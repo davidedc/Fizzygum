@@ -1,1 +1,1 @@
-coffee -c morphee-coffee.coffee
+coffee -b -c morphee-coffee.coffee
