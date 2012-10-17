@@ -2159,7 +2159,7 @@ Morph::escalateEvent = (functionName, arg) ->
 Morph::evaluateString = (code) ->
   result = undefined
   try
-    result = eval_(code)
+    result = eval(code)
     @drawNew()
     @changed()
   catch err
@@ -3606,7 +3606,6 @@ SliderMorph::setTargetSetter = ->
   else menu.popUpAtHand @world()  if choices.length > 0
 
 SliderMorph::numericalSetters = ->
-  
   # for context menu demo purposes
   list = SliderMorph.uber.numericalSetters.call(this)
   list.push "setStart", "setStop", "setSize"
@@ -6747,7 +6746,9 @@ WorldMorph::edit = (aStringOrTextMorph) ->
     @virtualKeyboard.style.top = @cursor.top() + pos.y + "px"
     @virtualKeyboard.style.left = @cursor.left() + pos.x + "px"
     @virtualKeyboard.focus()
-  @slide aStringOrTextMorph  unless aStringOrTextMorph.parentThatIsA(MenuMorph)  if MorphicPreferences.useSliderForInput
+  if MorphicPreferences.useSliderForInput
+    if !aStringOrTextMorph.parentThatIsA(MenuMorph)
+      @slide aStringOrTextMorph
 
 WorldMorph::slide = (aStringOrTextMorph) ->
   

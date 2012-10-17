@@ -2499,7 +2499,7 @@ Morph.prototype.evaluateString = function(code) {
   var result;
   result = void 0;
   try {
-    result = eval_(code);
+    result = eval(code);
     this.drawNew();
     this.changed();
   } catch (err) {
@@ -7451,8 +7451,10 @@ WorldMorph.prototype.edit = function(aStringOrTextMorph) {
     this.virtualKeyboard.style.left = this.cursor.left() + pos.x + "px";
     this.virtualKeyboard.focus();
   }
-  if (!(MorphicPreferences.useSliderForInput ? aStringOrTextMorph.parentThatIsA(MenuMorph) : void 0)) {
-    return this.slide(aStringOrTextMorph);
+  if (MorphicPreferences.useSliderForInput) {
+    if (!aStringOrTextMorph.parentThatIsA(MenuMorph)) {
+      return this.slide(aStringOrTextMorph);
+    }
   }
 };
 
