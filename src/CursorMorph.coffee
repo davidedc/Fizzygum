@@ -2,16 +2,11 @@
 
 # I am a String/Text editing widget
 
-class CursorMorph
+class CursorMorph extends BlinkerMorph
   constructor: (aStringOrTextMorph) ->
     @init aStringOrTextMorph
 
 # CursorMorph: referenced constructors
-
-# CursorMorph inherits from BlinkerMorph:
-CursorMorph:: = new BlinkerMorph()
-CursorMorph::constructor = CursorMorph
-CursorMorph.uber = BlinkerMorph::
 
 # CursorMorph instance creation:
 CursorMorph::init = (aStringOrTextMorph) ->
@@ -22,7 +17,7 @@ CursorMorph::init = (aStringOrTextMorph) ->
   @target = aStringOrTextMorph
   @originalContents = @target.text
   @slot = @target.text.length
-  CursorMorph.uber.init.call this
+  super()
   ls = fontHeight(@target.fontSize)
   @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
   @drawNew()

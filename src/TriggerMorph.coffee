@@ -2,15 +2,10 @@
 
 # I provide basic button functionality
 
-class TriggerMorph
+class TriggerMorph extends Morph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
 
-
-# TriggerMorph inherits from Morph:
-TriggerMorph:: = new Morph()
-TriggerMorph::constructor = TriggerMorph
-TriggerMorph.uber = Morph::
 
 # TriggerMorph instance creation:
 TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
@@ -29,7 +24,7 @@ TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environm
   @labelColor = labelColor or new Color(0, 0, 0)
   
   # initialize inherited properties:
-  TriggerMorph.uber.init.call this
+  super()
   
   # override inherited properites:
   @color = new Color(255, 255, 255)
@@ -74,7 +69,7 @@ TriggerMorph::createLabel = ->
 TriggerMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = TriggerMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.label = (dict[@label])  if c.label and dict[@label]
   c
 

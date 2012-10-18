@@ -944,14 +944,10 @@ MorphicNode::parentThatIsAnyOf = (constructors) ->
   @parent.parentThatIsAnyOf constructors
   # Morphs //////////////////////////////////////////////////////////////
 
-class Morph
+class Morph extends MorphicNode
   constructor: () ->
     @init()
 
-
-Morph.prototype = new MorphicNode();
-Morph.prototype.constructor = Morph;
-Morph.uber = MorphicNode.prototype;
 
 # Morphs //////////////////////////////////////////////////////////////
 
@@ -991,7 +987,7 @@ Morph::shadowBlur = 4
 
 # Morph initialization:
 Morph::init = ->
-  Morph.uber.init.call this
+  super()
   @isMorph = true
   @bounds = new Rectangle(0, 0, 50, 40)
   @color = new Color(80, 80, 80)
@@ -2031,15 +2027,10 @@ Morph::overlappingImage = (otherMorph) ->
 
 # I am a resize / move handle that can be attached to any Morph
 
-class HandleMorph
+class HandleMorph extends Morph
   constructor: (target, minX, minY, insetX, insetY, type) ->
     # if insetY is missing, it will be the same as insetX
     @init target, minX, minY, insetX, insetY, type
-
-# HandleMorph inherits from Morph:
-HandleMorph:: = new Morph()
-HandleMorph::constructor = HandleMorph
-HandleMorph.uber = Morph::
 
 # HandleMorph instance creation:
 HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
@@ -2048,7 +2039,7 @@ HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
   @minExtent = new Point(minX or 0, minY or 0)
   @inset = new Point(insetX or 0, insetY or insetX or 0)
   @type = type or "resize" # can also be 'move'
-  HandleMorph.uber.init.call this
+  super()
   @color = new Color(255, 255, 255)
   @isDraggable = false
   @noticesTransparentClick = true
@@ -2184,7 +2175,7 @@ HandleMorph::mouseLeave = ->
 HandleMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c
 
@@ -2205,28 +2196,18 @@ HandleMorph::attach = ->
   menu.popUpAtHand @world()  if choices.length > 0
 # ShadowMorph /////////////////////////////////////////////////////////
 
-class ShadowMorph
+class ShadowMorph extends Morph
   constructor: () ->
     @init()
-
-# ShadowMorph inherits from Morph:
-ShadowMorph:: = new Morph()
-ShadowMorph::constructor = ShadowMorph
-ShadowMorph.uber = Morph::
 # PenMorph ////////////////////////////////////////////////////////////
 
 # I am a simple LOGO-wise turtle.
 
-class PenMorph
+class PenMorph extends Morph
   constructor: () ->
     @init()
 
 # PenMorph: referenced constructors
-
-# PenMorph inherits from Morph:
-PenMorph:: = new Morph()
-PenMorph::constructor = PenMorph
-PenMorph.uber = Morph::
 
 # PenMorph instance creation:
 PenMorph::init = ->
@@ -2238,7 +2219,7 @@ PenMorph::init = ->
   @heading = 0
   @isDown = true
   @size = 1
-  HandleMorph.uber.init.call this
+  super()
   @setExtent new Point(size, size)
 
 
@@ -2394,18 +2375,13 @@ PenMorph::tree = (level, length, angle) ->
     @forward -length
 # ColorPaletteMorph ///////////////////////////////////////////////////
 
-class ColorPaletteMorph
+class ColorPaletteMorph extends Morph
   constructor: (target, sizePoint) ->
     @init target or null, sizePoint or new Point(80, 50)
 
-# ColorPaletteMorph inherits from Morph:
-ColorPaletteMorph:: = new Morph()
-ColorPaletteMorph::constructor = ColorPaletteMorph
-ColorPaletteMorph.uber = Morph::
-
 # ColorPaletteMorph instance creation:
 ColorPaletteMorph::init = (target, size) ->
-  ColorPaletteMorph.uber.init.call this
+  super()
   @target = target
   @targetSetter = "color"
   @silentSetExtent size
@@ -2456,14 +2432,14 @@ ColorPaletteMorph::updateTarget = ->
 ColorPaletteMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = ColorPaletteMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c
 
 
 # ColorPaletteMorph menu:
 ColorPaletteMorph::developersMenu = ->
-  menu = ColorPaletteMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
   menu
@@ -2498,14 +2474,9 @@ ColorPaletteMorph::setTargetSetter = ->
   else menu.popUpAtHand @world()  if choices.length > 0
 # GrayPaletteMorph ///////////////////////////////////////////////////
 
-class GrayPaletteMorph
+class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (target, sizePoint) ->
     @init target or null, sizePoint or new Point(80, 10)
-
-# GrayPaletteMorph inherits from ColorPaletteMorph:
-GrayPaletteMorph:: = new ColorPaletteMorph()
-GrayPaletteMorph::constructor = GrayPaletteMorph
-GrayPaletteMorph.uber = ColorPaletteMorph::
 
 # GrayPaletteMorph instance creation:
 GrayPaletteMorph::drawNew = ->
@@ -2523,25 +2494,20 @@ GrayPaletteMorph::drawNew = ->
   context.fillRect 0, 0, ext.x, ext.y
 # ColorPickerMorph ///////////////////////////////////////////////////
 
-class ColorPickerMorph
+class ColorPickerMorph extends Morph
   constructor: (defaultColor) ->
     @init defaultColor or new Color(255, 255, 255)
-
-# ColorPickerMorph inherits from Morph:
-ColorPickerMorph:: = new Morph()
-ColorPickerMorph::constructor = ColorPickerMorph
-ColorPickerMorph.uber = Morph::
 
 # ColorPickerMorph instance creation:
 ColorPickerMorph::init = (defaultColor) ->
   @choice = defaultColor
-  ColorPickerMorph.uber.init.call this
+  super
   @color = new Color(255, 255, 255)
   @silentSetExtent new Point(80, 80)
   @drawNew()
 
 ColorPickerMorph::drawNew = ->
-  ColorPickerMorph.uber.drawNew.call this
+  super
   @buildSubmorphs()
 
 ColorPickerMorph::buildSubmorphs = ->
@@ -2575,18 +2541,13 @@ ColorPickerMorph::rootForGrab = ->
 
 # can be used for text cursors
 
-class BlinkerMorph
+class BlinkerMorph extends Morph
   constructor: (rate) ->
     @init rate
 
-# BlinkerMorph inherits from Morph:
-BlinkerMorph:: = new Morph()
-BlinkerMorph::constructor = BlinkerMorph
-BlinkerMorph.uber = Morph::
-
 # BlinkerMorph instance creation:
 BlinkerMorph::init = (rate) ->
-  BlinkerMorph.uber.init.call this
+  super()
   @color = new Color(0, 0, 0)
   @fps = rate or 2
   @drawNew()
@@ -2599,16 +2560,11 @@ BlinkerMorph::step = ->
 
 # I am a String/Text editing widget
 
-class CursorMorph
+class CursorMorph extends BlinkerMorph
   constructor: (aStringOrTextMorph) ->
     @init aStringOrTextMorph
 
 # CursorMorph: referenced constructors
-
-# CursorMorph inherits from BlinkerMorph:
-CursorMorph:: = new BlinkerMorph()
-CursorMorph::constructor = CursorMorph
-CursorMorph.uber = BlinkerMorph::
 
 # CursorMorph instance creation:
 CursorMorph::init = (aStringOrTextMorph) ->
@@ -2619,7 +2575,7 @@ CursorMorph::init = (aStringOrTextMorph) ->
   @target = aStringOrTextMorph
   @originalContents = @target.text
   @slot = @target.text.length
-  CursorMorph.uber.init.call this
+  super()
   ls = fontHeight(@target.fontSize)
   @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
   @drawNew()
@@ -2823,21 +2779,16 @@ CursorMorph::inspectKeyEvent = (event) ->
 
 # I can have an optionally rounded border
 
-class BoxMorph
+class BoxMorph extends Morph
   constructor: (edge, border, borderColor) ->
     @init edge, border, borderColor
-
-# BoxMorph inherits from Morph:
-BoxMorph:: = new Morph()
-BoxMorph::constructor = BoxMorph
-BoxMorph.uber = Morph::
 
 # BoxMorph instance creation:
 BoxMorph::init = (edge, border, borderColor) ->
   @edge = edge or 4
   @border = border or ((if (border is 0) then 0 else 2))
   @borderColor = borderColor or new Color()
-  BoxMorph.uber.init.call this
+  super()
 
 
 # BoxMorph drawing:
@@ -2846,7 +2797,7 @@ BoxMorph::drawNew = ->
   @image = newCanvas(@extent())
   context = @image.getContext("2d")
   if (@edge is 0) and (@border is 0)
-    BoxMorph.uber.drawNew.call this
+    super()
     return null
   context.fillStyle = @color.toString()
   context.beginPath()
@@ -2881,7 +2832,7 @@ BoxMorph::outlinePath = (context, radius, inset) ->
 
 # BoxMorph menus:
 BoxMorph::developersMenu = ->
-  menu = BoxMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   menu.addItem "border width...", (->
     @prompt menu.title + "\nborder\nwidth:", @setBorderWidth, this, @border.toString(), null, 0, 100, true
@@ -2934,7 +2885,7 @@ BoxMorph::colorSetters = ->
 BoxMorph::numericalSetters = ->
   
   # for context menu demo purposes
-  list = BoxMorph.uber.numericalSetters.call(this)
+  list = super()
   list.push "setBorderWidth", "setCornerSize"
   list
 # SpeechBubbleMorph ///////////////////////////////////////////////////
@@ -2945,16 +2896,11 @@ BoxMorph::numericalSetters = ->
 #	If I am invoked using popUp() I behave like a tool tip.
 #
 
-class SpeechBubbleMorph
+class SpeechBubbleMorph extends BoxMorph
   constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
     @init contents, color, edge, border, borderColor, padding, isThought
 
 # SpeechBubbleMorph: referenced constructors
-
-# SpeechBubbleMorph inherits from BoxMorph:
-SpeechBubbleMorph:: = new BoxMorph()
-SpeechBubbleMorph::constructor = SpeechBubbleMorph
-SpeechBubbleMorph.uber = BoxMorph::
 
 # SpeechBubbleMorph instance creation:
 SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, isThought) ->
@@ -2962,7 +2908,7 @@ SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, 
   @contents = contents or ""
   @padding = padding or 0 # additional vertical pixels
   @isThought = isThought or false # draw "think" bubble
-  SpeechBubbleMorph.uber.init.call this, edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+  super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
   @color = color or new Color(230, 230, 230)
   @drawNew()
 
@@ -3004,7 +2950,7 @@ SpeechBubbleMorph::drawNew = ->
   @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
   
   # draw my outline
-  SpeechBubbleMorph.uber.drawNew.call this
+  super()
   
   # position my contents
   @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))
@@ -3071,16 +3017,12 @@ SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
 
 # I can be used for sliders
 
-class CircleBoxMorph
+class CircleBoxMorph extends Morph
   constructor: (orientation) ->
     @init orientation or "vertical"
 
-# CircleBoxMorph inherits from Morph:
-CircleBoxMorph:: = new Morph()
-CircleBoxMorph::constructor = CircleBoxMorph
-CircleBoxMorph.uber = Morph::
 CircleBoxMorph::init = (orientation) ->
-  CircleBoxMorph.uber.init.call this
+  super()
   @orientation = orientation
   @autoOrient = true
   @setExtent new Point(20, 100)
@@ -3132,7 +3074,7 @@ CircleBoxMorph::drawNew = ->
 
 # CircleBoxMorph menu:
 CircleBoxMorph::developersMenu = ->
-  menu = CircleBoxMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   if @orientation is "vertical"
     menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"
@@ -3154,18 +3096,13 @@ CircleBoxMorph::toggleOrientation = ->
 # MouseSensorMorph ////////////////////////////////////////////////////
 
 # for demo and debuggin purposes only, to be removed later
-class MouseSensorMorph
+class MouseSensorMorph extends BoxMorph
   constructor: (edge, border, borderColor) ->
     @init edge, border, borderColor
 
-# MouseSensorMorph inherits from BoxMorph:
-MouseSensorMorph:: = new BoxMorph()
-MouseSensorMorph::constructor = MouseSensorMorph
-MouseSensorMorph.uber = BoxMorph::
-
 # MouseSensorMorph instance creation:
 MouseSensorMorph::init = (edge, border, borderColor) ->
-  MouseSensorMorph.uber.init.call this
+  super
   @edge = edge or 4
   @border = border or 2
   @color = new Color(255, 255, 255)
@@ -3207,16 +3144,9 @@ MouseSensorMorph::mouseClickLeft = ->
   @unTouch()
 # InspectorMorph //////////////////////////////////////////////////////
 
-class InspectorMorph
+class InspectorMorph extends BoxMorph
   constructor: (target) ->
     @init target
-
-# InspectorMorph: referenced constructors
-
-# InspectorMorph inherits from BoxMorph:
-InspectorMorph:: = new BoxMorph()
-InspectorMorph::constructor = InspectorMorph
-InspectorMorph.uber = BoxMorph::
 
 # InspectorMorph instance creation:
 InspectorMorph::init = (target) ->
@@ -3228,7 +3158,7 @@ InspectorMorph::init = (target) ->
   @markOwnProperties = false
   
   # initialize inherited properties:
-  InspectorMorph.uber.init.call this
+  super()
   
   # override inherited properties:
   @silentSetExtent new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3)
@@ -3506,7 +3436,7 @@ InspectorMorph::fixLayout = ->
   @changed()
 
 InspectorMorph::setExtent = (aPoint) ->
-  InspectorMorph.uber.setExtent.call this, aPoint
+  super aPoint
   @fixLayout()
 
 
@@ -3569,17 +3499,12 @@ InspectorMorph::removeProperty = ->
     @inform err
 # MenuMorph ///////////////////////////////////////////////////////////
 
-class MenuMorph
+class MenuMorph extends BoxMorph
   constructor: (target, title, environment, fontSize) ->
     @init target, title, environment, fontSize
 
 
 # MenuMorph: referenced constructors
-
-# MenuMorph inherits from BoxMorph:
-MenuMorph:: = new BoxMorph()
-MenuMorph::constructor = MenuMorph
-MenuMorph.uber = BoxMorph::
 
 # MenuMorph instance creation:
 MenuMorph::init = (target, title, environment, fontSize) ->
@@ -3595,7 +3520,7 @@ MenuMorph::init = (target, title, environment, fontSize) ->
   @isListContents = false
   
   # initialize inherited properties:
-  MenuMorph.uber.init.call this
+  super()
   
   # override inherited properties:
   @isDraggable = false
@@ -3675,7 +3600,7 @@ MenuMorph::drawNew = ->
   fb = @fullBounds()
   @silentSetExtent fb.extent().add(4)
   @adjustWidths()
-  MenuMorph.uber.drawNew.call this
+  super()
 
 MenuMorph::maxWidth = ->
   w = 0
@@ -3765,7 +3690,7 @@ StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowO
   @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
-  super
+  super()
   
   # override inherited properites:
   @color = color or new Color(0, 0, 0)
@@ -3927,7 +3852,7 @@ StringMorph::endOfLine = ->
 
 # StringMorph menus:
 StringMorph::developersMenu = ->
-  menu = super
+  menu = super()
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->
@@ -4088,15 +4013,10 @@ StringMorph::disableSelecting = ->
 
 # I am a multi-line, word-wrapping String
 
-class TextMorph
+class TextMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
     @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
 
-
-# TextMorph inherits from Morph:
-TextMorph:: = new Morph()
-TextMorph::constructor = TextMorph
-TextMorph.uber = Morph::
 
 # TextMorph instance creation:
 TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
@@ -4130,7 +4050,7 @@ TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fo
   @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
-  TextMorph.uber.init.call this
+  super()
   
   # override inherited properites:
   @color = new Color(0, 0, 0)
@@ -4456,7 +4376,7 @@ TextMorph::disableSelecting = ->
 
 # TextMorph menus:
 TextMorph::developersMenu = ->
-  menu = TextMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->
@@ -4589,15 +4509,10 @@ TextMorph::inspectIt = ->
 
 # I provide basic button functionality
 
-class TriggerMorph
+class TriggerMorph extends Morph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
 
-
-# TriggerMorph inherits from Morph:
-TriggerMorph:: = new Morph()
-TriggerMorph::constructor = TriggerMorph
-TriggerMorph.uber = Morph::
 
 # TriggerMorph instance creation:
 TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
@@ -4616,7 +4531,7 @@ TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environm
   @labelColor = labelColor or new Color(0, 0, 0)
   
   # initialize inherited properties:
-  TriggerMorph.uber.init.call this
+  super()
   
   # override inherited properites:
   @color = new Color(255, 255, 255)
@@ -4661,7 +4576,7 @@ TriggerMorph::createLabel = ->
 TriggerMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = TriggerMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.label = (dict[@label])  if c.label and dict[@label]
   c
 
@@ -4735,14 +4650,9 @@ TriggerMorph::popUpbubbleHelp = (contents) ->
 
 # I automatically determine my bounds
 
-class MenuItemMorph
+class MenuItemMorph extends TriggerMorph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, color
-
-# MenuItemMorph inherits from TriggerMorph:
-MenuItemMorph:: = new TriggerMorph()
-MenuItemMorph::constructor = MenuItemMorph
-MenuItemMorph.uber = TriggerMorph::
 
 # MenuItemMorph instance creation:
 MenuItemMorph::createLabel = ->
@@ -4800,17 +4710,13 @@ MenuItemMorph::isSelectedListItem = ->
 
 # I clip my submorphs at my bounds
 
-class FrameMorph
+class FrameMorph extends Morph
   constructor: (aScrollFrame) ->
     @init aScrollFrame
 
-# Frames inherit from Morph:
-FrameMorph:: = new Morph()
-FrameMorph::constructor = FrameMorph
-FrameMorph.uber = Morph::
 FrameMorph::init = (aScrollFrame) ->
   @scrollFrame = aScrollFrame or null
-  FrameMorph.uber.init.call this
+  super()
   @color = new Color(255, 250, 245)
   @drawNew()
   @acceptsDrops = true
@@ -4905,14 +4811,14 @@ FrameMorph::reactToGrabOf = ->
 FrameMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = FrameMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]
   c
 
 
 # FrameMorph menus:
 FrameMorph::developersMenu = ->
-  menu = FrameMorph.uber.developersMenu.call(this)
+  menu = super()
   if @children.length > 0
     menu.addLine()
     menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
@@ -4926,20 +4832,15 @@ FrameMorph::keepAllSubmorphsWithin = ->
 
 # I am a Demo of a stepping custom Morph
 
-class BouncerMorph
+class BouncerMorph extends Morph
   constructor: () ->
     @init()
-
-# Bouncers inherit from Morph:
-BouncerMorph:: = new Morph()
-BouncerMorph::constructor = BouncerMorph
-BouncerMorph.uber = Morph::
 
 # BouncerMorph instance creation:
 
 # BouncerMorph initialization:
 BouncerMorph::init = (type, speed) ->
-  BouncerMorph.uber.init.call this
+  super()
   @fps = 50
   
   # additional properties:
@@ -4989,19 +4890,15 @@ BouncerMorph::step = ->
 
 # HandMorph inherits from Morph:
 
-class HandMorph
+class HandMorph extends Morph
   constructor: (aWorld) ->
     @init aWorld
-
-HandMorph:: = new Morph()
-HandMorph::constructor = HandMorph
-HandMorph.uber = Morph::
 
 # HandMorph instance creation:
 
 # HandMorph initialization:
 HandMorph::init = (aWorld) ->
-  HandMorph.uber.init.call this
+  super()
   @bounds = new Rectangle()
   
   # additional properties:
@@ -5209,7 +5106,7 @@ HandleMorph::mouseLeave = ->
 
 HandleMorph::copyRecordingReferences = (dict) ->
   c = undefined
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = dict[@target]  if c.target and dict[@target]
   c
 
@@ -5349,7 +5246,7 @@ HandMorph::destroyTemporaries = ->
 # HandMorph dragging optimization
 HandMorph::moveBy = (delta) ->
   Morph::trackChanges = false
-  HandMorph.uber.moveBy.call this, delta
+  super delta
   Morph::trackChanges = true
   @fullChanged()
 
@@ -5425,14 +5322,10 @@ HandMorph::processMouseMove = (event) ->
   @mouseOverList = mouseOverNew
 # StringFieldMorph ////////////////////////////////////////////////////
 
-class StringFieldMorph
+class StringFieldMorph extends FrameMorph
   constructor: (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
     @init defaultContents or "", minWidth or 100, fontSize or 12, fontStyle or "sans-serif", bold or false, italic or false, isNumeric
 
-# StringFieldMorph inherit from FrameMorph:
-StringFieldMorph:: = new FrameMorph()
-StringFieldMorph::constructor = StringFieldMorph
-StringFieldMorph.uber = FrameMorph::
 StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
   @defaultContents = defaultContents
   @minWidth = minWidth
@@ -5442,7 +5335,7 @@ StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, 
   @isItalic = italic
   @isNumeric = isNumeric or false
   @text = null
-  StringFieldMorph.uber.init.call this
+  super()
   @color = new Color(255, 255, 255)
   @isEditable = true
   @acceptsDrops = false
@@ -5463,7 +5356,7 @@ StringFieldMorph::drawNew = ->
   @text.isDraggable = false
   @text.enableSelecting()
   @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
-  StringFieldMorph.uber.drawNew.call this
+  super()
   @add @text
 
 StringFieldMorph::string = ->
@@ -5477,11 +5370,11 @@ StringFieldMorph::mouseClickLeft = ->
 StringFieldMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = StringFieldMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.text = (dict[@text])  if c.text and dict[@text]
   c
 # WorldMorph //////////////////////////////////////////////////////////
-class WorldMorph
+class WorldMorph extends FrameMorph
   constructor: (aCanvas, fillPage) ->
     @init aCanvas, fillPage
 
@@ -5489,14 +5382,12 @@ class WorldMorph
 
 # WorldMorph inherits from FrameMorph:
 WorldMorph:: = new FrameMorph()
-WorldMorph::constructor = WorldMorph
-WorldMorph.uber = FrameMorph::
 
 # WorldMorph instance creation:
 
 # WorldMorph initialization:
 WorldMorph::init = (aCanvas, fillPage) ->
-  WorldMorph.uber.init.call this
+  super()
   @color = new Color(205, 205, 205) # (130, 130, 130)
   @alpha = 1
   @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
@@ -5524,7 +5415,7 @@ WorldMorph::init = (aCanvas, fillPage) ->
 WorldMorph::drawNew = ->
   
   # initialize my surface property
-  WorldMorph.uber.drawNew.call this
+  super()
   @trailsCanvas = newCanvas(@extent())
 
 
@@ -6082,36 +5973,32 @@ WorldMorph::togglePreferences = ->
     MorphicPreferences = standardSettings
 # SliderButtonMorph ///////////////////////////////////////////////////
 
-class SliderButtonMorph
+class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
     @init orientation
 
-# SliderButtonMorph inherits from CircleBoxMorph:
-SliderButtonMorph:: = new CircleBoxMorph()
-SliderButtonMorph::constructor = SliderButtonMorph
-SliderButtonMorph.uber = CircleBoxMorph::
 SliderButtonMorph::init = (orientation) ->
   @color = new Color(80, 80, 80)
   @highlightColor = new Color(90, 90, 140)
   @pressColor = new Color(80, 80, 160)
   @is3D = true
   @hasMiddleDip = true
-  SliderButtonMorph.uber.init.call this, orientation
+  super orientation
 
 SliderButtonMorph::autoOrientation = ->
   nop()
 
 SliderButtonMorph::drawNew = ->
   colorBak = @color.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super()
   @drawEdges()  if @is3D
   @normalImage = @image
   @color = @highlightColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super()
   @drawEdges()  if @is3D
   @highlightImage = @image
   @color = @pressColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super()
   @drawEdges()  if @is3D
   @pressImage = @image
   @color = colorBak
@@ -6211,14 +6098,10 @@ SliderButtonMorph::mouseMove = ->
   nop()
 # SliderMorph ///////////////////////////////////////////////////
 
-class SliderMorph
+class SliderMorph extends CircleBoxMorph
   constructor: (start, stop, value, size, orientation, color) ->
     @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
 
-# SliderMorph inherits from CircleBoxMorph:
-SliderMorph:: = new CircleBoxMorph()
-SliderMorph::constructor = SliderMorph
-SliderMorph.uber = CircleBoxMorph::
 SliderMorph::init = (start, stop, value, size, orientation, color) ->
   @target = null
   @action = null
@@ -6232,7 +6115,7 @@ SliderMorph::init = (start, stop, value, size, orientation, color) ->
   @button.color = new Color(200, 200, 200)
   @button.highlightColor = new Color(210, 210, 255)
   @button.pressColor = new Color(180, 180, 255)
-  SliderMorph.uber.init.call this, orientation
+  super orientation
   @add @button
   @alpha = 0.3
   @color = color or new Color(0, 0, 0)
@@ -6258,7 +6141,7 @@ SliderMorph::drawNew = ->
   bh = undefined
   posX = undefined
   posY = undefined
-  SliderMorph.uber.drawNew.call this
+  super()
   @button.orientation = @orientation
   if @orientation is "vertical"
     bw = @width() - 2
@@ -6297,7 +6180,7 @@ SliderMorph::updateTarget = ->
 SliderMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = SliderMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c.button = (dict[@button])  if c.button and dict[@button]
   c
@@ -6305,7 +6188,7 @@ SliderMorph::copyRecordingReferences = (dict) ->
 
 # SliderMorph menu:
 SliderMorph::developersMenu = ->
-  menu = SliderMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
   menu.addItem "floor...", (->
     @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
@@ -6401,7 +6284,7 @@ SliderMorph::setTargetSetter = ->
 
 SliderMorph::numericalSetters = ->
   # for context menu demo purposes
-  list = SliderMorph.uber.numericalSetters.call(this)
+  list = super()
   list.push "setStart", "setStop", "setSize"
   list
 
@@ -6434,17 +6317,14 @@ SliderMorph::mouseDownLeft = (pos) ->
       @step = null
 # ScrollFrameMorph ////////////////////////////////////////////////////
 
-class ScrollFrameMorph
+class ScrollFrameMorph extends FrameMorph
   constructor: (scroller, size, sliderColor) ->
     @init scroller, size, sliderColor
 
 
-ScrollFrameMorph:: = new FrameMorph()
-ScrollFrameMorph::constructor = ScrollFrameMorph
-ScrollFrameMorph.uber = FrameMorph::
 ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   myself = this
-  ScrollFrameMorph.uber.init.call this
+  super()
   @scrollBarSize = size or MorphicPreferences.scrollBarSize
   @autoScrollTrigger = null
   @isScrollingByDragging = true # change if desired
@@ -6518,7 +6398,7 @@ ScrollFrameMorph::setContents = (aMorph) ->
 
 ScrollFrameMorph::setExtent = (aPoint) ->
   @contents.setPosition @position().copy()  if @isTextLineWrapping
-  ScrollFrameMorph.uber.setExtent.call this, aPoint
+  super aPoint
   @contents.adjustBounds()
 
 
@@ -6626,7 +6506,7 @@ ScrollFrameMorph::mouseScroll = (y, x) ->
 ScrollFrameMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = ScrollFrameMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.contents = (dict[@contents])  if c.contents and dict[@contents]
   if c.hBar and dict[@hBar]
     c.hBar = (dict[@hBar])
@@ -6639,7 +6519,7 @@ ScrollFrameMorph::copyRecordingReferences = (dict) ->
   c
 
 ScrollFrameMorph::developersMenu = ->
-  menu = ScrollFrameMorph.uber.developersMenu.call(this)
+  menu = super()
   if @isTextLineWrapping
     menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
   else
@@ -6649,7 +6529,7 @@ ScrollFrameMorph::developersMenu = ->
 ScrollFrameMorph::toggleTextLineWrapping = ->
   @isTextLineWrapping = not @isTextLineWrapping# ListMorph ///////////////////////////////////////////////////////////
 
-class ListMorph
+class ListMorph extends ScrollFrameMorph
   constructor: (elements, labelGetter, format) ->
   
   #
@@ -6675,11 +6555,8 @@ class ListMorph
       element.toString()
     , format or []
 
-ListMorph:: = new ScrollFrameMorph()
-ListMorph::constructor = ListMorph
-ListMorph.uber = ScrollFrameMorph::
 ListMorph::init = (elements, labelGetter, format) ->
-  ListMorph.uber.init.call this
+  super()
   @contents.acceptsDrops = false
   @color = new Color(255, 255, 255)
   @hBar.alpha = 0.6
@@ -6722,4 +6599,4 @@ ListMorph::setExtent = (aPoint) ->
   nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
   @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
   @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-  ListMorph.uber.setExtent.call this, aPoint
+  super aPoint

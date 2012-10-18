@@ -35,7 +35,7 @@ StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowO
   @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
-  super
+  super()
   
   # override inherited properites:
   @color = color or new Color(0, 0, 0)
@@ -197,7 +197,7 @@ StringMorph::endOfLine = ->
 
 # StringMorph menus:
 StringMorph::developersMenu = ->
-  menu = super
+  menu = super()
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->

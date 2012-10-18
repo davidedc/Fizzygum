@@ -1,24 +1,19 @@
 # ColorPickerMorph ///////////////////////////////////////////////////
 
-class ColorPickerMorph
+class ColorPickerMorph extends Morph
   constructor: (defaultColor) ->
     @init defaultColor or new Color(255, 255, 255)
-
-# ColorPickerMorph inherits from Morph:
-ColorPickerMorph:: = new Morph()
-ColorPickerMorph::constructor = ColorPickerMorph
-ColorPickerMorph.uber = Morph::
 
 # ColorPickerMorph instance creation:
 ColorPickerMorph::init = (defaultColor) ->
   @choice = defaultColor
-  ColorPickerMorph.uber.init.call this
+  super
   @color = new Color(255, 255, 255)
   @silentSetExtent new Point(80, 80)
   @drawNew()
 
 ColorPickerMorph::drawNew = ->
-  ColorPickerMorph.uber.drawNew.call this
+  super
   @buildSubmorphs()
 
 ColorPickerMorph::buildSubmorphs = ->

@@ -1,13 +1,8 @@
 # GrayPaletteMorph ///////////////////////////////////////////////////
 
-class GrayPaletteMorph
+class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (target, sizePoint) ->
     @init target or null, sizePoint or new Point(80, 10)
-
-# GrayPaletteMorph inherits from ColorPaletteMorph:
-GrayPaletteMorph:: = new ColorPaletteMorph()
-GrayPaletteMorph::constructor = GrayPaletteMorph
-GrayPaletteMorph.uber = ColorPaletteMorph::
 
 # GrayPaletteMorph instance creation:
 GrayPaletteMorph::drawNew = ->

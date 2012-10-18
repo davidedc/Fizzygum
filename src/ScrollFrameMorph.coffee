@@ -1,16 +1,13 @@
 # ScrollFrameMorph ////////////////////////////////////////////////////
 
-class ScrollFrameMorph
+class ScrollFrameMorph extends FrameMorph
   constructor: (scroller, size, sliderColor) ->
     @init scroller, size, sliderColor
 
 
-ScrollFrameMorph:: = new FrameMorph()
-ScrollFrameMorph::constructor = ScrollFrameMorph
-ScrollFrameMorph.uber = FrameMorph::
 ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   myself = this
-  ScrollFrameMorph.uber.init.call this
+  super()
   @scrollBarSize = size or MorphicPreferences.scrollBarSize
   @autoScrollTrigger = null
   @isScrollingByDragging = true # change if desired
@@ -84,7 +81,7 @@ ScrollFrameMorph::setContents = (aMorph) ->
 
 ScrollFrameMorph::setExtent = (aPoint) ->
   @contents.setPosition @position().copy()  if @isTextLineWrapping
-  ScrollFrameMorph.uber.setExtent.call this, aPoint
+  super aPoint
   @contents.adjustBounds()
 
 
@@ -192,7 +189,7 @@ ScrollFrameMorph::mouseScroll = (y, x) ->
 ScrollFrameMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = ScrollFrameMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.contents = (dict[@contents])  if c.contents and dict[@contents]
   if c.hBar and dict[@hBar]
     c.hBar = (dict[@hBar])
@@ -205,7 +202,7 @@ ScrollFrameMorph::copyRecordingReferences = (dict) ->
   c
 
 ScrollFrameMorph::developersMenu = ->
-  menu = ScrollFrameMorph.uber.developersMenu.call(this)
+  menu = super()
   if @isTextLineWrapping
     menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
   else

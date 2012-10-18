@@ -1,13 +1,9 @@
 # Morphs //////////////////////////////////////////////////////////////
 
-class Morph
+class Morph extends MorphicNode
   constructor: () ->
     @init()
 
-
-Morph.prototype = new MorphicNode();
-Morph.prototype.constructor = Morph;
-Morph.uber = MorphicNode.prototype;
 
 # Morphs //////////////////////////////////////////////////////////////
 
@@ -47,7 +43,7 @@ Morph::shadowBlur = 4
 
 # Morph initialization:
 Morph::init = ->
-  Morph.uber.init.call this
+  super()
   @isMorph = true
   @bounds = new Rectangle(0, 0, 50, 40)
   @color = new Color(80, 80, 80)

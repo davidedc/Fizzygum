@@ -1,15 +1,8 @@
 # InspectorMorph //////////////////////////////////////////////////////
 
-class InspectorMorph
+class InspectorMorph extends BoxMorph
   constructor: (target) ->
     @init target
-
-# InspectorMorph: referenced constructors
-
-# InspectorMorph inherits from BoxMorph:
-InspectorMorph:: = new BoxMorph()
-InspectorMorph::constructor = InspectorMorph
-InspectorMorph.uber = BoxMorph::
 
 # InspectorMorph instance creation:
 InspectorMorph::init = (target) ->
@@ -21,7 +14,7 @@ InspectorMorph::init = (target) ->
   @markOwnProperties = false
   
   # initialize inherited properties:
-  InspectorMorph.uber.init.call this
+  super()
   
   # override inherited properties:
   @silentSetExtent new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3)
@@ -299,7 +292,7 @@ InspectorMorph::fixLayout = ->
   @changed()
 
 InspectorMorph::setExtent = (aPoint) ->
-  InspectorMorph.uber.setExtent.call this, aPoint
+  super aPoint
   @fixLayout()
 
 

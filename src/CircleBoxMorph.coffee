@@ -2,16 +2,12 @@
 
 # I can be used for sliders
 
-class CircleBoxMorph
+class CircleBoxMorph extends Morph
   constructor: (orientation) ->
     @init orientation or "vertical"
 
-# CircleBoxMorph inherits from Morph:
-CircleBoxMorph:: = new Morph()
-CircleBoxMorph::constructor = CircleBoxMorph
-CircleBoxMorph.uber = Morph::
 CircleBoxMorph::init = (orientation) ->
-  CircleBoxMorph.uber.init.call this
+  super()
   @orientation = orientation
   @autoOrient = true
   @setExtent new Point(20, 100)
@@ -63,7 +59,7 @@ CircleBoxMorph::drawNew = ->
 
 # CircleBoxMorph menu:
 CircleBoxMorph::developersMenu = ->
-  menu = CircleBoxMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   if @orientation is "vertical"
     menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"

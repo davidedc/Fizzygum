@@ -2,17 +2,13 @@
 
 # I clip my submorphs at my bounds
 
-class FrameMorph
+class FrameMorph extends Morph
   constructor: (aScrollFrame) ->
     @init aScrollFrame
 
-# Frames inherit from Morph:
-FrameMorph:: = new Morph()
-FrameMorph::constructor = FrameMorph
-FrameMorph.uber = Morph::
 FrameMorph::init = (aScrollFrame) ->
   @scrollFrame = aScrollFrame or null
-  FrameMorph.uber.init.call this
+  super()
   @color = new Color(255, 250, 245)
   @drawNew()
   @acceptsDrops = true
@@ -107,14 +103,14 @@ FrameMorph::reactToGrabOf = ->
 FrameMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = FrameMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]
   c
 
 
 # FrameMorph menus:
 FrameMorph::developersMenu = ->
-  menu = FrameMorph.uber.developersMenu.call(this)
+  menu = super()
   if @children.length > 0
     menu.addLine()
     menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"

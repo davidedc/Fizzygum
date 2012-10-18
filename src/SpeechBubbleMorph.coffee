@@ -6,16 +6,11 @@
 #	If I am invoked using popUp() I behave like a tool tip.
 #
 
-class SpeechBubbleMorph
+class SpeechBubbleMorph extends BoxMorph
   constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
     @init contents, color, edge, border, borderColor, padding, isThought
 
 # SpeechBubbleMorph: referenced constructors
-
-# SpeechBubbleMorph inherits from BoxMorph:
-SpeechBubbleMorph:: = new BoxMorph()
-SpeechBubbleMorph::constructor = SpeechBubbleMorph
-SpeechBubbleMorph.uber = BoxMorph::
 
 # SpeechBubbleMorph instance creation:
 SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, isThought) ->
@@ -23,7 +18,7 @@ SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, 
   @contents = contents or ""
   @padding = padding or 0 # additional vertical pixels
   @isThought = isThought or false # draw "think" bubble
-  SpeechBubbleMorph.uber.init.call this, edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+  super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
   @color = color or new Color(230, 230, 230)
   @drawNew()
 
@@ -65,7 +60,7 @@ SpeechBubbleMorph::drawNew = ->
   @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
   
   # draw my outline
-  SpeechBubbleMorph.uber.drawNew.call this
+  super()
   
   # position my contents
   @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))

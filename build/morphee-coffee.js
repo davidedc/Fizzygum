@@ -1099,7 +1099,9 @@ MorphicNode.prototype.parentThatIsAnyOf = function(constructors) {
   return this.parent.parentThatIsAnyOf(constructors);
 };
 
-Morph = (function() {
+Morph = (function(_super) {
+
+  __extends(Morph, _super);
 
   function Morph() {
     this.init();
@@ -1107,20 +1109,14 @@ Morph = (function() {
 
   return Morph;
 
-})();
-
-Morph.prototype = new MorphicNode();
-
-Morph.prototype.constructor = Morph;
-
-Morph.uber = MorphicNode.prototype;
+})(MorphicNode);
 
 Morph.prototype.trackChanges = true;
 
 Morph.prototype.shadowBlur = 4;
 
 Morph.prototype.init = function() {
-  Morph.uber.init.call(this);
+  Morph.__super__.init.call(this);
   this.isMorph = true;
   this.bounds = new Rectangle(0, 0, 50, 40);
   this.color = new Color(80, 80, 80);
@@ -2257,7 +2253,9 @@ Morph.prototype.overlappingImage = function(otherMorph) {
   return oImg;
 };
 
-HandleMorph = (function() {
+HandleMorph = (function(_super) {
+
+  __extends(HandleMorph, _super);
 
   function HandleMorph(target, minX, minY, insetX, insetY, type) {
     this.init(target, minX, minY, insetX, insetY, type);
@@ -2265,13 +2263,7 @@ HandleMorph = (function() {
 
   return HandleMorph;
 
-})();
-
-HandleMorph.prototype = new Morph();
-
-HandleMorph.prototype.constructor = HandleMorph;
-
-HandleMorph.uber = Morph.prototype;
+})(Morph);
 
 HandleMorph.prototype.init = function(target, minX, minY, insetX, insetY, type) {
   var size;
@@ -2280,7 +2272,7 @@ HandleMorph.prototype.init = function(target, minX, minY, insetX, insetY, type) 
   this.minExtent = new Point(minX || 0, minY || 0);
   this.inset = new Point(insetX || 0, insetY || insetX || 0);
   this.type = type || "resize";
-  HandleMorph.uber.init.call(this);
+  HandleMorph.__super__.init.call(this);
   this.color = new Color(255, 255, 255);
   this.isDraggable = false;
   this.noticesTransparentClick = true;
@@ -2431,7 +2423,7 @@ HandleMorph.prototype.mouseLeave = function() {
 
 HandleMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict);
+  c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.target && dict[this.target]) {
     c.target = dict[this.target];
   }
@@ -2456,7 +2448,9 @@ HandleMorph.prototype.attach = function() {
   }
 };
 
-ShadowMorph = (function() {
+ShadowMorph = (function(_super) {
+
+  __extends(ShadowMorph, _super);
 
   function ShadowMorph() {
     this.init();
@@ -2464,15 +2458,11 @@ ShadowMorph = (function() {
 
   return ShadowMorph;
 
-})();
+})(Morph);
 
-ShadowMorph.prototype = new Morph();
+PenMorph = (function(_super) {
 
-ShadowMorph.prototype.constructor = ShadowMorph;
-
-ShadowMorph.uber = Morph.prototype;
-
-PenMorph = (function() {
+  __extends(PenMorph, _super);
 
   function PenMorph() {
     this.init();
@@ -2480,13 +2470,7 @@ PenMorph = (function() {
 
   return PenMorph;
 
-})();
-
-PenMorph.prototype = new Morph();
-
-PenMorph.prototype.constructor = PenMorph;
-
-PenMorph.uber = Morph.prototype;
+})(Morph);
 
 PenMorph.prototype.init = function() {
   var size;
@@ -2496,7 +2480,7 @@ PenMorph.prototype.init = function() {
   this.heading = 0;
   this.isDown = true;
   this.size = 1;
-  HandleMorph.uber.init.call(this);
+  PenMorph.__super__.init.call(this);
   return this.setExtent(new Point(size, size));
 };
 
@@ -2671,7 +2655,9 @@ PenMorph.prototype.tree = function(level, length, angle) {
   }
 };
 
-ColorPaletteMorph = (function() {
+ColorPaletteMorph = (function(_super) {
+
+  __extends(ColorPaletteMorph, _super);
 
   function ColorPaletteMorph(target, sizePoint) {
     this.init(target || null, sizePoint || new Point(80, 50));
@@ -2679,16 +2665,10 @@ ColorPaletteMorph = (function() {
 
   return ColorPaletteMorph;
 
-})();
-
-ColorPaletteMorph.prototype = new Morph();
-
-ColorPaletteMorph.prototype.constructor = ColorPaletteMorph;
-
-ColorPaletteMorph.uber = Morph.prototype;
+})(Morph);
 
 ColorPaletteMorph.prototype.init = function(target, size) {
-  ColorPaletteMorph.uber.init.call(this);
+  ColorPaletteMorph.__super__.init.call(this);
   this.target = target;
   this.targetSetter = "color";
   this.silentSetExtent(size);
@@ -2748,7 +2728,7 @@ ColorPaletteMorph.prototype.updateTarget = function() {
 
 ColorPaletteMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = ColorPaletteMorph.uber.copyRecordingReferences.call(this, dict);
+  c = ColorPaletteMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.target && dict[this.target]) {
     c.target = dict[this.target];
   }
@@ -2757,7 +2737,7 @@ ColorPaletteMorph.prototype.copyRecordingReferences = function(dict) {
 
 ColorPaletteMorph.prototype.developersMenu = function() {
   var menu;
-  menu = ColorPaletteMorph.uber.developersMenu.call(this);
+  menu = ColorPaletteMorph.__super__.developersMenu.call(this);
   menu.addLine();
   menu.addItem("set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one");
   return menu;
@@ -2804,7 +2784,9 @@ ColorPaletteMorph.prototype.setTargetSetter = function() {
   }
 };
 
-GrayPaletteMorph = (function() {
+GrayPaletteMorph = (function(_super) {
+
+  __extends(GrayPaletteMorph, _super);
 
   function GrayPaletteMorph(target, sizePoint) {
     this.init(target || null, sizePoint || new Point(80, 10));
@@ -2812,13 +2794,7 @@ GrayPaletteMorph = (function() {
 
   return GrayPaletteMorph;
 
-})();
-
-GrayPaletteMorph.prototype = new ColorPaletteMorph();
-
-GrayPaletteMorph.prototype.constructor = GrayPaletteMorph;
-
-GrayPaletteMorph.uber = ColorPaletteMorph.prototype;
+})(ColorPaletteMorph);
 
 GrayPaletteMorph.prototype.drawNew = function() {
   var context, ext, gradient;
@@ -2836,7 +2812,9 @@ GrayPaletteMorph.prototype.drawNew = function() {
   return context.fillRect(0, 0, ext.x, ext.y);
 };
 
-ColorPickerMorph = (function() {
+ColorPickerMorph = (function(_super) {
+
+  __extends(ColorPickerMorph, _super);
 
   function ColorPickerMorph(defaultColor) {
     this.init(defaultColor || new Color(255, 255, 255));
@@ -2844,24 +2822,18 @@ ColorPickerMorph = (function() {
 
   return ColorPickerMorph;
 
-})();
-
-ColorPickerMorph.prototype = new Morph();
-
-ColorPickerMorph.prototype.constructor = ColorPickerMorph;
-
-ColorPickerMorph.uber = Morph.prototype;
+})(Morph);
 
 ColorPickerMorph.prototype.init = function(defaultColor) {
   this.choice = defaultColor;
-  ColorPickerMorph.uber.init.call(this);
+  ColorPickerMorph.__super__.init.apply(this, arguments);
   this.color = new Color(255, 255, 255);
   this.silentSetExtent(new Point(80, 80));
   return this.drawNew();
 };
 
 ColorPickerMorph.prototype.drawNew = function() {
-  ColorPickerMorph.uber.drawNew.call(this);
+  ColorPickerMorph.__super__.drawNew.apply(this, arguments);
   return this.buildSubmorphs();
 };
 
@@ -2898,7 +2870,9 @@ ColorPickerMorph.prototype.rootForGrab = function() {
   return this;
 };
 
-BlinkerMorph = (function() {
+BlinkerMorph = (function(_super) {
+
+  __extends(BlinkerMorph, _super);
 
   function BlinkerMorph(rate) {
     this.init(rate);
@@ -2906,16 +2880,10 @@ BlinkerMorph = (function() {
 
   return BlinkerMorph;
 
-})();
-
-BlinkerMorph.prototype = new Morph();
-
-BlinkerMorph.prototype.constructor = BlinkerMorph;
-
-BlinkerMorph.uber = Morph.prototype;
+})(Morph);
 
 BlinkerMorph.prototype.init = function(rate) {
-  BlinkerMorph.uber.init.call(this);
+  BlinkerMorph.__super__.init.call(this);
   this.color = new Color(0, 0, 0);
   this.fps = rate || 2;
   return this.drawNew();
@@ -2925,7 +2893,9 @@ BlinkerMorph.prototype.step = function() {
   return this.toggleVisibility();
 };
 
-CursorMorph = (function() {
+CursorMorph = (function(_super) {
+
+  __extends(CursorMorph, _super);
 
   function CursorMorph(aStringOrTextMorph) {
     this.init(aStringOrTextMorph);
@@ -2933,13 +2903,7 @@ CursorMorph = (function() {
 
   return CursorMorph;
 
-})();
-
-CursorMorph.prototype = new BlinkerMorph();
-
-CursorMorph.prototype.constructor = CursorMorph;
-
-CursorMorph.uber = BlinkerMorph.prototype;
+})(BlinkerMorph);
 
 CursorMorph.prototype.init = function(aStringOrTextMorph) {
   var ls;
@@ -2948,7 +2912,7 @@ CursorMorph.prototype.init = function(aStringOrTextMorph) {
   this.target = aStringOrTextMorph;
   this.originalContents = this.target.text;
   this.slot = this.target.text.length;
-  CursorMorph.uber.init.call(this);
+  CursorMorph.__super__.init.call(this);
   ls = fontHeight(this.target.fontSize);
   this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
   this.drawNew();
@@ -3186,7 +3150,9 @@ CursorMorph.prototype.inspectKeyEvent = function(event) {
   return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString());
 };
 
-BoxMorph = (function() {
+BoxMorph = (function(_super) {
+
+  __extends(BoxMorph, _super);
 
   function BoxMorph(edge, border, borderColor) {
     this.init(edge, border, borderColor);
@@ -3194,19 +3160,13 @@ BoxMorph = (function() {
 
   return BoxMorph;
 
-})();
-
-BoxMorph.prototype = new Morph();
-
-BoxMorph.prototype.constructor = BoxMorph;
-
-BoxMorph.uber = Morph.prototype;
+})(Morph);
 
 BoxMorph.prototype.init = function(edge, border, borderColor) {
   this.edge = edge || 4;
   this.border = border || (border === 0 ? 0 : 2);
   this.borderColor = borderColor || new Color();
-  return BoxMorph.uber.init.call(this);
+  return BoxMorph.__super__.init.call(this);
 };
 
 BoxMorph.prototype.drawNew = function() {
@@ -3215,7 +3175,7 @@ BoxMorph.prototype.drawNew = function() {
   this.image = newCanvas(this.extent());
   context = this.image.getContext("2d");
   if ((this.edge === 0) && (this.border === 0)) {
-    BoxMorph.uber.drawNew.call(this);
+    BoxMorph.__super__.drawNew.call(this);
     return null;
   }
   context.fillStyle = this.color.toString();
@@ -3246,7 +3206,7 @@ BoxMorph.prototype.outlinePath = function(context, radius, inset) {
 
 BoxMorph.prototype.developersMenu = function() {
   var menu;
-  menu = BoxMorph.uber.developersMenu.call(this);
+  menu = BoxMorph.__super__.developersMenu.call(this);
   menu.addLine();
   menu.addItem("border width...", (function() {
     return this.prompt(menu.title + "\nborder\nwidth:", this.setBorderWidth, this, this.border.toString(), null, 0, 100, true);
@@ -3304,12 +3264,14 @@ BoxMorph.prototype.colorSetters = function() {
 
 BoxMorph.prototype.numericalSetters = function() {
   var list;
-  list = BoxMorph.uber.numericalSetters.call(this);
+  list = BoxMorph.__super__.numericalSetters.call(this);
   list.push("setBorderWidth", "setCornerSize");
   return list;
 };
 
-SpeechBubbleMorph = (function() {
+SpeechBubbleMorph = (function(_super) {
+
+  __extends(SpeechBubbleMorph, _super);
 
   function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
     this.init(contents, color, edge, border, borderColor, padding, isThought);
@@ -3317,20 +3279,14 @@ SpeechBubbleMorph = (function() {
 
   return SpeechBubbleMorph;
 
-})();
-
-SpeechBubbleMorph.prototype = new BoxMorph();
-
-SpeechBubbleMorph.prototype.constructor = SpeechBubbleMorph;
-
-SpeechBubbleMorph.uber = BoxMorph.prototype;
+})(BoxMorph);
 
 SpeechBubbleMorph.prototype.init = function(contents, color, edge, border, borderColor, padding, isThought) {
   this.isPointingRight = true;
   this.contents = contents || "";
   this.padding = padding || 0;
   this.isThought = isThought || false;
-  SpeechBubbleMorph.uber.init.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
+  SpeechBubbleMorph.__super__.init.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
   this.color = color || new Color(230, 230, 230);
   return this.drawNew();
 };
@@ -3368,7 +3324,7 @@ SpeechBubbleMorph.prototype.drawNew = function() {
   this.add(this.contentsMorph);
   this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
   this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
-  SpeechBubbleMorph.uber.drawNew.call(this);
+  SpeechBubbleMorph.__super__.drawNew.call(this);
   return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
 };
 
@@ -3415,7 +3371,9 @@ SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
   }
 };
 
-CircleBoxMorph = (function() {
+CircleBoxMorph = (function(_super) {
+
+  __extends(CircleBoxMorph, _super);
 
   function CircleBoxMorph(orientation) {
     this.init(orientation || "vertical");
@@ -3423,16 +3381,10 @@ CircleBoxMorph = (function() {
 
   return CircleBoxMorph;
 
-})();
-
-CircleBoxMorph.prototype = new Morph();
-
-CircleBoxMorph.prototype.constructor = CircleBoxMorph;
-
-CircleBoxMorph.uber = Morph.prototype;
+})(Morph);
 
 CircleBoxMorph.prototype.init = function(orientation) {
-  CircleBoxMorph.uber.init.call(this);
+  CircleBoxMorph.__super__.init.call(this);
   this.orientation = orientation;
   this.autoOrient = true;
   return this.setExtent(new Point(20, 100));
@@ -3493,7 +3445,7 @@ CircleBoxMorph.prototype.drawNew = function() {
 
 CircleBoxMorph.prototype.developersMenu = function() {
   var menu;
-  menu = CircleBoxMorph.uber.developersMenu.call(this);
+  menu = CircleBoxMorph.__super__.developersMenu.call(this);
   menu.addLine();
   if (this.orientation === "vertical") {
     menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
@@ -3518,7 +3470,9 @@ CircleBoxMorph.prototype.toggleOrientation = function() {
   return this.changed();
 };
 
-MouseSensorMorph = (function() {
+MouseSensorMorph = (function(_super) {
+
+  __extends(MouseSensorMorph, _super);
 
   function MouseSensorMorph(edge, border, borderColor) {
     this.init(edge, border, borderColor);
@@ -3526,16 +3480,10 @@ MouseSensorMorph = (function() {
 
   return MouseSensorMorph;
 
-})();
-
-MouseSensorMorph.prototype = new BoxMorph();
-
-MouseSensorMorph.prototype.constructor = MouseSensorMorph;
-
-MouseSensorMorph.uber = BoxMorph.prototype;
+})(BoxMorph);
 
 MouseSensorMorph.prototype.init = function(edge, border, borderColor) {
-  MouseSensorMorph.uber.init.call(this);
+  MouseSensorMorph.__super__.init.apply(this, arguments);
   this.edge = edge || 4;
   this.border = border || 2;
   this.color = new Color(255, 255, 255);
@@ -3589,7 +3537,9 @@ MouseSensorMorph.prototype.mouseClickLeft = function() {
   return this.unTouch();
 };
 
-InspectorMorph = (function() {
+InspectorMorph = (function(_super) {
+
+  __extends(InspectorMorph, _super);
 
   function InspectorMorph(target) {
     this.init(target);
@@ -3597,20 +3547,14 @@ InspectorMorph = (function() {
 
   return InspectorMorph;
 
-})();
-
-InspectorMorph.prototype = new BoxMorph();
-
-InspectorMorph.prototype.constructor = InspectorMorph;
-
-InspectorMorph.uber = BoxMorph.prototype;
+})(BoxMorph);
 
 InspectorMorph.prototype.init = function(target) {
   this.target = target;
   this.currentProperty = null;
   this.showing = "attributes";
   this.markOwnProperties = false;
-  InspectorMorph.uber.init.call(this);
+  InspectorMorph.__super__.init.call(this);
   this.silentSetExtent(new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3));
   this.isDraggable = true;
   this.border = 1;
@@ -3865,7 +3809,7 @@ InspectorMorph.prototype.fixLayout = function() {
 };
 
 InspectorMorph.prototype.setExtent = function(aPoint) {
-  InspectorMorph.uber.setExtent.call(this, aPoint);
+  InspectorMorph.__super__.setExtent.call(this, aPoint);
   return this.fixLayout();
 };
 
@@ -3938,7 +3882,9 @@ InspectorMorph.prototype.removeProperty = function() {
   }
 };
 
-MenuMorph = (function() {
+MenuMorph = (function(_super) {
+
+  __extends(MenuMorph, _super);
 
   function MenuMorph(target, title, environment, fontSize) {
     this.init(target, title, environment, fontSize);
@@ -3946,13 +3892,7 @@ MenuMorph = (function() {
 
   return MenuMorph;
 
-})();
-
-MenuMorph.prototype = new BoxMorph();
-
-MenuMorph.prototype.constructor = MenuMorph;
-
-MenuMorph.uber = BoxMorph.prototype;
+})(BoxMorph);
 
 MenuMorph.prototype.init = function(target, title, environment, fontSize) {
   this.target = target;
@@ -3963,7 +3903,7 @@ MenuMorph.prototype.init = function(target, title, environment, fontSize) {
   this.label = null;
   this.world = null;
   this.isListContents = false;
-  MenuMorph.uber.init.call(this);
+  MenuMorph.__super__.init.call(this);
   this.isDraggable = false;
   this.border = null;
   return this.edge = null;
@@ -4054,7 +3994,7 @@ MenuMorph.prototype.drawNew = function() {
   fb = this.fullBounds();
   this.silentSetExtent(fb.extent().add(4));
   this.adjustWidths();
-  return MenuMorph.uber.drawNew.call(this);
+  return MenuMorph.__super__.drawNew.call(this);
 };
 
 MenuMorph.prototype.maxWidth = function() {
@@ -4165,7 +4105,7 @@ StringMorph.prototype.init = function(text, fontSize, fontStyle, bold, italic, i
   this.endMark = 0;
   this.markedTextColor = new Color(255, 255, 255);
   this.markedBackgoundColor = new Color(60, 60, 120);
-  StringMorph.__super__.init.apply(this, arguments);
+  StringMorph.__super__.init.call(this);
   this.color = color || new Color(0, 0, 0);
   this.noticesTransparentClick = true;
   return this.drawNew();
@@ -4319,7 +4259,7 @@ StringMorph.prototype.endOfLine = function() {
 
 StringMorph.prototype.developersMenu = function() {
   var menu;
-  menu = StringMorph.__super__.developersMenu.apply(this, arguments);
+  menu = StringMorph.__super__.developersMenu.call(this);
   menu.addLine();
   menu.addItem("edit", "edit");
   menu.addItem("font size...", (function() {
@@ -4508,7 +4448,9 @@ StringMorph.prototype.disableSelecting = function() {
   return delete this.mouseMove;
 };
 
-TextMorph = (function() {
+TextMorph = (function(_super) {
+
+  __extends(TextMorph, _super);
 
   function TextMorph(text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) {
     this.init(text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor);
@@ -4516,13 +4458,7 @@ TextMorph = (function() {
 
   return TextMorph;
 
-})();
-
-TextMorph.prototype = new Morph();
-
-TextMorph.prototype.constructor = TextMorph;
-
-TextMorph.uber = Morph.prototype;
+})(Morph);
 
 TextMorph.prototype.init = function(text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) {
   this.text = text || (text === "" ? text : "TextMorph");
@@ -4547,7 +4483,7 @@ TextMorph.prototype.init = function(text, fontSize, fontStyle, bold, italic, ali
   this.endMark = 0;
   this.markedTextColor = new Color(255, 255, 255);
   this.markedBackgoundColor = new Color(60, 60, 120);
-  TextMorph.uber.init.call(this);
+  TextMorph.__super__.init.call(this);
   this.color = new Color(0, 0, 0);
   this.noticesTransparentClick = true;
   return this.drawNew();
@@ -4903,7 +4839,7 @@ TextMorph.prototype.disableSelecting = function() {
 
 TextMorph.prototype.developersMenu = function() {
   var menu;
-  menu = TextMorph.uber.developersMenu.call(this);
+  menu = TextMorph.__super__.developersMenu.call(this);
   menu.addLine();
   menu.addItem("edit", "edit");
   menu.addItem("font size...", (function() {
@@ -5063,7 +4999,9 @@ TextMorph.prototype.inspectIt = function() {
   }
 };
 
-TriggerMorph = (function() {
+TriggerMorph = (function(_super) {
+
+  __extends(TriggerMorph, _super);
 
   function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) {
     this.init(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor);
@@ -5071,13 +5009,7 @@ TriggerMorph = (function() {
 
   return TriggerMorph;
 
-})();
-
-TriggerMorph.prototype = new Morph();
-
-TriggerMorph.prototype.constructor = TriggerMorph;
-
-TriggerMorph.uber = Morph.prototype;
+})(Morph);
 
 TriggerMorph.prototype.init = function(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) {
   this.target = target || null;
@@ -5091,7 +5023,7 @@ TriggerMorph.prototype.init = function(target, action, labelString, fontSize, fo
   this.highlightColor = new Color(192, 192, 192);
   this.pressColor = new Color(128, 128, 128);
   this.labelColor = labelColor || new Color(0, 0, 0);
-  TriggerMorph.uber.init.call(this);
+  TriggerMorph.__super__.init.call(this);
   this.color = new Color(255, 255, 255);
   return this.drawNew();
 };
@@ -5133,7 +5065,7 @@ TriggerMorph.prototype.createLabel = function() {
 
 TriggerMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = TriggerMorph.uber.copyRecordingReferences.call(this, dict);
+  c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.label && dict[this.label]) {
     c.label = dict[this.label];
   }
@@ -5200,7 +5132,9 @@ TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
   return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
 };
 
-MenuItemMorph = (function() {
+MenuItemMorph = (function(_super) {
+
+  __extends(MenuItemMorph, _super);
 
   function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color) {
     this.init(target, action, labelString, fontSize, fontStyle, environment, hint, color);
@@ -5208,13 +5142,7 @@ MenuItemMorph = (function() {
 
   return MenuItemMorph;
 
-})();
-
-MenuItemMorph.prototype = new TriggerMorph();
-
-MenuItemMorph.prototype.constructor = MenuItemMorph;
-
-MenuItemMorph.uber = TriggerMorph.prototype;
+})(TriggerMorph);
 
 MenuItemMorph.prototype.createLabel = function() {
   var np;
@@ -5286,7 +5214,9 @@ MenuItemMorph.prototype.isSelectedListItem = function() {
   return false;
 };
 
-FrameMorph = (function() {
+FrameMorph = (function(_super) {
+
+  __extends(FrameMorph, _super);
 
   function FrameMorph(aScrollFrame) {
     this.init(aScrollFrame);
@@ -5294,17 +5224,11 @@ FrameMorph = (function() {
 
   return FrameMorph;
 
-})();
-
-FrameMorph.prototype = new Morph();
-
-FrameMorph.prototype.constructor = FrameMorph;
-
-FrameMorph.uber = Morph.prototype;
+})(Morph);
 
 FrameMorph.prototype.init = function(aScrollFrame) {
   this.scrollFrame = aScrollFrame || null;
-  FrameMorph.uber.init.call(this);
+  FrameMorph.__super__.init.call(this);
   this.color = new Color(255, 250, 245);
   this.drawNew();
   this.acceptsDrops = true;
@@ -5425,7 +5349,7 @@ FrameMorph.prototype.reactToGrabOf = function() {
 
 FrameMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = FrameMorph.uber.copyRecordingReferences.call(this, dict);
+  c = FrameMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.frame && dict[this.scrollFrame]) {
     c.frame = dict[this.scrollFrame];
   }
@@ -5434,7 +5358,7 @@ FrameMorph.prototype.copyRecordingReferences = function(dict) {
 
 FrameMorph.prototype.developersMenu = function() {
   var menu;
-  menu = FrameMorph.uber.developersMenu.call(this);
+  menu = FrameMorph.__super__.developersMenu.call(this);
   if (this.children.length > 0) {
     menu.addLine();
     menu.addItem("move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible");
@@ -5450,7 +5374,9 @@ FrameMorph.prototype.keepAllSubmorphsWithin = function() {
   });
 };
 
-BouncerMorph = (function() {
+BouncerMorph = (function(_super) {
+
+  __extends(BouncerMorph, _super);
 
   function BouncerMorph() {
     this.init();
@@ -5458,16 +5384,10 @@ BouncerMorph = (function() {
 
   return BouncerMorph;
 
-})();
-
-BouncerMorph.prototype = new Morph();
-
-BouncerMorph.prototype.constructor = BouncerMorph;
-
-BouncerMorph.uber = Morph.prototype;
+})(Morph);
 
 BouncerMorph.prototype.init = function(type, speed) {
-  BouncerMorph.uber.init.call(this);
+  BouncerMorph.__super__.init.call(this);
   this.fps = 50;
   this.isStopped = false;
   this.type = type || "vertical";
@@ -5525,7 +5445,9 @@ BouncerMorph.prototype.step = function() {
   }
 };
 
-HandMorph = (function() {
+HandMorph = (function(_super) {
+
+  __extends(HandMorph, _super);
 
   function HandMorph(aWorld) {
     this.init(aWorld);
@@ -5533,16 +5455,10 @@ HandMorph = (function() {
 
   return HandMorph;
 
-})();
-
-HandMorph.prototype = new Morph();
-
-HandMorph.prototype.constructor = HandMorph;
-
-HandMorph.uber = Morph.prototype;
+})(Morph);
 
 HandMorph.prototype.init = function(aWorld) {
-  HandMorph.uber.init.call(this);
+  HandMorph.__super__.init.call(this);
   this.bounds = new Rectangle();
   this.world = aWorld;
   this.mouseButton = null;
@@ -5782,7 +5698,7 @@ HandleMorph.prototype.mouseLeave = function() {
 HandleMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
   c = void 0;
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict);
+  c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.target && dict[this.target]) {
     c.target = dict[this.target];
   }
@@ -5937,7 +5853,7 @@ HandMorph.prototype.destroyTemporaries = function() {
 
 HandMorph.prototype.moveBy = function(delta) {
   Morph.prototype.trackChanges = false;
-  HandMorph.uber.moveBy.call(this, delta);
+  HandMorph.__super__.moveBy.call(this, delta);
   Morph.prototype.trackChanges = true;
   return this.fullChanged();
 };
@@ -6009,7 +5925,9 @@ HandMorph.prototype.processMouseMove = function(event) {
   return this.mouseOverList = mouseOverNew;
 };
 
-StringFieldMorph = (function() {
+StringFieldMorph = (function(_super) {
+
+  __extends(StringFieldMorph, _super);
 
   function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) {
     this.init(defaultContents || "", minWidth || 100, fontSize || 12, fontStyle || "sans-serif", bold || false, italic || false, isNumeric);
@@ -6017,13 +5935,7 @@ StringFieldMorph = (function() {
 
   return StringFieldMorph;
 
-})();
-
-StringFieldMorph.prototype = new FrameMorph();
-
-StringFieldMorph.prototype.constructor = StringFieldMorph;
-
-StringFieldMorph.uber = FrameMorph.prototype;
+})(FrameMorph);
 
 StringFieldMorph.prototype.init = function(defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) {
   this.defaultContents = defaultContents;
@@ -6034,7 +5946,7 @@ StringFieldMorph.prototype.init = function(defaultContents, minWidth, fontSize, 
   this.isItalic = italic;
   this.isNumeric = isNumeric || false;
   this.text = null;
-  StringFieldMorph.uber.init.call(this);
+  StringFieldMorph.__super__.init.call(this);
   this.color = new Color(255, 255, 255);
   this.isEditable = true;
   this.acceptsDrops = false;
@@ -6057,7 +5969,7 @@ StringFieldMorph.prototype.drawNew = function() {
   this.text.isDraggable = false;
   this.text.enableSelecting();
   this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
-  StringFieldMorph.uber.drawNew.call(this);
+  StringFieldMorph.__super__.drawNew.call(this);
   return this.add(this.text);
 };
 
@@ -6073,14 +5985,16 @@ StringFieldMorph.prototype.mouseClickLeft = function() {
 
 StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = StringFieldMorph.uber.copyRecordingReferences.call(this, dict);
+  c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.text && dict[this.text]) {
     c.text = dict[this.text];
   }
   return c;
 };
 
-WorldMorph = (function() {
+WorldMorph = (function(_super) {
+
+  __extends(WorldMorph, _super);
 
   function WorldMorph(aCanvas, fillPage) {
     this.init(aCanvas, fillPage);
@@ -6088,16 +6002,12 @@ WorldMorph = (function() {
 
   return WorldMorph;
 
-})();
+})(FrameMorph);
 
 WorldMorph.prototype = new FrameMorph();
 
-WorldMorph.prototype.constructor = WorldMorph;
-
-WorldMorph.uber = FrameMorph.prototype;
-
 WorldMorph.prototype.init = function(aCanvas, fillPage) {
-  WorldMorph.uber.init.call(this);
+  WorldMorph.__super__.init.call(this);
   this.color = new Color(205, 205, 205);
   this.alpha = 1;
   this.bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height);
@@ -6124,7 +6034,7 @@ WorldMorph.prototype.init = function(aCanvas, fillPage) {
 };
 
 WorldMorph.prototype.drawNew = function() {
-  WorldMorph.uber.drawNew.call(this);
+  WorldMorph.__super__.drawNew.call(this);
   return this.trailsCanvas = newCanvas(this.extent());
 };
 
@@ -6709,7 +6619,9 @@ WorldMorph.prototype.togglePreferences = function() {
   }
 };
 
-SliderButtonMorph = (function() {
+SliderButtonMorph = (function(_super) {
+
+  __extends(SliderButtonMorph, _super);
 
   function SliderButtonMorph(orientation) {
     this.init(orientation);
@@ -6717,13 +6629,7 @@ SliderButtonMorph = (function() {
 
   return SliderButtonMorph;
 
-})();
-
-SliderButtonMorph.prototype = new CircleBoxMorph();
-
-SliderButtonMorph.prototype.constructor = SliderButtonMorph;
-
-SliderButtonMorph.uber = CircleBoxMorph.prototype;
+})(CircleBoxMorph);
 
 SliderButtonMorph.prototype.init = function(orientation) {
   this.color = new Color(80, 80, 80);
@@ -6731,7 +6637,7 @@ SliderButtonMorph.prototype.init = function(orientation) {
   this.pressColor = new Color(80, 80, 160);
   this.is3D = true;
   this.hasMiddleDip = true;
-  return SliderButtonMorph.uber.init.call(this, orientation);
+  return SliderButtonMorph.__super__.init.call(this, orientation);
 };
 
 SliderButtonMorph.prototype.autoOrientation = function() {
@@ -6741,19 +6647,19 @@ SliderButtonMorph.prototype.autoOrientation = function() {
 SliderButtonMorph.prototype.drawNew = function() {
   var colorBak;
   colorBak = this.color.copy();
-  SliderButtonMorph.uber.drawNew.call(this);
+  SliderButtonMorph.__super__.drawNew.call(this);
   if (this.is3D) {
     this.drawEdges();
   }
   this.normalImage = this.image;
   this.color = this.highlightColor.copy();
-  SliderButtonMorph.uber.drawNew.call(this);
+  SliderButtonMorph.__super__.drawNew.call(this);
   if (this.is3D) {
     this.drawEdges();
   }
   this.highlightImage = this.image;
   this.color = this.pressColor.copy();
-  SliderButtonMorph.uber.drawNew.call(this);
+  SliderButtonMorph.__super__.drawNew.call(this);
   if (this.is3D) {
     this.drawEdges();
   }
@@ -6861,7 +6767,9 @@ SliderButtonMorph.prototype.mouseMove = function() {
   return nop();
 };
 
-SliderMorph = (function() {
+SliderMorph = (function(_super) {
+
+  __extends(SliderMorph, _super);
 
   function SliderMorph(start, stop, value, size, orientation, color) {
     this.init(start || 1, stop || 100, value || 50, size || 10, orientation || "vertical", color);
@@ -6869,13 +6777,7 @@ SliderMorph = (function() {
 
   return SliderMorph;
 
-})();
-
-SliderMorph.prototype = new CircleBoxMorph();
-
-SliderMorph.prototype.constructor = SliderMorph;
-
-SliderMorph.uber = CircleBoxMorph.prototype;
+})(CircleBoxMorph);
 
 SliderMorph.prototype.init = function(start, stop, value, size, orientation, color) {
   this.target = null;
@@ -6890,7 +6792,7 @@ SliderMorph.prototype.init = function(start, stop, value, size, orientation, col
   this.button.color = new Color(200, 200, 200);
   this.button.highlightColor = new Color(210, 210, 255);
   this.button.pressColor = new Color(180, 180, 255);
-  SliderMorph.uber.init.call(this, orientation);
+  SliderMorph.__super__.init.call(this, orientation);
   this.add(this.button);
   this.alpha = 0.3;
   this.color = color || new Color(0, 0, 0);
@@ -6922,7 +6824,7 @@ SliderMorph.prototype.drawNew = function() {
   bh = void 0;
   posX = void 0;
   posY = void 0;
-  SliderMorph.uber.drawNew.call(this);
+  SliderMorph.__super__.drawNew.call(this);
   this.button.orientation = this.orientation;
   if (this.orientation === "vertical") {
     bw = this.width() - 2;
@@ -6966,7 +6868,7 @@ SliderMorph.prototype.updateTarget = function() {
 
 SliderMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = SliderMorph.uber.copyRecordingReferences.call(this, dict);
+  c = SliderMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.target && dict[this.target]) {
     c.target = dict[this.target];
   }
@@ -6978,7 +6880,7 @@ SliderMorph.prototype.copyRecordingReferences = function(dict) {
 
 SliderMorph.prototype.developersMenu = function() {
   var menu;
-  menu = SliderMorph.uber.developersMenu.call(this);
+  menu = SliderMorph.__super__.developersMenu.call(this);
   menu.addItem("show value...", "showValue", "display a dialog box\nshowing the selected number");
   menu.addItem("floor...", (function() {
     return this.prompt(menu.title + "\nfloor:", this.setStart, this, this.start.toString(), null, 0, this.stop - this.size, true);
@@ -7096,7 +6998,7 @@ SliderMorph.prototype.setTargetSetter = function() {
 
 SliderMorph.prototype.numericalSetters = function() {
   var list;
-  list = SliderMorph.uber.numericalSetters.call(this);
+  list = SliderMorph.__super__.numericalSetters.call(this);
   list.push("setStart", "setStop", "setSize");
   return list;
 };
@@ -7135,7 +7037,9 @@ SliderMorph.prototype.mouseDownLeft = function(pos) {
   };
 };
 
-ScrollFrameMorph = (function() {
+ScrollFrameMorph = (function(_super) {
+
+  __extends(ScrollFrameMorph, _super);
 
   function ScrollFrameMorph(scroller, size, sliderColor) {
     this.init(scroller, size, sliderColor);
@@ -7143,18 +7047,12 @@ ScrollFrameMorph = (function() {
 
   return ScrollFrameMorph;
 
-})();
-
-ScrollFrameMorph.prototype = new FrameMorph();
-
-ScrollFrameMorph.prototype.constructor = ScrollFrameMorph;
-
-ScrollFrameMorph.uber = FrameMorph.prototype;
+})(FrameMorph);
 
 ScrollFrameMorph.prototype.init = function(scroller, size, sliderColor) {
   var myself;
   myself = this;
-  ScrollFrameMorph.uber.init.call(this);
+  ScrollFrameMorph.__super__.init.call(this);
   this.scrollBarSize = size || MorphicPreferences.scrollBarSize;
   this.autoScrollTrigger = null;
   this.isScrollingByDragging = true;
@@ -7233,7 +7131,7 @@ ScrollFrameMorph.prototype.setExtent = function(aPoint) {
   if (this.isTextLineWrapping) {
     this.contents.setPosition(this.position().copy());
   }
-  ScrollFrameMorph.uber.setExtent.call(this, aPoint);
+  ScrollFrameMorph.__super__.setExtent.call(this, aPoint);
   return this.contents.adjustBounds();
 };
 
@@ -7394,7 +7292,7 @@ ScrollFrameMorph.prototype.mouseScroll = function(y, x) {
 
 ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
   var c;
-  c = ScrollFrameMorph.uber.copyRecordingReferences.call(this, dict);
+  c = ScrollFrameMorph.__super__.copyRecordingReferences.call(this, dict);
   if (c.contents && dict[this.contents]) {
     c.contents = dict[this.contents];
   }
@@ -7415,7 +7313,7 @@ ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
 
 ScrollFrameMorph.prototype.developersMenu = function() {
   var menu;
-  menu = ScrollFrameMorph.uber.developersMenu.call(this);
+  menu = ScrollFrameMorph.__super__.developersMenu.call(this);
   if (this.isTextLineWrapping) {
     menu.addItem("auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff");
   } else {
@@ -7428,7 +7326,9 @@ ScrollFrameMorph.prototype.toggleTextLineWrapping = function() {
   return this.isTextLineWrapping = !this.isTextLineWrapping;
 };
 
-ListMorph = (function() {
+ListMorph = (function(_super) {
+
+  __extends(ListMorph, _super);
 
   function ListMorph(elements, labelGetter, format) {
     this.init(elements || [], labelGetter || function(element) {
@@ -7444,16 +7344,10 @@ ListMorph = (function() {
 
   return ListMorph;
 
-})();
-
-ListMorph.prototype = new ScrollFrameMorph();
-
-ListMorph.prototype.constructor = ListMorph;
-
-ListMorph.uber = ScrollFrameMorph.prototype;
+})(ScrollFrameMorph);
 
 ListMorph.prototype.init = function(elements, labelGetter, format) {
-  ListMorph.uber.init.call(this);
+  ListMorph.__super__.init.call(this);
   this.contents.acceptsDrops = false;
   this.color = new Color(255, 255, 255);
   this.hBar.alpha = 0.6;
@@ -7511,5 +7405,5 @@ ListMorph.prototype.setExtent = function(aPoint) {
   if (nb.bottom() > lb.bottom() && nb.height() <= lb.height()) {
     this.listContents.setBottom(nb.bottom());
   }
-  return ListMorph.uber.setExtent.call(this, aPoint);
+  return ListMorph.__super__.setExtent.call(this, aPoint);
 };

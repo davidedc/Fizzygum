@@ -1,18 +1,13 @@
 # MouseSensorMorph ////////////////////////////////////////////////////
 
 # for demo and debuggin purposes only, to be removed later
-class MouseSensorMorph
+class MouseSensorMorph extends BoxMorph
   constructor: (edge, border, borderColor) ->
     @init edge, border, borderColor
 
-# MouseSensorMorph inherits from BoxMorph:
-MouseSensorMorph:: = new BoxMorph()
-MouseSensorMorph::constructor = MouseSensorMorph
-MouseSensorMorph.uber = BoxMorph::
-
 # MouseSensorMorph instance creation:
 MouseSensorMorph::init = (edge, border, borderColor) ->
-  MouseSensorMorph.uber.init.call this
+  super
   @edge = edge or 4
   @border = border or 2
   @color = new Color(255, 255, 255)

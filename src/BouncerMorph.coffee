@@ -2,20 +2,15 @@
 
 # I am a Demo of a stepping custom Morph
 
-class BouncerMorph
+class BouncerMorph extends Morph
   constructor: () ->
     @init()
-
-# Bouncers inherit from Morph:
-BouncerMorph:: = new Morph()
-BouncerMorph::constructor = BouncerMorph
-BouncerMorph.uber = Morph::
 
 # BouncerMorph instance creation:
 
 # BouncerMorph initialization:
 BouncerMorph::init = (type, speed) ->
-  BouncerMorph.uber.init.call this
+  super()
   @fps = 50
   
   # additional properties:

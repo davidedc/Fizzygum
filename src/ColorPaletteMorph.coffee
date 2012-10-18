@@ -1,17 +1,12 @@
 # ColorPaletteMorph ///////////////////////////////////////////////////
 
-class ColorPaletteMorph
+class ColorPaletteMorph extends Morph
   constructor: (target, sizePoint) ->
     @init target or null, sizePoint or new Point(80, 50)
 
-# ColorPaletteMorph inherits from Morph:
-ColorPaletteMorph:: = new Morph()
-ColorPaletteMorph::constructor = ColorPaletteMorph
-ColorPaletteMorph.uber = Morph::
-
 # ColorPaletteMorph instance creation:
 ColorPaletteMorph::init = (target, size) ->
-  ColorPaletteMorph.uber.init.call this
+  super()
   @target = target
   @targetSetter = "color"
   @silentSetExtent size
@@ -62,14 +57,14 @@ ColorPaletteMorph::updateTarget = ->
 ColorPaletteMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = ColorPaletteMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c
 
 
 # ColorPaletteMorph menu:
 ColorPaletteMorph::developersMenu = ->
-  menu = ColorPaletteMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
   menu

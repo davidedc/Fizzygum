@@ -2,15 +2,10 @@
 
 # I am a resize / move handle that can be attached to any Morph
 
-class HandleMorph
+class HandleMorph extends Morph
   constructor: (target, minX, minY, insetX, insetY, type) ->
     # if insetY is missing, it will be the same as insetX
     @init target, minX, minY, insetX, insetY, type
-
-# HandleMorph inherits from Morph:
-HandleMorph:: = new Morph()
-HandleMorph::constructor = HandleMorph
-HandleMorph.uber = Morph::
 
 # HandleMorph instance creation:
 HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
@@ -19,7 +14,7 @@ HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
   @minExtent = new Point(minX or 0, minY or 0)
   @inset = new Point(insetX or 0, insetY or insetX or 0)
   @type = type or "resize" # can also be 'move'
-  HandleMorph.uber.init.call this
+  super()
   @color = new Color(255, 255, 255)
   @isDraggable = false
   @noticesTransparentClick = true
@@ -155,7 +150,7 @@ HandleMorph::mouseLeave = ->
 HandleMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c
 

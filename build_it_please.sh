@@ -1,4 +1,5 @@
 rm src/morphee-coffee.coffee
+rm build/*
 #cat src/*.coffee >> src/morphee-coffee.coffee
 
 cat src/morphicVersion.coffee >> src/morphee-coffee.coffee

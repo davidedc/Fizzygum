@@ -2,15 +2,10 @@
 
 # I am a multi-line, word-wrapping String
 
-class TextMorph
+class TextMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
     @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
 
-
-# TextMorph inherits from Morph:
-TextMorph:: = new Morph()
-TextMorph::constructor = TextMorph
-TextMorph.uber = Morph::
 
 # TextMorph instance creation:
 TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
@@ -44,7 +39,7 @@ TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fo
   @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
-  TextMorph.uber.init.call this
+  super()
   
   # override inherited properites:
   @color = new Color(0, 0, 0)
@@ -370,7 +365,7 @@ TextMorph::disableSelecting = ->
 
 # TextMorph menus:
 TextMorph::developersMenu = ->
-  menu = TextMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->

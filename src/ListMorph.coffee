@@ -1,6 +1,6 @@
 # ListMorph ///////////////////////////////////////////////////////////
 
-class ListMorph
+class ListMorph extends ScrollFrameMorph
   constructor: (elements, labelGetter, format) ->
   
   #
@@ -26,11 +26,8 @@ class ListMorph
       element.toString()
     , format or []
 
-ListMorph:: = new ScrollFrameMorph()
-ListMorph::constructor = ListMorph
-ListMorph.uber = ScrollFrameMorph::
 ListMorph::init = (elements, labelGetter, format) ->
-  ListMorph.uber.init.call this
+  super()
   @contents.acceptsDrops = false
   @color = new Color(255, 255, 255)
   @hBar.alpha = 0.6
@@ -73,4 +70,4 @@ ListMorph::setExtent = (aPoint) ->
   nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
   @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
   @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-  ListMorph.uber.setExtent.call this, aPoint
+  super aPoint

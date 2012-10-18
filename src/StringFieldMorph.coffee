@@ -1,13 +1,9 @@
 # StringFieldMorph ////////////////////////////////////////////////////
 
-class StringFieldMorph
+class StringFieldMorph extends FrameMorph
   constructor: (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
     @init defaultContents or "", minWidth or 100, fontSize or 12, fontStyle or "sans-serif", bold or false, italic or false, isNumeric
 
-# StringFieldMorph inherit from FrameMorph:
-StringFieldMorph:: = new FrameMorph()
-StringFieldMorph::constructor = StringFieldMorph
-StringFieldMorph.uber = FrameMorph::
 StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
   @defaultContents = defaultContents
   @minWidth = minWidth
@@ -17,7 +13,7 @@ StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, 
   @isItalic = italic
   @isNumeric = isNumeric or false
   @text = null
-  StringFieldMorph.uber.init.call this
+  super()
   @color = new Color(255, 255, 255)
   @isEditable = true
   @acceptsDrops = false
@@ -38,7 +34,7 @@ StringFieldMorph::drawNew = ->
   @text.isDraggable = false
   @text.enableSelecting()
   @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
-  StringFieldMorph.uber.drawNew.call this
+  super()
   @add @text
 
 StringFieldMorph::string = ->
@@ -52,6 +48,6 @@ StringFieldMorph::mouseClickLeft = ->
 StringFieldMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = StringFieldMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.text = (dict[@text])  if c.text and dict[@text]
   c

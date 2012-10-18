@@ -1,16 +1,11 @@
 # MenuMorph ///////////////////////////////////////////////////////////
 
-class MenuMorph
+class MenuMorph extends BoxMorph
   constructor: (target, title, environment, fontSize) ->
     @init target, title, environment, fontSize
 
 
 # MenuMorph: referenced constructors
-
-# MenuMorph inherits from BoxMorph:
-MenuMorph:: = new BoxMorph()
-MenuMorph::constructor = MenuMorph
-MenuMorph.uber = BoxMorph::
 
 # MenuMorph instance creation:
 MenuMorph::init = (target, title, environment, fontSize) ->
@@ -26,7 +21,7 @@ MenuMorph::init = (target, title, environment, fontSize) ->
   @isListContents = false
   
   # initialize inherited properties:
-  MenuMorph.uber.init.call this
+  super()
   
   # override inherited properties:
   @isDraggable = false
@@ -106,7 +101,7 @@ MenuMorph::drawNew = ->
   fb = @fullBounds()
   @silentSetExtent fb.extent().add(4)
   @adjustWidths()
-  MenuMorph.uber.drawNew.call this
+  super()
 
 MenuMorph::maxWidth = ->
   w = 0

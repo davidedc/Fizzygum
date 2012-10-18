@@ -2,14 +2,9 @@
 
 # I automatically determine my bounds
 
-class MenuItemMorph
+class MenuItemMorph extends TriggerMorph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, color
-
-# MenuItemMorph inherits from TriggerMorph:
-MenuItemMorph:: = new TriggerMorph()
-MenuItemMorph::constructor = MenuItemMorph
-MenuItemMorph.uber = TriggerMorph::
 
 # MenuItemMorph instance creation:
 MenuItemMorph::createLabel = ->

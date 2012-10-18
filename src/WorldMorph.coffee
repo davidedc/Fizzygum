@@ -1,5 +1,5 @@
 # WorldMorph //////////////////////////////////////////////////////////
-class WorldMorph
+class WorldMorph extends FrameMorph
   constructor: (aCanvas, fillPage) ->
     @init aCanvas, fillPage
 
@@ -7,14 +7,12 @@ class WorldMorph
 
 # WorldMorph inherits from FrameMorph:
 WorldMorph:: = new FrameMorph()
-WorldMorph::constructor = WorldMorph
-WorldMorph.uber = FrameMorph::
 
 # WorldMorph instance creation:
 
 # WorldMorph initialization:
 WorldMorph::init = (aCanvas, fillPage) ->
-  WorldMorph.uber.init.call this
+  super()
   @color = new Color(205, 205, 205) # (130, 130, 130)
   @alpha = 1
   @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
@@ -42,7 +40,7 @@ WorldMorph::init = (aCanvas, fillPage) ->
 WorldMorph::drawNew = ->
   
   # initialize my surface property
-  WorldMorph.uber.drawNew.call this
+  super()
   @trailsCanvas = newCanvas(@extent())
 
 

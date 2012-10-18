@@ -4,19 +4,15 @@
 
 # HandMorph inherits from Morph:
 
-class HandMorph
+class HandMorph extends Morph
   constructor: (aWorld) ->
     @init aWorld
-
-HandMorph:: = new Morph()
-HandMorph::constructor = HandMorph
-HandMorph.uber = Morph::
 
 # HandMorph instance creation:
 
 # HandMorph initialization:
 HandMorph::init = (aWorld) ->
-  HandMorph.uber.init.call this
+  super()
   @bounds = new Rectangle()
   
   # additional properties:
@@ -224,7 +220,7 @@ HandleMorph::mouseLeave = ->
 
 HandleMorph::copyRecordingReferences = (dict) ->
   c = undefined
-  c = HandleMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = dict[@target]  if c.target and dict[@target]
   c
 
@@ -364,7 +360,7 @@ HandMorph::destroyTemporaries = ->
 # HandMorph dragging optimization
 HandMorph::moveBy = (delta) ->
   Morph::trackChanges = false
-  HandMorph.uber.moveBy.call this, delta
+  super delta
   Morph::trackChanges = true
   @fullChanged()
 

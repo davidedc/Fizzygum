@@ -1,13 +1,9 @@
 # SliderMorph ///////////////////////////////////////////////////
 
-class SliderMorph
+class SliderMorph extends CircleBoxMorph
   constructor: (start, stop, value, size, orientation, color) ->
     @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
 
-# SliderMorph inherits from CircleBoxMorph:
-SliderMorph:: = new CircleBoxMorph()
-SliderMorph::constructor = SliderMorph
-SliderMorph.uber = CircleBoxMorph::
 SliderMorph::init = (start, stop, value, size, orientation, color) ->
   @target = null
   @action = null
@@ -21,7 +17,7 @@ SliderMorph::init = (start, stop, value, size, orientation, color) ->
   @button.color = new Color(200, 200, 200)
   @button.highlightColor = new Color(210, 210, 255)
   @button.pressColor = new Color(180, 180, 255)
-  SliderMorph.uber.init.call this, orientation
+  super orientation
   @add @button
   @alpha = 0.3
   @color = color or new Color(0, 0, 0)
@@ -47,7 +43,7 @@ SliderMorph::drawNew = ->
   bh = undefined
   posX = undefined
   posY = undefined
-  SliderMorph.uber.drawNew.call this
+  super()
   @button.orientation = @orientation
   if @orientation is "vertical"
     bw = @width() - 2
@@ -86,7 +82,7 @@ SliderMorph::updateTarget = ->
 SliderMorph::copyRecordingReferences = (dict) ->
   
   # inherited, see comment in Morph
-  c = SliderMorph.uber.copyRecordingReferences.call(this, dict)
+  c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c.button = (dict[@button])  if c.button and dict[@button]
   c
@@ -94,7 +90,7 @@ SliderMorph::copyRecordingReferences = (dict) ->
 
 # SliderMorph menu:
 SliderMorph::developersMenu = ->
-  menu = SliderMorph.uber.developersMenu.call(this)
+  menu = super()
   menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
   menu.addItem "floor...", (->
     @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
@@ -190,7 +186,7 @@ SliderMorph::setTargetSetter = ->
 
 SliderMorph::numericalSetters = ->
   # for context menu demo purposes
-  list = SliderMorph.uber.numericalSetters.call(this)
+  list = super()
   list.push "setStart", "setStop", "setSize"
   list
 

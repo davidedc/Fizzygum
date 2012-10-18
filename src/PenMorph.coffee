@@ -2,16 +2,11 @@
 
 # I am a simple LOGO-wise turtle.
 
-class PenMorph
+class PenMorph extends Morph
   constructor: () ->
     @init()
 
 # PenMorph: referenced constructors
-
-# PenMorph inherits from Morph:
-PenMorph:: = new Morph()
-PenMorph::constructor = PenMorph
-PenMorph.uber = Morph::
 
 # PenMorph instance creation:
 PenMorph::init = ->
@@ -23,7 +18,7 @@ PenMorph::init = ->
   @heading = 0
   @isDown = true
   @size = 1
-  HandleMorph.uber.init.call this
+  super()
   @setExtent new Point(size, size)
 
 
