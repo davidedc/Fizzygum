@@ -6084,34 +6084,36 @@ WorldMorph::togglePreferences = ->
     MorphicPreferences = standardSettings
 # SliderButtonMorph ///////////////////////////////////////////////////
 
-class SliderButtonMorph extends CircleBoxMorph
+class SliderButtonMorph
   constructor: (orientation) ->
     @init orientation
 
 # SliderButtonMorph inherits from CircleBoxMorph:
-# SliderButtonMorph:: = new CircleBoxMorph()
+SliderButtonMorph:: = new CircleBoxMorph()
+SliderButtonMorph::constructor = SliderButtonMorph
+SliderButtonMorph.uber = CircleBoxMorph::
 SliderButtonMorph::init = (orientation) ->
   @color = new Color(80, 80, 80)
   @highlightColor = new Color(90, 90, 140)
   @pressColor = new Color(80, 80, 160)
   @is3D = true
   @hasMiddleDip = true
-  super orientation
+  SliderButtonMorph.uber.init.call this, orientation
 
 SliderButtonMorph::autoOrientation = ->
   nop()
 
 SliderButtonMorph::drawNew = ->
   colorBak = @color.copy()
-  super
+  SliderButtonMorph.uber.drawNew.call this
   @drawEdges()  if @is3D
   @normalImage = @image
   @color = @highlightColor.copy()
-  super
+  SliderButtonMorph.uber.drawNew.call this
   @drawEdges()  if @is3D
   @highlightImage = @image
   @color = @pressColor.copy()
-  super
+  SliderButtonMorph.uber.drawNew.call this
   @drawEdges()  if @is3D
   @pressImage = @image
   @color = colorBak
