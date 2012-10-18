@@ -1,0 +1,374 @@
+<!DOCTYPE html>  <html> <head>   <title>HandMorph.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="BlinkerMorph.html">                 BlinkerMorph.coffee               </a>                                           <a class="source" href="BouncerMorph.html">                 BouncerMorph.coffee               </a>                                           <a class="source" href="BoxMorph.html">                 BoxMorph.coffee               </a>                                           <a class="source" href="CircleBoxMorph.html">                 CircleBoxMorph.coffee               </a>                                           <a class="source" href="Color.html">                 Color.coffee               </a>                                           <a class="source" href="ColorPaletteMorph.html">                 ColorPaletteMorph.coffee               </a>                                           <a class="source" href="ColorPickerMorph.html">                 ColorPickerMorph.coffee               </a>                                           <a class="source" href="CursorMorph.html">                 CursorMorph.coffee               </a>                                           <a class="source" href="FrameMorph.html">                 FrameMorph.coffee               </a>                                           <a class="source" href="GrayPaletteMorph.html">                 GrayPaletteMorph.coffee               </a>                                           <a class="source" href="HandMorph.html">                 HandMorph.coffee               </a>                                           <a class="source" href="HandleMorph.html">                 HandleMorph.coffee               </a>                                           <a class="source" href="InspectorMorph.html">                 InspectorMorph.coffee               </a>                                           <a class="source" href="ListMorph.html">                 ListMorph.coffee               </a>                                           <a class="source" href="MenuItemMorph.html">                 MenuItemMorph.coffee               </a>                                           <a class="source" href="MenuMorph.html">                 MenuMorph.coffee               </a>                                           <a class="source" href="Morph.html">                 Morph.coffee               </a>                                           <a class="source" href="MorphicNode.html">                 MorphicNode.coffee               </a>                                           <a class="source" href="MouseSensorMorph.html">                 MouseSensorMorph.coffee               </a>                                           <a class="source" href="PenMorph.html">                 PenMorph.coffee               </a>                                           <a class="source" href="Point.html">                 Point.coffee               </a>                                           <a class="source" href="Rectangle.html">                 Rectangle.coffee               </a>                                           <a class="source" href="ScrollFrameMorph.html">                 ScrollFrameMorph.coffee               </a>                                           <a class="source" href="ShadowMorph.html">                 ShadowMorph.coffee               </a>                                           <a class="source" href="SliderButtonMorph.html">                 SliderButtonMorph.coffee               </a>                                           <a class="source" href="SliderMorph.html">                 SliderMorph.coffee               </a>                                           <a class="source" href="SpeechBubbleMorph.html">                 SpeechBubbleMorph.coffee               </a>                                           <a class="source" href="StringFieldMorph.html">                 StringFieldMorph.coffee               </a>                                           <a class="source" href="StringMorph.html">                 StringMorph.coffee               </a>                                           <a class="source" href="TextMorph.html">                 TextMorph.coffee               </a>                                           <a class="source" href="TriggerMorph.html">                 TriggerMorph.coffee               </a>                                           <a class="source" href="WorldMorph.html">                 WorldMorph.coffee               </a>                                           <a class="source" href="globalFunctions.html">                 globalFunctions.coffee               </a>                                           <a class="source" href="globalSettings.html">                 globalSettings.coffee               </a>                                           <a class="source" href="morphicVersion.html">                 morphicVersion.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               HandMorph.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>HandMorph ///////////////////////////////////////////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>I represent the Mouse cursor</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>HandMorph inherits from Morph:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">HandMorph</span> <span class="k">extends</span> <span class="nx">Morph</span>
+  <span class="nv">constructor: </span><span class="nf">(aWorld) -&gt;</span>
+    <span class="nx">@init</span> <span class="nx">aWorld</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>HandMorph instance creation:</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>HandMorph initialization:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::init = </span><span class="nf">(aWorld) -&gt;</span>
+  <span class="k">super</span><span class="p">()</span>
+  <span class="vi">@bounds = </span><span class="k">new</span> <span class="nx">Rectangle</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>additional properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@world = </span><span class="nx">aWorld</span>
+  <span class="vi">@mouseButton = </span><span class="kc">null</span>
+  <span class="vi">@mouseOverList = </span><span class="p">[]</span>
+  <span class="vi">@mouseDownMorph = </span><span class="kc">null</span>
+  <span class="vi">@morphToGrab = </span><span class="kc">null</span>
+  <span class="vi">@grabOrigin = </span><span class="kc">null</span>
+  <span class="vi">@temporaries = </span><span class="p">[]</span>
+  <span class="vi">@touchHoldTimeout = </span><span class="kc">null</span>
+
+<span class="nv">HandMorph::changed = </span><span class="o">-&gt;</span>
+  <span class="nv">b = </span><span class="kc">undefined</span>
+  <span class="k">if</span> <span class="nx">@world</span> <span class="o">isnt</span> <span class="kc">null</span>
+    <span class="nv">b = </span><span class="nx">@fullBounds</span><span class="p">()</span>
+    <span class="nx">@world</span><span class="p">.</span><span class="nx">broken</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">spread</span><span class="p">()</span>  <span class="nx">unless</span> <span class="nx">b</span><span class="p">.</span><span class="nx">extent</span><span class="p">().</span><span class="nx">eq</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">())</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>HandMorph navigation:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::morphAtPointer = </span><span class="o">-&gt;</span>
+  <span class="nv">morphs = </span><span class="nx">@world</span><span class="p">.</span><span class="nx">allChildren</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">reverse</span><span class="p">()</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nv">result = </span><span class="kc">null</span>
+  <span class="nx">morphs</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span>
+    <span class="nv">result = </span><span class="nx">m</span>  <span class="k">if</span> <span class="nx">m</span><span class="p">.</span><span class="nx">visibleBounds</span><span class="p">().</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span> <span class="o">and</span> <span class="nx">result</span> <span class="o">is</span> <span class="kc">null</span> <span class="o">and</span> <span class="nx">m</span><span class="p">.</span><span class="nx">isVisible</span> <span class="o">and</span> <span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">noticesTransparentClick</span> <span class="o">or</span> <span class="p">(</span><span class="o">not</span> <span class="nx">m</span><span class="p">.</span><span class="nx">isTransparentAt</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)))</span> <span class="o">and</span> <span class="p">(</span><span class="nx">m</span> <span class="o">not</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span><span class="p">)</span>
+
+  <span class="k">return</span> <span class="nx">result</span>  <span class="k">if</span> <span class="nx">result</span> <span class="o">isnt</span> <span class="kc">null</span>
+  <span class="nx">@world</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>alternative -  more elegant and possibly more
+performant - solution for morphAtPointer.
+Has some issues, commented out for now</p>
+
+<p>HandMorph.prototype.morphAtPointer = function () {
+var myself = this;
+return this.world.topMorphSuchThat(function (m) {
+    return m.visibleBounds().containsPoint(myself.bounds.origin) &amp;&amp;
+        m.isVisible &amp;&amp;
+        (m.noticesTransparentClick ||
+            (! m.isTransparentAt(myself.bounds.origin))) &amp;&amp;
+        (! (m instanceof ShadowMorph));
+});
+};</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::allMorphsAtPointer = </span><span class="o">-&gt;</span>
+  <span class="nv">morphs = </span><span class="nx">@world</span><span class="p">.</span><span class="nx">allChildren</span><span class="p">()</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nx">morphs</span><span class="p">.</span><span class="nx">filter</span> <span class="nf">(m) -&gt;</span>
+    <span class="nx">m</span><span class="p">.</span><span class="nx">isVisible</span> <span class="o">and</span> <span class="nx">m</span><span class="p">.</span><span class="nx">visibleBounds</span><span class="p">().</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>HandMorph dragging and dropping:</p>
+
+<p>drag 'n' drop events, method(arg) -> receiver:</p>
+
+<pre><code>prepareToBeGrabbed(handMorph) -&gt; grabTarget
+reactToGrabOf(grabbedMorph) -&gt; oldParent
+wantsDropOf(morphToDrop) -&gt;  newParent
+justDropped(handMorph) -&gt; droppedMorph
+reactToDropOf(droppedMorph, handMorph) -&gt; newParent
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::dropTargetFor = </span><span class="nf">(aMorph) -&gt;</span>
+  <span class="nv">target = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+  <span class="nv">target = </span><span class="nx">target</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">target</span><span class="p">.</span><span class="nx">wantsDropOf</span><span class="p">(</span><span class="nx">aMorph</span><span class="p">)</span>
+  <span class="nx">target</span>
+
+<span class="nv">HandMorph::grab = </span><span class="nf">(aMorph) -&gt;</span>
+  <span class="nv">oldParent = </span><span class="nx">aMorph</span><span class="p">.</span><span class="nx">parent</span>
+  <span class="k">return</span> <span class="kc">null</span>  <span class="k">if</span> <span class="nx">aMorph</span> <span class="k">instanceof</span> <span class="nx">WorldMorph</span>
+  <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span>
+    <span class="nx">@world</span><span class="p">.</span><span class="nx">stopEditing</span><span class="p">()</span>
+    <span class="vi">@grabOrigin = </span><span class="nx">aMorph</span><span class="p">.</span><span class="nx">situation</span><span class="p">()</span>
+    <span class="nx">aMorph</span><span class="p">.</span><span class="nx">addShadow</span><span class="p">()</span>
+    <span class="nx">aMorph</span><span class="p">.</span><span class="nx">prepareToBeGrabbed</span> <span class="k">this</span>  <span class="k">if</span> <span class="nx">aMorph</span><span class="p">.</span><span class="nx">prepareToBeGrabbed</span>
+    <span class="nx">@add</span> <span class="nx">aMorph</span>
+    <span class="nx">@changed</span><span class="p">()</span>
+    <span class="nx">oldParent</span><span class="p">.</span><span class="nx">reactToGrabOf</span> <span class="nx">aMorph</span>  <span class="k">if</span> <span class="nx">oldParent</span> <span class="o">and</span> <span class="nx">oldParent</span><span class="p">.</span><span class="nx">reactToGrabOf</span>
+
+<span class="nv">HandMorph::drop = </span><span class="o">-&gt;</span>
+  <span class="nv">target = </span><span class="kc">undefined</span>
+  <span class="nv">morphToDrop = </span><span class="kc">undefined</span>
+  <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="nv">morphToDrop = </span><span class="nx">@children</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nv">target = </span><span class="nx">@dropTargetFor</span><span class="p">(</span><span class="nx">morphToDrop</span><span class="p">)</span>
+    <span class="nx">@changed</span><span class="p">()</span>
+    <span class="nx">target</span><span class="p">.</span><span class="nx">add</span> <span class="nx">morphToDrop</span>
+    <span class="nx">morphToDrop</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+    <span class="nx">morphToDrop</span><span class="p">.</span><span class="nx">removeShadow</span><span class="p">()</span>
+    <span class="vi">@children = </span><span class="p">[]</span>
+    <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">()</span>
+    <span class="nx">morphToDrop</span><span class="p">.</span><span class="nx">justDropped</span> <span class="k">this</span>  <span class="k">if</span> <span class="nx">morphToDrop</span><span class="p">.</span><span class="nx">justDropped</span>
+    <span class="nx">target</span><span class="p">.</span><span class="nx">reactToDropOf</span> <span class="nx">morphToDrop</span><span class="p">,</span> <span class="k">this</span>  <span class="k">if</span> <span class="nx">target</span><span class="p">.</span><span class="nx">reactToDropOf</span>
+    <span class="vi">@dragOrigin = </span><span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>HandMorph event dispatching:</p>
+
+<p>mouse events:</p>
+
+<pre><code>mouseDownLeft
+mouseDownRight
+mouseClickLeft
+mouseClickRight
+mouseEnter
+mouseLeave
+mouseEnterDragging
+mouseLeaveDragging
+mouseMove
+mouseScroll
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::processMouseDown = </span><span class="nf">(event) -&gt;</span>
+  <span class="nv">morph = </span><span class="kc">undefined</span>
+  <span class="nv">expectedClick = </span><span class="kc">undefined</span>
+  <span class="nv">actualClick = </span><span class="kc">undefined</span>
+  <span class="nx">@destroyTemporaries</span><span class="p">()</span>
+  <span class="vi">@morphToGrab = </span><span class="kc">null</span>
+  <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="nx">@drop</span><span class="p">()</span>
+    <span class="vi">@mouseButton = </span><span class="kc">null</span>
+  <span class="k">else</span>
+    <span class="nv">morph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeMenu</span>
+      <span class="nx">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">allParents</span><span class="p">(),</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeMenu</span><span class="p">)</span>
+        <span class="nx">@world</span><span class="p">.</span><span class="nx">activeMenu</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+      <span class="k">else</span>
+        <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
+    <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">morph</span> <span class="o">isnt</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span>  <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span>
+    <span class="nx">@world</span><span class="p">.</span><span class="nx">stopEditing</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">morph</span> <span class="o">isnt</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">target</span>  <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">cursor</span>
+    <span class="vi">@morphToGrab = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">rootForGrab</span><span class="p">()</span>  <span class="nx">unless</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseMove</span>
+    <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">button</span> <span class="o">is</span> <span class="mi">2</span> <span class="o">or</span> <span class="nx">event</span><span class="p">.</span><span class="nx">ctrlKey</span>
+      <span class="vi">@mouseButton = </span><span class="s">&quot;right&quot;</span>
+      <span class="nv">actualClick = </span><span class="s">&quot;mouseDownRight&quot;</span>
+      <span class="nv">expectedClick = </span><span class="s">&quot;mouseClickRight&quot;</span>
+    <span class="k">else</span>
+      <span class="vi">@mouseButton = </span><span class="s">&quot;left&quot;</span>
+      <span class="nv">actualClick = </span><span class="s">&quot;mouseDownLeft&quot;</span>
+      <span class="nv">expectedClick = </span><span class="s">&quot;mouseClickLeft&quot;</span>
+    <span class="vi">@mouseDownMorph = </span><span class="nx">morph</span>
+    <span class="vi">@mouseDownMorph = </span><span class="nx">@mouseDownMorph</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">@mouseDownMorph</span><span class="p">[</span><span class="nx">expectedClick</span><span class="p">]</span>
+    <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">morph</span><span class="p">[</span><span class="nx">actualClick</span><span class="p">]</span>
+    <span class="nx">morph</span><span class="p">[</span><span class="nx">actualClick</span><span class="p">]</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
+
+<span class="nv">HandMorph::processTouchStart = </span><span class="nf">(event) -&gt;</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
+  <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">touches</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>simulate mouseRightClick</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@touchHoldTimeout = </span><span class="nx">setInterval</span><span class="p">(</span><span class="o">-&gt;</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">processMouseDown</span> <span class="nv">button: </span><span class="mi">2</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">processMouseUp</span> <span class="nv">button: </span><span class="mi">2</span>
+      <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+      <span class="nx">clearInterval</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">touchHoldTimeout</span>
+    <span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+    <span class="nx">@processMouseMove</span> <span class="nx">event</span><span class="p">.</span><span class="nx">touches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># update my position</span>
+    <span class="nx">@processMouseDown</span> <span class="nv">button: </span><span class="mi">0</span>
+    <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+
+<span class="nv">HandMorph::processTouchMove = </span><span class="nf">(event) -&gt;</span>
+  <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">touches</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
+    <span class="nv">touch = </span><span class="nx">event</span><span class="p">.</span><span class="nx">touches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="nx">@processMouseMove</span> <span class="nx">touch</span>
+    <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
+
+<span class="nv">HandMorph::processTouchEnd = </span><span class="nf">(event) -&gt;</span>
+  <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
+  <span class="nx">nop</span> <span class="nx">event</span>
+  <span class="nx">@processMouseUp</span> <span class="nv">button: </span><span class="mi">0</span>
+
+<span class="nv">HandMorph::processMouseUp = </span><span class="o">-&gt;</span>
+  <span class="nv">morph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+  <span class="nv">context = </span><span class="kc">undefined</span>
+  <span class="nv">contextMenu = </span><span class="kc">undefined</span>
+  <span class="nv">expectedClick = </span><span class="kc">undefined</span>
+  <span class="nx">@destroyTemporaries</span><span class="p">()</span>
+  <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+    <span class="nx">@drop</span><span class="p">()</span>
+  <span class="k">else</span>
+    <span class="k">if</span> <span class="nx">@mouseButton</span> <span class="o">is</span> <span class="s">&quot;left&quot;</span>
+      <span class="nv">expectedClick = </span><span class="s">&quot;mouseClickLeft&quot;</span>
+    <span class="k">else</span>
+      <span class="nv">expectedClick = </span><span class="s">&quot;mouseClickRight&quot;</span>
+      <span class="k">if</span> <span class="nx">@mouseButton</span>
+        <span class="nv">context = </span><span class="nx">morph</span>
+        <span class="nv">contextMenu = </span><span class="nx">context</span><span class="p">.</span><span class="nx">contextMenu</span><span class="p">()</span>
+        <span class="k">while</span> <span class="p">(</span><span class="o">not</span> <span class="nx">contextMenu</span><span class="p">)</span> <span class="o">and</span> <span class="nx">context</span><span class="p">.</span><span class="nx">parent</span>
+          <span class="nv">context = </span><span class="nx">context</span><span class="p">.</span><span class="nx">parent</span>
+          <span class="nv">contextMenu = </span><span class="nx">context</span><span class="p">.</span><span class="nx">contextMenu</span><span class="p">()</span>
+        <span class="nx">contextMenu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span>  <span class="k">if</span> <span class="nx">contextMenu</span>
+    <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">morph</span><span class="p">[</span><span class="nx">expectedClick</span><span class="p">]</span>
+    <span class="nx">morph</span><span class="p">[</span><span class="nx">expectedClick</span><span class="p">]</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
+  <span class="vi">@mouseButton = </span><span class="kc">null</span>
+
+<span class="nv">HandleMorph::rootForGrab = </span><span class="o">-&gt;</span>
+  <span class="k">this</span>
+
+<span class="nv">HandleMorph::mouseEnter = </span><span class="o">-&gt;</span>
+  <span class="vi">@image = </span><span class="nx">@highlightImage</span>
+  <span class="nx">@changed</span><span class="p">()</span>
+
+<span class="nv">HandleMorph::mouseLeave = </span><span class="o">-&gt;</span>
+  <span class="vi">@image = </span><span class="nx">@normalImage</span>
+  <span class="nx">@changed</span><span class="p">()</span>
+
+<span class="nv">HandleMorph::copyRecordingReferences = </span><span class="nf">(dict) -&gt;</span>
+  <span class="nv">c = </span><span class="kc">undefined</span>
+  <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>
+  <span class="nv">c.target = </span><span class="nx">dict</span><span class="p">[</span><span class="nx">@target</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">target</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@target</span><span class="p">]</span>
+  <span class="nx">c</span>
+
+<span class="nv">HandleMorph::attach = </span><span class="o">-&gt;</span>
+  <span class="nv">choices = </span><span class="kc">undefined</span>
+  <span class="nv">menu = </span><span class="kc">undefined</span>
+  <span class="nv">myself = </span><span class="kc">undefined</span>
+  <span class="nv">choices = </span><span class="nx">@overlappedMorphs</span><span class="p">()</span>
+  <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">&quot;choose target:&quot;</span><span class="p">)</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">-&gt;</span>
+      <span class="nv">myself.isDraggable = </span><span class="kc">false</span>
+      <span class="nv">myself.target = </span><span class="nx">each</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+      <span class="nv">myself.noticesTransparentClick = </span><span class="kc">true</span>
+
+
+  <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+<span class="nv">HandMorph::processMouseScroll = </span><span class="nf">(event) -&gt;</span>
+  <span class="nv">morph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+  <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">while</span> <span class="nx">morph</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseScroll</span>
+  <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseScroll</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">detail</span> <span class="o">/</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s">&quot;wheelDeltaY&quot;</span><span class="p">)</span> <span class="k">then</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDeltaY</span> <span class="o">/</span> <span class="mi">120</span> <span class="k">else</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDelta</span> <span class="o">/</span> <span class="mi">120</span><span class="p">)),</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDeltaX</span> <span class="o">/</span> <span class="mi">120</span> <span class="o">or</span> <span class="mi">0</span>  <span class="k">if</span> <span class="nx">morph</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>drop event:</p>
+
+<pre><code>   droppedImage
+   droppedAudio
+   droppedText
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::processDrop = </span><span class="nf">(event) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>find out whether an external image or audio file was dropped
+   onto the world canvas, turn it into an offscreen canvas or audio
+   element and dispatch the</p>
+
+<pre><code>   droppedImage(canvas, name)
+   droppedAudio(audio, name)
+</code></pre>
+
+<p>events to interested Morphs at the mouse pointer</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">files = </span><span class="p">(</span><span class="k">if</span> <span class="nx">event</span> <span class="k">instanceof</span> <span class="nx">FileList</span> <span class="k">then</span> <span class="nx">event</span> <span class="k">else</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">files</span> <span class="o">||</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span><span class="p">.</span><span class="nx">files</span><span class="p">))</span>
+  <span class="nv">file = </span><span class="kc">undefined</span>
+  <span class="nv">txt = </span><span class="p">(</span><span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span> <span class="k">then</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span><span class="p">.</span><span class="nx">getData</span><span class="p">(</span><span class="s">&quot;Text/HTML&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">null</span><span class="p">)</span>
+  <span class="nv">src = </span><span class="kc">undefined</span>
+  <span class="nv">targetDrop = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+  <span class="nv">img = </span><span class="k">new</span> <span class="nx">Image</span><span class="p">()</span>
+  <span class="nv">canvas = </span><span class="kc">undefined</span>
+  <span class="nv">i = </span><span class="kc">undefined</span>
+
+  <span class="nv">readImage = </span><span class="nf">(aFile) -&gt;</span>
+    <span class="nv">pic = </span><span class="k">new</span> <span class="nx">Image</span><span class="p">()</span>
+    <span class="nv">frd = </span><span class="k">new</span> <span class="nx">FileReader</span><span class="p">()</span>
+    <span class="nv">targetDrop = </span><span class="nx">targetDrop</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedImage</span>
+    <span class="nv">pic.onload = </span><span class="o">-&gt;</span>
+      <span class="nv">canvas = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">pic</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">pic</span><span class="p">.</span><span class="nx">height</span><span class="p">))</span>
+      <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">).</span><span class="nx">drawImage</span> <span class="nx">pic</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+      <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedImage</span> <span class="nx">canvas</span><span class="p">,</span> <span class="nx">aFile</span><span class="p">.</span><span class="nx">name</span>
+
+    <span class="nv">frd = </span><span class="k">new</span> <span class="nx">FileReader</span><span class="p">()</span>
+    <span class="nv">frd.onloadend = </span><span class="nf">(e) -&gt;</span>
+      <span class="nv">pic.src = </span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span>
+
+    <span class="nx">frd</span><span class="p">.</span><span class="nx">readAsDataURL</span> <span class="nx">aFile</span>
+  <span class="nv">readAudio = </span><span class="nf">(aFile) -&gt;</span>
+    <span class="nv">snd = </span><span class="k">new</span> <span class="nx">Audio</span><span class="p">()</span>
+    <span class="nv">frd = </span><span class="k">new</span> <span class="nx">FileReader</span><span class="p">()</span>
+    <span class="nv">targetDrop = </span><span class="nx">targetDrop</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedAudio</span>
+    <span class="nv">frd.onloadend = </span><span class="nf">(e) -&gt;</span>
+      <span class="nv">snd.src = </span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span>
+      <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedAudio</span> <span class="nx">snd</span><span class="p">,</span> <span class="nx">aFile</span><span class="p">.</span><span class="nx">name</span>
+
+    <span class="nx">frd</span><span class="p">.</span><span class="nx">readAsDataURL</span> <span class="nx">aFile</span>
+  <span class="nv">readText = </span><span class="nf">(aFile) -&gt;</span>
+    <span class="nv">frd = </span><span class="k">new</span> <span class="nx">FileReader</span><span class="p">()</span>
+    <span class="nv">targetDrop = </span><span class="nx">targetDrop</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedText</span>
+    <span class="nv">frd.onloadend = </span><span class="nf">(e) -&gt;</span>
+      <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedText</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span><span class="p">,</span> <span class="nx">aFile</span><span class="p">.</span><span class="nx">name</span>
+
+    <span class="nx">frd</span><span class="p">.</span><span class="nx">readAsText</span> <span class="nx">aFile</span>
+  <span class="nv">parseImgURL = </span><span class="nf">(html) -&gt;</span>
+    <span class="nv">url = </span><span class="s">&quot;&quot;</span>
+    <span class="nv">i = </span><span class="kc">undefined</span>
+    <span class="nv">c = </span><span class="kc">undefined</span>
+    <span class="nv">start = </span><span class="nx">html</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;&lt;img src=\&quot;&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">null</span>  <span class="k">if</span> <span class="nx">start</span> <span class="o">is</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="nx">start</span> <span class="o">+=</span> <span class="mi">10</span>
+    <span class="nv">i = </span><span class="nx">start</span>
+    <span class="k">while</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">html</span><span class="p">.</span><span class="nx">length</span>
+      <span class="nv">c = </span><span class="nx">html</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+      <span class="k">return</span> <span class="nx">url</span>  <span class="k">if</span> <span class="nx">c</span> <span class="o">is</span> <span class="s">&quot;\&quot;&quot;</span>
+      <span class="nv">url = </span><span class="nx">url</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span>
+      <span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="kc">null</span>
+  <span class="k">if</span> <span class="nx">files</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="nv">i = </span><span class="mi">0</span>
+    <span class="k">while</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">files</span><span class="p">.</span><span class="nx">length</span>
+      <span class="nv">file = </span><span class="nx">files</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;image&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
+        <span class="nx">readImage</span> <span class="nx">file</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;audio&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
+        <span class="nx">readAudio</span> <span class="nx">file</span>
+      <span class="k">else</span> <span class="nx">readText</span> <span class="nx">file</span>  <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
+      <span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="nx">txt</span>
+    <span class="nv">targetDrop = </span><span class="nx">targetDrop</span><span class="p">.</span><span class="nx">parent</span>  <span class="nx">until</span> <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedImage</span>
+    <span class="nv">img = </span><span class="k">new</span> <span class="nx">Image</span><span class="p">()</span>
+    <span class="nv">img.onload = </span><span class="o">-&gt;</span>
+      <span class="nv">canvas = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">img</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">height</span><span class="p">))</span>
+      <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">).</span><span class="nx">drawImage</span> <span class="nx">img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+      <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedImage</span> <span class="nx">canvas</span>
+
+    <span class="nv">src = </span><span class="nx">parseImgURL</span><span class="p">(</span><span class="nx">txt</span><span class="p">)</span>
+    <span class="nv">img.src = </span><span class="nx">src</span>  <span class="k">if</span> <span class="nx">src</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>HandMorph tools</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::destroyTemporaries = </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>temporaries are just an array of morphs which will be deleted upon
+the next mouse click, or whenever another temporary Morph decides
+that it needs to remove them. The primary purpose of temporaries is
+to display tools tips of speech bubble help.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@temporaries</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(morph) -&gt;</span>
+    <span class="nx">morph</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+
+  <span class="vi">@temporaries = </span><span class="p">[]</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>HandMorph dragging optimization</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">HandMorph::moveBy = </span><span class="nf">(delta) -&gt;</span>
+  <span class="nv">Morph::trackChanges = </span><span class="kc">false</span>
+  <span class="k">super</span> <span class="nx">delta</span>
+  <span class="nv">Morph::trackChanges = </span><span class="kc">true</span>
+  <span class="nx">@fullChanged</span><span class="p">()</span>
+
+<span class="nv">HandMorph::processMouseMove = </span><span class="nf">(event) -&gt;</span>
+  <span class="nv">pos = </span><span class="kc">undefined</span>
+  <span class="nv">posInDocument = </span><span class="nx">getDocumentPositionOf</span><span class="p">(</span><span class="nx">@world</span><span class="p">.</span><span class="nx">worldCanvas</span><span class="p">)</span>
+  <span class="nv">mouseOverNew = </span><span class="kc">undefined</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nv">morph = </span><span class="kc">undefined</span>
+  <span class="nv">topMorph = </span><span class="kc">undefined</span>
+  <span class="nv">fb = </span><span class="kc">undefined</span>
+  <span class="nv">pos = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">pageX</span> <span class="o">-</span> <span class="nx">posInDocument</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">pageY</span> <span class="o">-</span> <span class="nx">posInDocument</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@setPosition</span> <span class="nx">pos</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>determine the new mouse-over-list:
+mouseOverNew = this.allMorphsAtPointer();</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseOverNew = </span><span class="nx">@morphAtPointer</span><span class="p">().</span><span class="nx">allParents</span><span class="p">()</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nx">@mouseButton</span> <span class="o">is</span> <span class="s">&quot;left&quot;</span><span class="p">)</span>
+    <span class="nv">topMorph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+    <span class="nv">morph = </span><span class="nx">topMorph</span><span class="p">.</span><span class="nx">rootForGrab</span><span class="p">()</span>
+    <span class="nx">topMorph</span><span class="p">.</span><span class="nx">mouseMove</span> <span class="nx">pos</span>  <span class="k">if</span> <span class="nx">topMorph</span><span class="p">.</span><span class="nx">mouseMove</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>if a morph is marked for grabbing, just grab it</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@morphToGrab</span>
+      <span class="k">if</span> <span class="nx">@morphToGrab</span><span class="p">.</span><span class="nx">isDraggable</span>
+        <span class="nv">morph = </span><span class="nx">@morphToGrab</span>
+        <span class="nx">@grab</span> <span class="nx">morph</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="nx">@morphToGrab</span><span class="p">.</span><span class="nx">isTemplate</span>
+        <span class="nv">morph = </span><span class="nx">@morphToGrab</span><span class="p">.</span><span class="nx">fullCopy</span><span class="p">()</span>
+        <span class="nv">morph.isTemplate = </span><span class="kc">false</span>
+        <span class="nv">morph.isDraggable = </span><span class="kc">true</span>
+        <span class="nx">@grab</span> <span class="nx">morph</span>
+        <span class="vi">@grabOrigin = </span><span class="nx">@morphToGrab</span><span class="p">.</span><span class="nx">situation</span><span class="p">()</span>
+      </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>if the mouse has left its fullBounds, center it</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nv">fb = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">fullBounds</span><span class="p">()</span>
+      <span class="nx">unless</span> <span class="nx">fb</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
+        <span class="vi">@bounds.origin = </span><span class="nx">fb</span><span class="p">.</span><span class="nx">center</span><span class="p">()</span>
+        <span class="nx">@grab</span> <span class="nx">morph</span>
+        <span class="nx">@setPosition</span> <span class="nx">pos</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>original, more cautious code for grabbing Morphs,
+retained in case of needing    to fall back:</p>
+
+<pre><code>if (morph === this.morphToGrab) {
+    if (morph.isDraggable) {
+        this.grab(morph);
+    } else if (morph.isTemplate) {
+        morph = morph.fullCopy();
+        morph.isTemplate = false;
+        morph.isDraggable = true;
+        this.grab(morph);
+    }
+}
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@mouseOverList</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(old) -&gt;</span>
+    <span class="nx">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">mouseOverNew</span><span class="p">,</span> <span class="nx">old</span><span class="p">)</span>
+      <span class="nx">old</span><span class="p">.</span><span class="nx">mouseLeave</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">old</span><span class="p">.</span><span class="nx">mouseLeave</span>
+      <span class="nx">old</span><span class="p">.</span><span class="nx">mouseLeaveDragging</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">old</span><span class="p">.</span><span class="nx">mouseLeaveDragging</span> <span class="o">and</span> <span class="nx">@mouseButton</span>
+
+  <span class="nx">mouseOverNew</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(newMorph) -&gt;</span>
+    <span class="nx">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">mouseOverList</span><span class="p">,</span> <span class="nx">newMorph</span><span class="p">)</span>
+      <span class="nx">newMorph</span><span class="p">.</span><span class="nx">mouseEnter</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">newMorph</span><span class="p">.</span><span class="nx">mouseEnter</span>
+      <span class="nx">newMorph</span><span class="p">.</span><span class="nx">mouseEnterDragging</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">newMorph</span><span class="p">.</span><span class="nx">mouseEnterDragging</span> <span class="o">and</span> <span class="nx">@mouseButton</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>autoScrolling support:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nx">newMorph</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
+            <span class="k">if</span> <span class="o">!</span><span class="nx">newMorph</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">insetBy</span><span class="p">(</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">scrollBarSize</span> <span class="o">*</span> <span class="mi">3</span><span class="p">).</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>
+                <span class="nx">newMorph</span><span class="p">.</span><span class="nx">startAutoScrolling</span><span class="p">();</span>
+
+  <span class="vi">@mouseOverList = </span><span class="nx">mouseOverNew</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

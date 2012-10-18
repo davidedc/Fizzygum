@@ -1,0 +1,294 @@
+<!DOCTYPE html>  <html> <head>   <title>InspectorMorph.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="BlinkerMorph.html">                 BlinkerMorph.coffee               </a>                                           <a class="source" href="BouncerMorph.html">                 BouncerMorph.coffee               </a>                                           <a class="source" href="BoxMorph.html">                 BoxMorph.coffee               </a>                                           <a class="source" href="CircleBoxMorph.html">                 CircleBoxMorph.coffee               </a>                                           <a class="source" href="Color.html">                 Color.coffee               </a>                                           <a class="source" href="ColorPaletteMorph.html">                 ColorPaletteMorph.coffee               </a>                                           <a class="source" href="ColorPickerMorph.html">                 ColorPickerMorph.coffee               </a>                                           <a class="source" href="CursorMorph.html">                 CursorMorph.coffee               </a>                                           <a class="source" href="FrameMorph.html">                 FrameMorph.coffee               </a>                                           <a class="source" href="GrayPaletteMorph.html">                 GrayPaletteMorph.coffee               </a>                                           <a class="source" href="HandMorph.html">                 HandMorph.coffee               </a>                                           <a class="source" href="HandleMorph.html">                 HandleMorph.coffee               </a>                                           <a class="source" href="InspectorMorph.html">                 InspectorMorph.coffee               </a>                                           <a class="source" href="ListMorph.html">                 ListMorph.coffee               </a>                                           <a class="source" href="MenuItemMorph.html">                 MenuItemMorph.coffee               </a>                                           <a class="source" href="MenuMorph.html">                 MenuMorph.coffee               </a>                                           <a class="source" href="Morph.html">                 Morph.coffee               </a>                                           <a class="source" href="MorphicNode.html">                 MorphicNode.coffee               </a>                                           <a class="source" href="MouseSensorMorph.html">                 MouseSensorMorph.coffee               </a>                                           <a class="source" href="PenMorph.html">                 PenMorph.coffee               </a>                                           <a class="source" href="Point.html">                 Point.coffee               </a>                                           <a class="source" href="Rectangle.html">                 Rectangle.coffee               </a>                                           <a class="source" href="ScrollFrameMorph.html">                 ScrollFrameMorph.coffee               </a>                                           <a class="source" href="ShadowMorph.html">                 ShadowMorph.coffee               </a>                                           <a class="source" href="SliderButtonMorph.html">                 SliderButtonMorph.coffee               </a>                                           <a class="source" href="SliderMorph.html">                 SliderMorph.coffee               </a>                                           <a class="source" href="SpeechBubbleMorph.html">                 SpeechBubbleMorph.coffee               </a>                                           <a class="source" href="StringFieldMorph.html">                 StringFieldMorph.coffee               </a>                                           <a class="source" href="StringMorph.html">                 StringMorph.coffee               </a>                                           <a class="source" href="TextMorph.html">                 TextMorph.coffee               </a>                                           <a class="source" href="TriggerMorph.html">                 TriggerMorph.coffee               </a>                                           <a class="source" href="WorldMorph.html">                 WorldMorph.coffee               </a>                                           <a class="source" href="globalFunctions.html">                 globalFunctions.coffee               </a>                                           <a class="source" href="globalSettings.html">                 globalSettings.coffee               </a>                                           <a class="source" href="morphicVersion.html">                 morphicVersion.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               InspectorMorph.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>InspectorMorph //////////////////////////////////////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">InspectorMorph</span> <span class="k">extends</span> <span class="nx">BoxMorph</span>
+  <span class="nv">constructor: </span><span class="nf">(target) -&gt;</span>
+    <span class="nx">@init</span> <span class="nx">target</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>InspectorMorph instance creation:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">InspectorMorph::init = </span><span class="nf">(target) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>additional properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@target = </span><span class="nx">target</span>
+  <span class="vi">@currentProperty = </span><span class="kc">null</span>
+  <span class="vi">@showing = </span><span class="s">&quot;attributes&quot;</span>
+  <span class="vi">@markOwnProperties = </span><span class="kc">false</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>initialize inherited properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">super</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>override inherited properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@silentSetExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+  <span class="vi">@isDraggable = </span><span class="kc">true</span>
+  <span class="vi">@border = </span><span class="mi">1</span>
+  <span class="vi">@edge = </span><span class="mi">5</span>
+  <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+  <span class="vi">@borderColor = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">95</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">95</span><span class="p">)</span>
+  <span class="nx">@drawNew</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>panes:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@label = </span><span class="kc">null</span>
+  <span class="vi">@list = </span><span class="kc">null</span>
+  <span class="vi">@detail = </span><span class="kc">null</span>
+  <span class="vi">@work = </span><span class="kc">null</span>
+  <span class="vi">@buttonInspect = </span><span class="kc">null</span>
+  <span class="vi">@buttonClose = </span><span class="kc">null</span>
+  <span class="vi">@buttonSubset = </span><span class="kc">null</span>
+  <span class="vi">@buttonEdit = </span><span class="kc">null</span>
+  <span class="vi">@resizer = </span><span class="kc">null</span>
+  <span class="nx">@buildPanes</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@target</span>
+
+<span class="nv">InspectorMorph::setTarget = </span><span class="nf">(target) -&gt;</span>
+  <span class="vi">@target = </span><span class="nx">target</span>
+  <span class="vi">@currentProperty = </span><span class="kc">null</span>
+  <span class="nx">@buildPanes</span><span class="p">()</span>
+
+<span class="nv">InspectorMorph::buildPanes = </span><span class="o">-&gt;</span>
+  <span class="nv">attribs = </span><span class="p">[]</span>
+  <span class="nv">property = </span><span class="kc">undefined</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nv">ctrl = </span><span class="kc">undefined</span>
+  <span class="nv">ev = </span><span class="kc">undefined</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>remove existing panes</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>keep work pane around</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">m</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">m</span> <span class="o">isnt</span> <span class="nx">@work</span>
+
+  <span class="vi">@children = </span><span class="p">[]</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>label</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@label = </span><span class="k">new</span> <span class="nx">TextMorph</span><span class="p">(</span><span class="nx">@target</span><span class="p">.</span><span class="nx">toString</span><span class="p">())</span>
+  <span class="vi">@label.fontSize = </span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">menuFontSize</span>
+  <span class="vi">@label.isBold = </span><span class="kc">true</span>
+  <span class="vi">@label.color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+  <span class="nx">@label</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+  <span class="nx">@add</span> <span class="nx">@label</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>properties list</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">for</span> <span class="nx">property</span> <span class="k">of</span> <span class="nx">@target</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>dummy condition, to be refined</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">attribs</span><span class="p">.</span><span class="nx">push</span> <span class="nx">property</span>  <span class="k">if</span> <span class="nx">property</span>
+  <span class="k">if</span> <span class="nx">@showing</span> <span class="o">is</span> <span class="s">&quot;attributes&quot;</span>
+    <span class="nv">attribs = </span><span class="nx">attribs</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nf">(prop) -&gt;</span>
+      <span class="k">typeof</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">prop</span><span class="p">]</span> <span class="o">isnt</span> <span class="s">&quot;function&quot;</span>
+    <span class="p">)</span>
+  <span class="k">else</span> <span class="k">if</span> <span class="nx">@showing</span> <span class="o">is</span> <span class="s">&quot;methods&quot;</span>
+    <span class="nv">attribs = </span><span class="nx">attribs</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nf">(prop) -&gt;</span>
+      <span class="k">typeof</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">prop</span><span class="p">]</span> <span class="o">is</span> <span class="s">&quot;function&quot;</span>
+    <span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>otherwise show all properties
+label getter
+format list
+format element: [color, predicate(element]</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@list = </span><span class="k">new</span> <span class="nx">ListMorph</span><span class="p">((</span><span class="k">if</span> <span class="nx">@target</span> <span class="k">instanceof</span> <span class="nb">Array</span> <span class="k">then</span> <span class="nx">attribs</span> <span class="k">else</span> <span class="nx">attribs</span><span class="p">.</span><span class="nx">sort</span><span class="p">()),</span> <span class="kc">null</span><span class="p">,</span> <span class="p">(</span><span class="k">if</span> <span class="nx">@markOwnProperties</span> <span class="k">then</span> <span class="p">[[</span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">180</span><span class="p">),</span> <span class="nf">(element) -&gt;</span>
+    <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">hasOwnProperty</span> <span class="nx">element</span>
+  <span class="p">]]</span> <span class="k">else</span> <span class="kc">null</span><span class="p">))</span>
+  <span class="vi">@list.action = </span><span class="nf">(selected) -&gt;</span>
+    <span class="nv">val = </span><span class="kc">undefined</span>
+    <span class="nv">txt = </span><span class="kc">undefined</span>
+    <span class="nv">cnts = </span><span class="kc">undefined</span>
+    <span class="nv">val = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">selected</span><span class="p">]</span>
+    <span class="nv">myself.currentProperty = </span><span class="nx">val</span>
+    <span class="k">if</span> <span class="nx">val</span> <span class="o">is</span> <span class="kc">null</span>
+      <span class="nv">txt = </span><span class="s">&quot;NULL&quot;</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">isString</span><span class="p">(</span><span class="nx">val</span><span class="p">)</span>
+      <span class="nv">txt = </span><span class="nx">val</span>
+    <span class="k">else</span>
+      <span class="nv">txt = </span><span class="nx">val</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
+    <span class="nv">cnts = </span><span class="k">new</span> <span class="nx">TextMorph</span><span class="p">(</span><span class="nx">txt</span><span class="p">)</span>
+    <span class="nv">cnts.isEditable = </span><span class="kc">true</span>
+    <span class="nx">cnts</span><span class="p">.</span><span class="nx">enableSelecting</span><span class="p">()</span>
+    <span class="nx">cnts</span><span class="p">.</span><span class="nx">setReceiver</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span>
+    <span class="nx">myself</span><span class="p">.</span><span class="nx">detail</span><span class="p">.</span><span class="nx">setContents</span> <span class="nx">cnts</span>
+
+  <span class="vi">@list.hBar.alpha = </span><span class="mf">0.6</span>
+  <span class="vi">@list.vBar.alpha = </span><span class="mf">0.6</span>
+  <span class="nx">@add</span> <span class="nx">@list</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>details pane</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@detail = </span><span class="k">new</span> <span class="nx">ScrollFrameMorph</span><span class="p">()</span>
+  <span class="vi">@detail.acceptsDrops = </span><span class="kc">false</span>
+  <span class="vi">@detail.contents.acceptsDrops = </span><span class="kc">false</span>
+  <span class="vi">@detail.isTextLineWrapping = </span><span class="kc">true</span>
+  <span class="vi">@detail.color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+  <span class="vi">@detail.hBar.alpha = </span><span class="mf">0.6</span>
+  <span class="vi">@detail.vBar.alpha = </span><span class="mf">0.6</span>
+  <span class="nv">ctrl = </span><span class="k">new</span> <span class="nx">TextMorph</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+  <span class="nv">ctrl.isEditable = </span><span class="kc">true</span>
+  <span class="nx">ctrl</span><span class="p">.</span><span class="nx">enableSelecting</span><span class="p">()</span>
+  <span class="nx">ctrl</span><span class="p">.</span><span class="nx">setReceiver</span> <span class="nx">@target</span>
+  <span class="nx">@detail</span><span class="p">.</span><span class="nx">setContents</span> <span class="nx">ctrl</span>
+  <span class="nx">@add</span> <span class="nx">@detail</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>work ('evaluation') pane
+don't refresh the work pane if it already exists</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="k">if</span> <span class="nx">@work</span> <span class="o">is</span> <span class="kc">null</span>
+    <span class="vi">@work = </span><span class="k">new</span> <span class="nx">ScrollFrameMorph</span><span class="p">()</span>
+    <span class="vi">@work.acceptsDrops = </span><span class="kc">false</span>
+    <span class="vi">@work.contents.acceptsDrops = </span><span class="kc">false</span>
+    <span class="vi">@work.isTextLineWrapping = </span><span class="kc">true</span>
+    <span class="vi">@work.color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="vi">@work.hBar.alpha = </span><span class="mf">0.6</span>
+    <span class="vi">@work.vBar.alpha = </span><span class="mf">0.6</span>
+    <span class="nv">ev = </span><span class="k">new</span> <span class="nx">TextMorph</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+    <span class="nv">ev.isEditable = </span><span class="kc">true</span>
+    <span class="nx">ev</span><span class="p">.</span><span class="nx">enableSelecting</span><span class="p">()</span>
+    <span class="nx">ev</span><span class="p">.</span><span class="nx">setReceiver</span> <span class="nx">@target</span>
+    <span class="nx">@work</span><span class="p">.</span><span class="nx">setContents</span> <span class="nx">ev</span>
+  <span class="nx">@add</span> <span class="nx">@work</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>properties button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@buttonSubset = </span><span class="k">new</span> <span class="nx">TriggerMorph</span><span class="p">()</span>
+  <span class="vi">@buttonSubset.labelString = </span><span class="s">&quot;show...&quot;</span>
+  <span class="vi">@buttonSubset.action = </span><span class="o">-&gt;</span>
+    <span class="nv">menu = </span><span class="kc">undefined</span>
+    <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;attributes&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nv">myself.showing = </span><span class="s">&quot;attributes&quot;</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;methods&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nv">myself.showing = </span><span class="s">&quot;methods&quot;</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;all&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+      <span class="nv">myself.showing = </span><span class="s">&quot;all&quot;</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="p">((</span><span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">markOwnProperties</span> <span class="k">then</span> <span class="s">&quot;un-mark own&quot;</span> <span class="k">else</span> <span class="s">&quot;mark own&quot;</span><span class="p">)),</span> <span class="p">(</span><span class="o">-&gt;</span>
+      <span class="nv">myself.markOwnProperties = </span><span class="o">not</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">markOwnProperties</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+    <span class="p">),</span> <span class="s">&quot;highlight\n&#39;own&#39; properties&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">world</span><span class="p">()</span>
+
+  <span class="nx">@add</span> <span class="nx">@buttonSubset</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>inspect button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@buttonInspect = </span><span class="k">new</span> <span class="nx">TriggerMorph</span><span class="p">()</span>
+  <span class="vi">@buttonInspect.labelString = </span><span class="s">&quot;inspect...&quot;</span>
+  <span class="vi">@buttonInspect.action = </span><span class="o">-&gt;</span>
+    <span class="nv">menu = </span><span class="kc">undefined</span>
+    <span class="nv">world = </span><span class="kc">undefined</span>
+    <span class="nv">inspector = </span><span class="kc">undefined</span>
+    <span class="k">if</span> <span class="nx">isObject</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span><span class="p">)</span>
+      <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">()</span>
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;in new inspector...&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+        <span class="nv">world = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">world</span><span class="p">()</span>
+        <span class="nv">inspector = </span><span class="k">new</span> <span class="nx">InspectorMorph</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span><span class="p">)</span>
+        <span class="nx">inspector</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>
+        <span class="nx">inspector</span><span class="p">.</span><span class="nx">keepWithin</span> <span class="nx">world</span>
+        <span class="nx">world</span><span class="p">.</span><span class="nx">add</span> <span class="nx">inspector</span>
+        <span class="nx">inspector</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;here...&quot;</span><span class="p">,</span> <span class="o">-&gt;</span>
+        <span class="nx">myself</span><span class="p">.</span><span class="nx">setTarget</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span>
+
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">world</span><span class="p">()</span>
+    <span class="k">else</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">inform</span> <span class="p">((</span><span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span> <span class="o">is</span> <span class="kc">null</span> <span class="k">then</span> <span class="s">&quot;null&quot;</span> <span class="k">else</span> <span class="k">typeof</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span><span class="p">))</span> <span class="o">+</span> <span class="s">&quot;\nis not inspectable&quot;</span>
+
+  <span class="nx">@add</span> <span class="nx">@buttonInspect</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>edit button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@buttonEdit = </span><span class="k">new</span> <span class="nx">TriggerMorph</span><span class="p">()</span>
+  <span class="vi">@buttonEdit.labelString = </span><span class="s">&quot;edit...&quot;</span>
+  <span class="vi">@buttonEdit.action = </span><span class="o">-&gt;</span>
+    <span class="nv">menu = </span><span class="kc">undefined</span>
+    <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">myself</span><span class="p">)</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;save&quot;</span><span class="p">,</span> <span class="s">&quot;save&quot;</span><span class="p">,</span> <span class="s">&quot;accept changes&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;add property...&quot;</span><span class="p">,</span> <span class="s">&quot;addProperty&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;rename...&quot;</span><span class="p">,</span> <span class="s">&quot;renameProperty&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;remove...&quot;</span><span class="p">,</span> <span class="s">&quot;removeProperty&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">world</span><span class="p">()</span>
+
+  <span class="nx">@add</span> <span class="nx">@buttonEdit</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>close button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@buttonClose = </span><span class="k">new</span> <span class="nx">TriggerMorph</span><span class="p">()</span>
+  <span class="vi">@buttonClose.labelString = </span><span class="s">&quot;close&quot;</span>
+  <span class="vi">@buttonClose.action = </span><span class="o">-&gt;</span>
+    <span class="nx">myself</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+
+  <span class="nx">@add</span> <span class="nx">@buttonClose</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>resizer</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@resizer = </span><span class="k">new</span> <span class="nx">HandleMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="nx">@edge</span><span class="p">,</span> <span class="nx">@edge</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>update layout</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@fixLayout</span><span class="p">()</span>
+
+<span class="nv">InspectorMorph::fixLayout = </span><span class="o">-&gt;</span>
+  <span class="nv">x = </span><span class="kc">undefined</span>
+  <span class="nv">y = </span><span class="kc">undefined</span>
+  <span class="nv">r = </span><span class="kc">undefined</span>
+  <span class="nv">b = </span><span class="kc">undefined</span>
+  <span class="nv">w = </span><span class="kc">undefined</span>
+  <span class="nv">h = </span><span class="kc">undefined</span>
+  <span class="nv">Morph::trackChanges = </span><span class="kc">false</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>label</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nv">y = </span><span class="nx">@top</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nv">r = </span><span class="nx">@right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@edge</span>
+  <span class="nv">w = </span><span class="nx">r</span> <span class="o">-</span> <span class="nx">x</span>
+  <span class="nx">@label</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@label</span><span class="p">.</span><span class="nx">setWidth</span> <span class="nx">w</span>
+  <span class="k">if</span> <span class="nx">@label</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span> <span class="o">&gt;</span> <span class="p">(</span><span class="nx">@height</span><span class="p">()</span> <span class="o">-</span> <span class="mi">50</span><span class="p">)</span>
+    <span class="nx">@silentSetHeight</span> <span class="nx">@label</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span> <span class="o">+</span> <span class="mi">50</span>
+    <span class="nx">@drawNew</span><span class="p">()</span>
+    <span class="nx">@changed</span><span class="p">()</span>
+    <span class="nx">@resizer</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>list</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">y = </span><span class="nx">@label</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span> <span class="o">+</span> <span class="mi">2</span>
+  <span class="nv">w = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3</span><span class="p">),</span> <span class="nx">@list</span><span class="p">.</span><span class="nx">listContents</span><span class="p">.</span><span class="nx">width</span><span class="p">())</span>
+  <span class="nx">w</span> <span class="o">-=</span> <span class="nx">@edge</span>
+  <span class="nv">b = </span><span class="nx">@bottom</span><span class="p">()</span> <span class="o">-</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="nx">@edge</span><span class="p">)</span> <span class="o">-</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span>
+  <span class="nv">h = </span><span class="nx">b</span> <span class="o">-</span> <span class="nx">y</span>
+  <span class="nx">@list</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@list</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>detail</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nv">r = </span><span class="nx">@right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@edge</span>
+  <span class="nv">w = </span><span class="nx">r</span> <span class="o">-</span> <span class="nx">x</span>
+  <span class="nx">@detail</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@detail</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="p">(</span><span class="nx">h</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="nx">@edge</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-24">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-24">&#182;</a>               </div>               <p>work</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">y = </span><span class="nx">@detail</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nx">@work</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@work</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-25">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-25">&#182;</a>               </div>               <p>properties button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span>
+  <span class="nv">y = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nv">w = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>
+  <span class="nv">h = </span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span>
+  <span class="nx">@buttonSubset</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@buttonSubset</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-26">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-26">&#182;</a>               </div>               <p>inspect button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@detail</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span>
+  <span class="nv">w = </span><span class="nx">@detail</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@edge</span> <span class="o">-</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span>
+  <span class="nv">w = </span><span class="nx">w</span> <span class="o">/</span> <span class="mi">3</span> <span class="o">-</span> <span class="nx">@edge</span> <span class="o">/</span> <span class="mi">3</span>
+  <span class="nx">@buttonInspect</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@buttonInspect</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-27">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-27">&#182;</a>               </div>               <p>edit button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@buttonInspect</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nx">@buttonEdit</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@buttonEdit</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>close button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">x = </span><span class="nx">@buttonEdit</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@edge</span>
+  <span class="nv">r = </span><span class="nx">@detail</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@edge</span> <span class="o">-</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span>
+  <span class="nv">w = </span><span class="nx">r</span> <span class="o">-</span> <span class="nx">x</span>
+  <span class="nx">@buttonClose</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
+  <span class="nx">@buttonClose</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">h</span><span class="p">)</span>
+  <span class="nv">Morph::trackChanges = </span><span class="kc">true</span>
+  <span class="nx">@changed</span><span class="p">()</span>
+
+<span class="nv">InspectorMorph::setExtent = </span><span class="nf">(aPoint) -&gt;</span>
+  <span class="k">super</span> <span class="nx">aPoint</span>
+  <span class="nx">@fixLayout</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>InspectorMorph editing ops:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">InspectorMorph::save = </span><span class="o">-&gt;</span>
+  <span class="nv">txt = </span><span class="nx">@detail</span><span class="p">.</span><span class="nx">contents</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">text</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
+  <span class="nv">prop = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">selected</span>
+  <span class="k">try</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>this.target[prop] = evaluate(txt);</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@target</span><span class="p">.</span><span class="nx">evaluateString</span> <span class="s">&quot;this.&quot;</span> <span class="o">+</span> <span class="nx">prop</span> <span class="o">+</span> <span class="s">&quot; = &quot;</span> <span class="o">+</span> <span class="nx">txt</span>
+    <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+  <span class="k">catch</span> <span class="nx">err</span>
+    <span class="nx">@inform</span> <span class="nx">err</span>
+
+<span class="nv">InspectorMorph::addProperty = </span><span class="o">-&gt;</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nx">@prompt</span> <span class="s">&quot;new property name:&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">(prop) -&gt;</span>
+    <span class="k">if</span> <span class="nx">prop</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">prop</span><span class="p">]</span> <span class="o">=</span> <span class="kc">null</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+      <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">drawNew</span>
+        <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+        <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+        <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+  <span class="p">),</span> <span class="k">this</span><span class="p">,</span> <span class="s">&quot;property&quot;</span> <span class="c1"># Chrome cannot handle empty strings (others do)</span>
+
+<span class="nv">InspectorMorph::renameProperty = </span><span class="o">-&gt;</span>
+  <span class="nv">myself = </span><span class="k">this</span>
+  <span class="nv">propertyName = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">selected</span>
+  <span class="nx">@prompt</span> <span class="s">&quot;property name:&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">(prop) -&gt;</span>
+    <span class="k">try</span>
+      <span class="k">delete</span> <span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">propertyName</span><span class="p">])</span>
+
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">[</span><span class="nx">prop</span><span class="p">]</span> <span class="o">=</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">currentProperty</span>
+    <span class="k">catch</span> <span class="nx">err</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">inform</span> <span class="nx">err</span>
+    <span class="nx">myself</span><span class="p">.</span><span class="nx">buildPanes</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">drawNew</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+      <span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+  <span class="p">),</span> <span class="k">this</span><span class="p">,</span> <span class="nx">propertyName</span>
+
+<span class="nv">InspectorMorph::removeProperty = </span><span class="o">-&gt;</span>
+  <span class="nv">prop = </span><span class="nx">@list</span><span class="p">.</span><span class="nx">selected</span>
+  <span class="k">try</span>
+    <span class="k">delete</span> <span class="p">(</span><span class="nx">@target</span><span class="p">[</span><span class="nx">prop</span><span class="p">])</span>
+
+    <span class="vi">@currentProperty = </span><span class="kc">null</span>
+    <span class="nx">@buildPanes</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+  <span class="k">catch</span> <span class="nx">err</span>
+    <span class="nx">@inform</span> <span class="nx">err</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -1,3 +1,2 @@
-cd src
-docco morphee-coffee.coffee
-mv docs ../
+rm src/morphee-coffee.coffee
+docco src/*.coffee
