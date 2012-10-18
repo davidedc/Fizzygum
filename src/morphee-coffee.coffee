@@ -3732,15 +3732,13 @@ MenuMorph::popUpCenteredInWorld = (world) ->
 
 # I am a single line of text
 
-class StringMorph
+class StringMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
     @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
 
 
 # StringMorph inherits from Morph:
 StringMorph:: = new Morph()
-StringMorph::constructor = StringMorph
-StringMorph.uber = Morph::
 
 # StringMorph instance creation:
 StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
@@ -3767,7 +3765,7 @@ StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowO
   @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
-  StringMorph.uber.init.call this
+  super
   
   # override inherited properites:
   @color = color or new Color(0, 0, 0)
@@ -3929,7 +3927,7 @@ StringMorph::endOfLine = ->
 
 # StringMorph menus:
 StringMorph::developersMenu = ->
-  menu = StringMorph.uber.developersMenu.call(this)
+  menu = super
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->
