@@ -1,35 +1,32 @@
 # SliderButtonMorph ///////////////////////////////////////////////////
 
-class SliderButtonMorph
+class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
     @init orientation
 
 # SliderButtonMorph inherits from CircleBoxMorph:
-SliderButtonMorph:: = new CircleBoxMorph()
-SliderButtonMorph::constructor = SliderButtonMorph
-SliderButtonMorph.uber = CircleBoxMorph::
 SliderButtonMorph::init = (orientation) ->
   @color = new Color(80, 80, 80)
   @highlightColor = new Color(90, 90, 140)
   @pressColor = new Color(80, 80, 160)
   @is3D = true
   @hasMiddleDip = true
-  SliderButtonMorph.uber.init.call this, orientation
+  super orientation
 
 SliderButtonMorph::autoOrientation = ->
   nop()
 
 SliderButtonMorph::drawNew = ->
   colorBak = @color.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super
   @drawEdges()  if @is3D
   @normalImage = @image
   @color = @highlightColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super
   @drawEdges()  if @is3D
   @highlightImage = @image
   @color = @pressColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
+  super
   @drawEdges()  if @is3D
   @pressImage = @image
   @color = colorBak
