@@ -4085,8 +4085,6 @@ StringMorph = (function(_super) {
 
 })(Morph);
 
-StringMorph.prototype = new Morph();
-
 StringMorph.prototype.init = function(text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) {
   this.text = text || (text === "" ? "" : "StringMorph");
   this.fontSize = fontSize || 12;
@@ -6003,8 +6001,6 @@ WorldMorph = (function(_super) {
   return WorldMorph;
 
 })(FrameMorph);
-
-WorldMorph.prototype = new FrameMorph();
 
 WorldMorph.prototype.init = function(aCanvas, fillPage) {
   WorldMorph.__super__.init.call(this);

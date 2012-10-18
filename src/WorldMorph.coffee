@@ -5,9 +5,6 @@ class WorldMorph extends FrameMorph
 
 # I represent the <canvas> element
 
-# WorldMorph inherits from FrameMorph:
-WorldMorph:: = new FrameMorph()
-
 # WorldMorph instance creation:
 
 # WorldMorph initialization:

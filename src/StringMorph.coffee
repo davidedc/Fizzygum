@@ -7,9 +7,6 @@ class StringMorph extends Morph
     @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
 
 
-# StringMorph inherits from Morph:
-StringMorph:: = new Morph()
-
 # StringMorph instance creation:
 StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
   
