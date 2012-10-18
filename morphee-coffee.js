@@ -6708,19 +6708,26 @@ HandMorph.prototype.processMouseScroll = function(event) {
 };
 
 HandMorph.prototype.processDrop = function(event) {
-  var canvas, file, files, i, img, parseImgURL, readAudio, readImage, readText, src, target, txt, _results;
+  var canvas, file, files, i, img, parseImgURL, readAudio, readImage, readText, src, targetDrop, txt, _results;
+  files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
+  file = void 0;
+  txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
+  src = void 0;
+  targetDrop = this.morphAtPointer();
+  img = new Image();
+  canvas = void 0;
+  i = void 0;
   readImage = function(aFile) {
-    var frd, pic, target;
+    var frd, pic;
     pic = new Image();
     frd = new FileReader();
-    while (!target.droppedImage) {
-      target = target.parent;
+    while (!targetDrop.droppedImage) {
+      targetDrop = targetDrop.parent;
     }
     pic.onload = function() {
-      var canvas;
       canvas = newCanvas(new Point(pic.width, pic.height));
       canvas.getContext("2d").drawImage(pic, 0, 0);
-      return target.droppedImage(canvas, aFile.name);
+      return targetDrop.droppedImage(canvas, aFile.name);
     };
     frd = new FileReader();
     frd.onloadend = function(e) {
@@ -6729,23 +6736,23 @@ HandMorph.prototype.processDrop = function(event) {
     return frd.readAsDataURL(aFile);
   };
   readAudio = function(aFile) {
-    var frd, snd, target;
+    var frd, snd;
     snd = new Audio();
     frd = new FileReader();
-    while (!target.droppedAudio) {
-      target = target.parent;
+    while (!targetDrop.droppedAudio) {
+      targetDrop = targetDrop.parent;
     }
     frd.onloadend = function(e) {
       snd.src = e.target.result;
-      return target.droppedAudio(snd, aFile.name);
+      return targetDrop.droppedAudio(snd, aFile.name);
     };
     return frd.readAsDataURL(aFile);
   };
   readText = function(aFile) {
-    var frd, target;
+    var frd;
     frd = new FileReader();
-    while (!target.droppedText) {
-      target = target.parent;
+    while (!targetDrop.droppedText) {
+      targetDrop = targetDrop.parent;
     }
     frd.onloadend = function(e) {
       return target.droppedText(e.target.result, aFile.name);
@@ -6753,7 +6760,7 @@ HandMorph.prototype.processDrop = function(event) {
     return frd.readAsText(aFile);
   };
   parseImgURL = function(html) {
-    var c, i, start, url;
+    var c, start, url;
     url = "";
     i = void 0;
     c = void 0;
@@ -6773,14 +6780,6 @@ HandMorph.prototype.processDrop = function(event) {
     }
     return null;
   };
-  files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
-  file = void 0;
-  txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
-  src = void 0;
-  target = this.morphAtPointer();
-  img = new Image();
-  canvas = void 0;
-  i = void 0;
   if (files.length > 0) {
     i = 0;
     _results = [];
@@ -6799,14 +6798,14 @@ HandMorph.prototype.processDrop = function(event) {
     }
     return _results;
   } else if (txt) {
-    while (!target.droppedImage) {
-      target = target.parent;
+    while (!targetDrop.droppedImage) {
+      targetDrop = targetDrop.parent;
     }
     img = new Image();
     img.onload = function() {
       canvas = newCanvas(new Point(img.width, img.height));
       canvas.getContext("2d").drawImage(img, 0, 0);
-      return target.droppedImage(canvas);
+      return targetDrop.droppedImage(canvas);
     };
     src = parseImgURL(txt);
     if (src) {

@@ -6034,14 +6034,24 @@ HandMorph::processDrop = (event) ->
   #    
   #    events to interested Morphs at the mouse pointer
   #
+
+  files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
+  file = undefined
+  txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
+  src = undefined
+  targetDrop = @morphAtPointer()
+  img = new Image()
+  canvas = undefined
+  i = undefined
+
   readImage = (aFile) ->
     pic = new Image()
     frd = new FileReader()
-    target = target.parent  until target.droppedImage
+    targetDrop = targetDrop.parent  until targetDrop.droppedImage
     pic.onload = ->
       canvas = newCanvas(new Point(pic.width, pic.height))
       canvas.getContext("2d").drawImage pic, 0, 0
-      target.droppedImage canvas, aFile.name
+      targetDrop.droppedImage canvas, aFile.name
 
     frd = new FileReader()
     frd.onloadend = (e) ->
@@ -6051,15 +6061,15 @@ HandMorph::processDrop = (event) ->
   readAudio = (aFile) ->
     snd = new Audio()
     frd = new FileReader()
-    target = target.parent  until target.droppedAudio
+    targetDrop = targetDrop.parent  until targetDrop.droppedAudio
     frd.onloadend = (e) ->
       snd.src = e.target.result
-      target.droppedAudio snd, aFile.name
+      targetDrop.droppedAudio snd, aFile.name
 
     frd.readAsDataURL aFile
   readText = (aFile) ->
     frd = new FileReader()
-    target = target.parent  until target.droppedText
+    targetDrop = targetDrop.parent  until targetDrop.droppedText
     frd.onloadend = (e) ->
       target.droppedText e.target.result, aFile.name
 
@@ -6078,14 +6088,6 @@ HandMorph::processDrop = (event) ->
       url = url.concat(c)
       i += 1
     null
-  files = (if event instanceof FileList then event else event.target.files or event.dataTransfer.files)
-  file = undefined
-  txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
-  src = undefined
-  target = @morphAtPointer()
-  img = new Image()
-  canvas = undefined
-  i = undefined
   if files.length > 0
     i = 0
     while i < files.length
@@ -6097,12 +6099,12 @@ HandMorph::processDrop = (event) ->
       else readText file  if file.type.indexOf("text") is 0
       i += 1
   else if txt
-    target = target.parent  until target.droppedImage
+    targetDrop = targetDrop.parent  until targetDrop.droppedImage
     img = new Image()
     img.onload = ->
       canvas = newCanvas(new Point(img.width, img.height))
       canvas.getContext("2d").drawImage img, 0, 0
-      target.droppedImage canvas
+      targetDrop.droppedImage canvas
 
     src = parseImgURL(txt)
     img.src = src  if src
