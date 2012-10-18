@@ -1,168 +1,4 @@
 morphicVersion = "2012-October-16"
-
-class MorphicNode
-  constructor: (parent, childrenArray) ->
-    @init parent or null, childrenArray or []
-
-class Morph
-  constructor: () ->
-    @init()
-
-class ShadowMorph
-  constructor: () ->
-    @init()
-
-class HandleMorph
-  constructor: (target, minX, minY, insetX, insetY, type) ->
-    # if insetY is missing, it will be the same as insetX
-    @init target, minX, minY, insetX, insetY, type
-
-class PenMorph
-  constructor: () ->
-    @init()
-
-class ColorPaletteMorph
-  constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 50)
-
-class GrayPaletteMorph
-  constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 10)
-
-class ColorPickerMorph
-  constructor: (defaultColor) ->
-    @init defaultColor or new Color(255, 255, 255)
-
-class BlinkerMorph
-  constructor: (rate) ->
-    @init rate
-
-class CursorMorph
-  constructor: (aStringOrTextMorph) ->
-    @init aStringOrTextMorph
-
-class BoxMorph
-  constructor: (edge, border, borderColor) ->
-    @init edge, border, borderColor
-
-class SpeechBubbleMorph
-  constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
-    @init contents, color, edge, border, borderColor, padding, isThought
-
-class CircleBoxMorph
-  constructor: (orientation) ->
-    @init orientation or "vertical"
-
-class SliderButtonMorph
-  constructor: (orientation) ->
-    @init orientation
-
-class SliderMorph
-  constructor: (start, stop, value, size, orientation, color) ->
-    @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
-
-class MouseSensorMorph
-  constructor: (edge, border, borderColor) ->
-    @init edge, border, borderColor
-
-class InspectorMorph
-  constructor: (target) ->
-    @init target
-
-class MenuMorph
-  constructor: (target, title, environment, fontSize) ->
-    @init target, title, environment, fontSize
-
-#
-#	if target is a function, use it as callback:
-#	execute target as callback function with the action property
-#	of the triggered MenuItem as argument.
-#	Use the environment, if it is specified.
-#	Note: if action is also a function, instead of becoming
-#	the argument itself it will be called to answer the argument.
-#	For selections, Yes/No Choices etc.
-#
-#	else (if target is not a function):
-#
-#		if action is a function:
-#		execute the action with target as environment (can be null)
-#		for lambdafied (inline) actions
-#
-#		else if action is a String:
-#		treat it as function property of target and execute it
-#		for selector-like actions
-#	
-
-class StringMorph
-  constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
-    @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
-
-class TextMorph
-  constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
-    @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
-
-class TriggerMorph
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-    @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
-
-class MenuItemMorph
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
-    @init target, action, labelString, fontSize, fontStyle, environment, hint, color
-
-class FrameMorph
-  constructor: (aScrollFrame) ->
-    @init aScrollFrame
-
-class ScrollFrameMorph
-  constructor: (scroller, size, sliderColor) ->
-    @init scroller, size, sliderColor
-
-class ListMorph
-  constructor: (elements, labelGetter, format) ->
-  
-  #
-  #    passing a format is optional. If the format parameter is specified
-  #    it has to be of the following pattern:
-  #
-  #        [
-  #            [<color>, <single-argument predicate>],
-  #            ...
-  #        ]
-  #
-  #    multiple color conditions can be passed in such a format list, the
-  #    last predicate to evaluate true when given the list element sets
-  #    the given color. If no condition is met, the default color (black)
-  #    will be assigned.
-  #    
-  #    An example of how to use fomats can be found in the InspectorMorph's
-  #    "markOwnProperties" mechanism.
-  #
-    @init elements or [], labelGetter or (element) ->
-      return element  if isString(element)
-      return element.toSource()  if element.toSource
-      element.toString()
-    , format or []
-
-class StringFieldMorph
-  constructor: (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
-    @init defaultContents or "", minWidth or 100, fontSize or 12, fontStyle or "sans-serif", bold or false, italic or false, isNumeric
-
-class BouncerMorph
-  constructor: () ->
-    @init()
-
-class HandMorph
-  constructor: (aWorld) ->
-    @init aWorld
-
-class WorldMorph
-  constructor: (aCanvas, fillPage) ->
-    @init aCanvas, fillPage
-
-class Rectangle
-  constructor: (left, top, right, bottom) ->
-    @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
-
 # Global Functions ////////////////////////////////////////////////////
 nop = ->
   
@@ -422,7 +258,6 @@ copy = (target) ->
     for property of target
       c[property] = target[property]  unless c[property]
   c
-
 # Global settings /////////////////////////////////////////////////////
 
 #global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
@@ -460,7 +295,6 @@ touchScreenSettings =
   useVirtualKeyboard: true
 
 MorphicPreferences = standardSettings
-
 # Colors //////////////////////////////////////////////////////////////
 
 # Color instance creation:
@@ -595,8 +429,6 @@ Color::dansDarker = ->
   vv = Math.max(hsv[2] - 0.16, 0)
   result.set_hsv hsv[0], hsv[1], vv
   result
-
-
 # Points //////////////////////////////////////////////////////////////
 
 # Point instance creation:
@@ -811,9 +643,12 @@ Point::extent = (aPoint) ->
   #answer a new Rectangle
   crn = @add(aPoint)
   new Rectangle(@x, @y, crn.x, crn.y)
-
-
 # Rectangles //////////////////////////////////////////////////////////
+
+class Rectangle
+  constructor: (left, top, right, bottom) ->
+    @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
+
 
 # Rectangle instance creation:
 Rectangle::init = (originPoint, cornerPoint) ->
@@ -1013,7 +848,9 @@ Rectangle::asArray = ->
 
 Rectangle::asArray_xywh = ->
   [@left(), @top(), @width(), @height()]
-
+class MorphicNode
+  constructor: (parent, childrenArray) ->
+    @init parent or null, childrenArray or []
 
 MorphicNode::init = (parent, childrenArray) ->
   @parent = parent or null
@@ -1105,9 +942,13 @@ MorphicNode::parentThatIsAnyOf = (constructors) ->
   return this  if yup
   return null  unless @parent
   @parent.parentThatIsAnyOf constructors
-  
+  # Morphs //////////////////////////////////////////////////////////////
 
-# Morphs //////////////////////////////////////////////////////////////
+class Morph
+  constructor: () ->
+    @init()
+
+
 Morph.prototype = new MorphicNode();
 Morph.prototype.constructor = Morph;
 Morph.uber = MorphicNode.prototype;
@@ -2186,20 +2027,14 @@ Morph::overlappingImage = (otherMorph) ->
   ctx.globalCompositeOperation = "source-in"
   ctx.drawImage otherMorph.fullImage(), otherFb.origin.x - oRect.origin.x, otherFb.origin.y - oRect.origin.y
   oImg
-
-
-# ShadowMorph /////////////////////////////////////////////////////////
-
-# ShadowMorph inherits from Morph:
-ShadowMorph:: = new Morph()
-ShadowMorph::constructor = ShadowMorph
-ShadowMorph.uber = Morph::
-
-# ShadowMorph instance creation:
-
 # HandleMorph ////////////////////////////////////////////////////////
 
 # I am a resize / move handle that can be attached to any Morph
+
+class HandleMorph
+  constructor: (target, minX, minY, insetX, insetY, type) ->
+    # if insetY is missing, it will be the same as insetX
+    @init target, minX, minY, insetX, insetY, type
 
 # HandleMorph inherits from Morph:
 HandleMorph:: = new Morph()
@@ -2368,12 +2203,23 @@ HandleMorph::attach = ->
 
 
   menu.popUpAtHand @world()  if choices.length > 0
+# ShadowMorph /////////////////////////////////////////////////////////
 
+class ShadowMorph
+  constructor: () ->
+    @init()
 
-
+# ShadowMorph inherits from Morph:
+ShadowMorph:: = new Morph()
+ShadowMorph::constructor = ShadowMorph
+ShadowMorph.uber = Morph::
 # PenMorph ////////////////////////////////////////////////////////////
 
 # I am a simple LOGO-wise turtle.
+
+class PenMorph
+  constructor: () ->
+    @init()
 
 # PenMorph: referenced constructors
 
@@ -2546,9 +2392,11 @@ PenMorph::tree = (level, length, angle) ->
     @tree level - 1, length * 0.75, angle
     @turn angle
     @forward -length
-
-
 # ColorPaletteMorph ///////////////////////////////////////////////////
+
+class ColorPaletteMorph
+  constructor: (target, sizePoint) ->
+    @init target or null, sizePoint or new Point(80, 50)
 
 # ColorPaletteMorph inherits from Morph:
 ColorPaletteMorph:: = new Morph()
@@ -2648,9 +2496,11 @@ ColorPaletteMorph::setTargetSetter = ->
   if choices.length is 1
     @targetSetter = choices[0]
   else menu.popUpAtHand @world()  if choices.length > 0
-
-
 # GrayPaletteMorph ///////////////////////////////////////////////////
+
+class GrayPaletteMorph
+  constructor: (target, sizePoint) ->
+    @init target or null, sizePoint or new Point(80, 10)
 
 # GrayPaletteMorph inherits from ColorPaletteMorph:
 GrayPaletteMorph:: = new ColorPaletteMorph()
@@ -2671,9 +2521,11 @@ GrayPaletteMorph::drawNew = ->
   gradient.addColorStop 1, "white"
   context.fillStyle = gradient
   context.fillRect 0, 0, ext.x, ext.y
-
-
 # ColorPickerMorph ///////////////////////////////////////////////////
+
+class ColorPickerMorph
+  constructor: (defaultColor) ->
+    @init defaultColor or new Color(255, 255, 255)
 
 # ColorPickerMorph inherits from Morph:
 ColorPickerMorph:: = new Morph()
@@ -2719,12 +2571,13 @@ ColorPickerMorph::getChoice = ->
   @feedback.color
 
 ColorPickerMorph::rootForGrab = ->
-  this
-
-
-# BlinkerMorph ////////////////////////////////////////////////////////
+  this# BlinkerMorph ////////////////////////////////////////////////////////
 
 # can be used for text cursors
+
+class BlinkerMorph
+  constructor: (rate) ->
+    @init rate
 
 # BlinkerMorph inherits from Morph:
 BlinkerMorph:: = new Morph()
@@ -2742,11 +2595,13 @@ BlinkerMorph::init = (rate) ->
 # BlinkerMorph stepping:
 BlinkerMorph::step = ->
   @toggleVisibility()
-
-
 # CursorMorph /////////////////////////////////////////////////////////
 
 # I am a String/Text editing widget
+
+class CursorMorph
+  constructor: (aStringOrTextMorph) ->
+    @init aStringOrTextMorph
 
 # CursorMorph: referenced constructors
 
@@ -2964,11 +2819,13 @@ CursorMorph::inspectKeyEvent = (event) ->
   
   # private
   @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()
-
-
 # BoxMorph ////////////////////////////////////////////////////////////
 
 # I can have an optionally rounded border
+
+class BoxMorph
+  constructor: (edge, border, borderColor) ->
+    @init edge, border, borderColor
 
 # BoxMorph inherits from Morph:
 BoxMorph:: = new Morph()
@@ -3080,8 +2937,6 @@ BoxMorph::numericalSetters = ->
   list = BoxMorph.uber.numericalSetters.call(this)
   list.push "setBorderWidth", "setCornerSize"
   list
-
-
 # SpeechBubbleMorph ///////////////////////////////////////////////////
 
 #
@@ -3089,6 +2944,10 @@ BoxMorph::numericalSetters = ->
 #	a Morph, a Canvas or a toString() representation of anything else.
 #	If I am invoked using popUp() I behave like a tool tip.
 #
+
+class SpeechBubbleMorph
+  constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
+    @init contents, color, edge, border, borderColor, padding, isThought
 
 # SpeechBubbleMorph: referenced constructors
 
@@ -3208,11 +3067,13 @@ SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
       # top bubble:
       rad = radius / 2.8
       circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
-
-
 # CircleBoxMorph //////////////////////////////////////////////////////
 
 # I can be used for sliders
+
+class CircleBoxMorph
+  constructor: (orientation) ->
+    @init orientation or "vertical"
 
 # CircleBoxMorph inherits from Morph:
 CircleBoxMorph:: = new Morph()
@@ -3290,359 +3151,12 @@ CircleBoxMorph::toggleOrientation = ->
   @setCenter center
   @drawNew()
   @changed()
-
-
-# SliderButtonMorph ///////////////////////////////////////////////////
-
-# SliderButtonMorph inherits from CircleBoxMorph:
-SliderButtonMorph:: = new CircleBoxMorph()
-SliderButtonMorph::constructor = SliderButtonMorph
-SliderButtonMorph.uber = CircleBoxMorph::
-SliderButtonMorph::init = (orientation) ->
-  @color = new Color(80, 80, 80)
-  @highlightColor = new Color(90, 90, 140)
-  @pressColor = new Color(80, 80, 160)
-  @is3D = true
-  @hasMiddleDip = true
-  SliderButtonMorph.uber.init.call this, orientation
-
-SliderButtonMorph::autoOrientation = ->
-  nop()
-
-SliderButtonMorph::drawNew = ->
-  colorBak = @color.copy()
-  SliderButtonMorph.uber.drawNew.call this
-  @drawEdges()  if @is3D
-  @normalImage = @image
-  @color = @highlightColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
-  @drawEdges()  if @is3D
-  @highlightImage = @image
-  @color = @pressColor.copy()
-  SliderButtonMorph.uber.drawNew.call this
-  @drawEdges()  if @is3D
-  @pressImage = @image
-  @color = colorBak
-  @image = @normalImage
-
-SliderButtonMorph::drawEdges = ->
-  context = @image.getContext("2d")
-  gradient = undefined
-  radius = undefined
-  w = @width()
-  h = @height()
-  context.lineJoin = "round"
-  context.lineCap = "round"
-  if @orientation is "vertical"
-    context.lineWidth = w / 3
-    gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)
-    gradient.addColorStop 0, "white"
-    gradient.addColorStop 1, @color.toString()
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo context.lineWidth * 0.5, w / 2
-    context.lineTo context.lineWidth * 0.5, h - w / 2
-    context.stroke()
-    gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)
-    gradient.addColorStop 0, @color.toString()
-    gradient.addColorStop 1, "black"
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo w - context.lineWidth * 0.5, w / 2
-    context.lineTo w - context.lineWidth * 0.5, h - w / 2
-    context.stroke()
-    if @hasMiddleDip
-      gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0)
-      radius = w / 4
-      gradient.addColorStop 0, "black"
-      gradient.addColorStop 0.35, @color.toString()
-      gradient.addColorStop 0.65, @color.toString()
-      gradient.addColorStop 1, "white"
-      context.fillStyle = gradient
-      context.beginPath()
-      context.arc w / 2, h / 2, radius, radians(0), radians(360), false
-      context.closePath()
-      context.fill()
-  else if @orientation is "horizontal"
-    context.lineWidth = h / 3
-    gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)
-    gradient.addColorStop 0, "white"
-    gradient.addColorStop 1, @color.toString()
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo h / 2, context.lineWidth * 0.5
-    context.lineTo w - h / 2, context.lineWidth * 0.5
-    context.stroke()
-    gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)
-    gradient.addColorStop 0, @color.toString()
-    gradient.addColorStop 1, "black"
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo h / 2, h - context.lineWidth * 0.5
-    context.lineTo w - h / 2, h - context.lineWidth * 0.5
-    context.stroke()
-    if @hasMiddleDip
-      gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth)
-      radius = h / 4
-      gradient.addColorStop 0, "black"
-      gradient.addColorStop 0.35, @color.toString()
-      gradient.addColorStop 0.65, @color.toString()
-      gradient.addColorStop 1, "white"
-      context.fillStyle = gradient
-      context.beginPath()
-      context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false
-      context.closePath()
-      context.fill()
-
-
-#SliderButtonMorph events:
-SliderButtonMorph::mouseEnter = ->
-  @image = @highlightImage
-  @changed()
-
-SliderButtonMorph::mouseLeave = ->
-  @image = @normalImage
-  @changed()
-
-SliderButtonMorph::mouseDownLeft = (pos) ->
-  @image = @pressImage
-  @changed()
-  @escalateEvent "mouseDownLeft", pos
-
-SliderButtonMorph::mouseClickLeft = ->
-  @image = @highlightImage
-  @changed()
-
-SliderButtonMorph::mouseMove = ->
-  
-  # prevent my parent from getting picked up
-  nop()
-
-
-# SliderMorph ///////////////////////////////////////////////////
-
-# SliderMorph inherits from CircleBoxMorph:
-SliderMorph:: = new CircleBoxMorph()
-SliderMorph::constructor = SliderMorph
-SliderMorph.uber = CircleBoxMorph::
-SliderMorph::init = (start, stop, value, size, orientation, color) ->
-  @target = null
-  @action = null
-  @start = start
-  @stop = stop
-  @value = value
-  @size = size
-  @offset = null
-  @button = new SliderButtonMorph()
-  @button.isDraggable = false
-  @button.color = new Color(200, 200, 200)
-  @button.highlightColor = new Color(210, 210, 255)
-  @button.pressColor = new Color(180, 180, 255)
-  SliderMorph.uber.init.call this, orientation
-  @add @button
-  @alpha = 0.3
-  @color = color or new Color(0, 0, 0)
-  @setExtent new Point(20, 100)
-
-
-# this.drawNew();
-SliderMorph::autoOrientation = ->
-  nop()
-
-SliderMorph::rangeSize = ->
-  @stop - @start
-
-SliderMorph::ratio = ->
-  @size / @rangeSize()
-
-SliderMorph::unitSize = ->
-  return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"
-  (@width() - @button.width()) / @rangeSize()
-
-SliderMorph::drawNew = ->
-  bw = undefined
-  bh = undefined
-  posX = undefined
-  posY = undefined
-  SliderMorph.uber.drawNew.call this
-  @button.orientation = @orientation
-  if @orientation is "vertical"
-    bw = @width() - 2
-    bh = Math.max(bw, Math.round(@height() * @ratio()))
-    @button.silentSetExtent new Point(bw, bh)
-    posX = 1
-    posY = Math.min(Math.round((@value - @start) * @unitSize()), @height() - @button.height())
-  else
-    bh = @height() - 2
-    bw = Math.max(bh, Math.round(@width() * @ratio()))
-    @button.silentSetExtent new Point(bw, bh)
-    posY = 1
-    posX = Math.min(Math.round((@value - @start) * @unitSize()), @width() - @button.width())
-  @button.setPosition new Point(posX, posY).add(@bounds.origin)
-  @button.drawNew()
-  @button.changed()
-
-SliderMorph::updateValue = ->
-  relPos = undefined
-  if @orientation is "vertical"
-    relPos = @button.top() - @top()
-  else
-    relPos = @button.left() - @left()
-  @value = Math.round(relPos / @unitSize() + @start)
-  @updateTarget()
-
-SliderMorph::updateTarget = ->
-  if @action
-    if typeof @action is "function"
-      @action.call @target, @value
-    else # assume it's a String
-      @target[@action] @value
-
-
-# SliderMorph duplicating:
-SliderMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = SliderMorph.uber.copyRecordingReferences.call(this, dict)
-  c.target = (dict[@target])  if c.target and dict[@target]
-  c.button = (dict[@button])  if c.button and dict[@button]
-  c
-
-
-# SliderMorph menu:
-SliderMorph::developersMenu = ->
-  menu = SliderMorph.uber.developersMenu.call(this)
-  menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
-  menu.addItem "floor...", (->
-    @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
-  ), "set the minimum value\nwhich can be selected"
-  menu.addItem "ceiling...", (->
-    @prompt menu.title + "\nceiling:", @setStop, this, @stop.toString(), null, @start + @size, @size * 100, true
-  ), "set the maximum value\nwhich can be selected"
-  menu.addItem "button size...", (->
-    @prompt menu.title + "\nbutton size:", @setSize, this, @size.toString(), null, 1, @stop - @start, true
-  ), "set the range\ncovered by\nthe slider button"
-  menu.addLine()
-  menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
-  menu
-
-SliderMorph::showValue = ->
-  @inform @value
-
-SliderMorph::userSetStart = (num) ->
-  
-  # for context menu demo purposes
-  @start = Math.max(num, @stop)
-
-SliderMorph::setStart = (num) ->
-  
-  # for context menu demo purposes
-  newStart = undefined
-  if typeof num is "number"
-    @start = Math.min(Math.max(num, 0), @stop - @size)
-  else
-    newStart = parseFloat(num)
-    @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
-  @value = Math.max(@value, @start)
-  @updateTarget()
-  @drawNew()
-  @changed()
-
-SliderMorph::setStop = (num) ->
-  
-  # for context menu demo purposes
-  newStop = undefined
-  if typeof num is "number"
-    @stop = Math.max(num, @start + @size)
-  else
-    newStop = parseFloat(num)
-    @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
-  @value = Math.min(@value, @stop)
-  @updateTarget()
-  @drawNew()
-  @changed()
-
-SliderMorph::setSize = (num) ->
-  
-  # for context menu demo purposes
-  newSize = undefined
-  if typeof num is "number"
-    @size = Math.min(Math.max(num, 1), @stop - @start)
-  else
-    newSize = parseFloat(num)
-    @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
-  @value = Math.min(@value, @stop - @size)
-  @updateTarget()
-  @drawNew()
-  @changed()
-
-SliderMorph::setTarget = ->
-  choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
-  myself = this
-  choices.push @world()
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.target = each
-      myself.setTargetSetter()
-
-
-  if choices.length is 1
-    @target = choices[0]
-    @setTargetSetter()
-  else menu.popUpAtHand @world()  if choices.length > 0
-
-SliderMorph::setTargetSetter = ->
-  choices = @target.numericalSetters()
-  menu = new MenuMorph(this, "choose target property:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each, ->
-      myself.action = each
-
-
-  if choices.length is 1
-    @action = choices[0]
-  else menu.popUpAtHand @world()  if choices.length > 0
-
-SliderMorph::numericalSetters = ->
-  # for context menu demo purposes
-  list = SliderMorph.uber.numericalSetters.call(this)
-  list.push "setStart", "setStop", "setSize"
-  list
-
-
-# SliderMorph stepping:
-SliderMorph::step = null
-SliderMorph::mouseDownLeft = (pos) ->
-  world = undefined
-  myself = this
-  unless @button.bounds.containsPoint(pos)
-    @offset = new Point() # return null;
-  else
-    @offset = pos.subtract(@button.bounds.origin)
-  world = @root()
-  @step = ->
-    mousePos = undefined
-    newX = undefined
-    newY = undefined
-    if world.hand.mouseButton
-      mousePos = world.hand.bounds.origin
-      if myself.orientation is "vertical"
-        newX = myself.button.bounds.origin.x
-        newY = Math.max(Math.min(mousePos.y - myself.offset.y, myself.bottom() - myself.button.height()), myself.top())
-      else
-        newY = myself.button.bounds.origin.y
-        newX = Math.max(Math.min(mousePos.x - myself.offset.x, myself.right() - myself.button.width()), myself.left())
-      myself.button.setPosition new Point(newX, newY)
-      myself.updateValue()
-    else
-      @step = null
-
-
 # MouseSensorMorph ////////////////////////////////////////////////////
 
 # for demo and debuggin purposes only, to be removed later
+class MouseSensorMorph
+  constructor: (edge, border, borderColor) ->
+    @init edge, border, borderColor
 
 # MouseSensorMorph inherits from BoxMorph:
 MouseSensorMorph:: = new BoxMorph()
@@ -3691,9 +3205,11 @@ MouseSensorMorph::mouseDownLeft = ->
 
 MouseSensorMorph::mouseClickLeft = ->
   @unTouch()
-
-
 # InspectorMorph //////////////////////////////////////////////////////
+
+class InspectorMorph
+  constructor: (target) ->
+    @init target
 
 # InspectorMorph: referenced constructors
 
@@ -4051,9 +3567,12 @@ InspectorMorph::removeProperty = ->
       @target.changed()
   catch err
     @inform err
-
-
 # MenuMorph ///////////////////////////////////////////////////////////
+
+class MenuMorph
+  constructor: (target, title, environment, fontSize) ->
+    @init target, title, environment, fontSize
+
 
 # MenuMorph: referenced constructors
 
@@ -4209,10 +3728,14 @@ MenuMorph::popUpCenteredInWorld = (world) ->
   @drawNew()
   @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
 
-
 # StringMorph /////////////////////////////////////////////////////////
 
 # I am a single line of text
+
+class StringMorph
+  constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
+    @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
+
 
 # StringMorph inherits from Morph:
 StringMorph:: = new Morph()
@@ -4563,11 +4086,14 @@ StringMorph::disableSelecting = ->
   delete @mouseDownLeft
 
   delete @mouseMove
-
-
 # TextMorph ///////////////////////////////////////////////////////////
 
 # I am a multi-line, word-wrapping String
+
+class TextMorph
+  constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
+    @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
+
 
 # TextMorph inherits from Morph:
 TextMorph:: = new Morph()
@@ -5061,11 +4587,14 @@ TextMorph::inspectIt = ->
     inspector.keepWithin world
     world.add inspector
     inspector.changed()
-
-
 # TriggerMorph ////////////////////////////////////////////////////////
 
 # I provide basic button functionality
+
+class TriggerMorph
+  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
+    @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
+
 
 # TriggerMorph inherits from Morph:
 TriggerMorph:: = new Morph()
@@ -5204,11 +4733,13 @@ TriggerMorph::bubbleHelp = (contents) ->
 
 TriggerMorph::popUpbubbleHelp = (contents) ->
   new SpeechBubbleMorph(localize(contents), null, null, 1).popUp @world(), @rightCenter().add(new Point(-8, 0))
-
-
 # MenuItemMorph ///////////////////////////////////////////////////////
 
 # I automatically determine my bounds
+
+class MenuItemMorph
+  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
+    @init target, action, labelString, fontSize, fontStyle, environment, hint, color
 
 # MenuItemMorph inherits from TriggerMorph:
 MenuItemMorph:: = new TriggerMorph()
@@ -5267,11 +4798,13 @@ MenuItemMorph::isListItem = ->
 MenuItemMorph::isSelectedListItem = ->
   return @image is @pressImage  if @isListItem()
   false
-
-
 # FrameMorph //////////////////////////////////////////////////////////
 
 # I clip my submorphs at my bounds
+
+class FrameMorph
+  constructor: (aScrollFrame) ->
+    @init aScrollFrame
 
 # Frames inherit from Morph:
 FrameMorph:: = new Morph()
@@ -5391,64 +4924,13 @@ FrameMorph::keepAllSubmorphsWithin = ->
   myself = this
   @children.forEach (m) ->
     m.keepWithin myself
-
-# StringFieldMorph ////////////////////////////////////////////////////
-
-# StringFieldMorph inherit from FrameMorph:
-StringFieldMorph:: = new FrameMorph()
-StringFieldMorph::constructor = StringFieldMorph
-StringFieldMorph.uber = FrameMorph::
-StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
-  @defaultContents = defaultContents
-  @minWidth = minWidth
-  @fontSize = fontSize
-  @fontStyle = fontStyle
-  @isBold = bold
-  @isItalic = italic
-  @isNumeric = isNumeric or false
-  @text = null
-  StringFieldMorph.uber.init.call this
-  @color = new Color(255, 255, 255)
-  @isEditable = true
-  @acceptsDrops = false
-  @drawNew()
-
-StringFieldMorph::drawNew = ->
-  txt = undefined
-  txt = (if @text then @string() else @defaultContents)
-  @text = null
-  @children.forEach (child) ->
-    child.destroy()
-
-  @children = []
-  @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
-  @text.isNumeric = @isNumeric # for whichever reason...
-  @text.setPosition @bounds.origin.copy()
-  @text.isEditable = @isEditable
-  @text.isDraggable = false
-  @text.enableSelecting()
-  @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
-  StringFieldMorph.uber.drawNew.call this
-  @add @text
-
-StringFieldMorph::string = ->
-  @text.text
-
-StringFieldMorph::mouseClickLeft = ->
-  @text.edit()  if @isEditable
-
-
-# StringFieldMorph duplicating:
-StringFieldMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = StringFieldMorph.uber.copyRecordingReferences.call(this, dict)
-  c.text = (dict[@text])  if c.text and dict[@text]
-  c
-
 # BouncerMorph ////////////////////////////////////////////////////////
 
 # I am a Demo of a stepping custom Morph
+
+class BouncerMorph
+  constructor: () ->
+    @init()
 
 # Bouncers inherit from Morph:
 BouncerMorph:: = new Morph()
@@ -5503,275 +4985,16 @@ BouncerMorph::step = ->
         @moveLeft()
       @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
       @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
-
-
-
-# ScrollFrameMorph ////////////////////////////////////////////////////
-ScrollFrameMorph:: = new FrameMorph()
-ScrollFrameMorph::constructor = ScrollFrameMorph
-ScrollFrameMorph.uber = FrameMorph::
-ScrollFrameMorph::init = (scroller, size, sliderColor) ->
-  myself = this
-  ScrollFrameMorph.uber.init.call this
-  @scrollBarSize = size or MorphicPreferences.scrollBarSize
-  @autoScrollTrigger = null
-  @isScrollingByDragging = true # change if desired
-  @hasVelocity = true # dto.
-  @padding = 0 # around the scrollable area
-  @growth = 0 # pixels or Point to grow right/left when near edge
-  @isTextLineWrapping = false
-  @contents = scroller or new FrameMorph(this)
-  @add @contents
-  # start
-  # stop
-  # value
-  # size
-  @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
-  @hBar.setHeight @scrollBarSize
-  @hBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.left() - num, myself.contents.position().y)
-
-  @hBar.isDraggable = false
-  @add @hBar
-  # start
-  # stop
-  # value
-  # size
-  @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
-  @vBar.setWidth @scrollBarSize
-  @vBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.contents.position().x, myself.top() - num)
-
-  @vBar.isDraggable = false
-  @add @vBar
-
-ScrollFrameMorph::adjustScrollBars = ->
-  hWidth = @width() - @scrollBarSize
-  vHeight = @height() - @scrollBarSize
-  @changed()
-  if @contents.width() > @width() + MorphicPreferences.scrollBarSize
-    @hBar.show()
-    @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
-    @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
-    @hBar.start = 0
-    @hBar.stop = @contents.width() - @width()
-    @hBar.size = @width() / @contents.width() * @hBar.stop
-    @hBar.value = @left() - @contents.left()
-    @hBar.drawNew()
-  else
-    @hBar.hide()
-  if @contents.height() > @height() + @scrollBarSize
-    @vBar.show()
-    @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
-    @vBar.setPosition new Point(@right() - @vBar.width(), @top())
-    @vBar.start = 0
-    @vBar.stop = @contents.height() - @height()
-    @vBar.size = @height() / @contents.height() * @vBar.stop
-    @vBar.value = @top() - @contents.top()
-    @vBar.drawNew()
-  else
-    @vBar.hide()
-
-ScrollFrameMorph::addContents = (aMorph) ->
-  @contents.add aMorph
-  @contents.adjustBounds()
-
-ScrollFrameMorph::setContents = (aMorph) ->
-  @contents.children.forEach (m) ->
-    m.destroy()
-
-  @contents.children = []
-  aMorph.setPosition @position().add(new Point(2, 2))
-  @addContents aMorph
-
-ScrollFrameMorph::setExtent = (aPoint) ->
-  @contents.setPosition @position().copy()  if @isTextLineWrapping
-  ScrollFrameMorph.uber.setExtent.call this, aPoint
-  @contents.adjustBounds()
-
-
-# ScrollFrameMorph scrolling by dragging:
-ScrollFrameMorph::scrollX = (steps) ->
-  cl = @contents.left()
-  l = @left()
-  cw = @contents.width()
-  r = @right()
-  newX = undefined
-  newX = cl + steps
-  newX = l  if newX > l
-  newX = r - cw  if newX + cw < r
-  @contents.setLeft newX  if newX isnt cl
-
-ScrollFrameMorph::scrollY = (steps) ->
-  ct = @contents.top()
-  t = @top()
-  ch = @contents.height()
-  b = @bottom()
-  newY = undefined
-  newY = ct + steps
-  newY = t  if newY > t
-  newY = b - ch  if newY + ch < b
-  @contents.setTop newY  if newY isnt ct
-
-ScrollFrameMorph::step = ->
-  nop()
-
-ScrollFrameMorph::mouseDownLeft = (pos) ->
-  return null  unless @isScrollingByDragging
-  world = @root()
-  oldPos = pos
-  myself = this
-  deltaX = 0
-  deltaY = 0
-  friction = 0.8
-  @step = ->
-    newPos = undefined
-    if world.hand.mouseButton and (world.hand.children.length is 0) and (myself.bounds.containsPoint(world.hand.position()))
-      newPos = world.hand.bounds.origin
-      deltaX = newPos.x - oldPos.x
-      myself.scrollX deltaX  if deltaX isnt 0
-      deltaY = newPos.y - oldPos.y
-      myself.scrollY deltaY  if deltaY isnt 0
-      oldPos = newPos
-    else
-      unless myself.hasVelocity
-        myself.step = ->
-          nop()
-      else
-        if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-          myself.step = ->
-            nop()
-        else
-          deltaX = deltaX * friction
-          myself.scrollX Math.round(deltaX)
-          deltaY = deltaY * friction
-          myself.scrollY Math.round(deltaY)
-    @adjustScrollBars()
-
-ScrollFrameMorph::startAutoScrolling = ->
-  myself = this
-  inset = MorphicPreferences.scrollBarSize * 3
-  world = @world()
-  hand = undefined
-  inner = undefined
-  pos = undefined
-  return null  unless world
-  hand = world.hand
-  @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
-  @step = ->
-    pos = hand.bounds.origin
-    inner = myself.bounds.insetBy(inset)
-    if (myself.bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
-      myself.autoScroll pos
-    else
-      myself.step = ->
-        nop()
-
-      myself.autoScrollTrigger = null
-
-ScrollFrameMorph::autoScroll = (pos) ->
-  inset = undefined
-  area = undefined
-  return null  if Date.now() - @autoScrollTrigger < 500
-  inset = MorphicPreferences.scrollBarSize * 3
-  area = @topLeft().extent(new Point(@width(), inset))
-  @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
-  area = @topLeft().extent(new Point(inset, @height()))
-  @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)
-  area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
-  @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
-  area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
-  @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
-  @adjustScrollBars()
-
-
-# ScrollFrameMorph events:
-ScrollFrameMorph::mouseScroll = (y, x) ->
-  @scrollY y * MorphicPreferences.mouseScrollAmount  if y
-  @scrollX x * MorphicPreferences.mouseScrollAmount  if x
-  @adjustScrollBars()
-
-ScrollFrameMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = ScrollFrameMorph.uber.copyRecordingReferences.call(this, dict)
-  c.contents = (dict[@contents])  if c.contents and dict[@contents]
-  if c.hBar and dict[@hBar]
-    c.hBar = (dict[@hBar])
-    c.hBar.action = (num) ->
-      c.contents.setPosition new Point(c.left() - num, c.contents.position().y)
-  if c.vBar and dict[@vBar]
-    c.vBar = (dict[@vBar])
-    c.vBar.action = (num) ->
-      c.contents.setPosition new Point(c.contents.position().x, c.top() - num)
-  c
-
-ScrollFrameMorph::developersMenu = ->
-  menu = ScrollFrameMorph.uber.developersMenu.call(this)
-  if @isTextLineWrapping
-    menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
-  else
-    menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"
-  menu
-
-ScrollFrameMorph::toggleTextLineWrapping = ->
-  @isTextLineWrapping = not @isTextLineWrapping
-
-# ListMorph ///////////////////////////////////////////////////////////
-ListMorph:: = new ScrollFrameMorph()
-ListMorph::constructor = ListMorph
-ListMorph.uber = ScrollFrameMorph::
-ListMorph::init = (elements, labelGetter, format) ->
-  ListMorph.uber.init.call this
-  @contents.acceptsDrops = false
-  @color = new Color(255, 255, 255)
-  @hBar.alpha = 0.6
-  @vBar.alpha = 0.6
-  @elements = elements or []
-  @labelGetter = labelGetter
-  @format = format
-  @listContents = null
-  @selected = null
-  @action = null
-  @acceptsDrops = false
-  @buildListContents()
-
-ListMorph::buildListContents = ->
-  myself = this
-  @listContents.destroy()  if @listContents
-  @listContents = new MenuMorph(@select, null, this)
-  @elements = ["(empty)"]  if @elements.length is 0
-  @elements.forEach (element) ->
-    color = null
-    myself.format.forEach (pair) ->
-      color = pair[0]  if pair[1].call(null, element)
-
-    # label string
-    # action
-    # hint
-    myself.listContents.addItem myself.labelGetter(element), element, null, color
-
-  @listContents.setPosition @contents.position()
-  @listContents.isListContents = true
-  @listContents.drawNew()
-  @addContents @listContents
-
-ListMorph::select = (item) ->
-  @selected = item
-  @action.call null, item  if @action
-
-ListMorph::setExtent = (aPoint) ->
-  lb = @listContents.bounds
-  nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
-  @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
-  @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-  ListMorph.uber.setExtent.call this, aPoint
-
 # HandMorph ///////////////////////////////////////////////////////////
 
 # I represent the Mouse cursor
 
 # HandMorph inherits from Morph:
+
+class HandMorph
+  constructor: (aWorld) ->
+    @init aWorld
+
 HandMorph:: = new Morph()
 HandMorph::constructor = HandMorph
 HandMorph.uber = Morph::
@@ -6202,8 +5425,67 @@ HandMorph::processMouseMove = (event) ->
                 newMorph.startAutoScrolling();
 
   @mouseOverList = mouseOverNew
+# StringFieldMorph ////////////////////////////////////////////////////
 
+class StringFieldMorph
+  constructor: (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
+    @init defaultContents or "", minWidth or 100, fontSize or 12, fontStyle or "sans-serif", bold or false, italic or false, isNumeric
+
+# StringFieldMorph inherit from FrameMorph:
+StringFieldMorph:: = new FrameMorph()
+StringFieldMorph::constructor = StringFieldMorph
+StringFieldMorph.uber = FrameMorph::
+StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
+  @defaultContents = defaultContents
+  @minWidth = minWidth
+  @fontSize = fontSize
+  @fontStyle = fontStyle
+  @isBold = bold
+  @isItalic = italic
+  @isNumeric = isNumeric or false
+  @text = null
+  StringFieldMorph.uber.init.call this
+  @color = new Color(255, 255, 255)
+  @isEditable = true
+  @acceptsDrops = false
+  @drawNew()
+
+StringFieldMorph::drawNew = ->
+  txt = undefined
+  txt = (if @text then @string() else @defaultContents)
+  @text = null
+  @children.forEach (child) ->
+    child.destroy()
+
+  @children = []
+  @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
+  @text.isNumeric = @isNumeric # for whichever reason...
+  @text.setPosition @bounds.origin.copy()
+  @text.isEditable = @isEditable
+  @text.isDraggable = false
+  @text.enableSelecting()
+  @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
+  StringFieldMorph.uber.drawNew.call this
+  @add @text
+
+StringFieldMorph::string = ->
+  @text.text
+
+StringFieldMorph::mouseClickLeft = ->
+  @text.edit()  if @isEditable
+
+
+# StringFieldMorph duplicating:
+StringFieldMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = StringFieldMorph.uber.copyRecordingReferences.call(this, dict)
+  c.text = (dict[@text])  if c.text and dict[@text]
+  c
 # WorldMorph //////////////////////////////////////////////////////////
+class WorldMorph
+  constructor: (aCanvas, fillPage) ->
+    @init aCanvas, fillPage
 
 # I represent the <canvas> element
 
@@ -6800,4 +6082,644 @@ WorldMorph::togglePreferences = ->
     MorphicPreferences = touchScreenSettings
   else
     MorphicPreferences = standardSettings
+# SliderButtonMorph ///////////////////////////////////////////////////
 
+class SliderButtonMorph extends CircleBoxMorph
+  constructor: (orientation) ->
+    @init orientation
+
+# SliderButtonMorph inherits from CircleBoxMorph:
+# SliderButtonMorph:: = new CircleBoxMorph()
+SliderButtonMorph::init = (orientation) ->
+  @color = new Color(80, 80, 80)
+  @highlightColor = new Color(90, 90, 140)
+  @pressColor = new Color(80, 80, 160)
+  @is3D = true
+  @hasMiddleDip = true
+  super orientation
+
+SliderButtonMorph::autoOrientation = ->
+  nop()
+
+SliderButtonMorph::drawNew = ->
+  colorBak = @color.copy()
+  super
+  @drawEdges()  if @is3D
+  @normalImage = @image
+  @color = @highlightColor.copy()
+  super
+  @drawEdges()  if @is3D
+  @highlightImage = @image
+  @color = @pressColor.copy()
+  super
+  @drawEdges()  if @is3D
+  @pressImage = @image
+  @color = colorBak
+  @image = @normalImage
+
+SliderButtonMorph::drawEdges = ->
+  context = @image.getContext("2d")
+  gradient = undefined
+  radius = undefined
+  w = @width()
+  h = @height()
+  context.lineJoin = "round"
+  context.lineCap = "round"
+  if @orientation is "vertical"
+    context.lineWidth = w / 3
+    gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)
+    gradient.addColorStop 0, "white"
+    gradient.addColorStop 1, @color.toString()
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo context.lineWidth * 0.5, w / 2
+    context.lineTo context.lineWidth * 0.5, h - w / 2
+    context.stroke()
+    gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)
+    gradient.addColorStop 0, @color.toString()
+    gradient.addColorStop 1, "black"
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo w - context.lineWidth * 0.5, w / 2
+    context.lineTo w - context.lineWidth * 0.5, h - w / 2
+    context.stroke()
+    if @hasMiddleDip
+      gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0)
+      radius = w / 4
+      gradient.addColorStop 0, "black"
+      gradient.addColorStop 0.35, @color.toString()
+      gradient.addColorStop 0.65, @color.toString()
+      gradient.addColorStop 1, "white"
+      context.fillStyle = gradient
+      context.beginPath()
+      context.arc w / 2, h / 2, radius, radians(0), radians(360), false
+      context.closePath()
+      context.fill()
+  else if @orientation is "horizontal"
+    context.lineWidth = h / 3
+    gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)
+    gradient.addColorStop 0, "white"
+    gradient.addColorStop 1, @color.toString()
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo h / 2, context.lineWidth * 0.5
+    context.lineTo w - h / 2, context.lineWidth * 0.5
+    context.stroke()
+    gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)
+    gradient.addColorStop 0, @color.toString()
+    gradient.addColorStop 1, "black"
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo h / 2, h - context.lineWidth * 0.5
+    context.lineTo w - h / 2, h - context.lineWidth * 0.5
+    context.stroke()
+    if @hasMiddleDip
+      gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth)
+      radius = h / 4
+      gradient.addColorStop 0, "black"
+      gradient.addColorStop 0.35, @color.toString()
+      gradient.addColorStop 0.65, @color.toString()
+      gradient.addColorStop 1, "white"
+      context.fillStyle = gradient
+      context.beginPath()
+      context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false
+      context.closePath()
+      context.fill()
+
+
+#SliderButtonMorph events:
+SliderButtonMorph::mouseEnter = ->
+  @image = @highlightImage
+  @changed()
+
+SliderButtonMorph::mouseLeave = ->
+  @image = @normalImage
+  @changed()
+
+SliderButtonMorph::mouseDownLeft = (pos) ->
+  @image = @pressImage
+  @changed()
+  @escalateEvent "mouseDownLeft", pos
+
+SliderButtonMorph::mouseClickLeft = ->
+  @image = @highlightImage
+  @changed()
+
+SliderButtonMorph::mouseMove = ->
+  
+  # prevent my parent from getting picked up
+  nop()
+# SliderMorph ///////////////////////////////////////////////////
+
+class SliderMorph
+  constructor: (start, stop, value, size, orientation, color) ->
+    @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
+
+# SliderMorph inherits from CircleBoxMorph:
+SliderMorph:: = new CircleBoxMorph()
+SliderMorph::constructor = SliderMorph
+SliderMorph.uber = CircleBoxMorph::
+SliderMorph::init = (start, stop, value, size, orientation, color) ->
+  @target = null
+  @action = null
+  @start = start
+  @stop = stop
+  @value = value
+  @size = size
+  @offset = null
+  @button = new SliderButtonMorph()
+  @button.isDraggable = false
+  @button.color = new Color(200, 200, 200)
+  @button.highlightColor = new Color(210, 210, 255)
+  @button.pressColor = new Color(180, 180, 255)
+  SliderMorph.uber.init.call this, orientation
+  @add @button
+  @alpha = 0.3
+  @color = color or new Color(0, 0, 0)
+  @setExtent new Point(20, 100)
+
+
+# this.drawNew();
+SliderMorph::autoOrientation = ->
+  nop()
+
+SliderMorph::rangeSize = ->
+  @stop - @start
+
+SliderMorph::ratio = ->
+  @size / @rangeSize()
+
+SliderMorph::unitSize = ->
+  return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"
+  (@width() - @button.width()) / @rangeSize()
+
+SliderMorph::drawNew = ->
+  bw = undefined
+  bh = undefined
+  posX = undefined
+  posY = undefined
+  SliderMorph.uber.drawNew.call this
+  @button.orientation = @orientation
+  if @orientation is "vertical"
+    bw = @width() - 2
+    bh = Math.max(bw, Math.round(@height() * @ratio()))
+    @button.silentSetExtent new Point(bw, bh)
+    posX = 1
+    posY = Math.min(Math.round((@value - @start) * @unitSize()), @height() - @button.height())
+  else
+    bh = @height() - 2
+    bw = Math.max(bh, Math.round(@width() * @ratio()))
+    @button.silentSetExtent new Point(bw, bh)
+    posY = 1
+    posX = Math.min(Math.round((@value - @start) * @unitSize()), @width() - @button.width())
+  @button.setPosition new Point(posX, posY).add(@bounds.origin)
+  @button.drawNew()
+  @button.changed()
+
+SliderMorph::updateValue = ->
+  relPos = undefined
+  if @orientation is "vertical"
+    relPos = @button.top() - @top()
+  else
+    relPos = @button.left() - @left()
+  @value = Math.round(relPos / @unitSize() + @start)
+  @updateTarget()
+
+SliderMorph::updateTarget = ->
+  if @action
+    if typeof @action is "function"
+      @action.call @target, @value
+    else # assume it's a String
+      @target[@action] @value
+
+
+# SliderMorph duplicating:
+SliderMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = SliderMorph.uber.copyRecordingReferences.call(this, dict)
+  c.target = (dict[@target])  if c.target and dict[@target]
+  c.button = (dict[@button])  if c.button and dict[@button]
+  c
+
+
+# SliderMorph menu:
+SliderMorph::developersMenu = ->
+  menu = SliderMorph.uber.developersMenu.call(this)
+  menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
+  menu.addItem "floor...", (->
+    @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
+  ), "set the minimum value\nwhich can be selected"
+  menu.addItem "ceiling...", (->
+    @prompt menu.title + "\nceiling:", @setStop, this, @stop.toString(), null, @start + @size, @size * 100, true
+  ), "set the maximum value\nwhich can be selected"
+  menu.addItem "button size...", (->
+    @prompt menu.title + "\nbutton size:", @setSize, this, @size.toString(), null, 1, @stop - @start, true
+  ), "set the range\ncovered by\nthe slider button"
+  menu.addLine()
+  menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+  menu
+
+SliderMorph::showValue = ->
+  @inform @value
+
+SliderMorph::userSetStart = (num) ->
+  
+  # for context menu demo purposes
+  @start = Math.max(num, @stop)
+
+SliderMorph::setStart = (num) ->
+  
+  # for context menu demo purposes
+  newStart = undefined
+  if typeof num is "number"
+    @start = Math.min(Math.max(num, 0), @stop - @size)
+  else
+    newStart = parseFloat(num)
+    @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
+  @value = Math.max(@value, @start)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setStop = (num) ->
+  
+  # for context menu demo purposes
+  newStop = undefined
+  if typeof num is "number"
+    @stop = Math.max(num, @start + @size)
+  else
+    newStop = parseFloat(num)
+    @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
+  @value = Math.min(@value, @stop)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setSize = (num) ->
+  
+  # for context menu demo purposes
+  newSize = undefined
+  if typeof num is "number"
+    @size = Math.min(Math.max(num, 1), @stop - @start)
+  else
+    newSize = parseFloat(num)
+    @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
+  @value = Math.min(@value, @stop - @size)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setTarget = ->
+  choices = @overlappedMorphs()
+  menu = new MenuMorph(this, "choose target:")
+  myself = this
+  choices.push @world()
+  choices.forEach (each) ->
+    menu.addItem each.toString().slice(0, 50), ->
+      myself.target = each
+      myself.setTargetSetter()
+
+
+  if choices.length is 1
+    @target = choices[0]
+    @setTargetSetter()
+  else menu.popUpAtHand @world()  if choices.length > 0
+
+SliderMorph::setTargetSetter = ->
+  choices = @target.numericalSetters()
+  menu = new MenuMorph(this, "choose target property:")
+  myself = this
+  choices.forEach (each) ->
+    menu.addItem each, ->
+      myself.action = each
+
+
+  if choices.length is 1
+    @action = choices[0]
+  else menu.popUpAtHand @world()  if choices.length > 0
+
+SliderMorph::numericalSetters = ->
+  # for context menu demo purposes
+  list = SliderMorph.uber.numericalSetters.call(this)
+  list.push "setStart", "setStop", "setSize"
+  list
+
+
+# SliderMorph stepping:
+SliderMorph::step = null
+SliderMorph::mouseDownLeft = (pos) ->
+  world = undefined
+  myself = this
+  unless @button.bounds.containsPoint(pos)
+    @offset = new Point() # return null;
+  else
+    @offset = pos.subtract(@button.bounds.origin)
+  world = @root()
+  @step = ->
+    mousePos = undefined
+    newX = undefined
+    newY = undefined
+    if world.hand.mouseButton
+      mousePos = world.hand.bounds.origin
+      if myself.orientation is "vertical"
+        newX = myself.button.bounds.origin.x
+        newY = Math.max(Math.min(mousePos.y - myself.offset.y, myself.bottom() - myself.button.height()), myself.top())
+      else
+        newY = myself.button.bounds.origin.y
+        newX = Math.max(Math.min(mousePos.x - myself.offset.x, myself.right() - myself.button.width()), myself.left())
+      myself.button.setPosition new Point(newX, newY)
+      myself.updateValue()
+    else
+      @step = null
+# ScrollFrameMorph ////////////////////////////////////////////////////
+
+class ScrollFrameMorph
+  constructor: (scroller, size, sliderColor) ->
+    @init scroller, size, sliderColor
+
+
+ScrollFrameMorph:: = new FrameMorph()
+ScrollFrameMorph::constructor = ScrollFrameMorph
+ScrollFrameMorph.uber = FrameMorph::
+ScrollFrameMorph::init = (scroller, size, sliderColor) ->
+  myself = this
+  ScrollFrameMorph.uber.init.call this
+  @scrollBarSize = size or MorphicPreferences.scrollBarSize
+  @autoScrollTrigger = null
+  @isScrollingByDragging = true # change if desired
+  @hasVelocity = true # dto.
+  @padding = 0 # around the scrollable area
+  @growth = 0 # pixels or Point to grow right/left when near edge
+  @isTextLineWrapping = false
+  @contents = scroller or new FrameMorph(this)
+  @add @contents
+  # start
+  # stop
+  # value
+  # size
+  @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
+  @hBar.setHeight @scrollBarSize
+  @hBar.action = (num) ->
+    myself.contents.setPosition new Point(myself.left() - num, myself.contents.position().y)
+
+  @hBar.isDraggable = false
+  @add @hBar
+  # start
+  # stop
+  # value
+  # size
+  @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
+  @vBar.setWidth @scrollBarSize
+  @vBar.action = (num) ->
+    myself.contents.setPosition new Point(myself.contents.position().x, myself.top() - num)
+
+  @vBar.isDraggable = false
+  @add @vBar
+
+ScrollFrameMorph::adjustScrollBars = ->
+  hWidth = @width() - @scrollBarSize
+  vHeight = @height() - @scrollBarSize
+  @changed()
+  if @contents.width() > @width() + MorphicPreferences.scrollBarSize
+    @hBar.show()
+    @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
+    @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
+    @hBar.start = 0
+    @hBar.stop = @contents.width() - @width()
+    @hBar.size = @width() / @contents.width() * @hBar.stop
+    @hBar.value = @left() - @contents.left()
+    @hBar.drawNew()
+  else
+    @hBar.hide()
+  if @contents.height() > @height() + @scrollBarSize
+    @vBar.show()
+    @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
+    @vBar.setPosition new Point(@right() - @vBar.width(), @top())
+    @vBar.start = 0
+    @vBar.stop = @contents.height() - @height()
+    @vBar.size = @height() / @contents.height() * @vBar.stop
+    @vBar.value = @top() - @contents.top()
+    @vBar.drawNew()
+  else
+    @vBar.hide()
+
+ScrollFrameMorph::addContents = (aMorph) ->
+  @contents.add aMorph
+  @contents.adjustBounds()
+
+ScrollFrameMorph::setContents = (aMorph) ->
+  @contents.children.forEach (m) ->
+    m.destroy()
+
+  @contents.children = []
+  aMorph.setPosition @position().add(new Point(2, 2))
+  @addContents aMorph
+
+ScrollFrameMorph::setExtent = (aPoint) ->
+  @contents.setPosition @position().copy()  if @isTextLineWrapping
+  ScrollFrameMorph.uber.setExtent.call this, aPoint
+  @contents.adjustBounds()
+
+
+# ScrollFrameMorph scrolling by dragging:
+ScrollFrameMorph::scrollX = (steps) ->
+  cl = @contents.left()
+  l = @left()
+  cw = @contents.width()
+  r = @right()
+  newX = undefined
+  newX = cl + steps
+  newX = l  if newX > l
+  newX = r - cw  if newX + cw < r
+  @contents.setLeft newX  if newX isnt cl
+
+ScrollFrameMorph::scrollY = (steps) ->
+  ct = @contents.top()
+  t = @top()
+  ch = @contents.height()
+  b = @bottom()
+  newY = undefined
+  newY = ct + steps
+  newY = t  if newY > t
+  newY = b - ch  if newY + ch < b
+  @contents.setTop newY  if newY isnt ct
+
+ScrollFrameMorph::step = ->
+  nop()
+
+ScrollFrameMorph::mouseDownLeft = (pos) ->
+  return null  unless @isScrollingByDragging
+  world = @root()
+  oldPos = pos
+  myself = this
+  deltaX = 0
+  deltaY = 0
+  friction = 0.8
+  @step = ->
+    newPos = undefined
+    if world.hand.mouseButton and (world.hand.children.length is 0) and (myself.bounds.containsPoint(world.hand.position()))
+      newPos = world.hand.bounds.origin
+      deltaX = newPos.x - oldPos.x
+      myself.scrollX deltaX  if deltaX isnt 0
+      deltaY = newPos.y - oldPos.y
+      myself.scrollY deltaY  if deltaY isnt 0
+      oldPos = newPos
+    else
+      unless myself.hasVelocity
+        myself.step = ->
+          nop()
+      else
+        if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
+          myself.step = ->
+            nop()
+        else
+          deltaX = deltaX * friction
+          myself.scrollX Math.round(deltaX)
+          deltaY = deltaY * friction
+          myself.scrollY Math.round(deltaY)
+    @adjustScrollBars()
+
+ScrollFrameMorph::startAutoScrolling = ->
+  myself = this
+  inset = MorphicPreferences.scrollBarSize * 3
+  world = @world()
+  hand = undefined
+  inner = undefined
+  pos = undefined
+  return null  unless world
+  hand = world.hand
+  @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
+  @step = ->
+    pos = hand.bounds.origin
+    inner = myself.bounds.insetBy(inset)
+    if (myself.bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
+      myself.autoScroll pos
+    else
+      myself.step = ->
+        nop()
+
+      myself.autoScrollTrigger = null
+
+ScrollFrameMorph::autoScroll = (pos) ->
+  inset = undefined
+  area = undefined
+  return null  if Date.now() - @autoScrollTrigger < 500
+  inset = MorphicPreferences.scrollBarSize * 3
+  area = @topLeft().extent(new Point(@width(), inset))
+  @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
+  area = @topLeft().extent(new Point(inset, @height()))
+  @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)
+  area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
+  @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
+  area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
+  @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
+  @adjustScrollBars()
+
+
+# ScrollFrameMorph events:
+ScrollFrameMorph::mouseScroll = (y, x) ->
+  @scrollY y * MorphicPreferences.mouseScrollAmount  if y
+  @scrollX x * MorphicPreferences.mouseScrollAmount  if x
+  @adjustScrollBars()
+
+ScrollFrameMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = ScrollFrameMorph.uber.copyRecordingReferences.call(this, dict)
+  c.contents = (dict[@contents])  if c.contents and dict[@contents]
+  if c.hBar and dict[@hBar]
+    c.hBar = (dict[@hBar])
+    c.hBar.action = (num) ->
+      c.contents.setPosition new Point(c.left() - num, c.contents.position().y)
+  if c.vBar and dict[@vBar]
+    c.vBar = (dict[@vBar])
+    c.vBar.action = (num) ->
+      c.contents.setPosition new Point(c.contents.position().x, c.top() - num)
+  c
+
+ScrollFrameMorph::developersMenu = ->
+  menu = ScrollFrameMorph.uber.developersMenu.call(this)
+  if @isTextLineWrapping
+    menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
+  else
+    menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"
+  menu
+
+ScrollFrameMorph::toggleTextLineWrapping = ->
+  @isTextLineWrapping = not @isTextLineWrapping# ListMorph ///////////////////////////////////////////////////////////
+
+class ListMorph
+  constructor: (elements, labelGetter, format) ->
+  
+  #
+  #    passing a format is optional. If the format parameter is specified
+  #    it has to be of the following pattern:
+  #
+  #        [
+  #            [<color>, <single-argument predicate>],
+  #            ...
+  #        ]
+  #
+  #    multiple color conditions can be passed in such a format list, the
+  #    last predicate to evaluate true when given the list element sets
+  #    the given color. If no condition is met, the default color (black)
+  #    will be assigned.
+  #    
+  #    An example of how to use fomats can be found in the InspectorMorph's
+  #    "markOwnProperties" mechanism.
+  #
+    @init elements or [], labelGetter or (element) ->
+      return element  if isString(element)
+      return element.toSource()  if element.toSource
+      element.toString()
+    , format or []
+
+ListMorph:: = new ScrollFrameMorph()
+ListMorph::constructor = ListMorph
+ListMorph.uber = ScrollFrameMorph::
+ListMorph::init = (elements, labelGetter, format) ->
+  ListMorph.uber.init.call this
+  @contents.acceptsDrops = false
+  @color = new Color(255, 255, 255)
+  @hBar.alpha = 0.6
+  @vBar.alpha = 0.6
+  @elements = elements or []
+  @labelGetter = labelGetter
+  @format = format
+  @listContents = null
+  @selected = null
+  @action = null
+  @acceptsDrops = false
+  @buildListContents()
+
+ListMorph::buildListContents = ->
+  myself = this
+  @listContents.destroy()  if @listContents
+  @listContents = new MenuMorph(@select, null, this)
+  @elements = ["(empty)"]  if @elements.length is 0
+  @elements.forEach (element) ->
+    color = null
+    myself.format.forEach (pair) ->
+      color = pair[0]  if pair[1].call(null, element)
+
+    # label string
+    # action
+    # hint
+    myself.listContents.addItem myself.labelGetter(element), element, null, color
+
+  @listContents.setPosition @contents.position()
+  @listContents.isListContents = true
+  @listContents.drawNew()
+  @addContents @listContents
+
+ListMorph::select = (item) ->
+  @selected = item
+  @action.call null, item  if @action
+
+ListMorph::setExtent = (aPoint) ->
+  lb = @listContents.bounds
+  nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
+  @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
+  @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+  ListMorph.uber.setExtent.call this, aPoint
