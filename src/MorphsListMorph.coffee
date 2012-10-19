@@ -42,7 +42,7 @@ MorphsListMorph::buildPanes = ->
   @children.forEach (m) ->
     # keep work pane around
     m.destroy()  if m isnt @work
-
+  
   @children = []
   
   # label
@@ -58,7 +58,7 @@ MorphsListMorph::buildPanes = ->
     theWordMorph = "Morph"
     ListOfMorphs.push i  if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
   @morphsList = new ListMorph(ListOfMorphs, null)
-
+  
   # so far nothing happens when items are selected
   #@morphsList.action = (selected) ->
   #  val = undefined
@@ -77,17 +77,17 @@ MorphsListMorph::buildPanes = ->
   #  cnts.enableSelecting()
   #  cnts.setReceiver myself.target
   #  myself.detail.setContents cnts
-
+  
   @morphsList.hBar.alpha = 0.6
   @morphsList.vBar.alpha = 0.6
   @add @morphsList
-
+  
   # close button
   @buttonClose = new TriggerMorph()
   @buttonClose.labelString = "close"
   @buttonClose.action = ->
     myself.destroy()
-
+  
   @add @buttonClose
   
   # resizer

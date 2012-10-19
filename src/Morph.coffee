@@ -159,7 +159,7 @@ Morph::fullBounds = ->
   result = @bounds
   @children.forEach (child) ->
     result = result.merge(child.fullBounds())  if child.isVisible
-
+  
   result
 
 Morph::fullBoundsNoShadow = ->
@@ -169,7 +169,7 @@ Morph::fullBoundsNoShadow = ->
   result = @bounds
   @children.forEach (child) ->
     result = result.merge(child.fullBounds())  if (child not instanceof ShadowMorph) and (child.isVisible)
-
+  
   result
 
 Morph::visibleBounds = ->
@@ -181,7 +181,7 @@ Morph::visibleBounds = ->
   )
   frames.forEach (f) ->
     visible = visible.intersect(f.bounds)
-
+  
   visible
 
 
@@ -191,7 +191,7 @@ Morph::moveBy = (delta) ->
   @bounds = @bounds.translateBy(delta)
   @children.forEach (child) ->
     child.moveBy delta
-
+  
   @changed()
 
 Morph::silentMoveBy = (delta) ->
@@ -303,7 +303,7 @@ Morph::drawTexture = (url) ->
   @cachedTexture = new Image()
   @cachedTexture.onload = ->
     myself.drawCachedTexture()
-
+  
   @cachedTexture.src = @texture = url # make absolute
 
 Morph::drawCachedTexture = ->
@@ -444,7 +444,7 @@ Morph::fullImage = ->
     if morph.isVisible
       ctx.globalAlpha = morph.alpha
       ctx.drawImage morph.image, morph.bounds.origin.x - fb.origin.x, morph.bounds.origin.y - fb.origin.y
-
+  
   img
 
 
@@ -595,7 +595,7 @@ Morph::morphAt = (aPoint) ->
   result = null
   morphs.forEach (m) ->
     result = m  if m.fullBounds().containsPoint(aPoint) and (result is null)
-
+  
   result
 
 
@@ -669,7 +669,7 @@ Morph::fullCopy = ->
   c = @copyRecordingReferences(dict)
   c.forAllChildren (m) ->
     m.updateReferences dict
-
+  
   c
 
 Morph::copyRecordingReferences = (dict) ->
@@ -689,7 +689,7 @@ Morph::copyRecordingReferences = (dict) ->
   dict[this] = c
   @children.forEach (m) ->
     c.add m.copyRecordingReferences(dict)
-
+  
   c
 
 Morph::updateReferences = (dict) ->
@@ -830,10 +830,10 @@ Morph::prompt = (msg, callback, environment, defaultContents, width, floorNum, c
   menu.addLine 2
   menu.addItem "Ok", ->
     entryField.string()
-
+  
   menu.addItem "Cancel", ->
     null
-
+  
   menu.isDraggable = true
   menu.popUpAtHand @world()
   entryField.text.edit()
@@ -847,10 +847,10 @@ Morph::pickColor = (msg, callback, environment, defaultContents) ->
   menu.addLine 2
   menu.addItem "Ok", ->
     colorPicker.getChoice()
-
+  
   menu.addItem "Cancel", ->
     null
-
+  
   menu.isDraggable = true
   menu.popUpAtHand @world()
 
@@ -884,8 +884,8 @@ Morph::hierarchyMenu = ->
     if each.developersMenu and (each isnt world)
       menu.addItem each.toString().slice(0, 50), ->
         each.developersMenu().popUpAtHand world
-
-
+  
+  
   menu
 
 Morph::developersMenu = ->
@@ -897,7 +897,7 @@ Morph::developersMenu = ->
   if userMenu
     menu.addItem "user features...", ->
       userMenu.popUpAtHand world
-
+    
     menu.addLine()
   menu.addItem "color...", (->
     @pickColor menu.title + "\ncolor:", @setColor, this, @color

@@ -47,7 +47,7 @@ FrameMorph::moveBy = (delta) ->
   @bounds = @bounds.translateBy(delta)
   @children.forEach (child) ->
     child.silentMoveBy delta
-
+  
   @changed()
 
 
@@ -58,7 +58,7 @@ FrameMorph::submorphBounds = ->
     result = @children[0].bounds
     @children.forEach (child) ->
       result = result.merge(child.fullBounds())
-
+  
   result
 
 FrameMorph::keepInScrollFrame = ->
@@ -87,7 +87,7 @@ FrameMorph::adjustBounds = ->
       if morph instanceof TextMorph
         morph.setWidth myself.width()
         myself.setHeight Math.max(morph.height(), myself.scrollFrame.height())
-
+  
   @scrollFrame.adjustScrollBars()
 
 

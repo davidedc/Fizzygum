@@ -338,7 +338,7 @@ StringMorph::enableSelecting = ->
       @startMark = @slotAt(pos)
       @endMark = @startMark
       @currentlySelecting = true
-
+  
   @mouseMove = (pos) ->
     if @isEditable and @currentlySelecting and (not @isDraggable)
       newMark = @slotAt(pos)
@@ -349,5 +349,4 @@ StringMorph::enableSelecting = ->
 
 StringMorph::disableSelecting = ->
   delete @mouseDownLeft
-
   delete @mouseMove

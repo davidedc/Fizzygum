@@ -25,7 +25,7 @@ StringFieldMorph::drawNew = ->
   @text = null
   @children.forEach (child) ->
     child.destroy()
-
+  
   @children = []
   @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
   @text.isNumeric = @isNumeric # for whichever reason...

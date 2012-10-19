@@ -1,5 +1,8 @@
 # Global settings /////////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 #global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 #FileList, getBlurredShadowSupport
 modules = {} # keep track of additional loaded modules

@@ -78,8 +78,8 @@ ColorPaletteMorph::setTarget = ->
     menu.addItem each.toString().slice(0, 50), ->
       myself.target = each
       myself.setTargetSetter()
-
-
+  
+  
   if choices.length is 1
     @target = choices[0]
     @setTargetSetter()
@@ -92,8 +92,8 @@ ColorPaletteMorph::setTargetSetter = ->
   choices.forEach (each) ->
     menu.addItem each, ->
       myself.targetSetter = each
-
-
+  
+  
   if choices.length is 1
     @targetSetter = choices[0]
   else menu.popUpAtHand @world()  if choices.length > 0

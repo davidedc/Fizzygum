@@ -39,7 +39,7 @@ HandMorph::morphAtPointer = ->
   result = null
   morphs.forEach (m) ->
     result = m  if m.visibleBounds().containsPoint(myself.bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(myself.bounds.origin))) and (m not instanceof ShadowMorph)
-
+  
   return result  if result isnt null
   @world
 
@@ -207,40 +207,6 @@ HandMorph::processMouseUp = ->
     morph[expectedClick] @bounds.origin
   @mouseButton = null
 
-HandleMorph::rootForGrab = ->
-  this
-
-HandleMorph::mouseEnter = ->
-  @image = @highlightImage
-  @changed()
-
-HandleMorph::mouseLeave = ->
-  @image = @normalImage
-  @changed()
-
-HandleMorph::copyRecordingReferences = (dict) ->
-  c = undefined
-  c = super dict
-  c.target = dict[@target]  if c.target and dict[@target]
-  c
-
-HandleMorph::attach = ->
-  choices = undefined
-  menu = undefined
-  myself = undefined
-  choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.isDraggable = false
-      myself.target = each
-      myself.drawNew()
-      myself.noticesTransparentClick = true
-
-
-  menu.popUpAtHand @world()  if choices.length > 0
-
 HandMorph::processMouseScroll = (event) ->
   morph = @morphAtPointer()
   morph = morph.parent  while morph and not morph.mouseScroll
@@ -266,7 +232,7 @@ HandMorph::processDrop = (event) ->
   #    
   #    events to interested Morphs at the mouse pointer
   #
-
+  
   files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
   file = undefined
   txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
@@ -275,7 +241,7 @@ HandMorph::processDrop = (event) ->
   img = new Image()
   canvas = undefined
   i = undefined
-
+  
   readImage = (aFile) ->
     pic = new Image()
     frd = new FileReader()
@@ -284,11 +250,11 @@ HandMorph::processDrop = (event) ->
       canvas = newCanvas(new Point(pic.width, pic.height))
       canvas.getContext("2d").drawImage pic, 0, 0
       targetDrop.droppedImage canvas, aFile.name
-
+    
     frd = new FileReader()
     frd.onloadend = (e) ->
       pic.src = e.target.result
-
+    
     frd.readAsDataURL aFile
   readAudio = (aFile) ->
     snd = new Audio()
@@ -297,14 +263,14 @@ HandMorph::processDrop = (event) ->
     frd.onloadend = (e) ->
       snd.src = e.target.result
       targetDrop.droppedAudio snd, aFile.name
-
+    
     frd.readAsDataURL aFile
   readText = (aFile) ->
     frd = new FileReader()
     targetDrop = targetDrop.parent  until targetDrop.droppedText
     frd.onloadend = (e) ->
       targetDrop.droppedText e.target.result, aFile.name
-
+    
     frd.readAsText aFile
   parseImgURL = (html) ->
     url = ""
@@ -337,7 +303,7 @@ HandMorph::processDrop = (event) ->
       canvas = newCanvas(new Point(img.width, img.height))
       canvas.getContext("2d").drawImage img, 0, 0
       targetDrop.droppedImage canvas
-
+    
     src = parseImgURL(txt)
     img.src = src  if src
 
@@ -353,7 +319,7 @@ HandMorph::destroyTemporaries = ->
   #
   @temporaries.forEach (morph) ->
     morph.destroy()
-
+  
   @temporaries = []
 
 
@@ -421,7 +387,7 @@ HandMorph::processMouseMove = (event) ->
     unless contains(mouseOverNew, old)
       old.mouseLeave()  if old.mouseLeave
       old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
-
+  
   mouseOverNew.forEach (newMorph) ->
     unless contains(myself.mouseOverList, newMorph)
       newMorph.mouseEnter()  if newMorph.mouseEnter
@@ -432,5 +398,5 @@ HandMorph::processMouseMove = (event) ->
         if newMorph instanceof ScrollFrameMorph
             if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(myself.bounds.origin)
                 newMorph.startAutoScrolling();
-
+  
   @mouseOverList = mouseOverNew

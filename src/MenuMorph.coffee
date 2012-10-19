@@ -61,7 +61,7 @@ MenuMorph::drawNew = ->
   isLine = false
   @children.forEach (m) ->
     m.destroy()
-
+  
   @children = []
   unless @isListContents
     @edge = 5
@@ -97,7 +97,7 @@ MenuMorph::drawNew = ->
     myself.add item
     y = y + item.height()
     y += 1  if isLine
-
+  
   fb = @fullBounds()
   @silentSetExtent fb.extent().add(4)
   @adjustWidths()
@@ -108,7 +108,7 @@ MenuMorph::maxWidth = ->
   w = @parent.width()  if @parent.scrollFrame instanceof ScrollFrameMorph  if @parent instanceof FrameMorph
   @children.forEach (item) ->
     w = Math.max(w, item.width())  if (item instanceof MenuItemMorph) or (item instanceof StringFieldMorph) or (item instanceof ColorPickerMorph) or (item instanceof SliderMorph)
-
+  
   w = Math.max(w, @label.width())  if @label
   w
 
@@ -127,7 +127,7 @@ MenuMorph::adjustWidths = ->
 MenuMorph::unselectAllItems = ->
   @children.forEach (item) ->
     item.image = item.normalImage  if item instanceof MenuItemMorph
-
+  
   @changed()
 
 MenuMorph::popup = (world, pos) ->

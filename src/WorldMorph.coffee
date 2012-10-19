@@ -95,14 +95,14 @@ WorldMorph::fullDrawOn = (aCanvas, aRect) ->
   #
   @children.forEach (child) ->
     child.fullDrawOn aCanvas, rectangle
-
+  
   @hand.fullDrawOn aCanvas, rectangle
 
 WorldMorph::updateBroken = ->
   myself = this
   @broken.forEach (rect) ->
     myself.fullDrawOn myself.worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
-
+  
   @broken = []
 
 WorldMorph::doOneCycle = ->
@@ -385,59 +385,59 @@ WorldMorph::userCreateMorph = ->
   menu = new MenuMorph(this, "make a morph")
   menu.addItem "rectangle", ->
     create new Morph()
-
+  
   menu.addItem "box", ->
     create new BoxMorph()
-
+  
   menu.addItem "circle box", ->
     create new CircleBoxMorph()
-
+  
   menu.addLine()
   menu.addItem "slider", ->
     create new SliderMorph()
-
+  
   menu.addItem "frame", ->
     newMorph = new FrameMorph()
     newMorph.setExtent new Point(350, 250)
     create newMorph
-
+  
   menu.addItem "scroll frame", ->
     newMorph = new ScrollFrameMorph()
     newMorph.contents.acceptsDrops = true
     newMorph.contents.adjustBounds()
     newMorph.setExtent new Point(350, 250)
     create newMorph
-
+  
   menu.addItem "handle", ->
     create new HandleMorph()
-
+  
   menu.addLine()
   menu.addItem "string", ->
     newMorph = new StringMorph("Hello, World!")
     newMorph.isEditable = true
     create newMorph
-
+  
   menu.addItem "text", ->
     newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " + "traurig bin, ein Märchen aus uralten Zeiten, das " + "kommt mir nicht aus dem Sinn. Die Luft ist kühl " + "und es dunkelt, und ruhig fließt der Rhein; der " + "Gipfel des Berges funkelt im Abendsonnenschein. " + "Die schönste Jungfrau sitzet dort oben wunderbar, " + "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " + "goldenes Haar, sie kämmt es mit goldenem Kamme, " + "und singt ein Lied dabei; das hat eine wundersame, " + "gewalt'ge Melodei. Den Schiffer im kleinen " + "Schiffe, ergreift es mit wildem Weh; er schaut " + "nicht die Felsenriffe, er schaut nur hinauf in " + "die Höh'. Ich glaube, die Wellen verschlingen " + "am Ende Schiffer und Kahn, und das hat mit ihrem " + "Singen, die Loreley getan.")
     newMorph.isEditable = true
     newMorph.maxWidth = 300
     newMorph.drawNew()
     create newMorph
-
+  
   menu.addItem "speech bubble", ->
     newMorph = new SpeechBubbleMorph("Hello, World!")
     create newMorph
-
+  
   menu.addLine()
   menu.addItem "gray scale palette", ->
     create new GrayPaletteMorph()
-
+  
   menu.addItem "color palette", ->
     create new ColorPaletteMorph()
-
+  
   menu.addItem "color picker", ->
     create new ColorPickerMorph()
-
+  
   menu.addLine()
   menu.addItem "sensor demo", ->
     newMorph = new MouseSensorMorph()
@@ -448,7 +448,7 @@ WorldMorph::userCreateMorph = ->
     newMorph.alpha = 0.2
     newMorph.setExtent new Point(100, 100)
     create newMorph
-
+  
   menu.addItem "animation demo", ->
     foo = undefined
     bar = undefined
@@ -494,22 +494,22 @@ WorldMorph::userCreateMorph = ->
     foo.add fred
     foo.add bar
     create foo
-
+  
   menu.addItem "pen", ->
     create new PenMorph()
-
+  
   menu.addLine()
   menu.addItem "view all...", ->
     newMorph = new MorphsListMorph()
     create newMorph
-
+  
   if myself.customMorphs
     menu.addLine()
     myself.customMorphs().forEach (morph) ->
       menu.addItem morph.toString(), ->
         create morph
-
-
+  
+  
   menu.popUpAtHand this
 
 WorldMorph::toggleDevMode = ->
@@ -574,7 +574,7 @@ WorldMorph::slide = (aStringOrTextMorph) ->
     aStringOrTextMorph.text = Math.round(num).toString()
     aStringOrTextMorph.drawNew()
     aStringOrTextMorph.changed()
-
+  
   menu.items.push slider
   menu.popup this, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
 

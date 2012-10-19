@@ -164,8 +164,8 @@ SliderMorph::setTarget = ->
     menu.addItem each.toString().slice(0, 50), ->
       myself.target = each
       myself.setTargetSetter()
-
-
+  
+  
   if choices.length is 1
     @target = choices[0]
     @setTargetSetter()
@@ -178,8 +178,8 @@ SliderMorph::setTargetSetter = ->
   choices.forEach (each) ->
     menu.addItem each, ->
       myself.action = each
-
-
+  
+  
   if choices.length is 1
     @action = choices[0]
   else menu.popUpAtHand @world()  if choices.length > 0

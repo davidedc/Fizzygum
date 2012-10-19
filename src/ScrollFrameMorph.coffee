@@ -25,7 +25,7 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   @hBar.setHeight @scrollBarSize
   @hBar.action = (num) ->
     myself.contents.setPosition new Point(myself.left() - num, myself.contents.position().y)
-
+  
   @hBar.isDraggable = false
   @add @hBar
   # start
@@ -36,7 +36,7 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   @vBar.setWidth @scrollBarSize
   @vBar.action = (num) ->
     myself.contents.setPosition new Point(myself.contents.position().x, myself.top() - num)
-
+  
   @vBar.isDraggable = false
   @add @vBar
 
@@ -74,7 +74,7 @@ ScrollFrameMorph::addContents = (aMorph) ->
 ScrollFrameMorph::setContents = (aMorph) ->
   @contents.children.forEach (m) ->
     m.destroy()
-
+  
   @contents.children = []
   aMorph.setPosition @position().add(new Point(2, 2))
   @addContents aMorph
@@ -161,7 +161,7 @@ ScrollFrameMorph::startAutoScrolling = ->
     else
       myself.step = ->
         nop()
-
+      
       myself.autoScrollTrigger = null
 
 ScrollFrameMorph::autoScroll = (pos) ->

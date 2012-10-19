@@ -76,7 +76,7 @@ TextMorph::parse = ->
   paragraphs.forEach (p) ->
     myself.words = myself.words.concat(p.split(" "))
     myself.words.push "\n"
-
+  
   @words.forEach (word) ->
     if word is "\n"
       myself.lines.push oldline
@@ -359,7 +359,6 @@ TextMorph::enableSelecting = ->
 
 TextMorph::disableSelecting = ->
   delete @mouseDownLeft
-
   delete @mouseMove
 
 

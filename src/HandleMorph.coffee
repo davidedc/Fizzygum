@@ -125,7 +125,7 @@ HandleMorph::mouseDownLeft = (pos) ->
         myself.target.setPosition newPos.subtract(@target.extent()).add(@extent())
     else
       @step = null
-
+  
   unless @target.step
     @target.step = ->
       nop()
@@ -166,6 +166,6 @@ HandleMorph::attach = ->
       myself.target = each
       myself.drawNew()
       myself.noticesTransparentClick = true
-
-
+  
+  
   menu.popUpAtHand @world()  if choices.length > 0

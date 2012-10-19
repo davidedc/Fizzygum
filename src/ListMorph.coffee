@@ -50,7 +50,7 @@ ListMorph::buildListContents = ->
     color = null
     myself.format.forEach (pair) ->
       color = pair[0]  if pair[1].call(null, element)
-
+    
     # label string
     # action
     # hint

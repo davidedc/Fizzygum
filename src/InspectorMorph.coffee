@@ -53,7 +53,7 @@ InspectorMorph::buildPanes = ->
   @children.forEach (m) ->
     # keep work pane around
     m.destroy()  if m isnt @work
-
+  
   @children = []
   
   # label
@@ -100,7 +100,7 @@ InspectorMorph::buildPanes = ->
     cnts.enableSelecting()
     cnts.setReceiver myself.target
     myself.detail.setContents cnts
-
+  
   @list.hBar.alpha = 0.6
   @list.vBar.alpha = 0.6
   @add @list
@@ -146,22 +146,22 @@ InspectorMorph::buildPanes = ->
     menu.addItem "attributes", ->
       myself.showing = "attributes"
       myself.buildPanes()
-
+    
     menu.addItem "methods", ->
       myself.showing = "methods"
       myself.buildPanes()
-
+    
     menu.addItem "all", ->
       myself.showing = "all"
       myself.buildPanes()
-
+    
     menu.addLine()
     menu.addItem ((if myself.markOwnProperties then "un-mark own" else "mark own")), (->
       myself.markOwnProperties = not myself.markOwnProperties
       myself.buildPanes()
     ), "highlight\n'own' properties"
     menu.popUpAtHand myself.world()
-
+  
   @add @buttonSubset
   
   # inspect button
@@ -180,14 +180,14 @@ InspectorMorph::buildPanes = ->
         inspector.keepWithin world
         world.add inspector
         inspector.changed()
-
+      
       menu.addItem "here...", ->
         myself.setTarget myself.currentProperty
-
+      
       menu.popUpAtHand myself.world()
     else
       myself.inform ((if myself.currentProperty is null then "null" else typeof myself.currentProperty)) + "\nis not inspectable"
-
+  
   @add @buttonInspect
   
   # edit button
@@ -202,7 +202,7 @@ InspectorMorph::buildPanes = ->
     menu.addItem "rename...", "renameProperty"
     menu.addItem "remove...", "removeProperty"
     menu.popUpAtHand myself.world()
-
+  
   @add @buttonEdit
   
   # close button
@@ -210,7 +210,7 @@ InspectorMorph::buildPanes = ->
   @buttonClose.labelString = "close"
   @buttonClose.action = ->
     myself.destroy()
-
+  
   @add @buttonClose
   
   # resizer
@@ -329,7 +329,7 @@ InspectorMorph::renameProperty = ->
   @prompt "property name:", ((prop) ->
     try
       delete (myself.target[propertyName])
-
+      
       myself.target[prop] = myself.currentProperty
     catch err
       myself.inform err
@@ -344,7 +344,7 @@ InspectorMorph::removeProperty = ->
   prop = @list.selected
   try
     delete (@target[prop])
-
+    
     @currentProperty = null
     @buildPanes()
     if @target.drawNew

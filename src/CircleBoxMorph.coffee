@@ -51,7 +51,7 @@ CircleBoxMorph::drawNew = ->
     context.arc center.x, center.y, radius, 0, 2 * Math.PI, false
     context.closePath()
     context.fill()
-
+  
   rect = rect.translateBy(@bounds.origin.neg())
   ext = rect.extent()
   context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()  if ext.x > 0 and ext.y > 0

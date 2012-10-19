@@ -41,21 +41,21 @@ MorphicNode::allChildren = ->
   result = [this]
   @children.forEach (child) ->
     result = result.concat(child.allChildren())
-
+  
   result
 
 MorphicNode::forAllChildren = (aFunction) ->
   if @children.length > 0
     @children.forEach (child) ->
       child.forAllChildren aFunction
-
+  
   aFunction.call null, this
 
 MorphicNode::allLeafs = ->
   result = []
   @allChildren().forEach (element) ->
     result.push element  if element.children.length is 0
-
+  
   result
 
 MorphicNode::allParents = ->
@@ -88,8 +88,7 @@ MorphicNode::parentThatIsAnyOf = (constructors) ->
     if myself.constructor is each
       yup = true
       return
-
+  
   return this  if yup
   return null  unless @parent
   @parent.parentThatIsAnyOf constructors
-  
