@@ -498,6 +498,11 @@ WorldMorph::userCreateMorph = ->
   menu.addItem "pen", ->
     create new PenMorph()
 
+  menu.addLine()
+  menu.addItem "view all...", ->
+    newMorph = new MorphsListMorph()
+    create newMorph
+
   if myself.customMorphs
     menu.addLine()
     myself.customMorphs().forEach (morph) ->
