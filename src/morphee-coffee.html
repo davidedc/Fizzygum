@@ -13,10 +13,6 @@
 
 			var	worldCanvas, world, hi, hint1, hint2;
 
-			function loop() {
-				world.doOneCycle();
-			}
-
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
 				world = new WorldMorph(worldCanvas);
@@ -61,7 +57,7 @@
 			 
 				(function animloop(){
 				  requestAnimFrame(animloop);
-				  loop();
+				  world.doOneCycle();
 				})();
 				// place the rAF *before* the render() to assure as close to 
 				// 60fps with the setTimeout fallback.
