@@ -1,4 +1,8 @@
 # WorldMorph //////////////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 class WorldMorph extends FrameMorph
   constructor: (aCanvas, fillPage) ->
     @init aCanvas, fillPage
@@ -304,17 +308,13 @@ WorldMorph::initEventListeners = ->
     # For Safari / chrome
     msg
 
-WorldMorph::mouseDownLeft = ->
-  nop()
+WorldMorph::mouseDownLeft = noOpFunction
 
-WorldMorph::mouseClickLeft = ->
-  nop()
+WorldMorph::mouseClickLeft = noOpFunction
 
-WorldMorph::mouseDownRight = ->
-  nop()
+WorldMorph::mouseDownRight = noOpFunction
 
-WorldMorph::mouseClickRight = ->
-  nop()
+WorldMorph::mouseClickRight = noOpFunction
 
 WorldMorph::wantsDropOf = ->
   

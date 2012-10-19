@@ -1,8 +1,15 @@
 # Global Functions ////////////////////////////////////////////////////
+
 nop = ->
-  
   # do explicitly nothing
   null
+
+noOpFunction = ->
+  # returns the function that does nothing
+  ->    
+    # this is the function that does nothing
+    null
+
 localize = (string) ->
   
   # override this function with custom localizations

@@ -1,5 +1,8 @@
 # HandleMorph ////////////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 # I am a resize / move handle that can be attached to any Morph
 
 class HandleMorph extends Morph
@@ -127,8 +130,7 @@ HandleMorph::mouseDownLeft = (pos) ->
       @step = null
   
   unless @target.step
-    @target.step = ->
-      nop()
+    @target.step = noOpFunction
 
 
 # HandleMorph dragging and dropping:

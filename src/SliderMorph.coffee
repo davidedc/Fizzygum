@@ -1,5 +1,8 @@
 # SliderMorph ///////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 class SliderMorph extends CircleBoxMorph
   constructor: (start, stop, value, size, orientation, color) ->
     @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
@@ -25,8 +28,7 @@ SliderMorph::init = (start, stop, value, size, orientation, color) ->
 
 
 # this.drawNew();
-SliderMorph::autoOrientation = ->
-  nop()
+SliderMorph::autoOrientation = noOpFunction
 
 SliderMorph::rangeSize = ->
   @stop - @start

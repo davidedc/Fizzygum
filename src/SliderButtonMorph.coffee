@@ -1,5 +1,8 @@
 # SliderButtonMorph ///////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
     @init orientation
@@ -12,8 +15,7 @@ SliderButtonMorph::init = (orientation) ->
   @hasMiddleDip = true
   super orientation
 
-SliderButtonMorph::autoOrientation = ->
-  nop()
+SliderButtonMorph::autoOrientation = noOpFunction
 
 SliderButtonMorph::drawNew = ->
   colorBak = @color.copy()
@@ -119,7 +121,5 @@ SliderButtonMorph::mouseClickLeft = ->
   @image = @highlightImage
   @changed()
 
-SliderButtonMorph::mouseMove = ->
-  
-  # prevent my parent from getting picked up
-  nop()
+# prevent my parent from getting picked up
+SliderButtonMorph::mouseMove = noOpFunction

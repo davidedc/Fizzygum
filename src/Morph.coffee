@@ -1,5 +1,8 @@
 # Morph //////////////////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 class Morph extends MorphicNode
   constructor: () ->
     @init()

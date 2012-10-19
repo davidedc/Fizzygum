@@ -180,7 +180,6 @@ HandMorph::processTouchMove = (event) ->
 
 HandMorph::processTouchEnd = (event) ->
   clearInterval @touchHoldTimeout
-  nop event
   @processMouseUp button: 0
 
 HandMorph::processMouseUp = ->

@@ -1,5 +1,8 @@
 # ScrollFrameMorph ////////////////////////////////////////////////////
 
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
 class ScrollFrameMorph extends FrameMorph
   constructor: (scroller, size, sliderColor) ->
     @init scroller, size, sliderColor
@@ -108,8 +111,7 @@ ScrollFrameMorph::scrollY = (steps) ->
   newY = b - ch  if newY + ch < b
   @contents.setTop newY  if newY isnt ct
 
-ScrollFrameMorph::step = ->
-  nop()
+ScrollFrameMorph::step = noOpFunction
 
 ScrollFrameMorph::mouseDownLeft = (pos) ->
   return null  unless @isScrollingByDragging
@@ -130,12 +132,10 @@ ScrollFrameMorph::mouseDownLeft = (pos) ->
       oldPos = newPos
     else
       unless myself.hasVelocity
-        myself.step = ->
-          nop()
+        myself.step = noOpFunction
       else
         if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-          myself.step = ->
-            nop()
+          myself.step = noOpFunction
         else
           deltaX = deltaX * friction
           myself.scrollX Math.round(deltaX)
@@ -159,8 +159,7 @@ ScrollFrameMorph::startAutoScrolling = ->
     if (myself.bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
       myself.autoScroll pos
     else
-      myself.step = ->
-        nop()
+      myself.step = noOpFunction
       
       myself.autoScrollTrigger = null
 
