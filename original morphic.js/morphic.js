@@ -4,10 +4,10 @@
 	a lively Web-GUI
 	inspired by Squeak
 
-	written by Jens Mönig
+	written by Jens MÃ¶nig
 	jens@moenig.org
 
-	Copyright (C) 2012 by Jens Mönig
+	Copyright (C) 2012 by Jens MÃ¶nig
 
 	This file is part of Snap!. 
 
@@ -945,7 +945,7 @@
 	background texture handling and countless bug fixes.
 	Ian Reynolds contributed backspace key handling for Chrome.
 
-	- Jens Mönig
+	- Jens MÃ¶nig
 */
 
 // Global settings /////////////////////////////////////////////////////
@@ -953,7 +953,7 @@
 /*global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 FileList, getBlurredShadowSupport*/
 
-var morphicVersion = '2012-October-16';
+var morphicVersion = '2012-October-19';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = getBlurredShadowSupport(); // check for Chrome-bug
 
@@ -9689,7 +9689,7 @@ WorldMorph.prototype.initEventListeners = function () {
 
 	canvas.addEventListener(
 		"touchend",
-		function () {
+		function (event) {
             myself.hand.processTouchEnd(event);
 		},
 		false
