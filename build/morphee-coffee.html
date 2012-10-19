@@ -13,11 +13,14 @@
 
 			var	worldCanvas, world, hi, hint1, hint2;
 
+			function loop() {
+				world.doOneCycle();
+			}
+
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
 				world = new WorldMorph(worldCanvas);
 				world.isDevMode = true;
-				setInterval(loop, 50);
 
 				hi = new StringMorph(
 					'Hello, World!', 48, 'serif');
@@ -39,11 +42,31 @@
 				hint2.isEditable = true;
 				hint2.setPosition(hint1.bottomLeft());
 				world.add(hint2);
+
+				// shim layer with setTimeout fallback
+				window.requestAnimFrame = (function(){
+				  return  window.requestAnimationFrame       || 
+						  window.webkitRequestAnimationFrame || 
+						  window.mozRequestAnimationFrame    || 
+						  window.oRequestAnimationFrame      || 
+						  window.msRequestAnimationFrame     || 
+						  function( callback ){
+							window.setTimeout(callback, 1000 / 60);
+						  };
+				})();
+			 
+			 
+				// usage: 
+				// instead of setInterval(render, 16) ....
+			 
+				(function animloop(){
+				  requestAnimFrame(animloop);
+				  loop();
+				})();
+				// place the rAF *before* the render() to assure as close to 
+				// 60fps with the setTimeout fallback.
 			};
 
-			function loop() {
-				world.doOneCycle();
-			}
 		</script>
 	</head>
 
