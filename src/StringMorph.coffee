@@ -115,7 +115,7 @@ StringMorph::renderWithBlanks = (context, startX, y) ->
   
   # create the blank form
   drawBlank = ->
-    context.drawImage blank, x, 0
+    context.drawImage blank, Math.round(x), 0
     x += space
   space = context.measureText(" ").width
   blank = newCanvas(new Point(space, @height()))

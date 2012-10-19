@@ -320,7 +320,7 @@ Morph::drawCachedTexture = ->
   while y <= lines
     x = 0
     while x <= cols
-      context.drawImage bg, x * bg.width, y * bg.height
+      context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)
       x += 1
     y += 1
   @changed()
@@ -358,7 +358,7 @@ Morph::drawOn = (aCanvas, aRect) ->
     w = Math.min(src.width(), @image.width - sl)
     h = Math.min(src.height(), @image.height - st)
     return null  if w < 1 or h < 1
-    context.drawImage @image, src.left(), src.top(), w, h, area.left(), area.top(), w, h
+    context.drawImage @image, Math.round(src.left()), Math.round(src.top()), Math.round(w), Math.round(h), Math.round(area.left()), Math.round(area.top()), Math.round(w), Math.round(h)
 
 
 # "for debugging purposes:"
@@ -446,7 +446,7 @@ Morph::fullImage = ->
   @allChildren().forEach (morph) ->
     if morph.isVisible
       ctx.globalAlpha = morph.alpha
-      ctx.drawImage morph.image, morph.bounds.origin.x - fb.origin.x, morph.bounds.origin.y - fb.origin.y
+      ctx.drawImage morph.image, Math.round(morph.bounds.origin.x - fb.origin.x), Math.round(morph.bounds.origin.y - fb.origin.y)
   
   img
 
@@ -468,7 +468,7 @@ Morph::shadowImage = (off_, color) ->
   ctx = outline.getContext("2d")
   ctx.drawImage img, 0, 0
   ctx.globalCompositeOperation = "destination-out"
-  ctx.drawImage img, -offset.x, -offset.y
+  ctx.drawImage img, Math.round(-offset.x), Math.round(-offset.y)
   sha = newCanvas(fb)
   ctx = sha.getContext("2d")
   ctx.drawImage outline, 0, 0
@@ -493,12 +493,12 @@ Morph::shadowImageBlurred = (off_, color) ->
   ctx.shadowOffsetY = offset.y
   ctx.shadowBlur = blur
   ctx.shadowColor = clr.toString()
-  ctx.drawImage img, blur - offset.x, blur - offset.y
+  ctx.drawImage img, Math.round(blur - offset.x), Math.round(blur - offset.y)
   ctx.shadowOffsetX = 0
   ctx.shadowOffsetY = 0
   ctx.shadowBlur = 0
   ctx.globalCompositeOperation = "destination-out"
-  ctx.drawImage img, blur - offset.x, blur - offset.y
+  ctx.drawImage img, Math.round(blur - offset.x), Math.round(blur - offset.y)
   sha
 
 Morph::shadow = (off_, a, color) ->
@@ -1078,7 +1078,7 @@ Morph::overlappingImage = (otherMorph) ->
   oImg = newCanvas(oRect.extent())
   ctx = oImg.getContext("2d")
   return newCanvas(new Point(1, 1))  if oRect.width() < 1 or oRect.height() < 1
-  ctx.drawImage @fullImage(), oRect.origin.x - fb.origin.x, oRect.origin.y - fb.origin.y
+  ctx.drawImage @fullImage(), Math.round(oRect.origin.x - fb.origin.x), Math.round(oRect.origin.y - fb.origin.y)
   ctx.globalCompositeOperation = "source-in"
-  ctx.drawImage otherMorph.fullImage(), otherFb.origin.x - oRect.origin.x, otherFb.origin.y - oRect.origin.y
+  ctx.drawImage otherMorph.fullImage(), Math.round(otherFb.origin.x - oRect.origin.x), Math.round(otherFb.origin.y - oRect.origin.y)
   oImg

@@ -34,23 +34,8 @@ WorldMorph::init = (aCanvas, fillPage) ->
   @cursor = null
   @activeMenu = null
   @activeHandle = null
-  @trailsCanvas = null
   @virtualKeyboard = null
   @initEventListeners()
-
-WorldMorph::drawNew = ->
-  
-  # initialize my surface property
-  super()
-  @trailsCanvas = newCanvas(@extent())
-
-
-# World Morph pen trails:
-WorldMorph::penTrails = ->
-  
-  # answer my pen trails canvas. default is to answer my image
-  @trailsCanvas
-
 
 # World Morph display:
 WorldMorph::brokenFor = (aMorph) ->
@@ -62,45 +47,8 @@ WorldMorph::brokenFor = (aMorph) ->
 
 
 WorldMorph::fullDrawOn = (aCanvas, aRect) ->
-  rectangle = undefined
-  area = undefined
-  ctx = undefined
-  l = undefined
-  t = undefined
-  w = undefined
-  h = undefined
-  rectangle = aRect or @fullBounds()
-  area = rectangle.intersect(@bounds)
-  l = area.left()
-  t = area.top()
-  w = area.width()
-  h = area.height()
-  return null  if (w < 0) or (h < 0)
-  ctx = aCanvas.getContext("2d")
-  ctx.globalAlpha = 1
-  ctx.fillStyle = @color.toString()
-  ctx.fillRect l, t, w, h
-  ctx.drawImage @trailsCanvas, l, t, w, h, l, t, w, h  if @trailsCanvas and (w > 1) and (h > 1)
-  
-  # for debugging purposes:
-  #		try {
-  #			ctx.drawImage(this.trailsCanvas, l, t, w, h, l, t, w, h);
-  #		} catch (err) {
-  #			alert('error' + err
-  #				+ '\nl: ' + l
-  #				+ '\nt: ' + t
-  #				+ '\nw: ' + w
-  #				+ '\nh: ' + h
-  #				+ '\ntrailsCanvas width: ' + this.trailsCanvas.width
-  #				+ '\ntrailsCanvas height: ' + this.trailsCanvas.height
-  #			);
-  #		}
-  #
-  #
-  @children.forEach (child) ->
-    child.fullDrawOn aCanvas, rectangle
-  
-  @hand.fullDrawOn aCanvas, rectangle
+  super aCanvas, aRect
+  @hand.fullDrawOn aCanvas, aRect
 
 WorldMorph::updateBroken = ->
   myself = this
