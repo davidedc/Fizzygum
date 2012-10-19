@@ -39,6 +39,13 @@
 				hint2.setPosition(hint1.bottomLeft());
 				world.add(hint2);
 
+alert("doing something");
+var a = 1, b = 2, c = 3;
+
+for ( var i in window ) {
+    console.log(i, typeof window[i]);
+}
+
 				// shim layer with setTimeout fallback
 				window.requestAnimFrame = (function(){
 				  return  window.requestAnimationFrame       || 
@@ -61,6 +68,8 @@
 				})();
 				// place the rAF *before* the render() to assure as close to 
 				// 60fps with the setTimeout fallback.
+				
+				
 			};
 
 		</script>
