@@ -942,7 +942,7 @@ MorphicNode::parentThatIsAnyOf = (constructors) ->
   return this  if yup
   return null  unless @parent
   @parent.parentThatIsAnyOf constructors
-  # Morphs //////////////////////////////////////////////////////////////
+  # Morph //////////////////////////////////////////////////////////////
 
 class Morph extends MorphicNode
   constructor: () ->
