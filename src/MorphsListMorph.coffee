@@ -34,7 +34,6 @@ MorphsListMorph::setTarget = (target) ->
 MorphsListMorph::buildPanes = ->
   attribs = []
   property = undefined
-  myself = this
   ctrl = undefined
   ev = undefined
   
@@ -85,8 +84,8 @@ MorphsListMorph::buildPanes = ->
   # close button
   @buttonClose = new TriggerMorph()
   @buttonClose.labelString = "close"
-  @buttonClose.action = ->
-    myself.destroy()
+  @buttonClose.action = =>
+    @destroy()
   
   @add @buttonClose
   

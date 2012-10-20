@@ -19,19 +19,18 @@ MouseSensorMorph::init = (edge, border, borderColor) ->
   @drawNew()
 
 MouseSensorMorph::touch = ->
-  myself = this
   unless @isTouched
     @isTouched = true
     @alpha = 0.6
-    @step = ->
-      if myself.isTouched
-        myself.alpha = myself.alpha + myself.upStep  if myself.alpha < 1
-      else if myself.alpha > (myself.downStep)
-        myself.alpha = myself.alpha - myself.downStep
+    @step = =>
+      if @isTouched
+        @alpha = @alpha + @upStep  if @alpha < 1
+      else if @alpha > (@downStep)
+        @alpha = @alpha - @downStep
       else
-        myself.alpha = 0
-        myself.step = null
-      myself.changed()
+        @alpha = 0
+        @step = null
+      @changed()
 
 MouseSensorMorph::unTouch = ->
   @isTouched = false

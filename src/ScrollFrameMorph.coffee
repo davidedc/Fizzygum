@@ -9,7 +9,6 @@ class ScrollFrameMorph extends FrameMorph
 
 
 ScrollFrameMorph::init = (scroller, size, sliderColor) ->
-  myself = this
   super()
   @scrollBarSize = size or MorphicPreferences.scrollBarSize
   @autoScrollTrigger = null
@@ -26,8 +25,8 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   # size
   @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
   @hBar.setHeight @scrollBarSize
-  @hBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.left() - num, myself.contents.position().y)
+  @hBar.action = (num) =>
+    @contents.setPosition new Point(@left() - num, @contents.position().y)
   
   @hBar.isDraggable = false
   @add @hBar
@@ -37,8 +36,8 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   # size
   @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
   @vBar.setWidth @scrollBarSize
-  @vBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.contents.position().x, myself.top() - num)
+  @vBar.action = (num) =>
+    @contents.setPosition new Point(@contents.position().x, @top() - num)
   
   @vBar.isDraggable = false
   @add @vBar
@@ -117,34 +116,32 @@ ScrollFrameMorph::mouseDownLeft = (pos) ->
   return null  unless @isScrollingByDragging
   world = @root()
   oldPos = pos
-  myself = this
   deltaX = 0
   deltaY = 0
   friction = 0.8
-  @step = ->
+  @step = =>
     newPos = undefined
-    if world.hand.mouseButton and (world.hand.children.length is 0) and (myself.bounds.containsPoint(world.hand.position()))
+    if world.hand.mouseButton and (world.hand.children.length is 0) and (@bounds.containsPoint(world.hand.position()))
       newPos = world.hand.bounds.origin
       deltaX = newPos.x - oldPos.x
-      myself.scrollX deltaX  if deltaX isnt 0
+      @scrollX deltaX  if deltaX isnt 0
       deltaY = newPos.y - oldPos.y
-      myself.scrollY deltaY  if deltaY isnt 0
+      @scrollY deltaY  if deltaY isnt 0
       oldPos = newPos
     else
-      unless myself.hasVelocity
-        myself.step = noOpFunction
+      unless @hasVelocity
+        @step = noOpFunction
       else
         if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-          myself.step = noOpFunction
+          @step = noOpFunction
         else
           deltaX = deltaX * friction
-          myself.scrollX Math.round(deltaX)
+          @scrollX Math.round(deltaX)
           deltaY = deltaY * friction
-          myself.scrollY Math.round(deltaY)
+          @scrollY Math.round(deltaY)
     @adjustScrollBars()
 
 ScrollFrameMorph::startAutoScrolling = ->
-  myself = this
   inset = MorphicPreferences.scrollBarSize * 3
   world = @world()
   hand = undefined
@@ -153,15 +150,14 @@ ScrollFrameMorph::startAutoScrolling = ->
   return null  unless world
   hand = world.hand
   @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
-  @step = ->
+  @step = =>
     pos = hand.bounds.origin
-    inner = myself.bounds.insetBy(inset)
-    if (myself.bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
-      myself.autoScroll pos
+    inner = @bounds.insetBy(inset)
+    if (@bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
+      @autoScroll pos
     else
-      myself.step = noOpFunction
-      
-      myself.autoScrollTrigger = null
+      @step = noOpFunction
+      @autoScrollTrigger = null
 
 ScrollFrameMorph::autoScroll = (pos) ->
   inset = undefined

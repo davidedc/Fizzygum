@@ -42,19 +42,18 @@ ListMorph::init = (elements, labelGetter, format) ->
   @buildListContents()
 
 ListMorph::buildListContents = ->
-  myself = this
   @listContents.destroy()  if @listContents
   @listContents = new MenuMorph(@select, null, this)
   @elements = ["(empty)"]  if @elements.length is 0
-  @elements.forEach (element) ->
+  @elements.forEach (element) =>
     color = null
-    myself.format.forEach (pair) ->
+    @format.forEach (pair) ->
       color = pair[0]  if pair[1].call(null, element)
     
     # label string
     # action
     # hint
-    myself.listContents.addItem myself.labelGetter(element), element, null, color
+    @listContents.addItem @labelGetter(element), element, null, color
 
   @listContents.setPosition @contents.position()
   @listContents.isListContents = true

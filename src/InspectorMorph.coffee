@@ -45,7 +45,6 @@ InspectorMorph::setTarget = (target) ->
 InspectorMorph::buildPanes = ->
   attribs = []
   property = undefined
-  myself = this
   ctrl = undefined
   ev = undefined
   
@@ -69,26 +68,26 @@ InspectorMorph::buildPanes = ->
     # dummy condition, to be refined
     attribs.push property  if property
   if @showing is "attributes"
-    attribs = attribs.filter((prop) ->
-      typeof myself.target[prop] isnt "function"
+    attribs = attribs.filter((prop) =>
+      typeof @target[prop] isnt "function"
     )
   else if @showing is "methods"
-    attribs = attribs.filter((prop) ->
-      typeof myself.target[prop] is "function"
+    attribs = attribs.filter((prop) =>
+      typeof @target[prop] is "function"
     )
   # otherwise show all properties
   # label getter
   # format list
   # format element: [color, predicate(element]
-  @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180), (element) ->
-    myself.target.hasOwnProperty element
+  @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180), (element) =>
+    @target.hasOwnProperty element
   ]] else null))
-  @list.action = (selected) ->
+  @list.action = (selected) =>
     val = undefined
     txt = undefined
     cnts = undefined
-    val = myself.target[selected]
-    myself.currentProperty = val
+    val = @target[selected]
+    @currentProperty = val
     if val is null
       txt = "NULL"
     else if isString(val)
@@ -98,8 +97,8 @@ InspectorMorph::buildPanes = ->
     cnts = new TextMorph(txt)
     cnts.isEditable = true
     cnts.enableSelecting()
-    cnts.setReceiver myself.target
-    myself.detail.setContents cnts
+    cnts.setReceiver @target
+    @detail.setContents cnts
   
   @list.hBar.alpha = 0.6
   @list.vBar.alpha = 0.6
@@ -140,76 +139,76 @@ InspectorMorph::buildPanes = ->
   # properties button
   @buttonSubset = new TriggerMorph()
   @buttonSubset.labelString = "show..."
-  @buttonSubset.action = ->
+  @buttonSubset.action = =>
     menu = undefined
     menu = new MenuMorph()
-    menu.addItem "attributes", ->
-      myself.showing = "attributes"
-      myself.buildPanes()
+    menu.addItem "attributes", =>
+      @showing = "attributes"
+      @buildPanes()
     
-    menu.addItem "methods", ->
-      myself.showing = "methods"
-      myself.buildPanes()
+    menu.addItem "methods", =>
+      @showing = "methods"
+      @buildPanes()
     
-    menu.addItem "all", ->
-      myself.showing = "all"
-      myself.buildPanes()
+    menu.addItem "all", =>
+      @showing = "all"
+      @buildPanes()
     
     menu.addLine()
-    menu.addItem ((if myself.markOwnProperties then "un-mark own" else "mark own")), (->
-      myself.markOwnProperties = not myself.markOwnProperties
-      myself.buildPanes()
+    menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (->
+      @markOwnProperties = not @markOwnProperties
+      @buildPanes()
     ), "highlight\n'own' properties"
-    menu.popUpAtHand myself.world()
+    menu.popUpAtHand @world()
   
   @add @buttonSubset
   
   # inspect button
   @buttonInspect = new TriggerMorph()
   @buttonInspect.labelString = "inspect..."
-  @buttonInspect.action = ->
+  @buttonInspect.action = =>
     menu = undefined
     world = undefined
     inspector = undefined
-    if isObject(myself.currentProperty)
+    if isObject(@currentProperty)
       menu = new MenuMorph()
-      menu.addItem "in new inspector...", ->
-        world = myself.world()
-        inspector = new InspectorMorph(myself.currentProperty)
+      menu.addItem "in new inspector...", =>
+        world = @world()
+        inspector = new InspectorMorph(@currentProperty)
         inspector.setPosition world.hand.position()
         inspector.keepWithin world
         world.add inspector
         inspector.changed()
       
-      menu.addItem "here...", ->
-        myself.setTarget myself.currentProperty
+      menu.addItem "here...", =>
+        @setTarget @currentProperty
       
-      menu.popUpAtHand myself.world()
+      menu.popUpAtHand @world()
     else
-      myself.inform ((if myself.currentProperty is null then "null" else typeof myself.currentProperty)) + "\nis not inspectable"
+      @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
   
   @add @buttonInspect
   
   # edit button
   @buttonEdit = new TriggerMorph()
   @buttonEdit.labelString = "edit..."
-  @buttonEdit.action = ->
+  @buttonEdit.action = =>
     menu = undefined
-    menu = new MenuMorph(myself)
+    menu = new MenuMorph(@)
     menu.addItem "save", "save", "accept changes"
     menu.addLine()
     menu.addItem "add property...", "addProperty"
     menu.addItem "rename...", "renameProperty"
     menu.addItem "remove...", "removeProperty"
-    menu.popUpAtHand myself.world()
+    menu.popUpAtHand @world()
   
   @add @buttonEdit
   
   # close button
   @buttonClose = new TriggerMorph()
   @buttonClose.labelString = "close"
-  @buttonClose.action = ->
-    myself.destroy()
+  @buttonClose.action = =>
+    @destroy()
   
   @add @buttonClose
   
@@ -312,33 +311,30 @@ InspectorMorph::save = ->
     @inform err
 
 InspectorMorph::addProperty = ->
-  myself = this
-  @prompt "new property name:", ((prop) ->
+  @prompt "new property name:", ((prop) =>
     if prop
-      myself.target[prop] = null
-      myself.buildPanes()
-      if myself.target.drawNew
-        myself.target.changed()
-        myself.target.drawNew()
-        myself.target.changed()
+      @target[prop] = null
+      @buildPanes()
+      if @target.drawNew
+        @target.changed()
+        @target.drawNew()
+        @target.changed()
   ), this, "property" # Chrome cannot handle empty strings (others do)
 
 InspectorMorph::renameProperty = ->
-  myself = this
   propertyName = @list.selected
-  @prompt "property name:", ((prop) ->
+  @prompt "property name:", ((prop) =>
     try
-      delete (myself.target[propertyName])
-      
-      myself.target[prop] = myself.currentProperty
+      delete (@target[propertyName])
+      @target[prop] = @currentProperty
     catch err
-      myself.inform err
-    myself.buildPanes()
-    if myself.target.drawNew
-      myself.target.changed()
-      myself.target.drawNew()
-      myself.target.changed()
-  ), this, propertyName
+      @inform err
+    @buildPanes()
+    if @target.drawNew
+      @target.changed()
+      @target.drawNew()
+      @target.changed()
+  ), @, propertyName
 
 InspectorMorph::removeProperty = ->
   prop = @list.selected

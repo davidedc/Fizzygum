@@ -53,7 +53,6 @@ MenuMorph::createLabel = ->
   @label.text = text
 
 MenuMorph::drawNew = ->
-  myself = this
   item = undefined
   fb = undefined
   x = undefined
@@ -80,21 +79,21 @@ MenuMorph::drawNew = ->
     else
       y = @top() + 4
   y += 1
-  @items.forEach (tuple) ->
+  @items.forEach (tuple) =>
     isLine = false
     if tuple instanceof StringFieldMorph or tuple instanceof ColorPickerMorph or tuple instanceof SliderMorph
       item = tuple
     else if tuple[0] is 0
       isLine = true
       item = new Morph()
-      item.color = myself.borderColor
+      item.color = @borderColor
       item.setHeight tuple[1]
     else
       # bubble help hint
-      item = new MenuItemMorph(myself.target, tuple[1], tuple[0], myself.fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, myself.environment, tuple[2], tuple[3]) # color
+      item = new MenuItemMorph(@target, tuple[1], tuple[0], @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, @environment, tuple[2], tuple[3]) # color
     y += 1  if isLine
     item.setPosition new Point(x, y)
-    myself.add item
+    @add item
     y = y + item.height()
     y += 1  if isLine
   
@@ -114,14 +113,13 @@ MenuMorph::maxWidth = ->
 
 MenuMorph::adjustWidths = ->
   w = @maxWidth()
-  myself = this
-  @children.forEach (item) ->
+  @children.forEach (item) =>
     item.silentSetWidth w
     if item instanceof MenuItemMorph
       item.createBackgrounds()
     else
       item.drawNew()
-      item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))  if item is myself.label
+      item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))  if item is @label
 
 
 MenuMorph::unselectAllItems = ->

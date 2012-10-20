@@ -66,10 +66,9 @@ MorphicNode::allParents = ->
   result
 
 MorphicNode::siblings = ->
-  myself = this
   return []  if @parent is null
-  @parent.children.filter (child) ->
-    child isnt myself
+  @parent.children.filter (child) =>
+    child isnt @
 
 
 MorphicNode::parentThatIsA = (constructor) ->
@@ -83,9 +82,8 @@ MorphicNode::parentThatIsAnyOf = (constructors) ->
   
   # including myself
   yup = false
-  myself = this
-  constructors.forEach (each) ->
-    if myself.constructor is each
+  constructors.forEach (each) =>
+    if @constructor is each
       yup = true
       return
   

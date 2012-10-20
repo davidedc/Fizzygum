@@ -112,20 +112,19 @@ HandleMorph::step = null
 HandleMorph::mouseDownLeft = (pos) ->
   world = @root()
   offset = pos.subtract(@bounds.origin)
-  myself = this
   return null  unless @target
-  @step = ->
+  @step = =>
     newPos = undefined
     newExt = undefined
     if world.hand.mouseButton
       newPos = world.hand.bounds.origin.copy().subtract(offset)
       if @type is "resize"
-        newExt = newPos.add(myself.extent().add(myself.inset)).subtract(myself.target.bounds.origin)
-        newExt = newExt.max(myself.minExtent)
-        myself.target.setExtent newExt
-        myself.setPosition myself.target.bottomRight().subtract(myself.extent().add(myself.inset))
+        newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
+        newExt = newExt.max(@minExtent)
+        @target.setExtent newExt
+        @setPosition @target.bottomRight().subtract(@extent().add(@inset))
       else # type === 'move'
-        myself.target.setPosition newPos.subtract(@target.extent()).add(@extent())
+        @target.setPosition newPos.subtract(@target.extent()).add(@extent())
     else
       @step = null
   
@@ -161,13 +160,12 @@ HandleMorph::copyRecordingReferences = (dict) ->
 HandleMorph::attach = ->
   choices = @overlappedMorphs()
   menu = new MenuMorph(this, "choose target:")
-  myself = this
-  choices.forEach (each) ->
+  choices.forEach (each) =>
     menu.addItem each.toString().slice(0, 50), ->
-      myself.isDraggable = false
-      myself.target = each
-      myself.drawNew()
-      myself.noticesTransparentClick = true
+      @isDraggable = false
+      @target = each
+      @drawNew()
+      @noticesTransparentClick = true
   
   
   menu.popUpAtHand @world()  if choices.length > 0

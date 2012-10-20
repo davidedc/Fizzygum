@@ -1,3 +1,96 @@
+class MorphicNode
+  constructor: (parent, childrenArray) ->
+    @init parent or null, childrenArray or []
+
+MorphicNode::init = (parent, childrenArray) ->
+  @parent = parent or null
+  @children = childrenArray or []
+
+
+# MorphicNode string representation: e.g. 'a MorphicNode[3]'
+MorphicNode::toString = ->
+  "a MorphicNode" + "[" + @children.length.toString() + "]"
+
+
+# MorphicNode accessing:
+MorphicNode::addChild = (aMorphicNode) ->
+  @children.push aMorphicNode
+  aMorphicNode.parent = this
+
+MorphicNode::addChildFirst = (aMorphicNode) ->
+  @children.splice 0, null, aMorphicNode
+  aMorphicNode.parent = this
+
+MorphicNode::removeChild = (aMorphicNode) ->
+  idx = @children.indexOf(aMorphicNode)
+  @children.splice idx, 1  if idx isnt -1
+
+
+# MorphicNode functions:
+MorphicNode::root = ->
+  return this  if @parent is null
+  @parent.root()
+
+MorphicNode::depth = ->
+  return 0  if @parent is null
+  @parent.depth() + 1
+
+MorphicNode::allChildren = ->
+  
+  # includes myself
+  result = [this]
+  @children.forEach (child) ->
+    result = result.concat(child.allChildren())
+  
+  result
+
+MorphicNode::forAllChildren = (aFunction) ->
+  if @children.length > 0
+    @children.forEach (child) ->
+      child.forAllChildren aFunction
+  
+  aFunction.call null, this
+
+MorphicNode::allLeafs = ->
+  result = []
+  @allChildren().forEach (element) ->
+    result.push element  if element.children.length is 0
+  
+  result
+
+MorphicNode::allParents = ->
+  
+  # includes myself
+  result = [this]
+  result = result.concat(@parent.allParents())  if @parent isnt null
+  result
+
+MorphicNode::siblings = ->
+  return []  if @parent is null
+  @parent.children.filter (child) =>
+    child isnt @
+
+
+MorphicNode::parentThatIsA = (constructor) ->
+  
+  # including myself
+  return this  if this instanceof constructor
+  return null  unless @parent
+  @parent.parentThatIsA constructor
+
+MorphicNode::parentThatIsAnyOf = (constructors) ->
+  
+  # including myself
+  yup = false
+  constructors.forEach (each) =>
+    if @constructor is each
+      yup = true
+      return
+  
+  return this  if yup
+  return null  unless @parent
+  @parent.parentThatIsAnyOf constructors
+morphicVersion = "2012-October-16"
 # Global Functions ////////////////////////////////////////////////////
 
 nop = ->
@@ -264,100 +357,6 @@ copy = (target) ->
     for property of target
       c[property] = target[property]  unless c[property]
   c
-class MorphicNode
-  constructor: (parent, childrenArray) ->
-    @init parent or null, childrenArray or []
-
-MorphicNode::init = (parent, childrenArray) ->
-  @parent = parent or null
-  @children = childrenArray or []
-
-
-# MorphicNode string representation: e.g. 'a MorphicNode[3]'
-MorphicNode::toString = ->
-  "a MorphicNode" + "[" + @children.length.toString() + "]"
-
-
-# MorphicNode accessing:
-MorphicNode::addChild = (aMorphicNode) ->
-  @children.push aMorphicNode
-  aMorphicNode.parent = this
-
-MorphicNode::addChildFirst = (aMorphicNode) ->
-  @children.splice 0, null, aMorphicNode
-  aMorphicNode.parent = this
-
-MorphicNode::removeChild = (aMorphicNode) ->
-  idx = @children.indexOf(aMorphicNode)
-  @children.splice idx, 1  if idx isnt -1
-
-
-# MorphicNode functions:
-MorphicNode::root = ->
-  return this  if @parent is null
-  @parent.root()
-
-MorphicNode::depth = ->
-  return 0  if @parent is null
-  @parent.depth() + 1
-
-MorphicNode::allChildren = ->
-  
-  # includes myself
-  result = [this]
-  @children.forEach (child) ->
-    result = result.concat(child.allChildren())
-  
-  result
-
-MorphicNode::forAllChildren = (aFunction) ->
-  if @children.length > 0
-    @children.forEach (child) ->
-      child.forAllChildren aFunction
-  
-  aFunction.call null, this
-
-MorphicNode::allLeafs = ->
-  result = []
-  @allChildren().forEach (element) ->
-    result.push element  if element.children.length is 0
-  
-  result
-
-MorphicNode::allParents = ->
-  
-  # includes myself
-  result = [this]
-  result = result.concat(@parent.allParents())  if @parent isnt null
-  result
-
-MorphicNode::siblings = ->
-  myself = this
-  return []  if @parent is null
-  @parent.children.filter (child) ->
-    child isnt myself
-
-
-MorphicNode::parentThatIsA = (constructor) ->
-  
-  # including myself
-  return this  if this instanceof constructor
-  return null  unless @parent
-  @parent.parentThatIsA constructor
-
-MorphicNode::parentThatIsAnyOf = (constructors) ->
-  
-  # including myself
-  yup = false
-  myself = this
-  constructors.forEach (each) ->
-    if myself.constructor is each
-      yup = true
-      return
-  
-  return this  if yup
-  return null  unless @parent
-  @parent.parentThatIsAnyOf constructors
 # Morph //////////////////////////////////////////////////////////////
 
 # this comment below is needed to figure our dependencies between classes
@@ -1438,6 +1437,514 @@ Morph::overlappingImage = (otherMorph) ->
   ctx.globalCompositeOperation = "source-in"
   ctx.drawImage otherMorph.fullImage(), Math.round(otherFb.origin.x - oRect.origin.x), Math.round(otherFb.origin.y - oRect.origin.y)
   oImg
+# CircleBoxMorph //////////////////////////////////////////////////////
+
+# I can be used for sliders
+
+class CircleBoxMorph extends Morph
+  constructor: (orientation) ->
+    @init orientation or "vertical"
+
+CircleBoxMorph::init = (orientation) ->
+  super()
+  @orientation = orientation
+  @autoOrient = true
+  @setExtent new Point(20, 100)
+
+CircleBoxMorph::autoOrientation = ->
+  if @height() > @width()
+    @orientation = "vertical"
+  else
+    @orientation = "horizontal"
+
+CircleBoxMorph::drawNew = ->
+  radius = undefined
+  center1 = undefined
+  center2 = undefined
+  rect = undefined
+  points = undefined
+  x = undefined
+  y = undefined
+  context = undefined
+  ext = undefined
+  @autoOrientation()  if @autoOrient
+  @image = newCanvas(@extent())
+  context = @image.getContext("2d")
+  if @orientation is "vertical"
+    radius = @width() / 2
+    x = @center().x
+    center1 = new Point(x, @top() + radius)
+    center2 = new Point(x, @bottom() - radius)
+    rect = @bounds.origin.add(new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
+  else
+    radius = @height() / 2
+    y = @center().y
+    center1 = new Point(@left() + radius, y)
+    center2 = new Point(@right() - radius, y)
+    rect = @bounds.origin.add(new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
+  points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
+  points.forEach (center) =>
+    context.fillStyle = @color.toString()
+    context.beginPath()
+    context.arc center.x, center.y, radius, 0, 2 * Math.PI, false
+    context.closePath()
+    context.fill()
+  
+  rect = rect.translateBy(@bounds.origin.neg())
+  ext = rect.extent()
+  context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()  if ext.x > 0 and ext.y > 0
+
+
+# CircleBoxMorph menu:
+CircleBoxMorph::developersMenu = ->
+  menu = super()
+  menu.addLine()
+  if @orientation is "vertical"
+    menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"
+  else
+    menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"
+  menu
+
+CircleBoxMorph::toggleOrientation = ->
+  center = @center()
+  @changed()
+  if @orientation is "vertical"
+    @orientation = "horizontal"
+  else
+    @orientation = "vertical"
+  @silentSetExtent new Point(@height(), @width())
+  @setCenter center
+  @drawNew()
+  @changed()
+# SliderButtonMorph ///////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
+class SliderButtonMorph extends CircleBoxMorph
+  constructor: (orientation) ->
+    @init orientation
+
+SliderButtonMorph::init = (orientation) ->
+  @color = new Color(80, 80, 80)
+  @highlightColor = new Color(90, 90, 140)
+  @pressColor = new Color(80, 80, 160)
+  @is3D = true
+  @hasMiddleDip = true
+  super orientation
+
+SliderButtonMorph::autoOrientation = noOpFunction
+
+SliderButtonMorph::drawNew = ->
+  colorBak = @color.copy()
+  super()
+  @drawEdges()  if @is3D
+  @normalImage = @image
+  @color = @highlightColor.copy()
+  super()
+  @drawEdges()  if @is3D
+  @highlightImage = @image
+  @color = @pressColor.copy()
+  super()
+  @drawEdges()  if @is3D
+  @pressImage = @image
+  @color = colorBak
+  @image = @normalImage
+
+SliderButtonMorph::drawEdges = ->
+  context = @image.getContext("2d")
+  gradient = undefined
+  radius = undefined
+  w = @width()
+  h = @height()
+  context.lineJoin = "round"
+  context.lineCap = "round"
+  if @orientation is "vertical"
+    context.lineWidth = w / 3
+    gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)
+    gradient.addColorStop 0, "white"
+    gradient.addColorStop 1, @color.toString()
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo context.lineWidth * 0.5, w / 2
+    context.lineTo context.lineWidth * 0.5, h - w / 2
+    context.stroke()
+    gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)
+    gradient.addColorStop 0, @color.toString()
+    gradient.addColorStop 1, "black"
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo w - context.lineWidth * 0.5, w / 2
+    context.lineTo w - context.lineWidth * 0.5, h - w / 2
+    context.stroke()
+    if @hasMiddleDip
+      gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0)
+      radius = w / 4
+      gradient.addColorStop 0, "black"
+      gradient.addColorStop 0.35, @color.toString()
+      gradient.addColorStop 0.65, @color.toString()
+      gradient.addColorStop 1, "white"
+      context.fillStyle = gradient
+      context.beginPath()
+      context.arc w / 2, h / 2, radius, radians(0), radians(360), false
+      context.closePath()
+      context.fill()
+  else if @orientation is "horizontal"
+    context.lineWidth = h / 3
+    gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)
+    gradient.addColorStop 0, "white"
+    gradient.addColorStop 1, @color.toString()
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo h / 2, context.lineWidth * 0.5
+    context.lineTo w - h / 2, context.lineWidth * 0.5
+    context.stroke()
+    gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)
+    gradient.addColorStop 0, @color.toString()
+    gradient.addColorStop 1, "black"
+    context.strokeStyle = gradient
+    context.beginPath()
+    context.moveTo h / 2, h - context.lineWidth * 0.5
+    context.lineTo w - h / 2, h - context.lineWidth * 0.5
+    context.stroke()
+    if @hasMiddleDip
+      gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth)
+      radius = h / 4
+      gradient.addColorStop 0, "black"
+      gradient.addColorStop 0.35, @color.toString()
+      gradient.addColorStop 0.65, @color.toString()
+      gradient.addColorStop 1, "white"
+      context.fillStyle = gradient
+      context.beginPath()
+      context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false
+      context.closePath()
+      context.fill()
+
+
+#SliderButtonMorph events:
+SliderButtonMorph::mouseEnter = ->
+  @image = @highlightImage
+  @changed()
+
+SliderButtonMorph::mouseLeave = ->
+  @image = @normalImage
+  @changed()
+
+SliderButtonMorph::mouseDownLeft = (pos) ->
+  @image = @pressImage
+  @changed()
+  @escalateEvent "mouseDownLeft", pos
+
+SliderButtonMorph::mouseClickLeft = ->
+  @image = @highlightImage
+  @changed()
+
+# prevent my parent from getting picked up
+SliderButtonMorph::mouseMove = noOpFunction
+# SliderMorph ///////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
+class SliderMorph extends CircleBoxMorph
+  constructor: (start, stop, value, size, orientation, color) ->
+    @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
+
+SliderMorph::init = (start, stop, value, size, orientation, color) ->
+  @target = null
+  @action = null
+  @start = start
+  @stop = stop
+  @value = value
+  @size = size
+  @offset = null
+  @button = new SliderButtonMorph()
+  @button.isDraggable = false
+  @button.color = new Color(200, 200, 200)
+  @button.highlightColor = new Color(210, 210, 255)
+  @button.pressColor = new Color(180, 180, 255)
+  super orientation
+  @add @button
+  @alpha = 0.3
+  @color = color or new Color(0, 0, 0)
+  @setExtent new Point(20, 100)
+
+
+# this.drawNew();
+SliderMorph::autoOrientation = noOpFunction
+
+SliderMorph::rangeSize = ->
+  @stop - @start
+
+SliderMorph::ratio = ->
+  @size / @rangeSize()
+
+SliderMorph::unitSize = ->
+  return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"
+  (@width() - @button.width()) / @rangeSize()
+
+SliderMorph::drawNew = ->
+  bw = undefined
+  bh = undefined
+  posX = undefined
+  posY = undefined
+  super()
+  @button.orientation = @orientation
+  if @orientation is "vertical"
+    bw = @width() - 2
+    bh = Math.max(bw, Math.round(@height() * @ratio()))
+    @button.silentSetExtent new Point(bw, bh)
+    posX = 1
+    posY = Math.min(Math.round((@value - @start) * @unitSize()), @height() - @button.height())
+  else
+    bh = @height() - 2
+    bw = Math.max(bh, Math.round(@width() * @ratio()))
+    @button.silentSetExtent new Point(bw, bh)
+    posY = 1
+    posX = Math.min(Math.round((@value - @start) * @unitSize()), @width() - @button.width())
+  @button.setPosition new Point(posX, posY).add(@bounds.origin)
+  @button.drawNew()
+  @button.changed()
+
+SliderMorph::updateValue = ->
+  relPos = undefined
+  if @orientation is "vertical"
+    relPos = @button.top() - @top()
+  else
+    relPos = @button.left() - @left()
+  @value = Math.round(relPos / @unitSize() + @start)
+  @updateTarget()
+
+SliderMorph::updateTarget = ->
+  if @action
+    if typeof @action is "function"
+      @action.call @target, @value
+    else # assume it's a String
+      @target[@action] @value
+
+
+# SliderMorph duplicating:
+SliderMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = super dict
+  c.target = (dict[@target])  if c.target and dict[@target]
+  c.button = (dict[@button])  if c.button and dict[@button]
+  c
+
+
+# SliderMorph menu:
+SliderMorph::developersMenu = ->
+  menu = super()
+  menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
+  menu.addItem "floor...", (->
+    @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
+  ), "set the minimum value\nwhich can be selected"
+  menu.addItem "ceiling...", (->
+    @prompt menu.title + "\nceiling:", @setStop, this, @stop.toString(), null, @start + @size, @size * 100, true
+  ), "set the maximum value\nwhich can be selected"
+  menu.addItem "button size...", (->
+    @prompt menu.title + "\nbutton size:", @setSize, this, @size.toString(), null, 1, @stop - @start, true
+  ), "set the range\ncovered by\nthe slider button"
+  menu.addLine()
+  menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+  menu
+
+SliderMorph::showValue = ->
+  @inform @value
+
+SliderMorph::userSetStart = (num) ->
+  
+  # for context menu demo purposes
+  @start = Math.max(num, @stop)
+
+SliderMorph::setStart = (num) ->
+  
+  # for context menu demo purposes
+  newStart = undefined
+  if typeof num is "number"
+    @start = Math.min(Math.max(num, 0), @stop - @size)
+  else
+    newStart = parseFloat(num)
+    @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
+  @value = Math.max(@value, @start)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setStop = (num) ->
+  
+  # for context menu demo purposes
+  newStop = undefined
+  if typeof num is "number"
+    @stop = Math.max(num, @start + @size)
+  else
+    newStop = parseFloat(num)
+    @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
+  @value = Math.min(@value, @stop)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setSize = (num) ->
+  
+  # for context menu demo purposes
+  newSize = undefined
+  if typeof num is "number"
+    @size = Math.min(Math.max(num, 1), @stop - @start)
+  else
+    newSize = parseFloat(num)
+    @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
+  @value = Math.min(@value, @stop - @size)
+  @updateTarget()
+  @drawNew()
+  @changed()
+
+SliderMorph::setTarget = ->
+  choices = @overlappedMorphs()
+  menu = new MenuMorph(this, "choose target:")
+  choices.push @world()
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), =>
+      @target = each
+      @setTargetSetter()
+  
+  
+  if choices.length is 1
+    @target = choices[0]
+    @setTargetSetter()
+  else menu.popUpAtHand @world()  if choices.length > 0
+
+SliderMorph::setTargetSetter = ->
+  choices = @target.numericalSetters()
+  menu = new MenuMorph(this, "choose target property:")
+  choices.forEach (each) =>
+    menu.addItem each, =>
+      @action = each
+  
+  
+  if choices.length is 1
+    @action = choices[0]
+  else menu.popUpAtHand @world()  if choices.length > 0
+
+SliderMorph::numericalSetters = ->
+  # for context menu demo purposes
+  list = super()
+  list.push "setStart", "setStop", "setSize"
+  list
+
+
+# SliderMorph stepping:
+SliderMorph::step = null
+SliderMorph::mouseDownLeft = (pos) ->
+  world = undefined
+  unless @button.bounds.containsPoint(pos)
+    @offset = new Point() # return null;
+  else
+    @offset = pos.subtract(@button.bounds.origin)
+  world = @root()
+  @step = =>
+    mousePos = undefined
+    newX = undefined
+    newY = undefined
+    if world.hand.mouseButton
+      mousePos = world.hand.bounds.origin
+      if @orientation is "vertical"
+        newX = @button.bounds.origin.x
+        newY = Math.max(Math.min(mousePos.y - @offset.y, @bottom() - @button.height()), @top())
+      else
+        newY = @button.bounds.origin.y
+        newX = Math.max(Math.min(mousePos.x - @offset.x, @right() - @button.width()), @left())
+      @button.setPosition new Point(newX, newY)
+      @updateValue()
+    else
+      @step = null
+# ColorPickerMorph ///////////////////////////////////////////////////
+
+class ColorPickerMorph extends Morph
+  constructor: (defaultColor) ->
+    @init defaultColor or new Color(255, 255, 255)
+
+# ColorPickerMorph instance creation:
+ColorPickerMorph::init = (defaultColor) ->
+  @choice = defaultColor
+  super
+  @color = new Color(255, 255, 255)
+  @silentSetExtent new Point(80, 80)
+  @drawNew()
+
+ColorPickerMorph::drawNew = ->
+  super
+  @buildSubmorphs()
+
+ColorPickerMorph::buildSubmorphs = ->
+  cpal = undefined
+  gpal = undefined
+  x = undefined
+  y = undefined
+  @children.forEach (child) ->
+    child.destroy()
+  
+  @children = []
+  @feedback = new Morph()
+  @feedback.color = @choice
+  @feedback.setExtent new Point(20, 20)
+  cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
+  gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
+  cpal.setPosition @bounds.origin
+  @add cpal
+  gpal.setPosition cpal.bottomLeft()
+  @add gpal
+  x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))
+  y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)
+  @feedback.setPosition new Point(x, y)
+  @add @feedback
+
+ColorPickerMorph::getChoice = ->
+  @feedback.color
+
+ColorPickerMorph::rootForGrab = ->
+  this
+# Global settings /////////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
+#global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
+#FileList, getBlurredShadowSupport
+modules = {} # keep track of additional loaded modules
+useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
+standardSettings =
+  minimumFontHeight: getMinimumFontHeight() # browser settings
+  globalFontFamily: ""
+  menuFontName: "sans-serif"
+  menuFontSize: 12
+  bubbleHelpFontSize: 10
+  prompterFontName: "sans-serif"
+  prompterFontSize: 12
+  prompterSliderSize: 10
+  handleSize: 15
+  scrollBarSize: 12
+  mouseScrollAmount: 40
+  useSliderForInput: false
+  useVirtualKeyboard: true
+
+touchScreenSettings =
+  minimumFontHeight: standardSettings.minimumFontHeight
+  globalFontFamily: ""
+  menuFontName: "sans-serif"
+  menuFontSize: 24
+  bubbleHelpFontSize: 18
+  prompterFontName: "sans-serif"
+  prompterFontSize: 24
+  prompterSliderSize: 20
+  handleSize: 26
+  scrollBarSize: 24
+  mouseScrollAmount: 40
+  useSliderForInput: true
+  useVirtualKeyboard: true
+
+MorphicPreferences = standardSettings
 # BoxMorph ////////////////////////////////////////////////////////////
 
 # I can have an optionally rounded border
@@ -1598,7 +2105,6 @@ InspectorMorph::setTarget = (target) ->
 InspectorMorph::buildPanes = ->
   attribs = []
   property = undefined
-  myself = this
   ctrl = undefined
   ev = undefined
   
@@ -1622,26 +2128,26 @@ InspectorMorph::buildPanes = ->
     # dummy condition, to be refined
     attribs.push property  if property
   if @showing is "attributes"
-    attribs = attribs.filter((prop) ->
-      typeof myself.target[prop] isnt "function"
+    attribs = attribs.filter((prop) =>
+      typeof @target[prop] isnt "function"
     )
   else if @showing is "methods"
-    attribs = attribs.filter((prop) ->
-      typeof myself.target[prop] is "function"
+    attribs = attribs.filter((prop) =>
+      typeof @target[prop] is "function"
     )
   # otherwise show all properties
   # label getter
   # format list
   # format element: [color, predicate(element]
-  @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180), (element) ->
-    myself.target.hasOwnProperty element
+  @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180), (element) =>
+    @target.hasOwnProperty element
   ]] else null))
-  @list.action = (selected) ->
+  @list.action = (selected) =>
     val = undefined
     txt = undefined
     cnts = undefined
-    val = myself.target[selected]
-    myself.currentProperty = val
+    val = @target[selected]
+    @currentProperty = val
     if val is null
       txt = "NULL"
     else if isString(val)
@@ -1651,8 +2157,8 @@ InspectorMorph::buildPanes = ->
     cnts = new TextMorph(txt)
     cnts.isEditable = true
     cnts.enableSelecting()
-    cnts.setReceiver myself.target
-    myself.detail.setContents cnts
+    cnts.setReceiver @target
+    @detail.setContents cnts
   
   @list.hBar.alpha = 0.6
   @list.vBar.alpha = 0.6
@@ -1693,76 +2199,76 @@ InspectorMorph::buildPanes = ->
   # properties button
   @buttonSubset = new TriggerMorph()
   @buttonSubset.labelString = "show..."
-  @buttonSubset.action = ->
+  @buttonSubset.action = =>
     menu = undefined
     menu = new MenuMorph()
-    menu.addItem "attributes", ->
-      myself.showing = "attributes"
-      myself.buildPanes()
+    menu.addItem "attributes", =>
+      @showing = "attributes"
+      @buildPanes()
     
-    menu.addItem "methods", ->
-      myself.showing = "methods"
-      myself.buildPanes()
+    menu.addItem "methods", =>
+      @showing = "methods"
+      @buildPanes()
     
-    menu.addItem "all", ->
-      myself.showing = "all"
-      myself.buildPanes()
+    menu.addItem "all", =>
+      @showing = "all"
+      @buildPanes()
     
     menu.addLine()
-    menu.addItem ((if myself.markOwnProperties then "un-mark own" else "mark own")), (->
-      myself.markOwnProperties = not myself.markOwnProperties
-      myself.buildPanes()
+    menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (->
+      @markOwnProperties = not @markOwnProperties
+      @buildPanes()
     ), "highlight\n'own' properties"
-    menu.popUpAtHand myself.world()
+    menu.popUpAtHand @world()
   
   @add @buttonSubset
   
   # inspect button
   @buttonInspect = new TriggerMorph()
   @buttonInspect.labelString = "inspect..."
-  @buttonInspect.action = ->
+  @buttonInspect.action = =>
     menu = undefined
     world = undefined
     inspector = undefined
-    if isObject(myself.currentProperty)
+    if isObject(@currentProperty)
       menu = new MenuMorph()
-      menu.addItem "in new inspector...", ->
-        world = myself.world()
-        inspector = new InspectorMorph(myself.currentProperty)
+      menu.addItem "in new inspector...", =>
+        world = @world()
+        inspector = new InspectorMorph(@currentProperty)
         inspector.setPosition world.hand.position()
         inspector.keepWithin world
         world.add inspector
         inspector.changed()
       
-      menu.addItem "here...", ->
-        myself.setTarget myself.currentProperty
+      menu.addItem "here...", =>
+        @setTarget @currentProperty
       
-      menu.popUpAtHand myself.world()
+      menu.popUpAtHand @world()
     else
-      myself.inform ((if myself.currentProperty is null then "null" else typeof myself.currentProperty)) + "\nis not inspectable"
+      @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
   
   @add @buttonInspect
   
   # edit button
   @buttonEdit = new TriggerMorph()
   @buttonEdit.labelString = "edit..."
-  @buttonEdit.action = ->
+  @buttonEdit.action = =>
     menu = undefined
-    menu = new MenuMorph(myself)
+    menu = new MenuMorph(@)
     menu.addItem "save", "save", "accept changes"
     menu.addLine()
     menu.addItem "add property...", "addProperty"
     menu.addItem "rename...", "renameProperty"
     menu.addItem "remove...", "removeProperty"
-    menu.popUpAtHand myself.world()
+    menu.popUpAtHand @world()
   
   @add @buttonEdit
   
   # close button
   @buttonClose = new TriggerMorph()
   @buttonClose.labelString = "close"
-  @buttonClose.action = ->
-    myself.destroy()
+  @buttonClose.action = =>
+    @destroy()
   
   @add @buttonClose
   
@@ -1865,33 +2371,30 @@ InspectorMorph::save = ->
     @inform err
 
 InspectorMorph::addProperty = ->
-  myself = this
-  @prompt "new property name:", ((prop) ->
+  @prompt "new property name:", ((prop) =>
     if prop
-      myself.target[prop] = null
-      myself.buildPanes()
-      if myself.target.drawNew
-        myself.target.changed()
-        myself.target.drawNew()
-        myself.target.changed()
+      @target[prop] = null
+      @buildPanes()
+      if @target.drawNew
+        @target.changed()
+        @target.drawNew()
+        @target.changed()
   ), this, "property" # Chrome cannot handle empty strings (others do)
 
 InspectorMorph::renameProperty = ->
-  myself = this
   propertyName = @list.selected
-  @prompt "property name:", ((prop) ->
+  @prompt "property name:", ((prop) =>
     try
-      delete (myself.target[propertyName])
-      
-      myself.target[prop] = myself.currentProperty
+      delete (@target[propertyName])
+      @target[prop] = @currentProperty
     catch err
-      myself.inform err
-    myself.buildPanes()
-    if myself.target.drawNew
-      myself.target.changed()
-      myself.target.drawNew()
-      myself.target.changed()
-  ), this, propertyName
+      @inform err
+    @buildPanes()
+    if @target.drawNew
+      @target.changed()
+      @target.drawNew()
+      @target.changed()
+  ), @, propertyName
 
 InspectorMorph::removeProperty = ->
   prop = @list.selected
@@ -1906,211 +2409,442 @@ InspectorMorph::removeProperty = ->
       @target.changed()
   catch err
     @inform err
-# Rectangles //////////////////////////////////////////////////////////
+# SpeechBubbleMorph ///////////////////////////////////////////////////
 
-class Rectangle
-  constructor: (left, top, right, bottom) ->
-    @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
+#
+#	I am a comic-style speech bubble that can display either a string,
+#	a Morph, a Canvas or a toString() representation of anything else.
+#	If I am invoked using popUp() I behave like a tool tip.
+#
+
+class SpeechBubbleMorph extends BoxMorph
+  constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
+    @init contents, color, edge, border, borderColor, padding, isThought
+
+# SpeechBubbleMorph: referenced constructors
+
+# SpeechBubbleMorph instance creation:
+SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, isThought) ->
+  @isPointingRight = true # orientation of text
+  @contents = contents or ""
+  @padding = padding or 0 # additional vertical pixels
+  @isThought = isThought or false # draw "think" bubble
+  super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+  @color = color or new Color(230, 230, 230)
+  @drawNew()
 
 
-# Rectangle instance creation:
-Rectangle::init = (originPoint, cornerPoint) ->
-  @origin = originPoint
-  @corner = cornerPoint
+# SpeechBubbleMorph invoking:
+SpeechBubbleMorph::popUp = (world, pos) ->
+  @drawNew()
+  @setPosition pos.subtract(new Point(0, @height()))
+  @addShadow new Point(2, 2), 80
+  @keepWithin world
+  world.add this
+  @changed()
+  world.hand.destroyTemporaries()
+  world.hand.temporaries.push this
+  @mouseEnter = ->
+    @destroy()
 
 
-# Rectangle string representation: e.g. '[0@0 | 160@80]'
-Rectangle::toString = ->
-  "[" + @origin.toString() + " | " + @extent().toString() + "]"
-
-
-# Rectangle copying:
-Rectangle::copy = ->
-  new Rectangle(@left(), @top(), @right(), @bottom())
-
-
-# Rectangle accessing - setting:
-Rectangle::setTo = (left, top, right, bottom) ->
+# SpeechBubbleMorph drawing:
+SpeechBubbleMorph::drawNew = ->
   
-  # note: all inputs are optional and can be omitted
-  @origin = new Point(left or ((if (left is 0) then 0 else @left())), top or ((if (top is 0) then 0 else @top())))
-  @corner = new Point(right or ((if (right is 0) then 0 else @right())), bottom or ((if (bottom is 0) then 0 else @bottom())))
-
-
-# Rectangle accessing - getting:
-Rectangle::area = ->
+  # re-build my contents
+  @contentsMorph.destroy()  if @contentsMorph
+  if @contents instanceof Morph
+    @contentsMorph = @contents
+  else if isString(@contents)
+    @contentsMorph = new TextMorph(@contents, MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+  else if @contents instanceof HTMLCanvasElement
+    @contentsMorph = new Morph()
+    @contentsMorph.silentSetWidth @contents.width
+    @contentsMorph.silentSetHeight @contents.height
+    @contentsMorph.image = @contents
+  else
+    @contentsMorph = new TextMorph(@contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+  @add @contentsMorph
   
-  #requires width() and height() to be defined
+  # adjust my layout
+  @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
+  @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
+  
+  # draw my outline
+  super()
+  
+  # position my contents
+  @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))
+
+SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
+  circle = (x, y, r) ->
+    context.moveTo x + r, y
+    context.arc x, y, r, radians(0), radians(360)
+  offset = radius + inset
   w = @width()
-  return 0  if w < 0
-  Math.max w * @height(), 0
+  h = @height()
+  rad = undefined
+  
+  # top left:
+  context.arc offset, offset, radius, radians(-180), radians(-90), false
+  
+  # top right:
+  context.arc w - offset, offset, radius, radians(-90), radians(-0), false
+  
+  # bottom right:
+  context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false
+  unless @isThought # draw speech bubble hook
+    if @isPointingRight
+      context.lineTo offset + radius, h - offset
+      context.lineTo radius / 2 + inset, h - inset
+    else # pointing left
+      context.lineTo w - (radius / 2 + inset), h - inset
+      context.lineTo w - (offset + radius), h - offset
+  
+  # bottom left:
+  context.arc offset, h - offset - radius, radius, radians(90), radians(180), false
+  if @isThought
+    
+    # close large bubble:
+    context.lineTo inset, offset
+    
+    # draw thought bubbles:
+    if @isPointingRight
+      
+      # tip bubble:
+      rad = radius / 4
+      circle rad + inset, h - rad - inset, rad
+      
+      # middle bubble:
+      rad = radius / 3.2
+      circle rad * 2 + inset, h - rad - inset * 2, rad
+      
+      # top bubble:
+      rad = radius / 2.8
+      circle rad * 3 + inset * 2, h - rad - inset * 4, rad
+    else # pointing left
+      # tip bubble:
+      rad = radius / 4
+      circle w - (rad + inset), h - rad - inset, rad
+      
+      # middle bubble:
+      rad = radius / 3.2
+      circle w - (rad * 2 + inset), h - rad - inset * 2, rad
+      
+      # top bubble:
+      rad = radius / 2.8
+      circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
+# TriggerMorph ////////////////////////////////////////////////////////
 
-Rectangle::bottom = ->
-  @corner.y
+# I provide basic button functionality
 
-Rectangle::bottomCenter = ->
-  new Point(@center().x, @bottom())
+class TriggerMorph extends Morph
+  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
+    @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
 
-Rectangle::bottomLeft = ->
-  new Point(@origin.x, @corner.y)
 
-Rectangle::bottomRight = ->
-  @corner.copy()
+# TriggerMorph instance creation:
+TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
+  
+  # additional properties:
+  @target = target or null
+  @action = action or null
+  @environment = environment or null
+  @labelString = labelString or null
+  @label = null
+  @hint = hint or null
+  @fontSize = fontSize or MorphicPreferences.menuFontSize
+  @fontStyle = fontStyle or "sans-serif"
+  @highlightColor = new Color(192, 192, 192)
+  @pressColor = new Color(128, 128, 128)
+  @labelColor = labelColor or new Color(0, 0, 0)
+  
+  # initialize inherited properties:
+  super()
+  
+  # override inherited properites:
+  @color = new Color(255, 255, 255)
+  @drawNew()
 
-Rectangle::boundingBox = ->
+
+# TriggerMorph drawing:
+TriggerMorph::drawNew = ->
+  @createBackgrounds()
+  @createLabel()  if @labelString isnt null
+
+TriggerMorph::createBackgrounds = ->
+  context = undefined
+  ext = @extent()
+  @normalImage = newCanvas(ext)
+  context = @normalImage.getContext("2d")
+  context.fillStyle = @color.toString()
+  context.fillRect 0, 0, ext.x, ext.y
+  @highlightImage = newCanvas(ext)
+  context = @highlightImage.getContext("2d")
+  context.fillStyle = @highlightColor.toString()
+  context.fillRect 0, 0, ext.x, ext.y
+  @pressImage = newCanvas(ext)
+  context = @pressImage.getContext("2d")
+  context.fillStyle = @pressColor.toString()
+  context.fillRect 0, 0, ext.x, ext.y
+  @image = @normalImage
+
+TriggerMorph::createLabel = ->
+  @label.destroy()  if @label isnt null
+  # bold
+  # italic
+  # numeric
+  # shadow offset
+  # shadow color
+  @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+  @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
+  @add @label
+
+
+# TriggerMorph duplicating:
+TriggerMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = super dict
+  c.label = (dict[@label])  if c.label and dict[@label]
+  c
+
+
+# TriggerMorph action:
+TriggerMorph::trigger = ->
+  
+  #
+  #	if target is a function, use it as callback:
+  #	execute target as callback function with action as argument
+  #	in the environment as optionally specified.
+  #	Note: if action is also a function, instead of becoming
+  #	the argument itself it will be called to answer the argument.
+  #	for selections, Yes/No Choices etc:
+  #
+  #	else (if target is not a function):
+  #
+  #		if action is a function:
+  #		execute the action with target as environment (can be null)
+  #		for lambdafied (inline) actions
+  #
+  #		else if action is a String:
+  #		treat it as function property of target and execute it
+  #		for selector-like actions
+  #	
+  if typeof @target is "function"
+    if typeof @action is "function"
+      @target.call @environment, @action.call()
+    else
+      @target.call @environment, @action
+  else
+    if typeof @action is "function"
+      @action.call @target
+    else # assume it's a String
+      @target[@action]()
+
+
+# TriggerMorph events:
+TriggerMorph::mouseEnter = ->
+  @image = @highlightImage
+  @changed()
+  @bubbleHelp @hint  if @hint
+
+TriggerMorph::mouseLeave = ->
+  @image = @normalImage
+  @changed()
+  @world().hand.destroyTemporaries()  if @hint
+
+TriggerMorph::mouseDownLeft = ->
+  @image = @pressImage
+  @changed()
+
+TriggerMorph::mouseClickLeft = ->
+  @image = @highlightImage
+  @changed()
+  @trigger()
+
+
+# TriggerMorph bubble help:
+TriggerMorph::bubbleHelp = (contents) ->
+  @fps = 2
+  @step = =>
+    @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())
+    @fps = 0
+    delete @step
+
+TriggerMorph::popUpbubbleHelp = (contents) ->
+  new SpeechBubbleMorph(localize(contents), null, null, 1).popUp @world(), @rightCenter().add(new Point(-8, 0))
+# HandleMorph ////////////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
+# I am a resize / move handle that can be attached to any Morph
+
+class HandleMorph extends Morph
+  constructor: (target, minX, minY, insetX, insetY, type) ->
+    # if insetY is missing, it will be the same as insetX
+    @init target, minX, minY, insetX, insetY, type
+
+# HandleMorph instance creation:
+HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
+  size = MorphicPreferences.handleSize
+  @target = target or null
+  @minExtent = new Point(minX or 0, minY or 0)
+  @inset = new Point(insetX or 0, insetY or insetX or 0)
+  @type = type or "resize" # can also be 'move'
+  super()
+  @color = new Color(255, 255, 255)
+  @isDraggable = false
+  @noticesTransparentClick = true
+  @setExtent new Point(size, size)
+
+
+# HandleMorph drawing:
+HandleMorph::drawNew = ->
+  @normalImage = newCanvas(@extent())
+  @highlightImage = newCanvas(@extent())
+  @drawOnCanvas @normalImage, @color, new Color(100, 100, 100)
+  @drawOnCanvas @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
+  @image = @normalImage
+  if @target
+    @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+    @target.add this
+    @target.changed()
+
+HandleMorph::drawOnCanvas = (aCanvas, color, shadowColor) ->
+  context = aCanvas.getContext("2d")
+  p1 = undefined
+  p11 = undefined
+  p2 = undefined
+  p22 = undefined
+  i = undefined
+  context.lineWidth = 1
+  context.lineCap = "round"
+  context.strokeStyle = color.toString()
+  if @type is "move"
+    p1 = @bottomLeft().subtract(@position())
+    p11 = p1.copy()
+    p2 = @topRight().subtract(@position())
+    p22 = p2.copy()
+    i = 0
+    while i <= @height()
+      p11.y = p1.y - i
+      p22.y = p2.y - i
+      context.beginPath()
+      context.moveTo p11.x, p11.y
+      context.lineTo p22.x, p22.y
+      context.closePath()
+      context.stroke()
+      i = i + 6
+  p1 = @bottomLeft().subtract(@position())
+  p11 = p1.copy()
+  p2 = @topRight().subtract(@position())
+  p22 = p2.copy()
+  i = 0
+  while i <= @width()
+    p11.x = p1.x + i
+    p22.x = p2.x + i
+    context.beginPath()
+    context.moveTo p11.x, p11.y
+    context.lineTo p22.x, p22.y
+    context.closePath()
+    context.stroke()
+    i = i + 6
+  context.strokeStyle = shadowColor.toString()
+  if @type is "move"
+    p1 = @bottomLeft().subtract(@position())
+    p11 = p1.copy()
+    p2 = @topRight().subtract(@position())
+    p22 = p2.copy()
+    i = -2
+    while i <= @height()
+      p11.y = p1.y - i
+      p22.y = p2.y - i
+      context.beginPath()
+      context.moveTo p11.x, p11.y
+      context.lineTo p22.x, p22.y
+      context.closePath()
+      context.stroke()
+      i = i + 6
+  p1 = @bottomLeft().subtract(@position())
+  p11 = p1.copy()
+  p2 = @topRight().subtract(@position())
+  p22 = p2.copy()
+  i = 2
+  while i <= @width()
+    p11.x = p1.x + i
+    p22.x = p2.x + i
+    context.beginPath()
+    context.moveTo p11.x, p11.y
+    context.lineTo p22.x, p22.y
+    context.closePath()
+    context.stroke()
+    i = i + 6
+
+
+# HandleMorph stepping:
+HandleMorph::step = null
+HandleMorph::mouseDownLeft = (pos) ->
+  world = @root()
+  offset = pos.subtract(@bounds.origin)
+  return null  unless @target
+  @step = =>
+    newPos = undefined
+    newExt = undefined
+    if world.hand.mouseButton
+      newPos = world.hand.bounds.origin.copy().subtract(offset)
+      if @type is "resize"
+        newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
+        newExt = newExt.max(@minExtent)
+        @target.setExtent newExt
+        @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+      else # type === 'move'
+        @target.setPosition newPos.subtract(@target.extent()).add(@extent())
+    else
+      @step = null
+  
+  unless @target.step
+    @target.step = noOpFunction
+
+
+# HandleMorph dragging and dropping:
+HandleMorph::rootForGrab = ->
   this
 
-Rectangle::center = ->
-  @origin.add @corner.subtract(@origin).floorDivideBy(2)
 
-Rectangle::corners = ->
-  [@origin, @bottomLeft(), @corner, @topRight()]
+# HandleMorph events:
+HandleMorph::mouseEnter = ->
+  @image = @highlightImage
+  @changed()
 
-Rectangle::extent = ->
-  @corner.subtract @origin
-
-Rectangle::height = ->
-  @corner.y - @origin.y
-
-Rectangle::left = ->
-  @origin.x
-
-Rectangle::leftCenter = ->
-  new Point(@left(), @center().y)
-
-Rectangle::right = ->
-  @corner.x
-
-Rectangle::rightCenter = ->
-  new Point(@right(), @center().y)
-
-Rectangle::top = ->
-  @origin.y
-
-Rectangle::topCenter = ->
-  new Point(@center().x, @top())
-
-Rectangle::topLeft = ->
-  @origin
-
-Rectangle::topRight = ->
-  new Point(@corner.x, @origin.y)
-
-Rectangle::width = ->
-  @corner.x - @origin.x
-
-Rectangle::position = ->
-  @origin
+HandleMorph::mouseLeave = ->
+  @image = @normalImage
+  @changed()
 
 
-# Rectangle comparison:
-Rectangle::eq = (aRect) ->
-  @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
-
-Rectangle::abs = ->
-  newOrigin = undefined
-  newCorner = undefined
-  newOrigin = @origin.abs()
-  newCorner = @corner.max(newOrigin)
-  newOrigin.corner newCorner
-
-
-# Rectangle functions:
-Rectangle::insetBy = (delta) ->
+# HandleMorph duplicating:
+HandleMorph::copyRecordingReferences = (dict) ->
   
-  # delta can be either a Point or a Number
-  result = new Rectangle()
-  result.origin = @origin.add(delta)
-  result.corner = @corner.subtract(delta)
-  result
+  # inherited, see comment in Morph
+  c = super dict
+  c.target = (dict[@target])  if c.target and dict[@target]
+  c
 
-Rectangle::expandBy = (delta) ->
+
+# HandleMorph menu:
+HandleMorph::attach = ->
+  choices = @overlappedMorphs()
+  menu = new MenuMorph(this, "choose target:")
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), ->
+      @isDraggable = false
+      @target = each
+      @drawNew()
+      @noticesTransparentClick = true
   
-  # delta can be either a Point or a Number
-  result = new Rectangle()
-  result.origin = @origin.subtract(delta)
-  result.corner = @corner.add(delta)
-  result
-
-Rectangle::growBy = (delta) ->
   
-  # delta can be either a Point or a Number
-  result = new Rectangle()
-  result.origin = @origin.copy()
-  result.corner = @corner.add(delta)
-  result
-
-Rectangle::intersect = (aRect) ->
-  result = new Rectangle()
-  result.origin = @origin.max(aRect.origin)
-  result.corner = @corner.min(aRect.corner)
-  result
-
-Rectangle::merge = (aRect) ->
-  result = new Rectangle()
-  result.origin = @origin.min(aRect.origin)
-  result.corner = @corner.max(aRect.corner)
-  result
-
-Rectangle::round = ->
-  @origin.round().corner @corner.round()
-
-Rectangle::spread = ->
-  
-  # round me by applying floor() to my origin and ceil() to my corner
-  @origin.floor().corner @corner.ceil()
-
-Rectangle::amountToTranslateWithin = (aRect) ->
-  
-  #
-  #    Answer a Point, delta, such that self + delta is forced within
-  #    aRectangle. when all of me cannot be made to fit, prefer to keep
-  #    my topLeft inside. Taken from Squeak.
-  #
-  dx = undefined
-  dy = undefined
-  dx = aRect.right() - @right()  if @right() > aRect.right()
-  dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
-  dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()
-  dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
-  new Point(dx, dy)
-
-
-# Rectangle testing:
-Rectangle::containsPoint = (aPoint) ->
-  @origin.le(aPoint) and aPoint.lt(@corner)
-
-Rectangle::containsRectangle = (aRect) ->
-  aRect.origin.gt(@origin) and aRect.corner.lt(@corner)
-
-Rectangle::intersects = (aRect) ->
-  ro = aRect.origin
-  rc = aRect.corner
-  (rc.x >= @origin.x) and (rc.y >= @origin.y) and (ro.x <= @corner.x) and (ro.y <= @corner.y)
-
-
-# Rectangle transforming:
-Rectangle::scaleBy = (scale) ->
-  
-  # scale can be either a Point or a scalar
-  o = @origin.multiplyBy(scale)
-  c = @corner.multiplyBy(scale)
-  new Rectangle(o.x, o.y, c.x, c.y)
-
-Rectangle::translateBy = (factor) ->
-  
-  # factor can be either a Point or a scalar
-  o = @origin.add(factor)
-  c = @corner.add(factor)
-  new Rectangle(o.x, o.y, c.x, c.y)
-
-
-# Rectangle converting:
-Rectangle::asArray = ->
-  [@left(), @top(), @right(), @bottom()]
-
-Rectangle::asArray_xywh = ->
-  [@left(), @top(), @width(), @height()]
+  menu.popUpAtHand @world()  if choices.length > 0
 # FrameMorph //////////////////////////////////////////////////////////
 
 # I clip my submorphs at my bounds
@@ -2283,723 +3017,25 @@ StringFieldMorph::copyRecordingReferences = (dict) ->
   c = super dict
   c.text = (dict[@text])  if c.text and dict[@text]
   c
-morphicVersion = "2012-October-16"
-# TriggerMorph ////////////////////////////////////////////////////////
+# BlinkerMorph ////////////////////////////////////////////////////////
 
-# I provide basic button functionality
+# can be used for text cursors
 
-class TriggerMorph extends Morph
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-    @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
+class BlinkerMorph extends Morph
+  constructor: (rate) ->
+    @init rate
 
-
-# TriggerMorph instance creation:
-TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-  
-  # additional properties:
-  @target = target or null
-  @action = action or null
-  @environment = environment or null
-  @labelString = labelString or null
-  @label = null
-  @hint = hint or null
-  @fontSize = fontSize or MorphicPreferences.menuFontSize
-  @fontStyle = fontStyle or "sans-serif"
-  @highlightColor = new Color(192, 192, 192)
-  @pressColor = new Color(128, 128, 128)
-  @labelColor = labelColor or new Color(0, 0, 0)
-  
-  # initialize inherited properties:
+# BlinkerMorph instance creation:
+BlinkerMorph::init = (rate) ->
   super()
-  
-  # override inherited properites:
-  @color = new Color(255, 255, 255)
+  @color = new Color(0, 0, 0)
+  @fps = rate or 2
   @drawNew()
 
 
-# TriggerMorph drawing:
-TriggerMorph::drawNew = ->
-  @createBackgrounds()
-  @createLabel()  if @labelString isnt null
-
-TriggerMorph::createBackgrounds = ->
-  context = undefined
-  ext = @extent()
-  @normalImage = newCanvas(ext)
-  context = @normalImage.getContext("2d")
-  context.fillStyle = @color.toString()
-  context.fillRect 0, 0, ext.x, ext.y
-  @highlightImage = newCanvas(ext)
-  context = @highlightImage.getContext("2d")
-  context.fillStyle = @highlightColor.toString()
-  context.fillRect 0, 0, ext.x, ext.y
-  @pressImage = newCanvas(ext)
-  context = @pressImage.getContext("2d")
-  context.fillStyle = @pressColor.toString()
-  context.fillRect 0, 0, ext.x, ext.y
-  @image = @normalImage
-
-TriggerMorph::createLabel = ->
-  @label.destroy()  if @label isnt null
-  # bold
-  # italic
-  # numeric
-  # shadow offset
-  # shadow color
-  @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
-  @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
-  @add @label
-
-
-# TriggerMorph duplicating:
-TriggerMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = super dict
-  c.label = (dict[@label])  if c.label and dict[@label]
-  c
-
-
-# TriggerMorph action:
-TriggerMorph::trigger = ->
-  
-  #
-  #	if target is a function, use it as callback:
-  #	execute target as callback function with action as argument
-  #	in the environment as optionally specified.
-  #	Note: if action is also a function, instead of becoming
-  #	the argument itself it will be called to answer the argument.
-  #	for selections, Yes/No Choices etc:
-  #
-  #	else (if target is not a function):
-  #
-  #		if action is a function:
-  #		execute the action with target as environment (can be null)
-  #		for lambdafied (inline) actions
-  #
-  #		else if action is a String:
-  #		treat it as function property of target and execute it
-  #		for selector-like actions
-  #	
-  if typeof @target is "function"
-    if typeof @action is "function"
-      @target.call @environment, @action.call()
-    else
-      @target.call @environment, @action
-  else
-    if typeof @action is "function"
-      @action.call @target
-    else # assume it's a String
-      @target[@action]()
-
-
-# TriggerMorph events:
-TriggerMorph::mouseEnter = ->
-  @image = @highlightImage
-  @changed()
-  @bubbleHelp @hint  if @hint
-
-TriggerMorph::mouseLeave = ->
-  @image = @normalImage
-  @changed()
-  @world().hand.destroyTemporaries()  if @hint
-
-TriggerMorph::mouseDownLeft = ->
-  @image = @pressImage
-  @changed()
-
-TriggerMorph::mouseClickLeft = ->
-  @image = @highlightImage
-  @changed()
-  @trigger()
-
-
-# TriggerMorph bubble help:
-TriggerMorph::bubbleHelp = (contents) ->
-  myself = this
-  @fps = 2
-  @step = ->
-    myself.popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())
-    myself.fps = 0
-    delete myself.step
-
-TriggerMorph::popUpbubbleHelp = (contents) ->
-  new SpeechBubbleMorph(localize(contents), null, null, 1).popUp @world(), @rightCenter().add(new Point(-8, 0))
-# Colors //////////////////////////////////////////////////////////////
-
-# Color instance creation:
-Color = (r, g, b, a) ->
-  
-  # all values are optional, just (r, g, b) is fine
-  @r = r or 0
-  @g = g or 0
-  @b = b or 0
-  @a = a or ((if (a is 0) then 0 else 1))
-
-# Color string representation: e.g. 'rgba(255,165,0,1)'
-Color::toString = ->
-  "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"
-
-
-# Color copying:
-Color::copy = ->
-  new Color(@r, @g, @b, @a)
-
-
-# Color comparison:
-Color::eq = (aColor) ->
-  
-  # ==
-  aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b
-
-
-# Color conversion (hsv):
-Color::hsv = ->
-  
-  # ignore alpha
-  max = undefined
-  min = undefined
-  h = undefined
-  s = undefined
-  v = undefined
-  d = undefined
-  rr = @r / 255
-  gg = @g / 255
-  bb = @b / 255
-  max = Math.max(rr, gg, bb)
-  min = Math.min(rr, gg, bb)
-  h = max
-  s = max
-  v = max
-  d = max - min
-  s = (if max is 0 then 0 else d / max)
-  if max is min
-    h = 0
-  else
-    switch max
-      when rr
-        h = (gg - bb) / d + ((if gg < bb then 6 else 0))
-      when gg
-        h = (bb - rr) / d + 2
-      when bb
-        h = (rr - gg) / d + 4
-    h /= 6
-  [h, s, v]
-
-Color::set_hsv = (h, s, v) ->
-  
-  # ignore alpha, h, s and v are to be within [0, 1]
-  i = undefined
-  f = undefined
-  p = undefined
-  q = undefined
-  t = undefined
-  i = Math.floor(h * 6)
-  f = h * 6 - i
-  p = v * (1 - s)
-  q = v * (1 - f * s)
-  t = v * (1 - (1 - f) * s)
-  switch i % 6
-    when 0
-      @r = v
-      @g = t
-      @b = p
-    when 1
-      @r = q
-      @g = v
-      @b = p
-    when 2
-      @r = p
-      @g = v
-      @b = t
-    when 3
-      @r = p
-      @g = q
-      @b = v
-    when 4
-      @r = t
-      @g = p
-      @b = v
-    when 5
-      @r = v
-      @g = p
-      @b = q
-  @r *= 255
-  @g *= 255
-  @b *= 255
-
-
-# Color mixing:
-Color::mixed = (proportion, otherColor) ->
-  
-  # answer a copy of this color mixed with another color, ignore alpha
-  frac1 = Math.min(Math.max(proportion, 0), 1)
-  frac2 = 1 - frac1
-  new Color(@r * frac1 + otherColor.r * frac2, @g * frac1 + otherColor.g * frac2, @b * frac1 + otherColor.b * frac2)
-
-Color::darker = (percent) ->
-  
-  # return an rgb-interpolated darker copy of me, ignore alpha
-  fract = 0.8333
-  fract = (100 - percent) / 100  if percent
-  @mixed fract, new Color(0, 0, 0)
-
-Color::lighter = (percent) ->
-  
-  # return an rgb-interpolated lighter copy of me, ignore alpha
-  fract = 0.8333
-  fract = (100 - percent) / 100  if percent
-  @mixed fract, new Color(255, 255, 255)
-
-Color::dansDarker = ->
-  
-  # return an hsv-interpolated darker copy of me, ignore alpha
-  hsv = @hsv()
-  result = new Color()
-  vv = Math.max(hsv[2] - 0.16, 0)
-  result.set_hsv hsv[0], hsv[1], vv
-  result
-# Global settings /////////////////////////////////////////////////////
-
-# this comment below is needed to figure our dependencies between classes
-# REQUIRES globalFunctions
-
-#global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
-#FileList, getBlurredShadowSupport
-modules = {} # keep track of additional loaded modules
-useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
-standardSettings =
-  minimumFontHeight: getMinimumFontHeight() # browser settings
-  globalFontFamily: ""
-  menuFontName: "sans-serif"
-  menuFontSize: 12
-  bubbleHelpFontSize: 10
-  prompterFontName: "sans-serif"
-  prompterFontSize: 12
-  prompterSliderSize: 10
-  handleSize: 15
-  scrollBarSize: 12
-  mouseScrollAmount: 40
-  useSliderForInput: false
-  useVirtualKeyboard: true
-
-touchScreenSettings =
-  minimumFontHeight: standardSettings.minimumFontHeight
-  globalFontFamily: ""
-  menuFontName: "sans-serif"
-  menuFontSize: 24
-  bubbleHelpFontSize: 18
-  prompterFontName: "sans-serif"
-  prompterFontSize: 24
-  prompterSliderSize: 20
-  handleSize: 26
-  scrollBarSize: 24
-  mouseScrollAmount: 40
-  useSliderForInput: true
-  useVirtualKeyboard: true
-
-MorphicPreferences = standardSettings
-# HandMorph ///////////////////////////////////////////////////////////
-
-# I represent the Mouse cursor
-
-# HandMorph inherits from Morph:
-
-class HandMorph extends Morph
-  constructor: (aWorld) ->
-    @init aWorld
-
-# HandMorph instance creation:
-
-# HandMorph initialization:
-HandMorph::init = (aWorld) ->
-  super()
-  @bounds = new Rectangle()
-  
-  # additional properties:
-  @world = aWorld
-  @mouseButton = null
-  @mouseOverList = []
-  @mouseDownMorph = null
-  @morphToGrab = null
-  @grabOrigin = null
-  @temporaries = []
-  @touchHoldTimeout = null
-
-HandMorph::changed = ->
-  b = undefined
-  if @world isnt null
-    b = @fullBounds()
-    @world.broken.push @fullBounds().spread()  unless b.extent().eq(new Point())
-
-
-# HandMorph navigation:
-HandMorph::morphAtPointer = ->
-  morphs = @world.allChildren().slice(0).reverse()
-  myself = this
-  result = null
-  morphs.forEach (m) ->
-    result = m  if m.visibleBounds().containsPoint(myself.bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(myself.bounds.origin))) and (m not instanceof ShadowMorph)
-  
-  return result  if result isnt null
-  @world
-
-#
-#    alternative -  more elegant and possibly more
-#	performant - solution for morphAtPointer.
-#	Has some issues, commented out for now
-#
-#HandMorph.prototype.morphAtPointer = function () {
-#	var myself = this;
-#	return this.world.topMorphSuchThat(function (m) {
-#		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
-#			m.isVisible &&
-#			(m.noticesTransparentClick ||
-#				(! m.isTransparentAt(myself.bounds.origin))) &&
-#			(! (m instanceof ShadowMorph));
-#	});
-#};
-#
-HandMorph::allMorphsAtPointer = ->
-  morphs = @world.allChildren()
-  myself = this
-  morphs.filter (m) ->
-    m.isVisible and m.visibleBounds().containsPoint(myself.bounds.origin)
-
-
-
-# HandMorph dragging and dropping:
-#
-#	drag 'n' drop events, method(arg) -> receiver:
-#
-#		prepareToBeGrabbed(handMorph) -> grabTarget
-#		reactToGrabOf(grabbedMorph) -> oldParent
-#		wantsDropOf(morphToDrop) ->  newParent
-#		justDropped(handMorph) -> droppedMorph
-#		reactToDropOf(droppedMorph, handMorph) -> newParent
-#
-HandMorph::dropTargetFor = (aMorph) ->
-  target = @morphAtPointer()
-  target = target.parent  until target.wantsDropOf(aMorph)
-  target
-
-HandMorph::grab = (aMorph) ->
-  oldParent = aMorph.parent
-  return null  if aMorph instanceof WorldMorph
-  if @children.length is 0
-    @world.stopEditing()
-    @grabOrigin = aMorph.situation()
-    aMorph.addShadow()
-    aMorph.prepareToBeGrabbed this  if aMorph.prepareToBeGrabbed
-    @add aMorph
-    @changed()
-    oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
-
-HandMorph::drop = ->
-  target = undefined
-  morphToDrop = undefined
-  if @children.length isnt 0
-    morphToDrop = @children[0]
-    target = @dropTargetFor(morphToDrop)
-    @changed()
-    target.add morphToDrop
-    morphToDrop.changed()
-    morphToDrop.removeShadow()
-    @children = []
-    @setExtent new Point()
-    morphToDrop.justDropped this  if morphToDrop.justDropped
-    target.reactToDropOf morphToDrop, this  if target.reactToDropOf
-    @dragOrigin = null
-
-# HandMorph event dispatching:
-#
-#    mouse events:
-#
-#		mouseDownLeft
-#		mouseDownRight
-#		mouseClickLeft
-#		mouseClickRight
-#		mouseEnter
-#		mouseLeave
-#		mouseEnterDragging
-#		mouseLeaveDragging
-#		mouseMove
-#		mouseScroll
-#
-HandMorph::processMouseDown = (event) ->
-  morph = undefined
-  expectedClick = undefined
-  actualClick = undefined
-  @destroyTemporaries()
-  @morphToGrab = null
-  if @children.length isnt 0
-    @drop()
-    @mouseButton = null
-  else
-    morph = @morphAtPointer()
-    if @world.activeMenu
-      unless contains(morph.allParents(), @world.activeMenu)
-        @world.activeMenu.destroy()
-      else
-        clearInterval @touchHoldTimeout
-    @world.activeHandle.destroy()  if morph isnt @world.activeHandle  if @world.activeHandle
-    @world.stopEditing()  if morph isnt @world.cursor.target  if @world.cursor
-    @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
-    if event.button is 2 or event.ctrlKey
-      @mouseButton = "right"
-      actualClick = "mouseDownRight"
-      expectedClick = "mouseClickRight"
-    else
-      @mouseButton = "left"
-      actualClick = "mouseDownLeft"
-      expectedClick = "mouseClickLeft"
-    @mouseDownMorph = morph
-    @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
-    morph = morph.parent  until morph[actualClick]
-    morph[actualClick] @bounds.origin
-
-HandMorph::processTouchStart = (event) ->
-  myself = this
-  clearInterval @touchHoldTimeout
-  if event.touches.length is 1
-    # simulate mouseRightClick
-    @touchHoldTimeout = setInterval(->
-      myself.processMouseDown button: 2
-      myself.processMouseUp button: 2
-      event.preventDefault()
-      clearInterval myself.touchHoldTimeout
-    , 400)
-    @processMouseMove event.touches[0] # update my position
-    @processMouseDown button: 0
-    event.preventDefault()
-
-HandMorph::processTouchMove = (event) ->
-  if event.touches.length is 1
-    touch = event.touches[0]
-    @processMouseMove touch
-    clearInterval @touchHoldTimeout
-
-HandMorph::processTouchEnd = (event) ->
-  clearInterval @touchHoldTimeout
-  @processMouseUp button: 0
-
-HandMorph::processMouseUp = ->
-  morph = @morphAtPointer()
-  context = undefined
-  contextMenu = undefined
-  expectedClick = undefined
-  @destroyTemporaries()
-  if @children.length isnt 0
-    @drop()
-  else
-    if @mouseButton is "left"
-      expectedClick = "mouseClickLeft"
-    else
-      expectedClick = "mouseClickRight"
-      if @mouseButton
-        context = morph
-        contextMenu = context.contextMenu()
-        while (not contextMenu) and context.parent
-          context = context.parent
-          contextMenu = context.contextMenu()
-        contextMenu.popUpAtHand @world  if contextMenu
-    morph = morph.parent  until morph[expectedClick]
-    morph[expectedClick] @bounds.origin
-  @mouseButton = null
-
-HandMorph::processMouseScroll = (event) ->
-  morph = @morphAtPointer()
-  morph = morph.parent  while morph and not morph.mouseScroll
-  morph.mouseScroll (event.detail / -3) or ((if event.hasOwnProperty("wheelDeltaY") then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
-
-
-#
-#	drop event:
-#
-#        droppedImage
-#        droppedAudio
-#        droppedText
-#
-HandMorph::processDrop = (event) ->
-  
-  #
-  #    find out whether an external image or audio file was dropped
-  #    onto the world canvas, turn it into an offscreen canvas or audio
-  #    element and dispatch the
-  #    
-  #        droppedImage(canvas, name)
-  #        droppedAudio(audio, name)
-  #    
-  #    events to interested Morphs at the mouse pointer
-  #
-  
-  files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
-  file = undefined
-  txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
-  src = undefined
-  targetDrop = @morphAtPointer()
-  img = new Image()
-  canvas = undefined
-  i = undefined
-  
-  readImage = (aFile) ->
-    pic = new Image()
-    frd = new FileReader()
-    targetDrop = targetDrop.parent  until targetDrop.droppedImage
-    pic.onload = ->
-      canvas = newCanvas(new Point(pic.width, pic.height))
-      canvas.getContext("2d").drawImage pic, 0, 0
-      targetDrop.droppedImage canvas, aFile.name
-    
-    frd = new FileReader()
-    frd.onloadend = (e) ->
-      pic.src = e.target.result
-    
-    frd.readAsDataURL aFile
-  readAudio = (aFile) ->
-    snd = new Audio()
-    frd = new FileReader()
-    targetDrop = targetDrop.parent  until targetDrop.droppedAudio
-    frd.onloadend = (e) ->
-      snd.src = e.target.result
-      targetDrop.droppedAudio snd, aFile.name
-    
-    frd.readAsDataURL aFile
-  readText = (aFile) ->
-    frd = new FileReader()
-    targetDrop = targetDrop.parent  until targetDrop.droppedText
-    frd.onloadend = (e) ->
-      targetDrop.droppedText e.target.result, aFile.name
-    
-    frd.readAsText aFile
-  parseImgURL = (html) ->
-    url = ""
-    i = undefined
-    c = undefined
-    start = html.indexOf("<img src=\"")
-    return null  if start is -1
-    start += 10
-    i = start
-    while i < html.length
-      c = html[i]
-      return url  if c is "\""
-      url = url.concat(c)
-      i += 1
-    null
-  if files.length > 0
-    i = 0
-    while i < files.length
-      file = files[i]
-      if file.type.indexOf("image") is 0
-        readImage file
-      else if file.type.indexOf("audio") is 0
-        readAudio file
-      else readText file  if file.type.indexOf("text") is 0
-      i += 1
-  else if txt
-    targetDrop = targetDrop.parent  until targetDrop.droppedImage
-    img = new Image()
-    img.onload = ->
-      canvas = newCanvas(new Point(img.width, img.height))
-      canvas.getContext("2d").drawImage img, 0, 0
-      targetDrop.droppedImage canvas
-    
-    src = parseImgURL(txt)
-    img.src = src  if src
-
-
-# HandMorph tools
-HandMorph::destroyTemporaries = ->
-  
-  #
-  #	temporaries are just an array of morphs which will be deleted upon
-  #	the next mouse click, or whenever another temporary Morph decides
-  #	that it needs to remove them. The primary purpose of temporaries is
-  #	to display tools tips of speech bubble help.
-  #
-  @temporaries.forEach (morph) ->
-    morph.destroy()
-  
-  @temporaries = []
-
-
-# HandMorph dragging optimization
-HandMorph::moveBy = (delta) ->
-  Morph::trackChanges = false
-  super delta
-  Morph::trackChanges = true
-  @fullChanged()
-
-HandMorph::processMouseMove = (event) ->
-  pos = undefined
-  posInDocument = getDocumentPositionOf(@world.worldCanvas)
-  mouseOverNew = undefined
-  myself = this
-  morph = undefined
-  topMorph = undefined
-  fb = undefined
-  pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
-  @setPosition pos
-  
-  # determine the new mouse-over-list:
-  # mouseOverNew = this.allMorphsAtPointer();
-  mouseOverNew = @morphAtPointer().allParents()
-  if (@children.length is 0) and (@mouseButton is "left")
-    topMorph = @morphAtPointer()
-    morph = topMorph.rootForGrab()
-    topMorph.mouseMove pos  if topMorph.mouseMove
-    
-    # if a morph is marked for grabbing, just grab it
-    if @morphToGrab
-      if @morphToGrab.isDraggable
-        morph = @morphToGrab
-        @grab morph
-      else if @morphToGrab.isTemplate
-        morph = @morphToGrab.fullCopy()
-        morph.isTemplate = false
-        morph.isDraggable = true
-        @grab morph
-        @grabOrigin = @morphToGrab.situation()
-      
-      # if the mouse has left its fullBounds, center it
-      fb = morph.fullBounds()
-      unless fb.containsPoint(pos)
-        @bounds.origin = fb.center()
-        @grab morph
-        @setPosition pos
-  
-  #
-  #	original, more cautious code for grabbing Morphs,
-  #	retained in case of needing	to fall back:
-  #
-  #		if (morph === this.morphToGrab) {
-  #			if (morph.isDraggable) {
-  #				this.grab(morph);
-  #			} else if (morph.isTemplate) {
-  #				morph = morph.fullCopy();
-  #				morph.isTemplate = false;
-  #				morph.isDraggable = true;
-  #				this.grab(morph);
-  #			}
-  #		}
-  #
-  @mouseOverList.forEach (old) ->
-    unless contains(mouseOverNew, old)
-      old.mouseLeave()  if old.mouseLeave
-      old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
-  
-  mouseOverNew.forEach (newMorph) ->
-    unless contains(myself.mouseOverList, newMorph)
-      newMorph.mouseEnter()  if newMorph.mouseEnter
-      newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
-    
-    # autoScrolling support:
-    if myself.children.length > 0
-        if newMorph instanceof ScrollFrameMorph
-            if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(myself.bounds.origin)
-                newMorph.startAutoScrolling();
-  
-  @mouseOverList = mouseOverNew
+# BlinkerMorph stepping:
+BlinkerMorph::step = ->
+  @toggleVisibility()
 # StringMorph /////////////////////////////////////////////////////////
 
 # I am a single line of text
@@ -3352,71 +3388,1085 @@ StringMorph::enableSelecting = ->
 StringMorph::disableSelecting = ->
   delete @mouseDownLeft
   delete @mouseMove
-# ColorPickerMorph ///////////////////////////////////////////////////
+# BouncerMorph ////////////////////////////////////////////////////////
 
-class ColorPickerMorph extends Morph
-  constructor: (defaultColor) ->
-    @init defaultColor or new Color(255, 255, 255)
+# I am a Demo of a stepping custom Morph
 
-# ColorPickerMorph instance creation:
-ColorPickerMorph::init = (defaultColor) ->
-  @choice = defaultColor
-  super
-  @color = new Color(255, 255, 255)
-  @silentSetExtent new Point(80, 80)
+class BouncerMorph extends Morph
+  constructor: () ->
+    @init()
+
+# BouncerMorph instance creation:
+
+# BouncerMorph initialization:
+BouncerMorph::init = (type, speed) ->
+  super()
+  @fps = 50
+  
+  # additional properties:
+  @isStopped = false
+  @type = type or "vertical"
+  if @type is "vertical"
+    @direction = "down"
+  else
+    @direction = "right"
+  @speed = speed or 1
+
+
+# BouncerMorph moving:
+BouncerMorph::moveUp = ->
+  @moveBy new Point(0, -@speed)
+
+BouncerMorph::moveDown = ->
+  @moveBy new Point(0, @speed)
+
+BouncerMorph::moveRight = ->
+  @moveBy new Point(@speed, 0)
+
+BouncerMorph::moveLeft = ->
+  @moveBy new Point(-@speed, 0)
+
+
+# BouncerMorph stepping:
+BouncerMorph::step = ->
+  unless @isStopped
+    if @type is "vertical"
+      if @direction is "down"
+        @moveDown()
+      else
+        @moveUp()
+      @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
+      @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
+    else if @type is "horizontal"
+      if @direction is "right"
+        @moveRight()
+      else
+        @moveLeft()
+      @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
+      @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
+# HandMorph ///////////////////////////////////////////////////////////
+
+# I represent the Mouse cursor
+
+# HandMorph inherits from Morph:
+
+class HandMorph extends Morph
+  constructor: (aWorld) ->
+    @init aWorld
+
+# HandMorph instance creation:
+
+# HandMorph initialization:
+HandMorph::init = (aWorld) ->
+  super()
+  @bounds = new Rectangle()
+  
+  # additional properties:
+  @world = aWorld
+  @mouseButton = null
+  @mouseOverList = []
+  @mouseDownMorph = null
+  @morphToGrab = null
+  @grabOrigin = null
+  @temporaries = []
+  @touchHoldTimeout = null
+
+HandMorph::changed = ->
+  b = undefined
+  if @world isnt null
+    b = @fullBounds()
+    @world.broken.push @fullBounds().spread()  unless b.extent().eq(new Point())
+
+
+# HandMorph navigation:
+HandMorph::morphAtPointer = ->
+  morphs = @world.allChildren().slice(0).reverse()
+  result = null
+  morphs.forEach (m) =>
+    result = m  if m.visibleBounds().containsPoint(@bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
+  
+  return result  if result isnt null
+  @world
+
+#
+#    alternative -  more elegant and possibly more
+#	performant - solution for morphAtPointer.
+#	Has some issues, commented out for now
+#
+#HandMorph.prototype.morphAtPointer = function () {
+#	var myself = this;
+#	return this.world.topMorphSuchThat(function (m) {
+#		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
+#			m.isVisible &&
+#			(m.noticesTransparentClick ||
+#				(! m.isTransparentAt(myself.bounds.origin))) &&
+#			(! (m instanceof ShadowMorph));
+#	});
+#};
+#
+HandMorph::allMorphsAtPointer = ->
+  morphs = @world.allChildren()
+  morphs.filter (m) =>
+    m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
+
+
+
+# HandMorph dragging and dropping:
+#
+#	drag 'n' drop events, method(arg) -> receiver:
+#
+#		prepareToBeGrabbed(handMorph) -> grabTarget
+#		reactToGrabOf(grabbedMorph) -> oldParent
+#		wantsDropOf(morphToDrop) ->  newParent
+#		justDropped(handMorph) -> droppedMorph
+#		reactToDropOf(droppedMorph, handMorph) -> newParent
+#
+HandMorph::dropTargetFor = (aMorph) ->
+  target = @morphAtPointer()
+  target = target.parent  until target.wantsDropOf(aMorph)
+  target
+
+HandMorph::grab = (aMorph) ->
+  oldParent = aMorph.parent
+  return null  if aMorph instanceof WorldMorph
+  if @children.length is 0
+    @world.stopEditing()
+    @grabOrigin = aMorph.situation()
+    aMorph.addShadow()
+    aMorph.prepareToBeGrabbed this  if aMorph.prepareToBeGrabbed
+    @add aMorph
+    @changed()
+    oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
+
+HandMorph::drop = ->
+  target = undefined
+  morphToDrop = undefined
+  if @children.length isnt 0
+    morphToDrop = @children[0]
+    target = @dropTargetFor(morphToDrop)
+    @changed()
+    target.add morphToDrop
+    morphToDrop.changed()
+    morphToDrop.removeShadow()
+    @children = []
+    @setExtent new Point()
+    morphToDrop.justDropped this  if morphToDrop.justDropped
+    target.reactToDropOf morphToDrop, this  if target.reactToDropOf
+    @dragOrigin = null
+
+# HandMorph event dispatching:
+#
+#    mouse events:
+#
+#		mouseDownLeft
+#		mouseDownRight
+#		mouseClickLeft
+#		mouseClickRight
+#		mouseEnter
+#		mouseLeave
+#		mouseEnterDragging
+#		mouseLeaveDragging
+#		mouseMove
+#		mouseScroll
+#
+HandMorph::processMouseDown = (event) ->
+  morph = undefined
+  expectedClick = undefined
+  actualClick = undefined
+  @destroyTemporaries()
+  @morphToGrab = null
+  if @children.length isnt 0
+    @drop()
+    @mouseButton = null
+  else
+    morph = @morphAtPointer()
+    if @world.activeMenu
+      unless contains(morph.allParents(), @world.activeMenu)
+        @world.activeMenu.destroy()
+      else
+        clearInterval @touchHoldTimeout
+    @world.activeHandle.destroy()  if morph isnt @world.activeHandle  if @world.activeHandle
+    @world.stopEditing()  if morph isnt @world.cursor.target  if @world.cursor
+    @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
+    if event.button is 2 or event.ctrlKey
+      @mouseButton = "right"
+      actualClick = "mouseDownRight"
+      expectedClick = "mouseClickRight"
+    else
+      @mouseButton = "left"
+      actualClick = "mouseDownLeft"
+      expectedClick = "mouseClickLeft"
+    @mouseDownMorph = morph
+    @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
+    morph = morph.parent  until morph[actualClick]
+    morph[actualClick] @bounds.origin
+
+HandMorph::processTouchStart = (event) ->
+  clearInterval @touchHoldTimeout
+  if event.touches.length is 1
+    # simulate mouseRightClick
+    @touchHoldTimeout = setInterval(=>
+      @processMouseDown button: 2
+      @processMouseUp button: 2
+      event.preventDefault()
+      clearInterval @touchHoldTimeout
+    , 400)
+    @processMouseMove event.touches[0] # update my position
+    @processMouseDown button: 0
+    event.preventDefault()
+
+HandMorph::processTouchMove = (event) ->
+  if event.touches.length is 1
+    touch = event.touches[0]
+    @processMouseMove touch
+    clearInterval @touchHoldTimeout
+
+HandMorph::processTouchEnd = (event) ->
+  clearInterval @touchHoldTimeout
+  @processMouseUp button: 0
+
+HandMorph::processMouseUp = ->
+  morph = @morphAtPointer()
+  context = undefined
+  contextMenu = undefined
+  expectedClick = undefined
+  @destroyTemporaries()
+  if @children.length isnt 0
+    @drop()
+  else
+    if @mouseButton is "left"
+      expectedClick = "mouseClickLeft"
+    else
+      expectedClick = "mouseClickRight"
+      if @mouseButton
+        context = morph
+        contextMenu = context.contextMenu()
+        while (not contextMenu) and context.parent
+          context = context.parent
+          contextMenu = context.contextMenu()
+        contextMenu.popUpAtHand @world  if contextMenu
+    morph = morph.parent  until morph[expectedClick]
+    morph[expectedClick] @bounds.origin
+  @mouseButton = null
+
+HandMorph::processMouseScroll = (event) ->
+  morph = @morphAtPointer()
+  morph = morph.parent  while morph and not morph.mouseScroll
+  morph.mouseScroll (event.detail / -3) or ((if event.hasOwnProperty("wheelDeltaY") then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
+
+
+#
+#	drop event:
+#
+#        droppedImage
+#        droppedAudio
+#        droppedText
+#
+HandMorph::processDrop = (event) ->
+  
+  #
+  #    find out whether an external image or audio file was dropped
+  #    onto the world canvas, turn it into an offscreen canvas or audio
+  #    element and dispatch the
+  #    
+  #        droppedImage(canvas, name)
+  #        droppedAudio(audio, name)
+  #    
+  #    events to interested Morphs at the mouse pointer
+  #
+  
+  files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
+  file = undefined
+  txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
+  src = undefined
+  targetDrop = @morphAtPointer()
+  img = new Image()
+  canvas = undefined
+  i = undefined
+  
+  readImage = (aFile) ->
+    pic = new Image()
+    frd = new FileReader()
+    targetDrop = targetDrop.parent  until targetDrop.droppedImage
+    pic.onload = ->
+      canvas = newCanvas(new Point(pic.width, pic.height))
+      canvas.getContext("2d").drawImage pic, 0, 0
+      targetDrop.droppedImage canvas, aFile.name
+    
+    frd = new FileReader()
+    frd.onloadend = (e) ->
+      pic.src = e.target.result
+    
+    frd.readAsDataURL aFile
+  readAudio = (aFile) ->
+    snd = new Audio()
+    frd = new FileReader()
+    targetDrop = targetDrop.parent  until targetDrop.droppedAudio
+    frd.onloadend = (e) ->
+      snd.src = e.target.result
+      targetDrop.droppedAudio snd, aFile.name
+    
+    frd.readAsDataURL aFile
+  readText = (aFile) ->
+    frd = new FileReader()
+    targetDrop = targetDrop.parent  until targetDrop.droppedText
+    frd.onloadend = (e) ->
+      targetDrop.droppedText e.target.result, aFile.name
+    
+    frd.readAsText aFile
+  parseImgURL = (html) ->
+    url = ""
+    i = undefined
+    c = undefined
+    start = html.indexOf("<img src=\"")
+    return null  if start is -1
+    start += 10
+    i = start
+    while i < html.length
+      c = html[i]
+      return url  if c is "\""
+      url = url.concat(c)
+      i += 1
+    null
+  if files.length > 0
+    i = 0
+    while i < files.length
+      file = files[i]
+      if file.type.indexOf("image") is 0
+        readImage file
+      else if file.type.indexOf("audio") is 0
+        readAudio file
+      else readText file  if file.type.indexOf("text") is 0
+      i += 1
+  else if txt
+    targetDrop = targetDrop.parent  until targetDrop.droppedImage
+    img = new Image()
+    img.onload = ->
+      canvas = newCanvas(new Point(img.width, img.height))
+      canvas.getContext("2d").drawImage img, 0, 0
+      targetDrop.droppedImage canvas
+    
+    src = parseImgURL(txt)
+    img.src = src  if src
+
+
+# HandMorph tools
+HandMorph::destroyTemporaries = ->
+  
+  #
+  #	temporaries are just an array of morphs which will be deleted upon
+  #	the next mouse click, or whenever another temporary Morph decides
+  #	that it needs to remove them. The primary purpose of temporaries is
+  #	to display tools tips of speech bubble help.
+  #
+  @temporaries.forEach (morph) ->
+    morph.destroy()
+  
+  @temporaries = []
+
+
+# HandMorph dragging optimization
+HandMorph::moveBy = (delta) ->
+  Morph::trackChanges = false
+  super delta
+  Morph::trackChanges = true
+  @fullChanged()
+
+HandMorph::processMouseMove = (event) ->
+  pos = undefined
+  posInDocument = getDocumentPositionOf(@world.worldCanvas)
+  mouseOverNew = undefined
+  morph = undefined
+  topMorph = undefined
+  fb = undefined
+  pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
+  @setPosition pos
+  
+  # determine the new mouse-over-list:
+  # mouseOverNew = this.allMorphsAtPointer();
+  mouseOverNew = @morphAtPointer().allParents()
+  if (@children.length is 0) and (@mouseButton is "left")
+    topMorph = @morphAtPointer()
+    morph = topMorph.rootForGrab()
+    topMorph.mouseMove pos  if topMorph.mouseMove
+    
+    # if a morph is marked for grabbing, just grab it
+    if @morphToGrab
+      if @morphToGrab.isDraggable
+        morph = @morphToGrab
+        @grab morph
+      else if @morphToGrab.isTemplate
+        morph = @morphToGrab.fullCopy()
+        morph.isTemplate = false
+        morph.isDraggable = true
+        @grab morph
+        @grabOrigin = @morphToGrab.situation()
+      
+      # if the mouse has left its fullBounds, center it
+      fb = morph.fullBounds()
+      unless fb.containsPoint(pos)
+        @bounds.origin = fb.center()
+        @grab morph
+        @setPosition pos
+  
+  #
+  #	original, more cautious code for grabbing Morphs,
+  #	retained in case of needing	to fall back:
+  #
+  #		if (morph === this.morphToGrab) {
+  #			if (morph.isDraggable) {
+  #				this.grab(morph);
+  #			} else if (morph.isTemplate) {
+  #				morph = morph.fullCopy();
+  #				morph.isTemplate = false;
+  #				morph.isDraggable = true;
+  #				this.grab(morph);
+  #			}
+  #		}
+  #
+  @mouseOverList.forEach (old) ->
+    unless contains(mouseOverNew, old)
+      old.mouseLeave()  if old.mouseLeave
+      old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
+  
+  mouseOverNew.forEach (newMorph) =>
+    unless contains(@mouseOverList, newMorph)
+      newMorph.mouseEnter()  if newMorph.mouseEnter
+      newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
+    
+    # autoScrolling support:
+    if @children.length > 0
+        if newMorph instanceof ScrollFrameMorph
+            if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(@bounds.origin)
+                newMorph.startAutoScrolling();
+  
+  @mouseOverList = mouseOverNew
+# MorphsListMorph //////////////////////////////////////////////////////
+
+class MorphsListMorph extends BoxMorph
+  constructor: (target) ->
+    @init target
+
+# MorphsListMorph instance creation:
+MorphsListMorph::init = () ->
+  # additional properties:
+  
+  # initialize inherited properties:
+  super()
+  
+  # override inherited properties:
+  @silentSetExtent new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3)
+  @isDraggable = true
+  @border = 1
+  @edge = 5
+  @color = new Color(60, 60, 60)
+  @borderColor = new Color(95, 95, 95)
   @drawNew()
+  
+  # panes:
+  @morphsList = null
+  @buttonClose = null
+  @resizer = null
+  @buildPanes()
 
-ColorPickerMorph::drawNew = ->
-  super
-  @buildSubmorphs()
+MorphsListMorph::setTarget = (target) ->
+  @target = target
+  @currentProperty = null
+  @buildPanes()
 
-ColorPickerMorph::buildSubmorphs = ->
-  cpal = undefined
-  gpal = undefined
-  x = undefined
-  y = undefined
-  @children.forEach (child) ->
-    child.destroy()
+MorphsListMorph::buildPanes = ->
+  attribs = []
+  property = undefined
+  ctrl = undefined
+  ev = undefined
+  
+  # remove existing panes
+  @children.forEach (m) ->
+    # keep work pane around
+    m.destroy()  if m isnt @work
   
   @children = []
-  @feedback = new Morph()
-  @feedback.color = @choice
-  @feedback.setExtent new Point(20, 20)
-  cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
-  gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
-  cpal.setPosition @bounds.origin
-  @add cpal
-  gpal.setPosition cpal.bottomLeft()
-  @add gpal
-  x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))
-  y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)
-  @feedback.setPosition new Point(x, y)
-  @add @feedback
+  
+  # label
+  @label = new TextMorph("Morphs List")
+  @label.fontSize = MorphicPreferences.menuFontSize
+  @label.isBold = true
+  @label.color = new Color(255, 255, 255)
+  @label.drawNew()
+  @add @label
+  
+  ListOfMorphs = []
+  for i of window
+    theWordMorph = "Morph"
+    ListOfMorphs.push i  if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+  @morphsList = new ListMorph(ListOfMorphs, null)
+  
+  # so far nothing happens when items are selected
+  #@morphsList.action = (selected) ->
+  #  val = undefined
+  #  txt = undefined
+  #  cnts = undefined
+  #  val = myself.target[selected]
+  #  myself.currentProperty = val
+  #  if val is null
+  #    txt = "NULL"
+  #  else if isString(val)
+  #    txt = val
+  #  else
+  #    txt = val.toString()
+  #  cnts = new TextMorph(txt)
+  #  cnts.isEditable = true
+  #  cnts.enableSelecting()
+  #  cnts.setReceiver myself.target
+  #  myself.detail.setContents cnts
+  
+  @morphsList.hBar.alpha = 0.6
+  @morphsList.vBar.alpha = 0.6
+  @add @morphsList
+  
+  # close button
+  @buttonClose = new TriggerMorph()
+  @buttonClose.labelString = "close"
+  @buttonClose.action = =>
+    @destroy()
+  
+  @add @buttonClose
+  
+  # resizer
+  @resizer = new HandleMorph(this, 150, 100, @edge, @edge)
+  
+  # update layout
+  @fixLayout()
 
-ColorPickerMorph::getChoice = ->
-  @feedback.color
+MorphsListMorph::fixLayout = ->
+  x = undefined
+  y = undefined
+  r = undefined
+  b = undefined
+  w = undefined
+  h = undefined
+  Morph::trackChanges = false
+  
+  # label
+  x = @left() + @edge
+  y = @top() + @edge
+  r = @right() - @edge
+  w = r - x
+  @label.setPosition new Point(x, y)
+  @label.setWidth w
+  if @label.height() > (@height() - 50)
+    @silentSetHeight @label.height() + 50
+    @drawNew()
+    @changed()
+    @resizer.drawNew()
+  
+  # morphsList
+  y = @label.bottom() + 2
+  w = @width() - @edge
+  w -= @edge
+  b = @bottom() - (2 * @edge) - MorphicPreferences.handleSize
+  h = b - y
+  @morphsList.setPosition new Point(x, y)
+  @morphsList.setExtent new Point(w, h)
+  
+  # close button
+  x = @morphsList.left()
+  y = @morphsList.bottom() + @edge
+  h = MorphicPreferences.handleSize
+  w = @morphsList.width() - h - @edge
+  @buttonClose.setPosition new Point(x, y)
+  @buttonClose.setExtent new Point(w, h)
+  Morph::trackChanges = true
+  @changed()
 
-ColorPickerMorph::rootForGrab = ->
-  this
-# BlinkerMorph ////////////////////////////////////////////////////////
+MorphsListMorph::setExtent = (aPoint) ->
+  super aPoint
+  @fixLayout()
 
-# can be used for text cursors
+# ColorPaletteMorph ///////////////////////////////////////////////////
 
-class BlinkerMorph extends Morph
-  constructor: (rate) ->
-    @init rate
+class ColorPaletteMorph extends Morph
+  constructor: (target, sizePoint) ->
+    @init target or null, sizePoint or new Point(80, 50)
 
-# BlinkerMorph instance creation:
-BlinkerMorph::init = (rate) ->
+# ColorPaletteMorph instance creation:
+ColorPaletteMorph::init = (target, size) ->
   super()
-  @color = new Color(0, 0, 0)
-  @fps = rate or 2
+  @target = target
+  @targetSetter = "color"
+  @silentSetExtent size
+  @choice = null
   @drawNew()
 
+ColorPaletteMorph::drawNew = ->
+  context = undefined
+  ext = undefined
+  x = undefined
+  y = undefined
+  h = undefined
+  l = undefined
+  ext = @extent()
+  @image = newCanvas(@extent())
+  context = @image.getContext("2d")
+  @choice = new Color()
+  x = 0
+  while x <= ext.x
+    h = 360 * x / ext.x
+    y = 0
+    while y <= ext.y
+      l = 100 - (y / ext.y * 100)
+      context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
+      context.fillRect x, y, 1, 1
+      y += 1
+    x += 1
 
-# BlinkerMorph stepping:
-BlinkerMorph::step = ->
-  @toggleVisibility()
+ColorPaletteMorph::mouseMove = (pos) ->
+  @choice = @getPixelColor(pos)
+  @updateTarget()
+
+ColorPaletteMorph::mouseDownLeft = (pos) ->
+  @choice = @getPixelColor(pos)
+  @updateTarget()
+
+ColorPaletteMorph::updateTarget = ->
+  if @target instanceof Morph and @choice isnt null
+    if @target[@targetSetter] instanceof Function
+      @target[@targetSetter] @choice
+    else
+      @target[@targetSetter] = @choice
+      @target.drawNew()
+      @target.changed()
+
+
+# ColorPaletteMorph duplicating:
+ColorPaletteMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = super dict
+  c.target = (dict[@target])  if c.target and dict[@target]
+  c
+
+
+# ColorPaletteMorph menu:
+ColorPaletteMorph::developersMenu = ->
+  menu = super()
+  menu.addLine()
+  menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
+  menu
+
+ColorPaletteMorph::setTarget = ->
+  choices = @overlappedMorphs()
+  menu = new MenuMorph(this, "choose target:")
+  choices.push @world()
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), =>
+      @target = each
+      @setTargetSetter()
+  
+  
+  if choices.length is 1
+    @target = choices[0]
+    @setTargetSetter()
+  else menu.popUpAtHand @world()  if choices.length > 0
+
+ColorPaletteMorph::setTargetSetter = ->
+  choices = @target.colorSetters()
+  menu = new MenuMorph(this, "choose target property:")
+  choices.forEach (each) =>
+    menu.addItem each, =>
+      @targetSetter = each
+  
+  
+  if choices.length is 1
+    @targetSetter = choices[0]
+  else menu.popUpAtHand @world()  if choices.length > 0
+# GrayPaletteMorph ///////////////////////////////////////////////////
+
+class GrayPaletteMorph extends ColorPaletteMorph
+  constructor: (target, sizePoint) ->
+    @init target or null, sizePoint or new Point(80, 10)
+
+# GrayPaletteMorph instance creation:
+GrayPaletteMorph::drawNew = ->
+  context = undefined
+  ext = undefined
+  gradient = undefined
+  ext = @extent()
+  @image = newCanvas(@extent())
+  context = @image.getContext("2d")
+  @choice = new Color()
+  gradient = context.createLinearGradient(0, 0, ext.x, ext.y)
+  gradient.addColorStop 0, "black"
+  gradient.addColorStop 1, "white"
+  context.fillStyle = gradient
+  context.fillRect 0, 0, ext.x, ext.y
+# MenuMorph ///////////////////////////////////////////////////////////
+
+class MenuMorph extends BoxMorph
+  constructor: (target, title, environment, fontSize) ->
+    @init target, title, environment, fontSize
+
+
+# MenuMorph: referenced constructors
+
+# MenuMorph instance creation:
+MenuMorph::init = (target, title, environment, fontSize) ->
+  
+  # additional properties:
+  @target = target
+  @title = title or null
+  @environment = environment or null
+  @fontSize = fontSize or null
+  @items = []
+  @label = null
+  @world = null
+  @isListContents = false
+  
+  # initialize inherited properties:
+  super()
+  
+  # override inherited properties:
+  @isDraggable = false
+  
+  # immutable properties:
+  @border = null
+  @edge = null
+
+MenuMorph::addItem = (labelString, action, hint, color) ->
+  @items.push [localize(labelString or "close"), action or nop, hint, color]
+
+MenuMorph::addLine = (width) ->
+  @items.push [0, width or 1]
+
+MenuMorph::createLabel = ->
+  text = undefined
+  @label.destroy()  if @label isnt null
+  text = new TextMorph(localize(@title), @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, true, false, "center")
+  text.alignment = "center"
+  text.color = new Color(255, 255, 255)
+  text.backgroundColor = @borderColor
+  text.drawNew()
+  @label = new BoxMorph(3, 0)
+  @label.color = @borderColor
+  @label.borderColor = @borderColor
+  @label.setExtent text.extent().add(4)
+  @label.drawNew()
+  @label.add text
+  @label.text = text
+
+MenuMorph::drawNew = ->
+  item = undefined
+  fb = undefined
+  x = undefined
+  y = undefined
+  isLine = false
+  @children.forEach (m) ->
+    m.destroy()
+  
+  @children = []
+  unless @isListContents
+    @edge = 5
+    @border = 2
+  @color = new Color(255, 255, 255)
+  @borderColor = new Color(60, 60, 60)
+  @silentSetExtent new Point(0, 0)
+  y = 2
+  x = @left() + 4
+  unless @isListContents
+    if @title
+      @createLabel()
+      @label.setPosition @bounds.origin.add(4)
+      @add @label
+      y = @label.bottom()
+    else
+      y = @top() + 4
+  y += 1
+  @items.forEach (tuple) =>
+    isLine = false
+    if tuple instanceof StringFieldMorph or tuple instanceof ColorPickerMorph or tuple instanceof SliderMorph
+      item = tuple
+    else if tuple[0] is 0
+      isLine = true
+      item = new Morph()
+      item.color = @borderColor
+      item.setHeight tuple[1]
+    else
+      # bubble help hint
+      item = new MenuItemMorph(@target, tuple[1], tuple[0], @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, @environment, tuple[2], tuple[3]) # color
+    y += 1  if isLine
+    item.setPosition new Point(x, y)
+    @add item
+    y = y + item.height()
+    y += 1  if isLine
+  
+  fb = @fullBounds()
+  @silentSetExtent fb.extent().add(4)
+  @adjustWidths()
+  super()
+
+MenuMorph::maxWidth = ->
+  w = 0
+  w = @parent.width()  if @parent.scrollFrame instanceof ScrollFrameMorph  if @parent instanceof FrameMorph
+  @children.forEach (item) ->
+    w = Math.max(w, item.width())  if (item instanceof MenuItemMorph) or (item instanceof StringFieldMorph) or (item instanceof ColorPickerMorph) or (item instanceof SliderMorph)
+  
+  w = Math.max(w, @label.width())  if @label
+  w
+
+MenuMorph::adjustWidths = ->
+  w = @maxWidth()
+  @children.forEach (item) =>
+    item.silentSetWidth w
+    if item instanceof MenuItemMorph
+      item.createBackgrounds()
+    else
+      item.drawNew()
+      item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))  if item is @label
+
+
+MenuMorph::unselectAllItems = ->
+  @children.forEach (item) ->
+    item.image = item.normalImage  if item instanceof MenuItemMorph
+  
+  @changed()
+
+MenuMorph::popup = (world, pos) ->
+  @drawNew()
+  @setPosition pos
+  @addShadow new Point(2, 2), 80
+  @keepWithin world
+  world.activeMenu.destroy()  if world.activeMenu
+  world.add this
+  world.activeMenu = this
+  @fullChanged()
+
+MenuMorph::popUpAtHand = (world) ->
+  wrrld = world or @world
+  @popup wrrld, wrrld.hand.position()
+
+MenuMorph::popUpCenteredAtHand = (world) ->
+  wrrld = world or @world
+  @drawNew()
+  @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
+
+MenuMorph::popUpCenteredInWorld = (world) ->
+  wrrld = world or @world
+  @drawNew()
+  @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
+
+# ScrollFrameMorph ////////////////////////////////////////////////////
+
+# this comment below is needed to figure our dependencies between classes
+# REQUIRES globalFunctions
+
+class ScrollFrameMorph extends FrameMorph
+  constructor: (scroller, size, sliderColor) ->
+    @init scroller, size, sliderColor
+
+
+ScrollFrameMorph::init = (scroller, size, sliderColor) ->
+  super()
+  @scrollBarSize = size or MorphicPreferences.scrollBarSize
+  @autoScrollTrigger = null
+  @isScrollingByDragging = true # change if desired
+  @hasVelocity = true # dto.
+  @padding = 0 # around the scrollable area
+  @growth = 0 # pixels or Point to grow right/left when near edge
+  @isTextLineWrapping = false
+  @contents = scroller or new FrameMorph(this)
+  @add @contents
+  # start
+  # stop
+  # value
+  # size
+  @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
+  @hBar.setHeight @scrollBarSize
+  @hBar.action = (num) =>
+    @contents.setPosition new Point(@left() - num, @contents.position().y)
+  
+  @hBar.isDraggable = false
+  @add @hBar
+  # start
+  # stop
+  # value
+  # size
+  @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
+  @vBar.setWidth @scrollBarSize
+  @vBar.action = (num) =>
+    @contents.setPosition new Point(@contents.position().x, @top() - num)
+  
+  @vBar.isDraggable = false
+  @add @vBar
+
+ScrollFrameMorph::adjustScrollBars = ->
+  hWidth = @width() - @scrollBarSize
+  vHeight = @height() - @scrollBarSize
+  @changed()
+  if @contents.width() > @width() + MorphicPreferences.scrollBarSize
+    @hBar.show()
+    @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
+    @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
+    @hBar.start = 0
+    @hBar.stop = @contents.width() - @width()
+    @hBar.size = @width() / @contents.width() * @hBar.stop
+    @hBar.value = @left() - @contents.left()
+    @hBar.drawNew()
+  else
+    @hBar.hide()
+  if @contents.height() > @height() + @scrollBarSize
+    @vBar.show()
+    @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
+    @vBar.setPosition new Point(@right() - @vBar.width(), @top())
+    @vBar.start = 0
+    @vBar.stop = @contents.height() - @height()
+    @vBar.size = @height() / @contents.height() * @vBar.stop
+    @vBar.value = @top() - @contents.top()
+    @vBar.drawNew()
+  else
+    @vBar.hide()
+
+ScrollFrameMorph::addContents = (aMorph) ->
+  @contents.add aMorph
+  @contents.adjustBounds()
+
+ScrollFrameMorph::setContents = (aMorph) ->
+  @contents.children.forEach (m) ->
+    m.destroy()
+  
+  @contents.children = []
+  aMorph.setPosition @position().add(new Point(2, 2))
+  @addContents aMorph
+
+ScrollFrameMorph::setExtent = (aPoint) ->
+  @contents.setPosition @position().copy()  if @isTextLineWrapping
+  super aPoint
+  @contents.adjustBounds()
+
+
+# ScrollFrameMorph scrolling by dragging:
+ScrollFrameMorph::scrollX = (steps) ->
+  cl = @contents.left()
+  l = @left()
+  cw = @contents.width()
+  r = @right()
+  newX = undefined
+  newX = cl + steps
+  newX = l  if newX > l
+  newX = r - cw  if newX + cw < r
+  @contents.setLeft newX  if newX isnt cl
+
+ScrollFrameMorph::scrollY = (steps) ->
+  ct = @contents.top()
+  t = @top()
+  ch = @contents.height()
+  b = @bottom()
+  newY = undefined
+  newY = ct + steps
+  newY = t  if newY > t
+  newY = b - ch  if newY + ch < b
+  @contents.setTop newY  if newY isnt ct
+
+ScrollFrameMorph::step = noOpFunction
+
+ScrollFrameMorph::mouseDownLeft = (pos) ->
+  return null  unless @isScrollingByDragging
+  world = @root()
+  oldPos = pos
+  deltaX = 0
+  deltaY = 0
+  friction = 0.8
+  @step = =>
+    newPos = undefined
+    if world.hand.mouseButton and (world.hand.children.length is 0) and (@bounds.containsPoint(world.hand.position()))
+      newPos = world.hand.bounds.origin
+      deltaX = newPos.x - oldPos.x
+      @scrollX deltaX  if deltaX isnt 0
+      deltaY = newPos.y - oldPos.y
+      @scrollY deltaY  if deltaY isnt 0
+      oldPos = newPos
+    else
+      unless @hasVelocity
+        @step = noOpFunction
+      else
+        if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
+          @step = noOpFunction
+        else
+          deltaX = deltaX * friction
+          @scrollX Math.round(deltaX)
+          deltaY = deltaY * friction
+          @scrollY Math.round(deltaY)
+    @adjustScrollBars()
+
+ScrollFrameMorph::startAutoScrolling = ->
+  inset = MorphicPreferences.scrollBarSize * 3
+  world = @world()
+  hand = undefined
+  inner = undefined
+  pos = undefined
+  return null  unless world
+  hand = world.hand
+  @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
+  @step = =>
+    pos = hand.bounds.origin
+    inner = @bounds.insetBy(inset)
+    if (@bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
+      @autoScroll pos
+    else
+      @step = noOpFunction
+      @autoScrollTrigger = null
+
+ScrollFrameMorph::autoScroll = (pos) ->
+  inset = undefined
+  area = undefined
+  return null  if Date.now() - @autoScrollTrigger < 500
+  inset = MorphicPreferences.scrollBarSize * 3
+  area = @topLeft().extent(new Point(@width(), inset))
+  @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
+  area = @topLeft().extent(new Point(inset, @height()))
+  @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)
+  area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
+  @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
+  area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
+  @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
+  @adjustScrollBars()
+
+
+# ScrollFrameMorph events:
+ScrollFrameMorph::mouseScroll = (y, x) ->
+  @scrollY y * MorphicPreferences.mouseScrollAmount  if y
+  @scrollX x * MorphicPreferences.mouseScrollAmount  if x
+  @adjustScrollBars()
+
+ScrollFrameMorph::copyRecordingReferences = (dict) ->
+  
+  # inherited, see comment in Morph
+  c = super dict
+  c.contents = (dict[@contents])  if c.contents and dict[@contents]
+  if c.hBar and dict[@hBar]
+    c.hBar = (dict[@hBar])
+    c.hBar.action = (num) ->
+      c.contents.setPosition new Point(c.left() - num, c.contents.position().y)
+  if c.vBar and dict[@vBar]
+    c.vBar = (dict[@vBar])
+    c.vBar.action = (num) ->
+      c.contents.setPosition new Point(c.contents.position().x, c.top() - num)
+  c
+
+ScrollFrameMorph::developersMenu = ->
+  menu = super()
+  if @isTextLineWrapping
+    menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
+  else
+    menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"
+  menu
+
+ScrollFrameMorph::toggleTextLineWrapping = ->
+  @isTextLineWrapping = not @isTextLineWrapping
+# ShadowMorph /////////////////////////////////////////////////////////
+
+class ShadowMorph extends Morph
+  constructor: () ->
+    @init()
 # CursorMorph /////////////////////////////////////////////////////////
 
 # I am a String/Text editing widget
@@ -3636,1125 +4686,560 @@ CursorMorph::inspectKeyEvent = (event) ->
   
   # private
   @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()
-# ColorPaletteMorph ///////////////////////////////////////////////////
+# TextMorph ///////////////////////////////////////////////////////////
 
-class ColorPaletteMorph extends Morph
-  constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 50)
+# I am a multi-line, word-wrapping String
 
-# ColorPaletteMorph instance creation:
-ColorPaletteMorph::init = (target, size) ->
-  super()
-  @target = target
-  @targetSetter = "color"
-  @silentSetExtent size
-  @choice = null
-  @drawNew()
-
-ColorPaletteMorph::drawNew = ->
-  context = undefined
-  ext = undefined
-  x = undefined
-  y = undefined
-  h = undefined
-  l = undefined
-  ext = @extent()
-  @image = newCanvas(@extent())
-  context = @image.getContext("2d")
-  @choice = new Color()
-  x = 0
-  while x <= ext.x
-    h = 360 * x / ext.x
-    y = 0
-    while y <= ext.y
-      l = 100 - (y / ext.y * 100)
-      context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
-      context.fillRect x, y, 1, 1
-      y += 1
-    x += 1
-
-ColorPaletteMorph::mouseMove = (pos) ->
-  @choice = @getPixelColor(pos)
-  @updateTarget()
-
-ColorPaletteMorph::mouseDownLeft = (pos) ->
-  @choice = @getPixelColor(pos)
-  @updateTarget()
-
-ColorPaletteMorph::updateTarget = ->
-  if @target instanceof Morph and @choice isnt null
-    if @target[@targetSetter] instanceof Function
-      @target[@targetSetter] @choice
-    else
-      @target[@targetSetter] = @choice
-      @target.drawNew()
-      @target.changed()
+class TextMorph extends Morph
+  constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
+    @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
 
 
-# ColorPaletteMorph duplicating:
-ColorPaletteMorph::copyRecordingReferences = (dict) ->
+# TextMorph instance creation:
+TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
   
-  # inherited, see comment in Morph
-  c = super dict
-  c.target = (dict[@target])  if c.target and dict[@target]
-  c
-
-
-# ColorPaletteMorph menu:
-ColorPaletteMorph::developersMenu = ->
-  menu = super()
-  menu.addLine()
-  menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
-  menu
-
-ColorPaletteMorph::setTarget = ->
-  choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
-  myself = this
-  choices.push @world()
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.target = each
-      myself.setTargetSetter()
-  
-  
-  if choices.length is 1
-    @target = choices[0]
-    @setTargetSetter()
-  else menu.popUpAtHand @world()  if choices.length > 0
-
-ColorPaletteMorph::setTargetSetter = ->
-  choices = @target.colorSetters()
-  menu = new MenuMorph(this, "choose target property:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each, ->
-      myself.targetSetter = each
-  
-  
-  if choices.length is 1
-    @targetSetter = choices[0]
-  else menu.popUpAtHand @world()  if choices.length > 0
-# GrayPaletteMorph ///////////////////////////////////////////////////
-
-class GrayPaletteMorph extends ColorPaletteMorph
-  constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 10)
-
-# GrayPaletteMorph instance creation:
-GrayPaletteMorph::drawNew = ->
-  context = undefined
-  ext = undefined
-  gradient = undefined
-  ext = @extent()
-  @image = newCanvas(@extent())
-  context = @image.getContext("2d")
-  @choice = new Color()
-  gradient = context.createLinearGradient(0, 0, ext.x, ext.y)
-  gradient.addColorStop 0, "black"
-  gradient.addColorStop 1, "white"
-  context.fillStyle = gradient
-  context.fillRect 0, 0, ext.x, ext.y
-# MorphsListMorph //////////////////////////////////////////////////////
-
-class MorphsListMorph extends BoxMorph
-  constructor: (target) ->
-    @init target
-
-# MorphsListMorph instance creation:
-MorphsListMorph::init = () ->
   # additional properties:
+  @text = text or ((if text is "" then text else "TextMorph"))
+  @words = []
+  @lines = []
+  @lineSlots = []
+  @fontSize = fontSize or 12
+  @fontName = fontName or MorphicPreferences.globalFontFamily
+  @fontStyle = fontStyle or "sans-serif"
+  @isBold = bold or false
+  @isItalic = italic or false
+  @alignment = alignment or "left"
+  @shadowOffset = shadowOffset or new Point(0, 0)
+  @shadowColor = shadowColor or null
+  @maxWidth = width or 0
+  @maxLineWidth = 0
+  @backgroundColor = null
+  @isEditable = false
+  
+  #additional properties for ad-hoc evaluation:
+  @receiver = null
+  
+  # additional properties for text-editing:
+  @currentlySelecting = false
+  @startMark = 0
+  @endMark = 0
+  @markedTextColor = new Color(255, 255, 255)
+  @markedBackgoundColor = new Color(60, 60, 120)
   
   # initialize inherited properties:
   super()
   
-  # override inherited properties:
-  @silentSetExtent new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3)
-  @isDraggable = true
-  @border = 1
-  @edge = 5
-  @color = new Color(60, 60, 60)
-  @borderColor = new Color(95, 95, 95)
-  @drawNew()
-  
-  # panes:
-  @morphsList = null
-  @buttonClose = null
-  @resizer = null
-  @buildPanes()
-
-MorphsListMorph::setTarget = (target) ->
-  @target = target
-  @currentProperty = null
-  @buildPanes()
-
-MorphsListMorph::buildPanes = ->
-  attribs = []
-  property = undefined
-  myself = this
-  ctrl = undefined
-  ev = undefined
-  
-  # remove existing panes
-  @children.forEach (m) ->
-    # keep work pane around
-    m.destroy()  if m isnt @work
-  
-  @children = []
-  
-  # label
-  @label = new TextMorph("Morphs List")
-  @label.fontSize = MorphicPreferences.menuFontSize
-  @label.isBold = true
-  @label.color = new Color(255, 255, 255)
-  @label.drawNew()
-  @add @label
-  
-  ListOfMorphs = []
-  for i of window
-    theWordMorph = "Morph"
-    ListOfMorphs.push i  if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
-  @morphsList = new ListMorph(ListOfMorphs, null)
-  
-  # so far nothing happens when items are selected
-  #@morphsList.action = (selected) ->
-  #  val = undefined
-  #  txt = undefined
-  #  cnts = undefined
-  #  val = myself.target[selected]
-  #  myself.currentProperty = val
-  #  if val is null
-  #    txt = "NULL"
-  #  else if isString(val)
-  #    txt = val
-  #  else
-  #    txt = val.toString()
-  #  cnts = new TextMorph(txt)
-  #  cnts.isEditable = true
-  #  cnts.enableSelecting()
-  #  cnts.setReceiver myself.target
-  #  myself.detail.setContents cnts
-  
-  @morphsList.hBar.alpha = 0.6
-  @morphsList.vBar.alpha = 0.6
-  @add @morphsList
-  
-  # close button
-  @buttonClose = new TriggerMorph()
-  @buttonClose.labelString = "close"
-  @buttonClose.action = ->
-    myself.destroy()
-  
-  @add @buttonClose
-  
-  # resizer
-  @resizer = new HandleMorph(this, 150, 100, @edge, @edge)
-  
-  # update layout
-  @fixLayout()
-
-MorphsListMorph::fixLayout = ->
-  x = undefined
-  y = undefined
-  r = undefined
-  b = undefined
-  w = undefined
-  h = undefined
-  Morph::trackChanges = false
-  
-  # label
-  x = @left() + @edge
-  y = @top() + @edge
-  r = @right() - @edge
-  w = r - x
-  @label.setPosition new Point(x, y)
-  @label.setWidth w
-  if @label.height() > (@height() - 50)
-    @silentSetHeight @label.height() + 50
-    @drawNew()
-    @changed()
-    @resizer.drawNew()
-  
-  # morphsList
-  y = @label.bottom() + 2
-  w = @width() - @edge
-  w -= @edge
-  b = @bottom() - (2 * @edge) - MorphicPreferences.handleSize
-  h = b - y
-  @morphsList.setPosition new Point(x, y)
-  @morphsList.setExtent new Point(w, h)
-  
-  # close button
-  x = @morphsList.left()
-  y = @morphsList.bottom() + @edge
-  h = MorphicPreferences.handleSize
-  w = @morphsList.width() - h - @edge
-  @buttonClose.setPosition new Point(x, y)
-  @buttonClose.setExtent new Point(w, h)
-  Morph::trackChanges = true
-  @changed()
-
-MorphsListMorph::setExtent = (aPoint) ->
-  super aPoint
-  @fixLayout()
-
-# MouseSensorMorph ////////////////////////////////////////////////////
-
-# for demo and debuggin purposes only, to be removed later
-class MouseSensorMorph extends BoxMorph
-  constructor: (edge, border, borderColor) ->
-    @init edge, border, borderColor
-
-# MouseSensorMorph instance creation:
-MouseSensorMorph::init = (edge, border, borderColor) ->
-  super
-  @edge = edge or 4
-  @border = border or 2
-  @color = new Color(255, 255, 255)
-  @borderColor = borderColor or new Color()
-  @isTouched = false
-  @upStep = 0.05
-  @downStep = 0.02
-  @noticesTransparentClick = false
-  @drawNew()
-
-MouseSensorMorph::touch = ->
-  myself = this
-  unless @isTouched
-    @isTouched = true
-    @alpha = 0.6
-    @step = ->
-      if myself.isTouched
-        myself.alpha = myself.alpha + myself.upStep  if myself.alpha < 1
-      else if myself.alpha > (myself.downStep)
-        myself.alpha = myself.alpha - myself.downStep
-      else
-        myself.alpha = 0
-        myself.step = null
-      myself.changed()
-
-MouseSensorMorph::unTouch = ->
-  @isTouched = false
-
-MouseSensorMorph::mouseEnter = ->
-  @touch()
-
-MouseSensorMorph::mouseLeave = ->
-  @unTouch()
-
-MouseSensorMorph::mouseDownLeft = ->
-  @touch()
-
-MouseSensorMorph::mouseClickLeft = ->
-  @unTouch()
-# SpeechBubbleMorph ///////////////////////////////////////////////////
-
-#
-#	I am a comic-style speech bubble that can display either a string,
-#	a Morph, a Canvas or a toString() representation of anything else.
-#	If I am invoked using popUp() I behave like a tool tip.
-#
-
-class SpeechBubbleMorph extends BoxMorph
-  constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
-    @init contents, color, edge, border, borderColor, padding, isThought
-
-# SpeechBubbleMorph: referenced constructors
-
-# SpeechBubbleMorph instance creation:
-SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, isThought) ->
-  @isPointingRight = true # orientation of text
-  @contents = contents or ""
-  @padding = padding or 0 # additional vertical pixels
-  @isThought = isThought or false # draw "think" bubble
-  super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
-  @color = color or new Color(230, 230, 230)
-  @drawNew()
-
-
-# SpeechBubbleMorph invoking:
-SpeechBubbleMorph::popUp = (world, pos) ->
-  @drawNew()
-  @setPosition pos.subtract(new Point(0, @height()))
-  @addShadow new Point(2, 2), 80
-  @keepWithin world
-  world.add this
-  @changed()
-  world.hand.destroyTemporaries()
-  world.hand.temporaries.push this
-  @mouseEnter = ->
-    @destroy()
-
-
-# SpeechBubbleMorph drawing:
-SpeechBubbleMorph::drawNew = ->
-  
-  # re-build my contents
-  @contentsMorph.destroy()  if @contentsMorph
-  if @contents instanceof Morph
-    @contentsMorph = @contents
-  else if isString(@contents)
-    @contentsMorph = new TextMorph(@contents, MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
-  else if @contents instanceof HTMLCanvasElement
-    @contentsMorph = new Morph()
-    @contentsMorph.silentSetWidth @contents.width
-    @contentsMorph.silentSetHeight @contents.height
-    @contentsMorph.image = @contents
-  else
-    @contentsMorph = new TextMorph(@contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
-  @add @contentsMorph
-  
-  # adjust my layout
-  @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
-  @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
-  
-  # draw my outline
-  super()
-  
-  # position my contents
-  @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))
-
-SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
-  circle = (x, y, r) ->
-    context.moveTo x + r, y
-    context.arc x, y, r, radians(0), radians(360)
-  offset = radius + inset
-  w = @width()
-  h = @height()
-  rad = undefined
-  
-  # top left:
-  context.arc offset, offset, radius, radians(-180), radians(-90), false
-  
-  # top right:
-  context.arc w - offset, offset, radius, radians(-90), radians(-0), false
-  
-  # bottom right:
-  context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false
-  unless @isThought # draw speech bubble hook
-    if @isPointingRight
-      context.lineTo offset + radius, h - offset
-      context.lineTo radius / 2 + inset, h - inset
-    else # pointing left
-      context.lineTo w - (radius / 2 + inset), h - inset
-      context.lineTo w - (offset + radius), h - offset
-  
-  # bottom left:
-  context.arc offset, h - offset - radius, radius, radians(90), radians(180), false
-  if @isThought
-    
-    # close large bubble:
-    context.lineTo inset, offset
-    
-    # draw thought bubbles:
-    if @isPointingRight
-      
-      # tip bubble:
-      rad = radius / 4
-      circle rad + inset, h - rad - inset, rad
-      
-      # middle bubble:
-      rad = radius / 3.2
-      circle rad * 2 + inset, h - rad - inset * 2, rad
-      
-      # top bubble:
-      rad = radius / 2.8
-      circle rad * 3 + inset * 2, h - rad - inset * 4, rad
-    else # pointing left
-      # tip bubble:
-      rad = radius / 4
-      circle w - (rad + inset), h - rad - inset, rad
-      
-      # middle bubble:
-      rad = radius / 3.2
-      circle w - (rad * 2 + inset), h - rad - inset * 2, rad
-      
-      # top bubble:
-      rad = radius / 2.8
-      circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
-# HandleMorph ////////////////////////////////////////////////////////
-
-# this comment below is needed to figure our dependencies between classes
-# REQUIRES globalFunctions
-
-# I am a resize / move handle that can be attached to any Morph
-
-class HandleMorph extends Morph
-  constructor: (target, minX, minY, insetX, insetY, type) ->
-    # if insetY is missing, it will be the same as insetX
-    @init target, minX, minY, insetX, insetY, type
-
-# HandleMorph instance creation:
-HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
-  size = MorphicPreferences.handleSize
-  @target = target or null
-  @minExtent = new Point(minX or 0, minY or 0)
-  @inset = new Point(insetX or 0, insetY or insetX or 0)
-  @type = type or "resize" # can also be 'move'
-  super()
-  @color = new Color(255, 255, 255)
-  @isDraggable = false
+  # override inherited properites:
+  @color = new Color(0, 0, 0)
   @noticesTransparentClick = true
-  @setExtent new Point(size, size)
+  @drawNew()
 
+TextMorph::toString = ->
+  
+  # e.g. 'a TextMorph("Hello World")'
+  "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
 
-# HandleMorph drawing:
-HandleMorph::drawNew = ->
-  @normalImage = newCanvas(@extent())
-  @highlightImage = newCanvas(@extent())
-  @drawOnCanvas @normalImage, @color, new Color(100, 100, 100)
-  @drawOnCanvas @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
-  @image = @normalImage
-  if @target
-    @setPosition @target.bottomRight().subtract(@extent().add(@inset))
-    @target.add this
-    @target.changed()
+TextMorph::font = ->
+  
+  # answer a font string, e.g. 'bold italic 12px sans-serif'
+  font = ""
+  font = font + "bold "  if @isBold
+  font = font + "italic "  if @isItalic
+  font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
 
-HandleMorph::drawOnCanvas = (aCanvas, color, shadowColor) ->
-  context = aCanvas.getContext("2d")
-  p1 = undefined
-  p11 = undefined
-  p2 = undefined
-  p22 = undefined
-  i = undefined
-  context.lineWidth = 1
-  context.lineCap = "round"
-  context.strokeStyle = color.toString()
-  if @type is "move"
-    p1 = @bottomLeft().subtract(@position())
-    p11 = p1.copy()
-    p2 = @topRight().subtract(@position())
-    p22 = p2.copy()
-    i = 0
-    while i <= @height()
-      p11.y = p1.y - i
-      p22.y = p2.y - i
-      context.beginPath()
-      context.moveTo p11.x, p11.y
-      context.lineTo p22.x, p22.y
-      context.closePath()
-      context.stroke()
-      i = i + 6
-  p1 = @bottomLeft().subtract(@position())
-  p11 = p1.copy()
-  p2 = @topRight().subtract(@position())
-  p22 = p2.copy()
-  i = 0
-  while i <= @width()
-    p11.x = p1.x + i
-    p22.x = p2.x + i
-    context.beginPath()
-    context.moveTo p11.x, p11.y
-    context.lineTo p22.x, p22.y
-    context.closePath()
-    context.stroke()
-    i = i + 6
-  context.strokeStyle = shadowColor.toString()
-  if @type is "move"
-    p1 = @bottomLeft().subtract(@position())
-    p11 = p1.copy()
-    p2 = @topRight().subtract(@position())
-    p22 = p2.copy()
-    i = -2
-    while i <= @height()
-      p11.y = p1.y - i
-      p22.y = p2.y - i
-      context.beginPath()
-      context.moveTo p11.x, p11.y
-      context.lineTo p22.x, p22.y
-      context.closePath()
-      context.stroke()
-      i = i + 6
-  p1 = @bottomLeft().subtract(@position())
-  p11 = p1.copy()
-  p2 = @topRight().subtract(@position())
-  p22 = p2.copy()
-  i = 2
-  while i <= @width()
-    p11.x = p1.x + i
-    p22.x = p2.x + i
-    context.beginPath()
-    context.moveTo p11.x, p11.y
-    context.lineTo p22.x, p22.y
-    context.closePath()
-    context.stroke()
-    i = i + 6
-
-
-# HandleMorph stepping:
-HandleMorph::step = null
-HandleMorph::mouseDownLeft = (pos) ->
-  world = @root()
-  offset = pos.subtract(@bounds.origin)
-  myself = this
-  return null  unless @target
-  @step = ->
-    newPos = undefined
-    newExt = undefined
-    if world.hand.mouseButton
-      newPos = world.hand.bounds.origin.copy().subtract(offset)
-      if @type is "resize"
-        newExt = newPos.add(myself.extent().add(myself.inset)).subtract(myself.target.bounds.origin)
-        newExt = newExt.max(myself.minExtent)
-        myself.target.setExtent newExt
-        myself.setPosition myself.target.bottomRight().subtract(myself.extent().add(myself.inset))
-      else # type === 'move'
-        myself.target.setPosition newPos.subtract(@target.extent()).add(@extent())
+TextMorph::parse = ->
+  paragraphs = @text.split("\n")
+  canvas = newCanvas()
+  context = canvas.getContext("2d")
+  oldline = ""
+  newline = undefined
+  w = undefined
+  slot = 0
+  context.font = @font()
+  @maxLineWidth = 0
+  @lines = []
+  @lineSlots = [0]
+  @words = []
+  paragraphs.forEach (p) =>
+    @words = @words.concat(p.split(" "))
+    @words.push "\n"
+  
+  @words.forEach (word) =>
+    if word is "\n"
+      @lines.push oldline
+      @lineSlots.push slot
+      @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
+      oldline = ""
     else
-      @step = null
-  
-  unless @target.step
-    @target.step = noOpFunction
+      if @maxWidth > 0
+        newline = oldline + word + " "
+        w = context.measureText(newline).width
+        if w > @maxWidth
+          @lines.push oldline
+          @lineSlots.push slot
+          @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
+          oldline = word + " "
+        else
+          oldline = newline
+      else
+        oldline = oldline + word + " "
+      slot += word.length + 1
 
 
-# HandleMorph dragging and dropping:
-HandleMorph::rootForGrab = ->
-  this
-
-
-# HandleMorph events:
-HandleMorph::mouseEnter = ->
-  @image = @highlightImage
-  @changed()
-
-HandleMorph::mouseLeave = ->
-  @image = @normalImage
-  @changed()
-
-
-# HandleMorph duplicating:
-HandleMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = super dict
-  c.target = (dict[@target])  if c.target and dict[@target]
-  c
-
-
-# HandleMorph menu:
-HandleMorph::attach = ->
-  choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.isDraggable = false
-      myself.target = each
-      myself.drawNew()
-      myself.noticesTransparentClick = true
-  
-  
-  menu.popUpAtHand @world()  if choices.length > 0
-# CircleBoxMorph //////////////////////////////////////////////////////
-
-# I can be used for sliders
-
-class CircleBoxMorph extends Morph
-  constructor: (orientation) ->
-    @init orientation or "vertical"
-
-CircleBoxMorph::init = (orientation) ->
-  super()
-  @orientation = orientation
-  @autoOrient = true
-  @setExtent new Point(20, 100)
-
-CircleBoxMorph::autoOrientation = ->
-  if @height() > @width()
-    @orientation = "vertical"
-  else
-    @orientation = "horizontal"
-
-CircleBoxMorph::drawNew = ->
-  radius = undefined
-  center1 = undefined
-  center2 = undefined
-  rect = undefined
-  points = undefined
+TextMorph::drawNew = ->
+  context = undefined
+  height = undefined
+  i = undefined
+  line = undefined
+  width = undefined
+  shadowHeight = undefined
+  shadowWidth = undefined
+  offx = undefined
+  offy = undefined
   x = undefined
   y = undefined
-  context = undefined
-  ext = undefined
-  myself = this
-  @autoOrientation()  if @autoOrient
-  @image = newCanvas(@extent())
+  start = undefined
+  stop = undefined
+  p = undefined
+  c = undefined
+  @image = newCanvas()
   context = @image.getContext("2d")
-  if @orientation is "vertical"
-    radius = @width() / 2
-    x = @center().x
-    center1 = new Point(x, @top() + radius)
-    center2 = new Point(x, @bottom() - radius)
-    rect = @bounds.origin.add(new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
-  else
-    radius = @height() / 2
-    y = @center().y
-    center1 = new Point(@left() + radius, y)
-    center2 = new Point(@right() - radius, y)
-    rect = @bounds.origin.add(new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
-  points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
-  points.forEach (center) ->
-    context.fillStyle = myself.color.toString()
-    context.beginPath()
-    context.arc center.x, center.y, radius, 0, 2 * Math.PI, false
-    context.closePath()
-    context.fill()
+  context.font = @font()
+  @parse()
   
-  rect = rect.translateBy(@bounds.origin.neg())
-  ext = rect.extent()
-  context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()  if ext.x > 0 and ext.y > 0
+  # set my extent
+  shadowWidth = Math.abs(@shadowOffset.x)
+  shadowHeight = Math.abs(@shadowOffset.y)
+  height = @lines.length * (fontHeight(@fontSize) + shadowHeight)
+  if @maxWidth is 0
+    @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))
+  else
+    @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
+  @image.width = @width()
+  @image.height = @height()
+  
+  # prepare context for drawing text
+  context = @image.getContext("2d")
+  context.font = @font()
+  context.textAlign = "left"
+  context.textBaseline = "bottom"
+  
+  # fill the background, if desired
+  if @backgroundColor
+    context.fillStyle = @backgroundColor.toString()
+    context.fillRect 0, 0, @width(), @height()
+  
+  # draw the shadow, if any
+  if @shadowColor
+    offx = Math.max(@shadowOffset.x, 0)
+    offy = Math.max(@shadowOffset.y, 0)
+    context.fillStyle = @shadowColor.toString()
+    i = 0
+    while i < @lines.length
+      line = @lines[i]
+      width = context.measureText(line).width + shadowWidth
+      if @alignment is "right"
+        x = @width() - width
+      else if @alignment is "center"
+        x = (@width() - width) / 2
+      else # 'left'
+        x = 0
+      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+      context.fillText line, x + offx, y + offy
+      i = i + 1
+  
+  # now draw the actual text
+  offx = Math.abs(Math.min(@shadowOffset.x, 0))
+  offy = Math.abs(Math.min(@shadowOffset.y, 0))
+  context.fillStyle = @color.toString()
+  i = 0
+  while i < @lines.length
+    line = @lines[i]
+    width = context.measureText(line).width + shadowWidth
+    if @alignment is "right"
+      x = @width() - width
+    else if @alignment is "center"
+      x = (@width() - width) / 2
+    else # 'left'
+      x = 0
+    y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+    context.fillText line, x + offx, y + offy
+    i = i + 1
+  
+  # draw the selection
+  start = Math.min(@startMark, @endMark)
+  stop = Math.max(@startMark, @endMark)
+  i = start
+  while i < stop
+    p = @slotPosition(i).subtract(@position())
+    c = @text.charAt(i)
+    context.fillStyle = @markedBackgoundColor.toString()
+    context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
+    context.fillStyle = @markedTextColor.toString()
+    context.fillText c, p.x, p.y + fontHeight(@fontSize)
+    i += 1
+  
+  # notify my parent of layout change
+  @parent.layoutChanged()  if @parent.layoutChanged  if @parent
+
+TextMorph::setExtent = (aPoint) ->
+  @maxWidth = Math.max(aPoint.x, 0)
+  @changed()
+  @drawNew()
 
 
-# CircleBoxMorph menu:
-CircleBoxMorph::developersMenu = ->
+# TextMorph mesuring:
+TextMorph::columnRow = (slot) ->
+  
+  # answer the logical position point of the given index ("slot")
+  row = undefined
+  col = undefined
+  idx = 0
+  row = 0
+  while row < @lines.length
+    idx = @lineSlots[row]
+    col = 0
+    while col < @lines[row].length
+      return new Point(col, row)  if idx is slot
+      idx += 1
+      col += 1
+    row += 1
+  
+  # return new Point(0, 0);
+  new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
+
+TextMorph::slotPosition = (slot) ->
+  
+  # answer the physical position point of the given index ("slot")
+  # where the cursor should be placed
+  colRow = @columnRow(slot)
+  context = @image.getContext("2d")
+  shadowHeight = Math.abs(@shadowOffset.y)
+  xOffset = 0
+  yOffset = undefined
+  x = undefined
+  y = undefined
+  idx = undefined
+  yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
+  idx = 0
+  while idx < colRow.x
+    xOffset += context.measureText(@lines[colRow.y][idx]).width
+    idx += 1
+  x = @left() + xOffset
+  y = @top() + yOffset
+  new Point(x, y)
+
+TextMorph::slotAt = (aPoint) ->
+  
+  # answer the slot (index) closest to the given point
+  # so the cursor can be moved accordingly
+  charX = 0
+  row = 0
+  col = 0
+  shadowHeight = Math.abs(@shadowOffset.y)
+  context = @image.getContext("2d")
+  row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)
+  row = Math.max(row, 1)
+  while aPoint.x - @left() > charX
+    charX += context.measureText(@lines[row - 1][col]).width
+    col += 1
+  @lineSlots[Math.max(row - 1, 0)] + col - 1
+
+TextMorph::upFrom = (slot) ->
+  
+  # answer the slot above the given one
+  above = undefined
+  colRow = @columnRow(slot)
+  return slot  if colRow.y < 1
+  above = @lines[colRow.y - 1]
+  return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1
+  @lineSlots[colRow.y - 1] + colRow.x
+
+TextMorph::downFrom = (slot) ->
+  
+  # answer the slot below the given one
+  below = undefined
+  colRow = @columnRow(slot)
+  return slot  if colRow.y > @lines.length - 2
+  below = @lines[colRow.y + 1]
+  return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1
+  @lineSlots[colRow.y + 1] + colRow.x
+
+TextMorph::startOfLine = (slot) ->
+  
+  # answer the first slot (index) of the line for the given slot
+  @lineSlots[@columnRow(slot).y]
+
+TextMorph::endOfLine = (slot) ->
+  
+  # answer the slot (index) indicating the EOL for the given slot
+  @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1
+
+
+# TextMorph editing:
+TextMorph::edit = ->
+  @root().edit this
+
+TextMorph::selection = ->
+  start = undefined
+  stop = undefined
+  start = Math.min(@startMark, @endMark)
+  stop = Math.max(@startMark, @endMark)
+  @text.slice start, stop
+
+TextMorph::selectionStartSlot = ->
+  Math.min @startMark, @endMark
+
+TextMorph::clearSelection = ->
+  @currentlySelecting = false
+  @startMark = 0
+  @endMark = 0
+  @drawNew()
+  @changed()
+
+TextMorph::deleteSelection = ->
+  start = undefined
+  stop = undefined
+  text = undefined
+  text = @text
+  start = Math.min(@startMark, @endMark)
+  stop = Math.max(@startMark, @endMark)
+  @text = text.slice(0, start) + text.slice(stop)
+  @changed()
+  @clearSelection()
+
+TextMorph::selectAll = ->
+  @startMark = 0
+  @endMark = @text.length
+  @drawNew()
+  @changed()
+
+TextMorph::selectAllAndEdit = ->
+  @edit()
+  @selectAll()
+
+TextMorph::mouseClickLeft = (pos) ->
+  if @isEditable
+    @edit()  unless @currentlySelecting
+    @root().cursor.gotoPos pos
+    @currentlySelecting = false
+  else
+    @escalateEvent "mouseClickLeft", pos
+
+TextMorph::enableSelecting = ->
+  @mouseDownLeft = (pos) ->
+    @clearSelection()
+    if @isEditable and (not @isDraggable)
+      @edit()
+      @root().cursor.gotoPos pos
+      @startMark = @slotAt(pos)
+      @endMark = @startMark
+      @currentlySelecting = true
+
+  @mouseMove = (pos) ->
+    if @isEditable and @currentlySelecting and (not @isDraggable)
+      newMark = @slotAt(pos)
+      if newMark isnt @endMark
+        @endMark = newMark
+        @drawNew()
+        @changed()
+
+TextMorph::disableSelecting = ->
+  delete @mouseDownLeft
+  delete @mouseMove
+
+
+# TextMorph menus:
+TextMorph::developersMenu = ->
   menu = super()
   menu.addLine()
-  if @orientation is "vertical"
-    menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"
-  else
-    menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"
-  menu
-
-CircleBoxMorph::toggleOrientation = ->
-  center = @center()
-  @changed()
-  if @orientation is "vertical"
-    @orientation = "horizontal"
-  else
-    @orientation = "vertical"
-  @silentSetExtent new Point(@height(), @width())
-  @setCenter center
-  @drawNew()
-  @changed()
-# SliderMorph ///////////////////////////////////////////////////
-
-# this comment below is needed to figure our dependencies between classes
-# REQUIRES globalFunctions
-
-class SliderMorph extends CircleBoxMorph
-  constructor: (start, stop, value, size, orientation, color) ->
-    @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
-
-SliderMorph::init = (start, stop, value, size, orientation, color) ->
-  @target = null
-  @action = null
-  @start = start
-  @stop = stop
-  @value = value
-  @size = size
-  @offset = null
-  @button = new SliderButtonMorph()
-  @button.isDraggable = false
-  @button.color = new Color(200, 200, 200)
-  @button.highlightColor = new Color(210, 210, 255)
-  @button.pressColor = new Color(180, 180, 255)
-  super orientation
-  @add @button
-  @alpha = 0.3
-  @color = color or new Color(0, 0, 0)
-  @setExtent new Point(20, 100)
-
-
-# this.drawNew();
-SliderMorph::autoOrientation = noOpFunction
-
-SliderMorph::rangeSize = ->
-  @stop - @start
-
-SliderMorph::ratio = ->
-  @size / @rangeSize()
-
-SliderMorph::unitSize = ->
-  return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"
-  (@width() - @button.width()) / @rangeSize()
-
-SliderMorph::drawNew = ->
-  bw = undefined
-  bh = undefined
-  posX = undefined
-  posY = undefined
-  super()
-  @button.orientation = @orientation
-  if @orientation is "vertical"
-    bw = @width() - 2
-    bh = Math.max(bw, Math.round(@height() * @ratio()))
-    @button.silentSetExtent new Point(bw, bh)
-    posX = 1
-    posY = Math.min(Math.round((@value - @start) * @unitSize()), @height() - @button.height())
-  else
-    bh = @height() - 2
-    bw = Math.max(bh, Math.round(@width() * @ratio()))
-    @button.silentSetExtent new Point(bw, bh)
-    posY = 1
-    posX = Math.min(Math.round((@value - @start) * @unitSize()), @width() - @button.width())
-  @button.setPosition new Point(posX, posY).add(@bounds.origin)
-  @button.drawNew()
-  @button.changed()
-
-SliderMorph::updateValue = ->
-  relPos = undefined
-  if @orientation is "vertical"
-    relPos = @button.top() - @top()
-  else
-    relPos = @button.left() - @left()
-  @value = Math.round(relPos / @unitSize() + @start)
-  @updateTarget()
-
-SliderMorph::updateTarget = ->
-  if @action
-    if typeof @action is "function"
-      @action.call @target, @value
-    else # assume it's a String
-      @target[@action] @value
-
-
-# SliderMorph duplicating:
-SliderMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = super dict
-  c.target = (dict[@target])  if c.target and dict[@target]
-  c.button = (dict[@button])  if c.button and dict[@button]
-  c
-
-
-# SliderMorph menu:
-SliderMorph::developersMenu = ->
-  menu = super()
-  menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
-  menu.addItem "floor...", (->
-    @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
-  ), "set the minimum value\nwhich can be selected"
-  menu.addItem "ceiling...", (->
-    @prompt menu.title + "\nceiling:", @setStop, this, @stop.toString(), null, @start + @size, @size * 100, true
-  ), "set the maximum value\nwhich can be selected"
-  menu.addItem "button size...", (->
-    @prompt menu.title + "\nbutton size:", @setSize, this, @size.toString(), null, 1, @stop - @start, true
-  ), "set the range\ncovered by\nthe slider button"
+  menu.addItem "edit", "edit"
+  menu.addItem "font size...", (->
+    @prompt menu.title + "\nfont\nsize:", @setFontSize, this, @fontSize.toString(), null, 6, 100, true
+  ), "set this Text's\nfont point size"
+  menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"
+  menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"
+  menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"
   menu.addLine()
-  menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+  menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
+  menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"
+  if @isBold
+    menu.addItem "normal weight", "toggleWeight"
+  else
+    menu.addItem "bold", "toggleWeight"
+  if @isItalic
+    menu.addItem "normal style", "toggleItalic"
+  else
+    menu.addItem "italic", "toggleItalic"
   menu
 
-SliderMorph::showValue = ->
-  @inform @value
-
-SliderMorph::userSetStart = (num) ->
+TextMorph::toggleIsDraggable = ->
   
   # for context menu demo purposes
-  @start = Math.max(num, @stop)
-
-SliderMorph::setStart = (num) ->
-  
-  # for context menu demo purposes
-  newStart = undefined
-  if typeof num is "number"
-    @start = Math.min(Math.max(num, 0), @stop - @size)
+  @isDraggable = not @isDraggable
+  if @isDraggable
+    @disableSelecting()
   else
-    newStart = parseFloat(num)
-    @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
-  @value = Math.max(@value, @start)
-  @updateTarget()
+    @enableSelecting()
+
+TextMorph::setAlignmentToLeft = ->
+  @alignment = "left"
   @drawNew()
   @changed()
 
-SliderMorph::setStop = (num) ->
-  
-  # for context menu demo purposes
-  newStop = undefined
-  if typeof num is "number"
-    @stop = Math.max(num, @start + @size)
-  else
-    newStop = parseFloat(num)
-    @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
-  @value = Math.min(@value, @stop)
-  @updateTarget()
+TextMorph::setAlignmentToRight = ->
+  @alignment = "right"
   @drawNew()
   @changed()
 
-SliderMorph::setSize = (num) ->
+TextMorph::setAlignmentToCenter = ->
+  @alignment = "center"
+  @drawNew()
+  @changed()
+
+TextMorph::toggleWeight = ->
+  @isBold = not @isBold
+  @changed()
+  @drawNew()
+  @changed()
+
+TextMorph::toggleItalic = ->
+  @isItalic = not @isItalic
+  @changed()
+  @drawNew()
+  @changed()
+
+TextMorph::setSerif = ->
+  @fontStyle = "serif"
+  @changed()
+  @drawNew()
+  @changed()
+
+TextMorph::setSansSerif = ->
+  @fontStyle = "sans-serif"
+  @changed()
+  @drawNew()
+  @changed()
+
+TextMorph::setText = (size) ->
+  
+  # for context menu demo purposes
+  @text = Math.round(size).toString()
+  @changed()
+  @drawNew()
+  @changed()
+
+TextMorph::setFontSize = (size) ->
   
   # for context menu demo purposes
   newSize = undefined
-  if typeof num is "number"
-    @size = Math.min(Math.max(num, 1), @stop - @start)
+  if typeof size is "number"
+    @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
   else
-    newSize = parseFloat(num)
-    @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
-  @value = Math.min(@value, @stop - @size)
-  @updateTarget()
+    newSize = parseFloat(size)
+    @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
+  @changed()
   @drawNew()
   @changed()
 
-SliderMorph::setTarget = ->
-  choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
-  choices.push @world()
-  choices.forEach (each) =>
-    menu.addItem each.toString().slice(0, 50), =>
-      @target = each
-      @setTargetSetter()
+TextMorph::numericalSetters = ->
   
-  
-  if choices.length is 1
-    @target = choices[0]
-    @setTargetSetter()
-  else menu.popUpAtHand @world()  if choices.length > 0
-
-SliderMorph::setTargetSetter = ->
-  choices = @target.numericalSetters()
-  menu = new MenuMorph(this, "choose target property:")
-  choices.forEach (each) =>
-    menu.addItem each, =>
-      @action = each
-  
-  
-  if choices.length is 1
-    @action = choices[0]
-  else menu.popUpAtHand @world()  if choices.length > 0
-
-SliderMorph::numericalSetters = ->
   # for context menu demo purposes
-  list = super()
-  list.push "setStart", "setStop", "setSize"
-  list
+  ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
 
 
-# SliderMorph stepping:
-SliderMorph::step = null
-SliderMorph::mouseDownLeft = (pos) ->
-  world = undefined
-  unless @button.bounds.containsPoint(pos)
-    @offset = new Point() # return null;
-  else
-    @offset = pos.subtract(@button.bounds.origin)
-  world = @root()
-  @step = =>
-    mousePos = undefined
-    newX = undefined
-    newY = undefined
-    if world.hand.mouseButton
-      mousePos = world.hand.bounds.origin
-      if @orientation is "vertical"
-        newX = @button.bounds.origin.x
-        newY = Math.max(Math.min(mousePos.y - @offset.y, @bottom() - @button.height()), @top())
-      else
-        newY = @button.bounds.origin.y
-        newX = Math.max(Math.min(mousePos.x - @offset.x, @right() - @button.width()), @left())
-      @button.setPosition new Point(newX, newY)
-      @updateValue()
-    else
-      @step = null
-# ScrollFrameMorph ////////////////////////////////////////////////////
-
-# this comment below is needed to figure our dependencies between classes
-# REQUIRES globalFunctions
-
-class ScrollFrameMorph extends FrameMorph
-  constructor: (scroller, size, sliderColor) ->
-    @init scroller, size, sliderColor
-
-
-ScrollFrameMorph::init = (scroller, size, sliderColor) ->
-  myself = this
-  super()
-  @scrollBarSize = size or MorphicPreferences.scrollBarSize
-  @autoScrollTrigger = null
-  @isScrollingByDragging = true # change if desired
-  @hasVelocity = true # dto.
-  @padding = 0 # around the scrollable area
-  @growth = 0 # pixels or Point to grow right/left when near edge
-  @isTextLineWrapping = false
-  @contents = scroller or new FrameMorph(this)
-  @add @contents
-  # start
-  # stop
-  # value
-  # size
-  @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
-  @hBar.setHeight @scrollBarSize
-  @hBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.left() - num, myself.contents.position().y)
-  
-  @hBar.isDraggable = false
-  @add @hBar
-  # start
-  # stop
-  # value
-  # size
-  @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
-  @vBar.setWidth @scrollBarSize
-  @vBar.action = (num) ->
-    myself.contents.setPosition new Point(myself.contents.position().x, myself.top() - num)
-  
-  @vBar.isDraggable = false
-  @add @vBar
-
-ScrollFrameMorph::adjustScrollBars = ->
-  hWidth = @width() - @scrollBarSize
-  vHeight = @height() - @scrollBarSize
-  @changed()
-  if @contents.width() > @width() + MorphicPreferences.scrollBarSize
-    @hBar.show()
-    @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
-    @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
-    @hBar.start = 0
-    @hBar.stop = @contents.width() - @width()
-    @hBar.size = @width() / @contents.width() * @hBar.stop
-    @hBar.value = @left() - @contents.left()
-    @hBar.drawNew()
-  else
-    @hBar.hide()
-  if @contents.height() > @height() + @scrollBarSize
-    @vBar.show()
-    @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
-    @vBar.setPosition new Point(@right() - @vBar.width(), @top())
-    @vBar.start = 0
-    @vBar.stop = @contents.height() - @height()
-    @vBar.size = @height() / @contents.height() * @vBar.stop
-    @vBar.value = @top() - @contents.top()
-    @vBar.drawNew()
-  else
-    @vBar.hide()
-
-ScrollFrameMorph::addContents = (aMorph) ->
-  @contents.add aMorph
-  @contents.adjustBounds()
-
-ScrollFrameMorph::setContents = (aMorph) ->
-  @contents.children.forEach (m) ->
-    m.destroy()
-  
-  @contents.children = []
-  aMorph.setPosition @position().add(new Point(2, 2))
-  @addContents aMorph
-
-ScrollFrameMorph::setExtent = (aPoint) ->
-  @contents.setPosition @position().copy()  if @isTextLineWrapping
-  super aPoint
-  @contents.adjustBounds()
-
-
-# ScrollFrameMorph scrolling by dragging:
-ScrollFrameMorph::scrollX = (steps) ->
-  cl = @contents.left()
-  l = @left()
-  cw = @contents.width()
-  r = @right()
-  newX = undefined
-  newX = cl + steps
-  newX = l  if newX > l
-  newX = r - cw  if newX + cw < r
-  @contents.setLeft newX  if newX isnt cl
-
-ScrollFrameMorph::scrollY = (steps) ->
-  ct = @contents.top()
-  t = @top()
-  ch = @contents.height()
-  b = @bottom()
-  newY = undefined
-  newY = ct + steps
-  newY = t  if newY > t
-  newY = b - ch  if newY + ch < b
-  @contents.setTop newY  if newY isnt ct
-
-ScrollFrameMorph::step = noOpFunction
-
-ScrollFrameMorph::mouseDownLeft = (pos) ->
-  return null  unless @isScrollingByDragging
-  world = @root()
-  oldPos = pos
-  myself = this
-  deltaX = 0
-  deltaY = 0
-  friction = 0.8
-  @step = ->
-    newPos = undefined
-    if world.hand.mouseButton and (world.hand.children.length is 0) and (myself.bounds.containsPoint(world.hand.position()))
-      newPos = world.hand.bounds.origin
-      deltaX = newPos.x - oldPos.x
-      myself.scrollX deltaX  if deltaX isnt 0
-      deltaY = newPos.y - oldPos.y
-      myself.scrollY deltaY  if deltaY isnt 0
-      oldPos = newPos
-    else
-      unless myself.hasVelocity
-        myself.step = noOpFunction
-      else
-        if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-          myself.step = noOpFunction
-        else
-          deltaX = deltaX * friction
-          myself.scrollX Math.round(deltaX)
-          deltaY = deltaY * friction
-          myself.scrollY Math.round(deltaY)
-    @adjustScrollBars()
-
-ScrollFrameMorph::startAutoScrolling = ->
-  myself = this
-  inset = MorphicPreferences.scrollBarSize * 3
-  world = @world()
-  hand = undefined
-  inner = undefined
-  pos = undefined
-  return null  unless world
-  hand = world.hand
-  @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
-  @step = ->
-    pos = hand.bounds.origin
-    inner = myself.bounds.insetBy(inset)
-    if (myself.bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
-      myself.autoScroll pos
-    else
-      myself.step = noOpFunction
-      
-      myself.autoScrollTrigger = null
-
-ScrollFrameMorph::autoScroll = (pos) ->
-  inset = undefined
-  area = undefined
-  return null  if Date.now() - @autoScrollTrigger < 500
-  inset = MorphicPreferences.scrollBarSize * 3
-  area = @topLeft().extent(new Point(@width(), inset))
-  @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
-  area = @topLeft().extent(new Point(inset, @height()))
-  @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)
-  area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
-  @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
-  area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
-  @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
-  @adjustScrollBars()
-
-
-# ScrollFrameMorph events:
-ScrollFrameMorph::mouseScroll = (y, x) ->
-  @scrollY y * MorphicPreferences.mouseScrollAmount  if y
-  @scrollX x * MorphicPreferences.mouseScrollAmount  if x
-  @adjustScrollBars()
-
-ScrollFrameMorph::copyRecordingReferences = (dict) ->
-  
-  # inherited, see comment in Morph
-  c = super dict
-  c.contents = (dict[@contents])  if c.contents and dict[@contents]
-  if c.hBar and dict[@hBar]
-    c.hBar = (dict[@hBar])
-    c.hBar.action = (num) ->
-      c.contents.setPosition new Point(c.left() - num, c.contents.position().y)
-  if c.vBar and dict[@vBar]
-    c.vBar = (dict[@vBar])
-    c.vBar.action = (num) ->
-      c.contents.setPosition new Point(c.contents.position().x, c.top() - num)
-  c
-
-ScrollFrameMorph::developersMenu = ->
-  menu = super()
-  if @isTextLineWrapping
-    menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
-  else
-    menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"
+# TextMorph evaluation:
+TextMorph::evaluationMenu = ->
+  menu = new MenuMorph(this, null)
+  menu.addItem "do it", "doIt", "evaluate the\nselected expression"
+  menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
+  menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
+  menu.addLine()
+  menu.addItem "select all", "selectAllAndEdit"
   menu
 
-ScrollFrameMorph::toggleTextLineWrapping = ->
-  @isTextLineWrapping = not @isTextLineWrapping
+TextMorph::setReceiver = (obj) ->
+  @receiver = obj
+  @customContextMenu = @evaluationMenu()
+
+TextMorph::doIt = ->
+  @receiver.evaluateString @selection()
+  @edit()
+
+TextMorph::showIt = ->
+  result = @receiver.evaluateString(@selection())
+  @inform result  if result isnt null
+
+TextMorph::inspectIt = ->
+  result = @receiver.evaluateString(@selection())
+  world = @world()
+  inspector = undefined
+  if result isnt null
+    inspector = new InspectorMorph(result)
+    inspector.setPosition world.hand.position()
+    inspector.keepWithin world
+    world.add inspector
+    inspector.changed()
+# MenuItemMorph ///////////////////////////////////////////////////////
+
+# I automatically determine my bounds
+
+class MenuItemMorph extends TriggerMorph
+  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
+    @init target, action, labelString, fontSize, fontStyle, environment, hint, color
+
+# MenuItemMorph instance creation:
+MenuItemMorph::createLabel = ->
+  np = undefined
+  @label.destroy()  if @label isnt null
+  # bold
+  # italic
+  # numeric
+  # shadow offset
+  # shadow color
+  @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+  @silentSetExtent @label.extent().add(new Point(8, 0))
+  np = @position().add(new Point(4, 0))
+  @label.bounds = np.extent(@label.extent())
+  @add @label
+
+
+# MenuItemMorph events:
+MenuItemMorph::mouseEnter = ->
+  unless @isListItem()
+    @image = @highlightImage
+    @changed()
+  @bubbleHelp @hint  if @hint
+
+MenuItemMorph::mouseLeave = ->
+  unless @isListItem()
+    @image = @normalImage
+    @changed()
+  @world().hand.destroyTemporaries()  if @hint
+
+MenuItemMorph::mouseDownLeft = (pos) ->
+  if @isListItem()
+    @parent.unselectAllItems()
+    @escalateEvent "mouseDownLeft", pos
+  @image = @pressImage
+  @changed()
+
+MenuItemMorph::mouseMove = ->
+  @escalateEvent "mouseMove"  if @isListItem()
+
+MenuItemMorph::mouseClickLeft = ->
+  unless @isListItem()
+    @parent.destroy()
+    @root().activeMenu = null
+  @trigger()
+
+MenuItemMorph::isListItem = ->
+  return @parent.isListContents  if @parent
+  false
+
+MenuItemMorph::isSelectedListItem = ->
+  return @image is @pressImage  if @isListItem()
+  false
 # WorldMorph //////////////////////////////////////////////////////////
 
 # this comment below is needed to figure our dependencies between classes
@@ -5298,6 +5783,638 @@ WorldMorph::togglePreferences = ->
     MorphicPreferences = touchScreenSettings
   else
     MorphicPreferences = standardSettings
+# MouseSensorMorph ////////////////////////////////////////////////////
+
+# for demo and debuggin purposes only, to be removed later
+class MouseSensorMorph extends BoxMorph
+  constructor: (edge, border, borderColor) ->
+    @init edge, border, borderColor
+
+# MouseSensorMorph instance creation:
+MouseSensorMorph::init = (edge, border, borderColor) ->
+  super
+  @edge = edge or 4
+  @border = border or 2
+  @color = new Color(255, 255, 255)
+  @borderColor = borderColor or new Color()
+  @isTouched = false
+  @upStep = 0.05
+  @downStep = 0.02
+  @noticesTransparentClick = false
+  @drawNew()
+
+MouseSensorMorph::touch = ->
+  unless @isTouched
+    @isTouched = true
+    @alpha = 0.6
+    @step = =>
+      if @isTouched
+        @alpha = @alpha + @upStep  if @alpha < 1
+      else if @alpha > (@downStep)
+        @alpha = @alpha - @downStep
+      else
+        @alpha = 0
+        @step = null
+      @changed()
+
+MouseSensorMorph::unTouch = ->
+  @isTouched = false
+
+MouseSensorMorph::mouseEnter = ->
+  @touch()
+
+MouseSensorMorph::mouseLeave = ->
+  @unTouch()
+
+MouseSensorMorph::mouseDownLeft = ->
+  @touch()
+
+MouseSensorMorph::mouseClickLeft = ->
+  @unTouch()
+# PenMorph ////////////////////////////////////////////////////////////
+
+# I am a simple LOGO-wise turtle.
+
+class PenMorph extends Morph
+  constructor: () ->
+    @init()
+
+# PenMorph: referenced constructors
+
+# PenMorph instance creation:
+PenMorph::init = ->
+  size = MorphicPreferences.handleSize * 4
+  
+  # additional properties:
+  @isWarped = false # internal optimization
+  @wantsRedraw = false # internal optimization
+  @heading = 0
+  @isDown = true
+  @size = 1
+  super()
+  @setExtent new Point(size, size)
+
+
+# PenMorph updating - optimized for warping, i.e atomic recursion
+PenMorph::changed = ->
+  if @isWarped is false
+    w = @root()
+    w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
+    @parent.childChanged this  if @parent
+
+
+# PenMorph display:
+PenMorph::drawNew = (facing) ->
+  
+  #
+  #    my orientation can be overridden with the "facing" parameter to
+  #    implement Scratch-style rotation styles
+  #    
+  #
+  context = undefined
+  start = undefined
+  dest = undefined
+  left = undefined
+  right = undefined
+  len = undefined
+  direction = facing or @heading
+  if @isWarped
+    @wantsRedraw = true
+    return null
+  @image = newCanvas(@extent())
+  context = @image.getContext("2d")
+  len = @width() / 2
+  start = @center().subtract(@bounds.origin)
+  dest = start.distanceAngle(len * 0.75, direction - 180)
+  left = start.distanceAngle(len, direction + 195)
+  right = start.distanceAngle(len, direction - 195)
+  context.fillStyle = @color.toString()
+  context.beginPath()
+  context.moveTo start.x, start.y
+  context.lineTo left.x, left.y
+  context.lineTo dest.x, dest.y
+  context.lineTo right.x, right.y
+  context.closePath()
+  context.strokeStyle = "white"
+  context.lineWidth = 3
+  context.stroke()
+  context.strokeStyle = "black"
+  context.lineWidth = 1
+  context.stroke()
+  context.fill()
+  @wantsRedraw = false
+
+
+# PenMorph access:
+PenMorph::setHeading = (degrees) ->
+  @heading = parseFloat(degrees) % 360
+  if @isWarped is false
+    @drawNew()
+    @changed()
+
+
+# PenMorph drawing:
+PenMorph::drawLine = (start, dest) ->
+  context = @parent.penTrails().getContext("2d")
+  from = start.subtract(@parent.bounds.origin)
+  to = dest.subtract(@parent.bounds.origin)
+  if @isDown
+    context.lineWidth = @size
+    context.strokeStyle = @color.toString()
+    context.lineCap = "round"
+    context.lineJoin = "round"
+    context.beginPath()
+    context.moveTo from.x, from.y
+    context.lineTo to.x, to.y
+    context.stroke()
+    @world().broken.push start.rectangle(dest).expandBy(Math.max(@size / 2, 1)).intersect(@parent.visibleBounds()).spread()  if @isWarped is false
+
+
+# PenMorph turtle ops:
+PenMorph::turn = (degrees) ->
+  @setHeading @heading + parseFloat(degrees)
+
+PenMorph::forward = (steps) ->
+  start = @center()
+  dest = undefined
+  dist = parseFloat(steps)
+  if dist >= 0
+    dest = @position().distanceAngle(dist, @heading)
+  else
+    dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
+  @setPosition dest
+  @drawLine start, @center()
+
+PenMorph::down = ->
+  @isDown = true
+
+PenMorph::up = ->
+  @isDown = false
+
+PenMorph::clear = ->
+  @parent.drawNew()
+  @parent.changed()
+
+
+# PenMorph optimization for atomic recursion:
+PenMorph::startWarp = ->
+  @isWarped = true
+
+PenMorph::endWarp = ->
+  @drawNew()  if @wantsRedraw
+  @changed()
+  @parent.changed()
+  @isWarped = false
+
+PenMorph::warp = (fun) ->
+  @startWarp()
+  fun.call this
+  @endWarp()
+
+PenMorph::warpOp = (selector, argsArray) ->
+  @startWarp()
+  this[selector].apply this, argsArray
+  @endWarp()
+
+
+# PenMorph demo ops:
+# try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})
+PenMorph::warpSierpinski = (length, min) ->
+  @warpOp "sierpinski", [length, min]
+
+PenMorph::sierpinski = (length, min) ->
+  i = undefined
+  if length > min
+    i = 0
+    while i < 3
+      @sierpinski length * 0.5, min
+      @turn 120
+      @forward length
+      i += 1
+
+PenMorph::warpTree = (level, length, angle) ->
+  @warpOp "tree", [level, length, angle]
+
+PenMorph::tree = (level, length, angle) ->
+  if level > 0
+    @size = level
+    @forward length
+    @turn angle
+    @tree level - 1, length * 0.75, angle
+    @turn angle * -2
+    @tree level - 1, length * 0.75, angle
+    @turn angle
+    @forward -length
+# Rectangles //////////////////////////////////////////////////////////
+
+class Rectangle
+  constructor: (left, top, right, bottom) ->
+    @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
+
+
+# Rectangle instance creation:
+Rectangle::init = (originPoint, cornerPoint) ->
+  @origin = originPoint
+  @corner = cornerPoint
+
+
+# Rectangle string representation: e.g. '[0@0 | 160@80]'
+Rectangle::toString = ->
+  "[" + @origin.toString() + " | " + @extent().toString() + "]"
+
+
+# Rectangle copying:
+Rectangle::copy = ->
+  new Rectangle(@left(), @top(), @right(), @bottom())
+
+
+# Rectangle accessing - setting:
+Rectangle::setTo = (left, top, right, bottom) ->
+  
+  # note: all inputs are optional and can be omitted
+  @origin = new Point(left or ((if (left is 0) then 0 else @left())), top or ((if (top is 0) then 0 else @top())))
+  @corner = new Point(right or ((if (right is 0) then 0 else @right())), bottom or ((if (bottom is 0) then 0 else @bottom())))
+
+
+# Rectangle accessing - getting:
+Rectangle::area = ->
+  
+  #requires width() and height() to be defined
+  w = @width()
+  return 0  if w < 0
+  Math.max w * @height(), 0
+
+Rectangle::bottom = ->
+  @corner.y
+
+Rectangle::bottomCenter = ->
+  new Point(@center().x, @bottom())
+
+Rectangle::bottomLeft = ->
+  new Point(@origin.x, @corner.y)
+
+Rectangle::bottomRight = ->
+  @corner.copy()
+
+Rectangle::boundingBox = ->
+  this
+
+Rectangle::center = ->
+  @origin.add @corner.subtract(@origin).floorDivideBy(2)
+
+Rectangle::corners = ->
+  [@origin, @bottomLeft(), @corner, @topRight()]
+
+Rectangle::extent = ->
+  @corner.subtract @origin
+
+Rectangle::height = ->
+  @corner.y - @origin.y
+
+Rectangle::left = ->
+  @origin.x
+
+Rectangle::leftCenter = ->
+  new Point(@left(), @center().y)
+
+Rectangle::right = ->
+  @corner.x
+
+Rectangle::rightCenter = ->
+  new Point(@right(), @center().y)
+
+Rectangle::top = ->
+  @origin.y
+
+Rectangle::topCenter = ->
+  new Point(@center().x, @top())
+
+Rectangle::topLeft = ->
+  @origin
+
+Rectangle::topRight = ->
+  new Point(@corner.x, @origin.y)
+
+Rectangle::width = ->
+  @corner.x - @origin.x
+
+Rectangle::position = ->
+  @origin
+
+
+# Rectangle comparison:
+Rectangle::eq = (aRect) ->
+  @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
+
+Rectangle::abs = ->
+  newOrigin = undefined
+  newCorner = undefined
+  newOrigin = @origin.abs()
+  newCorner = @corner.max(newOrigin)
+  newOrigin.corner newCorner
+
+
+# Rectangle functions:
+Rectangle::insetBy = (delta) ->
+  
+  # delta can be either a Point or a Number
+  result = new Rectangle()
+  result.origin = @origin.add(delta)
+  result.corner = @corner.subtract(delta)
+  result
+
+Rectangle::expandBy = (delta) ->
+  
+  # delta can be either a Point or a Number
+  result = new Rectangle()
+  result.origin = @origin.subtract(delta)
+  result.corner = @corner.add(delta)
+  result
+
+Rectangle::growBy = (delta) ->
+  
+  # delta can be either a Point or a Number
+  result = new Rectangle()
+  result.origin = @origin.copy()
+  result.corner = @corner.add(delta)
+  result
+
+Rectangle::intersect = (aRect) ->
+  result = new Rectangle()
+  result.origin = @origin.max(aRect.origin)
+  result.corner = @corner.min(aRect.corner)
+  result
+
+Rectangle::merge = (aRect) ->
+  result = new Rectangle()
+  result.origin = @origin.min(aRect.origin)
+  result.corner = @corner.max(aRect.corner)
+  result
+
+Rectangle::round = ->
+  @origin.round().corner @corner.round()
+
+Rectangle::spread = ->
+  
+  # round me by applying floor() to my origin and ceil() to my corner
+  @origin.floor().corner @corner.ceil()
+
+Rectangle::amountToTranslateWithin = (aRect) ->
+  
+  #
+  #    Answer a Point, delta, such that self + delta is forced within
+  #    aRectangle. when all of me cannot be made to fit, prefer to keep
+  #    my topLeft inside. Taken from Squeak.
+  #
+  dx = undefined
+  dy = undefined
+  dx = aRect.right() - @right()  if @right() > aRect.right()
+  dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
+  dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()
+  dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
+  new Point(dx, dy)
+
+
+# Rectangle testing:
+Rectangle::containsPoint = (aPoint) ->
+  @origin.le(aPoint) and aPoint.lt(@corner)
+
+Rectangle::containsRectangle = (aRect) ->
+  aRect.origin.gt(@origin) and aRect.corner.lt(@corner)
+
+Rectangle::intersects = (aRect) ->
+  ro = aRect.origin
+  rc = aRect.corner
+  (rc.x >= @origin.x) and (rc.y >= @origin.y) and (ro.x <= @corner.x) and (ro.y <= @corner.y)
+
+
+# Rectangle transforming:
+Rectangle::scaleBy = (scale) ->
+  
+  # scale can be either a Point or a scalar
+  o = @origin.multiplyBy(scale)
+  c = @corner.multiplyBy(scale)
+  new Rectangle(o.x, o.y, c.x, c.y)
+
+Rectangle::translateBy = (factor) ->
+  
+  # factor can be either a Point or a scalar
+  o = @origin.add(factor)
+  c = @corner.add(factor)
+  new Rectangle(o.x, o.y, c.x, c.y)
+
+
+# Rectangle converting:
+Rectangle::asArray = ->
+  [@left(), @top(), @right(), @bottom()]
+
+Rectangle::asArray_xywh = ->
+  [@left(), @top(), @width(), @height()]
+# ListMorph ///////////////////////////////////////////////////////////
+
+class ListMorph extends ScrollFrameMorph
+  constructor: (elements, labelGetter, format) ->
+  
+  #
+  #    passing a format is optional. If the format parameter is specified
+  #    it has to be of the following pattern:
+  #
+  #        [
+  #            [<color>, <single-argument predicate>],
+  #            ...
+  #        ]
+  #
+  #    multiple color conditions can be passed in such a format list, the
+  #    last predicate to evaluate true when given the list element sets
+  #    the given color. If no condition is met, the default color (black)
+  #    will be assigned.
+  #    
+  #    An example of how to use fomats can be found in the InspectorMorph's
+  #    "markOwnProperties" mechanism.
+  #
+    @init elements or [], labelGetter or (element) ->
+      return element  if isString(element)
+      return element.toSource()  if element.toSource
+      element.toString()
+    , format or []
+
+ListMorph::init = (elements, labelGetter, format) ->
+  super()
+  @contents.acceptsDrops = false
+  @color = new Color(255, 255, 255)
+  @hBar.alpha = 0.6
+  @vBar.alpha = 0.6
+  @elements = elements or []
+  @labelGetter = labelGetter
+  @format = format
+  @listContents = null
+  @selected = null
+  @action = null
+  @acceptsDrops = false
+  @buildListContents()
+
+ListMorph::buildListContents = ->
+  @listContents.destroy()  if @listContents
+  @listContents = new MenuMorph(@select, null, this)
+  @elements = ["(empty)"]  if @elements.length is 0
+  @elements.forEach (element) =>
+    color = null
+    @format.forEach (pair) ->
+      color = pair[0]  if pair[1].call(null, element)
+    
+    # label string
+    # action
+    # hint
+    @listContents.addItem @labelGetter(element), element, null, color
+
+  @listContents.setPosition @contents.position()
+  @listContents.isListContents = true
+  @listContents.drawNew()
+  @addContents @listContents
+
+ListMorph::select = (item) ->
+  @selected = item
+  @action.call null, item  if @action
+
+ListMorph::setExtent = (aPoint) ->
+  lb = @listContents.bounds
+  nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
+  @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
+  @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+  super aPoint# Colors //////////////////////////////////////////////////////////////
+
+# Color instance creation:
+Color = (r, g, b, a) ->
+  
+  # all values are optional, just (r, g, b) is fine
+  @r = r or 0
+  @g = g or 0
+  @b = b or 0
+  @a = a or ((if (a is 0) then 0 else 1))
+
+# Color string representation: e.g. 'rgba(255,165,0,1)'
+Color::toString = ->
+  "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"
+
+
+# Color copying:
+Color::copy = ->
+  new Color(@r, @g, @b, @a)
+
+
+# Color comparison:
+Color::eq = (aColor) ->
+  
+  # ==
+  aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b
+
+
+# Color conversion (hsv):
+Color::hsv = ->
+  
+  # ignore alpha
+  max = undefined
+  min = undefined
+  h = undefined
+  s = undefined
+  v = undefined
+  d = undefined
+  rr = @r / 255
+  gg = @g / 255
+  bb = @b / 255
+  max = Math.max(rr, gg, bb)
+  min = Math.min(rr, gg, bb)
+  h = max
+  s = max
+  v = max
+  d = max - min
+  s = (if max is 0 then 0 else d / max)
+  if max is min
+    h = 0
+  else
+    switch max
+      when rr
+        h = (gg - bb) / d + ((if gg < bb then 6 else 0))
+      when gg
+        h = (bb - rr) / d + 2
+      when bb
+        h = (rr - gg) / d + 4
+    h /= 6
+  [h, s, v]
+
+Color::set_hsv = (h, s, v) ->
+  
+  # ignore alpha, h, s and v are to be within [0, 1]
+  i = undefined
+  f = undefined
+  p = undefined
+  q = undefined
+  t = undefined
+  i = Math.floor(h * 6)
+  f = h * 6 - i
+  p = v * (1 - s)
+  q = v * (1 - f * s)
+  t = v * (1 - (1 - f) * s)
+  switch i % 6
+    when 0
+      @r = v
+      @g = t
+      @b = p
+    when 1
+      @r = q
+      @g = v
+      @b = p
+    when 2
+      @r = p
+      @g = v
+      @b = t
+    when 3
+      @r = p
+      @g = q
+      @b = v
+    when 4
+      @r = t
+      @g = p
+      @b = v
+    when 5
+      @r = v
+      @g = p
+      @b = q
+  @r *= 255
+  @g *= 255
+  @b *= 255
+
+
+# Color mixing:
+Color::mixed = (proportion, otherColor) ->
+  
+  # answer a copy of this color mixed with another color, ignore alpha
+  frac1 = Math.min(Math.max(proportion, 0), 1)
+  frac2 = 1 - frac1
+  new Color(@r * frac1 + otherColor.r * frac2, @g * frac1 + otherColor.g * frac2, @b * frac1 + otherColor.b * frac2)
+
+Color::darker = (percent) ->
+  
+  # return an rgb-interpolated darker copy of me, ignore alpha
+  fract = 0.8333
+  fract = (100 - percent) / 100  if percent
+  @mixed fract, new Color(0, 0, 0)
+
+Color::lighter = (percent) ->
+  
+  # return an rgb-interpolated lighter copy of me, ignore alpha
+  fract = 0.8333
+  fract = (100 - percent) / 100  if percent
+  @mixed fract, new Color(255, 255, 255)
+
+Color::dansDarker = ->
+  
+  # return an hsv-interpolated darker copy of me, ignore alpha
+  hsv = @hsv()
+  result = new Color()
+  vv = Math.max(hsv[2] - 0.16, 0)
+  result.set_hsv hsv[0], hsv[1], vv
+  result
 # Points //////////////////////////////////////////////////////////////
 
 # Point instance creation:
@@ -5512,1146 +6629,3 @@ Point::extent = (aPoint) ->
   #answer a new Rectangle
   crn = @add(aPoint)
   new Rectangle(@x, @y, crn.x, crn.y)
-# TextMorph ///////////////////////////////////////////////////////////
-
-# I am a multi-line, word-wrapping String
-
-class TextMorph extends Morph
-  constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
-    @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
-
-
-# TextMorph instance creation:
-TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
-  
-  # additional properties:
-  @text = text or ((if text is "" then text else "TextMorph"))
-  @words = []
-  @lines = []
-  @lineSlots = []
-  @fontSize = fontSize or 12
-  @fontName = fontName or MorphicPreferences.globalFontFamily
-  @fontStyle = fontStyle or "sans-serif"
-  @isBold = bold or false
-  @isItalic = italic or false
-  @alignment = alignment or "left"
-  @shadowOffset = shadowOffset or new Point(0, 0)
-  @shadowColor = shadowColor or null
-  @maxWidth = width or 0
-  @maxLineWidth = 0
-  @backgroundColor = null
-  @isEditable = false
-  
-  #additional properties for ad-hoc evaluation:
-  @receiver = null
-  
-  # additional properties for text-editing:
-  @currentlySelecting = false
-  @startMark = 0
-  @endMark = 0
-  @markedTextColor = new Color(255, 255, 255)
-  @markedBackgoundColor = new Color(60, 60, 120)
-  
-  # initialize inherited properties:
-  super()
-  
-  # override inherited properites:
-  @color = new Color(0, 0, 0)
-  @noticesTransparentClick = true
-  @drawNew()
-
-TextMorph::toString = ->
-  
-  # e.g. 'a TextMorph("Hello World")'
-  "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
-
-TextMorph::font = ->
-  
-  # answer a font string, e.g. 'bold italic 12px sans-serif'
-  font = ""
-  font = font + "bold "  if @isBold
-  font = font + "italic "  if @isItalic
-  font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
-
-TextMorph::parse = ->
-  myself = this
-  paragraphs = @text.split("\n")
-  canvas = newCanvas()
-  context = canvas.getContext("2d")
-  oldline = ""
-  newline = undefined
-  w = undefined
-  slot = 0
-  context.font = @font()
-  @maxLineWidth = 0
-  @lines = []
-  @lineSlots = [0]
-  @words = []
-  paragraphs.forEach (p) ->
-    myself.words = myself.words.concat(p.split(" "))
-    myself.words.push "\n"
-  
-  @words.forEach (word) ->
-    if word is "\n"
-      myself.lines.push oldline
-      myself.lineSlots.push slot
-      myself.maxLineWidth = Math.max(myself.maxLineWidth, context.measureText(oldline).width)
-      oldline = ""
-    else
-      if myself.maxWidth > 0
-        newline = oldline + word + " "
-        w = context.measureText(newline).width
-        if w > myself.maxWidth
-          myself.lines.push oldline
-          myself.lineSlots.push slot
-          myself.maxLineWidth = Math.max(myself.maxLineWidth, context.measureText(oldline).width)
-          oldline = word + " "
-        else
-          oldline = newline
-      else
-        oldline = oldline + word + " "
-      slot += word.length + 1
-
-
-TextMorph::drawNew = ->
-  context = undefined
-  height = undefined
-  i = undefined
-  line = undefined
-  width = undefined
-  shadowHeight = undefined
-  shadowWidth = undefined
-  offx = undefined
-  offy = undefined
-  x = undefined
-  y = undefined
-  start = undefined
-  stop = undefined
-  p = undefined
-  c = undefined
-  @image = newCanvas()
-  context = @image.getContext("2d")
-  context.font = @font()
-  @parse()
-  
-  # set my extent
-  shadowWidth = Math.abs(@shadowOffset.x)
-  shadowHeight = Math.abs(@shadowOffset.y)
-  height = @lines.length * (fontHeight(@fontSize) + shadowHeight)
-  if @maxWidth is 0
-    @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))
-  else
-    @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
-  @image.width = @width()
-  @image.height = @height()
-  
-  # prepare context for drawing text
-  context = @image.getContext("2d")
-  context.font = @font()
-  context.textAlign = "left"
-  context.textBaseline = "bottom"
-  
-  # fill the background, if desired
-  if @backgroundColor
-    context.fillStyle = @backgroundColor.toString()
-    context.fillRect 0, 0, @width(), @height()
-  
-  # draw the shadow, if any
-  if @shadowColor
-    offx = Math.max(@shadowOffset.x, 0)
-    offy = Math.max(@shadowOffset.y, 0)
-    context.fillStyle = @shadowColor.toString()
-    i = 0
-    while i < @lines.length
-      line = @lines[i]
-      width = context.measureText(line).width + shadowWidth
-      if @alignment is "right"
-        x = @width() - width
-      else if @alignment is "center"
-        x = (@width() - width) / 2
-      else # 'left'
-        x = 0
-      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
-      context.fillText line, x + offx, y + offy
-      i = i + 1
-  
-  # now draw the actual text
-  offx = Math.abs(Math.min(@shadowOffset.x, 0))
-  offy = Math.abs(Math.min(@shadowOffset.y, 0))
-  context.fillStyle = @color.toString()
-  i = 0
-  while i < @lines.length
-    line = @lines[i]
-    width = context.measureText(line).width + shadowWidth
-    if @alignment is "right"
-      x = @width() - width
-    else if @alignment is "center"
-      x = (@width() - width) / 2
-    else # 'left'
-      x = 0
-    y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
-    context.fillText line, x + offx, y + offy
-    i = i + 1
-  
-  # draw the selection
-  start = Math.min(@startMark, @endMark)
-  stop = Math.max(@startMark, @endMark)
-  i = start
-  while i < stop
-    p = @slotPosition(i).subtract(@position())
-    c = @text.charAt(i)
-    context.fillStyle = @markedBackgoundColor.toString()
-    context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
-    context.fillStyle = @markedTextColor.toString()
-    context.fillText c, p.x, p.y + fontHeight(@fontSize)
-    i += 1
-  
-  # notify my parent of layout change
-  @parent.layoutChanged()  if @parent.layoutChanged  if @parent
-
-TextMorph::setExtent = (aPoint) ->
-  @maxWidth = Math.max(aPoint.x, 0)
-  @changed()
-  @drawNew()
-
-
-# TextMorph mesuring:
-TextMorph::columnRow = (slot) ->
-  
-  # answer the logical position point of the given index ("slot")
-  row = undefined
-  col = undefined
-  idx = 0
-  row = 0
-  while row < @lines.length
-    idx = @lineSlots[row]
-    col = 0
-    while col < @lines[row].length
-      return new Point(col, row)  if idx is slot
-      idx += 1
-      col += 1
-    row += 1
-  
-  # return new Point(0, 0);
-  new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
-
-TextMorph::slotPosition = (slot) ->
-  
-  # answer the physical position point of the given index ("slot")
-  # where the cursor should be placed
-  colRow = @columnRow(slot)
-  context = @image.getContext("2d")
-  shadowHeight = Math.abs(@shadowOffset.y)
-  xOffset = 0
-  yOffset = undefined
-  x = undefined
-  y = undefined
-  idx = undefined
-  yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
-  idx = 0
-  while idx < colRow.x
-    xOffset += context.measureText(@lines[colRow.y][idx]).width
-    idx += 1
-  x = @left() + xOffset
-  y = @top() + yOffset
-  new Point(x, y)
-
-TextMorph::slotAt = (aPoint) ->
-  
-  # answer the slot (index) closest to the given point
-  # so the cursor can be moved accordingly
-  charX = 0
-  row = 0
-  col = 0
-  shadowHeight = Math.abs(@shadowOffset.y)
-  context = @image.getContext("2d")
-  row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)
-  row = Math.max(row, 1)
-  while aPoint.x - @left() > charX
-    charX += context.measureText(@lines[row - 1][col]).width
-    col += 1
-  @lineSlots[Math.max(row - 1, 0)] + col - 1
-
-TextMorph::upFrom = (slot) ->
-  
-  # answer the slot above the given one
-  above = undefined
-  colRow = @columnRow(slot)
-  return slot  if colRow.y < 1
-  above = @lines[colRow.y - 1]
-  return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1
-  @lineSlots[colRow.y - 1] + colRow.x
-
-TextMorph::downFrom = (slot) ->
-  
-  # answer the slot below the given one
-  below = undefined
-  colRow = @columnRow(slot)
-  return slot  if colRow.y > @lines.length - 2
-  below = @lines[colRow.y + 1]
-  return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1
-  @lineSlots[colRow.y + 1] + colRow.x
-
-TextMorph::startOfLine = (slot) ->
-  
-  # answer the first slot (index) of the line for the given slot
-  @lineSlots[@columnRow(slot).y]
-
-TextMorph::endOfLine = (slot) ->
-  
-  # answer the slot (index) indicating the EOL for the given slot
-  @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1
-
-
-# TextMorph editing:
-TextMorph::edit = ->
-  @root().edit this
-
-TextMorph::selection = ->
-  start = undefined
-  stop = undefined
-  start = Math.min(@startMark, @endMark)
-  stop = Math.max(@startMark, @endMark)
-  @text.slice start, stop
-
-TextMorph::selectionStartSlot = ->
-  Math.min @startMark, @endMark
-
-TextMorph::clearSelection = ->
-  @currentlySelecting = false
-  @startMark = 0
-  @endMark = 0
-  @drawNew()
-  @changed()
-
-TextMorph::deleteSelection = ->
-  start = undefined
-  stop = undefined
-  text = undefined
-  text = @text
-  start = Math.min(@startMark, @endMark)
-  stop = Math.max(@startMark, @endMark)
-  @text = text.slice(0, start) + text.slice(stop)
-  @changed()
-  @clearSelection()
-
-TextMorph::selectAll = ->
-  @startMark = 0
-  @endMark = @text.length
-  @drawNew()
-  @changed()
-
-TextMorph::selectAllAndEdit = ->
-  @edit()
-  @selectAll()
-
-TextMorph::mouseClickLeft = (pos) ->
-  if @isEditable
-    @edit()  unless @currentlySelecting
-    @root().cursor.gotoPos pos
-    @currentlySelecting = false
-  else
-    @escalateEvent "mouseClickLeft", pos
-
-TextMorph::enableSelecting = ->
-  @mouseDownLeft = (pos) ->
-    @clearSelection()
-    if @isEditable and (not @isDraggable)
-      @edit()
-      @root().cursor.gotoPos pos
-      @startMark = @slotAt(pos)
-      @endMark = @startMark
-      @currentlySelecting = true
-
-  @mouseMove = (pos) ->
-    if @isEditable and @currentlySelecting and (not @isDraggable)
-      newMark = @slotAt(pos)
-      if newMark isnt @endMark
-        @endMark = newMark
-        @drawNew()
-        @changed()
-
-TextMorph::disableSelecting = ->
-  delete @mouseDownLeft
-  delete @mouseMove
-
-
-# TextMorph menus:
-TextMorph::developersMenu = ->
-  menu = super()
-  menu.addLine()
-  menu.addItem "edit", "edit"
-  menu.addItem "font size...", (->
-    @prompt menu.title + "\nfont\nsize:", @setFontSize, this, @fontSize.toString(), null, 6, 100, true
-  ), "set this Text's\nfont point size"
-  menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"
-  menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"
-  menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"
-  menu.addLine()
-  menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
-  menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"
-  if @isBold
-    menu.addItem "normal weight", "toggleWeight"
-  else
-    menu.addItem "bold", "toggleWeight"
-  if @isItalic
-    menu.addItem "normal style", "toggleItalic"
-  else
-    menu.addItem "italic", "toggleItalic"
-  menu
-
-TextMorph::toggleIsDraggable = ->
-  
-  # for context menu demo purposes
-  @isDraggable = not @isDraggable
-  if @isDraggable
-    @disableSelecting()
-  else
-    @enableSelecting()
-
-TextMorph::setAlignmentToLeft = ->
-  @alignment = "left"
-  @drawNew()
-  @changed()
-
-TextMorph::setAlignmentToRight = ->
-  @alignment = "right"
-  @drawNew()
-  @changed()
-
-TextMorph::setAlignmentToCenter = ->
-  @alignment = "center"
-  @drawNew()
-  @changed()
-
-TextMorph::toggleWeight = ->
-  @isBold = not @isBold
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::toggleItalic = ->
-  @isItalic = not @isItalic
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::setSerif = ->
-  @fontStyle = "serif"
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::setSansSerif = ->
-  @fontStyle = "sans-serif"
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::setText = (size) ->
-  
-  # for context menu demo purposes
-  @text = Math.round(size).toString()
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::setFontSize = (size) ->
-  
-  # for context menu demo purposes
-  newSize = undefined
-  if typeof size is "number"
-    @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
-  else
-    newSize = parseFloat(size)
-    @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
-  @changed()
-  @drawNew()
-  @changed()
-
-TextMorph::numericalSetters = ->
-  
-  # for context menu demo purposes
-  ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
-
-
-# TextMorph evaluation:
-TextMorph::evaluationMenu = ->
-  menu = new MenuMorph(this, null)
-  menu.addItem "do it", "doIt", "evaluate the\nselected expression"
-  menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-  menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-  menu.addLine()
-  menu.addItem "select all", "selectAllAndEdit"
-  menu
-
-TextMorph::setReceiver = (obj) ->
-  @receiver = obj
-  @customContextMenu = @evaluationMenu()
-
-TextMorph::doIt = ->
-  @receiver.evaluateString @selection()
-  @edit()
-
-TextMorph::showIt = ->
-  result = @receiver.evaluateString(@selection())
-  @inform result  if result isnt null
-
-TextMorph::inspectIt = ->
-  result = @receiver.evaluateString(@selection())
-  world = @world()
-  inspector = undefined
-  if result isnt null
-    inspector = new InspectorMorph(result)
-    inspector.setPosition world.hand.position()
-    inspector.keepWithin world
-    world.add inspector
-    inspector.changed()
-# PenMorph ////////////////////////////////////////////////////////////
-
-# I am a simple LOGO-wise turtle.
-
-class PenMorph extends Morph
-  constructor: () ->
-    @init()
-
-# PenMorph: referenced constructors
-
-# PenMorph instance creation:
-PenMorph::init = ->
-  size = MorphicPreferences.handleSize * 4
-  
-  # additional properties:
-  @isWarped = false # internal optimization
-  @wantsRedraw = false # internal optimization
-  @heading = 0
-  @isDown = true
-  @size = 1
-  super()
-  @setExtent new Point(size, size)
-
-
-# PenMorph updating - optimized for warping, i.e atomic recursion
-PenMorph::changed = ->
-  if @isWarped is false
-    w = @root()
-    w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
-    @parent.childChanged this  if @parent
-
-
-# PenMorph display:
-PenMorph::drawNew = (facing) ->
-  
-  #
-  #    my orientation can be overridden with the "facing" parameter to
-  #    implement Scratch-style rotation styles
-  #    
-  #
-  context = undefined
-  start = undefined
-  dest = undefined
-  left = undefined
-  right = undefined
-  len = undefined
-  direction = facing or @heading
-  if @isWarped
-    @wantsRedraw = true
-    return null
-  @image = newCanvas(@extent())
-  context = @image.getContext("2d")
-  len = @width() / 2
-  start = @center().subtract(@bounds.origin)
-  dest = start.distanceAngle(len * 0.75, direction - 180)
-  left = start.distanceAngle(len, direction + 195)
-  right = start.distanceAngle(len, direction - 195)
-  context.fillStyle = @color.toString()
-  context.beginPath()
-  context.moveTo start.x, start.y
-  context.lineTo left.x, left.y
-  context.lineTo dest.x, dest.y
-  context.lineTo right.x, right.y
-  context.closePath()
-  context.strokeStyle = "white"
-  context.lineWidth = 3
-  context.stroke()
-  context.strokeStyle = "black"
-  context.lineWidth = 1
-  context.stroke()
-  context.fill()
-  @wantsRedraw = false
-
-
-# PenMorph access:
-PenMorph::setHeading = (degrees) ->
-  @heading = parseFloat(degrees) % 360
-  if @isWarped is false
-    @drawNew()
-    @changed()
-
-
-# PenMorph drawing:
-PenMorph::drawLine = (start, dest) ->
-  context = @parent.penTrails().getContext("2d")
-  from = start.subtract(@parent.bounds.origin)
-  to = dest.subtract(@parent.bounds.origin)
-  if @isDown
-    context.lineWidth = @size
-    context.strokeStyle = @color.toString()
-    context.lineCap = "round"
-    context.lineJoin = "round"
-    context.beginPath()
-    context.moveTo from.x, from.y
-    context.lineTo to.x, to.y
-    context.stroke()
-    @world().broken.push start.rectangle(dest).expandBy(Math.max(@size / 2, 1)).intersect(@parent.visibleBounds()).spread()  if @isWarped is false
-
-
-# PenMorph turtle ops:
-PenMorph::turn = (degrees) ->
-  @setHeading @heading + parseFloat(degrees)
-
-PenMorph::forward = (steps) ->
-  start = @center()
-  dest = undefined
-  dist = parseFloat(steps)
-  if dist >= 0
-    dest = @position().distanceAngle(dist, @heading)
-  else
-    dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
-  @setPosition dest
-  @drawLine start, @center()
-
-PenMorph::down = ->
-  @isDown = true
-
-PenMorph::up = ->
-  @isDown = false
-
-PenMorph::clear = ->
-  @parent.drawNew()
-  @parent.changed()
-
-
-# PenMorph optimization for atomic recursion:
-PenMorph::startWarp = ->
-  @isWarped = true
-
-PenMorph::endWarp = ->
-  @drawNew()  if @wantsRedraw
-  @changed()
-  @parent.changed()
-  @isWarped = false
-
-PenMorph::warp = (fun) ->
-  @startWarp()
-  fun.call this
-  @endWarp()
-
-PenMorph::warpOp = (selector, argsArray) ->
-  @startWarp()
-  this[selector].apply this, argsArray
-  @endWarp()
-
-
-# PenMorph demo ops:
-# try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})
-PenMorph::warpSierpinski = (length, min) ->
-  @warpOp "sierpinski", [length, min]
-
-PenMorph::sierpinski = (length, min) ->
-  i = undefined
-  if length > min
-    i = 0
-    while i < 3
-      @sierpinski length * 0.5, min
-      @turn 120
-      @forward length
-      i += 1
-
-PenMorph::warpTree = (level, length, angle) ->
-  @warpOp "tree", [level, length, angle]
-
-PenMorph::tree = (level, length, angle) ->
-  if level > 0
-    @size = level
-    @forward length
-    @turn angle
-    @tree level - 1, length * 0.75, angle
-    @turn angle * -2
-    @tree level - 1, length * 0.75, angle
-    @turn angle
-    @forward -length
-# SliderButtonMorph ///////////////////////////////////////////////////
-
-# this comment below is needed to figure our dependencies between classes
-# REQUIRES globalFunctions
-
-class SliderButtonMorph extends CircleBoxMorph
-  constructor: (orientation) ->
-    @init orientation
-
-SliderButtonMorph::init = (orientation) ->
-  @color = new Color(80, 80, 80)
-  @highlightColor = new Color(90, 90, 140)
-  @pressColor = new Color(80, 80, 160)
-  @is3D = true
-  @hasMiddleDip = true
-  super orientation
-
-SliderButtonMorph::autoOrientation = noOpFunction
-
-SliderButtonMorph::drawNew = ->
-  colorBak = @color.copy()
-  super()
-  @drawEdges()  if @is3D
-  @normalImage = @image
-  @color = @highlightColor.copy()
-  super()
-  @drawEdges()  if @is3D
-  @highlightImage = @image
-  @color = @pressColor.copy()
-  super()
-  @drawEdges()  if @is3D
-  @pressImage = @image
-  @color = colorBak
-  @image = @normalImage
-
-SliderButtonMorph::drawEdges = ->
-  context = @image.getContext("2d")
-  gradient = undefined
-  radius = undefined
-  w = @width()
-  h = @height()
-  context.lineJoin = "round"
-  context.lineCap = "round"
-  if @orientation is "vertical"
-    context.lineWidth = w / 3
-    gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)
-    gradient.addColorStop 0, "white"
-    gradient.addColorStop 1, @color.toString()
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo context.lineWidth * 0.5, w / 2
-    context.lineTo context.lineWidth * 0.5, h - w / 2
-    context.stroke()
-    gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)
-    gradient.addColorStop 0, @color.toString()
-    gradient.addColorStop 1, "black"
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo w - context.lineWidth * 0.5, w / 2
-    context.lineTo w - context.lineWidth * 0.5, h - w / 2
-    context.stroke()
-    if @hasMiddleDip
-      gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0)
-      radius = w / 4
-      gradient.addColorStop 0, "black"
-      gradient.addColorStop 0.35, @color.toString()
-      gradient.addColorStop 0.65, @color.toString()
-      gradient.addColorStop 1, "white"
-      context.fillStyle = gradient
-      context.beginPath()
-      context.arc w / 2, h / 2, radius, radians(0), radians(360), false
-      context.closePath()
-      context.fill()
-  else if @orientation is "horizontal"
-    context.lineWidth = h / 3
-    gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)
-    gradient.addColorStop 0, "white"
-    gradient.addColorStop 1, @color.toString()
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo h / 2, context.lineWidth * 0.5
-    context.lineTo w - h / 2, context.lineWidth * 0.5
-    context.stroke()
-    gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)
-    gradient.addColorStop 0, @color.toString()
-    gradient.addColorStop 1, "black"
-    context.strokeStyle = gradient
-    context.beginPath()
-    context.moveTo h / 2, h - context.lineWidth * 0.5
-    context.lineTo w - h / 2, h - context.lineWidth * 0.5
-    context.stroke()
-    if @hasMiddleDip
-      gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth)
-      radius = h / 4
-      gradient.addColorStop 0, "black"
-      gradient.addColorStop 0.35, @color.toString()
-      gradient.addColorStop 0.65, @color.toString()
-      gradient.addColorStop 1, "white"
-      context.fillStyle = gradient
-      context.beginPath()
-      context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false
-      context.closePath()
-      context.fill()
-
-
-#SliderButtonMorph events:
-SliderButtonMorph::mouseEnter = ->
-  @image = @highlightImage
-  @changed()
-
-SliderButtonMorph::mouseLeave = ->
-  @image = @normalImage
-  @changed()
-
-SliderButtonMorph::mouseDownLeft = (pos) ->
-  @image = @pressImage
-  @changed()
-  @escalateEvent "mouseDownLeft", pos
-
-SliderButtonMorph::mouseClickLeft = ->
-  @image = @highlightImage
-  @changed()
-
-# prevent my parent from getting picked up
-SliderButtonMorph::mouseMove = noOpFunction
-# BouncerMorph ////////////////////////////////////////////////////////
-
-# I am a Demo of a stepping custom Morph
-
-class BouncerMorph extends Morph
-  constructor: () ->
-    @init()
-
-# BouncerMorph instance creation:
-
-# BouncerMorph initialization:
-BouncerMorph::init = (type, speed) ->
-  super()
-  @fps = 50
-  
-  # additional properties:
-  @isStopped = false
-  @type = type or "vertical"
-  if @type is "vertical"
-    @direction = "down"
-  else
-    @direction = "right"
-  @speed = speed or 1
-
-
-# BouncerMorph moving:
-BouncerMorph::moveUp = ->
-  @moveBy new Point(0, -@speed)
-
-BouncerMorph::moveDown = ->
-  @moveBy new Point(0, @speed)
-
-BouncerMorph::moveRight = ->
-  @moveBy new Point(@speed, 0)
-
-BouncerMorph::moveLeft = ->
-  @moveBy new Point(-@speed, 0)
-
-
-# BouncerMorph stepping:
-BouncerMorph::step = ->
-  unless @isStopped
-    if @type is "vertical"
-      if @direction is "down"
-        @moveDown()
-      else
-        @moveUp()
-      @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
-      @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
-    else if @type is "horizontal"
-      if @direction is "right"
-        @moveRight()
-      else
-        @moveLeft()
-      @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
-      @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
-# ListMorph ///////////////////////////////////////////////////////////
-
-class ListMorph extends ScrollFrameMorph
-  constructor: (elements, labelGetter, format) ->
-  
-  #
-  #    passing a format is optional. If the format parameter is specified
-  #    it has to be of the following pattern:
-  #
-  #        [
-  #            [<color>, <single-argument predicate>],
-  #            ...
-  #        ]
-  #
-  #    multiple color conditions can be passed in such a format list, the
-  #    last predicate to evaluate true when given the list element sets
-  #    the given color. If no condition is met, the default color (black)
-  #    will be assigned.
-  #    
-  #    An example of how to use fomats can be found in the InspectorMorph's
-  #    "markOwnProperties" mechanism.
-  #
-    @init elements or [], labelGetter or (element) ->
-      return element  if isString(element)
-      return element.toSource()  if element.toSource
-      element.toString()
-    , format or []
-
-ListMorph::init = (elements, labelGetter, format) ->
-  super()
-  @contents.acceptsDrops = false
-  @color = new Color(255, 255, 255)
-  @hBar.alpha = 0.6
-  @vBar.alpha = 0.6
-  @elements = elements or []
-  @labelGetter = labelGetter
-  @format = format
-  @listContents = null
-  @selected = null
-  @action = null
-  @acceptsDrops = false
-  @buildListContents()
-
-ListMorph::buildListContents = ->
-  myself = this
-  @listContents.destroy()  if @listContents
-  @listContents = new MenuMorph(@select, null, this)
-  @elements = ["(empty)"]  if @elements.length is 0
-  @elements.forEach (element) ->
-    color = null
-    myself.format.forEach (pair) ->
-      color = pair[0]  if pair[1].call(null, element)
-    
-    # label string
-    # action
-    # hint
-    myself.listContents.addItem myself.labelGetter(element), element, null, color
-
-  @listContents.setPosition @contents.position()
-  @listContents.isListContents = true
-  @listContents.drawNew()
-  @addContents @listContents
-
-ListMorph::select = (item) ->
-  @selected = item
-  @action.call null, item  if @action
-
-ListMorph::setExtent = (aPoint) ->
-  lb = @listContents.bounds
-  nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
-  @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
-  @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-  super aPoint# MenuItemMorph ///////////////////////////////////////////////////////
-
-# I automatically determine my bounds
-
-class MenuItemMorph extends TriggerMorph
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
-    @init target, action, labelString, fontSize, fontStyle, environment, hint, color
-
-# MenuItemMorph instance creation:
-MenuItemMorph::createLabel = ->
-  np = undefined
-  @label.destroy()  if @label isnt null
-  # bold
-  # italic
-  # numeric
-  # shadow offset
-  # shadow color
-  @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
-  @silentSetExtent @label.extent().add(new Point(8, 0))
-  np = @position().add(new Point(4, 0))
-  @label.bounds = np.extent(@label.extent())
-  @add @label
-
-
-# MenuItemMorph events:
-MenuItemMorph::mouseEnter = ->
-  unless @isListItem()
-    @image = @highlightImage
-    @changed()
-  @bubbleHelp @hint  if @hint
-
-MenuItemMorph::mouseLeave = ->
-  unless @isListItem()
-    @image = @normalImage
-    @changed()
-  @world().hand.destroyTemporaries()  if @hint
-
-MenuItemMorph::mouseDownLeft = (pos) ->
-  if @isListItem()
-    @parent.unselectAllItems()
-    @escalateEvent "mouseDownLeft", pos
-  @image = @pressImage
-  @changed()
-
-MenuItemMorph::mouseMove = ->
-  @escalateEvent "mouseMove"  if @isListItem()
-
-MenuItemMorph::mouseClickLeft = ->
-  unless @isListItem()
-    @parent.destroy()
-    @root().activeMenu = null
-  @trigger()
-
-MenuItemMorph::isListItem = ->
-  return @parent.isListContents  if @parent
-  false
-
-MenuItemMorph::isSelectedListItem = ->
-  return @image is @pressImage  if @isListItem()
-  false
-# MenuMorph ///////////////////////////////////////////////////////////
-
-class MenuMorph extends BoxMorph
-  constructor: (target, title, environment, fontSize) ->
-    @init target, title, environment, fontSize
-
-
-# MenuMorph: referenced constructors
-
-# MenuMorph instance creation:
-MenuMorph::init = (target, title, environment, fontSize) ->
-  
-  # additional properties:
-  @target = target
-  @title = title or null
-  @environment = environment or null
-  @fontSize = fontSize or null
-  @items = []
-  @label = null
-  @world = null
-  @isListContents = false
-  
-  # initialize inherited properties:
-  super()
-  
-  # override inherited properties:
-  @isDraggable = false
-  
-  # immutable properties:
-  @border = null
-  @edge = null
-
-MenuMorph::addItem = (labelString, action, hint, color) ->
-  @items.push [localize(labelString or "close"), action or nop, hint, color]
-
-MenuMorph::addLine = (width) ->
-  @items.push [0, width or 1]
-
-MenuMorph::createLabel = ->
-  text = undefined
-  @label.destroy()  if @label isnt null
-  text = new TextMorph(localize(@title), @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, true, false, "center")
-  text.alignment = "center"
-  text.color = new Color(255, 255, 255)
-  text.backgroundColor = @borderColor
-  text.drawNew()
-  @label = new BoxMorph(3, 0)
-  @label.color = @borderColor
-  @label.borderColor = @borderColor
-  @label.setExtent text.extent().add(4)
-  @label.drawNew()
-  @label.add text
-  @label.text = text
-
-MenuMorph::drawNew = ->
-  myself = this
-  item = undefined
-  fb = undefined
-  x = undefined
-  y = undefined
-  isLine = false
-  @children.forEach (m) ->
-    m.destroy()
-  
-  @children = []
-  unless @isListContents
-    @edge = 5
-    @border = 2
-  @color = new Color(255, 255, 255)
-  @borderColor = new Color(60, 60, 60)
-  @silentSetExtent new Point(0, 0)
-  y = 2
-  x = @left() + 4
-  unless @isListContents
-    if @title
-      @createLabel()
-      @label.setPosition @bounds.origin.add(4)
-      @add @label
-      y = @label.bottom()
-    else
-      y = @top() + 4
-  y += 1
-  @items.forEach (tuple) ->
-    isLine = false
-    if tuple instanceof StringFieldMorph or tuple instanceof ColorPickerMorph or tuple instanceof SliderMorph
-      item = tuple
-    else if tuple[0] is 0
-      isLine = true
-      item = new Morph()
-      item.color = myself.borderColor
-      item.setHeight tuple[1]
-    else
-      # bubble help hint
-      item = new MenuItemMorph(myself.target, tuple[1], tuple[0], myself.fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, myself.environment, tuple[2], tuple[3]) # color
-    y += 1  if isLine
-    item.setPosition new Point(x, y)
-    myself.add item
-    y = y + item.height()
-    y += 1  if isLine
-  
-  fb = @fullBounds()
-  @silentSetExtent fb.extent().add(4)
-  @adjustWidths()
-  super()
-
-MenuMorph::maxWidth = ->
-  w = 0
-  w = @parent.width()  if @parent.scrollFrame instanceof ScrollFrameMorph  if @parent instanceof FrameMorph
-  @children.forEach (item) ->
-    w = Math.max(w, item.width())  if (item instanceof MenuItemMorph) or (item instanceof StringFieldMorph) or (item instanceof ColorPickerMorph) or (item instanceof SliderMorph)
-  
-  w = Math.max(w, @label.width())  if @label
-  w
-
-MenuMorph::adjustWidths = ->
-  w = @maxWidth()
-  myself = this
-  @children.forEach (item) ->
-    item.silentSetWidth w
-    if item instanceof MenuItemMorph
-      item.createBackgrounds()
-    else
-      item.drawNew()
-      item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))  if item is myself.label
-
-
-MenuMorph::unselectAllItems = ->
-  @children.forEach (item) ->
-    item.image = item.normalImage  if item instanceof MenuItemMorph
-  
-  @changed()
-
-MenuMorph::popup = (world, pos) ->
-  @drawNew()
-  @setPosition pos
-  @addShadow new Point(2, 2), 80
-  @keepWithin world
-  world.activeMenu.destroy()  if world.activeMenu
-  world.add this
-  world.activeMenu = this
-  @fullChanged()
-
-MenuMorph::popUpAtHand = (world) ->
-  wrrld = world or @world
-  @popup wrrld, wrrld.hand.position()
-
-MenuMorph::popUpCenteredAtHand = (world) ->
-  wrrld = world or @world
-  @drawNew()
-  @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
-
-MenuMorph::popUpCenteredInWorld = (world) ->
-  wrrld = world or @world
-  @drawNew()
-  @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
-
-# ShadowMorph /////////////////////////////////////////////////////////
-
-class ShadowMorph extends Morph
-  constructor: () ->
-    @init()

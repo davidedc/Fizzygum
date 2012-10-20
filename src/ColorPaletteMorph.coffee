@@ -72,12 +72,11 @@ ColorPaletteMorph::developersMenu = ->
 ColorPaletteMorph::setTarget = ->
   choices = @overlappedMorphs()
   menu = new MenuMorph(this, "choose target:")
-  myself = this
   choices.push @world()
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.target = each
-      myself.setTargetSetter()
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), =>
+      @target = each
+      @setTargetSetter()
   
   
   if choices.length is 1
@@ -88,10 +87,9 @@ ColorPaletteMorph::setTarget = ->
 ColorPaletteMorph::setTargetSetter = ->
   choices = @target.colorSetters()
   menu = new MenuMorph(this, "choose target property:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each, ->
-      myself.targetSetter = each
+  choices.forEach (each) =>
+    menu.addItem each, =>
+      @targetSetter = each
   
   
   if choices.length is 1

@@ -60,7 +60,6 @@ TextMorph::font = ->
   font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
 
 TextMorph::parse = ->
-  myself = this
   paragraphs = @text.split("\n")
   canvas = newCanvas()
   context = canvas.getContext("2d")
@@ -73,24 +72,24 @@ TextMorph::parse = ->
   @lines = []
   @lineSlots = [0]
   @words = []
-  paragraphs.forEach (p) ->
-    myself.words = myself.words.concat(p.split(" "))
-    myself.words.push "\n"
+  paragraphs.forEach (p) =>
+    @words = @words.concat(p.split(" "))
+    @words.push "\n"
   
-  @words.forEach (word) ->
+  @words.forEach (word) =>
     if word is "\n"
-      myself.lines.push oldline
-      myself.lineSlots.push slot
-      myself.maxLineWidth = Math.max(myself.maxLineWidth, context.measureText(oldline).width)
+      @lines.push oldline
+      @lineSlots.push slot
+      @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
       oldline = ""
     else
-      if myself.maxWidth > 0
+      if @maxWidth > 0
         newline = oldline + word + " "
         w = context.measureText(newline).width
-        if w > myself.maxWidth
-          myself.lines.push oldline
-          myself.lineSlots.push slot
-          myself.maxLineWidth = Math.max(myself.maxLineWidth, context.measureText(oldline).width)
+        if w > @maxWidth
+          @lines.push oldline
+          @lineSlots.push slot
+          @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
           oldline = word + " "
         else
           oldline = newline

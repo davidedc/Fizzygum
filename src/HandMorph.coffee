@@ -35,10 +35,9 @@ HandMorph::changed = ->
 # HandMorph navigation:
 HandMorph::morphAtPointer = ->
   morphs = @world.allChildren().slice(0).reverse()
-  myself = this
   result = null
-  morphs.forEach (m) ->
-    result = m  if m.visibleBounds().containsPoint(myself.bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(myself.bounds.origin))) and (m not instanceof ShadowMorph)
+  morphs.forEach (m) =>
+    result = m  if m.visibleBounds().containsPoint(@bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
   
   return result  if result isnt null
   @world
@@ -61,9 +60,8 @@ HandMorph::morphAtPointer = ->
 #
 HandMorph::allMorphsAtPointer = ->
   morphs = @world.allChildren()
-  myself = this
-  morphs.filter (m) ->
-    m.isVisible and m.visibleBounds().containsPoint(myself.bounds.origin)
+  morphs.filter (m) =>
+    m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
 
 
 
@@ -158,15 +156,14 @@ HandMorph::processMouseDown = (event) ->
     morph[actualClick] @bounds.origin
 
 HandMorph::processTouchStart = (event) ->
-  myself = this
   clearInterval @touchHoldTimeout
   if event.touches.length is 1
     # simulate mouseRightClick
-    @touchHoldTimeout = setInterval(->
-      myself.processMouseDown button: 2
-      myself.processMouseUp button: 2
+    @touchHoldTimeout = setInterval(=>
+      @processMouseDown button: 2
+      @processMouseUp button: 2
       event.preventDefault()
-      clearInterval myself.touchHoldTimeout
+      clearInterval @touchHoldTimeout
     , 400)
     @processMouseMove event.touches[0] # update my position
     @processMouseDown button: 0
@@ -333,7 +330,6 @@ HandMorph::processMouseMove = (event) ->
   pos = undefined
   posInDocument = getDocumentPositionOf(@world.worldCanvas)
   mouseOverNew = undefined
-  myself = this
   morph = undefined
   topMorph = undefined
   fb = undefined
@@ -387,15 +383,15 @@ HandMorph::processMouseMove = (event) ->
       old.mouseLeave()  if old.mouseLeave
       old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
   
-  mouseOverNew.forEach (newMorph) ->
-    unless contains(myself.mouseOverList, newMorph)
+  mouseOverNew.forEach (newMorph) =>
+    unless contains(@mouseOverList, newMorph)
       newMorph.mouseEnter()  if newMorph.mouseEnter
       newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
     
     # autoScrolling support:
-    if myself.children.length > 0
+    if @children.length > 0
         if newMorph instanceof ScrollFrameMorph
-            if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(myself.bounds.origin)
+            if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(@bounds.origin)
                 newMorph.startAutoScrolling();
   
   @mouseOverList = mouseOverNew

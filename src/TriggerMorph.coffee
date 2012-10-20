@@ -130,12 +130,11 @@ TriggerMorph::mouseClickLeft = ->
 
 # TriggerMorph bubble help:
 TriggerMorph::bubbleHelp = (contents) ->
-  myself = this
   @fps = 2
-  @step = ->
-    myself.popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())
-    myself.fps = 0
-    delete myself.step
+  @step = =>
+    @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())
+    @fps = 0
+    delete @step
 
 TriggerMorph::popUpbubbleHelp = (contents) ->
   new SpeechBubbleMorph(localize(contents), null, null, 1).popUp @world(), @rightCenter().add(new Point(-8, 0))
