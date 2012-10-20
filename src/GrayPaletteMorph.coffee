@@ -2,7 +2,7 @@
 
 class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 10)
+    super target or null, sizePoint or new Point(80, 10)
 
 GrayPaletteMorph::drawNew = ->
   context = undefined

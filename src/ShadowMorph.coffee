@@ -2,4 +2,4 @@
 
 class ShadowMorph extends Morph
   constructor: () ->
-    @init()
+    super()

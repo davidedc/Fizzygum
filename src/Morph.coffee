@@ -5,7 +5,22 @@
 
 class Morph extends MorphicNode
   constructor: () ->
-    @init()
+    super()
+    @isMorph = true
+    @bounds = new Rectangle(0, 0, 50, 40)
+    @color = new Color(80, 80, 80)
+    @texture = null # optional url of a fill-image
+    @cachedTexture = null # internal cache of actual bg image
+    @alpha = 1
+    @isVisible = true
+    @isDraggable = false
+    @isTemplate = false
+    @acceptsDrops = false
+    @noticesTransparentClick = false
+    @drawNew()
+    @fps = 0
+    @customContextMenu = null
+    @lastTime = Date.now()
 
 #
 #    damage list housekeeping
@@ -32,24 +47,6 @@ class Morph extends MorphicNode
 #
 Morph::trackChanges = true
 Morph::shadowBlur = 4
-
-Morph::init = ->
-  super()
-  @isMorph = true
-  @bounds = new Rectangle(0, 0, 50, 40)
-  @color = new Color(80, 80, 80)
-  @texture = null # optional url of a fill-image
-  @cachedTexture = null # internal cache of actual bg image
-  @alpha = 1
-  @isVisible = true
-  @isDraggable = false
-  @isTemplate = false
-  @acceptsDrops = false
-  @noticesTransparentClick = false
-  @drawNew()
-  @fps = 0
-  @customContextMenu = null
-  @lastTime = Date.now()
 
 
 # Morph string representation: e.g. 'a Morph 2 [20@45 | 130@250]'

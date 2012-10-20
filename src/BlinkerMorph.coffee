@@ -4,13 +4,10 @@
 
 class BlinkerMorph extends Morph
   constructor: (rate) ->
-    @init rate
-
-BlinkerMorph::init = (rate) ->
-  super()
-  @color = new Color(0, 0, 0)
-  @fps = rate or 2
-  @drawNew()
+    super()
+    @color = new Color(0, 0, 0)
+    @fps = rate or 2
+    @drawNew()
 
 # BlinkerMorph stepping:
 BlinkerMorph::step = ->

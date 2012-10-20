@@ -4,18 +4,15 @@
 
 class FrameMorph extends Morph
   constructor: (aScrollFrame) ->
-    @init aScrollFrame
-
-FrameMorph::init = (aScrollFrame) ->
-  @scrollFrame = aScrollFrame or null
-  super()
-  @color = new Color(255, 250, 245)
-  @drawNew()
-  @acceptsDrops = true
-  if @scrollFrame
-    @isDraggable = false
-    @noticesTransparentClick = false
-    @alpha = 0
+    @scrollFrame = aScrollFrame or null
+    super()
+    @color = new Color(255, 250, 245)
+    @drawNew()
+    @acceptsDrops = true
+    if @scrollFrame
+      @isDraggable = false
+      @noticesTransparentClick = false
+      @alpha = 0
 
 FrameMorph::fullBounds = ->
   shadow = @getShadow()

@@ -2,22 +2,19 @@
 
 class StringFieldMorph extends FrameMorph
   constructor: (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
-    @init defaultContents or "", minWidth or 100, fontSize or 12, fontStyle or "sans-serif", bold or false, italic or false, isNumeric
-
-StringFieldMorph::init = (defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) ->
-  @defaultContents = defaultContents
-  @minWidth = minWidth
-  @fontSize = fontSize
-  @fontStyle = fontStyle
-  @isBold = bold
-  @isItalic = italic
-  @isNumeric = isNumeric or false
-  @text = null
-  super()
-  @color = new Color(255, 255, 255)
-  @isEditable = true
-  @acceptsDrops = false
-  @drawNew()
+    @defaultContents = defaultContents or ""
+    @minWidth = minWidth or 100
+    @fontSize = fontSize or 12
+    @fontStyle = fontStyle or "sans-serif"
+    @isBold = bold or false
+    @isItalic = italic or false
+    @isNumeric = isNumeric or false
+    @text = null
+    super()
+    @color = new Color(255, 255, 255)
+    @isEditable = true
+    @acceptsDrops = false
+    @drawNew()
 
 StringFieldMorph::drawNew = ->
   txt = undefined

@@ -4,28 +4,25 @@
 
 class TriggerMorph extends Morph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-    @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
-
-TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-  # additional properties:
-  @target = target or null
-  @action = action or null
-  @environment = environment or null
-  @labelString = labelString or null
-  @label = null
-  @hint = hint or null
-  @fontSize = fontSize or MorphicPreferences.menuFontSize
-  @fontStyle = fontStyle or "sans-serif"
-  @highlightColor = new Color(192, 192, 192)
-  @pressColor = new Color(128, 128, 128)
-  @labelColor = labelColor or new Color(0, 0, 0)
-  #
-  # initialize inherited properties:
-  super()
-  #
-  # override inherited properites:
-  @color = new Color(255, 255, 255)
-  @drawNew()
+    # additional properties:
+    @target = target or null
+    @action = action or null
+    @environment = environment or null
+    @labelString = labelString or null
+    @label = null
+    @hint = hint or null
+    @fontSize = fontSize or MorphicPreferences.menuFontSize
+    @fontStyle = fontStyle or "sans-serif"
+    @highlightColor = new Color(192, 192, 192)
+    @pressColor = new Color(128, 128, 128)
+    @labelColor = labelColor or new Color(0, 0, 0)
+    #
+    # initialize inherited properties:
+    super()
+    #
+    # override inherited properites:
+    @color = new Color(255, 255, 255)
+    @drawNew()
 
 
 # TriggerMorph drawing:

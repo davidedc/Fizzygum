@@ -2,11 +2,8 @@
 
 class Rectangle
   constructor: (left, top, right, bottom) ->
-    @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
-
-Rectangle::init = (originPoint, cornerPoint) ->
-  @origin = originPoint
-  @corner = cornerPoint
+    @origin = new Point((left or 0), (top or 0))
+    @corner = new Point((right or 0), (bottom or 0))
 
 
 # Rectangle string representation: e.g. '[0@0 | 160@80]'

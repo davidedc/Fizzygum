@@ -5,15 +5,12 @@
 
 class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
-    @init orientation
-
-SliderButtonMorph::init = (orientation) ->
-  @color = new Color(80, 80, 80)
-  @highlightColor = new Color(90, 90, 140)
-  @pressColor = new Color(80, 80, 160)
-  @is3D = true
-  @hasMiddleDip = true
-  super orientation
+    @color = new Color(80, 80, 80)
+    @highlightColor = new Color(90, 90, 140)
+    @pressColor = new Color(80, 80, 160)
+    @is3D = true
+    @hasMiddleDip = true
+    super orientation
 
 SliderButtonMorph::autoOrientation = noOpFunction
 

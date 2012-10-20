@@ -14,26 +14,22 @@
    will be assigned.</p>
 
 <p>An example of how to use fomats can be found in the InspectorMorph's
-   "markOwnProperties" mechanism.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@init</span> <span class="nx">elements</span> <span class="o">or</span> <span class="p">[],</span> <span class="nx">labelGetter</span> <span class="o">or</span> <span class="nf">(element) -&gt;</span>
-      <span class="k">return</span> <span class="nx">element</span>  <span class="k">if</span> <span class="nx">isString</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
-      <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">toSource</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">element</span><span class="p">.</span><span class="nx">toSource</span>
-      <span class="nx">element</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
-    <span class="p">,</span> <span class="nx">format</span> <span class="o">or</span> <span class="p">[]</span>
-
-<span class="nv">ListMorph::init = </span><span class="nf">(elements, labelGetter, format) -&gt;</span>
-  <span class="k">super</span><span class="p">()</span>
-  <span class="vi">@contents.acceptsDrops = </span><span class="kc">false</span>
-  <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
-  <span class="vi">@hBar.alpha = </span><span class="mf">0.6</span>
-  <span class="vi">@vBar.alpha = </span><span class="mf">0.6</span>
-  <span class="vi">@elements = </span><span class="nx">elements</span> <span class="o">or</span> <span class="p">[]</span>
-  <span class="vi">@labelGetter = </span><span class="nx">labelGetter</span>
-  <span class="vi">@format = </span><span class="nx">format</span>
-  <span class="vi">@listContents = </span><span class="kc">null</span>
-  <span class="vi">@selected = </span><span class="kc">null</span>
-  <span class="vi">@action = </span><span class="kc">null</span>
-  <span class="vi">@acceptsDrops = </span><span class="kc">false</span>
-  <span class="nx">@buildListContents</span><span class="p">()</span>
+   "markOwnProperties" mechanism.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">super</span><span class="p">()</span>
+    <span class="vi">@contents.acceptsDrops = </span><span class="kc">false</span>
+    <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+    <span class="vi">@hBar.alpha = </span><span class="mf">0.6</span>
+    <span class="vi">@vBar.alpha = </span><span class="mf">0.6</span>
+    <span class="vi">@elements = </span><span class="nx">elements</span> <span class="o">or</span> <span class="p">[]</span>
+    <span class="vi">@labelGetter = </span><span class="nx">labelGetter</span> <span class="o">or</span> <span class="nf">(element) -&gt;</span>
+        <span class="k">return</span> <span class="nx">element</span>  <span class="k">if</span> <span class="nx">isString</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">toSource</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">element</span><span class="p">.</span><span class="nx">toSource</span>
+        <span class="nx">element</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
+    <span class="vi">@format = </span><span class="nx">format</span> <span class="o">or</span> <span class="p">[]</span>
+    <span class="vi">@listContents = </span><span class="kc">null</span>
+    <span class="vi">@selected = </span><span class="kc">null</span>
+    <span class="vi">@action = </span><span class="kc">null</span>
+    <span class="vi">@acceptsDrops = </span><span class="kc">false</span>
+    <span class="nx">@buildListContents</span><span class="p">()</span>
 
 <span class="nv">ListMorph::buildListContents = </span><span class="o">-&gt;</span>
   <span class="nx">@listContents</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@listContents</span>

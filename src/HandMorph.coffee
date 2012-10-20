@@ -6,21 +6,18 @@
 
 class HandMorph extends Morph
   constructor: (aWorld) ->
-    @init aWorld
-
-HandMorph::init = (aWorld) ->
-  super()
-  @bounds = new Rectangle()
-  #
-  # additional properties:
-  @world = aWorld
-  @mouseButton = null
-  @mouseOverList = []
-  @mouseDownMorph = null
-  @morphToGrab = null
-  @grabOrigin = null
-  @temporaries = []
-  @touchHoldTimeout = null
+    super()
+    @bounds = new Rectangle()
+    #
+    # additional properties:
+    @world = aWorld
+    @mouseButton = null
+    @mouseOverList = []
+    @mouseDownMorph = null
+    @morphToGrab = null
+    @grabOrigin = null
+    @temporaries = []
+    @touchHoldTimeout = null
 
 HandMorph::changed = ->
   b = undefined

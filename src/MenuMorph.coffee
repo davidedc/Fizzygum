@@ -2,28 +2,25 @@
 
 class MenuMorph extends BoxMorph
   constructor: (target, title, environment, fontSize) ->
-    @init target, title, environment, fontSize
-
-MenuMorph::init = (target, title, environment, fontSize) ->
-  # additional properties:
-  @target = target
-  @title = title or null
-  @environment = environment or null
-  @fontSize = fontSize or null
-  @items = []
-  @label = null
-  @world = null
-  @isListContents = false
-  #
-  # initialize inherited properties:
-  super()
-  #
-  # override inherited properties:
-  @isDraggable = false
-  #
-  # immutable properties:
-  @border = null
-  @edge = null
+    # additional properties:
+    @target = target
+    @title = title or null
+    @environment = environment or null
+    @fontSize = fontSize or null
+    @items = []
+    @label = null
+    @world = null
+    @isListContents = false
+    #
+    # initialize inherited properties:
+    super()
+    #
+    # override inherited properties:
+    @isDraggable = false
+    #
+    # immutable properties:
+    @border = null
+    @edge = null
 
 MenuMorph::addItem = (labelString, action, hint, color) ->
   @items.push [localize(labelString or "close"), action or nop, hint, color]

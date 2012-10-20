@@ -1,22 +1,19 @@
 # BouncerMorph ////////////////////////////////////////////////////////
-
+# fishy constructor
 # I am a Demo of a stepping custom Morph
 
 class BouncerMorph extends Morph
-  constructor: () ->
-    @init()
-
-BouncerMorph::init = (type, speed) ->
-  super()
-  @fps = 50
-  # additional properties:
-  @isStopped = false
-  @type = type or "vertical"
-  if @type is "vertical"
-    @direction = "down"
-  else
-    @direction = "right"
-  @speed = speed or 1
+  constructor: (type, speed) ->
+    super()
+    @fps = 50
+    # additional properties:
+    @isStopped = false
+    @type = type or "vertical"
+    if @type is "vertical"
+      @direction = "down"
+    else
+      @direction = "right"
+    @speed = speed or 1
 
 
 # BouncerMorph moving:

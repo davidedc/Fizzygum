@@ -1,10 +1,7 @@
 class MorphicNode
   constructor: (parent, childrenArray) ->
-    @init parent or null, childrenArray or []
-
-MorphicNode::init = (parent, childrenArray) ->
-  @parent = parent or null
-  @children = childrenArray or []
+    @parent = parent or null
+    @children = childrenArray or []
 
 
 # MorphicNode string representation: e.g. 'a MorphicNode[3]'

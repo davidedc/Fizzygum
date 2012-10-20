@@ -4,21 +4,18 @@
 
 class CursorMorph extends BlinkerMorph
   constructor: (aStringOrTextMorph) ->
-    @init aStringOrTextMorph
-
-CursorMorph::init = (aStringOrTextMorph) ->
-  ls = undefined
-  # additional properties:
-  @keyDownEventUsed = false
-  @target = aStringOrTextMorph
-  @originalContents = @target.text
-  @slot = @target.text.length
-  super()
-  ls = fontHeight(@target.fontSize)
-  @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
-  @drawNew()
-  @image.getContext("2d").font = @target.font()
-  @gotoSlot @slot
+    ls = undefined
+    # additional properties:
+    @keyDownEventUsed = false
+    @target = aStringOrTextMorph
+    @originalContents = @target.text
+    @slot = @target.text.length
+    super()
+    ls = fontHeight(@target.fontSize)
+    @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
+    @drawNew()
+    @image.getContext("2d").font = @target.font()
+    @gotoSlot @slot
 
 # CursorMorph event processing:
 CursorMorph::processKeyPress = (event) ->

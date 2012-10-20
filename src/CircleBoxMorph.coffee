@@ -4,13 +4,10 @@
 
 class CircleBoxMorph extends Morph
   constructor: (orientation) ->
-    @init orientation or "vertical"
-
-CircleBoxMorph::init = (orientation) ->
-  super()
-  @orientation = orientation
-  @autoOrient = true
-  @setExtent new Point(20, 100)
+    super()
+    @orientation = orientation or "vertical"
+    @autoOrient = true
+    @setExtent new Point(20, 100)
 
 CircleBoxMorph::autoOrientation = ->
   if @height() > @width()

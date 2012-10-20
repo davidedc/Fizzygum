@@ -4,18 +4,15 @@
 
 class PenMorph extends Morph
   constructor: () ->
-    @init()
-
-PenMorph::init = ->
-  size = MorphicPreferences.handleSize * 4
-  # additional properties:
-  @isWarped = false # internal optimization
-  @wantsRedraw = false # internal optimization
-  @heading = 0
-  @isDown = true
-  @size = 1
-  super()
-  @setExtent new Point(size, size)
+    size = MorphicPreferences.handleSize * 4
+    # additional properties:
+    @isWarped = false # internal optimization
+    @wantsRedraw = false # internal optimization
+    @heading = 0
+    @isDown = true
+    @size = 1
+    super()
+    @setExtent new Point(size, size)
 
 
 # PenMorph updating - optimized for warping, i.e atomic recursion

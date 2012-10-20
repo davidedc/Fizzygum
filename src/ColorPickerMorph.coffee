@@ -2,17 +2,14 @@
 
 class ColorPickerMorph extends Morph
   constructor: (defaultColor) ->
-    @init defaultColor or new Color(255, 255, 255)
-
-ColorPickerMorph::init = (defaultColor) ->
-  @choice = defaultColor
-  super
-  @color = new Color(255, 255, 255)
-  @silentSetExtent new Point(80, 80)
-  @drawNew()
+    @choice = defaultColor or new Color(255, 255, 255)
+    super()
+    @color = new Color(255, 255, 255)
+    @silentSetExtent new Point(80, 80)
+    @drawNew()
 
 ColorPickerMorph::drawNew = ->
-  super
+  super()
   @buildSubmorphs()
 
 ColorPickerMorph::buildSubmorphs = ->

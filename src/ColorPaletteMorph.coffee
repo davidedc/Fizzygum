@@ -2,15 +2,12 @@
 
 class ColorPaletteMorph extends Morph
   constructor: (target, sizePoint) ->
-    @init target or null, sizePoint or new Point(80, 50)
-
-ColorPaletteMorph::init = (target, size) ->
-  super()
-  @target = target
-  @targetSetter = "color"
-  @silentSetExtent size
-  @choice = null
-  @drawNew()
+    super()
+    @target = target or null
+    @targetSetter = "color"
+    @silentSetExtent sizePoint or new Point(80, 50)
+    @choice = null
+    @drawNew()
 
 ColorPaletteMorph::drawNew = ->
   context = undefined

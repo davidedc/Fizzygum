@@ -5,26 +5,23 @@
 
 class SliderMorph extends CircleBoxMorph
   constructor: (start, stop, value, size, orientation, color) ->
-    @init start or 1, stop or 100, value or 50, size or 10, orientation or "vertical", color
-
-SliderMorph::init = (start, stop, value, size, orientation, color) ->
-  @target = null
-  @action = null
-  @start = start
-  @stop = stop
-  @value = value
-  @size = size
-  @offset = null
-  @button = new SliderButtonMorph()
-  @button.isDraggable = false
-  @button.color = new Color(200, 200, 200)
-  @button.highlightColor = new Color(210, 210, 255)
-  @button.pressColor = new Color(180, 180, 255)
-  super orientation
-  @add @button
-  @alpha = 0.3
-  @color = color or new Color(0, 0, 0)
-  @setExtent new Point(20, 100)
+    @target = null
+    @action = null
+    @start = start or 1
+    @stop = stop or 100
+    @value = value or 50
+    @size = size or 10
+    @offset = null
+    @button = new SliderButtonMorph()
+    @button.isDraggable = false
+    @button.color = new Color(200, 200, 200)
+    @button.highlightColor = new Color(210, 210, 255)
+    @button.pressColor = new Color(180, 180, 255)
+    super orientation or "vertical"
+    @add @button
+    @alpha = 0.3
+    @color = color or new Color(0, 0, 0)
+    @setExtent new Point(20, 100)
 
 
 # this.drawNew();

@@ -3,36 +3,32 @@
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
 
+# I represent the <canvas> element
 class WorldMorph extends FrameMorph
   constructor: (aCanvas, fillPage) ->
-    @init aCanvas, fillPage
-
-# I represent the <canvas> element
-
-WorldMorph::init = (aCanvas, fillPage) ->
-  super()
-  @color = new Color(205, 205, 205) # (130, 130, 130)
-  @alpha = 1
-  @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
-  @drawNew()
-  @isVisible = true
-  @isDraggable = false
-  @currentKey = null # currently pressed key code
-  @worldCanvas = aCanvas
-  #
-  # additional properties:
-  @useFillPage = fillPage
-  @useFillPage = true  if @useFillPage is `undefined`
-  @isDevMode = false
-  @broken = []
-  @hand = new HandMorph(@)
-  @keyboardReceiver = null
-  @lastEditedText = null
-  @cursor = null
-  @activeMenu = null
-  @activeHandle = null
-  @virtualKeyboard = null
-  @initEventListeners()
+    super()
+    @color = new Color(205, 205, 205) # (130, 130, 130)
+    @alpha = 1
+    @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
+    @drawNew()
+    @isVisible = true
+    @isDraggable = false
+    @currentKey = null # currently pressed key code
+    @worldCanvas = aCanvas
+    #
+    # additional properties:
+    @useFillPage = fillPage
+    @useFillPage = true  if @useFillPage is `undefined`
+    @isDevMode = false
+    @broken = []
+    @hand = new HandMorph(@)
+    @keyboardReceiver = null
+    @lastEditedText = null
+    @cursor = null
+    @activeMenu = null
+    @activeHandle = null
+    @virtualKeyboard = null
+    @initEventListeners()
 
 # World Morph display:
 WorldMorph::brokenFor = (aMorph) ->

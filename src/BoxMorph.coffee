@@ -4,13 +4,10 @@
 
 class BoxMorph extends Morph
   constructor: (edge, border, borderColor) ->
-    @init edge, border, borderColor
-
-BoxMorph::init = (edge, border, borderColor) ->
-  @edge = edge or 4
-  @border = border or ((if (border is 0) then 0 else 2))
-  @borderColor = borderColor or new Color()
-  super()
+    @edge = edge or 4
+    @border = border or ((if (border is 0) then 0 else 2))
+    @borderColor = borderColor or new Color()
+    super()
 
 # BoxMorph drawing:
 BoxMorph::drawNew = ->

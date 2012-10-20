@@ -2,28 +2,25 @@
 
 class MorphsListMorph extends BoxMorph
   constructor: (target) ->
-    @init target
-
-MorphsListMorph::init = () ->
-  # additional properties:
-  #
-  # initialize inherited properties:
-  super()
-  #
-  # override inherited properties:
-  @silentSetExtent new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3)
-  @isDraggable = true
-  @border = 1
-  @edge = 5
-  @color = new Color(60, 60, 60)
-  @borderColor = new Color(95, 95, 95)
-  @drawNew()
-  #
-  # panes:
-  @morphsList = null
-  @buttonClose = null
-  @resizer = null
-  @buildPanes()
+    # additional properties:
+    #
+    # initialize inherited properties:
+    super()
+    #
+    # override inherited properties:
+    @silentSetExtent new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3)
+    @isDraggable = true
+    @border = 1
+    @edge = 5
+    @color = new Color(60, 60, 60)
+    @borderColor = new Color(95, 95, 95)
+    @drawNew()
+    #
+    # panes:
+    @morphsList = null
+    @buttonClose = null
+    @resizer = null
+    @buildPanes()
 
 MorphsListMorph::setTarget = (target) ->
   @target = target

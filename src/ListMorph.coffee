@@ -19,26 +19,22 @@ class ListMorph extends ScrollFrameMorph
     #    An example of how to use fomats can be found in the InspectorMorph's
     #    "markOwnProperties" mechanism.
     #
-    @init elements or [], labelGetter or (element) ->
-      return element  if isString(element)
-      return element.toSource()  if element.toSource
-      element.toString()
-    , format or []
-
-ListMorph::init = (elements, labelGetter, format) ->
-  super()
-  @contents.acceptsDrops = false
-  @color = new Color(255, 255, 255)
-  @hBar.alpha = 0.6
-  @vBar.alpha = 0.6
-  @elements = elements or []
-  @labelGetter = labelGetter
-  @format = format
-  @listContents = null
-  @selected = null
-  @action = null
-  @acceptsDrops = false
-  @buildListContents()
+    super()
+    @contents.acceptsDrops = false
+    @color = new Color(255, 255, 255)
+    @hBar.alpha = 0.6
+    @vBar.alpha = 0.6
+    @elements = elements or []
+    @labelGetter = labelGetter or (element) ->
+        return element  if isString(element)
+        return element.toSource()  if element.toSource
+        element.toString()
+    @format = format or []
+    @listContents = null
+    @selected = null
+    @action = null
+    @acceptsDrops = false
+    @buildListContents()
 
 ListMorph::buildListContents = ->
   @listContents.destroy()  if @listContents

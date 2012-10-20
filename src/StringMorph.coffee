@@ -4,37 +4,34 @@
 
 class StringMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
-    @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
-
-StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
-  # additional properties:
-  @text = text or ((if (text is "") then "" else "StringMorph"))
-  @fontSize = fontSize or 12
-  @fontName = fontName or MorphicPreferences.globalFontFamily
-  @fontStyle = fontStyle or "sans-serif"
-  @isBold = bold or false
-  @isItalic = italic or false
-  @isEditable = false
-  @isNumeric = isNumeric or false
-  @shadowOffset = shadowOffset or new Point(0, 0)
-  @shadowColor = shadowColor or null
-  @isShowingBlanks = false
-  @blanksColor = new Color(180, 140, 140)
-  #
-  # additional properties for text-editing:
-  @currentlySelecting = false
-  @startMark = 0
-  @endMark = 0
-  @markedTextColor = new Color(255, 255, 255)
-  @markedBackgoundColor = new Color(60, 60, 120)
-  #
-  # initialize inherited properties:
-  super()
-  #
-  # override inherited properites:
-  @color = color or new Color(0, 0, 0)
-  @noticesTransparentClick = true
-  @drawNew()
+    # additional properties:
+    @text = text or ((if (text is "") then "" else "StringMorph"))
+    @fontSize = fontSize or 12
+    @fontName = fontName or MorphicPreferences.globalFontFamily
+    @fontStyle = fontStyle or "sans-serif"
+    @isBold = bold or false
+    @isItalic = italic or false
+    @isEditable = false
+    @isNumeric = isNumeric or false
+    @shadowOffset = shadowOffset or new Point(0, 0)
+    @shadowColor = shadowColor or null
+    @isShowingBlanks = false
+    @blanksColor = new Color(180, 140, 140)
+    #
+    # additional properties for text-editing:
+    @currentlySelecting = false
+    @startMark = 0
+    @endMark = 0
+    @markedTextColor = new Color(255, 255, 255)
+    @markedBackgoundColor = new Color(60, 60, 120)
+    #
+    # initialize inherited properties:
+    super()
+    #
+    # override inherited properites:
+    @color = color or new Color(0, 0, 0)
+    @noticesTransparentClick = true
+    @drawNew()
 
 StringMorph::toString = ->
   # e.g. 'a StringMorph("Hello World")'
