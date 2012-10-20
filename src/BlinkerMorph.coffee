@@ -8,7 +8,7 @@ class BlinkerMorph extends Morph
     @color = new Color(0, 0, 0)
     @fps = rate or 2
     @drawNew()
-
-# BlinkerMorph stepping:
-BlinkerMorph::step = ->
-  @toggleVisibility()
+  
+  # BlinkerMorph stepping:
+  step: ->
+    @toggleVisibility()
