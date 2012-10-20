@@ -51,9 +51,8 @@ WorldMorph::fullDrawOn = (aCanvas, aRect) ->
   @hand.fullDrawOn aCanvas, aRect
 
 WorldMorph::updateBroken = ->
-  myself = this
-  @broken.forEach (rect) ->
-    myself.fullDrawOn myself.worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
+  @broken.forEach (rect) =>
+    @fullDrawOn @worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
   
   @broken = []
 
@@ -65,7 +64,6 @@ WorldMorph::fillPage = ->
   pos = getDocumentPositionOf(@worldCanvas)
   clientHeight = window.innerHeight
   clientWidth = window.innerWidth
-  myself = this
   if pos.x > 0
     @worldCanvas.style.position = "absolute"
     @worldCanvas.style.left = "0px"
@@ -84,8 +82,8 @@ WorldMorph::fillPage = ->
   if @worldCanvas.height isnt clientHeight
     @worldCanvas.height = clientHeight
     @setHeight clientHeight
-  @children.forEach (child) ->
-    child.reactToWorldResize myself.bounds.copy()  if child.reactToWorldResize
+  @children.forEach (child) =>
+    child.reactToWorldResize @bounds.copy()  if child.reactToWorldResize
 
 
 
@@ -121,7 +119,6 @@ WorldMorph::getGlobalPixelColor = (point) ->
 
 # WorldMorph events:
 WorldMorph::initVirtualKeyboard = ->
-  myself = this
   if @virtualKeyboard
     document.body.removeChild @virtualKeyboard
     @virtualKeyboard = null
@@ -138,11 +135,11 @@ WorldMorph::initVirtualKeyboard = ->
   @virtualKeyboard.style.width = "0px"
   @virtualKeyboard.style.height = "0px"
   document.body.appendChild @virtualKeyboard
-  @virtualKeyboard.addEventListener "keydown", ((event) ->
+  @virtualKeyboard.addEventListener "keydown", ((event) =>
     
     # remember the keyCode in the world's currentKey property
-    myself.currentKey = event.keyCode
-    myself.keyboardReceiver.processKeyDown event  if myself.keyboardReceiver
+    @currentKey = event.keyCode
+    @keyboardReceiver.processKeyDown event  if @keyboardReceiver
     
     # supress backspace override
     event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -150,59 +147,58 @@ WorldMorph::initVirtualKeyboard = ->
     # supress tab override and make sure tab gets
     # received by all browsers
     if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-      myself.keyboardReceiver.processKeyPress event  if myself.keyboardReceiver
+      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
       event.preventDefault()
   ), false
-  @virtualKeyboard.addEventListener "keyup", ((event) ->
+  @virtualKeyboard.addEventListener "keyup", ((event) =>
     
     # flush the world's currentKey property
-    myself.currentKey = null
+    @currentKey = null
     
     # dispatch to keyboard receiver
-    myself.keyboardReceiver.processKeyUp event  if myself.keyboardReceiver.processKeyUp  if myself.keyboardReceiver
+    @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
     event.preventDefault()
   ), false
-  @virtualKeyboard.addEventListener "keypress", ((event) ->
-    myself.keyboardReceiver.processKeyPress event  if myself.keyboardReceiver
+  @virtualKeyboard.addEventListener "keypress", ((event) =>
+    @keyboardReceiver.processKeyPress event  if @keyboardReceiver
     event.preventDefault()
   ), false
 
 WorldMorph::initEventListeners = ->
   canvas = @worldCanvas
-  myself = this
-  if myself.useFillPage
-    myself.fillPage()
+  if @useFillPage
+    @fillPage()
   else
     @changed()
-  canvas.addEventListener "mousedown", ((event) ->
-    myself.hand.processMouseDown event
+  canvas.addEventListener "mousedown", ((event) =>
+    @hand.processMouseDown event
   ), false
-  canvas.addEventListener "touchstart", ((event) ->
-    myself.hand.processTouchStart event
+  canvas.addEventListener "touchstart", ((event) =>
+    @hand.processTouchStart event
   ), false
-  canvas.addEventListener "mouseup", ((event) ->
+  canvas.addEventListener "mouseup", ((event) =>
     event.preventDefault()
-    myself.hand.processMouseUp event
+    @hand.processMouseUp event
   ), false
-  canvas.addEventListener "touchend", ((event) ->
-    myself.hand.processTouchEnd event
+  canvas.addEventListener "touchend", ((event) =>
+    @hand.processTouchEnd event
   ), false
-  canvas.addEventListener "mousemove", ((event) ->
-    myself.hand.processMouseMove event
+  canvas.addEventListener "mousemove", ((event) =>
+    @hand.processMouseMove event
   ), false
-  canvas.addEventListener "touchmove", ((event) ->
-    myself.hand.processTouchMove event
+  canvas.addEventListener "touchmove", ((event) =>
+    @hand.processTouchMove event
   ), false
   canvas.addEventListener "contextmenu", ((event) ->
     
     # suppress context menu for Mac-Firefox
     event.preventDefault()
   ), false
-  canvas.addEventListener "keydown", ((event) ->
+  canvas.addEventListener "keydown", ((event) =>
     
     # remember the keyCode in the world's currentKey property
-    myself.currentKey = event.keyCode
-    myself.keyboardReceiver.processKeyDown event  if myself.keyboardReceiver
+    @currentKey = event.keyCode
+    @keyboardReceiver.processKeyDown event  if @keyboardReceiver
     
     # supress backspace override
     event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -210,41 +206,41 @@ WorldMorph::initEventListeners = ->
     # supress tab override and make sure tab gets
     # received by all browsers
     if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-      myself.keyboardReceiver.processKeyPress event  if myself.keyboardReceiver
+      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
       event.preventDefault()
   ), false
-  canvas.addEventListener "keyup", ((event) ->
+  canvas.addEventListener "keyup", ((event) =>
     
     # flush the world's currentKey property
-    myself.currentKey = null
+    @currentKey = null
     
     # dispatch to keyboard receiver
-    myself.keyboardReceiver.processKeyUp event  if myself.keyboardReceiver.processKeyUp  if myself.keyboardReceiver
+    @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
     event.preventDefault()
   ), false
-  canvas.addEventListener "keypress", ((event) ->
-    myself.keyboardReceiver.processKeyPress event  if myself.keyboardReceiver
+  canvas.addEventListener "keypress", ((event) =>
+    @keyboardReceiver.processKeyPress event  if @keyboardReceiver
     event.preventDefault()
   ), false
   # Safari, Chrome
-  canvas.addEventListener "mousewheel", ((event) ->
-    myself.hand.processMouseScroll event
+  canvas.addEventListener "mousewheel", ((event) =>
+    @hand.processMouseScroll event
     event.preventDefault()
   ), false
   # Firefox
-  canvas.addEventListener "DOMMouseScroll", ((event) ->
-    myself.hand.processMouseScroll event
+  canvas.addEventListener "DOMMouseScroll", ((event) =>
+    @hand.processMouseScroll event
     event.preventDefault()
   ), false
   window.addEventListener "dragover", ((event) ->
     event.preventDefault()
   ), false
-  window.addEventListener "drop", ((event) ->
-    myself.hand.processDrop event
+  window.addEventListener "drop", ((event) =>
+    @hand.processDrop event
     event.preventDefault()
   ), false
-  window.addEventListener "resize", (->
-    myself.fillPage()  if myself.useFillPage
+  window.addEventListener "resize", (=>
+    @fillPage()  if @useFillPage
   ), false
   window.onbeforeunload = (evt) ->
     e = evt or window.event
@@ -324,10 +320,9 @@ WorldMorph::contextMenu = ->
   menu
 
 WorldMorph::userCreateMorph = ->
-  create = (aMorph) ->
+  create = (aMorph) =>
     aMorph.isDraggable = true
-    aMorph.pickUp myself
-  myself = this
+    aMorph.pickUp @
   menu = undefined
   newMorph = undefined
   menu = new MenuMorph(this, "make a morph")
@@ -451,9 +446,9 @@ WorldMorph::userCreateMorph = ->
     newMorph = new MorphsListMorph()
     create newMorph
   
-  if myself.customMorphs
+  if @customMorphs
     menu.addLine()
-    myself.customMorphs().forEach (morph) ->
+    @customMorphs().forEach (morph) ->
       menu.addItem morph.toString(), ->
         create morph
   
