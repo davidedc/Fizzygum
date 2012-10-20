@@ -302,10 +302,9 @@ Morph::drawNew = ->
   else @drawTexture @texture  if @texture
 
 Morph::drawTexture = (url) ->
-  myself = this
   @cachedTexture = new Image()
-  @cachedTexture.onload = ->
-    myself.drawCachedTexture()
+  @cachedTexture.onload = =>
+    @drawCachedTexture()
   
   @cachedTexture.src = @texture = url # make absolute
 
@@ -618,13 +617,12 @@ Morph::overlappedMorphs = ->
   #exclude the World
   world = @world()
   fb = @fullBounds()
-  myself = this
   allParents = @allParents()
   allChildren = @allChildren()
   morphs = undefined
   morphs = world.allChildren()
-  morphs.filter (m) ->
-    m.isVisible and m isnt myself and m isnt world and not contains(allParents, m) and not contains(allChildren, m) and m.fullBounds().intersects(fb)
+  morphs.filter (m) =>
+    m.isVisible and m isnt @ and m isnt world and not contains(allParents, m) and not contains(allChildren, m) and m.fullBounds().intersects(fb)
 
 
 
@@ -748,18 +746,17 @@ Morph::slideBackTo = (situation, inSteps) ->
   stepCount = 0
   oldStep = @step
   oldFps = @fps
-  myself = this
   @fps = 0
-  @step = ->
-    myself.fullChanged()
-    myself.silentMoveBy new Point(xStep, yStep)
-    myself.fullChanged()
+  @step = =>
+    @fullChanged()
+    @silentMoveBy new Point(xStep, yStep)
+    @fullChanged()
     stepCount += 1
     if stepCount is steps
-      situation.origin.add myself
-      situation.origin.reactToDropOf myself  if situation.origin.reactToDropOf
-      myself.step = oldStep
-      myself.fps = oldFps
+      situation.origin.add @
+      situation.origin.reactToDropOf @  if situation.origin.reactToDropOf
+      @step = oldStep
+      @fps = oldFps
 
 
 # Morph utilities:
@@ -954,11 +951,10 @@ Morph::setAlphaScaled = (alpha) ->
 Morph::attach = ->
   choices = @overlappedMorphs()
   menu = new MenuMorph(this, "choose new parent:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      each.add myself
-      myself.isDraggable = false
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), =>
+      each.add @
+      @isDraggable = false
 
 
   menu.popUpAtHand @world()  if choices.length > 0

@@ -28,16 +28,15 @@ FrameMorph::fullImage = ->
   @image
 
 FrameMorph::fullDrawOn = (aCanvas, aRect) ->
-  myself = this
   rectangle = undefined
   return null  unless @isVisible
   rectangle = aRect or @fullBounds()
   @drawOn aCanvas, rectangle
-  @children.forEach (child) ->
+  @children.forEach (child) =>
     if child instanceof ShadowMorph
       child.fullDrawOn aCanvas, rectangle
     else
-      child.fullDrawOn aCanvas, myself.bounds.intersect(rectangle)
+      child.fullDrawOn aCanvas, @bounds.intersect(rectangle)
 
 
 
@@ -71,7 +70,6 @@ FrameMorph::keepInScrollFrame = ->
 FrameMorph::adjustBounds = ->
   subBounds = undefined
   newBounds = undefined
-  myself = this
   return null  if @scrollFrame is null
   subBounds = @submorphBounds()
   if subBounds and (not @scrollFrame.isTextLineWrapping)
@@ -83,10 +81,10 @@ FrameMorph::adjustBounds = ->
     @drawNew()
     @keepInScrollFrame()
   if @scrollFrame.isTextLineWrapping
-    @children.forEach (morph) ->
+    @children.forEach (morph) =>
       if morph instanceof TextMorph
-        morph.setWidth myself.width()
-        myself.setHeight Math.max(morph.height(), myself.scrollFrame.height())
+        morph.setWidth @width()
+        @setHeight Math.max(morph.height(), @scrollFrame.height())
   
   @scrollFrame.adjustScrollBars()
 
@@ -117,6 +115,5 @@ FrameMorph::developersMenu = ->
   menu
 
 FrameMorph::keepAllSubmorphsWithin = ->
-  myself = this
-  @children.forEach (m) ->
-    m.keepWithin myself
+  @children.forEach (m) =>
+    m.keepWithin @

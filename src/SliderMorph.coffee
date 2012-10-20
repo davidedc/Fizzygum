@@ -160,12 +160,11 @@ SliderMorph::setSize = (num) ->
 SliderMorph::setTarget = ->
   choices = @overlappedMorphs()
   menu = new MenuMorph(this, "choose target:")
-  myself = this
   choices.push @world()
-  choices.forEach (each) ->
-    menu.addItem each.toString().slice(0, 50), ->
-      myself.target = each
-      myself.setTargetSetter()
+  choices.forEach (each) =>
+    menu.addItem each.toString().slice(0, 50), =>
+      @target = each
+      @setTargetSetter()
   
   
   if choices.length is 1
@@ -176,10 +175,9 @@ SliderMorph::setTarget = ->
 SliderMorph::setTargetSetter = ->
   choices = @target.numericalSetters()
   menu = new MenuMorph(this, "choose target property:")
-  myself = this
-  choices.forEach (each) ->
-    menu.addItem each, ->
-      myself.action = each
+  choices.forEach (each) =>
+    menu.addItem each, =>
+      @action = each
   
   
   if choices.length is 1
@@ -197,25 +195,24 @@ SliderMorph::numericalSetters = ->
 SliderMorph::step = null
 SliderMorph::mouseDownLeft = (pos) ->
   world = undefined
-  myself = this
   unless @button.bounds.containsPoint(pos)
     @offset = new Point() # return null;
   else
     @offset = pos.subtract(@button.bounds.origin)
   world = @root()
-  @step = ->
+  @step = =>
     mousePos = undefined
     newX = undefined
     newY = undefined
     if world.hand.mouseButton
       mousePos = world.hand.bounds.origin
-      if myself.orientation is "vertical"
-        newX = myself.button.bounds.origin.x
-        newY = Math.max(Math.min(mousePos.y - myself.offset.y, myself.bottom() - myself.button.height()), myself.top())
+      if @orientation is "vertical"
+        newX = @button.bounds.origin.x
+        newY = Math.max(Math.min(mousePos.y - @offset.y, @bottom() - @button.height()), @top())
       else
-        newY = myself.button.bounds.origin.y
-        newX = Math.max(Math.min(mousePos.x - myself.offset.x, myself.right() - myself.button.width()), myself.left())
-      myself.button.setPosition new Point(newX, newY)
-      myself.updateValue()
+        newY = @button.bounds.origin.y
+        newX = Math.max(Math.min(mousePos.x - @offset.x, @right() - @button.width()), @left())
+      @button.setPosition new Point(newX, newY)
+      @updateValue()
     else
       @step = null
