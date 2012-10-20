@@ -4,8 +4,6 @@ class Rectangle
   constructor: (left, top, right, bottom) ->
     @init new Point((left or 0), (top or 0)), new Point((right or 0), (bottom or 0))
 
-
-# Rectangle instance creation:
 Rectangle::init = (originPoint, cornerPoint) ->
   @origin = originPoint
   @corner = cornerPoint
@@ -15,23 +13,18 @@ Rectangle::init = (originPoint, cornerPoint) ->
 Rectangle::toString = ->
   "[" + @origin.toString() + " | " + @extent().toString() + "]"
 
-
 # Rectangle copying:
 Rectangle::copy = ->
   new Rectangle(@left(), @top(), @right(), @bottom())
 
-
 # Rectangle accessing - setting:
 Rectangle::setTo = (left, top, right, bottom) ->
-  
   # note: all inputs are optional and can be omitted
   @origin = new Point(left or ((if (left is 0) then 0 else @left())), top or ((if (top is 0) then 0 else @top())))
   @corner = new Point(right or ((if (right is 0) then 0 else @right())), bottom or ((if (bottom is 0) then 0 else @bottom())))
 
-
 # Rectangle accessing - getting:
 Rectangle::area = ->
-  
   #requires width() and height() to be defined
   w = @width()
   return 0  if w < 0
@@ -50,7 +43,7 @@ Rectangle::bottomRight = ->
   @corner.copy()
 
 Rectangle::boundingBox = ->
-  this
+  @
 
 Rectangle::center = ->
   @origin.add @corner.subtract(@origin).floorDivideBy(2)
@@ -94,7 +87,6 @@ Rectangle::width = ->
 Rectangle::position = ->
   @origin
 
-
 # Rectangle comparison:
 Rectangle::eq = (aRect) ->
   @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
@@ -106,10 +98,8 @@ Rectangle::abs = ->
   newCorner = @corner.max(newOrigin)
   newOrigin.corner newCorner
 
-
 # Rectangle functions:
 Rectangle::insetBy = (delta) ->
-  
   # delta can be either a Point or a Number
   result = new Rectangle()
   result.origin = @origin.add(delta)
@@ -117,7 +107,6 @@ Rectangle::insetBy = (delta) ->
   result
 
 Rectangle::expandBy = (delta) ->
-  
   # delta can be either a Point or a Number
   result = new Rectangle()
   result.origin = @origin.subtract(delta)
@@ -125,7 +114,6 @@ Rectangle::expandBy = (delta) ->
   result
 
 Rectangle::growBy = (delta) ->
-  
   # delta can be either a Point or a Number
   result = new Rectangle()
   result.origin = @origin.copy()
@@ -148,12 +136,10 @@ Rectangle::round = ->
   @origin.round().corner @corner.round()
 
 Rectangle::spread = ->
-  
   # round me by applying floor() to my origin and ceil() to my corner
   @origin.floor().corner @corner.ceil()
 
 Rectangle::amountToTranslateWithin = (aRect) ->
-  
   #
   #    Answer a Point, delta, such that self + delta is forced within
   #    aRectangle. when all of me cannot be made to fit, prefer to keep
@@ -183,14 +169,12 @@ Rectangle::intersects = (aRect) ->
 
 # Rectangle transforming:
 Rectangle::scaleBy = (scale) ->
-  
   # scale can be either a Point or a scalar
   o = @origin.multiplyBy(scale)
   c = @corner.multiplyBy(scale)
   new Rectangle(o.x, o.y, c.x, c.y)
 
 Rectangle::translateBy = (factor) ->
-  
   # factor can be either a Point or a scalar
   o = @origin.add(factor)
   c = @corner.add(factor)

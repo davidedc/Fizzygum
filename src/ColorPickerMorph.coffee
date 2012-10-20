@@ -4,7 +4,6 @@ class ColorPickerMorph extends Morph
   constructor: (defaultColor) ->
     @init defaultColor or new Color(255, 255, 255)
 
-# ColorPickerMorph instance creation:
 ColorPickerMorph::init = (defaultColor) ->
   @choice = defaultColor
   super
@@ -23,7 +22,6 @@ ColorPickerMorph::buildSubmorphs = ->
   y = undefined
   @children.forEach (child) ->
     child.destroy()
-  
   @children = []
   @feedback = new Morph()
   @feedback.color = @choice
@@ -43,4 +41,4 @@ ColorPickerMorph::getChoice = ->
   @feedback.color
 
 ColorPickerMorph::rootForGrab = ->
-  this
+  @

@@ -6,13 +6,9 @@ class BouncerMorph extends Morph
   constructor: () ->
     @init()
 
-# BouncerMorph instance creation:
-
-# BouncerMorph initialization:
 BouncerMorph::init = (type, speed) ->
   super()
   @fps = 50
-  
   # additional properties:
   @isStopped = false
   @type = type or "vertical"

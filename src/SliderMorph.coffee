@@ -82,7 +82,6 @@ SliderMorph::updateTarget = ->
 
 # SliderMorph duplicating:
 SliderMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
@@ -95,13 +94,13 @@ SliderMorph::developersMenu = ->
   menu = super()
   menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
   menu.addItem "floor...", (->
-    @prompt menu.title + "\nfloor:", @setStart, this, @start.toString(), null, 0, @stop - @size, true
+    @prompt menu.title + "\nfloor:", @setStart, @, @start.toString(), null, 0, @stop - @size, true
   ), "set the minimum value\nwhich can be selected"
   menu.addItem "ceiling...", (->
-    @prompt menu.title + "\nceiling:", @setStop, this, @stop.toString(), null, @start + @size, @size * 100, true
+    @prompt menu.title + "\nceiling:", @setStop, @, @stop.toString(), null, @start + @size, @size * 100, true
   ), "set the maximum value\nwhich can be selected"
   menu.addItem "button size...", (->
-    @prompt menu.title + "\nbutton size:", @setSize, this, @size.toString(), null, 1, @stop - @start, true
+    @prompt menu.title + "\nbutton size:", @setSize, @, @size.toString(), null, 1, @stop - @start, true
   ), "set the range\ncovered by\nthe slider button"
   menu.addLine()
   menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
@@ -111,12 +110,10 @@ SliderMorph::showValue = ->
   @inform @value
 
 SliderMorph::userSetStart = (num) ->
-  
   # for context menu demo purposes
   @start = Math.max(num, @stop)
 
 SliderMorph::setStart = (num) ->
-  
   # for context menu demo purposes
   newStart = undefined
   if typeof num is "number"
@@ -130,7 +127,6 @@ SliderMorph::setStart = (num) ->
   @changed()
 
 SliderMorph::setStop = (num) ->
-  
   # for context menu demo purposes
   newStop = undefined
   if typeof num is "number"
@@ -144,7 +140,6 @@ SliderMorph::setStop = (num) ->
   @changed()
 
 SliderMorph::setSize = (num) ->
-  
   # for context menu demo purposes
   newSize = undefined
   if typeof num is "number"
@@ -159,14 +154,13 @@ SliderMorph::setSize = (num) ->
 
 SliderMorph::setTarget = ->
   choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
+  menu = new MenuMorph(@, "choose target:")
   choices.push @world()
   choices.forEach (each) =>
     menu.addItem each.toString().slice(0, 50), =>
       @target = each
       @setTargetSetter()
-  
-  
+  #
   if choices.length is 1
     @target = choices[0]
     @setTargetSetter()
@@ -174,12 +168,11 @@ SliderMorph::setTarget = ->
 
 SliderMorph::setTargetSetter = ->
   choices = @target.numericalSetters()
-  menu = new MenuMorph(this, "choose target property:")
+  menu = new MenuMorph(@, "choose target property:")
   choices.forEach (each) =>
     menu.addItem each, =>
       @action = each
-  
-  
+  #
   if choices.length is 1
     @action = choices[0]
   else menu.popUpAtHand @world()  if choices.length > 0

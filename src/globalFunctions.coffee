@@ -11,19 +11,18 @@ noOpFunction = ->
     null
 
 localize = (string) ->
-  
   # override this function with custom localizations
   string
+
 isNil = (thing) ->
   thing is `undefined` or thing is null
-contains = (list, element) ->
-  
+
+contains = (list, element) ->  
   # answer true if element is a member of list
   list.some (any) ->
     any is element
 
 detect = (list, predicate) ->
-  
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null
   i = undefined
@@ -33,32 +32,35 @@ detect = (list, predicate) ->
     return list[i]  if predicate.call(null, list[i])
     i += 1
   null
+
 isString = (target) ->
   typeof target is "string" or target instanceof String
+
 isObject = (target) ->
   target isnt null and (typeof target is "object" or target instanceof Object)
+
 radians = (degrees) ->
   degrees * Math.PI / 180
+
 degrees = (radians) ->
   radians * 180 / Math.PI
+
 fontHeight = (height) ->
   Math.max height, MorphicPreferences.minimumFontHeight
-newCanvas = (extentPoint) ->
-  
+
+newCanvas = (extentPoint) ->  
   # answer a new empty instance of Canvas, don't display anywhere
   canvas = undefined
   ext = undefined
   ext = extentPoint or
     x: 0
     y: 0
-
   canvas = document.createElement("canvas")
   canvas.width = ext.x
   canvas.height = ext.y
   canvas
 
 getMinimumFontHeight = ->
-  
   # answer the height of the smallest font renderable in pixels
   str = "I"
   size = 50
@@ -85,8 +87,8 @@ getMinimumFontHeight = ->
       x += 1
     y += 1
   0
-getBlurredShadowSupport = ->
-  
+
+getBlurredShadowSupport = ->  
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
   source = undefined
@@ -109,8 +111,8 @@ getBlurredShadowSupport = ->
   ctx.shadowColor = "rgba(0, 0, 255, 1)"
   ctx.drawImage source, 0, 0
   (if ctx.getImageData(0, 0, 1, 1).data[3] then true else false)
-getDocumentPositionOf = (aDOMelement) ->
-  
+
+getDocumentPositionOf = (aDOMelement) ->  
   # answer the absolute coordinates of a DOM element in the document
   pos = undefined
   offsetParent = undefined
@@ -122,7 +124,6 @@ getDocumentPositionOf = (aDOMelement) ->
   pos =
     x: aDOMelement.offsetLeft
     y: aDOMelement.offsetTop
-
   offsetParent = aDOMelement.offsetParent
   while offsetParent isnt null
     pos.x += offsetParent.offsetLeft
@@ -132,8 +133,8 @@ getDocumentPositionOf = (aDOMelement) ->
       pos.y -= offsetParent.scrollTop
     offsetParent = offsetParent.offsetParent
   pos
-clone = (target) ->
-  
+
+clone = (target) ->  
   # answer a new instance of target's type
   if typeof target is "object"
     Clone = ->
@@ -141,8 +142,8 @@ clone = (target) ->
     Clone:: = target
     return new Clone()
   target
-copy = (target) ->
-  
+
+copy = (target) ->  
   # answer a shallow copy of target
   value = undefined
   c = undefined
@@ -160,8 +161,7 @@ copy = (target) ->
       c[property] = target[property]  unless c[property]
   c
 
-getMinimumFontHeight = ->
-  
+getMinimumFontHeight = ->  
   # answer the height of the smallest font renderable in pixels
   str = "I"
   size = 50
@@ -190,8 +190,7 @@ getMinimumFontHeight = ->
   0
 
 
-getBlurredShadowSupport = ->
-  
+getBlurredShadowSupport = ->  
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
   source = undefined
@@ -214,8 +213,8 @@ getBlurredShadowSupport = ->
   ctx.shadowColor = "rgba(0, 0, 255, 1)"
   ctx.drawImage source, 0, 0
   (if ctx.getImageData(0, 0, 1, 1).data[3] then true else false)
-getDocumentPositionOf = (aDOMelement) ->
-  
+
+getDocumentPositionOf = (aDOMelement) ->  
   # answer the absolute coordinates of a DOM element in the document
   pos = undefined
   offsetParent = undefined
@@ -237,8 +236,8 @@ getDocumentPositionOf = (aDOMelement) ->
       pos.y -= offsetParent.scrollTop
     offsetParent = offsetParent.offsetParent
   pos
-clone = (target) ->
-  
+
+clone = (target) ->  
   # answer a new instance of target's type
   if typeof target is "object"
     Clone = ->
@@ -246,8 +245,8 @@ clone = (target) ->
     Clone:: = target
     return new Clone()
   target
-copy = (target) ->
-  
+
+copy = (target) ->  
   # answer a shallow copy of target
   value = undefined
   c = undefined

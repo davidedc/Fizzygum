@@ -23,7 +23,6 @@ FrameMorph::fullBounds = ->
   @bounds
 
 FrameMorph::fullImage = ->
-  
   # use only for shadows
   @image
 
@@ -39,14 +38,12 @@ FrameMorph::fullDrawOn = (aCanvas, aRect) ->
       child.fullDrawOn aCanvas, @bounds.intersect(rectangle)
 
 
-
 # FrameMorph scrolling optimization:
 FrameMorph::moveBy = (delta) ->
   @changed()
   @bounds = @bounds.translateBy(delta)
   @children.forEach (child) ->
     child.silentMoveBy delta
-  
   @changed()
 
 
@@ -57,7 +54,6 @@ FrameMorph::submorphBounds = ->
     result = @children[0].bounds
     @children.forEach (child) ->
       result = result.merge(child.fullBounds())
-  
   result
 
 FrameMorph::keepInScrollFrame = ->
@@ -85,7 +81,6 @@ FrameMorph::adjustBounds = ->
       if morph instanceof TextMorph
         morph.setWidth @width()
         @setHeight Math.max(morph.height(), @scrollFrame.height())
-  
   @scrollFrame.adjustScrollBars()
 
 
@@ -99,7 +94,6 @@ FrameMorph::reactToGrabOf = ->
 
 # FrameMorph duplicating:
 FrameMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]

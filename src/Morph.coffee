@@ -7,15 +7,6 @@ class Morph extends MorphicNode
   constructor: () ->
     @init()
 
-
-# Morphs //////////////////////////////////////////////////////////////
-
-# Morph: referenced constructors
-
-# Morph inherits from MorphicNode:
-
-# Morph settings:
-
 #
 #    damage list housekeeping
 #
@@ -42,9 +33,6 @@ class Morph extends MorphicNode
 Morph::trackChanges = true
 Morph::shadowBlur = 4
 
-# Morph instance creation:
-
-# Morph initialization:
 Morph::init = ->
   super()
   @isMorph = true
@@ -73,7 +61,7 @@ Morph::toString = ->
 Morph::destroy = ->
   if @parent isnt null
     @fullChanged()
-    @parent.removeChild this
+    @parent.removeChild @
 
 
 # Morph stepping:
@@ -162,21 +150,19 @@ Morph::fullBounds = ->
   result = @bounds
   @children.forEach (child) ->
     result = result.merge(child.fullBounds())  if child.isVisible
-  
+  #
   result
 
 Morph::fullBoundsNoShadow = ->
-  
   # answer my full bounds but ignore any shadow
   result = undefined
   result = @bounds
   @children.forEach (child) ->
     result = result.merge(child.fullBounds())  if (child not instanceof ShadowMorph) and (child.isVisible)
-  
+  #
   result
 
 Morph::visibleBounds = ->
-  
   # answer which part of me is not clipped by a Frame
   visible = @bounds
   frames = @allParents().filter((p) ->
@@ -184,7 +170,7 @@ Morph::visibleBounds = ->
   )
   frames.forEach (f) ->
     visible = visible.intersect(f.bounds)
-  
+  #
   visible
 
 
@@ -194,7 +180,7 @@ Morph::moveBy = (delta) ->
   @bounds = @bounds.translateBy(delta)
   @children.forEach (child) ->
     child.moveBy delta
-  
+  #
   @changed()
 
 Morph::silentMoveBy = (delta) ->
@@ -230,7 +216,6 @@ Morph::setFullCenter = (aPoint) ->
   @setPosition aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
 
 Morph::keepWithin = (aMorph) ->
-  
   # make sure I am completely within another Morph's bounds
   leftOff = undefined
   rightOff = undefined
@@ -267,7 +252,6 @@ Morph::setWidth = (width) ->
   @setExtent new Point(width or 0, @height())
 
 Morph::silentSetWidth = (width) ->
-  
   # do not drawNew() just yet
   w = Math.max(Math.round(width or 0), 0)
   @bounds.corner = new Point(@bounds.origin.x + (w), @bounds.corner.y)
@@ -276,7 +260,6 @@ Morph::setHeight = (height) ->
   @setExtent new Point(@width(), height or 0)
 
 Morph::silentSetHeight = (height) ->
-  
   # do not drawNew() just yet
   h = Math.max(Math.round(height or 0), 0)
   @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + (h))
@@ -291,7 +274,6 @@ Morph::setColor = (aColor) ->
 
 # Morph displaying:
 Morph::drawNew = ->
-  
   # initialize my surface property
   @image = newCanvas(@extent())
   context = @image.getContext("2d")
@@ -305,7 +287,7 @@ Morph::drawTexture = (url) ->
   @cachedTexture = new Image()
   @cachedTexture.onload = =>
     @drawCachedTexture()
-  
+  #
   @cachedTexture.src = @texture = url # make absolute
 
 Morph::drawCachedTexture = ->
@@ -424,10 +406,8 @@ Morph::toggleVisibility = ->
     child.toggleVisibility()
 
 
-
 # Morph full image:
 Morph::fullImageClassic = ->
-  
   # why doesn't this work for all Morphs?
   fb = @fullBounds()
   img = newCanvas(fb.extent())
@@ -446,13 +426,12 @@ Morph::fullImage = ->
     if morph.isVisible
       ctx.globalAlpha = morph.alpha
       ctx.drawImage morph.image, Math.round(morph.bounds.origin.x - fb.origin.x), Math.round(morph.bounds.origin.y - fb.origin.y)
-  
+  #
   img
 
 
 # Morph shadow:
 Morph::shadowImage = (off_, color) ->
-  
   # fallback for Windows Chrome-Shadow bug
   fb = undefined
   img = undefined
@@ -542,7 +521,6 @@ Morph::removeShadow = ->
 
 # Morph pen trails:
 Morph::penTrails = ->
-  
   # answer my pen trails canvas. default is to answer my image
   @image
 
@@ -552,7 +530,7 @@ Morph::changed = ->
   if @trackChanges
     w = @root()
     w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
-  @parent.childChanged this  if @parent
+  @parent.childChanged @  if @parent
 
 Morph::fullChanged = ->
   if @trackChanges
@@ -560,11 +538,10 @@ Morph::fullChanged = ->
     w.broken.push @fullBounds().spread()  if w instanceof WorldMorph
 
 Morph::childChanged = ->
-  
   # react to a  change in one of my children,
   # default is to just pass this message on upwards
   # override this method for Morphs that need to adjust accordingly
-  @parent.childChanged this  if @parent
+  @parent.childChanged @  if @parent
 
 
 # Morph accessing - structure:
@@ -586,10 +563,10 @@ Morph::addBack = (aMorph) ->
 
 Morph::topMorphSuchThat = (predicate) ->
   next = undefined
-  if predicate.call(null, this)
+  if predicate.call(null, @)
     next = detect(@children.slice(0).reverse(), predicate)
     return next.topMorphSuchThat(predicate)  if next
-    return this
+    return @
   null
 
 Morph::morphAt = (aPoint) ->
@@ -597,7 +574,7 @@ Morph::morphAt = (aPoint) ->
   result = null
   morphs.forEach (m) ->
     result = m  if m.fullBounds().containsPoint(aPoint) and (result is null)
-  
+  #
   result
 
 
@@ -613,7 +590,6 @@ Morph::morphAt = (aPoint) ->
 #};
 #
 Morph::overlappedMorphs = ->
-  
   #exclude the World
   world = @world()
   fb = @fullBounds()
@@ -623,8 +599,6 @@ Morph::overlappedMorphs = ->
   morphs = world.allChildren()
   morphs.filter (m) =>
     m.isVisible and m isnt @ and m isnt world and not contains(allParents, m) and not contains(allChildren, m) and m.fullBounds().intersects(fb)
-
-
 
 # Morph pixel access:
 Morph::getPixelColor = (aPoint) ->
@@ -648,17 +622,15 @@ Morph::isTransparentAt = (aPoint) ->
     return data.data[3] is 0
   false
 
-
 # Morph duplicating:
 Morph::copy = ->
-  c = copy(this)
+  c = copy(@)
   c.parent = null
   c.children = []
   c.bounds = @bounds.copy()
   c
 
 Morph::fullCopy = ->
-  
   #
   #	Produce a copy of me with my entire tree of submorphs. Morphs
   #	mentioned more than once are all directed to a single new copy.
@@ -670,11 +642,10 @@ Morph::fullCopy = ->
   c = @copyRecordingReferences(dict)
   c.forAllChildren (m) ->
     m.updateReferences dict
-  
+  #
   c
 
 Morph::copyRecordingReferences = (dict) ->
-  
   #
   #	Recursively copy this entire composite morph, recording the
   #	correspondence between old and new morphs in the given dictionary.
@@ -687,14 +658,13 @@ Morph::copyRecordingReferences = (dict) ->
   #	should be copied when the morph is duplicated.
   #	
   c = @copy()
-  dict[this] = c
+  dict[@] = c
   @children.forEach (m) ->
     c.add m.copyRecordingReferences(dict)
-  
+  #
   c
 
 Morph::updateReferences = (dict) ->
-  
   #
   #	Update intra-morph references within a composite morph that has
   #	been copied. For example, if a button refers to morph X in the
@@ -702,19 +672,18 @@ Morph::updateReferences = (dict) ->
   #	should refer to the copy of X in new composite, not the original X.
   #	
   property = undefined
-  for property of this
-    this[property] = dict[property]  if property.isMorph and dict[property]
+  for property of @
+    @[property] = dict[property]  if property.isMorph and dict[property]
 
 
 # Morph dragging and dropping:
 Morph::rootForGrab = ->
-  return @parent.rootForGrab()  if this instanceof ShadowMorph
+  return @parent.rootForGrab()  if @ instanceof ShadowMorph
   return @parent  if @parent instanceof ScrollFrameMorph
-  return this  if @parent is null or @parent instanceof WorldMorph or @parent instanceof FrameMorph or @isDraggable is true
+  return @  if @parent is null or @parent instanceof WorldMorph or @parent instanceof FrameMorph or @isDraggable is true
   @parent.rootForGrab()
 
 Morph::wantsDropOf = (aMorph) ->
-  
   # default is to answer the general flag - change for my heirs
   return false  if (aMorph instanceof HandleMorph) or (aMorph instanceof MenuMorph) or (aMorph instanceof InspectorMorph)
   @acceptsDrops
@@ -722,13 +691,12 @@ Morph::wantsDropOf = (aMorph) ->
 Morph::pickUp = (wrrld) ->
   world = wrrld or @world()
   @setPosition world.hand.position().subtract(@extent().floorDivideBy(2))
-  world.hand.grab this
+  world.hand.grab @
 
 Morph::isPickedUp = ->
   @parentThatIsA(HandMorph) isnt null
 
 Morph::situation = ->
-  
   # answer a dictionary specifying where I am right now, so
   # I can slide back to it if I'm dropped somewhere else
   if @parent
@@ -764,10 +732,10 @@ Morph::nop = ->
   nop()
 
 Morph::resize = ->
-  @world().activeHandle = new HandleMorph(this)
+  @world().activeHandle = new HandleMorph(@)
 
 Morph::move = ->
-  @world().activeHandle = new HandleMorph(this, null, null, null, null, "move")
+  @world().activeHandle = new HandleMorph(@, null, null, null, null, "move")
 
 Morph::hint = (msg) ->
   m = undefined
@@ -777,7 +745,7 @@ Morph::hint = (msg) ->
     text = msg.toString()  if msg.toString
   else
     text = "NULL"
-  m = new MenuMorph(this, text)
+  m = new MenuMorph(@, text)
   m.isDraggable = true
   m.popUpCenteredAtHand @world()
 
@@ -789,7 +757,7 @@ Morph::inform = (msg) ->
     text = msg.toString()  if msg.toString
   else
     text = "NULL"
-  m = new MenuMorph(this, text)
+  m = new MenuMorph(@, text)
   m.addItem "Ok"
   m.isDraggable = true
   m.popUpCenteredAtHand @world()
@@ -830,10 +798,10 @@ Morph::prompt = (msg, callback, environment, defaultContents, width, floorNum, c
   menu.addLine 2
   menu.addItem "Ok", ->
     entryField.string()
-  
+  #
   menu.addItem "Cancel", ->
     null
-  
+  #
   menu.isDraggable = true
   menu.popUpAtHand @world()
   entryField.text.edit()
@@ -847,17 +815,17 @@ Morph::pickColor = (msg, callback, environment, defaultContents) ->
   menu.addLine 2
   menu.addItem "Ok", ->
     colorPicker.getChoice()
-  
+  #
   menu.addItem "Cancel", ->
     null
-  
+  #
   menu.isDraggable = true
   menu.popUpAtHand @world()
 
 Morph::inspect = (anotherObject) ->
   world = @world()
   inspector = undefined
-  inspectee = this
+  inspectee = @
   inspectee = anotherObject  if anotherObject
   inspector = new InspectorMorph(inspectee)
   inspector.setPosition world.hand.position()
@@ -879,31 +847,29 @@ Morph::contextMenu = ->
 Morph::hierarchyMenu = ->
   parents = @allParents()
   world = @world()
-  menu = new MenuMorph(this, null)
+  menu = new MenuMorph(@, null)
   parents.forEach (each) ->
     if each.developersMenu and (each isnt world)
       menu.addItem each.toString().slice(0, 50), ->
         each.developersMenu().popUpAtHand world
-  
-  
+  #  
   menu
 
 Morph::developersMenu = ->
-  
   # 'name' is not an official property of a function, hence:
   world = @world()
   userMenu = @userMenu() or (@parent and @parent.userMenu())
-  menu = new MenuMorph(this, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+  menu = new MenuMorph(@, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
   if userMenu
     menu.addItem "user features...", ->
       userMenu.popUpAtHand world
-    
+    #
     menu.addLine()
   menu.addItem "color...", (->
-    @pickColor menu.title + "\ncolor:", @setColor, this, @color
+    @pickColor menu.title + "\ncolor:", @setColor, @, @color
   ), "choose another color \nfor this morph"
   menu.addItem "transparency...", (->
-    @prompt menu.title + "\nalpha\nvalue:", @setAlphaScaled, this, (@alpha * 100).toString(), null, 1, 100, true
+    @prompt menu.title + "\nalpha\nvalue:", @setAlphaScaled, @, (@alpha * 100).toString(), null, 1, 100, true
   ), "set this morph's\nalpha value"
   menu.addItem "resize...", "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
   menu.addLine()
@@ -921,7 +887,7 @@ Morph::developersMenu = ->
     menu.addItem "unlock", "toggleIsDraggable", "make this morph\nmovable"
   menu.addItem "hide", "hide"
   menu.addItem "delete", "destroy"
-  unless this instanceof WorldMorph
+  unless @ instanceof WorldMorph
     menu.addLine()
     menu.addItem "World...", (->
       world.contextMenu().popUpAtHand world
@@ -934,7 +900,6 @@ Morph::userMenu = ->
 
 # Morph menu actions
 Morph::setAlphaScaled = (alpha) ->
-  
   # for context menu demo purposes
   newAlpha = undefined
   unscaled = undefined
@@ -950,27 +915,23 @@ Morph::setAlphaScaled = (alpha) ->
 
 Morph::attach = ->
   choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose new parent:")
+  menu = new MenuMorph(@, "choose new parent:")
   choices.forEach (each) =>
     menu.addItem each.toString().slice(0, 50), =>
       each.add @
       @isDraggable = false
-
-
+  #
   menu.popUpAtHand @world()  if choices.length > 0
 
 Morph::toggleIsDraggable = ->
-  
   # for context menu demo purposes
   @isDraggable = not @isDraggable
 
 Morph::colorSetters = ->
-  
   # for context menu demo purposes
   ["color"]
 
 Morph::numericalSetters = ->
-  
   # for context menu demo purposes
   ["setLeft", "setTop", "setWidth", "setHeight", "setAlphaScaled"]
 
@@ -996,7 +957,6 @@ Morph::previousEntryField = (current) ->
     fields[fields.length + 1]
 
 Morph::tab = (editField) ->
-  
   #
   #	the <tab> key was pressed in one of my edit fields.
   #	invoke my "nextTab()" function if it exists, else
@@ -1007,7 +967,6 @@ Morph::tab = (editField) ->
   else @parent.tab editField  if @parent
 
 Morph::backTab = (editField) ->
-  
   #
   #	the <back tab> key was pressed in one of my edit fields.
   #	invoke my "previousTab()" function if it exists, else

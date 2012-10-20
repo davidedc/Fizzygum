@@ -1,6 +1,5 @@
 # Points //////////////////////////////////////////////////////////////
 
-# Point instance creation:
 Point = (x, y) ->
   @x = x or 0
   @y = y or 0
@@ -17,27 +16,22 @@ Point::copy = ->
 
 # Point comparison:
 Point::eq = (aPoint) ->
-  
   # ==
   @x is aPoint.x and @y is aPoint.y
 
 Point::lt = (aPoint) ->
-  
   # <
   @x < aPoint.x and @y < aPoint.y
 
 Point::gt = (aPoint) ->
-  
   # >
   @x > aPoint.x and @y > aPoint.y
 
 Point::ge = (aPoint) ->
-  
   # >=
   @x >= aPoint.x and @y >= aPoint.y
 
 Point::le = (aPoint) ->
-  
   # <=
   @x <= aPoint.x and @y <= aPoint.y
 
@@ -92,11 +86,10 @@ Point::floorDivideBy = (other) ->
 
 # Point polar coordinates:
 Point::r = ->
-  t = (@multiplyBy(this))
+  t = (@multiplyBy(@))
   Math.sqrt t.x + t.y
 
 Point::degrees = ->
-  
   #
   #    answer the angle I make with origin in degrees.
   #    Right is 0, down is 90
@@ -114,7 +107,6 @@ Point::degrees = ->
   180 + degrees(theta)
 
 Point::theta = ->
-  
   #
   #    answer the angle I make with origin in radians.
   #    Right is 0, down is 90
@@ -137,23 +129,21 @@ Point::crossProduct = (aPoint) ->
   @multiplyBy aPoint.mirror()
 
 Point::distanceTo = (aPoint) ->
-  (aPoint.subtract(this)).r()
+  (aPoint.subtract(@)).r()
 
 Point::rotate = (direction, center) ->
-  
   # direction must be 'right', 'left' or 'pi'
   offset = @subtract(center)
   return new Point(-offset.y, offset.y).add(center)  if direction is "right"
   return new Point(offset.y, -offset.y).add(center)  if direction is "left"
-  
+  #
   # direction === 'pi'
   center.subtract offset
 
 Point::flip = (direction, center) ->
-  
   # direction must be 'vertical' or 'horizontal'
   return new Point(@x, center.y * 2 - @y)  if direction is "vertical"
-  
+  #
   # direction === 'horizontal'
   new Point(center.x * 2 - @x, @y)
 
@@ -194,12 +184,10 @@ Point::asArray = ->
 
 # creating Rectangle instances from Points:
 Point::corner = (cornerPoint) ->
-  
   # answer a new Rectangle
   new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)
 
 Point::rectangle = (aPoint) ->
-  
   # answer a new Rectangle
   org = undefined
   crn = undefined
@@ -208,7 +196,6 @@ Point::rectangle = (aPoint) ->
   new Rectangle(org.x, org.y, crn.x, crn.y)
 
 Point::extent = (aPoint) ->
-  
   #answer a new Rectangle
   crn = @add(aPoint)
   new Rectangle(@x, @y, crn.x, crn.y)

@@ -17,7 +17,7 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   @padding = 0 # around the scrollable area
   @growth = 0 # pixels or Point to grow right/left when near edge
   @isTextLineWrapping = false
-  @contents = scroller or new FrameMorph(this)
+  @contents = scroller or new FrameMorph(@)
   @add @contents
   # start
   # stop
@@ -27,7 +27,7 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   @hBar.setHeight @scrollBarSize
   @hBar.action = (num) =>
     @contents.setPosition new Point(@left() - num, @contents.position().y)
-  
+  #
   @hBar.isDraggable = false
   @add @hBar
   # start
@@ -38,7 +38,7 @@ ScrollFrameMorph::init = (scroller, size, sliderColor) ->
   @vBar.setWidth @scrollBarSize
   @vBar.action = (num) =>
     @contents.setPosition new Point(@contents.position().x, @top() - num)
-  
+  #
   @vBar.isDraggable = false
   @add @vBar
 
@@ -76,7 +76,7 @@ ScrollFrameMorph::addContents = (aMorph) ->
 ScrollFrameMorph::setContents = (aMorph) ->
   @contents.children.forEach (m) ->
     m.destroy()
-  
+  #
   @contents.children = []
   aMorph.setPosition @position().add(new Point(2, 2))
   @addContents aMorph
@@ -182,7 +182,6 @@ ScrollFrameMorph::mouseScroll = (y, x) ->
   @adjustScrollBars()
 
 ScrollFrameMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.contents = (dict[@contents])  if c.contents and dict[@contents]

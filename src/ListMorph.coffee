@@ -2,24 +2,23 @@
 
 class ListMorph extends ScrollFrameMorph
   constructor: (elements, labelGetter, format) ->
-  
-  #
-  #    passing a format is optional. If the format parameter is specified
-  #    it has to be of the following pattern:
-  #
-  #        [
-  #            [<color>, <single-argument predicate>],
-  #            ...
-  #        ]
-  #
-  #    multiple color conditions can be passed in such a format list, the
-  #    last predicate to evaluate true when given the list element sets
-  #    the given color. If no condition is met, the default color (black)
-  #    will be assigned.
-  #    
-  #    An example of how to use fomats can be found in the InspectorMorph's
-  #    "markOwnProperties" mechanism.
-  #
+    #
+    #    passing a format is optional. If the format parameter is specified
+    #    it has to be of the following pattern:
+    #
+    #        [
+    #            [<color>, <single-argument predicate>],
+    #            ...
+    #        ]
+    #
+    #    multiple color conditions can be passed in such a format list, the
+    #    last predicate to evaluate true when given the list element sets
+    #    the given color. If no condition is met, the default color (black)
+    #    will be assigned.
+    #    
+    #    An example of how to use fomats can be found in the InspectorMorph's
+    #    "markOwnProperties" mechanism.
+    #
     @init elements or [], labelGetter or (element) ->
       return element  if isString(element)
       return element.toSource()  if element.toSource
@@ -43,18 +42,18 @@ ListMorph::init = (elements, labelGetter, format) ->
 
 ListMorph::buildListContents = ->
   @listContents.destroy()  if @listContents
-  @listContents = new MenuMorph(@select, null, this)
+  @listContents = new MenuMorph(@select, null, @)
   @elements = ["(empty)"]  if @elements.length is 0
   @elements.forEach (element) =>
     color = null
     @format.forEach (pair) ->
       color = pair[0]  if pair[1].call(null, element)
-    
+    #
     # label string
     # action
     # hint
     @listContents.addItem @labelGetter(element), element, null, color
-
+  #
   @listContents.setPosition @contents.position()
   @listContents.isListContents = true
   @listContents.drawNew()

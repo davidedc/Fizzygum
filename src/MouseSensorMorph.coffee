@@ -5,7 +5,6 @@ class MouseSensorMorph extends BoxMorph
   constructor: (edge, border, borderColor) ->
     @init edge, border, borderColor
 
-# MouseSensorMorph instance creation:
 MouseSensorMorph::init = (edge, border, borderColor) ->
   super
   @edge = edge or 4

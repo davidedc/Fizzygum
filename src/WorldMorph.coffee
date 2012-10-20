@@ -9,9 +9,6 @@ class WorldMorph extends FrameMorph
 
 # I represent the <canvas> element
 
-# WorldMorph instance creation:
-
-# WorldMorph initialization:
 WorldMorph::init = (aCanvas, fillPage) ->
   super()
   @color = new Color(205, 205, 205) # (130, 130, 130)
@@ -22,13 +19,13 @@ WorldMorph::init = (aCanvas, fillPage) ->
   @isDraggable = false
   @currentKey = null # currently pressed key code
   @worldCanvas = aCanvas
-  
+  #
   # additional properties:
   @useFillPage = fillPage
   @useFillPage = true  if @useFillPage is `undefined`
   @isDevMode = false
   @broken = []
-  @hand = new HandMorph(this)
+  @hand = new HandMorph(@)
   @keyboardReceiver = null
   @lastEditedText = null
   @cursor = null
@@ -39,7 +36,6 @@ WorldMorph::init = (aCanvas, fillPage) ->
 
 # World Morph display:
 WorldMorph::brokenFor = (aMorph) ->
-  
   # private
   fb = aMorph.fullBounds()
   @broken.filter (rect) ->
@@ -53,7 +49,6 @@ WorldMorph::fullDrawOn = (aCanvas, aRect) ->
 WorldMorph::updateBroken = ->
   @broken.forEach (rect) =>
     @fullDrawOn @worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
-  
   @broken = []
 
 WorldMorph::doOneCycle = ->
@@ -136,14 +131,13 @@ WorldMorph::initVirtualKeyboard = ->
   @virtualKeyboard.style.height = "0px"
   document.body.appendChild @virtualKeyboard
   @virtualKeyboard.addEventListener "keydown", ((event) =>
-    
     # remember the keyCode in the world's currentKey property
     @currentKey = event.keyCode
     @keyboardReceiver.processKeyDown event  if @keyboardReceiver
-    
+    #
     # supress backspace override
     event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
-    
+    #
     # supress tab override and make sure tab gets
     # received by all browsers
     if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
@@ -151,10 +145,9 @@ WorldMorph::initVirtualKeyboard = ->
       event.preventDefault()
   ), false
   @virtualKeyboard.addEventListener "keyup", ((event) =>
-    
     # flush the world's currentKey property
     @currentKey = null
-    
+    #
     # dispatch to keyboard receiver
     @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
     event.preventDefault()
@@ -190,30 +183,28 @@ WorldMorph::initEventListeners = ->
     @hand.processTouchMove event
   ), false
   canvas.addEventListener "contextmenu", ((event) ->
-    
     # suppress context menu for Mac-Firefox
     event.preventDefault()
   ), false
   canvas.addEventListener "keydown", ((event) =>
-    
     # remember the keyCode in the world's currentKey property
     @currentKey = event.keyCode
     @keyboardReceiver.processKeyDown event  if @keyboardReceiver
-    
+    #
     # supress backspace override
     event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
-    
+    #
     # supress tab override and make sure tab gets
     # received by all browsers
     if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
       @keyboardReceiver.processKeyPress event  if @keyboardReceiver
       event.preventDefault()
   ), false
-  canvas.addEventListener "keyup", ((event) =>
-    
+  #
+  canvas.addEventListener "keyup", ((event) =>  
     # flush the world's currentKey property
     @currentKey = null
-    
+    #
     # dispatch to keyboard receiver
     @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
     event.preventDefault()
@@ -245,10 +236,10 @@ WorldMorph::initEventListeners = ->
   window.onbeforeunload = (evt) ->
     e = evt or window.event
     msg = "Are you sure you want to leave?"
-    
+    #
     # For IE and Firefox
     e.returnValue = msg  if e
-    
+    #
     # For Safari / chrome
     msg
 
@@ -261,13 +252,11 @@ WorldMorph::mouseDownRight = noOpFunction
 WorldMorph::mouseClickRight = noOpFunction
 
 WorldMorph::wantsDropOf = ->
-  
   # allow handle drops if any drops are allowed
   @acceptsDrops
 
 WorldMorph::droppedImage = ->
   null
-
 
 # WorldMorph text field tabbing:
 WorldMorph::nextTab = (editField) ->
@@ -287,9 +276,9 @@ WorldMorph::previousTab = (editField) ->
 WorldMorph::contextMenu = ->
   menu = undefined
   if @isDevMode
-    menu = new MenuMorph(this, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+    menu = new MenuMorph(@, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
   else
-    menu = new MenuMorph(this, "Morphic")
+    menu = new MenuMorph(@, "Morphic")
   if @isDevMode
     menu.addItem "demo...", "userCreateMorph", "sample morphs"
     menu.addLine()
@@ -305,7 +294,7 @@ WorldMorph::contextMenu = ->
     else
       menu.addItem "blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers"
     menu.addItem "color...", (->
-      @pickColor menu.title + "\ncolor:", @setColor, this, @color
+      @pickColor menu.title + "\ncolor:", @setColor, @, @color
     ), "choose the World's\nbackground color"
     if MorphicPreferences is standardSettings
       menu.addItem "touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders"
@@ -325,7 +314,7 @@ WorldMorph::userCreateMorph = ->
     aMorph.pickUp @
   menu = undefined
   newMorph = undefined
-  menu = new MenuMorph(this, "make a morph")
+  menu = new MenuMorph(@, "make a morph")
   menu.addItem "rectangle", ->
     create new Morph()
   
@@ -452,8 +441,7 @@ WorldMorph::userCreateMorph = ->
       menu.addItem morph.toString(), ->
         create morph
   
-  
-  menu.popUpAtHand this
+  menu.popUpAtHand @
 
 WorldMorph::toggleDevMode = ->
   @isDevMode = not @isDevMode
@@ -462,11 +450,9 @@ WorldMorph::hideAll = ->
   @children.forEach (child) ->
     child.hide()
 
-
 WorldMorph::showAllHiddens = ->
   @forAllChildren (child) ->
     child.show()  unless child.isVisible
-
 
 WorldMorph::about = ->
   versions = ""
@@ -494,7 +480,6 @@ WorldMorph::edit = (aStringOrTextMorph) ->
       @slide aStringOrTextMorph
 
 WorldMorph::slide = (aStringOrTextMorph) ->
-  
   # display a slider for numeric text entries
   val = parseFloat(aStringOrTextMorph.text)
   menu = undefined
@@ -517,9 +502,9 @@ WorldMorph::slide = (aStringOrTextMorph) ->
     aStringOrTextMorph.text = Math.round(num).toString()
     aStringOrTextMorph.drawNew()
     aStringOrTextMorph.changed()
-  
+  #
   menu.items.push slider
-  menu.popup this, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
+  menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
 
 WorldMorph::stopEditing = ->
   if @cursor

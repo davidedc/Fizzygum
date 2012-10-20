@@ -4,7 +4,6 @@ class ColorPaletteMorph extends Morph
   constructor: (target, sizePoint) ->
     @init target or null, sizePoint or new Point(80, 50)
 
-# ColorPaletteMorph instance creation:
 ColorPaletteMorph::init = (target, size) ->
   super()
   @target = target
@@ -55,12 +54,10 @@ ColorPaletteMorph::updateTarget = ->
 
 # ColorPaletteMorph duplicating:
 ColorPaletteMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
   c
-
 
 # ColorPaletteMorph menu:
 ColorPaletteMorph::developersMenu = ->
@@ -71,14 +68,12 @@ ColorPaletteMorph::developersMenu = ->
 
 ColorPaletteMorph::setTarget = ->
   choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
+  menu = new MenuMorph(@, "choose target:")
   choices.push @world()
   choices.forEach (each) =>
     menu.addItem each.toString().slice(0, 50), =>
       @target = each
       @setTargetSetter()
-  
-  
   if choices.length is 1
     @target = choices[0]
     @setTargetSetter()
@@ -86,12 +81,10 @@ ColorPaletteMorph::setTarget = ->
 
 ColorPaletteMorph::setTargetSetter = ->
   choices = @target.colorSetters()
-  menu = new MenuMorph(this, "choose target property:")
+  menu = new MenuMorph(@, "choose target property:")
   choices.forEach (each) =>
     menu.addItem each, =>
       @targetSetter = each
-  
-  
   if choices.length is 1
     @targetSetter = choices[0]
   else menu.popUpAtHand @world()  if choices.length > 0

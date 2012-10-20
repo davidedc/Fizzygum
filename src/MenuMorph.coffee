@@ -4,12 +4,7 @@ class MenuMorph extends BoxMorph
   constructor: (target, title, environment, fontSize) ->
     @init target, title, environment, fontSize
 
-
-# MenuMorph: referenced constructors
-
-# MenuMorph instance creation:
 MenuMorph::init = (target, title, environment, fontSize) ->
-  
   # additional properties:
   @target = target
   @title = title or null
@@ -19,13 +14,13 @@ MenuMorph::init = (target, title, environment, fontSize) ->
   @label = null
   @world = null
   @isListContents = false
-  
+  #
   # initialize inherited properties:
   super()
-  
+  #
   # override inherited properties:
   @isDraggable = false
-  
+  #
   # immutable properties:
   @border = null
   @edge = null
@@ -60,7 +55,7 @@ MenuMorph::drawNew = ->
   isLine = false
   @children.forEach (m) ->
     m.destroy()
-  
+  #
   @children = []
   unless @isListContents
     @edge = 5
@@ -96,7 +91,7 @@ MenuMorph::drawNew = ->
     @add item
     y = y + item.height()
     y += 1  if isLine
-  
+  #
   fb = @fullBounds()
   @silentSetExtent fb.extent().add(4)
   @adjustWidths()
@@ -107,7 +102,7 @@ MenuMorph::maxWidth = ->
   w = @parent.width()  if @parent.scrollFrame instanceof ScrollFrameMorph  if @parent instanceof FrameMorph
   @children.forEach (item) ->
     w = Math.max(w, item.width())  if (item instanceof MenuItemMorph) or (item instanceof StringFieldMorph) or (item instanceof ColorPickerMorph) or (item instanceof SliderMorph)
-  
+  #
   w = Math.max(w, @label.width())  if @label
   w
 
@@ -125,7 +120,7 @@ MenuMorph::adjustWidths = ->
 MenuMorph::unselectAllItems = ->
   @children.forEach (item) ->
     item.image = item.normalImage  if item instanceof MenuItemMorph
-  
+  #
   @changed()
 
 MenuMorph::popup = (world, pos) ->
@@ -134,8 +129,8 @@ MenuMorph::popup = (world, pos) ->
   @addShadow new Point(2, 2), 80
   @keepWithin world
   world.activeMenu.destroy()  if world.activeMenu
-  world.add this
-  world.activeMenu = this
+  world.add @
+  world.activeMenu = @
   @fullChanged()
 
 MenuMorph::popUpAtHand = (world) ->

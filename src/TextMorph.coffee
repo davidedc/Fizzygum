@@ -6,10 +6,7 @@ class TextMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
     @init text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor
 
-
-# TextMorph instance creation:
 TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
-  
   # additional properties:
   @text = text or ((if text is "" then text else "TextMorph"))
   @words = []
@@ -27,32 +24,30 @@ TextMorph::init = (text, fontSize, fontStyle, bold, italic, alignment, width, fo
   @maxLineWidth = 0
   @backgroundColor = null
   @isEditable = false
-  
+  #
   #additional properties for ad-hoc evaluation:
   @receiver = null
-  
+  #
   # additional properties for text-editing:
   @currentlySelecting = false
   @startMark = 0
   @endMark = 0
   @markedTextColor = new Color(255, 255, 255)
   @markedBackgoundColor = new Color(60, 60, 120)
-  
+  #
   # initialize inherited properties:
   super()
-  
+  #
   # override inherited properites:
   @color = new Color(0, 0, 0)
   @noticesTransparentClick = true
   @drawNew()
 
 TextMorph::toString = ->
-  
   # e.g. 'a TextMorph("Hello World")'
   "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
 
 TextMorph::font = ->
-  
   # answer a font string, e.g. 'bold italic 12px sans-serif'
   font = ""
   font = font + "bold "  if @isBold
@@ -75,7 +70,7 @@ TextMorph::parse = ->
   paragraphs.forEach (p) =>
     @words = @words.concat(p.split(" "))
     @words.push "\n"
-  
+  #
   @words.forEach (word) =>
     if word is "\n"
       @lines.push oldline
@@ -118,7 +113,7 @@ TextMorph::drawNew = ->
   context = @image.getContext("2d")
   context.font = @font()
   @parse()
-  
+  #
   # set my extent
   shadowWidth = Math.abs(@shadowOffset.x)
   shadowHeight = Math.abs(@shadowOffset.y)
@@ -129,18 +124,18 @@ TextMorph::drawNew = ->
     @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
   @image.width = @width()
   @image.height = @height()
-  
+  #
   # prepare context for drawing text
   context = @image.getContext("2d")
   context.font = @font()
   context.textAlign = "left"
   context.textBaseline = "bottom"
-  
+  #
   # fill the background, if desired
   if @backgroundColor
     context.fillStyle = @backgroundColor.toString()
     context.fillRect 0, 0, @width(), @height()
-  
+  #
   # draw the shadow, if any
   if @shadowColor
     offx = Math.max(@shadowOffset.x, 0)
@@ -159,7 +154,7 @@ TextMorph::drawNew = ->
       y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
       context.fillText line, x + offx, y + offy
       i = i + 1
-  
+  #
   # now draw the actual text
   offx = Math.abs(Math.min(@shadowOffset.x, 0))
   offy = Math.abs(Math.min(@shadowOffset.y, 0))
@@ -177,7 +172,7 @@ TextMorph::drawNew = ->
     y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
     context.fillText line, x + offx, y + offy
     i = i + 1
-  
+  #
   # draw the selection
   start = Math.min(@startMark, @endMark)
   stop = Math.max(@startMark, @endMark)
@@ -190,7 +185,7 @@ TextMorph::drawNew = ->
     context.fillStyle = @markedTextColor.toString()
     context.fillText c, p.x, p.y + fontHeight(@fontSize)
     i += 1
-  
+  #
   # notify my parent of layout change
   @parent.layoutChanged()  if @parent.layoutChanged  if @parent
 
@@ -202,7 +197,6 @@ TextMorph::setExtent = (aPoint) ->
 
 # TextMorph mesuring:
 TextMorph::columnRow = (slot) ->
-  
   # answer the logical position point of the given index ("slot")
   row = undefined
   col = undefined
@@ -216,12 +210,11 @@ TextMorph::columnRow = (slot) ->
       idx += 1
       col += 1
     row += 1
-  
+  #
   # return new Point(0, 0);
   new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
 
 TextMorph::slotPosition = (slot) ->
-  
   # answer the physical position point of the given index ("slot")
   # where the cursor should be placed
   colRow = @columnRow(slot)
@@ -242,7 +235,6 @@ TextMorph::slotPosition = (slot) ->
   new Point(x, y)
 
 TextMorph::slotAt = (aPoint) ->
-  
   # answer the slot (index) closest to the given point
   # so the cursor can be moved accordingly
   charX = 0
@@ -258,7 +250,6 @@ TextMorph::slotAt = (aPoint) ->
   @lineSlots[Math.max(row - 1, 0)] + col - 1
 
 TextMorph::upFrom = (slot) ->
-  
   # answer the slot above the given one
   above = undefined
   colRow = @columnRow(slot)
@@ -268,7 +259,6 @@ TextMorph::upFrom = (slot) ->
   @lineSlots[colRow.y - 1] + colRow.x
 
 TextMorph::downFrom = (slot) ->
-  
   # answer the slot below the given one
   below = undefined
   colRow = @columnRow(slot)
@@ -278,19 +268,17 @@ TextMorph::downFrom = (slot) ->
   @lineSlots[colRow.y + 1] + colRow.x
 
 TextMorph::startOfLine = (slot) ->
-  
   # answer the first slot (index) of the line for the given slot
   @lineSlots[@columnRow(slot).y]
 
 TextMorph::endOfLine = (slot) ->
-  
   # answer the slot (index) indicating the EOL for the given slot
   @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1
 
 
 # TextMorph editing:
 TextMorph::edit = ->
-  @root().edit this
+  @root().edit @
 
 TextMorph::selection = ->
   start = undefined
@@ -347,7 +335,7 @@ TextMorph::enableSelecting = ->
       @startMark = @slotAt(pos)
       @endMark = @startMark
       @currentlySelecting = true
-
+  #
   @mouseMove = (pos) ->
     if @isEditable and @currentlySelecting and (not @isDraggable)
       newMark = @slotAt(pos)
@@ -367,7 +355,7 @@ TextMorph::developersMenu = ->
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->
-    @prompt menu.title + "\nfont\nsize:", @setFontSize, this, @fontSize.toString(), null, 6, 100, true
+    @prompt menu.title + "\nfont\nsize:", @setFontSize, @, @fontSize.toString(), null, 6, 100, true
   ), "set this Text's\nfont point size"
   menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"
   menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"
@@ -386,7 +374,6 @@ TextMorph::developersMenu = ->
   menu
 
 TextMorph::toggleIsDraggable = ->
-  
   # for context menu demo purposes
   @isDraggable = not @isDraggable
   if @isDraggable
@@ -434,7 +421,6 @@ TextMorph::setSansSerif = ->
   @changed()
 
 TextMorph::setText = (size) ->
-  
   # for context menu demo purposes
   @text = Math.round(size).toString()
   @changed()
@@ -442,7 +428,6 @@ TextMorph::setText = (size) ->
   @changed()
 
 TextMorph::setFontSize = (size) ->
-  
   # for context menu demo purposes
   newSize = undefined
   if typeof size is "number"
@@ -455,14 +440,13 @@ TextMorph::setFontSize = (size) ->
   @changed()
 
 TextMorph::numericalSetters = ->
-  
   # for context menu demo purposes
   ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
 
 
 # TextMorph evaluation:
 TextMorph::evaluationMenu = ->
-  menu = new MenuMorph(this, null)
+  menu = new MenuMorph(@, null)
   menu.addItem "do it", "doIt", "evaluate the\nselected expression"
   menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
   menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"

@@ -6,10 +6,7 @@ class TriggerMorph extends Morph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, labelColor
 
-
-# TriggerMorph instance creation:
 TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
-  
   # additional properties:
   @target = target or null
   @action = action or null
@@ -22,10 +19,10 @@ TriggerMorph::init = (target, action, labelString, fontSize, fontStyle, environm
   @highlightColor = new Color(192, 192, 192)
   @pressColor = new Color(128, 128, 128)
   @labelColor = labelColor or new Color(0, 0, 0)
-  
+  #
   # initialize inherited properties:
   super()
-  
+  #
   # override inherited properites:
   @color = new Color(255, 255, 255)
   @drawNew()
@@ -67,7 +64,6 @@ TriggerMorph::createLabel = ->
 
 # TriggerMorph duplicating:
 TriggerMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.label = (dict[@label])  if c.label and dict[@label]
@@ -76,7 +72,6 @@ TriggerMorph::copyRecordingReferences = (dict) ->
 
 # TriggerMorph action:
 TriggerMorph::trigger = ->
-  
   #
   #	if target is a function, use it as callback:
   #	execute target as callback function with action as argument

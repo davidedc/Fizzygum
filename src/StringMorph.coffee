@@ -6,10 +6,7 @@ class StringMorph extends Morph
   constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
     @init text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName
 
-
-# StringMorph instance creation:
 StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
-  
   # additional properties:
   @text = text or ((if (text is "") then "" else "StringMorph"))
   @fontSize = fontSize or 12
@@ -23,29 +20,27 @@ StringMorph::init = (text, fontSize, fontStyle, bold, italic, isNumeric, shadowO
   @shadowColor = shadowColor or null
   @isShowingBlanks = false
   @blanksColor = new Color(180, 140, 140)
-  
+  #
   # additional properties for text-editing:
   @currentlySelecting = false
   @startMark = 0
   @endMark = 0
   @markedTextColor = new Color(255, 255, 255)
   @markedBackgoundColor = new Color(60, 60, 120)
-  
+  #
   # initialize inherited properties:
   super()
-  
+  #
   # override inherited properites:
   @color = color or new Color(0, 0, 0)
   @noticesTransparentClick = true
   @drawNew()
 
 StringMorph::toString = ->
-  
   # e.g. 'a StringMorph("Hello World")'
   "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"
 
 StringMorph::font = ->
-  
   # answer a font string, e.g. 'bold italic 12px sans-serif'
   font = ""
   font = font + "bold "  if @isBold
@@ -62,30 +57,30 @@ StringMorph::drawNew = ->
   c = undefined
   x = undefined
   y = undefined
-  
+  #
   # initialize my surface property
   @image = newCanvas()
   context = @image.getContext("2d")
   context.font = @font()
-  
+  #
   # set my extent
   width = Math.max(context.measureText(@text).width + Math.abs(@shadowOffset.x), 1)
   @bounds.corner = @bounds.origin.add(new Point(width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
   @image.width = width
   @image.height = @height()
-  
+  #
   # prepare context for drawing text
   context.font = @font()
   context.textAlign = "left"
   context.textBaseline = "bottom"
-  
+  #
   # first draw the shadow, if any
   if @shadowColor
     x = Math.max(@shadowOffset.x, 0)
     y = Math.max(@shadowOffset.y, 0)
     context.fillStyle = @shadowColor.toString()
     context.fillText @text, x, fontHeight(@fontSize) + y
-  
+  #
   # now draw the actual text
   x = Math.abs(Math.min(@shadowOffset.x, 0))
   y = Math.abs(Math.min(@shadowOffset.y, 0))
@@ -94,7 +89,7 @@ StringMorph::drawNew = ->
     @renderWithBlanks context, x, fontHeight(@fontSize) + y
   else
     context.fillText @text, x, fontHeight(@fontSize) + y
-  
+  #
   # draw the selection
   start = Math.min(@startMark, @endMark)
   stop = Math.max(@startMark, @endMark)
@@ -107,12 +102,11 @@ StringMorph::drawNew = ->
     context.fillStyle = @markedTextColor.toString()
     context.fillText c, p.x + x, fontHeight(@fontSize) + y
     i += 1
-  
+  #
   # notify my parent of layout change
   @parent.fixLayout()  if @parent.fixLayout  if @parent
 
 StringMorph::renderWithBlanks = (context, startX, y) ->
-  
   # create the blank form
   drawBlank = ->
     context.drawImage blank, Math.round(x), 0
@@ -126,7 +120,7 @@ StringMorph::renderWithBlanks = (context, startX, y) ->
   ctx.fillStyle = @blanksColor.toString()
   ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)
   ctx.fill()
-  
+  #
   # render my text inserting blanks
   words.forEach (word) ->
     drawBlank()  unless isFirst
@@ -136,10 +130,8 @@ StringMorph::renderWithBlanks = (context, startX, y) ->
       x += context.measureText(word).width
 
 
-
 # StringMorph mesuring:
 StringMorph::slotPosition = (slot) ->
-  
   # answer the position point of the given index ("slot")
   # where the cursor should be placed
   dest = Math.min(Math.max(slot, 0), @text.length)
@@ -159,7 +151,6 @@ StringMorph::slotPosition = (slot) ->
   new Point(x, y)
 
 StringMorph::slotAt = (aPoint) ->
-  
   # answer the slot (index) closest to the given point
   # so the cursor can be moved accordingly
   idx = 0
@@ -172,25 +163,20 @@ StringMorph::slotAt = (aPoint) ->
   idx - 1
 
 StringMorph::upFrom = (slot) ->
-  
   # answer the slot above the given one
   slot
 
 StringMorph::downFrom = (slot) ->
-  
   # answer the slot below the given one
   slot
 
 StringMorph::startOfLine = ->
-  
   # answer the first slot (index) of the line for the given slot
   0
 
 StringMorph::endOfLine = ->
-  
   # answer the slot (index) indicating the EOL for the given slot
   @text.length
-
 
 # StringMorph menus:
 StringMorph::developersMenu = ->
@@ -198,7 +184,7 @@ StringMorph::developersMenu = ->
   menu.addLine()
   menu.addItem "edit", "edit"
   menu.addItem "font size...", (->
-    @prompt menu.title + "\nfont\nsize:", @setFontSize, this, @fontSize.toString(), null, 6, 500, true
+    @prompt menu.title + "\nfont\nsize:", @setFontSize, @, @fontSize.toString(), null, 6, 500, true
   ), "set this String's\nfont point size"
   menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
   menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"
@@ -217,7 +203,6 @@ StringMorph::developersMenu = ->
   menu
 
 StringMorph::toggleIsDraggable = ->
-  
   # for context menu demo purposes
   @isDraggable = not @isDraggable
   if @isDraggable
@@ -256,7 +241,6 @@ StringMorph::setSansSerif = ->
   @changed()
 
 StringMorph::setFontSize = (size) ->
-  
   # for context menu demo purposes
   newSize = undefined
   if typeof size is "number"
@@ -269,7 +253,6 @@ StringMorph::setFontSize = (size) ->
   @changed()
 
 StringMorph::setText = (size) ->
-  
   # for context menu demo purposes
   @text = Math.round(size).toString()
   @changed()
@@ -277,14 +260,13 @@ StringMorph::setText = (size) ->
   @changed()
 
 StringMorph::numericalSetters = ->
-  
   # for context menu demo purposes
   ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
 
 
 # StringMorph editing:
 StringMorph::edit = ->
-  @root().edit this
+  @root().edit @
 
 StringMorph::selection = ->
   start = undefined

@@ -15,11 +15,11 @@ MorphicNode::toString = ->
 # MorphicNode accessing:
 MorphicNode::addChild = (aMorphicNode) ->
   @children.push aMorphicNode
-  aMorphicNode.parent = this
+  aMorphicNode.parent = @
 
 MorphicNode::addChildFirst = (aMorphicNode) ->
   @children.splice 0, null, aMorphicNode
-  aMorphicNode.parent = this
+  aMorphicNode.parent = @
 
 MorphicNode::removeChild = (aMorphicNode) ->
   idx = @children.indexOf(aMorphicNode)
@@ -28,7 +28,7 @@ MorphicNode::removeChild = (aMorphicNode) ->
 
 # MorphicNode functions:
 MorphicNode::root = ->
-  return this  if @parent is null
+  return @  if @parent is null
   @parent.root()
 
 MorphicNode::depth = ->
@@ -36,32 +36,30 @@ MorphicNode::depth = ->
   @parent.depth() + 1
 
 MorphicNode::allChildren = ->
-  
   # includes myself
-  result = [this]
+  result = [@]
   @children.forEach (child) ->
     result = result.concat(child.allChildren())
-  
+  #
   result
 
 MorphicNode::forAllChildren = (aFunction) ->
   if @children.length > 0
     @children.forEach (child) ->
       child.forAllChildren aFunction
-  
-  aFunction.call null, this
+  #
+  aFunction.call null, @
 
 MorphicNode::allLeafs = ->
   result = []
   @allChildren().forEach (element) ->
     result.push element  if element.children.length is 0
-  
+  #
   result
 
 MorphicNode::allParents = ->
-  
   # includes myself
-  result = [this]
+  result = [@]
   result = result.concat(@parent.allParents())  if @parent isnt null
   result
 
@@ -70,23 +68,20 @@ MorphicNode::siblings = ->
   @parent.children.filter (child) =>
     child isnt @
 
-
 MorphicNode::parentThatIsA = (constructor) ->
-  
   # including myself
-  return this  if this instanceof constructor
+  return @  if @ instanceof constructor
   return null  unless @parent
   @parent.parentThatIsA constructor
 
 MorphicNode::parentThatIsAnyOf = (constructors) ->
-  
   # including myself
   yup = false
   constructors.forEach (each) =>
     if @constructor is each
       yup = true
       return
-  
-  return this  if yup
+  #
+  return @  if yup
   return null  unless @parent
   @parent.parentThatIsAnyOf constructors

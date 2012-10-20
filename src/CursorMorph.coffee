@@ -6,12 +6,8 @@ class CursorMorph extends BlinkerMorph
   constructor: (aStringOrTextMorph) ->
     @init aStringOrTextMorph
 
-# CursorMorph: referenced constructors
-
-# CursorMorph instance creation:
 CursorMorph::init = (aStringOrTextMorph) ->
   ls = undefined
-  
   # additional properties:
   @keyDownEventUsed = false
   @target = aStringOrTextMorph
@@ -24,10 +20,8 @@ CursorMorph::init = (aStringOrTextMorph) ->
   @image.getContext("2d").font = @target.font()
   @gotoSlot @slot
 
-
 # CursorMorph event processing:
 CursorMorph::processKeyPress = (event) ->
-  
   # this.inspectKeyEvent(event);
   if @keyDownEventUsed
     @keyDownEventUsed = false
@@ -51,17 +45,14 @@ CursorMorph::processKeyPress = (event) ->
         @ctrl event.charCode
       else
         @insert String.fromCharCode(event.charCode)
-  
   # notify target's parent of key event
   @target.escalateEvent "reactToKeystroke", event
 
 CursorMorph::processKeyDown = (event) ->
-  
   # this.inspectKeyEvent(event);
   @keyDownEventUsed = false
   if event.ctrlKey
     @ctrl event.keyCode
-    
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", event
     return
@@ -100,9 +91,7 @@ CursorMorph::processKeyDown = (event) ->
       @cancel()
       @keyDownEventUsed = true
     else
-  
   # this.inspectKeyEvent(event);
-  
   # notify target's parent of key event
   @target.escalateEvent "reactToKeystroke", event
 
@@ -214,6 +203,5 @@ CursorMorph::deleteLeft = ->
 
 # CursorMorph utilities:
 CursorMorph::inspectKeyEvent = (event) ->
-  
   # private
   @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()

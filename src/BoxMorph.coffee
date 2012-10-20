@@ -6,13 +6,11 @@ class BoxMorph extends Morph
   constructor: (edge, border, borderColor) ->
     @init edge, border, borderColor
 
-# BoxMorph instance creation:
 BoxMorph::init = (edge, border, borderColor) ->
   @edge = edge or 4
   @border = border or ((if (border is 0) then 0 else 2))
   @borderColor = borderColor or new Color()
   super()
-
 
 # BoxMorph drawing:
 BoxMorph::drawNew = ->
@@ -39,16 +37,12 @@ BoxMorph::outlinePath = (context, radius, inset) ->
   offset = radius + inset
   w = @width()
   h = @height()
-  
   # top left:
   context.arc offset, offset, radius, radians(-180), radians(-90), false
-  
   # top right:
   context.arc w - offset, offset, radius, radians(-90), radians(-0), false
-  
   # bottom right:
   context.arc w - offset, h - offset, radius, radians(0), radians(90), false
-  
   # bottom left:
   context.arc offset, h - offset, radius, radians(90), radians(180), false
 
@@ -58,18 +52,17 @@ BoxMorph::developersMenu = ->
   menu = super()
   menu.addLine()
   menu.addItem "border width...", (->
-    @prompt menu.title + "\nborder\nwidth:", @setBorderWidth, this, @border.toString(), null, 0, 100, true
+    @prompt menu.title + "\nborder\nwidth:", @setBorderWidth, @, @border.toString(), null, 0, 100, true
   ), "set the border's\nline size"
   menu.addItem "border color...", (->
-    @pickColor menu.title + "\nborder color:", @setBorderColor, this, @borderColor
+    @pickColor menu.title + "\nborder color:", @setBorderColor, @, @borderColor
   ), "set the border's\nline color"
   menu.addItem "corner size...", (->
-    @prompt menu.title + "\ncorner\nsize:", @setCornerSize, this, @edge.toString(), null, 0, 100, true
+    @prompt menu.title + "\ncorner\nsize:", @setCornerSize, @, @edge.toString(), null, 0, 100, true
   ), "set the corner's\nradius"
   menu
 
 BoxMorph::setBorderWidth = (size) ->
-  
   # for context menu demo purposes
   newSize = undefined
   if typeof size is "number"
@@ -81,7 +74,6 @@ BoxMorph::setBorderWidth = (size) ->
   @changed()
 
 BoxMorph::setBorderColor = (color) ->
-  
   # for context menu demo purposes
   if color
     @borderColor = color
@@ -89,7 +81,6 @@ BoxMorph::setBorderColor = (color) ->
     @changed()
 
 BoxMorph::setCornerSize = (size) ->
-  
   # for context menu demo purposes
   newSize = undefined
   if typeof size is "number"
@@ -101,12 +92,10 @@ BoxMorph::setCornerSize = (size) ->
   @changed()
 
 BoxMorph::colorSetters = ->
-  
   # for context menu demo purposes
   ["color", "borderColor"]
 
 BoxMorph::numericalSetters = ->
-  
   # for context menu demo purposes
   list = super()
   list.push "setBorderWidth", "setCornerSize"

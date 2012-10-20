@@ -6,7 +6,6 @@ class MenuItemMorph extends TriggerMorph
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
     @init target, action, labelString, fontSize, fontStyle, environment, hint, color
 
-# MenuItemMorph instance creation:
 MenuItemMorph::createLabel = ->
   np = undefined
   @label.destroy()  if @label isnt null

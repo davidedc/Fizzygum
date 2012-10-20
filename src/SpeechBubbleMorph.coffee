@@ -10,9 +10,6 @@ class SpeechBubbleMorph extends BoxMorph
   constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
     @init contents, color, edge, border, borderColor, padding, isThought
 
-# SpeechBubbleMorph: referenced constructors
-
-# SpeechBubbleMorph instance creation:
 SpeechBubbleMorph::init = (contents, color, edge, border, borderColor, padding, isThought) ->
   @isPointingRight = true # orientation of text
   @contents = contents or ""
@@ -29,17 +26,16 @@ SpeechBubbleMorph::popUp = (world, pos) ->
   @setPosition pos.subtract(new Point(0, @height()))
   @addShadow new Point(2, 2), 80
   @keepWithin world
-  world.add this
+  world.add @
   @changed()
   world.hand.destroyTemporaries()
-  world.hand.temporaries.push this
+  world.hand.temporaries.push @
   @mouseEnter = ->
     @destroy()
 
 
 # SpeechBubbleMorph drawing:
 SpeechBubbleMorph::drawNew = ->
-  
   # re-build my contents
   @contentsMorph.destroy()  if @contentsMorph
   if @contents instanceof Morph
@@ -54,14 +50,14 @@ SpeechBubbleMorph::drawNew = ->
   else
     @contentsMorph = new TextMorph(@contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
   @add @contentsMorph
-  
+  #
   # adjust my layout
   @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
   @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
-  
+  #
   # draw my outline
   super()
-  
+  #
   # position my contents
   @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))
 
@@ -73,13 +69,13 @@ SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
   w = @width()
   h = @height()
   rad = undefined
-  
+  #
   # top left:
   context.arc offset, offset, radius, radians(-180), radians(-90), false
-  
+  #
   # top right:
   context.arc w - offset, offset, radius, radians(-90), radians(-0), false
-  
+  #
   # bottom right:
   context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false
   unless @isThought # draw speech bubble hook
@@ -89,25 +85,25 @@ SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
     else # pointing left
       context.lineTo w - (radius / 2 + inset), h - inset
       context.lineTo w - (offset + radius), h - offset
-  
+  #
   # bottom left:
   context.arc offset, h - offset - radius, radius, radians(90), radians(180), false
   if @isThought
-    
+    #
     # close large bubble:
     context.lineTo inset, offset
-    
+    #
     # draw thought bubbles:
     if @isPointingRight
-      
+      #
       # tip bubble:
       rad = radius / 4
       circle rad + inset, h - rad - inset, rad
-      
+      #
       # middle bubble:
       rad = radius / 3.2
       circle rad * 2 + inset, h - rad - inset * 2, rad
-      
+      #
       # top bubble:
       rad = radius / 2.8
       circle rad * 3 + inset * 2, h - rad - inset * 4, rad
@@ -115,11 +111,11 @@ SpeechBubbleMorph::outlinePath = (context, radius, inset) ->
       # tip bubble:
       rad = radius / 4
       circle w - (rad + inset), h - rad - inset, rad
-      
+      #
       # middle bubble:
       rad = radius / 3.2
       circle w - (rad * 2 + inset), h - rad - inset * 2, rad
-      
+      #
       # top bubble:
       rad = radius / 2.8
       circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad

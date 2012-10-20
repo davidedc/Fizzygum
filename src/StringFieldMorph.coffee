@@ -25,7 +25,7 @@ StringFieldMorph::drawNew = ->
   @text = null
   @children.forEach (child) ->
     child.destroy()
-  
+  #
   @children = []
   @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
   @text.isNumeric = @isNumeric # for whichever reason...
@@ -46,7 +46,6 @@ StringFieldMorph::mouseClickLeft = ->
 
 # StringFieldMorph duplicating:
 StringFieldMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.text = (dict[@text])  if c.text and dict[@text]

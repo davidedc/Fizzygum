@@ -10,7 +10,6 @@ class HandleMorph extends Morph
     # if insetY is missing, it will be the same as insetX
     @init target, minX, minY, insetX, insetY, type
 
-# HandleMorph instance creation:
 HandleMorph::init = (target, minX, minY, insetX, insetY, type) ->
   size = MorphicPreferences.handleSize
   @target = target or null
@@ -33,7 +32,7 @@ HandleMorph::drawNew = ->
   @image = @normalImage
   if @target
     @setPosition @target.bottomRight().subtract(@extent().add(@inset))
-    @target.add this
+    @target.add @
     @target.changed()
 
 HandleMorph::drawOnCanvas = (aCanvas, color, shadowColor) ->
@@ -134,7 +133,7 @@ HandleMorph::mouseDownLeft = (pos) ->
 
 # HandleMorph dragging and dropping:
 HandleMorph::rootForGrab = ->
-  this
+  @
 
 
 # HandleMorph events:
@@ -149,7 +148,6 @@ HandleMorph::mouseLeave = ->
 
 # HandleMorph duplicating:
 HandleMorph::copyRecordingReferences = (dict) ->
-  
   # inherited, see comment in Morph
   c = super dict
   c.target = (dict[@target])  if c.target and dict[@target]
@@ -159,13 +157,11 @@ HandleMorph::copyRecordingReferences = (dict) ->
 # HandleMorph menu:
 HandleMorph::attach = ->
   choices = @overlappedMorphs()
-  menu = new MenuMorph(this, "choose target:")
+  menu = new MenuMorph(@, "choose target:")
   choices.forEach (each) =>
     menu.addItem each.toString().slice(0, 50), ->
       @isDraggable = false
       @target = each
       @drawNew()
       @noticesTransparentClick = true
-  
-  
   menu.popUpAtHand @world()  if choices.length > 0

@@ -6,12 +6,8 @@ class PenMorph extends Morph
   constructor: () ->
     @init()
 
-# PenMorph: referenced constructors
-
-# PenMorph instance creation:
 PenMorph::init = ->
   size = MorphicPreferences.handleSize * 4
-  
   # additional properties:
   @isWarped = false # internal optimization
   @wantsRedraw = false # internal optimization
@@ -27,12 +23,11 @@ PenMorph::changed = ->
   if @isWarped is false
     w = @root()
     w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
-    @parent.childChanged this  if @parent
+    @parent.childChanged @  if @parent
 
 
 # PenMorph display:
 PenMorph::drawNew = (facing) ->
-  
   #
   #    my orientation can be overridden with the "facing" parameter to
   #    implement Scratch-style rotation styles
@@ -135,12 +130,12 @@ PenMorph::endWarp = ->
 
 PenMorph::warp = (fun) ->
   @startWarp()
-  fun.call this
+  fun.call @
   @endWarp()
 
 PenMorph::warpOp = (selector, argsArray) ->
   @startWarp()
-  this[selector].apply this, argsArray
+  @[selector].apply @, argsArray
   @endWarp()
 
 

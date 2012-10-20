@@ -4,18 +4,16 @@ class InspectorMorph extends BoxMorph
   constructor: (target) ->
     @init target
 
-# InspectorMorph instance creation:
 InspectorMorph::init = (target) ->
-  
   # additional properties:
   @target = target
   @currentProperty = null
   @showing = "attributes"
   @markOwnProperties = false
-  
+  #
   # initialize inherited properties:
   super()
-  
+  #
   # override inherited properties:
   @silentSetExtent new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3)
   @isDraggable = true
@@ -24,7 +22,7 @@ InspectorMorph::init = (target) ->
   @color = new Color(60, 60, 60)
   @borderColor = new Color(95, 95, 95)
   @drawNew()
-  
+  #
   # panes:
   @label = null
   @list = null
@@ -47,14 +45,14 @@ InspectorMorph::buildPanes = ->
   property = undefined
   ctrl = undefined
   ev = undefined
-  
+  #
   # remove existing panes
   @children.forEach (m) ->
     # keep work pane around
     m.destroy()  if m isnt @work
-  
+  #
   @children = []
-  
+  #
   # label
   @label = new TextMorph(@target.toString())
   @label.fontSize = MorphicPreferences.menuFontSize
@@ -62,7 +60,7 @@ InspectorMorph::buildPanes = ->
   @label.color = new Color(255, 255, 255)
   @label.drawNew()
   @add @label
-  
+  #
   # properties list
   for property of @target
     # dummy condition, to be refined
@@ -99,11 +97,11 @@ InspectorMorph::buildPanes = ->
     cnts.enableSelecting()
     cnts.setReceiver @target
     @detail.setContents cnts
-  
+  #
   @list.hBar.alpha = 0.6
   @list.vBar.alpha = 0.6
   @add @list
-  
+  #
   # details pane
   @detail = new ScrollFrameMorph()
   @detail.acceptsDrops = false
@@ -118,7 +116,7 @@ InspectorMorph::buildPanes = ->
   ctrl.setReceiver @target
   @detail.setContents ctrl
   @add @detail
-  
+  #
   # work ('evaluation') pane
   # don't refresh the work pane if it already exists
   if @work is null
@@ -135,7 +133,7 @@ InspectorMorph::buildPanes = ->
     ev.setReceiver @target
     @work.setContents ev
   @add @work
-  
+  #
   # properties button
   @buttonSubset = new TriggerMorph()
   @buttonSubset.labelString = "show..."
@@ -145,24 +143,24 @@ InspectorMorph::buildPanes = ->
     menu.addItem "attributes", =>
       @showing = "attributes"
       @buildPanes()
-    
+    #
     menu.addItem "methods", =>
       @showing = "methods"
       @buildPanes()
-    
+    #
     menu.addItem "all", =>
       @showing = "all"
       @buildPanes()
-    
+    #
     menu.addLine()
     menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (->
       @markOwnProperties = not @markOwnProperties
       @buildPanes()
     ), "highlight\n'own' properties"
     menu.popUpAtHand @world()
-  
+  #
   @add @buttonSubset
-  
+  #
   # inspect button
   @buttonInspect = new TriggerMorph()
   @buttonInspect.labelString = "inspect..."
@@ -179,16 +177,16 @@ InspectorMorph::buildPanes = ->
         inspector.keepWithin world
         world.add inspector
         inspector.changed()
-      
+      #
       menu.addItem "here...", =>
         @setTarget @currentProperty
-      
+      #
       menu.popUpAtHand @world()
     else
       @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
-  
+  #
   @add @buttonInspect
-  
+  #
   # edit button
   @buttonEdit = new TriggerMorph()
   @buttonEdit.labelString = "edit..."
@@ -201,20 +199,20 @@ InspectorMorph::buildPanes = ->
     menu.addItem "rename...", "renameProperty"
     menu.addItem "remove...", "removeProperty"
     menu.popUpAtHand @world()
-  
+  #
   @add @buttonEdit
-  
+  #
   # close button
   @buttonClose = new TriggerMorph()
   @buttonClose.labelString = "close"
   @buttonClose.action = =>
     @destroy()
-  
+  #
   @add @buttonClose
-  
+  #
   # resizer
-  @resizer = new HandleMorph(this, 150, 100, @edge, @edge)
-  
+  @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
+  #
   # update layout
   @fixLayout()
 
@@ -226,7 +224,7 @@ InspectorMorph::fixLayout = ->
   w = undefined
   h = undefined
   Morph::trackChanges = false
-  
+  #
   # label
   x = @left() + @edge
   y = @top() + @edge
@@ -239,7 +237,7 @@ InspectorMorph::fixLayout = ->
     @drawNew()
     @changed()
     @resizer.drawNew()
-  
+  #
   # list
   y = @label.bottom() + 2
   w = Math.min(Math.floor(@width() / 3), @list.listContents.width())
@@ -248,19 +246,19 @@ InspectorMorph::fixLayout = ->
   h = b - y
   @list.setPosition new Point(x, y)
   @list.setExtent new Point(w, h)
-  
+  #
   # detail
   x = @list.right() + @edge
   r = @right() - @edge
   w = r - x
   @detail.setPosition new Point(x, y)
   @detail.setExtent new Point(w, (h * 2 / 3) - @edge)
-  
+  #
   # work
   y = @detail.bottom() + @edge
   @work.setPosition new Point(x, y)
   @work.setExtent new Point(w, h / 3)
-  
+  #
   # properties button
   x = @list.left()
   y = @list.bottom() + @edge
@@ -268,19 +266,19 @@ InspectorMorph::fixLayout = ->
   h = MorphicPreferences.handleSize
   @buttonSubset.setPosition new Point(x, y)
   @buttonSubset.setExtent new Point(w, h)
-  
+  #
   # inspect button
   x = @detail.left()
   w = @detail.width() - @edge - MorphicPreferences.handleSize
   w = w / 3 - @edge / 3
   @buttonInspect.setPosition new Point(x, y)
   @buttonInspect.setExtent new Point(w, h)
-  
+  #
   # edit button
   x = @buttonInspect.right() + @edge
   @buttonEdit.setPosition new Point(x, y)
   @buttonEdit.setExtent new Point(w, h)
-  
+  #
   # close button
   x = @buttonEdit.right() + @edge
   r = @detail.right() - @edge - MorphicPreferences.handleSize
@@ -300,7 +298,7 @@ InspectorMorph::save = ->
   txt = @detail.contents.children[0].text.toString()
   prop = @list.selected
   try
-    
+    #
     # this.target[prop] = evaluate(txt);
     @target.evaluateString "this." + prop + " = " + txt
     if @target.drawNew
@@ -319,7 +317,7 @@ InspectorMorph::addProperty = ->
         @target.changed()
         @target.drawNew()
         @target.changed()
-  ), this, "property" # Chrome cannot handle empty strings (others do)
+  ), @, "property" # Chrome cannot handle empty strings (others do)
 
 InspectorMorph::renameProperty = ->
   propertyName = @list.selected
@@ -340,7 +338,7 @@ InspectorMorph::removeProperty = ->
   prop = @list.selected
   try
     delete (@target[prop])
-    
+    #
     @currentProperty = null
     @buildPanes()
     if @target.drawNew
