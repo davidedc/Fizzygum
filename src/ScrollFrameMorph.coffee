@@ -106,7 +106,8 @@ ScrollFrameMorph::scrollY = (steps) ->
   newY = b - ch  if newY + ch < b
   @contents.setTop newY  if newY isnt ct
 
-ScrollFrameMorph::step = noOpFunction
+ScrollFrameMorph::step = ->
+    nop()
 
 ScrollFrameMorph::mouseDownLeft = (pos) ->
   return null  unless @isScrollingByDragging

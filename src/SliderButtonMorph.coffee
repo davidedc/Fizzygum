@@ -12,7 +12,8 @@ class SliderButtonMorph extends CircleBoxMorph
     @hasMiddleDip = true
     super orientation
 
-SliderButtonMorph::autoOrientation = noOpFunction
+SliderButtonMorph::autoOrientation = ->
+    nop()
 
 SliderButtonMorph::drawNew = ->
   colorBak = @color.copy()
@@ -119,4 +120,5 @@ SliderButtonMorph::mouseClickLeft = ->
   @changed()
 
 # prevent my parent from getting picked up
-SliderButtonMorph::mouseMove = noOpFunction
+SliderButtonMorph::mouseMove = ->
+    nop()

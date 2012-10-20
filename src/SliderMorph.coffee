@@ -25,7 +25,8 @@ class SliderMorph extends CircleBoxMorph
 
 
 # this.drawNew();
-SliderMorph::autoOrientation = noOpFunction
+SliderMorph::autoOrientation = ->
+    nop()
 
 SliderMorph::rangeSize = ->
   @stop - @start
