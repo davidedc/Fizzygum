@@ -50,10 +50,9 @@
   <span class="nx">result</span>
 
 <span class="nv">MorphicNode::siblings = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="k">return</span> <span class="p">[]</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="kc">null</span>
-  <span class="nx">@parent</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">filter</span> <span class="nf">(child) -&gt;</span>
-    <span class="nx">child</span> <span class="o">isnt</span> <span class="nx">myself</span>
+  <span class="nx">@parent</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">filter</span> <span class="p">(</span><span class="nx">child</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">child</span> <span class="o">isnt</span> <span class="nx">@</span>
 
 
 <span class="nv">MorphicNode::parentThatIsA = </span><span class="nf">(constructor) -&gt;</span>
@@ -63,9 +62,8 @@
 
 <span class="nv">MorphicNode::parentThatIsAnyOf = </span><span class="nf">(constructors) -&gt;</span>
   </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>including myself</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">yup = </span><span class="kc">false</span>
-  <span class="nv">myself = </span><span class="k">this</span>
-  <span class="nx">constructors</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
-    <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">constructor</span> <span class="o">is</span> <span class="nx">each</span>
+  <span class="nx">constructors</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="k">if</span> <span class="nx">@constructor</span> <span class="o">is</span> <span class="nx">each</span>
       <span class="nv">yup = </span><span class="kc">true</span>
       <span class="k">return</span>
   

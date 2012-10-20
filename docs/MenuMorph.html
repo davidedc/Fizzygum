@@ -37,7 +37,6 @@
   <span class="vi">@label.text = </span><span class="nx">text</span>
 
 <span class="nv">MenuMorph::drawNew = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nv">item = </span><span class="kc">undefined</span>
   <span class="nv">fb = </span><span class="kc">undefined</span>
   <span class="nv">x = </span><span class="kc">undefined</span>
@@ -64,19 +63,19 @@
     <span class="k">else</span>
       <span class="nv">y = </span><span class="nx">@top</span><span class="p">()</span> <span class="o">+</span> <span class="mi">4</span>
   <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>
-  <span class="nx">@items</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(tuple) -&gt;</span>
+  <span class="nx">@items</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">tuple</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="nv">isLine = </span><span class="kc">false</span>
     <span class="k">if</span> <span class="nx">tuple</span> <span class="k">instanceof</span> <span class="nx">StringFieldMorph</span> <span class="o">or</span> <span class="nx">tuple</span> <span class="k">instanceof</span> <span class="nx">ColorPickerMorph</span> <span class="o">or</span> <span class="nx">tuple</span> <span class="k">instanceof</span> <span class="nx">SliderMorph</span>
       <span class="nv">item = </span><span class="nx">tuple</span>
     <span class="k">else</span> <span class="k">if</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">is</span> <span class="mi">0</span>
       <span class="nv">isLine = </span><span class="kc">true</span>
       <span class="nv">item = </span><span class="k">new</span> <span class="nx">Morph</span><span class="p">()</span>
-      <span class="nv">item.color = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">borderColor</span>
+      <span class="nv">item.color = </span><span class="nx">@borderColor</span>
       <span class="nx">item</span><span class="p">.</span><span class="nx">setHeight</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>bubble help hint</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nv">item = </span><span class="k">new</span> <span class="nx">MenuItemMorph</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">target</span><span class="p">,</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">fontSize</span> <span class="o">or</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">menuFontSize</span><span class="p">,</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">menuFontName</span><span class="p">,</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">environment</span><span class="p">,</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># color</span>
+    <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>bubble help hint</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nv">item = </span><span class="k">new</span> <span class="nx">MenuItemMorph</span><span class="p">(</span><span class="nx">@target</span><span class="p">,</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">@fontSize</span> <span class="o">or</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">menuFontSize</span><span class="p">,</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">menuFontName</span><span class="p">,</span> <span class="nx">@environment</span><span class="p">,</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="c1"># color</span>
     <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">isLine</span>
     <span class="nx">item</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
-    <span class="nx">myself</span><span class="p">.</span><span class="nx">add</span> <span class="nx">item</span>
+    <span class="nx">@add</span> <span class="nx">item</span>
     <span class="nv">y = </span><span class="nx">y</span> <span class="o">+</span> <span class="nx">item</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span>
     <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">isLine</span>
   
@@ -96,14 +95,13 @@
 
 <span class="nv">MenuMorph::adjustWidths = </span><span class="o">-&gt;</span>
   <span class="nv">w = </span><span class="nx">@maxWidth</span><span class="p">()</span>
-  <span class="nv">myself = </span><span class="k">this</span>
-  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(item) -&gt;</span>
+  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">item</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="nx">item</span><span class="p">.</span><span class="nx">silentSetWidth</span> <span class="nx">w</span>
     <span class="k">if</span> <span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">MenuItemMorph</span>
       <span class="nx">item</span><span class="p">.</span><span class="nx">createBackgrounds</span><span class="p">()</span>
     <span class="k">else</span>
       <span class="nx">item</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
-      <span class="nx">item</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">item</span><span class="p">.</span><span class="nx">center</span><span class="p">().</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">extent</span><span class="p">().</span><span class="nx">floorDivideBy</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="k">if</span> <span class="nx">item</span> <span class="o">is</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">label</span>
+      <span class="nx">item</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">item</span><span class="p">.</span><span class="nx">center</span><span class="p">().</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">extent</span><span class="p">().</span><span class="nx">floorDivideBy</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>  <span class="k">if</span> <span class="nx">item</span> <span class="o">is</span> <span class="nx">@label</span>
 
 
 <span class="nv">MenuMorph::unselectAllItems = </span><span class="o">-&gt;</span>

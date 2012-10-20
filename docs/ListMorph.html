@@ -37,17 +37,16 @@
   <span class="nx">@buildListContents</span><span class="p">()</span>
 
 <span class="nv">ListMorph::buildListContents = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nx">@listContents</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@listContents</span>
   <span class="vi">@listContents = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@select</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="k">this</span><span class="p">)</span>
   <span class="vi">@elements = </span><span class="p">[</span><span class="s">&quot;(empty)&quot;</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">@elements</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span>
-  <span class="nx">@elements</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(element) -&gt;</span>
+  <span class="nx">@elements</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="nv">color = </span><span class="kc">null</span>
-    <span class="nx">myself</span><span class="p">.</span><span class="nx">format</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(pair) -&gt;</span>
+    <span class="nx">@format</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(pair) -&gt;</span>
       <span class="nv">color = </span><span class="nx">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">call</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">element</span><span class="p">)</span>
     </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>label string
 action
-hint</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">myself</span><span class="p">.</span><span class="nx">listContents</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">labelGetter</span><span class="p">(</span><span class="nx">element</span><span class="p">),</span> <span class="nx">element</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">color</span>
+hint</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@listContents</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">@labelGetter</span><span class="p">(</span><span class="nx">element</span><span class="p">),</span> <span class="nx">element</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">color</span>
 
   <span class="nx">@listContents</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@contents</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>
   <span class="vi">@listContents.isListContents = </span><span class="kc">true</span>

@@ -22,16 +22,15 @@
   </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>use only for shadows</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@image</span>
 
 <span class="nv">FrameMorph::fullDrawOn = </span><span class="nf">(aCanvas, aRect) -&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nv">rectangle = </span><span class="kc">undefined</span>
   <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@isVisible</span>
   <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@fullBounds</span><span class="p">()</span>
   <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
-  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
+  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">child</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="k">if</span> <span class="nx">child</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span>
       <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
     <span class="k">else</span>
-      <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">rectangle</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>FrameMorph scrolling optimization:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">FrameMorph::moveBy = </span><span class="nf">(delta) -&gt;</span>
+      <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">rectangle</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>FrameMorph scrolling optimization:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">FrameMorph::moveBy = </span><span class="nf">(delta) -&gt;</span>
   <span class="nx">@changed</span><span class="p">()</span>
   <span class="vi">@bounds = </span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">translateBy</span><span class="p">(</span><span class="nx">delta</span><span class="p">)</span>
   <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
@@ -56,7 +55,6 @@
 <span class="nv">FrameMorph::adjustBounds = </span><span class="o">-&gt;</span>
   <span class="nv">subBounds = </span><span class="kc">undefined</span>
   <span class="nv">newBounds = </span><span class="kc">undefined</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="k">return</span> <span class="kc">null</span>  <span class="k">if</span> <span class="nx">@scrollFrame</span> <span class="o">is</span> <span class="kc">null</span>
   <span class="nv">subBounds = </span><span class="nx">@submorphBounds</span><span class="p">()</span>
   <span class="k">if</span> <span class="nx">subBounds</span> <span class="o">and</span> <span class="p">(</span><span class="o">not</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">isTextLineWrapping</span><span class="p">)</span>
@@ -68,10 +66,10 @@
     <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="nx">@keepInScrollFrame</span><span class="p">()</span>
   <span class="k">if</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">isTextLineWrapping</span>
-    <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(morph) -&gt;</span>
+    <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">morph</span><span class="p">)</span> <span class="o">=&gt;</span>
       <span class="k">if</span> <span class="nx">morph</span> <span class="k">instanceof</span> <span class="nx">TextMorph</span>
-        <span class="nx">morph</span><span class="p">.</span><span class="nx">setWidth</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>
-        <span class="nx">myself</span><span class="p">.</span><span class="nx">setHeight</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">height</span><span class="p">(),</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">scrollFrame</span><span class="p">.</span><span class="nx">height</span><span class="p">())</span>
+        <span class="nx">morph</span><span class="p">.</span><span class="nx">setWidth</span> <span class="nx">@width</span><span class="p">()</span>
+        <span class="nx">@setHeight</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">height</span><span class="p">(),</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">height</span><span class="p">())</span>
   
   <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">adjustScrollBars</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>FrameMorph dragging &amp; dropping of contents:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">FrameMorph::reactToDropOf = </span><span class="o">-&gt;</span>
   <span class="nx">@adjustBounds</span><span class="p">()</span>
@@ -88,8 +86,7 @@
   <span class="nx">menu</span>
 
 <span class="nv">FrameMorph::keepAllSubmorphsWithin = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
-  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span>
-    <span class="nx">m</span><span class="p">.</span><span class="nx">keepWithin</span> <span class="nx">myself</span>
+  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">m</span><span class="p">.</span><span class="nx">keepWithin</span> <span class="nx">@</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

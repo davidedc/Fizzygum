@@ -134,12 +134,11 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
 <span class="nv">SliderMorph::setTarget = </span><span class="o">-&gt;</span>
   <span class="nv">choices = </span><span class="nx">@overlappedMorphs</span><span class="p">()</span>
   <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">&quot;choose target:&quot;</span><span class="p">)</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@world</span><span class="p">()</span>
-  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">-&gt;</span>
-      <span class="nv">myself.target = </span><span class="nx">each</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">setTargetSetter</span><span class="p">()</span>
+  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">=&gt;</span>
+      <span class="vi">@target = </span><span class="nx">each</span>
+      <span class="nx">@setTargetSetter</span><span class="p">()</span>
   
   
   <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
@@ -150,10 +149,9 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
 <span class="nv">SliderMorph::setTargetSetter = </span><span class="o">-&gt;</span>
   <span class="nv">choices = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">numericalSetters</span><span class="p">()</span>
   <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">&quot;choose target property:&quot;</span><span class="p">)</span>
-  <span class="nv">myself = </span><span class="k">this</span>
-  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">-&gt;</span>
-      <span class="nv">myself.action = </span><span class="nx">each</span>
+  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">=&gt;</span>
+      <span class="vi">@action = </span><span class="nx">each</span>
   
   
   <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
@@ -165,26 +163,25 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
   <span class="nx">list</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>SliderMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">SliderMorph::step = </span><span class="kc">null</span>
 <span class="nv">SliderMorph::mouseDownLeft = </span><span class="nf">(pos) -&gt;</span>
   <span class="nv">world = </span><span class="kc">undefined</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nx">unless</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
     <span class="vi">@offset = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">()</span> <span class="c1"># return null;</span>
   <span class="k">else</span>
     <span class="vi">@offset = </span><span class="nx">pos</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>
   <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span>
-  <span class="vi">@step = </span><span class="o">-&gt;</span>
+  <span class="vi">@step = </span><span class="o">=&gt;</span>
     <span class="nv">mousePos = </span><span class="kc">undefined</span>
     <span class="nv">newX = </span><span class="kc">undefined</span>
     <span class="nv">newY = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">mouseButton</span>
       <span class="nv">mousePos = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
-      <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
-        <span class="nv">newX = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">x</span>
-        <span class="nv">newY = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">mousePos</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">offset</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span> <span class="o">-</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">height</span><span class="p">()),</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">top</span><span class="p">())</span>
+      <span class="k">if</span> <span class="nx">@orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
+        <span class="nv">newX = </span><span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">x</span>
+        <span class="nv">newY = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">mousePos</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">@offset</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">@bottom</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">height</span><span class="p">()),</span> <span class="nx">@top</span><span class="p">())</span>
       <span class="k">else</span>
-        <span class="nv">newY = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">y</span>
-        <span class="nv">newX = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">mousePos</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">width</span><span class="p">()),</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">left</span><span class="p">())</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">newX</span><span class="p">,</span> <span class="nx">newY</span><span class="p">)</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">updateValue</span><span class="p">()</span>
+        <span class="nv">newY = </span><span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">y</span>
+        <span class="nv">newX = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">mousePos</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">@offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">@right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">width</span><span class="p">()),</span> <span class="nx">@left</span><span class="p">())</span>
+      <span class="nx">@button</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">newX</span><span class="p">,</span> <span class="nx">newY</span><span class="p">)</span>
+      <span class="nx">@updateValue</span><span class="p">()</span>
     <span class="k">else</span>
       <span class="vi">@step = </span><span class="kc">null</span>
 

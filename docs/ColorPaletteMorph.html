@@ -57,12 +57,11 @@
 <span class="nv">ColorPaletteMorph::setTarget = </span><span class="o">-&gt;</span>
   <span class="nv">choices = </span><span class="nx">@overlappedMorphs</span><span class="p">()</span>
   <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">&quot;choose target:&quot;</span><span class="p">)</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@world</span><span class="p">()</span>
-  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">-&gt;</span>
-      <span class="nv">myself.target = </span><span class="nx">each</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">setTargetSetter</span><span class="p">()</span>
+  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">=&gt;</span>
+      <span class="vi">@target = </span><span class="nx">each</span>
+      <span class="nx">@setTargetSetter</span><span class="p">()</span>
   
   
   <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
@@ -73,10 +72,9 @@
 <span class="nv">ColorPaletteMorph::setTargetSetter = </span><span class="o">-&gt;</span>
   <span class="nv">choices = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">colorSetters</span><span class="p">()</span>
   <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s">&quot;choose target property:&quot;</span><span class="p">)</span>
-  <span class="nv">myself = </span><span class="k">this</span>
-  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) -&gt;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">-&gt;</span>
-      <span class="nv">myself.targetSetter = </span><span class="nx">each</span>
+  <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">=&gt;</span>
+      <span class="vi">@targetSetter = </span><span class="nx">each</span>
   
   
   <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>

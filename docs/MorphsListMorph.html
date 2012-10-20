@@ -21,7 +21,6 @@
 <span class="nv">MorphsListMorph::buildPanes = </span><span class="o">-&gt;</span>
   <span class="nv">attribs = </span><span class="p">[]</span>
   <span class="nv">property = </span><span class="kc">undefined</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nv">ctrl = </span><span class="kc">undefined</span>
   <span class="nv">ev = </span><span class="kc">undefined</span>
   </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>remove existing panes</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>keep work pane around</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">m</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">m</span> <span class="o">isnt</span> <span class="nx">@work</span>
@@ -62,8 +61,8 @@
   <span class="nx">@add</span> <span class="nx">@morphsList</span>
   </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>close button</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@buttonClose = </span><span class="k">new</span> <span class="nx">TriggerMorph</span><span class="p">()</span>
   <span class="vi">@buttonClose.labelString = </span><span class="s">&quot;close&quot;</span>
-  <span class="vi">@buttonClose.action = </span><span class="o">-&gt;</span>
-    <span class="nx">myself</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+  <span class="vi">@buttonClose.action = </span><span class="o">=&gt;</span>
+    <span class="nx">@destroy</span><span class="p">()</span>
   
   <span class="nx">@add</span> <span class="nx">@buttonClose</span>
   </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>resizer</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@resizer = </span><span class="k">new</span> <span class="nx">HandleMorph</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="nx">@edge</span><span class="p">,</span> <span class="nx">@edge</span><span class="p">)</span>

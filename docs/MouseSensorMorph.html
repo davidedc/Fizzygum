@@ -13,19 +13,18 @@
   <span class="nx">@drawNew</span><span class="p">()</span>
 
 <span class="nv">MouseSensorMorph::touch = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nx">unless</span> <span class="nx">@isTouched</span>
     <span class="vi">@isTouched = </span><span class="kc">true</span>
     <span class="vi">@alpha = </span><span class="mf">0.6</span>
-    <span class="vi">@step = </span><span class="o">-&gt;</span>
-      <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">isTouched</span>
-        <span class="nv">myself.alpha = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">+</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">upStep</span>  <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">&lt;</span> <span class="mi">1</span>
-      <span class="k">else</span> <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">&gt;</span> <span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">downStep</span><span class="p">)</span>
-        <span class="nv">myself.alpha = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">alpha</span> <span class="o">-</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">downStep</span>
+    <span class="vi">@step = </span><span class="o">=&gt;</span>
+      <span class="k">if</span> <span class="nx">@isTouched</span>
+        <span class="vi">@alpha = </span><span class="nx">@alpha</span> <span class="o">+</span> <span class="nx">@upStep</span>  <span class="k">if</span> <span class="nx">@alpha</span> <span class="o">&lt;</span> <span class="mi">1</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="nx">@alpha</span> <span class="o">&gt;</span> <span class="p">(</span><span class="nx">@downStep</span><span class="p">)</span>
+        <span class="vi">@alpha = </span><span class="nx">@alpha</span> <span class="o">-</span> <span class="nx">@downStep</span>
       <span class="k">else</span>
-        <span class="nv">myself.alpha = </span><span class="mi">0</span>
-        <span class="nv">myself.step = </span><span class="kc">null</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
+        <span class="vi">@alpha = </span><span class="mi">0</span>
+        <span class="vi">@step = </span><span class="kc">null</span>
+      <span class="nx">@changed</span><span class="p">()</span>
 
 <span class="nv">MouseSensorMorph::unTouch = </span><span class="o">-&gt;</span>
   <span class="vi">@isTouched = </span><span class="kc">false</span>

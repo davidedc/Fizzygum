@@ -89,12 +89,11 @@ for selector-like actions
   <span class="vi">@image = </span><span class="nx">@highlightImage</span>
   <span class="nx">@changed</span><span class="p">()</span>
   <span class="nx">@trigger</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>TriggerMorph bubble help:</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">TriggerMorph::bubbleHelp = </span><span class="nf">(contents) -&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="vi">@fps = </span><span class="mi">2</span>
-  <span class="vi">@step = </span><span class="o">-&gt;</span>
-    <span class="nx">myself</span><span class="p">.</span><span class="nx">popUpbubbleHelp</span> <span class="nx">contents</span>  <span class="k">if</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">@world</span><span class="p">().</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">())</span>
-    <span class="nv">myself.fps = </span><span class="mi">0</span>
-    <span class="k">delete</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">step</span>
+  <span class="vi">@step = </span><span class="o">=&gt;</span>
+    <span class="nx">@popUpbubbleHelp</span> <span class="nx">contents</span>  <span class="k">if</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">@world</span><span class="p">().</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">())</span>
+    <span class="vi">@fps = </span><span class="mi">0</span>
+    <span class="k">delete</span> <span class="nx">@step</span>
 
 <span class="nv">TriggerMorph::popUpbubbleHelp = </span><span class="nf">(contents) -&gt;</span>
   <span class="k">new</span> <span class="nx">SpeechBubbleMorph</span><span class="p">(</span><span class="nx">localize</span><span class="p">(</span><span class="nx">contents</span><span class="p">),</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">1</span><span class="p">).</span><span class="nx">popUp</span> <span class="nx">@world</span><span class="p">(),</span> <span class="nx">@rightCenter</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>

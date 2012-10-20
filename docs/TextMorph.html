@@ -38,7 +38,6 @@
   <span class="nx">font</span> <span class="o">+</span> <span class="nx">@fontSize</span> <span class="o">+</span> <span class="s">&quot;px &quot;</span> <span class="o">+</span> <span class="p">((</span><span class="k">if</span> <span class="nx">@fontName</span> <span class="k">then</span> <span class="nx">@fontName</span> <span class="o">+</span> <span class="s">&quot;, &quot;</span> <span class="k">else</span> <span class="s">&quot;&quot;</span><span class="p">))</span> <span class="o">+</span> <span class="nx">@fontStyle</span>
 
 <span class="nv">TextMorph::parse = </span><span class="o">-&gt;</span>
-  <span class="nv">myself = </span><span class="k">this</span>
   <span class="nv">paragraphs = </span><span class="nx">@text</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s">&quot;\n&quot;</span><span class="p">)</span>
   <span class="nv">canvas = </span><span class="nx">newCanvas</span><span class="p">()</span>
   <span class="nv">context = </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
@@ -51,24 +50,24 @@
   <span class="vi">@lines = </span><span class="p">[]</span>
   <span class="vi">@lineSlots = </span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
   <span class="vi">@words = </span><span class="p">[]</span>
-  <span class="nx">paragraphs</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(p) -&gt;</span>
-    <span class="nv">myself.words = </span><span class="nx">myself</span><span class="p">.</span><span class="nx">words</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span>
-    <span class="nx">myself</span><span class="p">.</span><span class="nx">words</span><span class="p">.</span><span class="nx">push</span> <span class="s">&quot;\n&quot;</span>
+  <span class="nx">paragraphs</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">p</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="vi">@words = </span><span class="nx">@words</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">))</span>
+    <span class="nx">@words</span><span class="p">.</span><span class="nx">push</span> <span class="s">&quot;\n&quot;</span>
   
-  <span class="nx">@words</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(word) -&gt;</span>
+  <span class="nx">@words</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">word</span><span class="p">)</span> <span class="o">=&gt;</span>
     <span class="k">if</span> <span class="nx">word</span> <span class="o">is</span> <span class="s">&quot;\n&quot;</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">lines</span><span class="p">.</span><span class="nx">push</span> <span class="nx">oldline</span>
-      <span class="nx">myself</span><span class="p">.</span><span class="nx">lineSlots</span><span class="p">.</span><span class="nx">push</span> <span class="nx">slot</span>
-      <span class="nv">myself.maxLineWidth = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">maxLineWidth</span><span class="p">,</span> <span class="nx">context</span><span class="p">.</span><span class="nx">measureText</span><span class="p">(</span><span class="nx">oldline</span><span class="p">).</span><span class="nx">width</span><span class="p">)</span>
+      <span class="nx">@lines</span><span class="p">.</span><span class="nx">push</span> <span class="nx">oldline</span>
+      <span class="nx">@lineSlots</span><span class="p">.</span><span class="nx">push</span> <span class="nx">slot</span>
+      <span class="vi">@maxLineWidth = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@maxLineWidth</span><span class="p">,</span> <span class="nx">context</span><span class="p">.</span><span class="nx">measureText</span><span class="p">(</span><span class="nx">oldline</span><span class="p">).</span><span class="nx">width</span><span class="p">)</span>
       <span class="nv">oldline = </span><span class="s">&quot;&quot;</span>
     <span class="k">else</span>
-      <span class="k">if</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">maxWidth</span> <span class="o">&gt;</span> <span class="mi">0</span>
+      <span class="k">if</span> <span class="nx">@maxWidth</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="nv">newline = </span><span class="nx">oldline</span> <span class="o">+</span> <span class="nx">word</span> <span class="o">+</span> <span class="s">&quot; &quot;</span>
         <span class="nv">w = </span><span class="nx">context</span><span class="p">.</span><span class="nx">measureText</span><span class="p">(</span><span class="nx">newline</span><span class="p">).</span><span class="nx">width</span>
-        <span class="k">if</span> <span class="nx">w</span> <span class="o">&gt;</span> <span class="nx">myself</span><span class="p">.</span><span class="nx">maxWidth</span>
-          <span class="nx">myself</span><span class="p">.</span><span class="nx">lines</span><span class="p">.</span><span class="nx">push</span> <span class="nx">oldline</span>
-          <span class="nx">myself</span><span class="p">.</span><span class="nx">lineSlots</span><span class="p">.</span><span class="nx">push</span> <span class="nx">slot</span>
-          <span class="nv">myself.maxLineWidth = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">myself</span><span class="p">.</span><span class="nx">maxLineWidth</span><span class="p">,</span> <span class="nx">context</span><span class="p">.</span><span class="nx">measureText</span><span class="p">(</span><span class="nx">oldline</span><span class="p">).</span><span class="nx">width</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nx">w</span> <span class="o">&gt;</span> <span class="nx">@maxWidth</span>
+          <span class="nx">@lines</span><span class="p">.</span><span class="nx">push</span> <span class="nx">oldline</span>
+          <span class="nx">@lineSlots</span><span class="p">.</span><span class="nx">push</span> <span class="nx">slot</span>
+          <span class="vi">@maxLineWidth = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@maxLineWidth</span><span class="p">,</span> <span class="nx">context</span><span class="p">.</span><span class="nx">measureText</span><span class="p">(</span><span class="nx">oldline</span><span class="p">).</span><span class="nx">width</span><span class="p">)</span>
           <span class="nv">oldline = </span><span class="nx">word</span> <span class="o">+</span> <span class="s">&quot; &quot;</span>
         <span class="k">else</span>
           <span class="nv">oldline = </span><span class="nx">newline</span>
