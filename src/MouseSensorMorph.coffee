@@ -13,32 +13,32 @@ class MouseSensorMorph extends BoxMorph
     @downStep = 0.02
     @noticesTransparentClick = false
     @drawNew()
-
-MouseSensorMorph::touch = ->
-  unless @isTouched
-    @isTouched = true
-    @alpha = 0.6
-    @step = =>
-      if @isTouched
-        @alpha = @alpha + @upStep  if @alpha < 1
-      else if @alpha > (@downStep)
-        @alpha = @alpha - @downStep
-      else
-        @alpha = 0
-        @step = null
-      @changed()
-
-MouseSensorMorph::unTouch = ->
-  @isTouched = false
-
-MouseSensorMorph::mouseEnter = ->
-  @touch()
-
-MouseSensorMorph::mouseLeave = ->
-  @unTouch()
-
-MouseSensorMorph::mouseDownLeft = ->
-  @touch()
-
-MouseSensorMorph::mouseClickLeft = ->
-  @unTouch()
+  
+  touch: ->
+    unless @isTouched
+      @isTouched = true
+      @alpha = 0.6
+      @step = =>
+        if @isTouched
+          @alpha = @alpha + @upStep  if @alpha < 1
+        else if @alpha > (@downStep)
+          @alpha = @alpha - @downStep
+        else
+          @alpha = 0
+          @step = null
+        @changed()
+  
+  unTouch: ->
+    @isTouched = false
+  
+  mouseEnter: ->
+    @touch()
+  
+  mouseLeave: ->
+    @unTouch()
+  
+  mouseDownLeft: ->
+    @touch()
+  
+  mouseClickLeft: ->
+    @unTouch()

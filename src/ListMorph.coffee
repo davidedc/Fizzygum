@@ -35,33 +35,33 @@ class ListMorph extends ScrollFrameMorph
     @action = null
     @acceptsDrops = false
     @buildListContents()
-
-ListMorph::buildListContents = ->
-  @listContents.destroy()  if @listContents
-  @listContents = new MenuMorph(@select, null, @)
-  @elements = ["(empty)"]  if @elements.length is 0
-  @elements.forEach (element) =>
-    color = null
-    @format.forEach (pair) ->
-      color = pair[0]  if pair[1].call(null, element)
+  
+  buildListContents: ->
+    @listContents.destroy()  if @listContents
+    @listContents = new MenuMorph(@select, null, @)
+    @elements = ["(empty)"]  if @elements.length is 0
+    @elements.forEach (element) =>
+      color = null
+      @format.forEach (pair) ->
+        color = pair[0]  if pair[1].call(null, element)
+      #
+      # label string
+      # action
+      # hint
+      @listContents.addItem @labelGetter(element), element, null, color
     #
-    # label string
-    # action
-    # hint
-    @listContents.addItem @labelGetter(element), element, null, color
-  #
-  @listContents.setPosition @contents.position()
-  @listContents.isListContents = true
-  @listContents.drawNew()
-  @addContents @listContents
-
-ListMorph::select = (item) ->
-  @selected = item
-  @action.call null, item  if @action
-
-ListMorph::setExtent = (aPoint) ->
-  lb = @listContents.bounds
-  nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
-  @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
-  @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-  super aPoint
+    @listContents.setPosition @contents.position()
+    @listContents.isListContents = true
+    @listContents.drawNew()
+    @addContents @listContents
+  
+  select: (item) ->
+    @selected = item
+    @action.call null, item  if @action
+  
+  setExtent: (aPoint) ->
+    lb = @listContents.bounds
+    nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
+    @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
+    @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+    super aPoint
