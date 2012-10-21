@@ -461,6 +461,8 @@ Morph = (function(_super) {
 
   __extends(Morph, _super);
 
+  Morph.prototype.morphPropertThatNoOtherObjectOwns = "this property is exposed to all the subclasses but only via their prototype chain. It should appear blue in the inspector for the PenMorph object";
+
   function Morph() {
     Morph.__super__.constructor.call(this);
     this.isMorph = true;
@@ -1604,283 +1606,6 @@ Morph = (function(_super) {
 
 })(MorphicNode);
 
-BlinkerMorph = (function(_super) {
-
-  __extends(BlinkerMorph, _super);
-
-  function BlinkerMorph(rate) {
-    BlinkerMorph.__super__.constructor.call(this);
-    this.color = new Color(0, 0, 0);
-    this.fps = rate || 2;
-    this.drawNew();
-  }
-
-  BlinkerMorph.prototype.step = function() {
-    return this.toggleVisibility();
-  };
-
-  return BlinkerMorph;
-
-})(Morph);
-
-CursorMorph = (function(_super) {
-
-  __extends(CursorMorph, _super);
-
-  function CursorMorph(aStringOrTextMorph) {
-    var ls;
-    ls = void 0;
-    this.keyDownEventUsed = false;
-    this.target = aStringOrTextMorph;
-    this.originalContents = this.target.text;
-    this.slot = this.target.text.length;
-    CursorMorph.__super__.constructor.call(this);
-    ls = fontHeight(this.target.fontSize);
-    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
-    this.drawNew();
-    this.image.getContext("2d").font = this.target.font();
-    this.gotoSlot(this.slot);
-  }
-
-  CursorMorph.prototype.processKeyPress = function(event) {
-    var navigation;
-    if (this.keyDownEventUsed) {
-      this.keyDownEventUsed = false;
-      return null;
-    }
-    if ((event.keyCode === 40) || event.charCode === 40) {
-      this.insert("(");
-      return null;
-    }
-    if ((event.keyCode === 37) || event.charCode === 37) {
-      this.insert("%");
-      return null;
-    }
-    navigation = [8, 13, 18, 27, 35, 36, 37, 38, 40];
-    if (event.keyCode) {
-      if (!contains(navigation, event.keyCode)) {
-        if (event.ctrlKey) {
-          this.ctrl(event.keyCode);
-        } else if (event.metaKey) {
-          this.cmd(event.keyCode);
-        } else {
-          this.insert(String.fromCharCode(event.keyCode));
-        }
-      }
-    } else if (event.charCode) {
-      if (!contains(navigation, event.charCode)) {
-        if (event.ctrlKey) {
-          this.ctrl(event.charCode);
-        } else if (event.metaKey) {
-          this.cmd(event.keyCode);
-        } else {
-          this.insert(String.fromCharCode(event.charCode));
-        }
-      }
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
-  };
-
-  CursorMorph.prototype.processKeyDown = function(event) {
-    this.keyDownEventUsed = false;
-    if (event.ctrlKey) {
-      this.ctrl(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    } else if (event.metaKey) {
-      this.cmd(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    }
-    switch (event.keyCode) {
-      case 37:
-        this.goLeft();
-        this.keyDownEventUsed = true;
-        break;
-      case 39:
-        this.goRight();
-        this.keyDownEventUsed = true;
-        break;
-      case 38:
-        this.goUp();
-        this.keyDownEventUsed = true;
-        break;
-      case 40:
-        this.goDown();
-        this.keyDownEventUsed = true;
-        break;
-      case 36:
-        this.goHome();
-        this.keyDownEventUsed = true;
-        break;
-      case 35:
-        this.goEnd();
-        this.keyDownEventUsed = true;
-        break;
-      case 46:
-        this.deleteRight();
-        this.keyDownEventUsed = true;
-        break;
-      case 8:
-        this.deleteLeft();
-        this.keyDownEventUsed = true;
-        break;
-      case 13:
-        if (this.target instanceof StringMorph) {
-          this.accept();
-        } else {
-          this.insert("\n");
-        }
-        this.keyDownEventUsed = true;
-        break;
-      case 27:
-        this.cancel();
-        this.keyDownEventUsed = true;
-        break;
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
-  };
-
-  CursorMorph.prototype.gotoSlot = function(newSlot) {
-    this.setPosition(this.target.slotPosition(newSlot));
-    return this.slot = Math.max(newSlot, 0);
-  };
-
-  CursorMorph.prototype.goLeft = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.slot - 1);
-  };
-
-  CursorMorph.prototype.goRight = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.slot + 1);
-  };
-
-  CursorMorph.prototype.goUp = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.target.upFrom(this.slot));
-  };
-
-  CursorMorph.prototype.goDown = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.target.downFrom(this.slot));
-  };
-
-  CursorMorph.prototype.goHome = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.target.startOfLine(this.slot));
-  };
-
-  CursorMorph.prototype.goEnd = function() {
-    this.target.clearSelection();
-    return this.gotoSlot(this.target.endOfLine(this.slot));
-  };
-
-  CursorMorph.prototype.gotoPos = function(aPoint) {
-    this.gotoSlot(this.target.slotAt(aPoint));
-    return this.show();
-  };
-
-  CursorMorph.prototype.accept = function() {
-    var world;
-    world = this.root();
-    if (world) {
-      world.stopEditing();
-    }
-    return this.escalateEvent("accept", null);
-  };
-
-  CursorMorph.prototype.cancel = function() {
-    var world;
-    world = this.root();
-    if (world) {
-      world.stopEditing();
-    }
-    this.target.text = this.originalContents;
-    this.target.changed();
-    this.target.drawNew();
-    this.target.changed();
-    return this.escalateEvent("cancel", null);
-  };
-
-  CursorMorph.prototype.insert = function(aChar) {
-    var text;
-    text = void 0;
-    if (aChar === "\t") {
-      return this.target.tab(this.target);
-    }
-    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
-      if (this.target.selection() !== "") {
-        this.gotoSlot(this.target.selectionStartSlot());
-        this.target.deleteSelection();
-      }
-      text = this.target.text;
-      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
-      this.target.text = text;
-      this.target.drawNew();
-      this.target.changed();
-      return this.goRight();
-    }
-  };
-
-  CursorMorph.prototype.ctrl = function(aChar) {
-    if ((aChar === 97) || (aChar === 65)) {
-      return this.target.selectAll();
-    } else if (aChar === 123) {
-      return this.insert("{");
-    } else if (aChar === 125) {
-      return this.insert("}");
-    } else if (aChar === 91) {
-      return this.insert("[");
-    } else if (aChar === 93) {
-      return this.insert("]");
-    }
-  };
-
-  CursorMorph.prototype.cmd = function(aChar) {
-    if (aChar === 65) {
-      return this.target.selectAll();
-    }
-  };
-
-  CursorMorph.prototype.deleteRight = function() {
-    var text;
-    text = void 0;
-    if (this.target.selection() !== "") {
-      this.gotoSlot(this.target.selectionStartSlot());
-      return this.target.deleteSelection();
-    } else {
-      text = this.target.text;
-      this.target.changed();
-      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
-      this.target.text = text;
-      return this.target.drawNew();
-    }
-  };
-
-  CursorMorph.prototype.deleteLeft = function() {
-    var text;
-    text = void 0;
-    if (this.target.selection() !== "") {
-      this.gotoSlot(this.target.selectionStartSlot());
-      this.target.deleteSelection();
-    }
-    text = this.target.text;
-    this.target.changed();
-    text = text.slice(0, Math.max(this.slot - 1, 0)) + text.slice(this.slot);
-    this.target.text = text;
-    this.target.drawNew();
-    return this.goLeft();
-  };
-
-  CursorMorph.prototype.inspectKeyEvent = function(event) {
-    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
-  };
-
-  return CursorMorph;
-
-})(BlinkerMorph);
-
 ColorPaletteMorph = (function(_super) {
 
   __extends(ColorPaletteMorph, _super);
@@ -2034,1307 +1759,233 @@ GrayPaletteMorph = (function(_super) {
 
 })(ColorPaletteMorph);
 
-BoxMorph = (function(_super) {
+HandleMorph = (function(_super) {
+  var step;
 
-  __extends(BoxMorph, _super);
+  __extends(HandleMorph, _super);
 
-  function BoxMorph(edge, border, borderColor) {
-    this.edge = edge || 4;
-    this.border = border || (border === 0 ? 0 : 2);
-    this.borderColor = borderColor || new Color();
-    BoxMorph.__super__.constructor.call(this);
+  function HandleMorph(target, minX, minY, insetX, insetY, type) {
+    var size;
+    size = MorphicPreferences.handleSize;
+    this.target = target || null;
+    this.minExtent = new Point(minX || 0, minY || 0);
+    this.inset = new Point(insetX || 0, insetY || insetX || 0);
+    this.type = type || "resize";
+    HandleMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.isDraggable = false;
+    this.noticesTransparentClick = true;
+    this.setExtent(new Point(size, size));
   }
 
-  BoxMorph.prototype.drawNew = function() {
-    var context;
-    context = void 0;
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    if ((this.edge === 0) && (this.border === 0)) {
-      BoxMorph.__super__.drawNew.call(this);
+  HandleMorph.prototype.drawNew = function() {
+    this.normalImage = newCanvas(this.extent());
+    this.highlightImage = newCanvas(this.extent());
+    this.drawOnCanvas(this.normalImage, this.color, new Color(100, 100, 100));
+    this.drawOnCanvas(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
+    this.image = this.normalImage;
+    if (this.target) {
+      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
+      this.target.add(this);
+      return this.target.changed();
+    }
+  };
+
+  HandleMorph.prototype.drawOnCanvas = function(aCanvas, color, shadowColor) {
+    var context, i, p1, p11, p2, p22, _results;
+    context = aCanvas.getContext("2d");
+    p1 = void 0;
+    p11 = void 0;
+    p2 = void 0;
+    p22 = void 0;
+    i = void 0;
+    context.lineWidth = 1;
+    context.lineCap = "round";
+    context.strokeStyle = color.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      i = 0;
+      while (i <= this.height()) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+        i = i + 6;
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    i = 0;
+    while (i <= this.width()) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      context.stroke();
+      i = i + 6;
+    }
+    context.strokeStyle = shadowColor.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      i = -2;
+      while (i <= this.height()) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+        i = i + 6;
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    i = 2;
+    _results = [];
+    while (i <= this.width()) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      context.stroke();
+      _results.push(i = i + 6);
+    }
+    return _results;
+  };
+
+  step = null;
+
+  HandleMorph.prototype.mouseDownLeft = function(pos) {
+    var offset, world,
+      _this = this;
+    world = this.root();
+    offset = pos.subtract(this.bounds.origin);
+    if (!this.target) {
       return null;
     }
-    context.fillStyle = this.color.toString();
-    context.beginPath();
-    this.outlinePath(context, Math.max(this.edge - this.border, 0), this.border);
-    context.closePath();
-    context.fill();
-    if (this.border > 0) {
-      context.lineWidth = this.border;
-      context.strokeStyle = this.borderColor.toString();
-      context.beginPath();
-      this.outlinePath(context, this.edge, this.border / 2);
-      context.closePath();
-      return context.stroke();
-    }
-  };
-
-  BoxMorph.prototype.outlinePath = function(context, radius, inset) {
-    var h, offset, w;
-    offset = radius + inset;
-    w = this.width();
-    h = this.height();
-    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
-    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
-    context.arc(w - offset, h - offset, radius, radians(0), radians(90), false);
-    return context.arc(offset, h - offset, radius, radians(90), radians(180), false);
-  };
-
-  BoxMorph.prototype.developersMenu = function() {
-    var menu;
-    menu = BoxMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("border width...", (function() {
-      return this.prompt(menu.title + "\nborder\nwidth:", this.setBorderWidth, this, this.border.toString(), null, 0, 100, true);
-    }), "set the border's\nline size");
-    menu.addItem("border color...", (function() {
-      return this.pickColor(menu.title + "\nborder color:", this.setBorderColor, this, this.borderColor);
-    }), "set the border's\nline color");
-    menu.addItem("corner size...", (function() {
-      return this.prompt(menu.title + "\ncorner\nsize:", this.setCornerSize, this, this.edge.toString(), null, 0, 100, true);
-    }), "set the corner's\nradius");
-    return menu;
-  };
-
-  BoxMorph.prototype.setBorderWidth = function(size) {
-    var newSize;
-    newSize = void 0;
-    if (typeof size === "number") {
-      this.border = Math.max(size, 0);
-    } else {
-      newSize = parseFloat(size);
-      if (!isNaN(newSize)) {
-        this.border = Math.max(newSize, 0);
-      }
-    }
-    this.drawNew();
-    return this.changed();
-  };
-
-  BoxMorph.prototype.setBorderColor = function(color) {
-    if (color) {
-      this.borderColor = color;
-      this.drawNew();
-      return this.changed();
-    }
-  };
-
-  BoxMorph.prototype.setCornerSize = function(size) {
-    var newSize;
-    newSize = void 0;
-    if (typeof size === "number") {
-      this.edge = Math.max(size, 0);
-    } else {
-      newSize = parseFloat(size);
-      if (!isNaN(newSize)) {
-        this.edge = Math.max(newSize, 0);
-      }
-    }
-    this.drawNew();
-    return this.changed();
-  };
-
-  BoxMorph.prototype.colorSetters = function() {
-    return ["color", "borderColor"];
-  };
-
-  BoxMorph.prototype.numericalSetters = function() {
-    var list;
-    list = BoxMorph.__super__.numericalSetters.call(this);
-    list.push("setBorderWidth", "setCornerSize");
-    return list;
-  };
-
-  return BoxMorph;
-
-})(Morph);
-
-MouseSensorMorph = (function(_super) {
-
-  __extends(MouseSensorMorph, _super);
-
-  function MouseSensorMorph(edge, border, borderColor) {
-    MouseSensorMorph.__super__.constructor.apply(this, arguments);
-    this.edge = edge || 4;
-    this.border = border || 2;
-    this.color = new Color(255, 255, 255);
-    this.borderColor = borderColor || new Color();
-    this.isTouched = false;
-    this.upStep = 0.05;
-    this.downStep = 0.02;
-    this.noticesTransparentClick = false;
-    this.drawNew();
-  }
-
-  MouseSensorMorph.prototype.touch = function() {
-    var _this = this;
-    if (!this.isTouched) {
-      this.isTouched = true;
-      this.alpha = 0.6;
-      return this.step = function() {
-        if (_this.isTouched) {
-          if (_this.alpha < 1) {
-            _this.alpha = _this.alpha + _this.upStep;
-          }
-        } else if (_this.alpha > _this.downStep) {
-          _this.alpha = _this.alpha - _this.downStep;
+    this.step = function() {
+      var newExt, newPos;
+      newPos = void 0;
+      newExt = void 0;
+      if (world.hand.mouseButton) {
+        newPos = world.hand.bounds.origin.copy().subtract(offset);
+        if (_this.type === "resize") {
+          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
+          newExt = newExt.max(_this.minExtent);
+          _this.target.setExtent(newExt);
+          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
         } else {
-          _this.alpha = 0;
-          _this.step = null;
+          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
         }
-        return _this.changed();
-      };
+      } else {
+        return _this.step = null;
+      }
+    };
+    if (!this.target.step) {
+      return this.target.step = noOpFunction;
     }
   };
 
-  MouseSensorMorph.prototype.unTouch = function() {
-    return this.isTouched = false;
-  };
-
-  MouseSensorMorph.prototype.mouseEnter = function() {
-    return this.touch();
-  };
-
-  MouseSensorMorph.prototype.mouseLeave = function() {
-    return this.unTouch();
-  };
-
-  MouseSensorMorph.prototype.mouseDownLeft = function() {
-    return this.touch();
-  };
-
-  MouseSensorMorph.prototype.mouseClickLeft = function() {
-    return this.unTouch();
-  };
-
-  return MouseSensorMorph;
-
-})(BoxMorph);
-
-ColorPickerMorph = (function(_super) {
-
-  __extends(ColorPickerMorph, _super);
-
-  function ColorPickerMorph(defaultColor) {
-    this.choice = defaultColor || new Color(255, 255, 255);
-    ColorPickerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.silentSetExtent(new Point(80, 80));
-    this.drawNew();
-  }
-
-  ColorPickerMorph.prototype.drawNew = function() {
-    ColorPickerMorph.__super__.drawNew.call(this);
-    return this.buildSubmorphs();
-  };
-
-  ColorPickerMorph.prototype.buildSubmorphs = function() {
-    var cpal, gpal, x, y;
-    cpal = void 0;
-    gpal = void 0;
-    x = void 0;
-    y = void 0;
-    this.children.forEach(function(child) {
-      return child.destroy();
-    });
-    this.children = [];
-    this.feedback = new Morph();
-    this.feedback.color = this.choice;
-    this.feedback.setExtent(new Point(20, 20));
-    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
-    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
-    cpal.setPosition(this.bounds.origin);
-    this.add(cpal);
-    gpal.setPosition(cpal.bottomLeft());
-    this.add(gpal);
-    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
-    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
-    this.feedback.setPosition(new Point(x, y));
-    return this.add(this.feedback);
-  };
-
-  ColorPickerMorph.prototype.getChoice = function() {
-    return this.feedback.color;
-  };
-
-  ColorPickerMorph.prototype.rootForGrab = function() {
+  HandleMorph.prototype.rootForGrab = function() {
     return this;
   };
 
-  return ColorPickerMorph;
+  HandleMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
+    }
+    return c;
+  };
+
+  HandleMorph.prototype.attach = function() {
+    var choices, menu,
+      _this = this;
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        this.isDraggable = false;
+        this.target = each;
+        this.drawNew();
+        return this.noticesTransparentClick = true;
+      });
+    });
+    if (choices.length > 0) {
+      return menu.popUpAtHand(this.world());
+    }
+  };
+
+  return HandleMorph;
 
 })(Morph);
 
-HandMorph = (function(_super) {
+modules = {};
 
-  __extends(HandMorph, _super);
+useBlurredShadows = getBlurredShadowSupport();
 
-  function HandMorph(aWorld) {
-    HandMorph.__super__.constructor.call(this);
-    this.bounds = new Rectangle();
-    this.world = aWorld;
-    this.mouseButton = null;
-    this.mouseOverList = [];
-    this.mouseDownMorph = null;
-    this.morphToGrab = null;
-    this.grabOrigin = null;
-    this.temporaries = [];
-    this.touchHoldTimeout = null;
-  }
+standardSettings = {
+  minimumFontHeight: getMinimumFontHeight(),
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 12,
+  bubbleHelpFontSize: 10,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 12,
+  prompterSliderSize: 10,
+  handleSize: 15,
+  scrollBarSize: 12,
+  mouseScrollAmount: 40,
+  useSliderForInput: false,
+  useVirtualKeyboard: true
+};
 
-  HandMorph.prototype.changed = function() {
-    var b;
-    b = void 0;
-    if (this.world !== null) {
-      b = this.fullBounds();
-      if (!b.extent().eq(new Point())) {
-        return this.world.broken.push(this.fullBounds().spread());
-      }
-    }
-  };
+touchScreenSettings = {
+  minimumFontHeight: standardSettings.minimumFontHeight,
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 24,
+  bubbleHelpFontSize: 18,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 24,
+  prompterSliderSize: 20,
+  handleSize: 26,
+  scrollBarSize: 24,
+  mouseScrollAmount: 40,
+  useSliderForInput: true,
+  useVirtualKeyboard: true
+};
 
-  HandMorph.prototype.morphAtPointer = function() {
-    var morphs, result,
-      _this = this;
-    morphs = this.world.allChildren().slice(0).reverse();
-    result = null;
-    morphs.forEach(function(m) {
-      if (m.visibleBounds().containsPoint(_this.bounds.origin) && result === null && m.isVisible && (m.noticesTransparentClick || (!m.isTransparentAt(_this.bounds.origin))) && (!(m instanceof ShadowMorph))) {
-        return result = m;
-      }
-    });
-    if (result !== null) {
-      return result;
-    }
-    return this.world;
-  };
-
-  HandMorph.prototype.allMorphsAtPointer = function() {
-    var morphs,
-      _this = this;
-    morphs = this.world.allChildren();
-    return morphs.filter(function(m) {
-      return m.isVisible && m.visibleBounds().containsPoint(_this.bounds.origin);
-    });
-  };
-
-  HandMorph.prototype.dropTargetFor = function(aMorph) {
-    var target;
-    target = this.morphAtPointer();
-    while (!target.wantsDropOf(aMorph)) {
-      target = target.parent;
-    }
-    return target;
-  };
-
-  HandMorph.prototype.grab = function(aMorph) {
-    var oldParent;
-    oldParent = aMorph.parent;
-    if (aMorph instanceof WorldMorph) {
-      return null;
-    }
-    if (this.children.length === 0) {
-      this.world.stopEditing();
-      this.grabOrigin = aMorph.situation();
-      aMorph.addShadow();
-      if (aMorph.prepareToBeGrabbed) {
-        aMorph.prepareToBeGrabbed(this);
-      }
-      this.add(aMorph);
-      this.changed();
-      if (oldParent && oldParent.reactToGrabOf) {
-        return oldParent.reactToGrabOf(aMorph);
-      }
-    }
-  };
-
-  HandMorph.prototype.drop = function() {
-    var morphToDrop, target;
-    target = void 0;
-    morphToDrop = void 0;
-    if (this.children.length !== 0) {
-      morphToDrop = this.children[0];
-      target = this.dropTargetFor(morphToDrop);
-      this.changed();
-      target.add(morphToDrop);
-      morphToDrop.changed();
-      morphToDrop.removeShadow();
-      this.children = [];
-      this.setExtent(new Point());
-      if (morphToDrop.justDropped) {
-        morphToDrop.justDropped(this);
-      }
-      if (target.reactToDropOf) {
-        target.reactToDropOf(morphToDrop, this);
-      }
-      return this.dragOrigin = null;
-    }
-  };
-
-  HandMorph.prototype.processMouseDown = function(event) {
-    var actualClick, expectedClick, morph;
-    morph = void 0;
-    expectedClick = void 0;
-    actualClick = void 0;
-    this.destroyTemporaries();
-    this.morphToGrab = null;
-    if (this.children.length !== 0) {
-      this.drop();
-      return this.mouseButton = null;
-    } else {
-      morph = this.morphAtPointer();
-      if (this.world.activeMenu) {
-        if (!contains(morph.allParents(), this.world.activeMenu)) {
-          this.world.activeMenu.destroy();
-        } else {
-          clearInterval(this.touchHoldTimeout);
-        }
-      }
-      if (this.world.activeHandle ? morph !== this.world.activeHandle : void 0) {
-        this.world.activeHandle.destroy();
-      }
-      if (this.world.cursor ? morph !== this.world.cursor.target : void 0) {
-        this.world.stopEditing();
-      }
-      if (!morph.mouseMove) {
-        this.morphToGrab = morph.rootForGrab();
-      }
-      if (event.button === 2 || event.ctrlKey) {
-        this.mouseButton = "right";
-        actualClick = "mouseDownRight";
-        expectedClick = "mouseClickRight";
-      } else {
-        this.mouseButton = "left";
-        actualClick = "mouseDownLeft";
-        expectedClick = "mouseClickLeft";
-      }
-      this.mouseDownMorph = morph;
-      while (!this.mouseDownMorph[expectedClick]) {
-        this.mouseDownMorph = this.mouseDownMorph.parent;
-      }
-      while (!morph[actualClick]) {
-        morph = morph.parent;
-      }
-      return morph[actualClick](this.bounds.origin);
-    }
-  };
-
-  HandMorph.prototype.processTouchStart = function(event) {
-    var _this = this;
-    clearInterval(this.touchHoldTimeout);
-    if (event.touches.length === 1) {
-      this.touchHoldTimeout = setInterval(function() {
-        _this.processMouseDown({
-          button: 2
-        });
-        _this.processMouseUp({
-          button: 2
-        });
-        event.preventDefault();
-        return clearInterval(_this.touchHoldTimeout);
-      }, 400);
-      this.processMouseMove(event.touches[0]);
-      this.processMouseDown({
-        button: 0
-      });
-      return event.preventDefault();
-    }
-  };
-
-  HandMorph.prototype.processTouchMove = function(event) {
-    var touch;
-    if (event.touches.length === 1) {
-      touch = event.touches[0];
-      this.processMouseMove(touch);
-      return clearInterval(this.touchHoldTimeout);
-    }
-  };
-
-  HandMorph.prototype.processTouchEnd = function(event) {
-    clearInterval(this.touchHoldTimeout);
-    return this.processMouseUp({
-      button: 0
-    });
-  };
-
-  HandMorph.prototype.processMouseUp = function() {
-    var context, contextMenu, expectedClick, morph;
-    morph = this.morphAtPointer();
-    context = void 0;
-    contextMenu = void 0;
-    expectedClick = void 0;
-    this.destroyTemporaries();
-    if (this.children.length !== 0) {
-      this.drop();
-    } else {
-      if (this.mouseButton === "left") {
-        expectedClick = "mouseClickLeft";
-      } else {
-        expectedClick = "mouseClickRight";
-        if (this.mouseButton) {
-          context = morph;
-          contextMenu = context.contextMenu();
-          while ((!contextMenu) && context.parent) {
-            context = context.parent;
-            contextMenu = context.contextMenu();
-          }
-          if (contextMenu) {
-            contextMenu.popUpAtHand(this.world);
-          }
-        }
-      }
-      while (!morph[expectedClick]) {
-        morph = morph.parent;
-      }
-      morph[expectedClick](this.bounds.origin);
-    }
-    return this.mouseButton = null;
-  };
-
-  HandMorph.prototype.processMouseScroll = function(event) {
-    var morph;
-    morph = this.morphAtPointer();
-    while (morph && !morph.mouseScroll) {
-      morph = morph.parent;
-    }
-    if (morph) {
-      return morph.mouseScroll((event.detail / -3) || (event.hasOwnProperty("wheelDeltaY") ? event.wheelDeltaY / 120 : event.wheelDelta / 120), event.wheelDeltaX / 120 || 0);
-    }
-  };
-
-  HandMorph.prototype.processDrop = function(event) {
-    var canvas, file, files, i, img, parseImgURL, readAudio, readImage, readText, src, targetDrop, txt, _results;
-    files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
-    file = void 0;
-    txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
-    src = void 0;
-    targetDrop = this.morphAtPointer();
-    img = new Image();
-    canvas = void 0;
-    i = void 0;
-    readImage = function(aFile) {
-      var frd, pic;
-      pic = new Image();
-      frd = new FileReader();
-      while (!targetDrop.droppedImage) {
-        targetDrop = targetDrop.parent;
-      }
-      pic.onload = function() {
-        canvas = newCanvas(new Point(pic.width, pic.height));
-        canvas.getContext("2d").drawImage(pic, 0, 0);
-        return targetDrop.droppedImage(canvas, aFile.name);
-      };
-      frd = new FileReader();
-      frd.onloadend = function(e) {
-        return pic.src = e.target.result;
-      };
-      return frd.readAsDataURL(aFile);
-    };
-    readAudio = function(aFile) {
-      var frd, snd;
-      snd = new Audio();
-      frd = new FileReader();
-      while (!targetDrop.droppedAudio) {
-        targetDrop = targetDrop.parent;
-      }
-      frd.onloadend = function(e) {
-        snd.src = e.target.result;
-        return targetDrop.droppedAudio(snd, aFile.name);
-      };
-      return frd.readAsDataURL(aFile);
-    };
-    readText = function(aFile) {
-      var frd;
-      frd = new FileReader();
-      while (!targetDrop.droppedText) {
-        targetDrop = targetDrop.parent;
-      }
-      frd.onloadend = function(e) {
-        return targetDrop.droppedText(e.target.result, aFile.name);
-      };
-      return frd.readAsText(aFile);
-    };
-    parseImgURL = function(html) {
-      var c, start, url;
-      url = "";
-      i = void 0;
-      c = void 0;
-      start = html.indexOf("<img src=\"");
-      if (start === -1) {
-        return null;
-      }
-      start += 10;
-      i = start;
-      while (i < html.length) {
-        c = html[i];
-        if (c === "\"") {
-          return url;
-        }
-        url = url.concat(c);
-        i += 1;
-      }
-      return null;
-    };
-    if (files.length > 0) {
-      i = 0;
-      _results = [];
-      while (i < files.length) {
-        file = files[i];
-        if (file.type.indexOf("image") === 0) {
-          readImage(file);
-        } else if (file.type.indexOf("audio") === 0) {
-          readAudio(file);
-        } else {
-          if (file.type.indexOf("text") === 0) {
-            readText(file);
-          }
-        }
-        _results.push(i += 1);
-      }
-      return _results;
-    } else if (txt) {
-      while (!targetDrop.droppedImage) {
-        targetDrop = targetDrop.parent;
-      }
-      img = new Image();
-      img.onload = function() {
-        canvas = newCanvas(new Point(img.width, img.height));
-        canvas.getContext("2d").drawImage(img, 0, 0);
-        return targetDrop.droppedImage(canvas);
-      };
-      src = parseImgURL(txt);
-      if (src) {
-        return img.src = src;
-      }
-    }
-  };
-
-  HandMorph.prototype.destroyTemporaries = function() {
-    this.temporaries.forEach(function(morph) {
-      return morph.destroy();
-    });
-    return this.temporaries = [];
-  };
-
-  HandMorph.prototype.moveBy = function(delta) {
-    Morph.prototype.trackChanges = false;
-    HandMorph.__super__.moveBy.call(this, delta);
-    Morph.prototype.trackChanges = true;
-    return this.fullChanged();
-  };
-
-  HandMorph.prototype.processMouseMove = function(event) {
-    var fb, morph, mouseOverNew, pos, posInDocument, topMorph,
-      _this = this;
-    pos = void 0;
-    posInDocument = getDocumentPositionOf(this.world.worldCanvas);
-    mouseOverNew = void 0;
-    morph = void 0;
-    topMorph = void 0;
-    fb = void 0;
-    pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y);
-    this.setPosition(pos);
-    mouseOverNew = this.morphAtPointer().allParents();
-    if ((this.children.length === 0) && (this.mouseButton === "left")) {
-      topMorph = this.morphAtPointer();
-      morph = topMorph.rootForGrab();
-      if (topMorph.mouseMove) {
-        topMorph.mouseMove(pos);
-      }
-      if (this.morphToGrab) {
-        if (this.morphToGrab.isDraggable) {
-          morph = this.morphToGrab;
-          this.grab(morph);
-        } else if (this.morphToGrab.isTemplate) {
-          morph = this.morphToGrab.fullCopy();
-          morph.isTemplate = false;
-          morph.isDraggable = true;
-          this.grab(morph);
-          this.grabOrigin = this.morphToGrab.situation();
-        }
-        fb = morph.fullBounds();
-        if (!fb.containsPoint(pos)) {
-          this.bounds.origin = fb.center();
-          this.grab(morph);
-          this.setPosition(pos);
-        }
-      }
-    }
-    this.mouseOverList.forEach(function(old) {
-      if (!contains(mouseOverNew, old)) {
-        if (old.mouseLeave) {
-          old.mouseLeave();
-        }
-        if (old.mouseLeaveDragging && this.mouseButton) {
-          return old.mouseLeaveDragging();
-        }
-      }
-    });
-    mouseOverNew.forEach(function(newMorph) {
-      if (!contains(_this.mouseOverList, newMorph)) {
-        if (newMorph.mouseEnter) {
-          newMorph.mouseEnter();
-        }
-        if (newMorph.mouseEnterDragging && _this.mouseButton) {
-          newMorph.mouseEnterDragging();
-        }
-      }
-      if (_this.children.length > 0) {
-        if (newMorph instanceof ScrollFrameMorph) {
-          if (!newMorph.bounds.insetBy(MorphicPreferences.scrollBarSize * 3).containsPoint(_this.bounds.origin)) {
-            return newMorph.startAutoScrolling();
-          }
-        }
-      }
-    });
-    return this.mouseOverList = mouseOverNew;
-  };
-
-  return HandMorph;
-
-})(Morph);
-
-MenuMorph = (function(_super) {
-
-  __extends(MenuMorph, _super);
-
-  function MenuMorph(target, title, environment, fontSize) {
-    this.target = target;
-    this.title = title || null;
-    this.environment = environment || null;
-    this.fontSize = fontSize || null;
-    this.items = [];
-    this.label = null;
-    this.world = null;
-    this.isListContents = false;
-    MenuMorph.__super__.constructor.call(this);
-    this.isDraggable = false;
-    this.border = null;
-    this.edge = null;
-  }
-
-  MenuMorph.prototype.addItem = function(labelString, action, hint, color) {
-    return this.items.push([localize(labelString || "close"), action || nop, hint, color]);
-  };
-
-  MenuMorph.prototype.addLine = function(width) {
-    return this.items.push([0, width || 1]);
-  };
-
-  MenuMorph.prototype.createLabel = function() {
-    var text;
-    text = void 0;
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    text = new TextMorph(localize(this.title), this.fontSize || MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, true, false, "center");
-    text.alignment = "center";
-    text.color = new Color(255, 255, 255);
-    text.backgroundColor = this.borderColor;
-    text.drawNew();
-    this.label = new BoxMorph(3, 0);
-    this.label.color = this.borderColor;
-    this.label.borderColor = this.borderColor;
-    this.label.setExtent(text.extent().add(4));
-    this.label.drawNew();
-    this.label.add(text);
-    return this.label.text = text;
-  };
-
-  MenuMorph.prototype.drawNew = function() {
-    var fb, isLine, item, x, y,
-      _this = this;
-    item = void 0;
-    fb = void 0;
-    x = void 0;
-    y = void 0;
-    isLine = false;
-    this.children.forEach(function(m) {
-      return m.destroy();
-    });
-    this.children = [];
-    if (!this.isListContents) {
-      this.edge = 5;
-      this.border = 2;
-    }
-    this.color = new Color(255, 255, 255);
-    this.borderColor = new Color(60, 60, 60);
-    this.silentSetExtent(new Point(0, 0));
-    y = 2;
-    x = this.left() + 4;
-    if (!this.isListContents) {
-      if (this.title) {
-        this.createLabel();
-        this.label.setPosition(this.bounds.origin.add(4));
-        this.add(this.label);
-        y = this.label.bottom();
-      } else {
-        y = this.top() + 4;
-      }
-    }
-    y += 1;
-    this.items.forEach(function(tuple) {
-      isLine = false;
-      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
-        item = tuple;
-      } else if (tuple[0] === 0) {
-        isLine = true;
-        item = new Morph();
-        item.color = _this.borderColor;
-        item.setHeight(tuple[1]);
-      } else {
-        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3]);
-      }
-      if (isLine) {
-        y += 1;
-      }
-      item.setPosition(new Point(x, y));
-      _this.add(item);
-      y = y + item.height();
-      if (isLine) {
-        return y += 1;
-      }
-    });
-    fb = this.fullBounds();
-    this.silentSetExtent(fb.extent().add(4));
-    this.adjustWidths();
-    return MenuMorph.__super__.drawNew.call(this);
-  };
-
-  MenuMorph.prototype.maxWidth = function() {
-    var w;
-    w = 0;
-    if (this.parent instanceof FrameMorph ? this.parent.scrollFrame instanceof ScrollFrameMorph : void 0) {
-      w = this.parent.width();
-    }
-    this.children.forEach(function(item) {
-      if ((item instanceof MenuItemMorph) || (item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
-        return w = Math.max(w, item.width());
-      }
-    });
-    if (this.label) {
-      w = Math.max(w, this.label.width());
-    }
-    return w;
-  };
-
-  MenuMorph.prototype.adjustWidths = function() {
-    var w,
-      _this = this;
-    w = this.maxWidth();
-    return this.children.forEach(function(item) {
-      item.silentSetWidth(w);
-      if (item instanceof MenuItemMorph) {
-        return item.createBackgrounds();
-      } else {
-        item.drawNew();
-        if (item === _this.label) {
-          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
-        }
-      }
-    });
-  };
-
-  MenuMorph.prototype.unselectAllItems = function() {
-    this.children.forEach(function(item) {
-      if (item instanceof MenuItemMorph) {
-        return item.image = item.normalImage;
-      }
-    });
-    return this.changed();
-  };
-
-  MenuMorph.prototype.popup = function(world, pos) {
-    this.drawNew();
-    this.setPosition(pos);
-    this.addShadow(new Point(2, 2), 80);
-    this.keepWithin(world);
-    if (world.activeMenu) {
-      world.activeMenu.destroy();
-    }
-    world.add(this);
-    world.activeMenu = this;
-    return this.fullChanged();
-  };
-
-  MenuMorph.prototype.popUpAtHand = function(world) {
-    var wrrld;
-    wrrld = world || this.world;
-    return this.popup(wrrld, wrrld.hand.position());
-  };
-
-  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
-    var wrrld;
-    wrrld = world || this.world;
-    this.drawNew();
-    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
-    var wrrld;
-    wrrld = world || this.world;
-    this.drawNew();
-    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  return MenuMorph;
-
-})(BoxMorph);
-
-MorphsListMorph = (function(_super) {
-
-  __extends(MorphsListMorph, _super);
-
-  function MorphsListMorph(target) {
-    MorphsListMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.drawNew();
-    this.morphsList = null;
-    this.buttonClose = null;
-    this.resizer = null;
-    this.buildPanes();
-  }
-
-  MorphsListMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  MorphsListMorph.prototype.buildPanes = function() {
-    var ListOfMorphs, attribs, ctrl, ev, i, property, theWordMorph,
-      _this = this;
-    attribs = [];
-    property = void 0;
-    ctrl = void 0;
-    ev = void 0;
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph("Morphs List");
-    this.label.fontSize = MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.drawNew();
-    this.add(this.label);
-    ListOfMorphs = [];
-    for (i in window) {
-      theWordMorph = "Morph";
-      if (i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1) {
-        ListOfMorphs.push(i);
-      }
-    }
-    this.morphsList = new ListMorph(ListOfMorphs, null);
-    this.morphsList.hBar.alpha = 0.6;
-    this.morphsList.vBar.alpha = 0.6;
-    this.add(this.morphsList);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  MorphsListMorph.prototype.fixLayout = function() {
-    var b, h, r, w, x, y;
-    x = void 0;
-    y = void 0;
-    r = void 0;
-    b = void 0;
-    w = void 0;
-    h = void 0;
-    Morph.prototype.trackChanges = false;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.label.setPosition(new Point(x, y));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.drawNew();
-      this.changed();
-      this.resizer.drawNew();
-    }
-    y = this.label.bottom() + 2;
-    w = this.width() - this.edge;
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - MorphicPreferences.handleSize;
-    h = b - y;
-    this.morphsList.setPosition(new Point(x, y));
-    this.morphsList.setExtent(new Point(w, h));
-    x = this.morphsList.left();
-    y = this.morphsList.bottom() + this.edge;
-    h = MorphicPreferences.handleSize;
-    w = this.morphsList.width() - h - this.edge;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
-  };
-
-  MorphsListMorph.prototype.setExtent = function(aPoint) {
-    MorphsListMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
-  };
-
-  return MorphsListMorph;
-
-})(BoxMorph);
-
-InspectorMorph = (function(_super) {
-
-  __extends(InspectorMorph, _super);
-
-  function InspectorMorph(target) {
-    this.target = target;
-    this.currentProperty = null;
-    this.showing = "attributes";
-    this.markOwnProperties = false;
-    InspectorMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.drawNew();
-    this.label = null;
-    this.list = null;
-    this.detail = null;
-    this.work = null;
-    this.buttonInspect = null;
-    this.buttonClose = null;
-    this.buttonSubset = null;
-    this.buttonEdit = null;
-    this.resizer = null;
-    if (this.target) {
-      this.buildPanes();
-    }
-  }
-
-  InspectorMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  InspectorMorph.prototype.buildPanes = function() {
-    var attribs, ctrl, ev, property, targetOwnMethods,
-      _this = this;
-    attribs = [];
-    property = void 0;
-    ctrl = void 0;
-    ev = void 0;
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph(this.target.toString());
-    this.label.fontSize = MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.drawNew();
-    this.add(this.label);
-    for (property in this.target) {
-      if (property) {
-        attribs.push(property);
-      }
-    }
-    if (this.showing === "attributes") {
-      attribs = attribs.filter(function(prop) {
-        return typeof _this.target[prop] !== "function";
-      });
-    } else if (this.showing === "methods") {
-      attribs = attribs.filter(function(prop) {
-        return typeof _this.target[prop] === "function";
-      });
-    }
-    if (this.markOwnProperties) {
-      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
-    }
-    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnProperties ? [
-      [
-        new Color(0, 0, 180), function(element) {
-          return (_this.target.hasOwnProperty(element)) || (__indexOf.call(targetOwnMethods, element) >= 0);
-        }
-      ]
-    ] : null));
-    this.list.action = function(selected) {
-      var cnts, txt, val;
-      val = void 0;
-      txt = void 0;
-      cnts = void 0;
-      val = _this.target[selected];
-      _this.currentProperty = val;
-      if (val === null) {
-        txt = "NULL";
-      } else if (isString(val)) {
-        txt = val;
-      } else {
-        txt = val.toString();
-      }
-      cnts = new TextMorph(txt);
-      cnts.isEditable = true;
-      cnts.enableSelecting();
-      cnts.setReceiver(_this.target);
-      return _this.detail.setContents(cnts);
-    };
-    this.list.hBar.alpha = 0.6;
-    this.list.vBar.alpha = 0.6;
-    this.add(this.list);
-    this.detail = new ScrollFrameMorph();
-    this.detail.acceptsDrops = false;
-    this.detail.contents.acceptsDrops = false;
-    this.detail.isTextLineWrapping = true;
-    this.detail.color = new Color(255, 255, 255);
-    this.detail.hBar.alpha = 0.6;
-    this.detail.vBar.alpha = 0.6;
-    ctrl = new TextMorph("");
-    ctrl.isEditable = true;
-    ctrl.enableSelecting();
-    ctrl.setReceiver(this.target);
-    this.detail.setContents(ctrl);
-    this.add(this.detail);
-    if (this.work === null) {
-      this.work = new ScrollFrameMorph();
-      this.work.acceptsDrops = false;
-      this.work.contents.acceptsDrops = false;
-      this.work.isTextLineWrapping = true;
-      this.work.color = new Color(255, 255, 255);
-      this.work.hBar.alpha = 0.6;
-      this.work.vBar.alpha = 0.6;
-      ev = new TextMorph("");
-      ev.isEditable = true;
-      ev.enableSelecting();
-      ev.setReceiver(this.target);
-      this.work.setContents(ev);
-    }
-    this.add(this.work);
-    this.buttonSubset = new TriggerMorph();
-    this.buttonSubset.labelString = "show...";
-    this.buttonSubset.action = function() {
-      var menu;
-      menu = void 0;
-      menu = new MenuMorph();
-      menu.addItem("attributes", function() {
-        _this.showing = "attributes";
-        return _this.buildPanes();
-      });
-      menu.addItem("methods", function() {
-        _this.showing = "methods";
-        return _this.buildPanes();
-      });
-      menu.addItem("all", function() {
-        _this.showing = "all";
-        return _this.buildPanes();
-      });
-      menu.addLine();
-      menu.addItem((_this.markOwnProperties ? "un-mark own" : "mark own"), (function() {
-        _this.markOwnProperties = !_this.markOwnProperties;
-        return _this.buildPanes();
-      }), "highlight\n'own' properties");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonSubset);
-    this.buttonInspect = new TriggerMorph();
-    this.buttonInspect.labelString = "inspect...";
-    this.buttonInspect.action = function() {
-      var inspector, menu, world;
-      menu = void 0;
-      world = void 0;
-      inspector = void 0;
-      if (isObject(_this.currentProperty)) {
-        menu = new MenuMorph();
-        menu.addItem("in new inspector...", function() {
-          world = _this.world();
-          inspector = new InspectorMorph(_this.currentProperty);
-          inspector.setPosition(world.hand.position());
-          inspector.keepWithin(world);
-          world.add(inspector);
-          return inspector.changed();
-        });
-        menu.addItem("here...", function() {
-          return _this.setTarget(_this.currentProperty);
-        });
-        return menu.popUpAtHand(_this.world());
-      } else {
-        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
-      }
-    };
-    this.add(this.buttonInspect);
-    this.buttonEdit = new TriggerMorph();
-    this.buttonEdit.labelString = "edit...";
-    this.buttonEdit.action = function() {
-      var menu;
-      menu = void 0;
-      menu = new MenuMorph(_this);
-      menu.addItem("save", "save", "accept changes");
-      menu.addLine();
-      menu.addItem("add property...", "addProperty");
-      menu.addItem("rename...", "renameProperty");
-      menu.addItem("remove...", "removeProperty");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonEdit);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  InspectorMorph.prototype.fixLayout = function() {
-    var b, h, r, w, x, y;
-    x = void 0;
-    y = void 0;
-    r = void 0;
-    b = void 0;
-    w = void 0;
-    h = void 0;
-    Morph.prototype.trackChanges = false;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.label.setPosition(new Point(x, y));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.drawNew();
-      this.changed();
-      this.resizer.drawNew();
-    }
-    y = this.label.bottom() + 2;
-    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - MorphicPreferences.handleSize;
-    h = b - y;
-    this.list.setPosition(new Point(x, y));
-    this.list.setExtent(new Point(w, h));
-    x = this.list.right() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.detail.setPosition(new Point(x, y));
-    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
-    y = this.detail.bottom() + this.edge;
-    this.work.setPosition(new Point(x, y));
-    this.work.setExtent(new Point(w, h / 3));
-    x = this.list.left();
-    y = this.list.bottom() + this.edge;
-    w = this.list.width();
-    h = MorphicPreferences.handleSize;
-    this.buttonSubset.setPosition(new Point(x, y));
-    this.buttonSubset.setExtent(new Point(w, h));
-    x = this.detail.left();
-    w = this.detail.width() - this.edge - MorphicPreferences.handleSize;
-    w = w / 3 - this.edge / 3;
-    this.buttonInspect.setPosition(new Point(x, y));
-    this.buttonInspect.setExtent(new Point(w, h));
-    x = this.buttonInspect.right() + this.edge;
-    this.buttonEdit.setPosition(new Point(x, y));
-    this.buttonEdit.setExtent(new Point(w, h));
-    x = this.buttonEdit.right() + this.edge;
-    r = this.detail.right() - this.edge - MorphicPreferences.handleSize;
-    w = r - x;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
-  };
-
-  InspectorMorph.prototype.setExtent = function(aPoint) {
-    InspectorMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
-  };
-
-  InspectorMorph.prototype.save = function() {
-    var prop, txt;
-    txt = this.detail.contents.children[0].text.toString();
-    prop = this.list.selected;
-    try {
-      this.target.evaluateString("this." + prop + " = " + txt);
-      if (this.target.drawNew) {
-        this.target.changed();
-        this.target.drawNew();
-        return this.target.changed();
-      }
-    } catch (err) {
-      return this.inform(err);
-    }
-  };
-
-  InspectorMorph.prototype.addProperty = function() {
-    var _this = this;
-    return this.prompt("new property name:", (function(prop) {
-      if (prop) {
-        _this.target[prop] = null;
-        _this.buildPanes();
-        if (_this.target.drawNew) {
-          _this.target.changed();
-          _this.target.drawNew();
-          return _this.target.changed();
-        }
-      }
-    }), this, "property");
-  };
-
-  InspectorMorph.prototype.renameProperty = function() {
-    var propertyName,
-      _this = this;
-    propertyName = this.list.selected;
-    return this.prompt("property name:", (function(prop) {
-      try {
-        delete _this.target[propertyName];
-        _this.target[prop] = _this.currentProperty;
-      } catch (err) {
-        _this.inform(err);
-      }
-      _this.buildPanes();
-      if (_this.target.drawNew) {
-        _this.target.changed();
-        _this.target.drawNew();
-        return _this.target.changed();
-      }
-    }), this, propertyName);
-  };
-
-  InspectorMorph.prototype.removeProperty = function() {
-    var prop;
-    prop = this.list.selected;
-    try {
-      delete this.target[prop];
-      this.currentProperty = null;
-      this.buildPanes();
-      if (this.target.drawNew) {
-        this.target.changed();
-        this.target.drawNew();
-        return this.target.changed();
-      }
-    } catch (err) {
-      return this.inform(err);
-    }
-  };
-
-  return InspectorMorph;
-
-})(BoxMorph);
+MorphicPreferences = standardSettings;
 
 FrameMorph = (function(_super) {
 
@@ -3846,2115 +2497,294 @@ ListMorph = (function(_super) {
 
 })(ScrollFrameMorph);
 
-PenMorph = (function(_super) {
+BoxMorph = (function(_super) {
 
-  __extends(PenMorph, _super);
+  __extends(BoxMorph, _super);
 
-  function PenMorph() {
-    var size;
-    size = MorphicPreferences.handleSize * 4;
-    this.isWarped = false;
-    this.wantsRedraw = false;
-    this.heading = 0;
-    this.isDown = true;
-    this.size = 1;
-    PenMorph.__super__.constructor.call(this);
-    this.setExtent(new Point(size, size));
+  function BoxMorph(edge, border, borderColor) {
+    this.edge = edge || 4;
+    this.border = border || (border === 0 ? 0 : 2);
+    this.borderColor = borderColor || new Color();
+    BoxMorph.__super__.constructor.call(this);
   }
 
-  PenMorph.prototype.changed = function() {
-    var w;
-    if (this.isWarped === false) {
-      w = this.root();
-      if (w instanceof WorldMorph) {
-        w.broken.push(this.visibleBounds().spread());
-      }
-      if (this.parent) {
-        return this.parent.childChanged(this);
-      }
-    }
-  };
-
-  PenMorph.prototype.drawNew = function(facing) {
-    var context, dest, direction, left, len, right, start;
+  BoxMorph.prototype.drawNew = function() {
+    var context;
     context = void 0;
-    start = void 0;
-    dest = void 0;
-    left = void 0;
-    right = void 0;
-    len = void 0;
-    direction = facing || this.heading;
-    if (this.isWarped) {
-      this.wantsRedraw = true;
-      return null;
-    }
     this.image = newCanvas(this.extent());
     context = this.image.getContext("2d");
-    len = this.width() / 2;
-    start = this.center().subtract(this.bounds.origin);
-    dest = start.distanceAngle(len * 0.75, direction - 180);
-    left = start.distanceAngle(len, direction + 195);
-    right = start.distanceAngle(len, direction - 195);
+    if ((this.edge === 0) && (this.border === 0)) {
+      BoxMorph.__super__.drawNew.call(this);
+      return null;
+    }
     context.fillStyle = this.color.toString();
     context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.lineTo(left.x, left.y);
-    context.lineTo(dest.x, dest.y);
-    context.lineTo(right.x, right.y);
+    this.outlinePath(context, Math.max(this.edge - this.border, 0), this.border);
     context.closePath();
-    context.strokeStyle = "white";
-    context.lineWidth = 3;
-    context.stroke();
-    context.strokeStyle = "black";
-    context.lineWidth = 1;
-    context.stroke();
     context.fill();
-    return this.wantsRedraw = false;
+    if (this.border > 0) {
+      context.lineWidth = this.border;
+      context.strokeStyle = this.borderColor.toString();
+      context.beginPath();
+      this.outlinePath(context, this.edge, this.border / 2);
+      context.closePath();
+      return context.stroke();
+    }
   };
 
-  PenMorph.prototype.setHeading = function(degrees) {
-    this.heading = parseFloat(degrees) % 360;
-    if (this.isWarped === false) {
+  BoxMorph.prototype.outlinePath = function(context, radius, inset) {
+    var h, offset, w;
+    offset = radius + inset;
+    w = this.width();
+    h = this.height();
+    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
+    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
+    context.arc(w - offset, h - offset, radius, radians(0), radians(90), false);
+    return context.arc(offset, h - offset, radius, radians(90), radians(180), false);
+  };
+
+  BoxMorph.prototype.developersMenu = function() {
+    var menu;
+    menu = BoxMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("border width...", (function() {
+      return this.prompt(menu.title + "\nborder\nwidth:", this.setBorderWidth, this, this.border.toString(), null, 0, 100, true);
+    }), "set the border's\nline size");
+    menu.addItem("border color...", (function() {
+      return this.pickColor(menu.title + "\nborder color:", this.setBorderColor, this, this.borderColor);
+    }), "set the border's\nline color");
+    menu.addItem("corner size...", (function() {
+      return this.prompt(menu.title + "\ncorner\nsize:", this.setCornerSize, this, this.edge.toString(), null, 0, 100, true);
+    }), "set the corner's\nradius");
+    return menu;
+  };
+
+  BoxMorph.prototype.setBorderWidth = function(size) {
+    var newSize;
+    newSize = void 0;
+    if (typeof size === "number") {
+      this.border = Math.max(size, 0);
+    } else {
+      newSize = parseFloat(size);
+      if (!isNaN(newSize)) {
+        this.border = Math.max(newSize, 0);
+      }
+    }
+    this.drawNew();
+    return this.changed();
+  };
+
+  BoxMorph.prototype.setBorderColor = function(color) {
+    if (color) {
+      this.borderColor = color;
       this.drawNew();
       return this.changed();
     }
   };
 
-  PenMorph.prototype.drawLine = function(start, dest) {
-    var context, from, to;
-    context = this.parent.penTrails().getContext("2d");
-    from = start.subtract(this.parent.bounds.origin);
-    to = dest.subtract(this.parent.bounds.origin);
-    if (this.isDown) {
-      context.lineWidth = this.size;
-      context.strokeStyle = this.color.toString();
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.beginPath();
-      context.moveTo(from.x, from.y);
-      context.lineTo(to.x, to.y);
-      context.stroke();
-      if (this.isWarped === false) {
-        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.size / 2, 1)).intersect(this.parent.visibleBounds()).spread());
-      }
-    }
-  };
-
-  PenMorph.prototype.turn = function(degrees) {
-    return this.setHeading(this.heading + parseFloat(degrees));
-  };
-
-  PenMorph.prototype.forward = function(steps) {
-    var dest, dist, start;
-    start = this.center();
-    dest = void 0;
-    dist = parseFloat(steps);
-    if (dist >= 0) {
-      dest = this.position().distanceAngle(dist, this.heading);
+  BoxMorph.prototype.setCornerSize = function(size) {
+    var newSize;
+    newSize = void 0;
+    if (typeof size === "number") {
+      this.edge = Math.max(size, 0);
     } else {
-      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
-    }
-    this.setPosition(dest);
-    return this.drawLine(start, this.center());
-  };
-
-  PenMorph.prototype.down = function() {
-    return this.isDown = true;
-  };
-
-  PenMorph.prototype.up = function() {
-    return this.isDown = false;
-  };
-
-  PenMorph.prototype.clear = function() {
-    this.parent.drawNew();
-    return this.parent.changed();
-  };
-
-  PenMorph.prototype.startWarp = function() {
-    return this.isWarped = true;
-  };
-
-  PenMorph.prototype.endWarp = function() {
-    if (this.wantsRedraw) {
-      this.drawNew();
-    }
-    this.changed();
-    this.parent.changed();
-    return this.isWarped = false;
-  };
-
-  PenMorph.prototype.warp = function(fun) {
-    this.startWarp();
-    fun.call(this);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpOp = function(selector, argsArray) {
-    this.startWarp();
-    this[selector].apply(this, argsArray);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpSierpinski = function(length, min) {
-    return this.warpOp("sierpinski", [length, min]);
-  };
-
-  PenMorph.prototype.sierpinski = function(length, min) {
-    var i, _results;
-    i = void 0;
-    if (length > min) {
-      i = 0;
-      _results = [];
-      while (i < 3) {
-        this.sierpinski(length * 0.5, min);
-        this.turn(120);
-        this.forward(length);
-        _results.push(i += 1);
+      newSize = parseFloat(size);
+      if (!isNaN(newSize)) {
+        this.edge = Math.max(newSize, 0);
       }
-      return _results;
     }
-  };
-
-  PenMorph.prototype.warpTree = function(level, length, angle) {
-    return this.warpOp("tree", [level, length, angle]);
-  };
-
-  PenMorph.prototype.tree = function(level, length, angle) {
-    if (level > 0) {
-      this.size = level;
-      this.forward(length);
-      this.turn(angle);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle * -2);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle);
-      return this.forward(-length);
-    }
-  };
-
-  return PenMorph;
-
-})(Morph);
-
-TriggerMorph = (function(_super) {
-
-  __extends(TriggerMorph, _super);
-
-  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) {
-    this.target = target || null;
-    this.action = action || null;
-    this.environment = environment || null;
-    this.labelString = labelString || null;
-    this.label = null;
-    this.hint = hint || null;
-    this.fontSize = fontSize || MorphicPreferences.menuFontSize;
-    this.fontStyle = fontStyle || "sans-serif";
-    this.highlightColor = new Color(192, 192, 192);
-    this.pressColor = new Color(128, 128, 128);
-    this.labelColor = labelColor || new Color(0, 0, 0);
-    TriggerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
     this.drawNew();
-  }
-
-  TriggerMorph.prototype.drawNew = function() {
-    this.createBackgrounds();
-    if (this.labelString !== null) {
-      return this.createLabel();
-    }
-  };
-
-  TriggerMorph.prototype.createBackgrounds = function() {
-    var context, ext;
-    context = void 0;
-    ext = this.extent();
-    this.normalImage = newCanvas(ext);
-    context = this.normalImage.getContext("2d");
-    context.fillStyle = this.color.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.highlightImage = newCanvas(ext);
-    context = this.highlightImage.getContext("2d");
-    context.fillStyle = this.highlightColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.pressImage = newCanvas(ext);
-    context = this.pressImage.getContext("2d");
-    context.fillStyle = this.pressColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    return this.image = this.normalImage;
-  };
-
-  TriggerMorph.prototype.createLabel = function() {
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor);
-    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
-    return this.add(this.label);
-  };
-
-  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.label && dict[this.label]) {
-      c.label = dict[this.label];
-    }
-    return c;
-  };
-
-  TriggerMorph.prototype.trigger = function() {
-    if (typeof this.target === "function") {
-      if (typeof this.action === "function") {
-        return this.target.call(this.environment, this.action.call());
-      } else {
-        return this.target.call(this.environment, this.action);
-      }
-    } else {
-      if (typeof this.action === "function") {
-        return this.action.call(this.target);
-      } else {
-        return this.target[this.action]();
-      }
-    }
-  };
-
-  TriggerMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  TriggerMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    this.changed();
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  TriggerMorph.prototype.mouseDownLeft = function() {
-    this.image = this.pressImage;
     return this.changed();
   };
 
-  TriggerMorph.prototype.mouseClickLeft = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    return this.trigger();
+  BoxMorph.prototype.colorSetters = function() {
+    return ["color", "borderColor"];
   };
 
-  TriggerMorph.prototype.bubbleHelp = function(contents) {
-    var _this = this;
-    this.fps = 2;
-    return this.step = function() {
-      if (_this.bounds.containsPoint(_this.world().hand.position())) {
-        _this.popUpbubbleHelp(contents);
-      }
-      _this.fps = 0;
-      return delete _this.step;
-    };
+  BoxMorph.prototype.numericalSetters = function() {
+    var list;
+    list = BoxMorph.__super__.numericalSetters.call(this);
+    list.push("setBorderWidth", "setCornerSize");
+    return list;
   };
 
-  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
-    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
-  };
-
-  return TriggerMorph;
+  return BoxMorph;
 
 })(Morph);
 
-MenuItemMorph = (function(_super) {
+MorphsListMorph = (function(_super) {
 
-  __extends(MenuItemMorph, _super);
+  __extends(MorphsListMorph, _super);
 
-  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color) {
-    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color);
-  }
-
-  MenuItemMorph.prototype.createLabel = function() {
-    var np;
-    np = void 0;
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor);
-    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
-    np = this.position().add(new Point(4, 0));
-    this.label.bounds = np.extent(this.label.extent());
-    return this.add(this.label);
-  };
-
-  MenuItemMorph.prototype.mouseEnter = function() {
-    if (!this.isListItem()) {
-      this.image = this.highlightImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  MenuItemMorph.prototype.mouseLeave = function() {
-    if (!this.isListItem()) {
-      this.image = this.normalImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
-    if (this.isListItem()) {
-      this.parent.unselectAllItems();
-      this.escalateEvent("mouseDownLeft", pos);
-    }
-    this.image = this.pressImage;
-    return this.changed();
-  };
-
-  MenuItemMorph.prototype.mouseMove = function() {
-    if (this.isListItem()) {
-      return this.escalateEvent("mouseMove");
-    }
-  };
-
-  MenuItemMorph.prototype.mouseClickLeft = function() {
-    if (!this.isListItem()) {
-      this.parent.destroy();
-      this.root().activeMenu = null;
-    }
-    return this.trigger();
-  };
-
-  MenuItemMorph.prototype.isListItem = function() {
-    if (this.parent) {
-      return this.parent.isListContents;
-    }
-    return false;
-  };
-
-  MenuItemMorph.prototype.isSelectedListItem = function() {
-    if (this.isListItem()) {
-      return this.image === this.pressImage;
-    }
-    return false;
-  };
-
-  return MenuItemMorph;
-
-})(TriggerMorph);
-
-Point = (function() {
-
-  function Point(x, y) {
-    this.x = x || 0;
-    this.y = y || 0;
-  }
-
-  Point.prototype.toString = function() {
-    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
-  };
-
-  Point.prototype.copy = function() {
-    return new Point(this.x, this.y);
-  };
-
-  Point.prototype.eq = function(aPoint) {
-    return this.x === aPoint.x && this.y === aPoint.y;
-  };
-
-  Point.prototype.lt = function(aPoint) {
-    return this.x < aPoint.x && this.y < aPoint.y;
-  };
-
-  Point.prototype.gt = function(aPoint) {
-    return this.x > aPoint.x && this.y > aPoint.y;
-  };
-
-  Point.prototype.ge = function(aPoint) {
-    return this.x >= aPoint.x && this.y >= aPoint.y;
-  };
-
-  Point.prototype.le = function(aPoint) {
-    return this.x <= aPoint.x && this.y <= aPoint.y;
-  };
-
-  Point.prototype.max = function(aPoint) {
-    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
-  };
-
-  Point.prototype.min = function(aPoint) {
-    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
-  };
-
-  Point.prototype.round = function() {
-    return new Point(Math.round(this.x), Math.round(this.y));
-  };
-
-  Point.prototype.abs = function() {
-    return new Point(Math.abs(this.x), Math.abs(this.y));
-  };
-
-  Point.prototype.neg = function() {
-    return new Point(-this.x, -this.y);
-  };
-
-  Point.prototype.mirror = function() {
-    return new Point(this.y, this.x);
-  };
-
-  Point.prototype.floor = function() {
-    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
-  };
-
-  Point.prototype.ceil = function() {
-    return new Point(Math.ceil(this.x), Math.ceil(this.y));
-  };
-
-  Point.prototype.add = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x + other.x, this.y + other.y);
-    }
-    return new Point(this.x + other, this.y + other);
-  };
-
-  Point.prototype.subtract = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x - other.x, this.y - other.y);
-    }
-    return new Point(this.x - other, this.y - other);
-  };
-
-  Point.prototype.multiplyBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x * other.x, this.y * other.y);
-    }
-    return new Point(this.x * other, this.y * other);
-  };
-
-  Point.prototype.divideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x / other.x, this.y / other.y);
-    }
-    return new Point(this.x / other, this.y / other);
-  };
-
-  Point.prototype.floorDivideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
-    }
-    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
-  };
-
-  Point.prototype.r = function() {
-    var t;
-    t = this.multiplyBy(this);
-    return Math.sqrt(t.x + t.y);
-  };
-
-  Point.prototype.degrees = function() {
-    var tan, theta;
-    tan = void 0;
-    theta = void 0;
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return 90;
-      }
-      return 270;
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return degrees(theta);
-      }
-      return 360 + (degrees(theta));
-    }
-    return 180 + degrees(theta);
-  };
-
-  Point.prototype.theta = function() {
-    var tan, theta;
-    tan = void 0;
-    theta = void 0;
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return radians(90);
-      }
-      return radians(270);
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return theta;
-      }
-      return radians(360) + theta;
-    }
-    return radians(180) + theta;
-  };
-
-  Point.prototype.crossProduct = function(aPoint) {
-    return this.multiplyBy(aPoint.mirror());
-  };
-
-  Point.prototype.distanceTo = function(aPoint) {
-    return (aPoint.subtract(this)).r();
-  };
-
-  Point.prototype.rotate = function(direction, center) {
-    var offset;
-    offset = this.subtract(center);
-    if (direction === "right") {
-      return new Point(-offset.y, offset.y).add(center);
-    }
-    if (direction === "left") {
-      return new Point(offset.y, -offset.y).add(center);
-    }
-    return center.subtract(offset);
-  };
-
-  Point.prototype.flip = function(direction, center) {
-    if (direction === "vertical") {
-      return new Point(this.x, center.y * 2 - this.y);
-    }
-    return new Point(center.x * 2 - this.x, this.y);
-  };
-
-  Point.prototype.distanceAngle = function(dist, angle) {
-    var deg, x, y;
-    deg = angle;
-    x = void 0;
-    y = void 0;
-    if (deg > 270) {
-      deg = deg - 360;
-    } else {
-      if (deg < -270) {
-        deg = deg + 360;
-      }
-    }
-    if (-90 <= deg && deg <= 90) {
-      x = Math.sin(radians(deg)) * dist;
-      y = Math.sqrt((dist * dist) - (x * x));
-      return new Point(x + this.x, this.y - y);
-    }
-    x = Math.sin(radians(180 - deg)) * dist;
-    y = Math.sqrt((dist * dist) - (x * x));
-    return new Point(x + this.x, this.y + y);
-  };
-
-  Point.prototype.scaleBy = function(scalePoint) {
-    return this.multiplyBy(scalePoint);
-  };
-
-  Point.prototype.translateBy = function(deltaPoint) {
-    return this.add(deltaPoint);
-  };
-
-  Point.prototype.rotateBy = function(angle, centerPoint) {
-    var center, p, r, theta;
-    center = centerPoint || new Point(0, 0);
-    p = this.subtract(center);
-    r = p.r();
-    theta = angle - p.theta();
-    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
-  };
-
-  Point.prototype.asArray = function() {
-    return [this.x, this.y];
-  };
-
-  Point.prototype.corner = function(cornerPoint) {
-    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
-  };
-
-  Point.prototype.rectangle = function(aPoint) {
-    var crn, org;
-    org = void 0;
-    crn = void 0;
-    org = this.min(aPoint);
-    crn = this.max(aPoint);
-    return new Rectangle(org.x, org.y, crn.x, crn.y);
-  };
-
-  Point.prototype.extent = function(aPoint) {
-    var crn;
-    crn = this.add(aPoint);
-    return new Rectangle(this.x, this.y, crn.x, crn.y);
-  };
-
-  return Point;
-
-})();
-
-StringFieldMorph = (function(_super) {
-
-  __extends(StringFieldMorph, _super);
-
-  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) {
-    this.defaultContents = defaultContents || "";
-    this.minWidth = minWidth || 100;
-    this.fontSize = fontSize || 12;
-    this.fontStyle = fontStyle || "sans-serif";
-    this.isBold = bold || false;
-    this.isItalic = italic || false;
-    this.isNumeric = isNumeric || false;
-    this.text = null;
-    StringFieldMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.isEditable = true;
-    this.acceptsDrops = false;
+  function MorphsListMorph(target) {
+    MorphsListMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
     this.drawNew();
+    this.morphsList = null;
+    this.buttonClose = null;
+    this.resizer = null;
+    this.buildPanes();
   }
 
-  StringFieldMorph.prototype.drawNew = function() {
-    var txt;
-    txt = void 0;
-    txt = (this.text ? this.string() : this.defaultContents);
-    this.text = null;
-    this.children.forEach(function(child) {
-      return child.destroy();
+  MorphsListMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
+  };
+
+  MorphsListMorph.prototype.buildPanes = function() {
+    var ListOfMorphs, attribs, ctrl, ev, i, property, theWordMorph,
+      _this = this;
+    attribs = [];
+    property = void 0;
+    ctrl = void 0;
+    ev = void 0;
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
+      }
     });
     this.children = [];
-    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
-    this.text.isNumeric = this.isNumeric;
-    this.text.setPosition(this.bounds.origin.copy());
-    this.text.isEditable = this.isEditable;
-    this.text.isDraggable = false;
-    this.text.enableSelecting();
-    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
-    StringFieldMorph.__super__.drawNew.call(this);
-    return this.add(this.text);
-  };
-
-  StringFieldMorph.prototype.string = function() {
-    return this.text.text;
-  };
-
-  StringFieldMorph.prototype.mouseClickLeft = function() {
-    if (this.isEditable) {
-      return this.text.edit();
+    this.label = new TextMorph("Morphs List");
+    this.label.fontSize = MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.drawNew();
+    this.add(this.label);
+    ListOfMorphs = [];
+    for (i in window) {
+      theWordMorph = "Morph";
+      if (i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1) {
+        ListOfMorphs.push(i);
+      }
     }
-  };
-
-  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.text && dict[this.text]) {
-      c.text = dict[this.text];
-    }
-    return c;
-  };
-
-  return StringFieldMorph;
-
-})(FrameMorph);
-
-WorldMorph = (function(_super) {
-
-  __extends(WorldMorph, _super);
-
-  function WorldMorph(aCanvas, fillPage) {
-    WorldMorph.__super__.constructor.call(this);
-    this.color = new Color(205, 205, 205);
-    this.alpha = 1;
-    this.bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height);
-    this.drawNew();
-    this.isVisible = true;
-    this.isDraggable = false;
-    this.currentKey = null;
-    this.worldCanvas = aCanvas;
-    this.useFillPage = fillPage;
-    if (this.useFillPage === undefined) {
-      this.useFillPage = true;
-    }
-    this.isDevMode = false;
-    this.broken = [];
-    this.hand = new HandMorph(this);
-    this.keyboardReceiver = null;
-    this.lastEditedText = null;
-    this.cursor = null;
-    this.activeMenu = null;
-    this.activeHandle = null;
-    this.virtualKeyboard = null;
-    this.initEventListeners();
-  }
-
-  WorldMorph.prototype.brokenFor = function(aMorph) {
-    var fb;
-    fb = aMorph.fullBounds();
-    return this.broken.filter(function(rect) {
-      return rect.intersects(fb);
-    });
-  };
-
-  WorldMorph.prototype.fullDrawOn = function(aCanvas, aRect) {
-    WorldMorph.__super__.fullDrawOn.call(this, aCanvas, aRect);
-    return this.hand.fullDrawOn(aCanvas, aRect);
-  };
-
-  WorldMorph.prototype.updateBroken = function() {
-    var _this = this;
-    this.broken.forEach(function(rect) {
-      if (rect.extent().gt(new Point(0, 0))) {
-        return _this.fullDrawOn(_this.worldCanvas, rect);
-      }
-    });
-    return this.broken = [];
-  };
-
-  WorldMorph.prototype.doOneCycle = function() {
-    this.stepFrame();
-    return this.updateBroken();
-  };
-
-  WorldMorph.prototype.fillPage = function() {
-    var clientHeight, clientWidth, pos,
-      _this = this;
-    pos = getDocumentPositionOf(this.worldCanvas);
-    clientHeight = window.innerHeight;
-    clientWidth = window.innerWidth;
-    if (pos.x > 0) {
-      this.worldCanvas.style.position = "absolute";
-      this.worldCanvas.style.left = "0px";
-      pos.x = 0;
-    }
-    if (pos.y > 0) {
-      this.worldCanvas.style.position = "absolute";
-      this.worldCanvas.style.top = "0px";
-      pos.y = 0;
-    }
-    if (document.body.scrollTop) {
-      clientHeight = document.documentElement.clientHeight;
-    }
-    if (document.body.scrollLeft) {
-      clientWidth = document.documentElement.clientWidth;
-    }
-    if (this.worldCanvas.width !== clientWidth) {
-      this.worldCanvas.width = clientWidth;
-      this.setWidth(clientWidth);
-    }
-    if (this.worldCanvas.height !== clientHeight) {
-      this.worldCanvas.height = clientHeight;
-      this.setHeight(clientHeight);
-    }
-    return this.children.forEach(function(child) {
-      if (child.reactToWorldResize) {
-        return child.reactToWorldResize(_this.bounds.copy());
-      }
-    });
-  };
-
-  WorldMorph.prototype.getGlobalPixelColor = function(point) {
-    var dta;
-    dta = this.worldCanvas.getContext("2d").getImageData(point.x, point.y, 1, 1).data;
-    return new Color(dta[0], dta[1], dta[2]);
-  };
-
-  WorldMorph.prototype.initVirtualKeyboard = function() {
-    var _this = this;
-    if (this.virtualKeyboard) {
-      document.body.removeChild(this.virtualKeyboard);
-      this.virtualKeyboard = null;
-    }
-    if (!MorphicPreferences.useVirtualKeyboard) {
-      return;
-    }
-    this.virtualKeyboard = document.createElement("input");
-    this.virtualKeyboard.type = "text";
-    this.virtualKeyboard.style.color = "transparent";
-    this.virtualKeyboard.style.backgroundColor = "transparent";
-    this.virtualKeyboard.style.border = "none";
-    this.virtualKeyboard.style.outline = "none";
-    this.virtualKeyboard.style.position = "absolute";
-    this.virtualKeyboard.style.top = "0px";
-    this.virtualKeyboard.style.left = "0px";
-    this.virtualKeyboard.style.width = "0px";
-    this.virtualKeyboard.style.height = "0px";
-    document.body.appendChild(this.virtualKeyboard);
-    this.virtualKeyboard.addEventListener("keydown", (function(event) {
-      _this.currentKey = event.keyCode;
-      if (_this.keyboardReceiver) {
-        _this.keyboardReceiver.processKeyDown(event);
-      }
-      if (event.keyIdentifier === "U+0008" || event.keyIdentifier === "Backspace") {
-        event.preventDefault();
-      }
-      if (event.keyIdentifier === "U+0009" || event.keyIdentifier === "Tab") {
-        if (_this.keyboardReceiver) {
-          _this.keyboardReceiver.processKeyPress(event);
-        }
-        return event.preventDefault();
-      }
-    }), false);
-    this.virtualKeyboard.addEventListener("keyup", (function(event) {
-      _this.currentKey = null;
-      if (_this.keyboardReceiver ? _this.keyboardReceiver.processKeyUp : void 0) {
-        _this.keyboardReceiver.processKeyUp(event);
-      }
-      return event.preventDefault();
-    }), false);
-    return this.virtualKeyboard.addEventListener("keypress", (function(event) {
-      if (_this.keyboardReceiver) {
-        _this.keyboardReceiver.processKeyPress(event);
-      }
-      return event.preventDefault();
-    }), false);
-  };
-
-  WorldMorph.prototype.initEventListeners = function() {
-    var canvas,
-      _this = this;
-    canvas = this.worldCanvas;
-    if (this.useFillPage) {
-      this.fillPage();
-    } else {
-      this.changed();
-    }
-    canvas.addEventListener("mousedown", (function(event) {
-      return _this.hand.processMouseDown(event);
-    }), false);
-    canvas.addEventListener("touchstart", (function(event) {
-      return _this.hand.processTouchStart(event);
-    }), false);
-    canvas.addEventListener("mouseup", (function(event) {
-      event.preventDefault();
-      return _this.hand.processMouseUp(event);
-    }), false);
-    canvas.addEventListener("touchend", (function(event) {
-      return _this.hand.processTouchEnd(event);
-    }), false);
-    canvas.addEventListener("mousemove", (function(event) {
-      return _this.hand.processMouseMove(event);
-    }), false);
-    canvas.addEventListener("touchmove", (function(event) {
-      return _this.hand.processTouchMove(event);
-    }), false);
-    canvas.addEventListener("contextmenu", (function(event) {
-      return event.preventDefault();
-    }), false);
-    canvas.addEventListener("keydown", (function(event) {
-      _this.currentKey = event.keyCode;
-      if (_this.keyboardReceiver) {
-        _this.keyboardReceiver.processKeyDown(event);
-      }
-      if (event.keyIdentifier === "U+0008" || event.keyIdentifier === "Backspace") {
-        event.preventDefault();
-      }
-      if (event.keyIdentifier === "U+0009" || event.keyIdentifier === "Tab") {
-        if (_this.keyboardReceiver) {
-          _this.keyboardReceiver.processKeyPress(event);
-        }
-        return event.preventDefault();
-      }
-    }), false);
-    canvas.addEventListener("keyup", (function(event) {
-      _this.currentKey = null;
-      if (_this.keyboardReceiver ? _this.keyboardReceiver.processKeyUp : void 0) {
-        _this.keyboardReceiver.processKeyUp(event);
-      }
-      return event.preventDefault();
-    }), false);
-    canvas.addEventListener("keypress", (function(event) {
-      if (_this.keyboardReceiver) {
-        _this.keyboardReceiver.processKeyPress(event);
-      }
-      return event.preventDefault();
-    }), false);
-    canvas.addEventListener("mousewheel", (function(event) {
-      _this.hand.processMouseScroll(event);
-      return event.preventDefault();
-    }), false);
-    canvas.addEventListener("DOMMouseScroll", (function(event) {
-      _this.hand.processMouseScroll(event);
-      return event.preventDefault();
-    }), false);
-    window.addEventListener("dragover", (function(event) {
-      return event.preventDefault();
-    }), false);
-    window.addEventListener("drop", (function(event) {
-      _this.hand.processDrop(event);
-      return event.preventDefault();
-    }), false);
-    window.addEventListener("resize", (function() {
-      if (_this.useFillPage) {
-        return _this.fillPage();
-      }
-    }), false);
-    return window.onbeforeunload = function(evt) {
-      var e, msg;
-      e = evt || window.event;
-      msg = "Are you sure you want to leave?";
-      if (e) {
-        e.returnValue = msg;
-      }
-      return msg;
+    this.morphsList = new ListMorph(ListOfMorphs, null);
+    this.morphsList.hBar.alpha = 0.6;
+    this.morphsList.vBar.alpha = 0.6;
+    this.add(this.morphsList);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
     };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
   };
 
-  WorldMorph.prototype.mouseDownLeft = function() {
-    return nop();
-  };
-
-  WorldMorph.prototype.mouseClickLeft = function() {
-    return nop();
-  };
-
-  WorldMorph.prototype.mouseDownRight = function() {
-    return nop();
-  };
-
-  WorldMorph.prototype.mouseClickRight = function() {
-    return nop();
-  };
-
-  WorldMorph.prototype.wantsDropOf = function() {
-    return this.acceptsDrops;
-  };
-
-  WorldMorph.prototype.droppedImage = function() {
-    return null;
-  };
-
-  WorldMorph.prototype.nextTab = function(editField) {
-    var next;
-    next = this.nextEntryField(editField);
-    editField.clearSelection();
-    next.selectAll();
-    return next.edit();
-  };
-
-  WorldMorph.prototype.previousTab = function(editField) {
-    var prev;
-    prev = this.previousEntryField(editField);
-    editField.clearSelection();
-    prev.selectAll();
-    return prev.edit();
-  };
-
-  WorldMorph.prototype.contextMenu = function() {
-    var menu;
-    menu = void 0;
-    if (this.isDevMode) {
-      menu = new MenuMorph(this, this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]);
-    } else {
-      menu = new MenuMorph(this, "Morphic");
-    }
-    if (this.isDevMode) {
-      menu.addItem("demo...", "userCreateMorph", "sample morphs");
-      menu.addLine();
-      menu.addItem("hide all...", "hideAll");
-      menu.addItem("show all...", "showAllHiddens");
-      menu.addItem("move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible");
-      menu.addItem("inspect...", "inspect", "open a window on\nall properties");
-      menu.addLine();
-      menu.addItem("restore display", "changed", "redraw the\nscreen once");
-      menu.addItem("fill page...", "fillPage", "let the World automatically\nadjust to browser resizings");
-      if (useBlurredShadows) {
-        menu.addItem("sharp shadows...", "toggleBlurredShadows", "sharp drop shadows\nuse for old browsers");
-      } else {
-        menu.addItem("blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers");
-      }
-      menu.addItem("color...", (function() {
-        return this.pickColor(menu.title + "\ncolor:", this.setColor, this, this.color);
-      }), "choose the World's\nbackground color");
-      if (MorphicPreferences === standardSettings) {
-        menu.addItem("touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders");
-      } else {
-        menu.addItem("standard settings", "togglePreferences", "smaller menu fonts\nand sliders");
-      }
-      menu.addLine();
-    }
-    if (this.isDevMode) {
-      menu.addItem("user mode...", "toggleDevMode", "disable developers'\ncontext menus");
-    } else {
-      menu.addItem("development mode...", "toggleDevMode");
-    }
-    menu.addItem("about morphic.js...", "about");
-    return menu;
-  };
-
-  WorldMorph.prototype.userCreateMorph = function() {
-    var create, menu, newMorph,
-      _this = this;
-    create = function(aMorph) {
-      aMorph.isDraggable = true;
-      return aMorph.pickUp(_this);
-    };
-    menu = void 0;
-    newMorph = void 0;
-    menu = new MenuMorph(this, "make a morph");
-    menu.addItem("rectangle", function() {
-      return create(new Morph());
-    });
-    menu.addItem("box", function() {
-      return create(new BoxMorph());
-    });
-    menu.addItem("circle box", function() {
-      return create(new CircleBoxMorph());
-    });
-    menu.addLine();
-    menu.addItem("slider", function() {
-      return create(new SliderMorph());
-    });
-    menu.addItem("frame", function() {
-      newMorph = new FrameMorph();
-      newMorph.setExtent(new Point(350, 250));
-      return create(newMorph);
-    });
-    menu.addItem("scroll frame", function() {
-      newMorph = new ScrollFrameMorph();
-      newMorph.contents.acceptsDrops = true;
-      newMorph.contents.adjustBounds();
-      newMorph.setExtent(new Point(350, 250));
-      return create(newMorph);
-    });
-    menu.addItem("handle", function() {
-      return create(new HandleMorph());
-    });
-    menu.addLine();
-    menu.addItem("string", function() {
-      newMorph = new StringMorph("Hello, World!");
-      newMorph.isEditable = true;
-      return create(newMorph);
-    });
-    menu.addItem("text", function() {
-      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " + "traurig bin, ein Märchen aus uralten Zeiten, das " + "kommt mir nicht aus dem Sinn. Die Luft ist kühl " + "und es dunkelt, und ruhig fließt der Rhein; der " + "Gipfel des Berges funkelt im Abendsonnenschein. " + "Die schönste Jungfrau sitzet dort oben wunderbar, " + "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " + "goldenes Haar, sie kämmt es mit goldenem Kamme, " + "und singt ein Lied dabei; das hat eine wundersame, " + "gewalt'ge Melodei. Den Schiffer im kleinen " + "Schiffe, ergreift es mit wildem Weh; er schaut " + "nicht die Felsenriffe, er schaut nur hinauf in " + "die Höh'. Ich glaube, die Wellen verschlingen " + "am Ende Schiffer und Kahn, und das hat mit ihrem " + "Singen, die Loreley getan.");
-      newMorph.isEditable = true;
-      newMorph.maxWidth = 300;
-      newMorph.drawNew();
-      return create(newMorph);
-    });
-    menu.addItem("speech bubble", function() {
-      newMorph = new SpeechBubbleMorph("Hello, World!");
-      return create(newMorph);
-    });
-    menu.addLine();
-    menu.addItem("gray scale palette", function() {
-      return create(new GrayPaletteMorph());
-    });
-    menu.addItem("color palette", function() {
-      return create(new ColorPaletteMorph());
-    });
-    menu.addItem("color picker", function() {
-      return create(new ColorPickerMorph());
-    });
-    menu.addLine();
-    menu.addItem("sensor demo", function() {
-      newMorph = new MouseSensorMorph();
-      newMorph.setColor(new Color(230, 200, 100));
-      newMorph.edge = 35;
-      newMorph.border = 15;
-      newMorph.borderColor = new Color(200, 100, 50);
-      newMorph.alpha = 0.2;
-      newMorph.setExtent(new Point(100, 100));
-      return create(newMorph);
-    });
-    menu.addItem("animation demo", function() {
-      var bar, baz, foo, fred, garply;
-      foo = void 0;
-      bar = void 0;
-      baz = void 0;
-      garply = void 0;
-      fred = void 0;
-      foo = new BouncerMorph();
-      foo.setPosition(new Point(50, 20));
-      foo.setExtent(new Point(300, 200));
-      foo.alpha = 0.9;
-      foo.speed = 3;
-      bar = new BouncerMorph();
-      bar.setColor(new Color(50, 50, 50));
-      bar.setPosition(new Point(80, 80));
-      bar.setExtent(new Point(80, 250));
-      bar.type = "horizontal";
-      bar.direction = "right";
-      bar.alpha = 0.9;
-      bar.speed = 5;
-      baz = new BouncerMorph();
-      baz.setColor(new Color(20, 20, 20));
-      baz.setPosition(new Point(90, 140));
-      baz.setExtent(new Point(40, 30));
-      baz.type = "horizontal";
-      baz.direction = "right";
-      baz.speed = 3;
-      garply = new BouncerMorph();
-      garply.setColor(new Color(200, 20, 20));
-      garply.setPosition(new Point(90, 140));
-      garply.setExtent(new Point(20, 20));
-      garply.type = "vertical";
-      garply.direction = "up";
-      garply.speed = 8;
-      fred = new BouncerMorph();
-      fred.setColor(new Color(20, 200, 20));
-      fred.setPosition(new Point(120, 140));
-      fred.setExtent(new Point(20, 20));
-      fred.type = "vertical";
-      fred.direction = "down";
-      fred.speed = 4;
-      bar.add(garply);
-      bar.add(baz);
-      foo.add(fred);
-      foo.add(bar);
-      return create(foo);
-    });
-    menu.addItem("pen", function() {
-      return create(new PenMorph());
-    });
-    menu.addLine();
-    menu.addItem("view all...", function() {
-      newMorph = new MorphsListMorph();
-      return create(newMorph);
-    });
-    if (this.customMorphs) {
-      menu.addLine();
-      this.customMorphs().forEach(function(morph) {
-        return menu.addItem(morph.toString(), function() {
-          return create(morph);
-        });
-      });
-    }
-    return menu.popUpAtHand(this);
-  };
-
-  WorldMorph.prototype.toggleDevMode = function() {
-    return this.isDevMode = !this.isDevMode;
-  };
-
-  WorldMorph.prototype.hideAll = function() {
-    return this.children.forEach(function(child) {
-      return child.hide();
-    });
-  };
-
-  WorldMorph.prototype.showAllHiddens = function() {
-    return this.forAllChildren(function(child) {
-      if (!child.isVisible) {
-        return child.show();
-      }
-    });
-  };
-
-  WorldMorph.prototype.about = function() {
-    var module, versions;
-    versions = "";
-    module = void 0;
-    for (module in modules) {
-      if (modules.hasOwnProperty(module)) {
-        versions += "\n" + module + " (" + modules[module] + ")";
-      }
-    }
-    if (versions !== "") {
-      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions;
-    }
-    return this.inform("morphic.js\n\n" + "a lively Web GUI\ninspired by Squeak\n" + morphicVersion + "\n\nwritten by Jens Mönig\njens@moenig.org" + versions);
-  };
-
-  WorldMorph.prototype.edit = function(aStringOrTextMorph) {
-    var pos;
-    pos = getDocumentPositionOf(this.worldCanvas);
-    if (!aStringOrTextMorph.isEditable) {
-      return null;
-    }
-    if (this.cursor) {
-      this.cursor.destroy();
-    }
-    if (this.lastEditedText) {
-      this.lastEditedText.clearSelection();
-    }
-    this.cursor = new CursorMorph(aStringOrTextMorph);
-    aStringOrTextMorph.parent.add(this.cursor);
-    this.keyboardReceiver = this.cursor;
-    this.initVirtualKeyboard();
-    if (MorphicPreferences.useVirtualKeyboard) {
-      this.virtualKeyboard.style.top = this.cursor.top() + pos.y + "px";
-      this.virtualKeyboard.style.left = this.cursor.left() + pos.x + "px";
-      this.virtualKeyboard.focus();
-    }
-    if (MorphicPreferences.useSliderForInput) {
-      if (!aStringOrTextMorph.parentThatIsA(MenuMorph)) {
-        return this.slide(aStringOrTextMorph);
-      }
-    }
-  };
-
-  WorldMorph.prototype.slide = function(aStringOrTextMorph) {
-    var menu, slider, val;
-    val = parseFloat(aStringOrTextMorph.text);
-    menu = void 0;
-    slider = void 0;
-    if (isNaN(val)) {
-      val = 0;
-    }
-    menu = new MenuMorph();
-    slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal");
-    slider.alpha = 1;
-    slider.color = new Color(225, 225, 225);
-    slider.button.color = menu.borderColor;
-    slider.button.highlightColor = slider.button.color.copy();
-    slider.button.highlightColor.b += 100;
-    slider.button.pressColor = slider.button.color.copy();
-    slider.button.pressColor.b += 150;
-    slider.silentSetHeight(MorphicPreferences.scrollBarSize);
-    slider.silentSetWidth(MorphicPreferences.menuFontSize * 10);
-    slider.drawNew();
-    slider.action = function(num) {
-      aStringOrTextMorph.changed();
-      aStringOrTextMorph.text = Math.round(num).toString();
-      aStringOrTextMorph.drawNew();
-      return aStringOrTextMorph.changed();
-    };
-    menu.items.push(slider);
-    return menu.popup(this, aStringOrTextMorph.bottomLeft().add(new Point(0, 5)));
-  };
-
-  WorldMorph.prototype.stopEditing = function() {
-    if (this.cursor) {
-      this.lastEditedText = this.cursor.target;
-      this.cursor.destroy();
-      this.lastEditedText.escalateEvent("reactToEdit", this.lastEditedText);
-    }
-    this.keyboardReceiver = null;
-    if (this.virtualKeyboard) {
-      this.virtualKeyboard.blur();
-      document.body.removeChild(this.virtualKeyboard);
-      this.virtualKeyboard = null;
-    }
-    return this.worldCanvas.focus();
-  };
-
-  WorldMorph.prototype.toggleBlurredShadows = function() {
-    var useBlurredShadows;
-    return useBlurredShadows = !useBlurredShadows;
-  };
-
-  WorldMorph.prototype.togglePreferences = function() {
-    var MorphicPreferences;
-    if (MorphicPreferences === standardSettings) {
-      return MorphicPreferences = touchScreenSettings;
-    } else {
-      return MorphicPreferences = standardSettings;
-    }
-  };
-
-  return WorldMorph;
-
-})(FrameMorph);
-
-CircleBoxMorph = (function(_super) {
-
-  __extends(CircleBoxMorph, _super);
-
-  function CircleBoxMorph(orientation) {
-    CircleBoxMorph.__super__.constructor.call(this);
-    this.orientation = orientation || "vertical";
-    this.autoOrient = true;
-    this.setExtent(new Point(20, 100));
-  }
-
-  CircleBoxMorph.prototype.autoOrientation = function() {
-    if (this.height() > this.width()) {
-      return this.orientation = "vertical";
-    } else {
-      return this.orientation = "horizontal";
-    }
-  };
-
-  CircleBoxMorph.prototype.drawNew = function() {
-    var center1, center2, context, ext, points, radius, rect, x, y,
-      _this = this;
-    radius = void 0;
-    center1 = void 0;
-    center2 = void 0;
-    rect = void 0;
-    points = void 0;
+  MorphsListMorph.prototype.fixLayout = function() {
+    var b, h, r, w, x, y;
     x = void 0;
     y = void 0;
-    context = void 0;
-    ext = void 0;
-    if (this.autoOrient) {
-      this.autoOrientation();
+    r = void 0;
+    b = void 0;
+    w = void 0;
+    h = void 0;
+    Morph.prototype.trackChanges = false;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.label.setPosition(new Point(x, y));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.drawNew();
+      this.changed();
+      this.resizer.drawNew();
     }
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    if (this.orientation === "vertical") {
-      radius = this.width() / 2;
-      x = this.center().x;
-      center1 = new Point(x, this.top() + radius);
-      center2 = new Point(x, this.bottom() - radius);
-      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
-    } else {
-      radius = this.height() / 2;
-      y = this.center().y;
-      center1 = new Point(this.left() + radius, y);
-      center2 = new Point(this.right() - radius, y);
-      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
-    }
-    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
-    points.forEach(function(center) {
-      context.fillStyle = _this.color.toString();
-      context.beginPath();
-      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-      context.closePath();
-      return context.fill();
-    });
-    rect = rect.translateBy(this.bounds.origin.neg());
-    ext = rect.extent();
-    if (ext.x > 0 && ext.y > 0) {
-      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
-    }
-  };
-
-  CircleBoxMorph.prototype.developersMenu = function() {
-    var menu;
-    menu = CircleBoxMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    if (this.orientation === "vertical") {
-      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
-    } else {
-      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
-    }
-    return menu;
-  };
-
-  CircleBoxMorph.prototype.toggleOrientation = function() {
-    var center;
-    center = this.center();
-    this.changed();
-    if (this.orientation === "vertical") {
-      this.orientation = "horizontal";
-    } else {
-      this.orientation = "vertical";
-    }
-    this.silentSetExtent(new Point(this.height(), this.width()));
-    this.setCenter(center);
-    this.drawNew();
+    y = this.label.bottom() + 2;
+    w = this.width() - this.edge;
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - MorphicPreferences.handleSize;
+    h = b - y;
+    this.morphsList.setPosition(new Point(x, y));
+    this.morphsList.setExtent(new Point(w, h));
+    x = this.morphsList.left();
+    y = this.morphsList.bottom() + this.edge;
+    h = MorphicPreferences.handleSize;
+    w = this.morphsList.width() - h - this.edge;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
     return this.changed();
   };
 
-  return CircleBoxMorph;
-
-})(Morph);
-
-Color = (function() {
-
-  function Color(r, g, b, a) {
-    this.r = r || 0;
-    this.g = g || 0;
-    this.b = b || 0;
-    this.a = a || (a === 0 ? 0 : 1);
-  }
-
-  Color.prototype.toString = function() {
-    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
+  MorphsListMorph.prototype.setExtent = function(aPoint) {
+    MorphsListMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
   };
 
-  Color.prototype.copy = function() {
-    return new Color(this.r, this.g, this.b, this.a);
-  };
-
-  Color.prototype.eq = function(aColor) {
-    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
-  };
-
-  Color.prototype.hsv = function() {
-    var bb, d, gg, h, max, min, rr, s, v;
-    max = void 0;
-    min = void 0;
-    h = void 0;
-    s = void 0;
-    v = void 0;
-    d = void 0;
-    rr = this.r / 255;
-    gg = this.g / 255;
-    bb = this.b / 255;
-    max = Math.max(rr, gg, bb);
-    min = Math.min(rr, gg, bb);
-    h = max;
-    s = max;
-    v = max;
-    d = max - min;
-    s = (max === 0 ? 0 : d / max);
-    if (max === min) {
-      h = 0;
-    } else {
-      switch (max) {
-        case rr:
-          h = (gg - bb) / d + (gg < bb ? 6 : 0);
-          break;
-        case gg:
-          h = (bb - rr) / d + 2;
-          break;
-        case bb:
-          h = (rr - gg) / d + 4;
-      }
-      h /= 6;
-    }
-    return [h, s, v];
-  };
-
-  Color.prototype.set_hsv = function(h, s, v) {
-    var f, i, p, q, t;
-    i = void 0;
-    f = void 0;
-    p = void 0;
-    q = void 0;
-    t = void 0;
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-      case 0:
-        this.r = v;
-        this.g = t;
-        this.b = p;
-        break;
-      case 1:
-        this.r = q;
-        this.g = v;
-        this.b = p;
-        break;
-      case 2:
-        this.r = p;
-        this.g = v;
-        this.b = t;
-        break;
-      case 3:
-        this.r = p;
-        this.g = q;
-        this.b = v;
-        break;
-      case 4:
-        this.r = t;
-        this.g = p;
-        this.b = v;
-        break;
-      case 5:
-        this.r = v;
-        this.g = p;
-        this.b = q;
-    }
-    this.r *= 255;
-    this.g *= 255;
-    return this.b *= 255;
-  };
-
-  Color.prototype.mixed = function(proportion, otherColor) {
-    var frac1, frac2;
-    frac1 = Math.min(Math.max(proportion, 0), 1);
-    frac2 = 1 - frac1;
-    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
-  };
-
-  Color.prototype.darker = function(percent) {
-    var fract;
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(0, 0, 0));
-  };
-
-  Color.prototype.lighter = function(percent) {
-    var fract;
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(255, 255, 255));
-  };
-
-  Color.prototype.dansDarker = function() {
-    var hsv, result, vv;
-    hsv = this.hsv();
-    result = new Color();
-    vv = Math.max(hsv[2] - 0.16, 0);
-    result.set_hsv(hsv[0], hsv[1], vv);
-    return result;
-  };
-
-  return Color;
-
-})();
-
-morphicVersion = "2012-October-16";
-
-Rectangle = (function() {
-
-  function Rectangle(left, top, right, bottom) {
-    this.origin = new Point(left || 0, top || 0);
-    this.corner = new Point(right || 0, bottom || 0);
-  }
-
-  Rectangle.prototype.toString = function() {
-    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
-  };
-
-  Rectangle.prototype.copy = function() {
-    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
-  };
-
-  Rectangle.prototype.setTo = function(left, top, right, bottom) {
-    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
-    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
-  };
-
-  Rectangle.prototype.area = function() {
-    var w;
-    w = this.width();
-    if (w < 0) {
-      return 0;
-    }
-    return Math.max(w * this.height(), 0);
-  };
-
-  Rectangle.prototype.bottom = function() {
-    return this.corner.y;
-  };
-
-  Rectangle.prototype.bottomCenter = function() {
-    return new Point(this.center().x, this.bottom());
-  };
-
-  Rectangle.prototype.bottomLeft = function() {
-    return new Point(this.origin.x, this.corner.y);
-  };
-
-  Rectangle.prototype.bottomRight = function() {
-    return this.corner.copy();
-  };
-
-  Rectangle.prototype.boundingBox = function() {
-    return this;
-  };
-
-  Rectangle.prototype.center = function() {
-    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
-  };
-
-  Rectangle.prototype.corners = function() {
-    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
-  };
-
-  Rectangle.prototype.extent = function() {
-    return this.corner.subtract(this.origin);
-  };
-
-  Rectangle.prototype.height = function() {
-    return this.corner.y - this.origin.y;
-  };
-
-  Rectangle.prototype.left = function() {
-    return this.origin.x;
-  };
-
-  Rectangle.prototype.leftCenter = function() {
-    return new Point(this.left(), this.center().y);
-  };
-
-  Rectangle.prototype.right = function() {
-    return this.corner.x;
-  };
-
-  Rectangle.prototype.rightCenter = function() {
-    return new Point(this.right(), this.center().y);
-  };
-
-  Rectangle.prototype.top = function() {
-    return this.origin.y;
-  };
-
-  Rectangle.prototype.topCenter = function() {
-    return new Point(this.center().x, this.top());
-  };
-
-  Rectangle.prototype.topLeft = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.topRight = function() {
-    return new Point(this.corner.x, this.origin.y);
-  };
-
-  Rectangle.prototype.width = function() {
-    return this.corner.x - this.origin.x;
-  };
-
-  Rectangle.prototype.position = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.eq = function(aRect) {
-    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
-  };
-
-  Rectangle.prototype.abs = function() {
-    var newCorner, newOrigin;
-    newOrigin = void 0;
-    newCorner = void 0;
-    newOrigin = this.origin.abs();
-    newCorner = this.corner.max(newOrigin);
-    return newOrigin.corner(newCorner);
-  };
-
-  Rectangle.prototype.insetBy = function(delta) {
-    var result;
-    result = new Rectangle();
-    result.origin = this.origin.add(delta);
-    result.corner = this.corner.subtract(delta);
-    return result;
-  };
-
-  Rectangle.prototype.expandBy = function(delta) {
-    var result;
-    result = new Rectangle();
-    result.origin = this.origin.subtract(delta);
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.growBy = function(delta) {
-    var result;
-    result = new Rectangle();
-    result.origin = this.origin.copy();
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.intersect = function(aRect) {
-    var result;
-    result = new Rectangle();
-    result.origin = this.origin.max(aRect.origin);
-    result.corner = this.corner.min(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.merge = function(aRect) {
-    var result;
-    result = new Rectangle();
-    result.origin = this.origin.min(aRect.origin);
-    result.corner = this.corner.max(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.round = function() {
-    return this.origin.round().corner(this.corner.round());
-  };
-
-  Rectangle.prototype.spread = function() {
-    return this.origin.floor().corner(this.corner.ceil());
-  };
-
-  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
-    var dx, dy;
-    dx = void 0;
-    dy = void 0;
-    if (this.right() > aRect.right()) {
-      dx = aRect.right() - this.right();
-    }
-    if (this.bottom() > aRect.bottom()) {
-      dy = aRect.bottom() - this.bottom();
-    }
-    if ((this.left() + dx) < aRect.left()) {
-      dx = aRect.left() - this.right();
-    }
-    if ((this.top() + dy) < aRect.top()) {
-      dy = aRect.top() - this.top();
-    }
-    return new Point(dx, dy);
-  };
-
-  Rectangle.prototype.containsPoint = function(aPoint) {
-    return this.origin.le(aPoint) && aPoint.lt(this.corner);
-  };
-
-  Rectangle.prototype.containsRectangle = function(aRect) {
-    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
-  };
-
-  Rectangle.prototype.intersects = function(aRect) {
-    var rc, ro;
-    ro = aRect.origin;
-    rc = aRect.corner;
-    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
-  };
-
-  Rectangle.prototype.scaleBy = function(scale) {
-    var c, o;
-    o = this.origin.multiplyBy(scale);
-    c = this.corner.multiplyBy(scale);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.translateBy = function(factor) {
-    var c, o;
-    o = this.origin.add(factor);
-    c = this.corner.add(factor);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.asArray = function() {
-    return [this.left(), this.top(), this.right(), this.bottom()];
-  };
-
-  Rectangle.prototype.asArray_xywh = function() {
-    return [this.left(), this.top(), this.width(), this.height()];
-  };
-
-  return Rectangle;
-
-})();
-
-SpeechBubbleMorph = (function(_super) {
-
-  __extends(SpeechBubbleMorph, _super);
-
-  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
-    this.isPointingRight = true;
-    this.contents = contents || "";
-    this.padding = padding || 0;
-    this.isThought = isThought || false;
-    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
-    this.color = color || new Color(230, 230, 230);
-    this.drawNew();
-  }
-
-  SpeechBubbleMorph.prototype.popUp = function(world, pos) {
-    this.drawNew();
-    this.setPosition(pos.subtract(new Point(0, this.height())));
-    this.addShadow(new Point(2, 2), 80);
-    this.keepWithin(world);
-    world.add(this);
-    this.changed();
-    world.hand.destroyTemporaries();
-    world.hand.temporaries.push(this);
-    return this.mouseEnter = function() {
-      return this.destroy();
-    };
-  };
-
-  SpeechBubbleMorph.prototype.drawNew = function() {
-    if (this.contentsMorph) {
-      this.contentsMorph.destroy();
-    }
-    if (this.contents instanceof Morph) {
-      this.contentsMorph = this.contents;
-    } else if (isString(this.contents)) {
-      this.contentsMorph = new TextMorph(this.contents, MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    } else if (this.contents instanceof HTMLCanvasElement) {
-      this.contentsMorph = new Morph();
-      this.contentsMorph.silentSetWidth(this.contents.width);
-      this.contentsMorph.silentSetHeight(this.contents.height);
-      this.contentsMorph.image = this.contents;
-    } else {
-      this.contentsMorph = new TextMorph(this.contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    }
-    this.add(this.contentsMorph);
-    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
-    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
-    SpeechBubbleMorph.__super__.drawNew.call(this);
-    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
-  };
-
-  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
-    var circle, h, offset, rad, w;
-    circle = function(x, y, r) {
-      context.moveTo(x + r, y);
-      return context.arc(x, y, r, radians(0), radians(360));
-    };
-    offset = radius + inset;
-    w = this.width();
-    h = this.height();
-    rad = void 0;
-    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
-    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
-    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
-    if (!this.isThought) {
-      if (this.isPointingRight) {
-        context.lineTo(offset + radius, h - offset);
-        context.lineTo(radius / 2 + inset, h - inset);
-      } else {
-        context.lineTo(w - (radius / 2 + inset), h - inset);
-        context.lineTo(w - (offset + radius), h - offset);
-      }
-    }
-    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
-    if (this.isThought) {
-      context.lineTo(inset, offset);
-      if (this.isPointingRight) {
-        rad = radius / 4;
-        circle(rad + inset, h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(rad * 2 + inset, h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
-      } else {
-        rad = radius / 4;
-        circle(w - (rad + inset), h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
-      }
-    }
-  };
-
-  return SpeechBubbleMorph;
+  return MorphsListMorph;
 
 })(BoxMorph);
 
-BouncerMorph = (function(_super) {
+MouseSensorMorph = (function(_super) {
 
-  __extends(BouncerMorph, _super);
+  __extends(MouseSensorMorph, _super);
 
-  function BouncerMorph(type, speed) {
-    BouncerMorph.__super__.constructor.call(this);
-    this.fps = 50;
-    this.isStopped = false;
-    this.type = type || "vertical";
-    if (this.type === "vertical") {
-      this.direction = "down";
-    } else {
-      this.direction = "right";
-    }
-    this.speed = speed || 1;
+  function MouseSensorMorph(edge, border, borderColor) {
+    MouseSensorMorph.__super__.constructor.apply(this, arguments);
+    this.edge = edge || 4;
+    this.border = border || 2;
+    this.color = new Color(255, 255, 255);
+    this.borderColor = borderColor || new Color();
+    this.isTouched = false;
+    this.upStep = 0.05;
+    this.downStep = 0.02;
+    this.noticesTransparentClick = false;
+    this.drawNew();
   }
 
-  BouncerMorph.prototype.moveUp = function() {
-    return this.moveBy(new Point(0, -this.speed));
-  };
-
-  BouncerMorph.prototype.moveDown = function() {
-    return this.moveBy(new Point(0, this.speed));
-  };
-
-  BouncerMorph.prototype.moveRight = function() {
-    return this.moveBy(new Point(this.speed, 0));
-  };
-
-  BouncerMorph.prototype.moveLeft = function() {
-    return this.moveBy(new Point(-this.speed, 0));
-  };
-
-  BouncerMorph.prototype.step = function() {
-    if (!this.isStopped) {
-      if (this.type === "vertical") {
-        if (this.direction === "down") {
-          this.moveDown();
+  MouseSensorMorph.prototype.touch = function() {
+    var _this = this;
+    if (!this.isTouched) {
+      this.isTouched = true;
+      this.alpha = 0.6;
+      return this.step = function() {
+        if (_this.isTouched) {
+          if (_this.alpha < 1) {
+            _this.alpha = _this.alpha + _this.upStep;
+          }
+        } else if (_this.alpha > _this.downStep) {
+          _this.alpha = _this.alpha - _this.downStep;
         } else {
-          this.moveUp();
+          _this.alpha = 0;
+          _this.step = null;
         }
-        if (this.fullBounds().top() < this.parent.top() && this.direction === "up") {
-          this.direction = "down";
-        }
-        if (this.fullBounds().bottom() > this.parent.bottom() && this.direction === "down") {
-          return this.direction = "up";
-        }
-      } else if (this.type === "horizontal") {
-        if (this.direction === "right") {
-          this.moveRight();
-        } else {
-          this.moveLeft();
-        }
-        if (this.fullBounds().left() < this.parent.left() && this.direction === "left") {
-          this.direction = "right";
-        }
-        if (this.fullBounds().right() > this.parent.right() && this.direction === "right") {
-          return this.direction = "left";
-        }
-      }
+        return _this.changed();
+      };
     }
   };
 
-  return BouncerMorph;
-
-})(Morph);
-
-SliderButtonMorph = (function(_super) {
-
-  __extends(SliderButtonMorph, _super);
-
-  function SliderButtonMorph(orientation) {
-    this.color = new Color(80, 80, 80);
-    this.highlightColor = new Color(90, 90, 140);
-    this.pressColor = new Color(80, 80, 160);
-    this.is3D = true;
-    this.hasMiddleDip = true;
-    SliderButtonMorph.__super__.constructor.call(this, orientation);
-  }
-
-  SliderButtonMorph.prototype.autoOrientation = function() {
-    return nop();
+  MouseSensorMorph.prototype.unTouch = function() {
+    return this.isTouched = false;
   };
 
-  SliderButtonMorph.prototype.drawNew = function() {
-    var colorBak;
-    colorBak = this.color.copy();
-    SliderButtonMorph.__super__.drawNew.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.normalImage = this.image;
-    this.color = this.highlightColor.copy();
-    SliderButtonMorph.__super__.drawNew.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.highlightImage = this.image;
-    this.color = this.pressColor.copy();
-    SliderButtonMorph.__super__.drawNew.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.pressImage = this.image;
-    this.color = colorBak;
-    return this.image = this.normalImage;
+  MouseSensorMorph.prototype.mouseEnter = function() {
+    return this.touch();
   };
 
-  SliderButtonMorph.prototype.drawEdges = function() {
-    var context, gradient, h, radius, w;
-    context = this.image.getContext("2d");
-    gradient = void 0;
-    radius = void 0;
-    w = this.width();
-    h = this.height();
-    context.lineJoin = "round";
-    context.lineCap = "round";
-    if (this.orientation === "vertical") {
-      context.lineWidth = w / 3;
-      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0);
-      gradient.addColorStop(0, "white");
-      gradient.addColorStop(1, this.color.toString());
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(context.lineWidth * 0.5, w / 2);
-      context.lineTo(context.lineWidth * 0.5, h - w / 2);
-      context.stroke();
-      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0);
-      gradient.addColorStop(0, this.color.toString());
-      gradient.addColorStop(1, "black");
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(w - context.lineWidth * 0.5, w / 2);
-      context.lineTo(w - context.lineWidth * 0.5, h - w / 2);
-      context.stroke();
-      if (this.hasMiddleDip) {
-        gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0);
-        radius = w / 4;
-        gradient.addColorStop(0, "black");
-        gradient.addColorStop(0.35, this.color.toString());
-        gradient.addColorStop(0.65, this.color.toString());
-        gradient.addColorStop(1, "white");
-        context.fillStyle = gradient;
-        context.beginPath();
-        context.arc(w / 2, h / 2, radius, radians(0), radians(360), false);
-        context.closePath();
-        return context.fill();
-      }
-    } else if (this.orientation === "horizontal") {
-      context.lineWidth = h / 3;
-      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth);
-      gradient.addColorStop(0, "white");
-      gradient.addColorStop(1, this.color.toString());
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(h / 2, context.lineWidth * 0.5);
-      context.lineTo(w - h / 2, context.lineWidth * 0.5);
-      context.stroke();
-      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h);
-      gradient.addColorStop(0, this.color.toString());
-      gradient.addColorStop(1, "black");
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(h / 2, h - context.lineWidth * 0.5);
-      context.lineTo(w - h / 2, h - context.lineWidth * 0.5);
-      context.stroke();
-      if (this.hasMiddleDip) {
-        gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth);
-        radius = h / 4;
-        gradient.addColorStop(0, "black");
-        gradient.addColorStop(0.35, this.color.toString());
-        gradient.addColorStop(0.65, this.color.toString());
-        gradient.addColorStop(1, "white");
-        context.fillStyle = gradient;
-        context.beginPath();
-        context.arc(this.width() / 2, this.height() / 2, radius, radians(0), radians(360), false);
-        context.closePath();
-        return context.fill();
-      }
-    }
+  MouseSensorMorph.prototype.mouseLeave = function() {
+    return this.unTouch();
   };
 
-  SliderButtonMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    return this.changed();
+  MouseSensorMorph.prototype.mouseDownLeft = function() {
+    return this.touch();
   };
 
-  SliderButtonMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    return this.changed();
+  MouseSensorMorph.prototype.mouseClickLeft = function() {
+    return this.unTouch();
   };
 
-  SliderButtonMorph.prototype.mouseDownLeft = function(pos) {
-    this.image = this.pressImage;
-    this.changed();
-    return this.escalateEvent("mouseDownLeft", pos);
-  };
+  return MouseSensorMorph;
 
-  SliderButtonMorph.prototype.mouseClickLeft = function() {
-    this.image = this.highlightImage;
-    return this.changed();
-  };
-
-  SliderButtonMorph.prototype.mouseMove = function() {
-    return nop();
-  };
-
-  return SliderButtonMorph;
-
-})(CircleBoxMorph);
-
-modules = {};
-
-useBlurredShadows = getBlurredShadowSupport();
-
-standardSettings = {
-  minimumFontHeight: getMinimumFontHeight(),
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 12,
-  bubbleHelpFontSize: 10,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 12,
-  prompterSliderSize: 10,
-  handleSize: 15,
-  scrollBarSize: 12,
-  mouseScrollAmount: 40,
-  useSliderForInput: false,
-  useVirtualKeyboard: true
-};
-
-touchScreenSettings = {
-  minimumFontHeight: standardSettings.minimumFontHeight,
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 24,
-  bubbleHelpFontSize: 18,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 24,
-  prompterSliderSize: 20,
-  handleSize: 26,
-  scrollBarSize: 24,
-  mouseScrollAmount: 40,
-  useSliderForInput: true,
-  useVirtualKeyboard: true
-};
-
-MorphicPreferences = standardSettings;
+})(BoxMorph);
 
 StringMorph = (function(_super) {
 
@@ -6872,193 +3702,117 @@ TextMorph = (function(_super) {
 
 })(Morph);
 
-HandleMorph = (function(_super) {
-  var step;
+BlinkerMorph = (function(_super) {
 
-  __extends(HandleMorph, _super);
+  __extends(BlinkerMorph, _super);
 
-  function HandleMorph(target, minX, minY, insetX, insetY, type) {
-    var size;
-    size = MorphicPreferences.handleSize;
-    this.target = target || null;
-    this.minExtent = new Point(minX || 0, minY || 0);
-    this.inset = new Point(insetX || 0, insetY || insetX || 0);
-    this.type = type || "resize";
-    HandleMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.isDraggable = false;
-    this.noticesTransparentClick = true;
-    this.setExtent(new Point(size, size));
+  function BlinkerMorph(rate) {
+    BlinkerMorph.__super__.constructor.call(this);
+    this.color = new Color(0, 0, 0);
+    this.fps = rate || 2;
+    this.drawNew();
   }
 
-  HandleMorph.prototype.drawNew = function() {
-    this.normalImage = newCanvas(this.extent());
-    this.highlightImage = newCanvas(this.extent());
-    this.drawOnCanvas(this.normalImage, this.color, new Color(100, 100, 100));
-    this.drawOnCanvas(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
-    this.image = this.normalImage;
-    if (this.target) {
-      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
-      this.target.add(this);
-      return this.target.changed();
+  BlinkerMorph.prototype.step = function() {
+    return this.toggleVisibility();
+  };
+
+  return BlinkerMorph;
+
+})(Morph);
+
+CircleBoxMorph = (function(_super) {
+
+  __extends(CircleBoxMorph, _super);
+
+  function CircleBoxMorph(orientation) {
+    CircleBoxMorph.__super__.constructor.call(this);
+    this.orientation = orientation || "vertical";
+    this.autoOrient = true;
+    this.setExtent(new Point(20, 100));
+  }
+
+  CircleBoxMorph.prototype.autoOrientation = function() {
+    if (this.height() > this.width()) {
+      return this.orientation = "vertical";
+    } else {
+      return this.orientation = "horizontal";
     }
   };
 
-  HandleMorph.prototype.drawOnCanvas = function(aCanvas, color, shadowColor) {
-    var context, i, p1, p11, p2, p22, _results;
-    context = aCanvas.getContext("2d");
-    p1 = void 0;
-    p11 = void 0;
-    p2 = void 0;
-    p22 = void 0;
-    i = void 0;
-    context.lineWidth = 1;
-    context.lineCap = "round";
-    context.strokeStyle = color.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      i = 0;
-      while (i <= this.height()) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-        i = i + 6;
-      }
-    }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    i = 0;
-    while (i <= this.width()) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      context.stroke();
-      i = i + 6;
-    }
-    context.strokeStyle = shadowColor.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      i = -2;
-      while (i <= this.height()) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-        i = i + 6;
-      }
-    }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    i = 2;
-    _results = [];
-    while (i <= this.width()) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      context.stroke();
-      _results.push(i = i + 6);
-    }
-    return _results;
-  };
-
-  step = null;
-
-  HandleMorph.prototype.mouseDownLeft = function(pos) {
-    var offset, world,
+  CircleBoxMorph.prototype.drawNew = function() {
+    var center1, center2, context, ext, points, radius, rect, x, y,
       _this = this;
-    world = this.root();
-    offset = pos.subtract(this.bounds.origin);
-    if (!this.target) {
-      return null;
+    radius = void 0;
+    center1 = void 0;
+    center2 = void 0;
+    rect = void 0;
+    points = void 0;
+    x = void 0;
+    y = void 0;
+    context = void 0;
+    ext = void 0;
+    if (this.autoOrient) {
+      this.autoOrientation();
     }
-    this.step = function() {
-      var newExt, newPos;
-      newPos = void 0;
-      newExt = void 0;
-      if (world.hand.mouseButton) {
-        newPos = world.hand.bounds.origin.copy().subtract(offset);
-        if (_this.type === "resize") {
-          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
-          newExt = newExt.max(_this.minExtent);
-          _this.target.setExtent(newExt);
-          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
-        } else {
-          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
-        }
-      } else {
-        return _this.step = null;
-      }
-    };
-    if (!this.target.step) {
-      return this.target.step = noOpFunction;
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    if (this.orientation === "vertical") {
+      radius = this.width() / 2;
+      x = this.center().x;
+      center1 = new Point(x, this.top() + radius);
+      center2 = new Point(x, this.bottom() - radius);
+      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
+    } else {
+      radius = this.height() / 2;
+      y = this.center().y;
+      center1 = new Point(this.left() + radius, y);
+      center2 = new Point(this.right() - radius, y);
+      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
     }
-  };
-
-  HandleMorph.prototype.rootForGrab = function() {
-    return this;
-  };
-
-  HandleMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    return this.changed();
-  };
-
-  HandleMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    return this.changed();
-  };
-
-  HandleMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
-    }
-    return c;
-  };
-
-  HandleMorph.prototype.attach = function() {
-    var choices, menu,
-      _this = this;
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        this.isDraggable = false;
-        this.target = each;
-        this.drawNew();
-        return this.noticesTransparentClick = true;
-      });
+    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
+    points.forEach(function(center) {
+      context.fillStyle = _this.color.toString();
+      context.beginPath();
+      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+      context.closePath();
+      return context.fill();
     });
-    if (choices.length > 0) {
-      return menu.popUpAtHand(this.world());
+    rect = rect.translateBy(this.bounds.origin.neg());
+    ext = rect.extent();
+    if (ext.x > 0 && ext.y > 0) {
+      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
     }
   };
 
-  return HandleMorph;
+  CircleBoxMorph.prototype.developersMenu = function() {
+    var menu;
+    menu = CircleBoxMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    if (this.orientation === "vertical") {
+      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
+    } else {
+      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
+    }
+    return menu;
+  };
+
+  CircleBoxMorph.prototype.toggleOrientation = function() {
+    var center;
+    center = this.center();
+    this.changed();
+    if (this.orientation === "vertical") {
+      this.orientation = "horizontal";
+    } else {
+      this.orientation = "vertical";
+    }
+    this.silentSetExtent(new Point(this.height(), this.width()));
+    this.setCenter(center);
+    this.drawNew();
+    return this.changed();
+  };
+
+  return CircleBoxMorph;
 
 })(Morph);
 
@@ -7329,6 +4083,1585 @@ SliderMorph = (function(_super) {
 
 })(CircleBoxMorph);
 
+WorldMorph = (function(_super) {
+
+  __extends(WorldMorph, _super);
+
+  function WorldMorph(aCanvas, fillPage) {
+    WorldMorph.__super__.constructor.call(this);
+    this.color = new Color(205, 205, 205);
+    this.alpha = 1;
+    this.bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height);
+    this.drawNew();
+    this.isVisible = true;
+    this.isDraggable = false;
+    this.currentKey = null;
+    this.worldCanvas = aCanvas;
+    this.useFillPage = fillPage;
+    if (this.useFillPage === undefined) {
+      this.useFillPage = true;
+    }
+    this.isDevMode = false;
+    this.broken = [];
+    this.hand = new HandMorph(this);
+    this.keyboardReceiver = null;
+    this.lastEditedText = null;
+    this.cursor = null;
+    this.activeMenu = null;
+    this.activeHandle = null;
+    this.virtualKeyboard = null;
+    this.initEventListeners();
+  }
+
+  WorldMorph.prototype.brokenFor = function(aMorph) {
+    var fb;
+    fb = aMorph.fullBounds();
+    return this.broken.filter(function(rect) {
+      return rect.intersects(fb);
+    });
+  };
+
+  WorldMorph.prototype.fullDrawOn = function(aCanvas, aRect) {
+    WorldMorph.__super__.fullDrawOn.call(this, aCanvas, aRect);
+    return this.hand.fullDrawOn(aCanvas, aRect);
+  };
+
+  WorldMorph.prototype.updateBroken = function() {
+    var _this = this;
+    this.broken.forEach(function(rect) {
+      if (rect.extent().gt(new Point(0, 0))) {
+        return _this.fullDrawOn(_this.worldCanvas, rect);
+      }
+    });
+    return this.broken = [];
+  };
+
+  WorldMorph.prototype.doOneCycle = function() {
+    this.stepFrame();
+    return this.updateBroken();
+  };
+
+  WorldMorph.prototype.fillPage = function() {
+    var clientHeight, clientWidth, pos,
+      _this = this;
+    pos = getDocumentPositionOf(this.worldCanvas);
+    clientHeight = window.innerHeight;
+    clientWidth = window.innerWidth;
+    if (pos.x > 0) {
+      this.worldCanvas.style.position = "absolute";
+      this.worldCanvas.style.left = "0px";
+      pos.x = 0;
+    }
+    if (pos.y > 0) {
+      this.worldCanvas.style.position = "absolute";
+      this.worldCanvas.style.top = "0px";
+      pos.y = 0;
+    }
+    if (document.body.scrollTop) {
+      clientHeight = document.documentElement.clientHeight;
+    }
+    if (document.body.scrollLeft) {
+      clientWidth = document.documentElement.clientWidth;
+    }
+    if (this.worldCanvas.width !== clientWidth) {
+      this.worldCanvas.width = clientWidth;
+      this.setWidth(clientWidth);
+    }
+    if (this.worldCanvas.height !== clientHeight) {
+      this.worldCanvas.height = clientHeight;
+      this.setHeight(clientHeight);
+    }
+    return this.children.forEach(function(child) {
+      if (child.reactToWorldResize) {
+        return child.reactToWorldResize(_this.bounds.copy());
+      }
+    });
+  };
+
+  WorldMorph.prototype.getGlobalPixelColor = function(point) {
+    var dta;
+    dta = this.worldCanvas.getContext("2d").getImageData(point.x, point.y, 1, 1).data;
+    return new Color(dta[0], dta[1], dta[2]);
+  };
+
+  WorldMorph.prototype.initVirtualKeyboard = function() {
+    var _this = this;
+    if (this.virtualKeyboard) {
+      document.body.removeChild(this.virtualKeyboard);
+      this.virtualKeyboard = null;
+    }
+    if (!MorphicPreferences.useVirtualKeyboard) {
+      return;
+    }
+    this.virtualKeyboard = document.createElement("input");
+    this.virtualKeyboard.type = "text";
+    this.virtualKeyboard.style.color = "transparent";
+    this.virtualKeyboard.style.backgroundColor = "transparent";
+    this.virtualKeyboard.style.border = "none";
+    this.virtualKeyboard.style.outline = "none";
+    this.virtualKeyboard.style.position = "absolute";
+    this.virtualKeyboard.style.top = "0px";
+    this.virtualKeyboard.style.left = "0px";
+    this.virtualKeyboard.style.width = "0px";
+    this.virtualKeyboard.style.height = "0px";
+    document.body.appendChild(this.virtualKeyboard);
+    this.virtualKeyboard.addEventListener("keydown", (function(event) {
+      _this.currentKey = event.keyCode;
+      if (_this.keyboardReceiver) {
+        _this.keyboardReceiver.processKeyDown(event);
+      }
+      if (event.keyIdentifier === "U+0008" || event.keyIdentifier === "Backspace") {
+        event.preventDefault();
+      }
+      if (event.keyIdentifier === "U+0009" || event.keyIdentifier === "Tab") {
+        if (_this.keyboardReceiver) {
+          _this.keyboardReceiver.processKeyPress(event);
+        }
+        return event.preventDefault();
+      }
+    }), false);
+    this.virtualKeyboard.addEventListener("keyup", (function(event) {
+      _this.currentKey = null;
+      if (_this.keyboardReceiver ? _this.keyboardReceiver.processKeyUp : void 0) {
+        _this.keyboardReceiver.processKeyUp(event);
+      }
+      return event.preventDefault();
+    }), false);
+    return this.virtualKeyboard.addEventListener("keypress", (function(event) {
+      if (_this.keyboardReceiver) {
+        _this.keyboardReceiver.processKeyPress(event);
+      }
+      return event.preventDefault();
+    }), false);
+  };
+
+  WorldMorph.prototype.initEventListeners = function() {
+    var canvas,
+      _this = this;
+    canvas = this.worldCanvas;
+    if (this.useFillPage) {
+      this.fillPage();
+    } else {
+      this.changed();
+    }
+    canvas.addEventListener("mousedown", (function(event) {
+      return _this.hand.processMouseDown(event);
+    }), false);
+    canvas.addEventListener("touchstart", (function(event) {
+      return _this.hand.processTouchStart(event);
+    }), false);
+    canvas.addEventListener("mouseup", (function(event) {
+      event.preventDefault();
+      return _this.hand.processMouseUp(event);
+    }), false);
+    canvas.addEventListener("touchend", (function(event) {
+      return _this.hand.processTouchEnd(event);
+    }), false);
+    canvas.addEventListener("mousemove", (function(event) {
+      return _this.hand.processMouseMove(event);
+    }), false);
+    canvas.addEventListener("touchmove", (function(event) {
+      return _this.hand.processTouchMove(event);
+    }), false);
+    canvas.addEventListener("contextmenu", (function(event) {
+      return event.preventDefault();
+    }), false);
+    canvas.addEventListener("keydown", (function(event) {
+      _this.currentKey = event.keyCode;
+      if (_this.keyboardReceiver) {
+        _this.keyboardReceiver.processKeyDown(event);
+      }
+      if (event.keyIdentifier === "U+0008" || event.keyIdentifier === "Backspace") {
+        event.preventDefault();
+      }
+      if (event.keyIdentifier === "U+0009" || event.keyIdentifier === "Tab") {
+        if (_this.keyboardReceiver) {
+          _this.keyboardReceiver.processKeyPress(event);
+        }
+        return event.preventDefault();
+      }
+    }), false);
+    canvas.addEventListener("keyup", (function(event) {
+      _this.currentKey = null;
+      if (_this.keyboardReceiver ? _this.keyboardReceiver.processKeyUp : void 0) {
+        _this.keyboardReceiver.processKeyUp(event);
+      }
+      return event.preventDefault();
+    }), false);
+    canvas.addEventListener("keypress", (function(event) {
+      if (_this.keyboardReceiver) {
+        _this.keyboardReceiver.processKeyPress(event);
+      }
+      return event.preventDefault();
+    }), false);
+    canvas.addEventListener("mousewheel", (function(event) {
+      _this.hand.processMouseScroll(event);
+      return event.preventDefault();
+    }), false);
+    canvas.addEventListener("DOMMouseScroll", (function(event) {
+      _this.hand.processMouseScroll(event);
+      return event.preventDefault();
+    }), false);
+    window.addEventListener("dragover", (function(event) {
+      return event.preventDefault();
+    }), false);
+    window.addEventListener("drop", (function(event) {
+      _this.hand.processDrop(event);
+      return event.preventDefault();
+    }), false);
+    window.addEventListener("resize", (function() {
+      if (_this.useFillPage) {
+        return _this.fillPage();
+      }
+    }), false);
+    return window.onbeforeunload = function(evt) {
+      var e, msg;
+      e = evt || window.event;
+      msg = "Are you sure you want to leave?";
+      if (e) {
+        e.returnValue = msg;
+      }
+      return msg;
+    };
+  };
+
+  WorldMorph.prototype.mouseDownLeft = function() {
+    return nop();
+  };
+
+  WorldMorph.prototype.mouseClickLeft = function() {
+    return nop();
+  };
+
+  WorldMorph.prototype.mouseDownRight = function() {
+    return nop();
+  };
+
+  WorldMorph.prototype.mouseClickRight = function() {
+    return nop();
+  };
+
+  WorldMorph.prototype.wantsDropOf = function() {
+    return this.acceptsDrops;
+  };
+
+  WorldMorph.prototype.droppedImage = function() {
+    return null;
+  };
+
+  WorldMorph.prototype.nextTab = function(editField) {
+    var next;
+    next = this.nextEntryField(editField);
+    editField.clearSelection();
+    next.selectAll();
+    return next.edit();
+  };
+
+  WorldMorph.prototype.previousTab = function(editField) {
+    var prev;
+    prev = this.previousEntryField(editField);
+    editField.clearSelection();
+    prev.selectAll();
+    return prev.edit();
+  };
+
+  WorldMorph.prototype.contextMenu = function() {
+    var menu;
+    menu = void 0;
+    if (this.isDevMode) {
+      menu = new MenuMorph(this, this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]);
+    } else {
+      menu = new MenuMorph(this, "Morphic");
+    }
+    if (this.isDevMode) {
+      menu.addItem("demo...", "userCreateMorph", "sample morphs");
+      menu.addLine();
+      menu.addItem("hide all...", "hideAll");
+      menu.addItem("show all...", "showAllHiddens");
+      menu.addItem("move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible");
+      menu.addItem("inspect...", "inspect", "open a window on\nall properties");
+      menu.addLine();
+      menu.addItem("restore display", "changed", "redraw the\nscreen once");
+      menu.addItem("fill page...", "fillPage", "let the World automatically\nadjust to browser resizings");
+      if (useBlurredShadows) {
+        menu.addItem("sharp shadows...", "toggleBlurredShadows", "sharp drop shadows\nuse for old browsers");
+      } else {
+        menu.addItem("blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers");
+      }
+      menu.addItem("color...", (function() {
+        return this.pickColor(menu.title + "\ncolor:", this.setColor, this, this.color);
+      }), "choose the World's\nbackground color");
+      if (MorphicPreferences === standardSettings) {
+        menu.addItem("touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders");
+      } else {
+        menu.addItem("standard settings", "togglePreferences", "smaller menu fonts\nand sliders");
+      }
+      menu.addLine();
+    }
+    if (this.isDevMode) {
+      menu.addItem("user mode...", "toggleDevMode", "disable developers'\ncontext menus");
+    } else {
+      menu.addItem("development mode...", "toggleDevMode");
+    }
+    menu.addItem("about morphic.js...", "about");
+    return menu;
+  };
+
+  WorldMorph.prototype.userCreateMorph = function() {
+    var create, menu, newMorph,
+      _this = this;
+    create = function(aMorph) {
+      aMorph.isDraggable = true;
+      return aMorph.pickUp(_this);
+    };
+    menu = void 0;
+    newMorph = void 0;
+    menu = new MenuMorph(this, "make a morph");
+    menu.addItem("rectangle", function() {
+      return create(new Morph());
+    });
+    menu.addItem("box", function() {
+      return create(new BoxMorph());
+    });
+    menu.addItem("circle box", function() {
+      return create(new CircleBoxMorph());
+    });
+    menu.addLine();
+    menu.addItem("slider", function() {
+      return create(new SliderMorph());
+    });
+    menu.addItem("frame", function() {
+      newMorph = new FrameMorph();
+      newMorph.setExtent(new Point(350, 250));
+      return create(newMorph);
+    });
+    menu.addItem("scroll frame", function() {
+      newMorph = new ScrollFrameMorph();
+      newMorph.contents.acceptsDrops = true;
+      newMorph.contents.adjustBounds();
+      newMorph.setExtent(new Point(350, 250));
+      return create(newMorph);
+    });
+    menu.addItem("handle", function() {
+      return create(new HandleMorph());
+    });
+    menu.addLine();
+    menu.addItem("string", function() {
+      newMorph = new StringMorph("Hello, World!");
+      newMorph.isEditable = true;
+      return create(newMorph);
+    });
+    menu.addItem("text", function() {
+      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " + "traurig bin, ein Märchen aus uralten Zeiten, das " + "kommt mir nicht aus dem Sinn. Die Luft ist kühl " + "und es dunkelt, und ruhig fließt der Rhein; der " + "Gipfel des Berges funkelt im Abendsonnenschein. " + "Die schönste Jungfrau sitzet dort oben wunderbar, " + "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " + "goldenes Haar, sie kämmt es mit goldenem Kamme, " + "und singt ein Lied dabei; das hat eine wundersame, " + "gewalt'ge Melodei. Den Schiffer im kleinen " + "Schiffe, ergreift es mit wildem Weh; er schaut " + "nicht die Felsenriffe, er schaut nur hinauf in " + "die Höh'. Ich glaube, die Wellen verschlingen " + "am Ende Schiffer und Kahn, und das hat mit ihrem " + "Singen, die Loreley getan.");
+      newMorph.isEditable = true;
+      newMorph.maxWidth = 300;
+      newMorph.drawNew();
+      return create(newMorph);
+    });
+    menu.addItem("speech bubble", function() {
+      newMorph = new SpeechBubbleMorph("Hello, World!");
+      return create(newMorph);
+    });
+    menu.addLine();
+    menu.addItem("gray scale palette", function() {
+      return create(new GrayPaletteMorph());
+    });
+    menu.addItem("color palette", function() {
+      return create(new ColorPaletteMorph());
+    });
+    menu.addItem("color picker", function() {
+      return create(new ColorPickerMorph());
+    });
+    menu.addLine();
+    menu.addItem("sensor demo", function() {
+      newMorph = new MouseSensorMorph();
+      newMorph.setColor(new Color(230, 200, 100));
+      newMorph.edge = 35;
+      newMorph.border = 15;
+      newMorph.borderColor = new Color(200, 100, 50);
+      newMorph.alpha = 0.2;
+      newMorph.setExtent(new Point(100, 100));
+      return create(newMorph);
+    });
+    menu.addItem("animation demo", function() {
+      var bar, baz, foo, fred, garply;
+      foo = void 0;
+      bar = void 0;
+      baz = void 0;
+      garply = void 0;
+      fred = void 0;
+      foo = new BouncerMorph();
+      foo.setPosition(new Point(50, 20));
+      foo.setExtent(new Point(300, 200));
+      foo.alpha = 0.9;
+      foo.speed = 3;
+      bar = new BouncerMorph();
+      bar.setColor(new Color(50, 50, 50));
+      bar.setPosition(new Point(80, 80));
+      bar.setExtent(new Point(80, 250));
+      bar.type = "horizontal";
+      bar.direction = "right";
+      bar.alpha = 0.9;
+      bar.speed = 5;
+      baz = new BouncerMorph();
+      baz.setColor(new Color(20, 20, 20));
+      baz.setPosition(new Point(90, 140));
+      baz.setExtent(new Point(40, 30));
+      baz.type = "horizontal";
+      baz.direction = "right";
+      baz.speed = 3;
+      garply = new BouncerMorph();
+      garply.setColor(new Color(200, 20, 20));
+      garply.setPosition(new Point(90, 140));
+      garply.setExtent(new Point(20, 20));
+      garply.type = "vertical";
+      garply.direction = "up";
+      garply.speed = 8;
+      fred = new BouncerMorph();
+      fred.setColor(new Color(20, 200, 20));
+      fred.setPosition(new Point(120, 140));
+      fred.setExtent(new Point(20, 20));
+      fred.type = "vertical";
+      fred.direction = "down";
+      fred.speed = 4;
+      bar.add(garply);
+      bar.add(baz);
+      foo.add(fred);
+      foo.add(bar);
+      return create(foo);
+    });
+    menu.addItem("pen", function() {
+      return create(new PenMorph());
+    });
+    menu.addLine();
+    menu.addItem("view all...", function() {
+      newMorph = new MorphsListMorph();
+      return create(newMorph);
+    });
+    if (this.customMorphs) {
+      menu.addLine();
+      this.customMorphs().forEach(function(morph) {
+        return menu.addItem(morph.toString(), function() {
+          return create(morph);
+        });
+      });
+    }
+    return menu.popUpAtHand(this);
+  };
+
+  WorldMorph.prototype.toggleDevMode = function() {
+    return this.isDevMode = !this.isDevMode;
+  };
+
+  WorldMorph.prototype.hideAll = function() {
+    return this.children.forEach(function(child) {
+      return child.hide();
+    });
+  };
+
+  WorldMorph.prototype.showAllHiddens = function() {
+    return this.forAllChildren(function(child) {
+      if (!child.isVisible) {
+        return child.show();
+      }
+    });
+  };
+
+  WorldMorph.prototype.about = function() {
+    var module, versions;
+    versions = "";
+    module = void 0;
+    for (module in modules) {
+      if (modules.hasOwnProperty(module)) {
+        versions += "\n" + module + " (" + modules[module] + ")";
+      }
+    }
+    if (versions !== "") {
+      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions;
+    }
+    return this.inform("morphic.js\n\n" + "a lively Web GUI\ninspired by Squeak\n" + morphicVersion + "\n\nwritten by Jens Mönig\njens@moenig.org" + versions);
+  };
+
+  WorldMorph.prototype.edit = function(aStringOrTextMorph) {
+    var pos;
+    pos = getDocumentPositionOf(this.worldCanvas);
+    if (!aStringOrTextMorph.isEditable) {
+      return null;
+    }
+    if (this.cursor) {
+      this.cursor.destroy();
+    }
+    if (this.lastEditedText) {
+      this.lastEditedText.clearSelection();
+    }
+    this.cursor = new CursorMorph(aStringOrTextMorph);
+    aStringOrTextMorph.parent.add(this.cursor);
+    this.keyboardReceiver = this.cursor;
+    this.initVirtualKeyboard();
+    if (MorphicPreferences.useVirtualKeyboard) {
+      this.virtualKeyboard.style.top = this.cursor.top() + pos.y + "px";
+      this.virtualKeyboard.style.left = this.cursor.left() + pos.x + "px";
+      this.virtualKeyboard.focus();
+    }
+    if (MorphicPreferences.useSliderForInput) {
+      if (!aStringOrTextMorph.parentThatIsA(MenuMorph)) {
+        return this.slide(aStringOrTextMorph);
+      }
+    }
+  };
+
+  WorldMorph.prototype.slide = function(aStringOrTextMorph) {
+    var menu, slider, val;
+    val = parseFloat(aStringOrTextMorph.text);
+    menu = void 0;
+    slider = void 0;
+    if (isNaN(val)) {
+      val = 0;
+    }
+    menu = new MenuMorph();
+    slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal");
+    slider.alpha = 1;
+    slider.color = new Color(225, 225, 225);
+    slider.button.color = menu.borderColor;
+    slider.button.highlightColor = slider.button.color.copy();
+    slider.button.highlightColor.b += 100;
+    slider.button.pressColor = slider.button.color.copy();
+    slider.button.pressColor.b += 150;
+    slider.silentSetHeight(MorphicPreferences.scrollBarSize);
+    slider.silentSetWidth(MorphicPreferences.menuFontSize * 10);
+    slider.drawNew();
+    slider.action = function(num) {
+      aStringOrTextMorph.changed();
+      aStringOrTextMorph.text = Math.round(num).toString();
+      aStringOrTextMorph.drawNew();
+      return aStringOrTextMorph.changed();
+    };
+    menu.items.push(slider);
+    return menu.popup(this, aStringOrTextMorph.bottomLeft().add(new Point(0, 5)));
+  };
+
+  WorldMorph.prototype.stopEditing = function() {
+    if (this.cursor) {
+      this.lastEditedText = this.cursor.target;
+      this.cursor.destroy();
+      this.lastEditedText.escalateEvent("reactToEdit", this.lastEditedText);
+    }
+    this.keyboardReceiver = null;
+    if (this.virtualKeyboard) {
+      this.virtualKeyboard.blur();
+      document.body.removeChild(this.virtualKeyboard);
+      this.virtualKeyboard = null;
+    }
+    return this.worldCanvas.focus();
+  };
+
+  WorldMorph.prototype.toggleBlurredShadows = function() {
+    return useBlurredShadows = !useBlurredShadows;
+  };
+
+  WorldMorph.prototype.togglePreferences = function() {
+    if (MorphicPreferences === standardSettings) {
+      return MorphicPreferences = touchScreenSettings;
+    } else {
+      return MorphicPreferences = standardSettings;
+    }
+  };
+
+  return WorldMorph;
+
+})(FrameMorph);
+
+TriggerMorph = (function(_super) {
+
+  __extends(TriggerMorph, _super);
+
+  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) {
+    this.target = target || null;
+    this.action = action || null;
+    this.environment = environment || null;
+    this.labelString = labelString || null;
+    this.label = null;
+    this.hint = hint || null;
+    this.fontSize = fontSize || MorphicPreferences.menuFontSize;
+    this.fontStyle = fontStyle || "sans-serif";
+    this.highlightColor = new Color(192, 192, 192);
+    this.pressColor = new Color(128, 128, 128);
+    this.labelColor = labelColor || new Color(0, 0, 0);
+    TriggerMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.drawNew();
+  }
+
+  TriggerMorph.prototype.drawNew = function() {
+    this.createBackgrounds();
+    if (this.labelString !== null) {
+      return this.createLabel();
+    }
+  };
+
+  TriggerMorph.prototype.createBackgrounds = function() {
+    var context, ext;
+    context = void 0;
+    ext = this.extent();
+    this.normalImage = newCanvas(ext);
+    context = this.normalImage.getContext("2d");
+    context.fillStyle = this.color.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.highlightImage = newCanvas(ext);
+    context = this.highlightImage.getContext("2d");
+    context.fillStyle = this.highlightColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.pressImage = newCanvas(ext);
+    context = this.pressImage.getContext("2d");
+    context.fillStyle = this.pressColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    return this.image = this.normalImage;
+  };
+
+  TriggerMorph.prototype.createLabel = function() {
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor);
+    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
+    return this.add(this.label);
+  };
+
+  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.label && dict[this.label]) {
+      c.label = dict[this.label];
+    }
+    return c;
+  };
+
+  TriggerMorph.prototype.trigger = function() {
+    if (typeof this.target === "function") {
+      if (typeof this.action === "function") {
+        return this.target.call(this.environment, this.action.call());
+      } else {
+        return this.target.call(this.environment, this.action);
+      }
+    } else {
+      if (typeof this.action === "function") {
+        return this.action.call(this.target);
+      } else {
+        return this.target[this.action]();
+      }
+    }
+  };
+
+  TriggerMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  TriggerMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    this.changed();
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  TriggerMorph.prototype.mouseDownLeft = function() {
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  TriggerMorph.prototype.mouseClickLeft = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    return this.trigger();
+  };
+
+  TriggerMorph.prototype.bubbleHelp = function(contents) {
+    var _this = this;
+    this.fps = 2;
+    return this.step = function() {
+      if (_this.bounds.containsPoint(_this.world().hand.position())) {
+        _this.popUpbubbleHelp(contents);
+      }
+      _this.fps = 0;
+      return delete _this.step;
+    };
+  };
+
+  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
+    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
+  };
+
+  return TriggerMorph;
+
+})(Morph);
+
+MenuItemMorph = (function(_super) {
+
+  __extends(MenuItemMorph, _super);
+
+  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color) {
+    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color);
+  }
+
+  MenuItemMorph.prototype.createLabel = function() {
+    var np;
+    np = void 0;
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor);
+    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
+    np = this.position().add(new Point(4, 0));
+    this.label.bounds = np.extent(this.label.extent());
+    return this.add(this.label);
+  };
+
+  MenuItemMorph.prototype.mouseEnter = function() {
+    if (!this.isListItem()) {
+      this.image = this.highlightImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  MenuItemMorph.prototype.mouseLeave = function() {
+    if (!this.isListItem()) {
+      this.image = this.normalImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
+    if (this.isListItem()) {
+      this.parent.unselectAllItems();
+      this.escalateEvent("mouseDownLeft", pos);
+    }
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  MenuItemMorph.prototype.mouseMove = function() {
+    if (this.isListItem()) {
+      return this.escalateEvent("mouseMove");
+    }
+  };
+
+  MenuItemMorph.prototype.mouseClickLeft = function() {
+    if (!this.isListItem()) {
+      this.parent.destroy();
+      this.root().activeMenu = null;
+    }
+    return this.trigger();
+  };
+
+  MenuItemMorph.prototype.isListItem = function() {
+    if (this.parent) {
+      return this.parent.isListContents;
+    }
+    return false;
+  };
+
+  MenuItemMorph.prototype.isSelectedListItem = function() {
+    if (this.isListItem()) {
+      return this.image === this.pressImage;
+    }
+    return false;
+  };
+
+  return MenuItemMorph;
+
+})(TriggerMorph);
+
+InspectorMorph = (function(_super) {
+
+  __extends(InspectorMorph, _super);
+
+  function InspectorMorph(target) {
+    this.target = target;
+    this.currentProperty = null;
+    this.showing = "attributes";
+    this.markOwnershipOfProperties = false;
+    InspectorMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
+    this.drawNew();
+    this.label = null;
+    this.list = null;
+    this.detail = null;
+    this.work = null;
+    this.buttonInspect = null;
+    this.buttonClose = null;
+    this.buttonSubset = null;
+    this.buttonEdit = null;
+    this.resizer = null;
+    if (this.target) {
+      this.buildPanes();
+    }
+  }
+
+  InspectorMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
+  };
+
+  InspectorMorph.prototype.buildPanes = function() {
+    var attribs, ctrl, ev, property, targetOwnMethods,
+      _this = this;
+    attribs = [];
+    property = void 0;
+    ctrl = void 0;
+    ev = void 0;
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
+      }
+    });
+    this.children = [];
+    this.label = new TextMorph(this.target.toString());
+    this.label.fontSize = MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.drawNew();
+    this.add(this.label);
+    for (property in this.target) {
+      if (property) {
+        attribs.push(property);
+      }
+    }
+    if (this.showing === "attributes") {
+      attribs = attribs.filter(function(prop) {
+        return typeof _this.target[prop] !== "function";
+      });
+    } else if (this.showing === "methods") {
+      attribs = attribs.filter(function(prop) {
+        return typeof _this.target[prop] === "function";
+      });
+    }
+    if (this.markOwnershipOfProperties) {
+      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
+    }
+    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnershipOfProperties ? [
+      [
+        new Color(0, 0, 180), function(element) {
+          return true;
+        }
+      ], [
+        new Color(0, 180, 0), function(element) {
+          return _this.target.hasOwnProperty(element);
+        }
+      ], [
+        new Color(180, 0, 0), function(element) {
+          return __indexOf.call(targetOwnMethods, element) >= 0;
+        }
+      ]
+    ] : null));
+    this.list.action = function(selected) {
+      var cnts, txt, val;
+      val = void 0;
+      txt = void 0;
+      cnts = void 0;
+      val = _this.target[selected];
+      _this.currentProperty = val;
+      if (val === null) {
+        txt = "NULL";
+      } else if (isString(val)) {
+        txt = val;
+      } else {
+        txt = val.toString();
+      }
+      cnts = new TextMorph(txt);
+      cnts.isEditable = true;
+      cnts.enableSelecting();
+      cnts.setReceiver(_this.target);
+      return _this.detail.setContents(cnts);
+    };
+    this.list.hBar.alpha = 0.6;
+    this.list.vBar.alpha = 0.6;
+    this.add(this.list);
+    this.detail = new ScrollFrameMorph();
+    this.detail.acceptsDrops = false;
+    this.detail.contents.acceptsDrops = false;
+    this.detail.isTextLineWrapping = true;
+    this.detail.color = new Color(255, 255, 255);
+    this.detail.hBar.alpha = 0.6;
+    this.detail.vBar.alpha = 0.6;
+    ctrl = new TextMorph("");
+    ctrl.isEditable = true;
+    ctrl.enableSelecting();
+    ctrl.setReceiver(this.target);
+    this.detail.setContents(ctrl);
+    this.add(this.detail);
+    if (this.work === null) {
+      this.work = new ScrollFrameMorph();
+      this.work.acceptsDrops = false;
+      this.work.contents.acceptsDrops = false;
+      this.work.isTextLineWrapping = true;
+      this.work.color = new Color(255, 255, 255);
+      this.work.hBar.alpha = 0.6;
+      this.work.vBar.alpha = 0.6;
+      ev = new TextMorph("");
+      ev.isEditable = true;
+      ev.enableSelecting();
+      ev.setReceiver(this.target);
+      this.work.setContents(ev);
+    }
+    this.add(this.work);
+    this.buttonSubset = new TriggerMorph();
+    this.buttonSubset.labelString = "show...";
+    this.buttonSubset.action = function() {
+      var menu;
+      menu = void 0;
+      menu = new MenuMorph();
+      menu.addItem("attributes", function() {
+        _this.showing = "attributes";
+        return _this.buildPanes();
+      });
+      menu.addItem("methods", function() {
+        _this.showing = "methods";
+        return _this.buildPanes();
+      });
+      menu.addItem("all", function() {
+        _this.showing = "all";
+        return _this.buildPanes();
+      });
+      menu.addLine();
+      menu.addItem((_this.markOwnershipOfProperties ? "un-mark ownership" : "mark ownership"), (function() {
+        _this.markOwnershipOfProperties = !_this.markOwnershipOfProperties;
+        return _this.buildPanes();
+      }), "highlight\nownership of properties");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonSubset);
+    this.buttonInspect = new TriggerMorph();
+    this.buttonInspect.labelString = "inspect...";
+    this.buttonInspect.action = function() {
+      var inspector, menu, world;
+      menu = void 0;
+      world = void 0;
+      inspector = void 0;
+      if (isObject(_this.currentProperty)) {
+        menu = new MenuMorph();
+        menu.addItem("in new inspector...", function() {
+          world = _this.world();
+          inspector = new InspectorMorph(_this.currentProperty);
+          inspector.setPosition(world.hand.position());
+          inspector.keepWithin(world);
+          world.add(inspector);
+          return inspector.changed();
+        });
+        menu.addItem("here...", function() {
+          return _this.setTarget(_this.currentProperty);
+        });
+        return menu.popUpAtHand(_this.world());
+      } else {
+        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
+      }
+    };
+    this.add(this.buttonInspect);
+    this.buttonEdit = new TriggerMorph();
+    this.buttonEdit.labelString = "edit...";
+    this.buttonEdit.action = function() {
+      var menu;
+      menu = void 0;
+      menu = new MenuMorph(_this);
+      menu.addItem("save", "save", "accept changes");
+      menu.addLine();
+      menu.addItem("add property...", "addProperty");
+      menu.addItem("rename...", "renameProperty");
+      menu.addItem("remove...", "removeProperty");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonEdit);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
+    };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
+  };
+
+  InspectorMorph.prototype.fixLayout = function() {
+    var b, h, r, w, x, y;
+    x = void 0;
+    y = void 0;
+    r = void 0;
+    b = void 0;
+    w = void 0;
+    h = void 0;
+    Morph.prototype.trackChanges = false;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.label.setPosition(new Point(x, y));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.drawNew();
+      this.changed();
+      this.resizer.drawNew();
+    }
+    y = this.label.bottom() + 2;
+    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - MorphicPreferences.handleSize;
+    h = b - y;
+    this.list.setPosition(new Point(x, y));
+    this.list.setExtent(new Point(w, h));
+    x = this.list.right() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.detail.setPosition(new Point(x, y));
+    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
+    y = this.detail.bottom() + this.edge;
+    this.work.setPosition(new Point(x, y));
+    this.work.setExtent(new Point(w, h / 3));
+    x = this.list.left();
+    y = this.list.bottom() + this.edge;
+    w = this.list.width();
+    h = MorphicPreferences.handleSize;
+    this.buttonSubset.setPosition(new Point(x, y));
+    this.buttonSubset.setExtent(new Point(w, h));
+    x = this.detail.left();
+    w = this.detail.width() - this.edge - MorphicPreferences.handleSize;
+    w = w / 3 - this.edge / 3;
+    this.buttonInspect.setPosition(new Point(x, y));
+    this.buttonInspect.setExtent(new Point(w, h));
+    x = this.buttonInspect.right() + this.edge;
+    this.buttonEdit.setPosition(new Point(x, y));
+    this.buttonEdit.setExtent(new Point(w, h));
+    x = this.buttonEdit.right() + this.edge;
+    r = this.detail.right() - this.edge - MorphicPreferences.handleSize;
+    w = r - x;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
+    return this.changed();
+  };
+
+  InspectorMorph.prototype.setExtent = function(aPoint) {
+    InspectorMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
+  };
+
+  InspectorMorph.prototype.save = function() {
+    var prop, txt;
+    txt = this.detail.contents.children[0].text.toString();
+    prop = this.list.selected;
+    try {
+      this.target.evaluateString("this." + prop + " = " + txt);
+      if (this.target.drawNew) {
+        this.target.changed();
+        this.target.drawNew();
+        return this.target.changed();
+      }
+    } catch (err) {
+      return this.inform(err);
+    }
+  };
+
+  InspectorMorph.prototype.addProperty = function() {
+    var _this = this;
+    return this.prompt("new property name:", (function(prop) {
+      if (prop) {
+        _this.target[prop] = null;
+        _this.buildPanes();
+        if (_this.target.drawNew) {
+          _this.target.changed();
+          _this.target.drawNew();
+          return _this.target.changed();
+        }
+      }
+    }), this, "property");
+  };
+
+  InspectorMorph.prototype.renameProperty = function() {
+    var propertyName,
+      _this = this;
+    propertyName = this.list.selected;
+    return this.prompt("property name:", (function(prop) {
+      try {
+        delete _this.target[propertyName];
+        _this.target[prop] = _this.currentProperty;
+      } catch (err) {
+        _this.inform(err);
+      }
+      _this.buildPanes();
+      if (_this.target.drawNew) {
+        _this.target.changed();
+        _this.target.drawNew();
+        return _this.target.changed();
+      }
+    }), this, propertyName);
+  };
+
+  InspectorMorph.prototype.removeProperty = function() {
+    var prop;
+    prop = this.list.selected;
+    try {
+      delete this.target[prop];
+      this.currentProperty = null;
+      this.buildPanes();
+      if (this.target.drawNew) {
+        this.target.changed();
+        this.target.drawNew();
+        return this.target.changed();
+      }
+    } catch (err) {
+      return this.inform(err);
+    }
+  };
+
+  return InspectorMorph;
+
+})(BoxMorph);
+
+Point = (function() {
+
+  function Point(x, y) {
+    this.x = x || 0;
+    this.y = y || 0;
+  }
+
+  Point.prototype.toString = function() {
+    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
+  };
+
+  Point.prototype.copy = function() {
+    return new Point(this.x, this.y);
+  };
+
+  Point.prototype.eq = function(aPoint) {
+    return this.x === aPoint.x && this.y === aPoint.y;
+  };
+
+  Point.prototype.lt = function(aPoint) {
+    return this.x < aPoint.x && this.y < aPoint.y;
+  };
+
+  Point.prototype.gt = function(aPoint) {
+    return this.x > aPoint.x && this.y > aPoint.y;
+  };
+
+  Point.prototype.ge = function(aPoint) {
+    return this.x >= aPoint.x && this.y >= aPoint.y;
+  };
+
+  Point.prototype.le = function(aPoint) {
+    return this.x <= aPoint.x && this.y <= aPoint.y;
+  };
+
+  Point.prototype.max = function(aPoint) {
+    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
+  };
+
+  Point.prototype.min = function(aPoint) {
+    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
+  };
+
+  Point.prototype.round = function() {
+    return new Point(Math.round(this.x), Math.round(this.y));
+  };
+
+  Point.prototype.abs = function() {
+    return new Point(Math.abs(this.x), Math.abs(this.y));
+  };
+
+  Point.prototype.neg = function() {
+    return new Point(-this.x, -this.y);
+  };
+
+  Point.prototype.mirror = function() {
+    return new Point(this.y, this.x);
+  };
+
+  Point.prototype.floor = function() {
+    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
+  };
+
+  Point.prototype.ceil = function() {
+    return new Point(Math.ceil(this.x), Math.ceil(this.y));
+  };
+
+  Point.prototype.add = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x + other.x, this.y + other.y);
+    }
+    return new Point(this.x + other, this.y + other);
+  };
+
+  Point.prototype.subtract = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x - other.x, this.y - other.y);
+    }
+    return new Point(this.x - other, this.y - other);
+  };
+
+  Point.prototype.multiplyBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x * other.x, this.y * other.y);
+    }
+    return new Point(this.x * other, this.y * other);
+  };
+
+  Point.prototype.divideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x / other.x, this.y / other.y);
+    }
+    return new Point(this.x / other, this.y / other);
+  };
+
+  Point.prototype.floorDivideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
+    }
+    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
+  };
+
+  Point.prototype.r = function() {
+    var t;
+    t = this.multiplyBy(this);
+    return Math.sqrt(t.x + t.y);
+  };
+
+  Point.prototype.degrees = function() {
+    var tan, theta;
+    tan = void 0;
+    theta = void 0;
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return 90;
+      }
+      return 270;
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return degrees(theta);
+      }
+      return 360 + (degrees(theta));
+    }
+    return 180 + degrees(theta);
+  };
+
+  Point.prototype.theta = function() {
+    var tan, theta;
+    tan = void 0;
+    theta = void 0;
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return radians(90);
+      }
+      return radians(270);
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return theta;
+      }
+      return radians(360) + theta;
+    }
+    return radians(180) + theta;
+  };
+
+  Point.prototype.crossProduct = function(aPoint) {
+    return this.multiplyBy(aPoint.mirror());
+  };
+
+  Point.prototype.distanceTo = function(aPoint) {
+    return (aPoint.subtract(this)).r();
+  };
+
+  Point.prototype.rotate = function(direction, center) {
+    var offset;
+    offset = this.subtract(center);
+    if (direction === "right") {
+      return new Point(-offset.y, offset.y).add(center);
+    }
+    if (direction === "left") {
+      return new Point(offset.y, -offset.y).add(center);
+    }
+    return center.subtract(offset);
+  };
+
+  Point.prototype.flip = function(direction, center) {
+    if (direction === "vertical") {
+      return new Point(this.x, center.y * 2 - this.y);
+    }
+    return new Point(center.x * 2 - this.x, this.y);
+  };
+
+  Point.prototype.distanceAngle = function(dist, angle) {
+    var deg, x, y;
+    deg = angle;
+    x = void 0;
+    y = void 0;
+    if (deg > 270) {
+      deg = deg - 360;
+    } else {
+      if (deg < -270) {
+        deg = deg + 360;
+      }
+    }
+    if (-90 <= deg && deg <= 90) {
+      x = Math.sin(radians(deg)) * dist;
+      y = Math.sqrt((dist * dist) - (x * x));
+      return new Point(x + this.x, this.y - y);
+    }
+    x = Math.sin(radians(180 - deg)) * dist;
+    y = Math.sqrt((dist * dist) - (x * x));
+    return new Point(x + this.x, this.y + y);
+  };
+
+  Point.prototype.scaleBy = function(scalePoint) {
+    return this.multiplyBy(scalePoint);
+  };
+
+  Point.prototype.translateBy = function(deltaPoint) {
+    return this.add(deltaPoint);
+  };
+
+  Point.prototype.rotateBy = function(angle, centerPoint) {
+    var center, p, r, theta;
+    center = centerPoint || new Point(0, 0);
+    p = this.subtract(center);
+    r = p.r();
+    theta = angle - p.theta();
+    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
+  };
+
+  Point.prototype.asArray = function() {
+    return [this.x, this.y];
+  };
+
+  Point.prototype.corner = function(cornerPoint) {
+    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
+  };
+
+  Point.prototype.rectangle = function(aPoint) {
+    var crn, org;
+    org = void 0;
+    crn = void 0;
+    org = this.min(aPoint);
+    crn = this.max(aPoint);
+    return new Rectangle(org.x, org.y, crn.x, crn.y);
+  };
+
+  Point.prototype.extent = function(aPoint) {
+    var crn;
+    crn = this.add(aPoint);
+    return new Rectangle(this.x, this.y, crn.x, crn.y);
+  };
+
+  return Point;
+
+})();
+
+MenuMorph = (function(_super) {
+
+  __extends(MenuMorph, _super);
+
+  function MenuMorph(target, title, environment, fontSize) {
+    this.target = target;
+    this.title = title || null;
+    this.environment = environment || null;
+    this.fontSize = fontSize || null;
+    this.items = [];
+    this.label = null;
+    this.world = null;
+    this.isListContents = false;
+    MenuMorph.__super__.constructor.call(this);
+    this.isDraggable = false;
+    this.border = null;
+    this.edge = null;
+  }
+
+  MenuMorph.prototype.addItem = function(labelString, action, hint, color) {
+    return this.items.push([localize(labelString || "close"), action || nop, hint, color]);
+  };
+
+  MenuMorph.prototype.addLine = function(width) {
+    return this.items.push([0, width || 1]);
+  };
+
+  MenuMorph.prototype.createLabel = function() {
+    var text;
+    text = void 0;
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    text = new TextMorph(localize(this.title), this.fontSize || MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, true, false, "center");
+    text.alignment = "center";
+    text.color = new Color(255, 255, 255);
+    text.backgroundColor = this.borderColor;
+    text.drawNew();
+    this.label = new BoxMorph(3, 0);
+    this.label.color = this.borderColor;
+    this.label.borderColor = this.borderColor;
+    this.label.setExtent(text.extent().add(4));
+    this.label.drawNew();
+    this.label.add(text);
+    return this.label.text = text;
+  };
+
+  MenuMorph.prototype.drawNew = function() {
+    var fb, isLine, item, x, y,
+      _this = this;
+    item = void 0;
+    fb = void 0;
+    x = void 0;
+    y = void 0;
+    isLine = false;
+    this.children.forEach(function(m) {
+      return m.destroy();
+    });
+    this.children = [];
+    if (!this.isListContents) {
+      this.edge = 5;
+      this.border = 2;
+    }
+    this.color = new Color(255, 255, 255);
+    this.borderColor = new Color(60, 60, 60);
+    this.silentSetExtent(new Point(0, 0));
+    y = 2;
+    x = this.left() + 4;
+    if (!this.isListContents) {
+      if (this.title) {
+        this.createLabel();
+        this.label.setPosition(this.bounds.origin.add(4));
+        this.add(this.label);
+        y = this.label.bottom();
+      } else {
+        y = this.top() + 4;
+      }
+    }
+    y += 1;
+    this.items.forEach(function(tuple) {
+      isLine = false;
+      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
+        item = tuple;
+      } else if (tuple[0] === 0) {
+        isLine = true;
+        item = new Morph();
+        item.color = _this.borderColor;
+        item.setHeight(tuple[1]);
+      } else {
+        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3]);
+      }
+      if (isLine) {
+        y += 1;
+      }
+      item.setPosition(new Point(x, y));
+      _this.add(item);
+      y = y + item.height();
+      if (isLine) {
+        return y += 1;
+      }
+    });
+    fb = this.fullBounds();
+    this.silentSetExtent(fb.extent().add(4));
+    this.adjustWidths();
+    return MenuMorph.__super__.drawNew.call(this);
+  };
+
+  MenuMorph.prototype.maxWidth = function() {
+    var w;
+    w = 0;
+    if (this.parent instanceof FrameMorph ? this.parent.scrollFrame instanceof ScrollFrameMorph : void 0) {
+      w = this.parent.width();
+    }
+    this.children.forEach(function(item) {
+      if ((item instanceof MenuItemMorph) || (item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
+        return w = Math.max(w, item.width());
+      }
+    });
+    if (this.label) {
+      w = Math.max(w, this.label.width());
+    }
+    return w;
+  };
+
+  MenuMorph.prototype.adjustWidths = function() {
+    var w,
+      _this = this;
+    w = this.maxWidth();
+    return this.children.forEach(function(item) {
+      item.silentSetWidth(w);
+      if (item instanceof MenuItemMorph) {
+        return item.createBackgrounds();
+      } else {
+        item.drawNew();
+        if (item === _this.label) {
+          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
+        }
+      }
+    });
+  };
+
+  MenuMorph.prototype.unselectAllItems = function() {
+    this.children.forEach(function(item) {
+      if (item instanceof MenuItemMorph) {
+        return item.image = item.normalImage;
+      }
+    });
+    return this.changed();
+  };
+
+  MenuMorph.prototype.popup = function(world, pos) {
+    this.drawNew();
+    this.setPosition(pos);
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    if (world.activeMenu) {
+      world.activeMenu.destroy();
+    }
+    world.add(this);
+    world.activeMenu = this;
+    return this.fullChanged();
+  };
+
+  MenuMorph.prototype.popUpAtHand = function(world) {
+    var wrrld;
+    wrrld = world || this.world;
+    return this.popup(wrrld, wrrld.hand.position());
+  };
+
+  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
+    var wrrld;
+    wrrld = world || this.world;
+    this.drawNew();
+    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
+    var wrrld;
+    wrrld = world || this.world;
+    this.drawNew();
+    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  return MenuMorph;
+
+})(BoxMorph);
+
 ShadowMorph = (function(_super) {
 
   __extends(ShadowMorph, _super);
@@ -7340,3 +5673,1683 @@ ShadowMorph = (function(_super) {
   return ShadowMorph;
 
 })(Morph);
+
+StringFieldMorph = (function(_super) {
+
+  __extends(StringFieldMorph, _super);
+
+  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, bold, italic, isNumeric) {
+    this.defaultContents = defaultContents || "";
+    this.minWidth = minWidth || 100;
+    this.fontSize = fontSize || 12;
+    this.fontStyle = fontStyle || "sans-serif";
+    this.isBold = bold || false;
+    this.isItalic = italic || false;
+    this.isNumeric = isNumeric || false;
+    this.text = null;
+    StringFieldMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.isEditable = true;
+    this.acceptsDrops = false;
+    this.drawNew();
+  }
+
+  StringFieldMorph.prototype.drawNew = function() {
+    var txt;
+    txt = void 0;
+    txt = (this.text ? this.string() : this.defaultContents);
+    this.text = null;
+    this.children.forEach(function(child) {
+      return child.destroy();
+    });
+    this.children = [];
+    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
+    this.text.isNumeric = this.isNumeric;
+    this.text.setPosition(this.bounds.origin.copy());
+    this.text.isEditable = this.isEditable;
+    this.text.isDraggable = false;
+    this.text.enableSelecting();
+    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
+    StringFieldMorph.__super__.drawNew.call(this);
+    return this.add(this.text);
+  };
+
+  StringFieldMorph.prototype.string = function() {
+    return this.text.text;
+  };
+
+  StringFieldMorph.prototype.mouseClickLeft = function() {
+    if (this.isEditable) {
+      return this.text.edit();
+    }
+  };
+
+  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.text && dict[this.text]) {
+      c.text = dict[this.text];
+    }
+    return c;
+  };
+
+  return StringFieldMorph;
+
+})(FrameMorph);
+
+ColorPickerMorph = (function(_super) {
+
+  __extends(ColorPickerMorph, _super);
+
+  function ColorPickerMorph(defaultColor) {
+    this.choice = defaultColor || new Color(255, 255, 255);
+    ColorPickerMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.silentSetExtent(new Point(80, 80));
+    this.drawNew();
+  }
+
+  ColorPickerMorph.prototype.drawNew = function() {
+    ColorPickerMorph.__super__.drawNew.call(this);
+    return this.buildSubmorphs();
+  };
+
+  ColorPickerMorph.prototype.buildSubmorphs = function() {
+    var cpal, gpal, x, y;
+    cpal = void 0;
+    gpal = void 0;
+    x = void 0;
+    y = void 0;
+    this.children.forEach(function(child) {
+      return child.destroy();
+    });
+    this.children = [];
+    this.feedback = new Morph();
+    this.feedback.color = this.choice;
+    this.feedback.setExtent(new Point(20, 20));
+    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
+    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
+    cpal.setPosition(this.bounds.origin);
+    this.add(cpal);
+    gpal.setPosition(cpal.bottomLeft());
+    this.add(gpal);
+    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
+    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
+    this.feedback.setPosition(new Point(x, y));
+    return this.add(this.feedback);
+  };
+
+  ColorPickerMorph.prototype.getChoice = function() {
+    return this.feedback.color;
+  };
+
+  ColorPickerMorph.prototype.rootForGrab = function() {
+    return this;
+  };
+
+  return ColorPickerMorph;
+
+})(Morph);
+
+PenMorph = (function(_super) {
+
+  __extends(PenMorph, _super);
+
+  PenMorph.prototype.heading = 0;
+
+  PenMorph.prototype.penSize = null;
+
+  PenMorph.prototype.isWarped = false;
+
+  PenMorph.prototype.wantsRedraw = false;
+
+  PenMorph.prototype.isDown = true;
+
+  function PenMorph() {
+    this.penSize = MorphicPreferences.handleSize * 4;
+    PenMorph.__super__.constructor.call(this);
+    this.setExtent(new Point(this.penSize, this.penSize));
+    this.penSize = 1;
+  }
+
+  PenMorph.prototype.changed = function() {
+    var w;
+    if (this.isWarped === false) {
+      w = this.root();
+      if (w instanceof WorldMorph) {
+        w.broken.push(this.visibleBounds().spread());
+      }
+      if (this.parent) {
+        return this.parent.childChanged(this);
+      }
+    }
+  };
+
+  PenMorph.prototype.drawNew = function(facing) {
+    var context, dest, direction, left, len, right, start;
+    context = void 0;
+    start = void 0;
+    dest = void 0;
+    left = void 0;
+    right = void 0;
+    len = void 0;
+    direction = facing || this.heading;
+    if (this.isWarped) {
+      this.wantsRedraw = true;
+      return null;
+    }
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    len = this.width() / 2;
+    start = this.center().subtract(this.bounds.origin);
+    dest = start.distanceAngle(len * 0.75, direction - 180);
+    left = start.distanceAngle(len, direction + 195);
+    right = start.distanceAngle(len, direction - 195);
+    context.fillStyle = this.color.toString();
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.lineTo(left.x, left.y);
+    context.lineTo(dest.x, dest.y);
+    context.lineTo(right.x, right.y);
+    context.closePath();
+    context.strokeStyle = "white";
+    context.lineWidth = 3;
+    context.stroke();
+    context.strokeStyle = "black";
+    context.lineWidth = 1;
+    context.stroke();
+    context.fill();
+    return this.wantsRedraw = false;
+  };
+
+  PenMorph.prototype.setHeading = function(degrees) {
+    this.heading = parseFloat(degrees) % 360;
+    if (this.isWarped === false) {
+      this.drawNew();
+      return this.changed();
+    }
+  };
+
+  PenMorph.prototype.drawLine = function(start, dest) {
+    var context, from, to;
+    context = this.parent.penTrails().getContext("2d");
+    from = start.subtract(this.parent.bounds.origin);
+    to = dest.subtract(this.parent.bounds.origin);
+    if (this.isDown) {
+      context.lineWidth = this.penSize;
+      context.strokeStyle = this.color.toString();
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      context.lineTo(to.x, to.y);
+      context.stroke();
+      if (this.isWarped === false) {
+        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.penSize / 2, 1)).intersect(this.parent.visibleBounds()).spread());
+      }
+    }
+  };
+
+  PenMorph.prototype.turn = function(degrees) {
+    return this.setHeading(this.heading + parseFloat(degrees));
+  };
+
+  PenMorph.prototype.forward = function(steps) {
+    var dest, dist, start;
+    start = this.center();
+    dest = void 0;
+    dist = parseFloat(steps);
+    if (dist >= 0) {
+      dest = this.position().distanceAngle(dist, this.heading);
+    } else {
+      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
+    }
+    this.setPosition(dest);
+    return this.drawLine(start, this.center());
+  };
+
+  PenMorph.prototype.down = function() {
+    return this.isDown = true;
+  };
+
+  PenMorph.prototype.up = function() {
+    return this.isDown = false;
+  };
+
+  PenMorph.prototype.clear = function() {
+    this.parent.drawNew();
+    return this.parent.changed();
+  };
+
+  PenMorph.prototype.startWarp = function() {
+    return this.isWarped = true;
+  };
+
+  PenMorph.prototype.endWarp = function() {
+    if (this.wantsRedraw) {
+      this.drawNew();
+    }
+    this.changed();
+    this.parent.changed();
+    return this.isWarped = false;
+  };
+
+  PenMorph.prototype.warp = function(fun) {
+    this.startWarp();
+    fun.call(this);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpOp = function(selector, argsArray) {
+    this.startWarp();
+    this[selector].apply(this, argsArray);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpSierpinski = function(length, min) {
+    return this.warpOp("sierpinski", [length, min]);
+  };
+
+  PenMorph.prototype.sierpinski = function(length, min) {
+    var i, _results;
+    i = void 0;
+    if (length > min) {
+      i = 0;
+      _results = [];
+      while (i < 3) {
+        this.sierpinski(length * 0.5, min);
+        this.turn(120);
+        this.forward(length);
+        _results.push(i += 1);
+      }
+      return _results;
+    }
+  };
+
+  PenMorph.prototype.warpTree = function(level, length, angle) {
+    return this.warpOp("tree", [level, length, angle]);
+  };
+
+  PenMorph.prototype.tree = function(level, length, angle) {
+    if (level > 0) {
+      this.penSize = level;
+      this.forward(length);
+      this.turn(angle);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle * -2);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle);
+      return this.forward(-length);
+    }
+  };
+
+  return PenMorph;
+
+})(Morph);
+
+Rectangle = (function() {
+
+  function Rectangle(left, top, right, bottom) {
+    this.origin = new Point(left || 0, top || 0);
+    this.corner = new Point(right || 0, bottom || 0);
+  }
+
+  Rectangle.prototype.toString = function() {
+    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
+  };
+
+  Rectangle.prototype.copy = function() {
+    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
+  };
+
+  Rectangle.prototype.setTo = function(left, top, right, bottom) {
+    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
+    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
+  };
+
+  Rectangle.prototype.area = function() {
+    var w;
+    w = this.width();
+    if (w < 0) {
+      return 0;
+    }
+    return Math.max(w * this.height(), 0);
+  };
+
+  Rectangle.prototype.bottom = function() {
+    return this.corner.y;
+  };
+
+  Rectangle.prototype.bottomCenter = function() {
+    return new Point(this.center().x, this.bottom());
+  };
+
+  Rectangle.prototype.bottomLeft = function() {
+    return new Point(this.origin.x, this.corner.y);
+  };
+
+  Rectangle.prototype.bottomRight = function() {
+    return this.corner.copy();
+  };
+
+  Rectangle.prototype.boundingBox = function() {
+    return this;
+  };
+
+  Rectangle.prototype.center = function() {
+    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
+  };
+
+  Rectangle.prototype.corners = function() {
+    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
+  };
+
+  Rectangle.prototype.extent = function() {
+    return this.corner.subtract(this.origin);
+  };
+
+  Rectangle.prototype.height = function() {
+    return this.corner.y - this.origin.y;
+  };
+
+  Rectangle.prototype.left = function() {
+    return this.origin.x;
+  };
+
+  Rectangle.prototype.leftCenter = function() {
+    return new Point(this.left(), this.center().y);
+  };
+
+  Rectangle.prototype.right = function() {
+    return this.corner.x;
+  };
+
+  Rectangle.prototype.rightCenter = function() {
+    return new Point(this.right(), this.center().y);
+  };
+
+  Rectangle.prototype.top = function() {
+    return this.origin.y;
+  };
+
+  Rectangle.prototype.topCenter = function() {
+    return new Point(this.center().x, this.top());
+  };
+
+  Rectangle.prototype.topLeft = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.topRight = function() {
+    return new Point(this.corner.x, this.origin.y);
+  };
+
+  Rectangle.prototype.width = function() {
+    return this.corner.x - this.origin.x;
+  };
+
+  Rectangle.prototype.position = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.eq = function(aRect) {
+    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
+  };
+
+  Rectangle.prototype.abs = function() {
+    var newCorner, newOrigin;
+    newOrigin = void 0;
+    newCorner = void 0;
+    newOrigin = this.origin.abs();
+    newCorner = this.corner.max(newOrigin);
+    return newOrigin.corner(newCorner);
+  };
+
+  Rectangle.prototype.insetBy = function(delta) {
+    var result;
+    result = new Rectangle();
+    result.origin = this.origin.add(delta);
+    result.corner = this.corner.subtract(delta);
+    return result;
+  };
+
+  Rectangle.prototype.expandBy = function(delta) {
+    var result;
+    result = new Rectangle();
+    result.origin = this.origin.subtract(delta);
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.growBy = function(delta) {
+    var result;
+    result = new Rectangle();
+    result.origin = this.origin.copy();
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.intersect = function(aRect) {
+    var result;
+    result = new Rectangle();
+    result.origin = this.origin.max(aRect.origin);
+    result.corner = this.corner.min(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.merge = function(aRect) {
+    var result;
+    result = new Rectangle();
+    result.origin = this.origin.min(aRect.origin);
+    result.corner = this.corner.max(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.round = function() {
+    return this.origin.round().corner(this.corner.round());
+  };
+
+  Rectangle.prototype.spread = function() {
+    return this.origin.floor().corner(this.corner.ceil());
+  };
+
+  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
+    var dx, dy;
+    dx = void 0;
+    dy = void 0;
+    if (this.right() > aRect.right()) {
+      dx = aRect.right() - this.right();
+    }
+    if (this.bottom() > aRect.bottom()) {
+      dy = aRect.bottom() - this.bottom();
+    }
+    if ((this.left() + dx) < aRect.left()) {
+      dx = aRect.left() - this.right();
+    }
+    if ((this.top() + dy) < aRect.top()) {
+      dy = aRect.top() - this.top();
+    }
+    return new Point(dx, dy);
+  };
+
+  Rectangle.prototype.containsPoint = function(aPoint) {
+    return this.origin.le(aPoint) && aPoint.lt(this.corner);
+  };
+
+  Rectangle.prototype.containsRectangle = function(aRect) {
+    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
+  };
+
+  Rectangle.prototype.intersects = function(aRect) {
+    var rc, ro;
+    ro = aRect.origin;
+    rc = aRect.corner;
+    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
+  };
+
+  Rectangle.prototype.scaleBy = function(scale) {
+    var c, o;
+    o = this.origin.multiplyBy(scale);
+    c = this.corner.multiplyBy(scale);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.translateBy = function(factor) {
+    var c, o;
+    o = this.origin.add(factor);
+    c = this.corner.add(factor);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.asArray = function() {
+    return [this.left(), this.top(), this.right(), this.bottom()];
+  };
+
+  Rectangle.prototype.asArray_xywh = function() {
+    return [this.left(), this.top(), this.width(), this.height()];
+  };
+
+  return Rectangle;
+
+})();
+
+CursorMorph = (function(_super) {
+
+  __extends(CursorMorph, _super);
+
+  function CursorMorph(aStringOrTextMorph) {
+    var ls;
+    ls = void 0;
+    this.keyDownEventUsed = false;
+    this.target = aStringOrTextMorph;
+    this.originalContents = this.target.text;
+    this.slot = this.target.text.length;
+    CursorMorph.__super__.constructor.call(this);
+    ls = fontHeight(this.target.fontSize);
+    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
+    this.drawNew();
+    this.image.getContext("2d").font = this.target.font();
+    this.gotoSlot(this.slot);
+  }
+
+  CursorMorph.prototype.processKeyPress = function(event) {
+    var navigation;
+    if (this.keyDownEventUsed) {
+      this.keyDownEventUsed = false;
+      return null;
+    }
+    if ((event.keyCode === 40) || event.charCode === 40) {
+      this.insert("(");
+      return null;
+    }
+    if ((event.keyCode === 37) || event.charCode === 37) {
+      this.insert("%");
+      return null;
+    }
+    navigation = [8, 13, 18, 27, 35, 36, 37, 38, 40];
+    if (event.keyCode) {
+      if (!contains(navigation, event.keyCode)) {
+        if (event.ctrlKey) {
+          this.ctrl(event.keyCode);
+        } else if (event.metaKey) {
+          this.cmd(event.keyCode);
+        } else {
+          this.insert(String.fromCharCode(event.keyCode));
+        }
+      }
+    } else if (event.charCode) {
+      if (!contains(navigation, event.charCode)) {
+        if (event.ctrlKey) {
+          this.ctrl(event.charCode);
+        } else if (event.metaKey) {
+          this.cmd(event.keyCode);
+        } else {
+          this.insert(String.fromCharCode(event.charCode));
+        }
+      }
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CursorMorph.prototype.processKeyDown = function(event) {
+    this.keyDownEventUsed = false;
+    if (event.ctrlKey) {
+      this.ctrl(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    } else if (event.metaKey) {
+      this.cmd(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    }
+    switch (event.keyCode) {
+      case 37:
+        this.goLeft();
+        this.keyDownEventUsed = true;
+        break;
+      case 39:
+        this.goRight();
+        this.keyDownEventUsed = true;
+        break;
+      case 38:
+        this.goUp();
+        this.keyDownEventUsed = true;
+        break;
+      case 40:
+        this.goDown();
+        this.keyDownEventUsed = true;
+        break;
+      case 36:
+        this.goHome();
+        this.keyDownEventUsed = true;
+        break;
+      case 35:
+        this.goEnd();
+        this.keyDownEventUsed = true;
+        break;
+      case 46:
+        this.deleteRight();
+        this.keyDownEventUsed = true;
+        break;
+      case 8:
+        this.deleteLeft();
+        this.keyDownEventUsed = true;
+        break;
+      case 13:
+        if (this.target instanceof StringMorph) {
+          this.accept();
+        } else {
+          this.insert("\n");
+        }
+        this.keyDownEventUsed = true;
+        break;
+      case 27:
+        this.cancel();
+        this.keyDownEventUsed = true;
+        break;
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CursorMorph.prototype.gotoSlot = function(newSlot) {
+    this.setPosition(this.target.slotPosition(newSlot));
+    return this.slot = Math.max(newSlot, 0);
+  };
+
+  CursorMorph.prototype.goLeft = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.slot - 1);
+  };
+
+  CursorMorph.prototype.goRight = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.slot + 1);
+  };
+
+  CursorMorph.prototype.goUp = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.target.upFrom(this.slot));
+  };
+
+  CursorMorph.prototype.goDown = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.target.downFrom(this.slot));
+  };
+
+  CursorMorph.prototype.goHome = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.target.startOfLine(this.slot));
+  };
+
+  CursorMorph.prototype.goEnd = function() {
+    this.target.clearSelection();
+    return this.gotoSlot(this.target.endOfLine(this.slot));
+  };
+
+  CursorMorph.prototype.gotoPos = function(aPoint) {
+    this.gotoSlot(this.target.slotAt(aPoint));
+    return this.show();
+  };
+
+  CursorMorph.prototype.accept = function() {
+    var world;
+    world = this.root();
+    if (world) {
+      world.stopEditing();
+    }
+    return this.escalateEvent("accept", null);
+  };
+
+  CursorMorph.prototype.cancel = function() {
+    var world;
+    world = this.root();
+    if (world) {
+      world.stopEditing();
+    }
+    this.target.text = this.originalContents;
+    this.target.changed();
+    this.target.drawNew();
+    this.target.changed();
+    return this.escalateEvent("cancel", null);
+  };
+
+  CursorMorph.prototype.insert = function(aChar) {
+    var text;
+    text = void 0;
+    if (aChar === "\t") {
+      return this.target.tab(this.target);
+    }
+    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
+      if (this.target.selection() !== "") {
+        this.gotoSlot(this.target.selectionStartSlot());
+        this.target.deleteSelection();
+      }
+      text = this.target.text;
+      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
+      this.target.text = text;
+      this.target.drawNew();
+      this.target.changed();
+      return this.goRight();
+    }
+  };
+
+  CursorMorph.prototype.ctrl = function(aChar) {
+    if ((aChar === 97) || (aChar === 65)) {
+      return this.target.selectAll();
+    } else if (aChar === 123) {
+      return this.insert("{");
+    } else if (aChar === 125) {
+      return this.insert("}");
+    } else if (aChar === 91) {
+      return this.insert("[");
+    } else if (aChar === 93) {
+      return this.insert("]");
+    }
+  };
+
+  CursorMorph.prototype.cmd = function(aChar) {
+    if (aChar === 65) {
+      return this.target.selectAll();
+    }
+  };
+
+  CursorMorph.prototype.deleteRight = function() {
+    var text;
+    text = void 0;
+    if (this.target.selection() !== "") {
+      this.gotoSlot(this.target.selectionStartSlot());
+      return this.target.deleteSelection();
+    } else {
+      text = this.target.text;
+      this.target.changed();
+      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
+      this.target.text = text;
+      return this.target.drawNew();
+    }
+  };
+
+  CursorMorph.prototype.deleteLeft = function() {
+    var text;
+    text = void 0;
+    if (this.target.selection() !== "") {
+      this.gotoSlot(this.target.selectionStartSlot());
+      this.target.deleteSelection();
+    }
+    text = this.target.text;
+    this.target.changed();
+    text = text.slice(0, Math.max(this.slot - 1, 0)) + text.slice(this.slot);
+    this.target.text = text;
+    this.target.drawNew();
+    return this.goLeft();
+  };
+
+  CursorMorph.prototype.inspectKeyEvent = function(event) {
+    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
+  };
+
+  return CursorMorph;
+
+})(BlinkerMorph);
+
+SliderButtonMorph = (function(_super) {
+
+  __extends(SliderButtonMorph, _super);
+
+  function SliderButtonMorph(orientation) {
+    this.color = new Color(80, 80, 80);
+    this.highlightColor = new Color(90, 90, 140);
+    this.pressColor = new Color(80, 80, 160);
+    this.is3D = true;
+    this.hasMiddleDip = true;
+    SliderButtonMorph.__super__.constructor.call(this, orientation);
+  }
+
+  SliderButtonMorph.prototype.autoOrientation = function() {
+    return nop();
+  };
+
+  SliderButtonMorph.prototype.drawNew = function() {
+    var colorBak;
+    colorBak = this.color.copy();
+    SliderButtonMorph.__super__.drawNew.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.normalImage = this.image;
+    this.color = this.highlightColor.copy();
+    SliderButtonMorph.__super__.drawNew.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.highlightImage = this.image;
+    this.color = this.pressColor.copy();
+    SliderButtonMorph.__super__.drawNew.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.pressImage = this.image;
+    this.color = colorBak;
+    return this.image = this.normalImage;
+  };
+
+  SliderButtonMorph.prototype.drawEdges = function() {
+    var context, gradient, h, radius, w;
+    context = this.image.getContext("2d");
+    gradient = void 0;
+    radius = void 0;
+    w = this.width();
+    h = this.height();
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    if (this.orientation === "vertical") {
+      context.lineWidth = w / 3;
+      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0);
+      gradient.addColorStop(0, "white");
+      gradient.addColorStop(1, this.color.toString());
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(context.lineWidth * 0.5, w / 2);
+      context.lineTo(context.lineWidth * 0.5, h - w / 2);
+      context.stroke();
+      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0);
+      gradient.addColorStop(0, this.color.toString());
+      gradient.addColorStop(1, "black");
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(w - context.lineWidth * 0.5, w / 2);
+      context.lineTo(w - context.lineWidth * 0.5, h - w / 2);
+      context.stroke();
+      if (this.hasMiddleDip) {
+        gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0);
+        radius = w / 4;
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(0.35, this.color.toString());
+        gradient.addColorStop(0.65, this.color.toString());
+        gradient.addColorStop(1, "white");
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(w / 2, h / 2, radius, radians(0), radians(360), false);
+        context.closePath();
+        return context.fill();
+      }
+    } else if (this.orientation === "horizontal") {
+      context.lineWidth = h / 3;
+      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth);
+      gradient.addColorStop(0, "white");
+      gradient.addColorStop(1, this.color.toString());
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(h / 2, context.lineWidth * 0.5);
+      context.lineTo(w - h / 2, context.lineWidth * 0.5);
+      context.stroke();
+      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h);
+      gradient.addColorStop(0, this.color.toString());
+      gradient.addColorStop(1, "black");
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(h / 2, h - context.lineWidth * 0.5);
+      context.lineTo(w - h / 2, h - context.lineWidth * 0.5);
+      context.stroke();
+      if (this.hasMiddleDip) {
+        gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth);
+        radius = h / 4;
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(0.35, this.color.toString());
+        gradient.addColorStop(0.65, this.color.toString());
+        gradient.addColorStop(1, "white");
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(this.width() / 2, this.height() / 2, radius, radians(0), radians(360), false);
+        context.closePath();
+        return context.fill();
+      }
+    }
+  };
+
+  SliderButtonMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseDownLeft = function(pos) {
+    this.image = this.pressImage;
+    this.changed();
+    return this.escalateEvent("mouseDownLeft", pos);
+  };
+
+  SliderButtonMorph.prototype.mouseClickLeft = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseMove = function() {
+    return nop();
+  };
+
+  return SliderButtonMorph;
+
+})(CircleBoxMorph);
+
+HandMorph = (function(_super) {
+
+  __extends(HandMorph, _super);
+
+  function HandMorph(aWorld) {
+    HandMorph.__super__.constructor.call(this);
+    this.bounds = new Rectangle();
+    this.world = aWorld;
+    this.mouseButton = null;
+    this.mouseOverList = [];
+    this.mouseDownMorph = null;
+    this.morphToGrab = null;
+    this.grabOrigin = null;
+    this.temporaries = [];
+    this.touchHoldTimeout = null;
+  }
+
+  HandMorph.prototype.changed = function() {
+    var b;
+    b = void 0;
+    if (this.world !== null) {
+      b = this.fullBounds();
+      if (!b.extent().eq(new Point())) {
+        return this.world.broken.push(this.fullBounds().spread());
+      }
+    }
+  };
+
+  HandMorph.prototype.morphAtPointer = function() {
+    var morphs, result,
+      _this = this;
+    morphs = this.world.allChildren().slice(0).reverse();
+    result = null;
+    morphs.forEach(function(m) {
+      if (m.visibleBounds().containsPoint(_this.bounds.origin) && result === null && m.isVisible && (m.noticesTransparentClick || (!m.isTransparentAt(_this.bounds.origin))) && (!(m instanceof ShadowMorph))) {
+        return result = m;
+      }
+    });
+    if (result !== null) {
+      return result;
+    }
+    return this.world;
+  };
+
+  HandMorph.prototype.allMorphsAtPointer = function() {
+    var morphs,
+      _this = this;
+    morphs = this.world.allChildren();
+    return morphs.filter(function(m) {
+      return m.isVisible && m.visibleBounds().containsPoint(_this.bounds.origin);
+    });
+  };
+
+  HandMorph.prototype.dropTargetFor = function(aMorph) {
+    var target;
+    target = this.morphAtPointer();
+    while (!target.wantsDropOf(aMorph)) {
+      target = target.parent;
+    }
+    return target;
+  };
+
+  HandMorph.prototype.grab = function(aMorph) {
+    var oldParent;
+    oldParent = aMorph.parent;
+    if (aMorph instanceof WorldMorph) {
+      return null;
+    }
+    if (this.children.length === 0) {
+      this.world.stopEditing();
+      this.grabOrigin = aMorph.situation();
+      aMorph.addShadow();
+      if (aMorph.prepareToBeGrabbed) {
+        aMorph.prepareToBeGrabbed(this);
+      }
+      this.add(aMorph);
+      this.changed();
+      if (oldParent && oldParent.reactToGrabOf) {
+        return oldParent.reactToGrabOf(aMorph);
+      }
+    }
+  };
+
+  HandMorph.prototype.drop = function() {
+    var morphToDrop, target;
+    target = void 0;
+    morphToDrop = void 0;
+    if (this.children.length !== 0) {
+      morphToDrop = this.children[0];
+      target = this.dropTargetFor(morphToDrop);
+      this.changed();
+      target.add(morphToDrop);
+      morphToDrop.changed();
+      morphToDrop.removeShadow();
+      this.children = [];
+      this.setExtent(new Point());
+      if (morphToDrop.justDropped) {
+        morphToDrop.justDropped(this);
+      }
+      if (target.reactToDropOf) {
+        target.reactToDropOf(morphToDrop, this);
+      }
+      return this.dragOrigin = null;
+    }
+  };
+
+  HandMorph.prototype.processMouseDown = function(event) {
+    var actualClick, expectedClick, morph;
+    morph = void 0;
+    expectedClick = void 0;
+    actualClick = void 0;
+    this.destroyTemporaries();
+    this.morphToGrab = null;
+    if (this.children.length !== 0) {
+      this.drop();
+      return this.mouseButton = null;
+    } else {
+      morph = this.morphAtPointer();
+      if (this.world.activeMenu) {
+        if (!contains(morph.allParents(), this.world.activeMenu)) {
+          this.world.activeMenu.destroy();
+        } else {
+          clearInterval(this.touchHoldTimeout);
+        }
+      }
+      if (this.world.activeHandle ? morph !== this.world.activeHandle : void 0) {
+        this.world.activeHandle.destroy();
+      }
+      if (this.world.cursor ? morph !== this.world.cursor.target : void 0) {
+        this.world.stopEditing();
+      }
+      if (!morph.mouseMove) {
+        this.morphToGrab = morph.rootForGrab();
+      }
+      if (event.button === 2 || event.ctrlKey) {
+        this.mouseButton = "right";
+        actualClick = "mouseDownRight";
+        expectedClick = "mouseClickRight";
+      } else {
+        this.mouseButton = "left";
+        actualClick = "mouseDownLeft";
+        expectedClick = "mouseClickLeft";
+      }
+      this.mouseDownMorph = morph;
+      while (!this.mouseDownMorph[expectedClick]) {
+        this.mouseDownMorph = this.mouseDownMorph.parent;
+      }
+      while (!morph[actualClick]) {
+        morph = morph.parent;
+      }
+      return morph[actualClick](this.bounds.origin);
+    }
+  };
+
+  HandMorph.prototype.processTouchStart = function(event) {
+    var _this = this;
+    clearInterval(this.touchHoldTimeout);
+    if (event.touches.length === 1) {
+      this.touchHoldTimeout = setInterval(function() {
+        _this.processMouseDown({
+          button: 2
+        });
+        _this.processMouseUp({
+          button: 2
+        });
+        event.preventDefault();
+        return clearInterval(_this.touchHoldTimeout);
+      }, 400);
+      this.processMouseMove(event.touches[0]);
+      this.processMouseDown({
+        button: 0
+      });
+      return event.preventDefault();
+    }
+  };
+
+  HandMorph.prototype.processTouchMove = function(event) {
+    var touch;
+    if (event.touches.length === 1) {
+      touch = event.touches[0];
+      this.processMouseMove(touch);
+      return clearInterval(this.touchHoldTimeout);
+    }
+  };
+
+  HandMorph.prototype.processTouchEnd = function(event) {
+    clearInterval(this.touchHoldTimeout);
+    return this.processMouseUp({
+      button: 0
+    });
+  };
+
+  HandMorph.prototype.processMouseUp = function() {
+    var context, contextMenu, expectedClick, morph;
+    morph = this.morphAtPointer();
+    context = void 0;
+    contextMenu = void 0;
+    expectedClick = void 0;
+    this.destroyTemporaries();
+    if (this.children.length !== 0) {
+      this.drop();
+    } else {
+      if (this.mouseButton === "left") {
+        expectedClick = "mouseClickLeft";
+      } else {
+        expectedClick = "mouseClickRight";
+        if (this.mouseButton) {
+          context = morph;
+          contextMenu = context.contextMenu();
+          while ((!contextMenu) && context.parent) {
+            context = context.parent;
+            contextMenu = context.contextMenu();
+          }
+          if (contextMenu) {
+            contextMenu.popUpAtHand(this.world);
+          }
+        }
+      }
+      while (!morph[expectedClick]) {
+        morph = morph.parent;
+      }
+      morph[expectedClick](this.bounds.origin);
+    }
+    return this.mouseButton = null;
+  };
+
+  HandMorph.prototype.processMouseScroll = function(event) {
+    var morph;
+    morph = this.morphAtPointer();
+    while (morph && !morph.mouseScroll) {
+      morph = morph.parent;
+    }
+    if (morph) {
+      return morph.mouseScroll((event.detail / -3) || (event.hasOwnProperty("wheelDeltaY") ? event.wheelDeltaY / 120 : event.wheelDelta / 120), event.wheelDeltaX / 120 || 0);
+    }
+  };
+
+  HandMorph.prototype.processDrop = function(event) {
+    var canvas, file, files, i, img, parseImgURL, readAudio, readImage, readText, src, targetDrop, txt, _results;
+    files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
+    file = void 0;
+    txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
+    src = void 0;
+    targetDrop = this.morphAtPointer();
+    img = new Image();
+    canvas = void 0;
+    i = void 0;
+    readImage = function(aFile) {
+      var frd, pic;
+      pic = new Image();
+      frd = new FileReader();
+      while (!targetDrop.droppedImage) {
+        targetDrop = targetDrop.parent;
+      }
+      pic.onload = function() {
+        canvas = newCanvas(new Point(pic.width, pic.height));
+        canvas.getContext("2d").drawImage(pic, 0, 0);
+        return targetDrop.droppedImage(canvas, aFile.name);
+      };
+      frd = new FileReader();
+      frd.onloadend = function(e) {
+        return pic.src = e.target.result;
+      };
+      return frd.readAsDataURL(aFile);
+    };
+    readAudio = function(aFile) {
+      var frd, snd;
+      snd = new Audio();
+      frd = new FileReader();
+      while (!targetDrop.droppedAudio) {
+        targetDrop = targetDrop.parent;
+      }
+      frd.onloadend = function(e) {
+        snd.src = e.target.result;
+        return targetDrop.droppedAudio(snd, aFile.name);
+      };
+      return frd.readAsDataURL(aFile);
+    };
+    readText = function(aFile) {
+      var frd;
+      frd = new FileReader();
+      while (!targetDrop.droppedText) {
+        targetDrop = targetDrop.parent;
+      }
+      frd.onloadend = function(e) {
+        return targetDrop.droppedText(e.target.result, aFile.name);
+      };
+      return frd.readAsText(aFile);
+    };
+    parseImgURL = function(html) {
+      var c, start, url;
+      url = "";
+      i = void 0;
+      c = void 0;
+      start = html.indexOf("<img src=\"");
+      if (start === -1) {
+        return null;
+      }
+      start += 10;
+      i = start;
+      while (i < html.length) {
+        c = html[i];
+        if (c === "\"") {
+          return url;
+        }
+        url = url.concat(c);
+        i += 1;
+      }
+      return null;
+    };
+    if (files.length > 0) {
+      i = 0;
+      _results = [];
+      while (i < files.length) {
+        file = files[i];
+        if (file.type.indexOf("image") === 0) {
+          readImage(file);
+        } else if (file.type.indexOf("audio") === 0) {
+          readAudio(file);
+        } else {
+          if (file.type.indexOf("text") === 0) {
+            readText(file);
+          }
+        }
+        _results.push(i += 1);
+      }
+      return _results;
+    } else if (txt) {
+      while (!targetDrop.droppedImage) {
+        targetDrop = targetDrop.parent;
+      }
+      img = new Image();
+      img.onload = function() {
+        canvas = newCanvas(new Point(img.width, img.height));
+        canvas.getContext("2d").drawImage(img, 0, 0);
+        return targetDrop.droppedImage(canvas);
+      };
+      src = parseImgURL(txt);
+      if (src) {
+        return img.src = src;
+      }
+    }
+  };
+
+  HandMorph.prototype.destroyTemporaries = function() {
+    this.temporaries.forEach(function(morph) {
+      return morph.destroy();
+    });
+    return this.temporaries = [];
+  };
+
+  HandMorph.prototype.moveBy = function(delta) {
+    Morph.prototype.trackChanges = false;
+    HandMorph.__super__.moveBy.call(this, delta);
+    Morph.prototype.trackChanges = true;
+    return this.fullChanged();
+  };
+
+  HandMorph.prototype.processMouseMove = function(event) {
+    var fb, morph, mouseOverNew, pos, posInDocument, topMorph,
+      _this = this;
+    pos = void 0;
+    posInDocument = getDocumentPositionOf(this.world.worldCanvas);
+    mouseOverNew = void 0;
+    morph = void 0;
+    topMorph = void 0;
+    fb = void 0;
+    pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y);
+    this.setPosition(pos);
+    mouseOverNew = this.morphAtPointer().allParents();
+    if ((this.children.length === 0) && (this.mouseButton === "left")) {
+      topMorph = this.morphAtPointer();
+      morph = topMorph.rootForGrab();
+      if (topMorph.mouseMove) {
+        topMorph.mouseMove(pos);
+      }
+      if (this.morphToGrab) {
+        if (this.morphToGrab.isDraggable) {
+          morph = this.morphToGrab;
+          this.grab(morph);
+        } else if (this.morphToGrab.isTemplate) {
+          morph = this.morphToGrab.fullCopy();
+          morph.isTemplate = false;
+          morph.isDraggable = true;
+          this.grab(morph);
+          this.grabOrigin = this.morphToGrab.situation();
+        }
+        fb = morph.fullBounds();
+        if (!fb.containsPoint(pos)) {
+          this.bounds.origin = fb.center();
+          this.grab(morph);
+          this.setPosition(pos);
+        }
+      }
+    }
+    this.mouseOverList.forEach(function(old) {
+      if (!contains(mouseOverNew, old)) {
+        if (old.mouseLeave) {
+          old.mouseLeave();
+        }
+        if (old.mouseLeaveDragging && this.mouseButton) {
+          return old.mouseLeaveDragging();
+        }
+      }
+    });
+    mouseOverNew.forEach(function(newMorph) {
+      if (!contains(_this.mouseOverList, newMorph)) {
+        if (newMorph.mouseEnter) {
+          newMorph.mouseEnter();
+        }
+        if (newMorph.mouseEnterDragging && _this.mouseButton) {
+          newMorph.mouseEnterDragging();
+        }
+      }
+      if (_this.children.length > 0) {
+        if (newMorph instanceof ScrollFrameMorph) {
+          if (!newMorph.bounds.insetBy(MorphicPreferences.scrollBarSize * 3).containsPoint(_this.bounds.origin)) {
+            return newMorph.startAutoScrolling();
+          }
+        }
+      }
+    });
+    return this.mouseOverList = mouseOverNew;
+  };
+
+  return HandMorph;
+
+})(Morph);
+
+morphicVersion = "2012-October-16";
+
+BouncerMorph = (function(_super) {
+
+  __extends(BouncerMorph, _super);
+
+  function BouncerMorph(type, speed) {
+    BouncerMorph.__super__.constructor.call(this);
+    this.fps = 50;
+    this.isStopped = false;
+    this.type = type || "vertical";
+    if (this.type === "vertical") {
+      this.direction = "down";
+    } else {
+      this.direction = "right";
+    }
+    this.speed = speed || 1;
+  }
+
+  BouncerMorph.prototype.moveUp = function() {
+    return this.moveBy(new Point(0, -this.speed));
+  };
+
+  BouncerMorph.prototype.moveDown = function() {
+    return this.moveBy(new Point(0, this.speed));
+  };
+
+  BouncerMorph.prototype.moveRight = function() {
+    return this.moveBy(new Point(this.speed, 0));
+  };
+
+  BouncerMorph.prototype.moveLeft = function() {
+    return this.moveBy(new Point(-this.speed, 0));
+  };
+
+  BouncerMorph.prototype.step = function() {
+    if (!this.isStopped) {
+      if (this.type === "vertical") {
+        if (this.direction === "down") {
+          this.moveDown();
+        } else {
+          this.moveUp();
+        }
+        if (this.fullBounds().top() < this.parent.top() && this.direction === "up") {
+          this.direction = "down";
+        }
+        if (this.fullBounds().bottom() > this.parent.bottom() && this.direction === "down") {
+          return this.direction = "up";
+        }
+      } else if (this.type === "horizontal") {
+        if (this.direction === "right") {
+          this.moveRight();
+        } else {
+          this.moveLeft();
+        }
+        if (this.fullBounds().left() < this.parent.left() && this.direction === "left") {
+          this.direction = "right";
+        }
+        if (this.fullBounds().right() > this.parent.right() && this.direction === "right") {
+          return this.direction = "left";
+        }
+      }
+    }
+  };
+
+  return BouncerMorph;
+
+})(Morph);
+
+Color = (function() {
+
+  function Color(r, g, b, a) {
+    this.r = r || 0;
+    this.g = g || 0;
+    this.b = b || 0;
+    this.a = a || (a === 0 ? 0 : 1);
+  }
+
+  Color.prototype.toString = function() {
+    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
+  };
+
+  Color.prototype.copy = function() {
+    return new Color(this.r, this.g, this.b, this.a);
+  };
+
+  Color.prototype.eq = function(aColor) {
+    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
+  };
+
+  Color.prototype.hsv = function() {
+    var bb, d, gg, h, max, min, rr, s, v;
+    max = void 0;
+    min = void 0;
+    h = void 0;
+    s = void 0;
+    v = void 0;
+    d = void 0;
+    rr = this.r / 255;
+    gg = this.g / 255;
+    bb = this.b / 255;
+    max = Math.max(rr, gg, bb);
+    min = Math.min(rr, gg, bb);
+    h = max;
+    s = max;
+    v = max;
+    d = max - min;
+    s = (max === 0 ? 0 : d / max);
+    if (max === min) {
+      h = 0;
+    } else {
+      switch (max) {
+        case rr:
+          h = (gg - bb) / d + (gg < bb ? 6 : 0);
+          break;
+        case gg:
+          h = (bb - rr) / d + 2;
+          break;
+        case bb:
+          h = (rr - gg) / d + 4;
+      }
+      h /= 6;
+    }
+    return [h, s, v];
+  };
+
+  Color.prototype.set_hsv = function(h, s, v) {
+    var f, i, p, q, t;
+    i = void 0;
+    f = void 0;
+    p = void 0;
+    q = void 0;
+    t = void 0;
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+      case 0:
+        this.r = v;
+        this.g = t;
+        this.b = p;
+        break;
+      case 1:
+        this.r = q;
+        this.g = v;
+        this.b = p;
+        break;
+      case 2:
+        this.r = p;
+        this.g = v;
+        this.b = t;
+        break;
+      case 3:
+        this.r = p;
+        this.g = q;
+        this.b = v;
+        break;
+      case 4:
+        this.r = t;
+        this.g = p;
+        this.b = v;
+        break;
+      case 5:
+        this.r = v;
+        this.g = p;
+        this.b = q;
+    }
+    this.r *= 255;
+    this.g *= 255;
+    return this.b *= 255;
+  };
+
+  Color.prototype.mixed = function(proportion, otherColor) {
+    var frac1, frac2;
+    frac1 = Math.min(Math.max(proportion, 0), 1);
+    frac2 = 1 - frac1;
+    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
+  };
+
+  Color.prototype.darker = function(percent) {
+    var fract;
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(0, 0, 0));
+  };
+
+  Color.prototype.lighter = function(percent) {
+    var fract;
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(255, 255, 255));
+  };
+
+  Color.prototype.dansDarker = function() {
+    var hsv, result, vv;
+    hsv = this.hsv();
+    result = new Color();
+    vv = Math.max(hsv[2] - 0.16, 0);
+    result.set_hsv(hsv[0], hsv[1], vv);
+    return result;
+  };
+
+  return Color;
+
+})();
+
+SpeechBubbleMorph = (function(_super) {
+
+  __extends(SpeechBubbleMorph, _super);
+
+  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
+    this.isPointingRight = true;
+    this.contents = contents || "";
+    this.padding = padding || 0;
+    this.isThought = isThought || false;
+    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
+    this.color = color || new Color(230, 230, 230);
+    this.drawNew();
+  }
+
+  SpeechBubbleMorph.prototype.popUp = function(world, pos) {
+    this.drawNew();
+    this.setPosition(pos.subtract(new Point(0, this.height())));
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    world.add(this);
+    this.changed();
+    world.hand.destroyTemporaries();
+    world.hand.temporaries.push(this);
+    return this.mouseEnter = function() {
+      return this.destroy();
+    };
+  };
+
+  SpeechBubbleMorph.prototype.drawNew = function() {
+    if (this.contentsMorph) {
+      this.contentsMorph.destroy();
+    }
+    if (this.contents instanceof Morph) {
+      this.contentsMorph = this.contents;
+    } else if (isString(this.contents)) {
+      this.contentsMorph = new TextMorph(this.contents, MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
+    } else if (this.contents instanceof HTMLCanvasElement) {
+      this.contentsMorph = new Morph();
+      this.contentsMorph.silentSetWidth(this.contents.width);
+      this.contentsMorph.silentSetHeight(this.contents.height);
+      this.contentsMorph.image = this.contents;
+    } else {
+      this.contentsMorph = new TextMorph(this.contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
+    }
+    this.add(this.contentsMorph);
+    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
+    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
+    SpeechBubbleMorph.__super__.drawNew.call(this);
+    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
+  };
+
+  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
+    var circle, h, offset, rad, w;
+    circle = function(x, y, r) {
+      context.moveTo(x + r, y);
+      return context.arc(x, y, r, radians(0), radians(360));
+    };
+    offset = radius + inset;
+    w = this.width();
+    h = this.height();
+    rad = void 0;
+    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
+    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
+    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
+    if (!this.isThought) {
+      if (this.isPointingRight) {
+        context.lineTo(offset + radius, h - offset);
+        context.lineTo(radius / 2 + inset, h - inset);
+      } else {
+        context.lineTo(w - (radius / 2 + inset), h - inset);
+        context.lineTo(w - (offset + radius), h - offset);
+      }
+    }
+    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
+    if (this.isThought) {
+      context.lineTo(inset, offset);
+      if (this.isPointingRight) {
+        rad = radius / 4;
+        circle(rad + inset, h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(rad * 2 + inset, h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
+      } else {
+        rad = radius / 4;
+        circle(w - (rad + inset), h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
+      }
+    }
+  };
+
+  return SpeechBubbleMorph;
+
+})(BoxMorph);
