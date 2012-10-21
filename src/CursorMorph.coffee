@@ -34,12 +34,16 @@ class CursorMorph extends BlinkerMorph
       unless contains(navigation, event.keyCode)
         if event.ctrlKey
           @ctrl event.keyCode
+        else if event.metaKey
+          @cmd event.keyCode
         else
           @insert String.fromCharCode(event.keyCode)
     else if event.charCode # all other browsers
       unless contains(navigation, event.charCode)
         if event.ctrlKey
           @ctrl event.charCode
+        else if event.metaKey
+          @cmd event.keyCode
         else
           @insert String.fromCharCode(event.charCode)
     # notify target's parent of key event
@@ -50,6 +54,11 @@ class CursorMorph extends BlinkerMorph
     @keyDownEventUsed = false
     if event.ctrlKey
       @ctrl event.keyCode
+      # notify target's parent of key event
+      @target.escalateEvent "reactToKeystroke", event
+      return
+    else if event.metaKey
+      @cmd event.keyCode
       # notify target's parent of key event
       @target.escalateEvent "reactToKeystroke", event
       return
@@ -159,19 +168,18 @@ class CursorMorph extends BlinkerMorph
   ctrl: (aChar) ->
     if (aChar is 97) or (aChar is 65)
       @target.selectAll()
-      return null
-    if aChar is 123
+    else if aChar is 123
       @insert "{"
-      return null
-    if aChar is 125
+    else if aChar is 125
       @insert "}"
-      return null
-    if aChar is 91
+    else if aChar is 91
       @insert "["
-      return null
-    if aChar is 93
+    else if aChar is 93
       @insert "]"
-      null
+  
+  cmd: (aChar) ->
+    if aChar is 65
+      @target.selectAll()
   
   deleteRight: ->
     text = undefined
@@ -201,4 +209,4 @@ class CursorMorph extends BlinkerMorph
   # CursorMorph utilities:
   inspectKeyEvent: (event) ->
     # private
-    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()
+    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()
