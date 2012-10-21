@@ -2,6 +2,7 @@ rake
 
 # unfortunately the -o option of docco doesn't work
 cd docs
+rm -r docco-code-commentary
 docco ../src/*.coffee
 docco ../build/morphee-coffee.coffee
 mv ./docs ./docco-code-commentary
