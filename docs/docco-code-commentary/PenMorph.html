@@ -11,6 +11,9 @@
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@penSize</span><span class="p">,</span> <span class="nx">@penSize</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>todo we need to change the size two times, for getting the right size
 of the arrow and of the line. Probably should make the two distinct</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@penSize = </span><span class="mi">1</span>
+
+  <span class="vi">@staticVariable: </span><span class="mi">1</span>
+  <span class="vi">@staticFunction: </span><span class="o">-&gt;</span> <span class="mf">3.14</span>
     </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>PenMorph updating - optimized for warping, i.e atomic recursion</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">changed: </span><span class="o">-&gt;</span>
     <span class="k">if</span> <span class="nx">@isWarped</span> <span class="o">is</span> <span class="kc">false</span>
       <span class="nv">w = </span><span class="nx">@root</span><span class="p">()</span>

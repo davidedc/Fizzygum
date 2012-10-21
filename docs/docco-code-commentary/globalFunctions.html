@@ -2,6 +2,9 @@
 
 <span class="nv">noOpFunction = </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>returns the function that does nothing</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="o">-&gt;</span>    </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>this is the function that does nothing</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kc">null</span>
 
+<span class="nv">isFunction = </span><span class="nf">(functionToCheck) -&gt;</span>
+  <span class="k">typeof</span><span class="p">(</span><span class="nx">functionToCheck</span><span class="p">)</span> <span class="o">is</span> <span class="s">&quot;function&quot;</span>
+
 <span class="nv">localize = </span><span class="nf">(string) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>override this function with custom localizations</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">string</span>
 
 <span class="nv">isNil = </span><span class="nf">(thing) -&gt;</span>
