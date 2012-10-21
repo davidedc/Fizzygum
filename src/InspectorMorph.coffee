@@ -150,7 +150,7 @@ class InspectorMorph extends BoxMorph
         @buildPanes()
       #
       menu.addLine()
-      menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (->
+      menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (=>
         @markOwnProperties = not @markOwnProperties
         @buildPanes()
       ), "highlight\n'own' properties"
