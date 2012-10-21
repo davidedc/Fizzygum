@@ -15,35 +15,35 @@ class StringFieldMorph extends FrameMorph
     @isEditable = true
     @acceptsDrops = false
     @drawNew()
-
-StringFieldMorph::drawNew = ->
-  txt = undefined
-  txt = (if @text then @string() else @defaultContents)
-  @text = null
-  @children.forEach (child) ->
-    child.destroy()
-  #
-  @children = []
-  @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
-  @text.isNumeric = @isNumeric # for whichever reason...
-  @text.setPosition @bounds.origin.copy()
-  @text.isEditable = @isEditable
-  @text.isDraggable = false
-  @text.enableSelecting()
-  @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
-  super()
-  @add @text
-
-StringFieldMorph::string = ->
-  @text.text
-
-StringFieldMorph::mouseClickLeft = ->
-  @text.edit()  if @isEditable
-
-
-# StringFieldMorph duplicating:
-StringFieldMorph::copyRecordingReferences = (dict) ->
-  # inherited, see comment in Morph
-  c = super dict
-  c.text = (dict[@text])  if c.text and dict[@text]
-  c
+  
+  drawNew: ->
+    txt = undefined
+    txt = (if @text then @string() else @defaultContents)
+    @text = null
+    @children.forEach (child) ->
+      child.destroy()
+    #
+    @children = []
+    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
+    @text.isNumeric = @isNumeric # for whichever reason...
+    @text.setPosition @bounds.origin.copy()
+    @text.isEditable = @isEditable
+    @text.isDraggable = false
+    @text.enableSelecting()
+    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
+    super()
+    @add @text
+  
+  string: ->
+    @text.text
+  
+  mouseClickLeft: ->
+    @text.edit()  if @isEditable
+  
+  
+  # StringFieldMorph duplicating:
+  copyRecordingReferences: (dict) ->
+    # inherited, see comment in Morph
+    c = super dict
+    c.text = (dict[@text])  if c.text and dict[@text]
+    c
