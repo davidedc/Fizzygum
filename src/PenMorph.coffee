@@ -17,6 +17,9 @@ class PenMorph extends Morph
     # todo we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
+
+  @staticVariable: 1
+  @staticFunction: -> 3.14
     
   # PenMorph updating - optimized for warping, i.e atomic recursion
   changed: ->

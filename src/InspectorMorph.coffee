@@ -78,16 +78,42 @@ class InspectorMorph extends BoxMorph
       attribs.push property  if property
     if @showing is "attributes"
       attribs = attribs.filter((prop) =>
-        typeof @target[prop] isnt "function"
+        not isFunction @target[prop]
       )
     else if @showing is "methods"
       attribs = attribs.filter((prop) =>
-        typeof @target[prop] is "function"
+        isFunction @target[prop]
       )
     # otherwise show all properties
     # label getter
     # format list
     # format element: [color, predicate(element]
+    
+    staticProperties = Object.getOwnPropertyNames(@target.constructor)
+    # get rid of all the standar fuff properties that are in classes
+    staticProperties = staticProperties.filter((prop) =>
+        prop not in ["name","length","prototype","caller","__super__","arguments"]
+    )
+    if @showing is "attributes"
+      staticFunctions = []
+      staticAttributes = staticProperties.filter((prop) =>
+        not isFunction(@target.constructor[prop])
+      )
+    else if @showing is "methods"
+      staticFunctions = staticProperties.filter((prop) =>
+        isFunction(@target.constructor[prop])
+      )
+      staticAttributes = []
+    else
+      staticFunctions = staticProperties.filter((prop) =>
+        isFunction(@target.constructor[prop])
+      )
+      staticAttributes = staticProperties.filter((prop) =>
+        prop not in staticFunctions
+      )
+    #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes
+    attribs = (attribs.concat staticFunctions).concat staticAttributes
+    #alert " all attribs " + attribs
     
     # caches the own methods of the object
     if @markOwnershipOfProperties
@@ -96,6 +122,7 @@ class InspectorMorph extends BoxMorph
     @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(
       if @markOwnershipOfProperties
         [
+          # give color criteria from the most general to the most specific
           [new Color(0, 0, 180),
             (element) =>
               # if the element is either an enumerable property of the object
@@ -105,6 +132,16 @@ class InspectorMorph extends BoxMorph
               # In theory, getOwnPropertyNames should give ALL the properties but the methods
               # are still not picked up, maybe because of the coffeescript construction system, I am not sure
               true
+          ],
+          [new Color(255, 165, 0),
+            (element) =>
+              # if the element is either an enumerable property of the object
+              # or it belongs to the own methods, then it is highlighted.
+              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+              # functions.
+              # In theory, getOwnPropertyNames should give ALL the properties but the methods
+              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+              element in staticProperties
           ],
           [new Color(0, 180, 0),
             (element) =>
@@ -134,6 +171,9 @@ class InspectorMorph extends BoxMorph
       txt = undefined
       cnts = undefined
       val = @target[selected]
+      # this is for finding the static variables
+      if val is undefined
+        val = @target.constructor[selected]
       @currentProperty = val
       if val is null
         txt = "NULL"

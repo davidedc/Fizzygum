@@ -10,6 +10,9 @@ noOpFunction = ->
     # this is the function that does nothing
     null
 
+isFunction = (functionToCheck) ->
+  typeof(functionToCheck) is "function"
+
 localize = (string) ->
   # override this function with custom localizations
   string
