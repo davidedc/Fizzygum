@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='../assets/codo.css' type='text/css'>
+  <script src='../assets/codo.js'></script>
+  <script src='../assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>Rectangle.coffee</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='../class_list.html'>Classes</a>
+      <a id='file_list_link' href='../file_list.html'>Files</a>
+      <a id='method_list_link' href='../method_list.html'>Methods</a>
+      <a id='extra_list_link' href='../extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        Rectangle.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td></td>
+        </tr>
+      </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.toString-file'>
+        ? (void) <strong>Rectangle.prototype.toString</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle string representation: e.g.
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.copy-file'>
+        ? (void) <strong>Rectangle.prototype.copy</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle copying:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.setTo-file'>
+        ? (void) <strong>Rectangle.prototype.setTo</strong>(left, top, right, bottom)
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle accessing - setting:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.area-file'>
+        ? (void) <strong>Rectangle.prototype.area</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle accessing - getting:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.bottom-file'>
+        ? (void) <strong>Rectangle.prototype.bottom</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.bottomCenter-file'>
+        ? (void) <strong>Rectangle.prototype.bottomCenter</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.bottomLeft-file'>
+        ? (void) <strong>Rectangle.prototype.bottomLeft</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.bottomRight-file'>
+        ? (void) <strong>Rectangle.prototype.bottomRight</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.boundingBox-file'>
+        ? (void) <strong>Rectangle.prototype.boundingBox</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.center-file'>
+        ? (void) <strong>Rectangle.prototype.center</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.corners-file'>
+        ? (void) <strong>Rectangle.prototype.corners</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.extent-file'>
+        ? (void) <strong>Rectangle.prototype.extent</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.height-file'>
+        ? (void) <strong>Rectangle.prototype.height</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.left-file'>
+        ? (void) <strong>Rectangle.prototype.left</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.leftCenter-file'>
+        ? (void) <strong>Rectangle.prototype.leftCenter</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.right-file'>
+        ? (void) <strong>Rectangle.prototype.right</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.rightCenter-file'>
+        ? (void) <strong>Rectangle.prototype.rightCenter</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.top-file'>
+        ? (void) <strong>Rectangle.prototype.top</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.topCenter-file'>
+        ? (void) <strong>Rectangle.prototype.topCenter</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.topLeft-file'>
+        ? (void) <strong>Rectangle.prototype.topLeft</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.topRight-file'>
+        ? (void) <strong>Rectangle.prototype.topRight</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.width-file'>
+        ? (void) <strong>Rectangle.prototype.width</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.position-file'>
+        ? (void) <strong>Rectangle.prototype.position</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.eq-file'>
+        ? (void) <strong>Rectangle.prototype.eq</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle comparison:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.abs-file'>
+        ? (void) <strong>Rectangle.prototype.abs</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.insetBy-file'>
+        ? (void) <strong>Rectangle.prototype.insetBy</strong>(delta)
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle functions:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.expandBy-file'>
+        ? (void) <strong>Rectangle.prototype.expandBy</strong>(delta)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.growBy-file'>
+        ? (void) <strong>Rectangle.prototype.growBy</strong>(delta)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.intersect-file'>
+        ? (void) <strong>Rectangle.prototype.intersect</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.merge-file'>
+        ? (void) <strong>Rectangle.prototype.merge</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.round-file'>
+        ? (void) <strong>Rectangle.prototype.round</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.spread-file'>
+        ? (void) <strong>Rectangle.prototype.spread</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.amountToTranslateWithin-file'>
+        ? (void) <strong>Rectangle.prototype.amountToTranslateWithin</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.containsPoint-file'>
+        ? (void) <strong>Rectangle.prototype.containsPoint</strong>(aPoint)
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle testing:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.containsRectangle-file'>
+        ? (void) <strong>Rectangle.prototype.containsRectangle</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.intersects-file'>
+        ? (void) <strong>Rectangle.prototype.intersects</strong>(aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.scaleBy-file'>
+        ? (void) <strong>Rectangle.prototype.scaleBy</strong>(scale)
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle transforming:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.translateBy-file'>
+        ? (void) <strong>Rectangle.prototype.translateBy</strong>(factor)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.asArray-file'>
+        ? (void) <strong>Rectangle.prototype.asArray</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Rectangle converting:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#Rectangle.prototype.asArray_xywh-file'>
+        ? (void) <strong>Rectangle.prototype.asArray_xywh</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.toString-file'>
+      ? (void) <strong>Rectangle.prototype.toString</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Rectangle string representation: e.g. &#39;[0@0 | 160@80]&#39;</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.copy-file'>
+      ? (void) <strong>Rectangle.prototype.copy</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Rectangle copying:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.setTo-file'>
+      ? (void) <strong>Rectangle.prototype.setTo</strong>(left, top, right, bottom)
+    </p>
+    <div class='docstring'>
+  <p>Rectangle accessing - setting:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.area-file'>
+      ? (void) <strong>Rectangle.prototype.area</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Rectangle accessing - getting:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.bottom-file'>
+      ? (void) <strong>Rectangle.prototype.bottom</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.bottomCenter-file'>
+      ? (void) <strong>Rectangle.prototype.bottomCenter</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.bottomLeft-file'>
+      ? (void) <strong>Rectangle.prototype.bottomLeft</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.bottomRight-file'>
+      ? (void) <strong>Rectangle.prototype.bottomRight</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.boundingBox-file'>
+      ? (void) <strong>Rectangle.prototype.boundingBox</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.center-file'>
+      ? (void) <strong>Rectangle.prototype.center</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.corners-file'>
+      ? (void) <strong>Rectangle.prototype.corners</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.extent-file'>
+      ? (void) <strong>Rectangle.prototype.extent</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.height-file'>
+      ? (void) <strong>Rectangle.prototype.height</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.left-file'>
+      ? (void) <strong>Rectangle.prototype.left</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.leftCenter-file'>
+      ? (void) <strong>Rectangle.prototype.leftCenter</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.right-file'>
+      ? (void) <strong>Rectangle.prototype.right</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.rightCenter-file'>
+      ? (void) <strong>Rectangle.prototype.rightCenter</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.top-file'>
+      ? (void) <strong>Rectangle.prototype.top</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.topCenter-file'>
+      ? (void) <strong>Rectangle.prototype.topCenter</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.topLeft-file'>
+      ? (void) <strong>Rectangle.prototype.topLeft</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.topRight-file'>
+      ? (void) <strong>Rectangle.prototype.topRight</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.width-file'>
+      ? (void) <strong>Rectangle.prototype.width</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.position-file'>
+      ? (void) <strong>Rectangle.prototype.position</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.eq-file'>
+      ? (void) <strong>Rectangle.prototype.eq</strong>(aRect)
+    </p>
+    <div class='docstring'>
+  <p>Rectangle comparison:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.abs-file'>
+      ? (void) <strong>Rectangle.prototype.abs</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.insetBy-file'>
+      ? (void) <strong>Rectangle.prototype.insetBy</strong>(delta)
+    </p>
+    <div class='docstring'>
+  <p>Rectangle functions:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.expandBy-file'>
+      ? (void) <strong>Rectangle.prototype.expandBy</strong>(delta)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.growBy-file'>
+      ? (void) <strong>Rectangle.prototype.growBy</strong>(delta)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.intersect-file'>
+      ? (void) <strong>Rectangle.prototype.intersect</strong>(aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.merge-file'>
+      ? (void) <strong>Rectangle.prototype.merge</strong>(aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.round-file'>
+      ? (void) <strong>Rectangle.prototype.round</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.spread-file'>
+      ? (void) <strong>Rectangle.prototype.spread</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.amountToTranslateWithin-file'>
+      ? (void) <strong>Rectangle.prototype.amountToTranslateWithin</strong>(aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.containsPoint-file'>
+      ? (void) <strong>Rectangle.prototype.containsPoint</strong>(aPoint)
+    </p>
+    <div class='docstring'>
+  <p>Rectangle testing:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.containsRectangle-file'>
+      ? (void) <strong>Rectangle.prototype.containsRectangle</strong>(aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.intersects-file'>
+      ? (void) <strong>Rectangle.prototype.intersects</strong>(aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.scaleBy-file'>
+      ? (void) <strong>Rectangle.prototype.scaleBy</strong>(scale)
+    </p>
+    <div class='docstring'>
+  <p>Rectangle transforming:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.translateBy-file'>
+      ? (void) <strong>Rectangle.prototype.translateBy</strong>(factor)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.asArray-file'>
+      ? (void) <strong>Rectangle.prototype.asArray</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Rectangle converting:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='Rectangle.prototype.asArray_xywh-file'>
+      ? (void) <strong>Rectangle.prototype.asArray_xywh</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sat Oct 20 2012 22:08:03 GMT+0100 (BST)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.1
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>

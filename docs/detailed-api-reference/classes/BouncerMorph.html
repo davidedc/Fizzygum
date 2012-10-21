@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='../assets/codo.css' type='text/css'>
+  <script src='../assets/codo.js'></script>
+  <script src='../assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>BouncerMorph</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='../class_list.html'>Classes</a>
+      <a id='file_list_link' href='../file_list.html'>Files</a>
+      <a id='method_list_link' href='../method_list.html'>Methods</a>
+      <a id='extra_list_link' href='../extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        BouncerMorph
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>./src/BouncerMorph.coffee</td>
+        </tr>
+        <tr>
+          <td>Inherits:</td>
+          <td>
+            <a href='../classes/Morph.html'>Morph</a>
+          </td>
+        </tr>
+      </table>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#constructor-instance'>
+        - (void) <strong>constructor</strong>(type, speed)
+      </a>
+    </span>
+    <span class='constructor note title'>Constructor</span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#moveUp-instance'>
+        - (void) <strong>moveUp</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      BouncerMorph moving:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#moveDown-instance'>
+        - (void) <strong>moveDown</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#moveRight-instance'>
+        - (void) <strong>moveRight</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#moveLeft-instance'>
+        - (void) <strong>moveLeft</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#step-instance'>
+        - (void) <strong>step</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      BouncerMorph stepping:
+    </span>
+  </li>
+</ul>
+      <h2>
+        <small>Inherited Method Summary</small>
+      </h2>
+      <h3 class='inherited'>
+        Methods inherited from
+        <a href='../classes/Morph.html'>Morph</a>
+      </h3>
+      <p class='inherited'>
+                <a href='../classes/Morph.html#constructor-instance'>#constructor</a>,
+                <a href='../classes/Morph.html#toString-instance'>#toString</a>,
+                <a href='../classes/Morph.html#destroy-instance'>#destroy</a>,
+                <a href='../classes/Morph.html#stepFrame-instance'>#stepFrame</a>,
+                <a href='../classes/Morph.html#step-instance'>#step</a>,
+                <a href='../classes/Morph.html#left-instance'>#left</a>,
+                <a href='../classes/Morph.html#right-instance'>#right</a>,
+                <a href='../classes/Morph.html#top-instance'>#top</a>,
+                <a href='../classes/Morph.html#bottom-instance'>#bottom</a>,
+                <a href='../classes/Morph.html#center-instance'>#center</a>,
+                <a href='../classes/Morph.html#bottomCenter-instance'>#bottomCenter</a>,
+                <a href='../classes/Morph.html#bottomLeft-instance'>#bottomLeft</a>,
+                <a href='../classes/Morph.html#bottomRight-instance'>#bottomRight</a>,
+                <a href='../classes/Morph.html#boundingBox-instance'>#boundingBox</a>,
+                <a href='../classes/Morph.html#corners-instance'>#corners</a>,
+                <a href='../classes/Morph.html#leftCenter-instance'>#leftCenter</a>,
+                <a href='../classes/Morph.html#rightCenter-instance'>#rightCenter</a>,
+                <a href='../classes/Morph.html#topCenter-instance'>#topCenter</a>,
+                <a href='../classes/Morph.html#topLeft-instance'>#topLeft</a>,
+                <a href='../classes/Morph.html#topRight-instance'>#topRight</a>,
+                <a href='../classes/Morph.html#position-instance'>#position</a>,
+                <a href='../classes/Morph.html#extent-instance'>#extent</a>,
+                <a href='../classes/Morph.html#width-instance'>#width</a>,
+                <a href='../classes/Morph.html#height-instance'>#height</a>,
+                <a href='../classes/Morph.html#fullBounds-instance'>#fullBounds</a>,
+                <a href='../classes/Morph.html#fullBoundsNoShadow-instance'>#fullBoundsNoShadow</a>,
+                <a href='../classes/Morph.html#visibleBounds-instance'>#visibleBounds</a>,
+                <a href='../classes/Morph.html#moveBy-instance'>#moveBy</a>,
+                <a href='../classes/Morph.html#silentMoveBy-instance'>#silentMoveBy</a>,
+                <a href='../classes/Morph.html#setPosition-instance'>#setPosition</a>,
+                <a href='../classes/Morph.html#silentSetPosition-instance'>#silentSetPosition</a>,
+                <a href='../classes/Morph.html#setLeft-instance'>#setLeft</a>,
+                <a href='../classes/Morph.html#setRight-instance'>#setRight</a>,
+                <a href='../classes/Morph.html#setTop-instance'>#setTop</a>,
+                <a href='../classes/Morph.html#setBottom-instance'>#setBottom</a>,
+                <a href='../classes/Morph.html#setCenter-instance'>#setCenter</a>,
+                <a href='../classes/Morph.html#setFullCenter-instance'>#setFullCenter</a>,
+                <a href='../classes/Morph.html#keepWithin-instance'>#keepWithin</a>,
+                <a href='../classes/Morph.html#setExtent-instance'>#setExtent</a>,
+                <a href='../classes/Morph.html#silentSetExtent-instance'>#silentSetExtent</a>,
+                <a href='../classes/Morph.html#setWidth-instance'>#setWidth</a>,
+                <a href='../classes/Morph.html#silentSetWidth-instance'>#silentSetWidth</a>,
+                <a href='../classes/Morph.html#setHeight-instance'>#setHeight</a>,
+                <a href='../classes/Morph.html#silentSetHeight-instance'>#silentSetHeight</a>,
+                <a href='../classes/Morph.html#setColor-instance'>#setColor</a>,
+                <a href='../classes/Morph.html#drawNew-instance'>#drawNew</a>,
+                <a href='../classes/Morph.html#drawTexture-instance'>#drawTexture</a>,
+                <a href='../classes/Morph.html#drawCachedTexture-instance'>#drawCachedTexture</a>,
+                <a href='../classes/Morph.html#drawOn-instance'>#drawOn</a>,
+                <a href='../classes/Morph.html#fullDrawOn-instance'>#fullDrawOn</a>,
+                <a href='../classes/Morph.html#hide-instance'>#hide</a>,
+                <a href='../classes/Morph.html#show-instance'>#show</a>,
+                <a href='../classes/Morph.html#toggleVisibility-instance'>#toggleVisibility</a>,
+                <a href='../classes/Morph.html#fullImageClassic-instance'>#fullImageClassic</a>,
+                <a href='../classes/Morph.html#fullImage-instance'>#fullImage</a>,
+                <a href='../classes/Morph.html#shadowImage-instance'>#shadowImage</a>,
+                <a href='../classes/Morph.html#shadowImageBlurred-instance'>#shadowImageBlurred</a>,
+                <a href='../classes/Morph.html#shadow-instance'>#shadow</a>,
+                <a href='../classes/Morph.html#addShadow-instance'>#addShadow</a>,
+                <a href='../classes/Morph.html#getShadow-instance'>#getShadow</a>,
+                <a href='../classes/Morph.html#removeShadow-instance'>#removeShadow</a>,
+                <a href='../classes/Morph.html#penTrails-instance'>#penTrails</a>,
+                <a href='../classes/Morph.html#changed-instance'>#changed</a>,
+                <a href='../classes/Morph.html#fullChanged-instance'>#fullChanged</a>,
+                <a href='../classes/Morph.html#childChanged-instance'>#childChanged</a>,
+                <a href='../classes/Morph.html#world-instance'>#world</a>,
+                <a href='../classes/Morph.html#add-instance'>#add</a>,
+                <a href='../classes/Morph.html#addBack-instance'>#addBack</a>,
+                <a href='../classes/Morph.html#topMorphSuchThat-instance'>#topMorphSuchThat</a>,
+                <a href='../classes/Morph.html#morphAt-instance'>#morphAt</a>,
+                <a href='../classes/Morph.html#overlappedMorphs-instance'>#overlappedMorphs</a>,
+                <a href='../classes/Morph.html#getPixelColor-instance'>#getPixelColor</a>,
+                <a href='../classes/Morph.html#isTransparentAt-instance'>#isTransparentAt</a>,
+                <a href='../classes/Morph.html#copy-instance'>#copy</a>,
+                <a href='../classes/Morph.html#fullCopy-instance'>#fullCopy</a>,
+                <a href='../classes/Morph.html#copyRecordingReferences-instance'>#copyRecordingReferences</a>,
+                <a href='../classes/Morph.html#updateReferences-instance'>#updateReferences</a>,
+                <a href='../classes/Morph.html#rootForGrab-instance'>#rootForGrab</a>,
+                <a href='../classes/Morph.html#wantsDropOf-instance'>#wantsDropOf</a>,
+                <a href='../classes/Morph.html#pickUp-instance'>#pickUp</a>,
+                <a href='../classes/Morph.html#isPickedUp-instance'>#isPickedUp</a>,
+                <a href='../classes/Morph.html#situation-instance'>#situation</a>,
+                <a href='../classes/Morph.html#slideBackTo-instance'>#slideBackTo</a>,
+                <a href='../classes/Morph.html#nop-instance'>#nop</a>,
+                <a href='../classes/Morph.html#resize-instance'>#resize</a>,
+                <a href='../classes/Morph.html#move-instance'>#move</a>,
+                <a href='../classes/Morph.html#hint-instance'>#hint</a>,
+                <a href='../classes/Morph.html#inform-instance'>#inform</a>,
+                <a href='../classes/Morph.html#prompt-instance'>#prompt</a>,
+                <a href='../classes/Morph.html#pickColor-instance'>#pickColor</a>,
+                <a href='../classes/Morph.html#inspect-instance'>#inspect</a>,
+                <a href='../classes/Morph.html#contextMenu-instance'>#contextMenu</a>,
+                <a href='../classes/Morph.html#hierarchyMenu-instance'>#hierarchyMenu</a>,
+                <a href='../classes/Morph.html#developersMenu-instance'>#developersMenu</a>,
+                <a href='../classes/Morph.html#userMenu-instance'>#userMenu</a>,
+                <a href='../classes/Morph.html#setAlphaScaled-instance'>#setAlphaScaled</a>,
+                <a href='../classes/Morph.html#attach-instance'>#attach</a>,
+                <a href='../classes/Morph.html#toggleIsDraggable-instance'>#toggleIsDraggable</a>,
+                <a href='../classes/Morph.html#colorSetters-instance'>#colorSetters</a>,
+                <a href='../classes/Morph.html#numericalSetters-instance'>#numericalSetters</a>,
+                <a href='../classes/Morph.html#allEntryFields-instance'>#allEntryFields</a>,
+                <a href='../classes/Morph.html#nextEntryField-instance'>#nextEntryField</a>,
+                <a href='../classes/Morph.html#previousEntryField-instance'>#previousEntryField</a>,
+                <a href='../classes/Morph.html#tab-instance'>#tab</a>,
+                <a href='../classes/Morph.html#backTab-instance'>#backTab</a>,
+                <a href='../classes/Morph.html#escalateEvent-instance'>#escalateEvent</a>,
+                <a href='../classes/Morph.html#evaluateString-instance'>#evaluateString</a>,
+                <a href='../classes/Morph.html#isTouching-instance'>#isTouching</a>,
+        <a href='../classes/Morph.html#overlappingImage-instance'>#overlappingImage</a>
+      </p>
+      <h3 class='inherited'>
+        Methods inherited from
+        <a href='../classes/MorphicNode.html'>MorphicNode</a>
+      </h3>
+      <p class='inherited'>
+                <a href='../classes/MorphicNode.html#constructor-instance'>#constructor</a>,
+                <a href='../classes/MorphicNode.html#toString-instance'>#toString</a>,
+                <a href='../classes/MorphicNode.html#addChild-instance'>#addChild</a>,
+                <a href='../classes/MorphicNode.html#addChildFirst-instance'>#addChildFirst</a>,
+                <a href='../classes/MorphicNode.html#removeChild-instance'>#removeChild</a>,
+                <a href='../classes/MorphicNode.html#root-instance'>#root</a>,
+                <a href='../classes/MorphicNode.html#depth-instance'>#depth</a>,
+                <a href='../classes/MorphicNode.html#allChildren-instance'>#allChildren</a>,
+                <a href='../classes/MorphicNode.html#forAllChildren-instance'>#forAllChildren</a>,
+                <a href='../classes/MorphicNode.html#allLeafs-instance'>#allLeafs</a>,
+                <a href='../classes/MorphicNode.html#allParents-instance'>#allParents</a>,
+                <a href='../classes/MorphicNode.html#siblings-instance'>#siblings</a>,
+                <a href='../classes/MorphicNode.html#parentThatIsA-instance'>#parentThatIsA</a>,
+        <a href='../classes/MorphicNode.html#parentThatIsAnyOf-instance'>#parentThatIsAnyOf</a>
+      </p>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-instance'>
+      - (void) <strong>constructor</strong>(type, speed)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='moveUp-instance'>
+      - (void) <strong>moveUp</strong>()
+    </p>
+    <div class='docstring'>
+  <p>BouncerMorph moving:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='moveDown-instance'>
+      - (void) <strong>moveDown</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='moveRight-instance'>
+      - (void) <strong>moveRight</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='moveLeft-instance'>
+      - (void) <strong>moveLeft</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='step-instance'>
+      - (void) <strong>step</strong>()
+    </p>
+    <div class='docstring'>
+  <p>BouncerMorph stepping:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sun Oct 21 2012 02:55:28 GMT+0100 (BST)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.1
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>

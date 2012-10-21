@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='../assets/codo.css' type='text/css'>
+  <script src='../assets/codo.js'></script>
+  <script src='../assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>StringMorph.coffee</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='../class_list.html'>Classes</a>
+      <a id='file_list_link' href='../file_list.html'>Files</a>
+      <a id='method_list_link' href='../method_list.html'>Methods</a>
+      <a id='extra_list_link' href='../extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        StringMorph.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td></td>
+        </tr>
+      </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.toString-file'>
+        ? (void) <strong>StringMorph.prototype.toString</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.font-file'>
+        ? (void) <strong>StringMorph.prototype.font</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.drawNew-file'>
+        ? (void) <strong>StringMorph.prototype.drawNew</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.renderWithBlanks-file'>
+        ? (void) <strong>StringMorph.prototype.renderWithBlanks</strong>(context, startX, y)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.slotPosition-file'>
+        ? (void) <strong>StringMorph.prototype.slotPosition</strong>(slot)
+      </a>
+    </span>
+    <span class='desc'>
+      StringMorph mesuring:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.slotAt-file'>
+        ? (void) <strong>StringMorph.prototype.slotAt</strong>(aPoint)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.upFrom-file'>
+        ? (void) <strong>StringMorph.prototype.upFrom</strong>(slot)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.downFrom-file'>
+        ? (void) <strong>StringMorph.prototype.downFrom</strong>(slot)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.startOfLine-file'>
+        ? (void) <strong>StringMorph.prototype.startOfLine</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.endOfLine-file'>
+        ? (void) <strong>StringMorph.prototype.endOfLine</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.developersMenu-file'>
+        ? (void) <strong>StringMorph.prototype.developersMenu</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      StringMorph menus:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.toggleIsDraggable-file'>
+        ? (void) <strong>StringMorph.prototype.toggleIsDraggable</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.toggleShowBlanks-file'>
+        ? (void) <strong>StringMorph.prototype.toggleShowBlanks</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.toggleWeight-file'>
+        ? (void) <strong>StringMorph.prototype.toggleWeight</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.toggleItalic-file'>
+        ? (void) <strong>StringMorph.prototype.toggleItalic</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.setSerif-file'>
+        ? (void) <strong>StringMorph.prototype.setSerif</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.setSansSerif-file'>
+        ? (void) <strong>StringMorph.prototype.setSansSerif</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.setFontSize-file'>
+        ? (void) <strong>StringMorph.prototype.setFontSize</strong>(size)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.setText-file'>
+        ? (void) <strong>StringMorph.prototype.setText</strong>(size)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.numericalSetters-file'>
+        ? (void) <strong>StringMorph.prototype.numericalSetters</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.edit-file'>
+        ? (void) <strong>StringMorph.prototype.edit</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      StringMorph editing:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.selection-file'>
+        ? (void) <strong>StringMorph.prototype.selection</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.selectionStartSlot-file'>
+        ? (void) <strong>StringMorph.prototype.selectionStartSlot</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.clearSelection-file'>
+        ? (void) <strong>StringMorph.prototype.clearSelection</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.deleteSelection-file'>
+        ? (void) <strong>StringMorph.prototype.deleteSelection</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.selectAll-file'>
+        ? (void) <strong>StringMorph.prototype.selectAll</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.mouseClickLeft-file'>
+        ? (void) <strong>StringMorph.prototype.mouseClickLeft</strong>(pos)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.enableSelecting-file'>
+        ? (void) <strong>StringMorph.prototype.enableSelecting</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#StringMorph.prototype.disableSelecting-file'>
+        ? (void) <strong>StringMorph.prototype.disableSelecting</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.toString-file'>
+      ? (void) <strong>StringMorph.prototype.toString</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.font-file'>
+      ? (void) <strong>StringMorph.prototype.font</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.drawNew-file'>
+      ? (void) <strong>StringMorph.prototype.drawNew</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.renderWithBlanks-file'>
+      ? (void) <strong>StringMorph.prototype.renderWithBlanks</strong>(context, startX, y)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.slotPosition-file'>
+      ? (void) <strong>StringMorph.prototype.slotPosition</strong>(slot)
+    </p>
+    <div class='docstring'>
+  <p>StringMorph mesuring:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.slotAt-file'>
+      ? (void) <strong>StringMorph.prototype.slotAt</strong>(aPoint)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.upFrom-file'>
+      ? (void) <strong>StringMorph.prototype.upFrom</strong>(slot)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.downFrom-file'>
+      ? (void) <strong>StringMorph.prototype.downFrom</strong>(slot)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.startOfLine-file'>
+      ? (void) <strong>StringMorph.prototype.startOfLine</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.endOfLine-file'>
+      ? (void) <strong>StringMorph.prototype.endOfLine</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.developersMenu-file'>
+      ? (void) <strong>StringMorph.prototype.developersMenu</strong>()
+    </p>
+    <div class='docstring'>
+  <p>StringMorph menus:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.toggleIsDraggable-file'>
+      ? (void) <strong>StringMorph.prototype.toggleIsDraggable</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.toggleShowBlanks-file'>
+      ? (void) <strong>StringMorph.prototype.toggleShowBlanks</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.toggleWeight-file'>
+      ? (void) <strong>StringMorph.prototype.toggleWeight</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.toggleItalic-file'>
+      ? (void) <strong>StringMorph.prototype.toggleItalic</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.setSerif-file'>
+      ? (void) <strong>StringMorph.prototype.setSerif</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.setSansSerif-file'>
+      ? (void) <strong>StringMorph.prototype.setSansSerif</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.setFontSize-file'>
+      ? (void) <strong>StringMorph.prototype.setFontSize</strong>(size)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.setText-file'>
+      ? (void) <strong>StringMorph.prototype.setText</strong>(size)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.numericalSetters-file'>
+      ? (void) <strong>StringMorph.prototype.numericalSetters</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.edit-file'>
+      ? (void) <strong>StringMorph.prototype.edit</strong>()
+    </p>
+    <div class='docstring'>
+  <p>StringMorph editing:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.selection-file'>
+      ? (void) <strong>StringMorph.prototype.selection</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.selectionStartSlot-file'>
+      ? (void) <strong>StringMorph.prototype.selectionStartSlot</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.clearSelection-file'>
+      ? (void) <strong>StringMorph.prototype.clearSelection</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.deleteSelection-file'>
+      ? (void) <strong>StringMorph.prototype.deleteSelection</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.selectAll-file'>
+      ? (void) <strong>StringMorph.prototype.selectAll</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.mouseClickLeft-file'>
+      ? (void) <strong>StringMorph.prototype.mouseClickLeft</strong>(pos)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.enableSelecting-file'>
+      ? (void) <strong>StringMorph.prototype.enableSelecting</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='StringMorph.prototype.disableSelecting-file'>
+      ? (void) <strong>StringMorph.prototype.disableSelecting</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sat Oct 20 2012 22:08:03 GMT+0100 (BST)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.1
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>

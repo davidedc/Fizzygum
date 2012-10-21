@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='../assets/codo.css' type='text/css'>
+  <script src='../assets/codo.js'></script>
+  <script src='../assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>FrameMorph.coffee</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='../class_list.html'>Classes</a>
+      <a id='file_list_link' href='../file_list.html'>Files</a>
+      <a id='method_list_link' href='../method_list.html'>Methods</a>
+      <a id='extra_list_link' href='../extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        FrameMorph.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td></td>
+        </tr>
+      </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.fullBounds-file'>
+        ? (void) <strong>FrameMorph.prototype.fullBounds</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.fullImage-file'>
+        ? (void) <strong>FrameMorph.prototype.fullImage</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.fullDrawOn-file'>
+        ? (void) <strong>FrameMorph.prototype.fullDrawOn</strong>(aCanvas, aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.moveBy-file'>
+        ? (void) <strong>FrameMorph.prototype.moveBy</strong>(delta)
+      </a>
+    </span>
+    <span class='desc'>
+      FrameMorph scrolling optimization:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.submorphBounds-file'>
+        ? (void) <strong>FrameMorph.prototype.submorphBounds</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      FrameMorph scrolling support:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.keepInScrollFrame-file'>
+        ? (void) <strong>FrameMorph.prototype.keepInScrollFrame</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.adjustBounds-file'>
+        ? (void) <strong>FrameMorph.prototype.adjustBounds</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.reactToDropOf-file'>
+        ? (void) <strong>FrameMorph.prototype.reactToDropOf</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      FrameMorph dragging &amp; dropping of contents:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.reactToGrabOf-file'>
+        ? (void) <strong>FrameMorph.prototype.reactToGrabOf</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.copyRecordingReferences-file'>
+        ? (void) <strong>FrameMorph.prototype.copyRecordingReferences</strong>(dict)
+      </a>
+    </span>
+    <span class='desc'>
+      FrameMorph duplicating:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.developersMenu-file'>
+        ? (void) <strong>FrameMorph.prototype.developersMenu</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      FrameMorph menus:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#FrameMorph.prototype.keepAllSubmorphsWithin-file'>
+        ? (void) <strong>FrameMorph.prototype.keepAllSubmorphsWithin</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.fullBounds-file'>
+      ? (void) <strong>FrameMorph.prototype.fullBounds</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.fullImage-file'>
+      ? (void) <strong>FrameMorph.prototype.fullImage</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.fullDrawOn-file'>
+      ? (void) <strong>FrameMorph.prototype.fullDrawOn</strong>(aCanvas, aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.moveBy-file'>
+      ? (void) <strong>FrameMorph.prototype.moveBy</strong>(delta)
+    </p>
+    <div class='docstring'>
+  <p>FrameMorph scrolling optimization:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.submorphBounds-file'>
+      ? (void) <strong>FrameMorph.prototype.submorphBounds</strong>()
+    </p>
+    <div class='docstring'>
+  <p>FrameMorph scrolling support:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.keepInScrollFrame-file'>
+      ? (void) <strong>FrameMorph.prototype.keepInScrollFrame</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.adjustBounds-file'>
+      ? (void) <strong>FrameMorph.prototype.adjustBounds</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.reactToDropOf-file'>
+      ? (void) <strong>FrameMorph.prototype.reactToDropOf</strong>()
+    </p>
+    <div class='docstring'>
+  <p>FrameMorph dragging &amp; dropping of contents:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.reactToGrabOf-file'>
+      ? (void) <strong>FrameMorph.prototype.reactToGrabOf</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.copyRecordingReferences-file'>
+      ? (void) <strong>FrameMorph.prototype.copyRecordingReferences</strong>(dict)
+    </p>
+    <div class='docstring'>
+  <p>FrameMorph duplicating:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.developersMenu-file'>
+      ? (void) <strong>FrameMorph.prototype.developersMenu</strong>()
+    </p>
+    <div class='docstring'>
+  <p>FrameMorph menus:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='FrameMorph.prototype.keepAllSubmorphsWithin-file'>
+      ? (void) <strong>FrameMorph.prototype.keepAllSubmorphsWithin</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sat Oct 20 2012 22:08:03 GMT+0100 (BST)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.1
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>

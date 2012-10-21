@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='../assets/codo.css' type='text/css'>
+  <script src='../assets/codo.js'></script>
+  <script src='../assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>WorldMorph.coffee</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='../class_list.html'>Classes</a>
+      <a id='file_list_link' href='../file_list.html'>Files</a>
+      <a id='method_list_link' href='../method_list.html'>Methods</a>
+      <a id='extra_list_link' href='../extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        WorldMorph.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td></td>
+        </tr>
+      </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.brokenFor-file'>
+        ? (void) <strong>WorldMorph.prototype.brokenFor</strong>(aMorph)
+      </a>
+    </span>
+    <span class='desc'>
+      World Morph display:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.fullDrawOn-file'>
+        ? (void) <strong>WorldMorph.prototype.fullDrawOn</strong>(aCanvas, aRect)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.updateBroken-file'>
+        ? (void) <strong>WorldMorph.prototype.updateBroken</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.doOneCycle-file'>
+        ? (void) <strong>WorldMorph.prototype.doOneCycle</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.fillPage-file'>
+        ? (void) <strong>WorldMorph.prototype.fillPage</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.getGlobalPixelColor-file'>
+        ? (void) <strong>WorldMorph.prototype.getGlobalPixelColor</strong>(point)
+      </a>
+    </span>
+    <span class='desc'>
+      WorldMorph global pixel access:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.initVirtualKeyboard-file'>
+        ? (void) <strong>WorldMorph.prototype.initVirtualKeyboard</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      WorldMorph events:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.initEventListeners-file'>
+        ? (void) <strong>WorldMorph.prototype.initEventListeners</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.wantsDropOf-file'>
+        ? (void) <strong>WorldMorph.prototype.wantsDropOf</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.droppedImage-file'>
+        ? (void) <strong>WorldMorph.prototype.droppedImage</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.nextTab-file'>
+        ? (void) <strong>WorldMorph.prototype.nextTab</strong>(editField)
+      </a>
+    </span>
+    <span class='desc'>
+      WorldMorph text field tabbing:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.previousTab-file'>
+        ? (void) <strong>WorldMorph.prototype.previousTab</strong>(editField)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.contextMenu-file'>
+        ? (void) <strong>WorldMorph.prototype.contextMenu</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      WorldMorph menu:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.userCreateMorph-file'>
+        ? (void) <strong>WorldMorph.prototype.userCreateMorph</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.toggleDevMode-file'>
+        ? (void) <strong>WorldMorph.prototype.toggleDevMode</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.hideAll-file'>
+        ? (void) <strong>WorldMorph.prototype.hideAll</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.showAllHiddens-file'>
+        ? (void) <strong>WorldMorph.prototype.showAllHiddens</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.about-file'>
+        ? (void) <strong>WorldMorph.prototype.about</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.edit-file'>
+        ? (void) <strong>WorldMorph.prototype.edit</strong>(aStringOrTextMorph)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.slide-file'>
+        ? (void) <strong>WorldMorph.prototype.slide</strong>(aStringOrTextMorph)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.stopEditing-file'>
+        ? (void) <strong>WorldMorph.prototype.stopEditing</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.toggleBlurredShadows-file'>
+        ? (void) <strong>WorldMorph.prototype.toggleBlurredShadows</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#WorldMorph.prototype.togglePreferences-file'>
+        ? (void) <strong>WorldMorph.prototype.togglePreferences</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.brokenFor-file'>
+      ? (void) <strong>WorldMorph.prototype.brokenFor</strong>(aMorph)
+    </p>
+    <div class='docstring'>
+  <p>World Morph display:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.fullDrawOn-file'>
+      ? (void) <strong>WorldMorph.prototype.fullDrawOn</strong>(aCanvas, aRect)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.updateBroken-file'>
+      ? (void) <strong>WorldMorph.prototype.updateBroken</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.doOneCycle-file'>
+      ? (void) <strong>WorldMorph.prototype.doOneCycle</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.fillPage-file'>
+      ? (void) <strong>WorldMorph.prototype.fillPage</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.getGlobalPixelColor-file'>
+      ? (void) <strong>WorldMorph.prototype.getGlobalPixelColor</strong>(point)
+    </p>
+    <div class='docstring'>
+  <p>WorldMorph global pixel access:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.initVirtualKeyboard-file'>
+      ? (void) <strong>WorldMorph.prototype.initVirtualKeyboard</strong>()
+    </p>
+    <div class='docstring'>
+  <p>WorldMorph events:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.initEventListeners-file'>
+      ? (void) <strong>WorldMorph.prototype.initEventListeners</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.wantsDropOf-file'>
+      ? (void) <strong>WorldMorph.prototype.wantsDropOf</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.droppedImage-file'>
+      ? (void) <strong>WorldMorph.prototype.droppedImage</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.nextTab-file'>
+      ? (void) <strong>WorldMorph.prototype.nextTab</strong>(editField)
+    </p>
+    <div class='docstring'>
+  <p>WorldMorph text field tabbing:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.previousTab-file'>
+      ? (void) <strong>WorldMorph.prototype.previousTab</strong>(editField)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.contextMenu-file'>
+      ? (void) <strong>WorldMorph.prototype.contextMenu</strong>()
+    </p>
+    <div class='docstring'>
+  <p>WorldMorph menu:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.userCreateMorph-file'>
+      ? (void) <strong>WorldMorph.prototype.userCreateMorph</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.toggleDevMode-file'>
+      ? (void) <strong>WorldMorph.prototype.toggleDevMode</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.hideAll-file'>
+      ? (void) <strong>WorldMorph.prototype.hideAll</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.showAllHiddens-file'>
+      ? (void) <strong>WorldMorph.prototype.showAllHiddens</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.about-file'>
+      ? (void) <strong>WorldMorph.prototype.about</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.edit-file'>
+      ? (void) <strong>WorldMorph.prototype.edit</strong>(aStringOrTextMorph)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.slide-file'>
+      ? (void) <strong>WorldMorph.prototype.slide</strong>(aStringOrTextMorph)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.stopEditing-file'>
+      ? (void) <strong>WorldMorph.prototype.stopEditing</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.toggleBlurredShadows-file'>
+      ? (void) <strong>WorldMorph.prototype.toggleBlurredShadows</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='WorldMorph.prototype.togglePreferences-file'>
+      ? (void) <strong>WorldMorph.prototype.togglePreferences</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sat Oct 20 2012 22:08:03 GMT+0100 (BST)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.1
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>
