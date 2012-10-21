@@ -74,8 +74,11 @@ class InspectorMorph extends BoxMorph
     # label getter
     # format list
     # format element: [color, predicate(element]
-    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180), (element) =>
-      @target.hasOwnProperty element
+    if @markOwnProperties
+      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)
+    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180),
+      (element) =>
+        (@target.hasOwnProperty element) or (element in targetOwnMethods)
     ]] else null))
     @list.action = (selected) =>
       val = undefined
