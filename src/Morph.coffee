@@ -4,6 +4,9 @@
 # REQUIRES globalFunctions
 
 class Morph extends MorphicNode
+  
+  morphPropertThatNoOtherObjectOwns: "this property is exposed to all the subclasses but only via their prototype chain. It should appear blue in the inspector for the PenMorph object"
+  
   constructor: () ->
     super()
     @isMorph = true

@@ -3,18 +3,21 @@
 # I am a simple LOGO-wise turtle.
 
 class PenMorph extends Morph
+  
+  heading: 0
+  penSize: null
+  isWarped: false # internal optimization
+  wantsRedraw: false # internal optimization
+  isDown: true
+  
   constructor: () ->
-    size = MorphicPreferences.handleSize * 4
-    # additional properties:
-    @isWarped = false # internal optimization
-    @wantsRedraw = false # internal optimization
-    @heading = 0
-    @isDown = true
-    @size = 1
+    @penSize = MorphicPreferences.handleSize * 4
     super()
-    @setExtent new Point(size, size)
-  
-  
+    @setExtent new Point(@penSize, @penSize)
+    # todo we need to change the size two times, for getting the right size
+    # of the arrow and of the line. Probably should make the two distinct
+    @penSize = 1
+    
   # PenMorph updating - optimized for warping, i.e atomic recursion
   changed: ->
     if @isWarped is false
@@ -78,7 +81,7 @@ class PenMorph extends Morph
     from = start.subtract(@parent.bounds.origin)
     to = dest.subtract(@parent.bounds.origin)
     if @isDown
-      context.lineWidth = @size
+      context.lineWidth = @penSize
       context.strokeStyle = @color.toString()
       context.lineCap = "round"
       context.lineJoin = "round"
@@ -86,7 +89,7 @@ class PenMorph extends Morph
       context.moveTo from.x, from.y
       context.lineTo to.x, to.y
       context.stroke()
-      @world().broken.push start.rectangle(dest).expandBy(Math.max(@size / 2, 1)).intersect(@parent.visibleBounds()).spread()  if @isWarped is false
+      @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()  if @isWarped is false
   
   
   # PenMorph turtle ops:
@@ -156,7 +159,7 @@ class PenMorph extends Morph
   
   tree: (level, length, angle) ->
     if level > 0
-      @size = level
+      @penSize = level
       @forward length
       @turn angle
       @tree level - 1, length * 0.75, angle

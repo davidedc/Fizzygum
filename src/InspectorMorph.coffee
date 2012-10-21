@@ -6,7 +6,7 @@ class InspectorMorph extends BoxMorph
     @target = target
     @currentProperty = null
     @showing = "attributes"
-    @markOwnProperties = false
+    @markOwnershipOfProperties = false
     #
     # initialize inherited properties:
     super()
@@ -57,8 +57,22 @@ class InspectorMorph extends BoxMorph
     @label.color = new Color(255, 255, 255)
     @label.drawNew()
     @add @label
+    
+    # properties list. Note that this picks up ALL properties
+    # (enumerable such as strings and un-enumerable such as functions)
+    # of the whole prototype chain.
     #
-    # properties list
+    #   a) some of these are DECLARED as part of the class that defines the object
+    #   and are proprietary to the object. These are shown RED
+    # 
+    #   b) some of these are proprietary to the object but are initialised by
+    #   code higher in the prototype chain. These are shown GREEN
+    #
+    #   c) some of these are not proprietary, i.e. they belong to an object up
+    #   the chain of prototypes. These are shown BLUE
+    #
+    # todo: show the static methods and variables in yet another color.
+    
     for property of @target
       # dummy condition, to be refined
       attribs.push property  if property
@@ -74,12 +88,47 @@ class InspectorMorph extends BoxMorph
     # label getter
     # format list
     # format element: [color, predicate(element]
-    if @markOwnProperties
+    
+    # caches the own methods of the object
+    if @markOwnershipOfProperties
       targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)
-    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null, (if @markOwnProperties then [[new Color(0, 0, 180),
-      (element) =>
-        (@target.hasOwnProperty element) or (element in targetOwnMethods)
-    ]] else null))
+      #alert targetOwnMethods
+    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(
+      if @markOwnershipOfProperties
+        [
+          [new Color(0, 0, 180),
+            (element) =>
+              # if the element is either an enumerable property of the object
+              # or it belongs to the own methods, then it is highlighted.
+              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+              # functions.
+              # In theory, getOwnPropertyNames should give ALL the properties but the methods
+              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+              true
+          ],
+          [new Color(0, 180, 0),
+            (element) =>
+              # if the element is either an enumerable property of the object
+              # or it belongs to the own methods, then it is highlighted.
+              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+              # functions.
+              # In theory, getOwnPropertyNames should give ALL the properties but the methods
+              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+              (@target.hasOwnProperty element)
+          ],
+          [new Color(180, 0, 0),
+            (element) =>
+              # if the element is either an enumerable property of the object
+              # or it belongs to the own methods, then it is highlighted.
+              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+              # functions.
+              # In theory, getOwnPropertyNames should give ALL the properties but the methods
+              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+              (element in targetOwnMethods)
+          ]
+        ]
+      else null
+    ))
     @list.action = (selected) =>
       val = undefined
       txt = undefined
@@ -153,10 +202,10 @@ class InspectorMorph extends BoxMorph
         @buildPanes()
       #
       menu.addLine()
-      menu.addItem ((if @markOwnProperties then "un-mark own" else "mark own")), (=>
-        @markOwnProperties = not @markOwnProperties
+      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
+        @markOwnershipOfProperties = not @markOwnershipOfProperties
         @buildPanes()
-      ), "highlight\n'own' properties"
+      ), "highlight\nownership of properties"
       menu.popUpAtHand @world()
     #
     @add @buttonSubset
