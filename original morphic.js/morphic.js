@@ -953,7 +953,7 @@
 /*global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 FileList, getBlurredShadowSupport*/
 
-var morphicVersion = '2012-October-19';
+var morphicVersion = '2012-October-22';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = getBlurredShadowSupport(); // check for Chrome-bug
 
@@ -1044,7 +1044,8 @@ function degrees(radians) {
 }
 
 function fontHeight(height) {
-	return Math.max(height, MorphicPreferences.minimumFontHeight);
+    var minHeight = Math.max(height, MorphicPreferences.minimumFontHeight);
+    return minHeight * 1.2; // assuming 1/5 font size for ascenders
 }
 
 function newCanvas(extentPoint) {
@@ -4287,6 +4288,10 @@ CursorMorph.prototype = new BlinkerMorph();
 CursorMorph.prototype.constructor = CursorMorph;
 CursorMorph.uber = BlinkerMorph.prototype;
 
+// CursorMorph preferences settings:
+
+CursorMorph.prototype.viewPadding = 1;
+
 // CursorMorph instance creation:
 
 function CursorMorph(aStringOrTextMorph) {
@@ -4410,9 +4415,44 @@ CursorMorph.prototype.processKeyDown = function (event) {
 
 // CursorMorph navigation:
 
+/*
+// original non-scrolling code, commented out in case we need to fall back:
+
 CursorMorph.prototype.gotoSlot = function (newSlot) {
 	this.setPosition(this.target.slotPosition(newSlot));
 	this.slot = Math.max(newSlot, 0);
+};
+*/
+
+CursorMorph.prototype.gotoSlot = function (slot) {
+	var length = this.target.text.length,
+		pos = this.target.slotPosition(slot),
+        right,
+        left;
+	this.slot = slot < 0 ? 0 : slot > length ? length : slot;
+	if (this.parent) {
+		right = this.parent.right() - this.viewPadding;
+		left = this.parent.left() + this.viewPadding;
+		if (pos.x > right) {
+			this.target.setLeft(this.target.left() + right - pos.x);
+			pos.x = right;
+		}
+		if (pos.x < left) {
+			left = Math.min(this.parent.left(), left);
+			this.target.setLeft(this.target.left() + left - pos.x);
+			pos.x = left;
+		}
+		if (this.target.right() < right &&
+                right - this.target.width() < left) {
+			pos.x += right - this.target.right();
+			this.target.setRight(right);
+		}
+	}
+	this.show();
+	this.setPosition(pos);
+	if (this.parent && this.parent.parent instanceof ScrollFrameMorph) {
+		this.parent.parent.scrollCursorIntoView(this, 6);
+	}
 };
 
 CursorMorph.prototype.goLeft = function () {
@@ -4534,15 +4574,14 @@ CursorMorph.prototype.deleteRight = function () {
 
 CursorMorph.prototype.deleteLeft = function () {
 	var text;
-	if (this.target.selection() !== '') {
+	if (this.target.selection()) {
 		this.gotoSlot(this.target.selectionStartSlot());
-		this.target.deleteSelection();
+		return this.target.deleteSelection();
 	}
 	text = this.target.text;
 	this.target.changed();
-	text = text.slice(0, Math.max(this.slot - 1, 0)) +
-		text.slice(this.slot);
-	this.target.text = text;
+	this.target.text = text.substring(0, this.slot - 1) +
+        text.substr(this.slot);
 	this.target.drawNew();
 	this.goLeft();
 };
@@ -6750,6 +6789,11 @@ StringMorph.prototype.endOfLine = function () {
 	return this.text.length;
 };
 
+StringMorph.prototype.rawHeight = function () {
+	// answer my corrected fontSize
+	return this.height() / 1.2;
+};
+
 // StringMorph menus:
 
 StringMorph.prototype.developersMenu = function () {
@@ -8446,6 +8490,21 @@ ScrollFrameMorph.prototype.autoScroll = function (pos) {
 	this.adjustScrollBars();
 };
 
+// ScrollFrameMorph scrolling by editing text:
+
+ScrollFrameMorph.prototype.scrollCursorIntoView = function (morph, padding) {
+	var ft = this.top() + padding,
+		fb = this.bottom() - padding;
+	if (morph.top() < ft) {
+		morph.target.setTop(morph.target.top() + ft - morph.top());
+		morph.setTop(ft);
+	} else if (morph.bottom() > fb) {
+		morph.target.setBottom(morph.target.bottom() + fb - morph.bottom());
+		morph.setBottom(fb);
+	}
+	this.adjustScrollBars();
+};
+
 // ScrollFrameMorph events:
 
 ScrollFrameMorph.prototype.mouseScroll = function (y, x) {
@@ -9413,23 +9472,9 @@ WorldMorph.prototype.init = function (aCanvas, fillPage) {
 	this.cursor = null;
 	this.activeMenu = null;
 	this.activeHandle = null;
-	this.trailsCanvas = null;
     this.virtualKeyboard = null;
 
 	this.initEventListeners();
-};
-
-WorldMorph.prototype.drawNew = function () {
-	// initialize my surface property
-	WorldMorph.uber.drawNew.call(this);
-	this.trailsCanvas = newCanvas(this.extent());
-};
-
-// World Morph pen trails:
-
-WorldMorph.prototype.penTrails = function () {
-	// answer my pen trails canvas. default is to answer my image
-	return this.trailsCanvas;
 };
 
 // World Morph display:
@@ -9443,46 +9488,8 @@ WorldMorph.prototype.brokenFor = function (aMorph) {
 };
 
 WorldMorph.prototype.fullDrawOn = function (aCanvas, aRect) {
-	var rectangle, area, ctx, l, t, w, h;
-	rectangle = aRect || this.fullBounds();
-	area = rectangle.intersect(this.bounds);
-	l = area.left();
-	t = area.top();
-	w = area.width();
-	h = area.height();
-	if ((w < 0) || (h < 0)) {
-		return null;
-	}
-
-	ctx = aCanvas.getContext('2d');
-	ctx.globalAlpha = 1;
-	ctx.fillStyle = this.color.toString();
-	ctx.fillRect(l, t, w, h);
-
-	if (this.trailsCanvas && (w > 1) && (h > 1)) {
-		ctx.drawImage(this.trailsCanvas, l, t, w, h, l, t, w, h);
-	}
-
-/* for debugging purposes:
-		try {
-			ctx.drawImage(this.trailsCanvas, l, t, w, h, l, t, w, h);
-		} catch (err) {
-			alert('error' + err
-				+ '\nl: ' + l
-				+ '\nt: ' + t
-				+ '\nw: ' + w
-				+ '\nh: ' + h
-				+ '\ntrailsCanvas width: ' + this.trailsCanvas.width
-				+ '\ntrailsCanvas height: ' + this.trailsCanvas.height
-			);
-		}
-
-*/
-
-	this.children.forEach(function (child) {
-		child.fullDrawOn(aCanvas, rectangle);
-	});
-	this.hand.fullDrawOn(aCanvas, rectangle);
+    WorldMorph.uber.fullDrawOn.call(this, aCanvas, aRect);
+	this.hand.fullDrawOn(aCanvas, aRect);
 };
 
 WorldMorph.prototype.updateBroken = function () {
