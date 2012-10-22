@@ -5,19 +5,19 @@
 # HandMorph inherits from Morph:
 
 class HandMorph extends Morph
-  constructor: (aWorld) ->
+
+  world: null
+  mouseButton: null
+  mouseOverList: []
+  mouseDownMorph: null
+  morphToGrab: null
+  grabOrigin: null
+  temporaries: []
+  touchHoldTimeout: null
+
+  constructor: (@world) ->
     super()
     @bounds = new Rectangle()
-    #
-    # additional properties:
-    @world = aWorld
-    @mouseButton = null
-    @mouseOverList = []
-    @mouseDownMorph = null
-    @morphToGrab = null
-    @grabOrigin = null
-    @temporaries = []
-    @touchHoldTimeout = null
   
   changed: ->
     b = undefined

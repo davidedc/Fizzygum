@@ -1,16 +1,24 @@
 # InspectorMorph //////////////////////////////////////////////////////
 
 class InspectorMorph extends BoxMorph
-  constructor: (target) ->
-    # additional properties:
-    @target = target
-    @currentProperty = null
-    @showing = "attributes"
-    @markOwnershipOfProperties = false
-    #
-    # initialize inherited properties:
+
+  target: null
+  currentProperty: null
+  showing: "attributes"
+  markOwnershipOfProperties: false
+  # panes:
+  label: null
+  list: null
+  detail: null
+  work: null
+  buttonInspect: null
+  buttonClose: null
+  buttonSubset: null
+  buttonEdit: null
+  resizer: null
+
+  constructor: (@target) ->
     super()
-    #
     # override inherited properties:
     @silentSetExtent new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
@@ -19,17 +27,6 @@ class InspectorMorph extends BoxMorph
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
     @drawNew()
-    #
-    # panes:
-    @label = null
-    @list = null
-    @detail = null
-    @work = null
-    @buttonInspect = null
-    @buttonClose = null
-    @buttonSubset = null
-    @buttonEdit = null
-    @resizer = null
     @buildPanes()  if @target
   
   setTarget: (target) ->

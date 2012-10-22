@@ -4,32 +4,27 @@
 # REQUIRES globalFunctions
 
 class ScrollFrameMorph extends FrameMorph
-  constructor: (scroller, size, sliderColor) ->
+
+  scrollBarSize: null
+  autoScrollTrigger: null
+  isScrollingByDragging: true # change if desired
+  hasVelocity: true # dto.
+  padding: 0 # around the scrollable area
+  growth: 0 # pixels or Point to grow right/left when near edge
+  isTextLineWrapping: false
+  contents: null
+  hBar: null
+  vBar: null
+
+  constructor: (@contents = new FrameMorph(@), @scrollBarSize = MorphicPreferences.scrollBarSize, sliderColor) ->
     super()
-    @scrollBarSize = size or MorphicPreferences.scrollBarSize
-    @autoScrollTrigger = null
-    @isScrollingByDragging = true # change if desired
-    @hasVelocity = true # dto.
-    @padding = 0 # around the scrollable area
-    @growth = 0 # pixels or Point to grow right/left when near edge
-    @isTextLineWrapping = false
-    @contents = scroller or new FrameMorph(@)
-    @add @contents
-    # start
-    # stop
-    # value
-    # size
     @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
     @hBar.setHeight @scrollBarSize
     @hBar.action = (num) =>
       @contents.setPosition new Point(@left() - num, @contents.position().y)
-    #
     @hBar.isDraggable = false
     @add @hBar
-    # start
-    # stop
-    # value
-    # size
+    #
     @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
     @vBar.setWidth @scrollBarSize
     @vBar.action = (num) =>
