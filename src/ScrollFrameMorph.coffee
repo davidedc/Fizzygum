@@ -171,6 +171,17 @@ class ScrollFrameMorph extends FrameMorph
     @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
     @adjustScrollBars()
   
+  # ScrollFrameMorph scrolling by editing text:
+  scrollCursorIntoView: (morph, padding) ->
+    ft = @top() + padding
+    fb = @bottom() - padding
+    if morph.top() < ft
+      morph.target.setTop morph.target.top() + ft - morph.top()
+      morph.setTop ft
+    else if morph.bottom() > fb
+      morph.target.setBottom morph.target.bottom() + fb - morph.bottom()
+      morph.setBottom fb
+    @adjustScrollBars()
   
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->

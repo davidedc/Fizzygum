@@ -1,1 +1,1 @@
-morphicVersion = "2012-October-16"
+morphicVersion = "2012-October-22"

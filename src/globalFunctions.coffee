@@ -49,7 +49,8 @@ degrees = (radians) ->
   radians * 180 / Math.PI
 
 fontHeight = (height) ->
-  Math.max height, MorphicPreferences.minimumFontHeight
+  minHeight = Math.max(height, MorphicPreferences.minimumFontHeight)
+  minHeight * 1.2 # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->  
   # answer a new empty instance of Canvas, don't display anywhere

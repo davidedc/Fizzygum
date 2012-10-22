@@ -8,6 +8,7 @@ class CursorMorph extends BlinkerMorph
   target: null
   originalContents: null
   slot: null
+  viewPadding: 1
 
   constructor: (@target) ->
     # additional properties:
@@ -105,10 +106,33 @@ class CursorMorph extends BlinkerMorph
     @target.escalateEvent "reactToKeystroke", event
   
   
-  # CursorMorph navigation:
-  gotoSlot: (newSlot) ->
-    @setPosition @target.slotPosition(newSlot)
-    @slot = Math.max(newSlot, 0)
+  # CursorMorph navigation - simple version
+  #gotoSlot: (newSlot) ->
+  #  @setPosition @target.slotPosition(newSlot)
+  #  @slot = Math.max(newSlot, 0)
+
+  gotoSlot: (slot) ->
+    length = @target.text.length
+    pos = @target.slotPosition(slot)
+    right = undefined
+    left = undefined
+    @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
+    if @parent
+      right = @parent.right() - @viewPadding
+      left = @parent.left() + @viewPadding
+      if pos.x > right
+        @target.setLeft @target.left() + right - pos.x
+        pos.x = right
+      if pos.x < left
+        left = Math.min(@parent.left(), left)
+        @target.setLeft @target.left() + left - pos.x
+        pos.x = left
+      if @target.right() < right and right - @target.width() < left
+        pos.x += right - @target.right()
+        @target.setRight right
+    @show()
+    @setPosition pos
+    @parent.parent.scrollCursorIntoView @, 6  if @parent and @parent.parent instanceof ScrollFrameMorph
   
   goLeft: ->
     @target.clearSelection()
@@ -198,13 +222,12 @@ class CursorMorph extends BlinkerMorph
   
   deleteLeft: ->
     text = undefined
-    if @target.selection() isnt ""
+    if @target.selection()
       @gotoSlot @target.selectionStartSlot()
-      @target.deleteSelection()
+      return @target.deleteSelection()
     text = @target.text
     @target.changed()
-    text = text.slice(0, Math.max(@slot - 1, 0)) + text.slice(@slot)
-    @target.text = text
+    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
     @target.drawNew()
     @goLeft()
   
