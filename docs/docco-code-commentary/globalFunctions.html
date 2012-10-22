@@ -35,7 +35,8 @@ true, otherwise answer null</p>             </td>             <td class="code"> 
   <span class="nx">radians</span> <span class="o">*</span> <span class="mi">180</span> <span class="o">/</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">PI</span>
 
 <span class="nv">fontHeight = </span><span class="nf">(height) -&gt;</span>
-  <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span> <span class="nx">height</span><span class="p">,</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">minimumFontHeight</span>
+  <span class="nv">minHeight = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">height</span><span class="p">,</span> <span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">minimumFontHeight</span><span class="p">)</span>
+  <span class="nx">minHeight</span> <span class="o">*</span> <span class="mf">1.2</span> <span class="c1"># assuming 1/5 font size for ascenders</span>
 
 <span class="nv">newCanvas = </span><span class="nf">(extentPoint) -&gt;</span>  </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>answer a new empty instance of Canvas, don't display anywhere</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">canvas = </span><span class="kc">undefined</span>
   <span class="nv">ext = </span><span class="kc">undefined</span>

@@ -4,6 +4,7 @@
   <span class="nv">target: </span><span class="kc">null</span>
   <span class="nv">originalContents: </span><span class="kc">null</span>
   <span class="nv">slot: </span><span class="kc">null</span>
+  <span class="nv">viewPadding: </span><span class="mi">1</span>
 
   <span class="nv">constructor: </span><span class="nf">(@target) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>additional properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@originalContents = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span>
     <span class="vi">@slot = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span>
@@ -84,9 +85,31 @@
       <span class="k">else</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>this.inspectKeyEvent(event);
 notify target's parent of key event</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@target</span><span class="p">.</span><span class="nx">escalateEvent</span> <span class="s">&quot;reactToKeystroke&quot;</span><span class="p">,</span> <span class="nx">event</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>CursorMorph navigation:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">gotoSlot: </span><span class="nf">(newSlot) -&gt;</span>
-    <span class="nx">@setPosition</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">slotPosition</span><span class="p">(</span><span class="nx">newSlot</span><span class="p">)</span>
-    <span class="vi">@slot = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newSlot</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>CursorMorph navigation - simple version
+gotoSlot: (newSlot) ->
+ @setPosition @target.slotPosition(newSlot)
+ @slot = Math.max(newSlot, 0)</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">gotoSlot: </span><span class="nf">(slot) -&gt;</span>
+    <span class="nv">length = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span>
+    <span class="nv">pos = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">slotPosition</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
+    <span class="nv">right = </span><span class="kc">undefined</span>
+    <span class="nv">left = </span><span class="kc">undefined</span>
+    <span class="vi">@slot = </span><span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&gt;</span> <span class="nx">length</span> <span class="k">then</span> <span class="nx">length</span> <span class="k">else</span> <span class="nx">slot</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nx">@parent</span>
+      <span class="nv">right = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@viewPadding</span>
+      <span class="nv">left = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@viewPadding</span>
+      <span class="k">if</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="nx">right</span>
+        <span class="nx">@target</span><span class="p">.</span><span class="nx">setLeft</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">right</span> <span class="o">-</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span>
+        <span class="nv">pos.x = </span><span class="nx">right</span>
+      <span class="k">if</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">left</span>
+        <span class="nv">left = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@parent</span><span class="p">.</span><span class="nx">left</span><span class="p">(),</span> <span class="nx">left</span><span class="p">)</span>
+        <span class="nx">@target</span><span class="p">.</span><span class="nx">setLeft</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">left</span> <span class="o">-</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span>
+        <span class="nv">pos.x = </span><span class="nx">left</span>
+      <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nx">right</span> <span class="o">and</span> <span class="nx">right</span> <span class="o">-</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nx">left</span>
+        <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span> <span class="o">+=</span> <span class="nx">right</span> <span class="o">-</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span>
+        <span class="nx">@target</span><span class="p">.</span><span class="nx">setRight</span> <span class="nx">right</span>
+    <span class="nx">@show</span><span class="p">()</span>
+    <span class="nx">@setPosition</span> <span class="nx">pos</span>
+    <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">scrollCursorIntoView</span> <span class="nx">@</span><span class="p">,</span> <span class="mi">6</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
   
   <span class="nv">goLeft: </span><span class="o">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
@@ -174,13 +197,12 @@ notify target's parent of key event</p>             </td>             <td class=
   
   <span class="nv">deleteLeft: </span><span class="o">-&gt;</span>
     <span class="nv">text = </span><span class="kc">undefined</span>
-    <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span> <span class="o">isnt</span> <span class="s">&quot;&quot;</span>
+    <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span>
       <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selectionStartSlot</span><span class="p">()</span>
-      <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>
+      <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>
     <span class="nv">text = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
-    <span class="nv">text = </span><span class="nx">text</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@slot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="nx">text</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
-    <span class="vi">@target.text = </span><span class="nx">text</span>
+    <span class="vi">@target.text = </span><span class="nx">text</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">@slot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="nx">text</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
     <span class="nx">@goLeft</span><span class="p">()</span>
   
