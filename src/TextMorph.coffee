@@ -3,42 +3,51 @@
 # I am a multi-line, word-wrapping String
 
 class TextMorph extends Morph
-  constructor: (text, fontSize, fontStyle, bold, italic, alignment, width, fontName, shadowOffset, shadowColor) ->
-    # additional properties:
-    @text = text or ((if text is "" then text else "TextMorph"))
-    @words = []
-    @lines = []
-    @lineSlots = []
-    @fontSize = fontSize or 12
-    @fontName = fontName or MorphicPreferences.globalFontFamily
-    @fontStyle = fontStyle or "sans-serif"
-    @isBold = bold or false
-    @isItalic = italic or false
-    @alignment = alignment or "left"
-    @shadowOffset = shadowOffset or new Point(0, 0)
-    @shadowColor = shadowColor or null
-    @maxWidth = width or 0
-    @maxLineWidth = 0
-    @backgroundColor = null
-    @isEditable = false
-    #
-    #additional properties for ad-hoc evaluation:
-    @receiver = null
-    #
-    # additional properties for text-editing:
-    @currentlySelecting = false
-    @startMark = 0
-    @endMark = 0
-    @markedTextColor = new Color(255, 255, 255)
-    @markedBackgoundColor = new Color(60, 60, 120)
-    #
-    # initialize inherited properties:
-    super()
-    #
-    # override inherited properites:
-    @color = new Color(0, 0, 0)
-    @noticesTransparentClick = true
-    @drawNew()
+
+  text: null
+  words: []
+  lines: []
+  lineSlots: []
+  fontSize: null
+  fontName: null
+  fontStyle: null
+  isBold: null
+  isItalic: null
+  alignment: null
+  shadowOffset: null
+  shadowColor: null
+  maxWidth: null
+  maxLineWidth: 0
+  backgroundColor: null
+  isEditable: false
+
+  #additional properties for ad-hoc evaluation:
+  receiver: null
+
+  # additional properties for text-editing:
+  currentlySelecting: false
+  startMark: 0
+  endMark: 0
+  markedTextColor: null
+  markedBackgoundColor: null
+
+  constructor: (
+    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,
+    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
+    @shadowColor = null
+    ) ->    
+      @text = text or ((if text is "" then text else "TextMorph"))
+      @fontName = fontName or MorphicPreferences.globalFontFamily
+      @shadowOffset = shadowOffset or new Point(0, 0)
+      @markedTextColor = new Color(255, 255, 255)
+      @markedBackgoundColor = new Color(60, 60, 120)
+      #
+      super()
+      #
+      # override inherited properites:
+      @color = new Color(0, 0, 0)
+      @noticesTransparentClick = true
+      @drawNew()
   
   toString: ->
     # e.g. 'a TextMorph("Hello World")'
