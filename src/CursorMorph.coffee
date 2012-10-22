@@ -3,11 +3,14 @@
 # I am a String/Text editing widget
 
 class CursorMorph extends BlinkerMorph
-  constructor: (aStringOrTextMorph) ->
-    ls = undefined
+
+  keyDownEventUsed: false
+  target: null
+  originalContents: null
+  slot: null
+
+  constructor: (@target) ->
     # additional properties:
-    @keyDownEventUsed = false
-    @target = aStringOrTextMorph
     @originalContents = @target.text
     @slot = @target.text.length
     super()

@@ -3,8 +3,12 @@
 # I can have an optionally rounded border
 
 class BoxMorph extends Morph
-  constructor: (edge, border, borderColor) ->
-    @edge = edge or 4
+
+  edge: null
+  border: null
+  borderColor: null
+
+  constructor: (@edge = 4, border, borderColor) ->
     @border = border or ((if (border is 0) then 0 else 2))
     @borderColor = borderColor or new Color()
     super()

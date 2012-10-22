@@ -17,6 +17,9 @@ class PenMorph extends Morph
     # todo we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
+    #alert @morphMethod() # works
+    # doesn't work cause coffeescript doesn't support static inheritance
+    #alert @morphStaticMethod()
 
   @staticVariable: 1
   @staticFunction: -> 3.14

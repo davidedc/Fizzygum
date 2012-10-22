@@ -6,19 +6,21 @@
 # I am a resize / move handle that can be attached to any Morph
 
 class HandleMorph extends Morph
-  constructor: (target, minX, minY, insetX, insetY, type) ->
+
+  target: null
+  minExtent: null
+  inset: null
+  type: null # "resize" or "move"
+
+  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->
     # if insetY is missing, it will be the same as insetX
-    size = MorphicPreferences.handleSize
-    @target = target or null
-    @minExtent = new Point(minX or 0, minY or 0)
+    @minExtent = new Point(minX, minY)
     @inset = new Point(insetX or 0, insetY or insetX or 0)
-    @type = type or "resize" # can also be 'move'
     super()
     @color = new Color(255, 255, 255)
-    @isDraggable = false
     @noticesTransparentClick = true
-    @setExtent new Point(size, size)
-  
+    size = MorphicPreferences.handleSize
+    @setExtent new Point(size, size)  
   
   # HandleMorph drawing:
   drawNew: ->

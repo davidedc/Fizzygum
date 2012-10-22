@@ -3,17 +3,20 @@
 # I am a Demo of a stepping custom Morph
 
 class BouncerMorph extends Morph
-  constructor: (type, speed) ->
+
+  isStopped: false
+  type: null
+  direction: null
+  speed: null
+
+  constructor: (@type = "vertical", @speed = 1) ->
     super()
     @fps = 50
     # additional properties:
-    @isStopped = false
-    @type = type or "vertical"
     if @type is "vertical"
       @direction = "down"
     else
       @direction = "right"
-    @speed = speed or 1
   
   
   # BouncerMorph moving:

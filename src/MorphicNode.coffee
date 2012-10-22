@@ -1,7 +1,9 @@
 class MorphicNode
-  constructor: (parent, childrenArray) ->
-    @parent = parent or null
-    @children = childrenArray or []
+
+  parent: null
+  children: null
+
+  constructor: (@parent = null, @children = []) ->
   
   
   # MorphicNode string representation: e.g. 'a MorphicNode[3]'

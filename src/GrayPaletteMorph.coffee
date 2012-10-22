@@ -1,13 +1,10 @@
 # GrayPaletteMorph ///////////////////////////////////////////////////
 
 class GrayPaletteMorph extends ColorPaletteMorph
-  constructor: (target, sizePoint) ->
-    super target or null, sizePoint or new Point(80, 10)
+  constructor: (@target = null, @sizePoint = new Point(80, 10)) ->
+    super @target, @sizePoint
   
   drawNew: ->
-    context = undefined
-    ext = undefined
-    gradient = undefined
     ext = @extent()
     @image = newCanvas(@extent())
     context = @image.getContext("2d")

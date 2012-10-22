@@ -3,8 +3,10 @@
 # I clip my submorphs at my bounds
 
 class FrameMorph extends Morph
-  constructor: (aScrollFrame) ->
-    @scrollFrame = aScrollFrame or null
+
+  @scrollFrame: null
+
+  constructor: (@scrollFrame = null) ->
     super()
     @color = new Color(255, 250, 245)
     @drawNew()

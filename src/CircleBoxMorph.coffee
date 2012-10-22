@@ -3,10 +3,12 @@
 # I can be used for sliders
 
 class CircleBoxMorph extends Morph
-  constructor: (orientation) ->
+
+  orientation: null
+  autoOrient: true
+
+  constructor: (@orientation = "vertical") ->
     super()
-    @orientation = orientation or "vertical"
-    @autoOrient = true
     @setExtent new Point(20, 100)
   
   autoOrientation: ->

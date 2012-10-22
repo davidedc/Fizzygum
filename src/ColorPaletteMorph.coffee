@@ -1,12 +1,14 @@
 # ColorPaletteMorph ///////////////////////////////////////////////////
 
 class ColorPaletteMorph extends Morph
-  constructor: (target, sizePoint) ->
+
+  target: null
+  targetSetter: "color"
+  choice: null
+
+  constructor: (@target = null, sizePoint) ->
     super()
-    @target = target or null
-    @targetSetter = "color"
     @silentSetExtent sizePoint or new Point(80, 50)
-    @choice = null
     @drawNew()
   
   drawNew: ->

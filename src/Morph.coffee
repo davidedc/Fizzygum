@@ -5,27 +5,38 @@
 
 class Morph extends MorphicNode
   
+  # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
+  morphMethod: ->
+    3.14
+  @morphStaticMethod: ->
+    3.14
+  # End of tests here ////////////////////
+
+  isMorph: true
+  bounds: null
+  color: null
+  texture: null # optional url of a fill-image
+  cachedTexture: null # internal cache of actual bg image
+  lastTime: null
+  alpha: 1
+  isVisible: true
+  isDraggable: false
+  isTemplate: false
+  acceptsDrops: false
+  noticesTransparentClick: false
+  fps: 0
+  customContextMenu: null
+  trackChanges: true
+  shadowBlur: 4
+  image: null
   
   constructor: () ->
     super()
-    @isMorph = true
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @texture = null # optional url of a fill-image
-    @cachedTexture = null # internal cache of actual bg image
-    @alpha = 1
-    @isVisible = true
-    @isDraggable = false
-    @isTemplate = false
-    @acceptsDrops = false
-    @noticesTransparentClick = false
     @drawNew()
-    @fps = 0
-    @customContextMenu = null
     @lastTime = Date.now()
-    @trackChanges = true
-    @shadowBlur = 4
   
   #
   #    damage list housekeeping

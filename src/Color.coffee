@@ -1,11 +1,14 @@
 # Colors //////////////////////////////////////////////////////////////
 
 class Color
-  constructor: (r, g, b, a) ->
+
+  a: null
+  r: null
+  g: null
+  b: null
+
+  constructor: (@r = 0, @g = 0, @b = 0, a) ->
     # all values are optional, just (r, g, b) is fine
-    @r = r or 0
-    @g = g or 0
-    @b = b or 0
     @a = a or ((if (a is 0) then 0 else 1))
   
   # Color string representation: e.g. 'rgba(255,165,0,1)'

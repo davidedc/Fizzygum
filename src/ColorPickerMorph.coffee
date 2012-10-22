@@ -1,6 +1,9 @@
 # ColorPickerMorph ///////////////////////////////////////////////////
 
 class ColorPickerMorph extends Morph
+
+  choice: null
+
   constructor: (defaultColor) ->
     @choice = defaultColor or new Color(255, 255, 255)
     super()
