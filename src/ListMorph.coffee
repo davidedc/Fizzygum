@@ -1,7 +1,15 @@
 # ListMorph ///////////////////////////////////////////////////////////
 
 class ListMorph extends ScrollFrameMorph
-  constructor: (elements, labelGetter, format) ->
+  
+  elements: null
+  labelGetter: null
+  format: null
+  listContents: null
+  selected: null
+  action: null
+
+  constructor: (@elements = [], labelGetter, @format = []) ->
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -24,16 +32,10 @@ class ListMorph extends ScrollFrameMorph
     @color = new Color(255, 255, 255)
     @hBar.alpha = 0.6
     @vBar.alpha = 0.6
-    @elements = elements or []
     @labelGetter = labelGetter or (element) ->
         return element  if isString(element)
         return element.toSource()  if element.toSource
         element.toString()
-    @format = format or []
-    @listContents = null
-    @selected = null
-    @action = null
-    @acceptsDrops = false
     @buildListContents()
   
   buildListContents: ->
