@@ -46,8 +46,6 @@
     <span class="nv">canvas = </span><span class="nx">newCanvas</span><span class="p">()</span>
     <span class="nv">context = </span><span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">oldline = </span><span class="s">&quot;&quot;</span>
-    <span class="nv">newline = </span><span class="kc">undefined</span>
-    <span class="nv">w = </span><span class="kc">undefined</span>
     <span class="nv">slot = </span><span class="mi">0</span>
     <span class="nv">context.font = </span><span class="nx">@font</span><span class="p">()</span>
     <span class="vi">@maxLineWidth = </span><span class="mi">0</span>
@@ -79,21 +77,6 @@
   
   
   <span class="nv">drawNew: </span><span class="o">-&gt;</span>
-    <span class="nv">context = </span><span class="kc">undefined</span>
-    <span class="nv">height = </span><span class="kc">undefined</span>
-    <span class="nv">i = </span><span class="kc">undefined</span>
-    <span class="nv">line = </span><span class="kc">undefined</span>
-    <span class="nv">width = </span><span class="kc">undefined</span>
-    <span class="nv">shadowHeight = </span><span class="kc">undefined</span>
-    <span class="nv">shadowWidth = </span><span class="kc">undefined</span>
-    <span class="nv">offx = </span><span class="kc">undefined</span>
-    <span class="nv">offy = </span><span class="kc">undefined</span>
-    <span class="nv">x = </span><span class="kc">undefined</span>
-    <span class="nv">y = </span><span class="kc">undefined</span>
-    <span class="nv">start = </span><span class="kc">undefined</span>
-    <span class="nv">stop = </span><span class="kc">undefined</span>
-    <span class="nv">p = </span><span class="kc">undefined</span>
-    <span class="nv">c = </span><span class="kc">undefined</span>
     <span class="vi">@image = </span><span class="nx">newCanvas</span><span class="p">()</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">context.font = </span><span class="nx">@font</span><span class="p">()</span>
@@ -158,9 +141,7 @@
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>TextMorph mesuring:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">columnRow: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>answer the logical position point of the given index ("slot")</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">row = </span><span class="kc">undefined</span>
-    <span class="nv">col = </span><span class="kc">undefined</span>
-    <span class="nv">idx = </span><span class="mi">0</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>TextMorph mesuring:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">columnRow: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>answer the logical position point of the given index ("slot")</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">idx = </span><span class="mi">0</span>
     <span class="nv">row = </span><span class="mi">0</span>
     <span class="k">while</span> <span class="nx">row</span> <span class="o">&lt;</span> <span class="nx">@lines</span><span class="p">.</span><span class="nx">length</span>
       <span class="nv">idx = </span><span class="nx">@lineSlots</span><span class="p">[</span><span class="nx">row</span><span class="p">]</span>
@@ -176,10 +157,6 @@ where the cursor should be placed</p>             </td>             <td class="c
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">shadowHeight = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">@shadowOffset</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span>
     <span class="nv">xOffset = </span><span class="mi">0</span>
-    <span class="nv">yOffset = </span><span class="kc">undefined</span>
-    <span class="nv">x = </span><span class="kc">undefined</span>
-    <span class="nv">y = </span><span class="kc">undefined</span>
-    <span class="nv">idx = </span><span class="kc">undefined</span>
     <span class="nv">yOffset = </span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="p">(</span><span class="nx">fontHeight</span><span class="p">(</span><span class="nx">@fontSize</span><span class="p">)</span> <span class="o">+</span> <span class="nx">shadowHeight</span><span class="p">)</span>
     <span class="nv">idx = </span><span class="mi">0</span>
     <span class="k">while</span> <span class="nx">idx</span> <span class="o">&lt;</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">x</span>
@@ -202,15 +179,13 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
       <span class="nx">col</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="nx">@lineSlots</span><span class="p">[</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">row</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">+</span> <span class="nx">col</span> <span class="o">-</span> <span class="mi">1</span>
   
-  <span class="nv">upFrom: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>answer the slot above the given one</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">above = </span><span class="kc">undefined</span>
-    <span class="nv">colRow = </span><span class="nx">@columnRow</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
+  <span class="nv">upFrom: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>answer the slot above the given one</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">colRow = </span><span class="nx">@columnRow</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
     <span class="k">return</span> <span class="nx">slot</span>  <span class="k">if</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">&lt;</span> <span class="mi">1</span>
     <span class="nv">above = </span><span class="nx">@lines</span><span class="p">[</span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
     <span class="k">return</span> <span class="nx">@lineSlots</span><span class="p">[</span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nx">above</span><span class="p">.</span><span class="nx">length</span>  <span class="k">if</span> <span class="nx">above</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="nx">@lineSlots</span><span class="p">[</span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">x</span>
   
-  <span class="nv">downFrom: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>answer the slot below the given one</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">below = </span><span class="kc">undefined</span>
-    <span class="nv">colRow = </span><span class="nx">@columnRow</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
+  <span class="nv">downFrom: </span><span class="nf">(slot) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>answer the slot below the given one</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">colRow = </span><span class="nx">@columnRow</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
     <span class="k">return</span> <span class="nx">slot</span>  <span class="k">if</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">&gt;</span> <span class="nx">@lines</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">2</span>
     <span class="nv">below = </span><span class="nx">@lines</span><span class="p">[</span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
     <span class="k">return</span> <span class="nx">@lineSlots</span><span class="p">[</span><span class="nx">colRow</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="nx">below</span><span class="p">.</span><span class="nx">length</span>  <span class="k">if</span> <span class="nx">below</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="nx">colRow</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">1</span>
@@ -224,8 +199,6 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
     <span class="nx">@root</span><span class="p">().</span><span class="nx">edit</span> <span class="nx">@</span>
   
   <span class="nv">selection: </span><span class="o">-&gt;</span>
-    <span class="nv">start = </span><span class="kc">undefined</span>
-    <span class="nv">stop = </span><span class="kc">undefined</span>
     <span class="nv">start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@startMark</span><span class="p">,</span> <span class="nx">@endMark</span><span class="p">)</span>
     <span class="nv">stop = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@startMark</span><span class="p">,</span> <span class="nx">@endMark</span><span class="p">)</span>
     <span class="nx">@text</span><span class="p">.</span><span class="nx">slice</span> <span class="nx">start</span><span class="p">,</span> <span class="nx">stop</span>
@@ -241,9 +214,6 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
     <span class="nx">@changed</span><span class="p">()</span>
   
   <span class="nv">deleteSelection: </span><span class="o">-&gt;</span>
-    <span class="nv">start = </span><span class="kc">undefined</span>
-    <span class="nv">stop = </span><span class="kc">undefined</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="nv">text = </span><span class="nx">@text</span>
     <span class="nv">start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@startMark</span><span class="p">,</span> <span class="nx">@endMark</span><span class="p">)</span>
     <span class="nv">stop = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@startMark</span><span class="p">,</span> <span class="nx">@endMark</span><span class="p">)</span>
@@ -362,8 +332,7 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
     <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">setFontSize: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">newSize = </span><span class="kc">undefined</span>
-    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
+  <span class="nv">setFontSize: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
       <span class="vi">@fontSize = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="mi">500</span><span class="p">))</span>
     <span class="k">else</span>
       <span class="nv">newSize = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">size</span><span class="p">)</span>
@@ -398,7 +367,6 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
   <span class="nv">inspectIt: </span><span class="o">-&gt;</span>
     <span class="nv">result = </span><span class="nx">@receiver</span><span class="p">.</span><span class="nx">evaluateString</span><span class="p">(</span><span class="nx">@selection</span><span class="p">())</span>
     <span class="nv">world = </span><span class="nx">@world</span><span class="p">()</span>
-    <span class="nv">inspector = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">result</span> <span class="o">isnt</span> <span class="kc">null</span>
       <span class="nv">inspector = </span><span class="k">new</span> <span class="nx">InspectorMorph</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span>
       <span class="nx">inspector</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>

@@ -75,7 +75,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">l = </span><span class="nx">@left</span><span class="p">()</span>
     <span class="nv">cw = </span><span class="nx">@contents</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>
     <span class="nv">r = </span><span class="nx">@right</span><span class="p">()</span>
-    <span class="nv">newX = </span><span class="kc">undefined</span>
     <span class="nv">newX = </span><span class="nx">cl</span> <span class="o">+</span> <span class="nx">steps</span>
     <span class="nv">newX = </span><span class="nx">l</span>  <span class="k">if</span> <span class="nx">newX</span> <span class="o">&gt;</span> <span class="nx">l</span>
     <span class="nv">newX = </span><span class="nx">r</span> <span class="o">-</span> <span class="nx">cw</span>  <span class="k">if</span> <span class="nx">newX</span> <span class="o">+</span> <span class="nx">cw</span> <span class="o">&lt;</span> <span class="nx">r</span>
@@ -86,7 +85,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">t = </span><span class="nx">@top</span><span class="p">()</span>
     <span class="nv">ch = </span><span class="nx">@contents</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span>
     <span class="nv">b = </span><span class="nx">@bottom</span><span class="p">()</span>
-    <span class="nv">newY = </span><span class="kc">undefined</span>
     <span class="nv">newY = </span><span class="nx">ct</span> <span class="o">+</span> <span class="nx">steps</span>
     <span class="nv">newY = </span><span class="nx">t</span>  <span class="k">if</span> <span class="nx">newY</span> <span class="o">&gt;</span> <span class="nx">t</span>
     <span class="nv">newY = </span><span class="nx">b</span> <span class="o">-</span> <span class="nx">ch</span>  <span class="k">if</span> <span class="nx">newY</span> <span class="o">+</span> <span class="nx">ch</span> <span class="o">&lt;</span> <span class="nx">b</span>
@@ -103,7 +101,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">deltaY = </span><span class="mi">0</span>
     <span class="nv">friction = </span><span class="mf">0.8</span>
     <span class="vi">@step = </span><span class="o">=&gt;</span>
-      <span class="nv">newPos = </span><span class="kc">undefined</span>
       <span class="k">if</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">mouseButton</span> <span class="o">and</span> <span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()))</span>
         <span class="nv">newPos = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
         <span class="nv">deltaX = </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">oldPos</span><span class="p">.</span><span class="nx">x</span>
@@ -127,9 +124,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
   <span class="nv">startAutoScrolling: </span><span class="o">-&gt;</span>
     <span class="nv">inset = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">scrollBarSize</span> <span class="o">*</span> <span class="mi">3</span>
     <span class="nv">world = </span><span class="nx">@world</span><span class="p">()</span>
-    <span class="nv">hand = </span><span class="kc">undefined</span>
-    <span class="nv">inner = </span><span class="kc">undefined</span>
-    <span class="nv">pos = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">world</span>
     <span class="nv">hand = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span>
     <span class="vi">@autoScrollTrigger = </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>  <span class="nx">unless</span> <span class="nx">@autoScrollTrigger</span>
@@ -143,8 +137,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
         <span class="vi">@autoScrollTrigger = </span><span class="kc">null</span>
   
   <span class="nv">autoScroll: </span><span class="nf">(pos) -&gt;</span>
-    <span class="nv">inset = </span><span class="kc">undefined</span>
-    <span class="nv">area = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">if</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@autoScrollTrigger</span> <span class="o">&lt;</span> <span class="mi">500</span>
     <span class="nv">inset = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">scrollBarSize</span> <span class="o">*</span> <span class="mi">3</span>
     <span class="nv">area = </span><span class="nx">@topLeft</span><span class="p">().</span><span class="nx">extent</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@width</span><span class="p">(),</span> <span class="nx">inset</span><span class="p">))</span>

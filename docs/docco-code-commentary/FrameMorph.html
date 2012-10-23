@@ -20,15 +20,14 @@
   <span class="nv">fullImage: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>use only for shadows</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@image</span>
   
   <span class="nv">fullDrawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
-    <span class="nv">rectangle = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@isVisible</span>
-    <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@fullBounds</span><span class="p">()</span>
-    <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
+    <span class="nv">boundsRectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@fullBounds</span><span class="p">()</span>
+    <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">boundsRectangle</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">child</span><span class="p">)</span> <span class="o">=&gt;</span>
       <span class="k">if</span> <span class="nx">child</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span>
-        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
+        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">boundsRectangle</span>
       <span class="k">else</span>
-        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">rectangle</span><span class="p">)</span>
+        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">boundsRectangle</span><span class="p">)</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>FrameMorph scrolling optimization:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">moveBy: </span><span class="nf">(delta) -&gt;</span>
     <span class="nx">@changed</span><span class="p">()</span>
@@ -53,8 +52,6 @@
     <span class="nx">@moveBy</span> <span class="mi">0</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@bottom</span><span class="p">(),</span> <span class="mi">0</span><span class="p">)</span>  <span class="k">if</span> <span class="nx">@bottom</span><span class="p">()</span> <span class="o">&lt;</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">bottom</span><span class="p">()</span>
   
   <span class="nv">adjustBounds: </span><span class="o">-&gt;</span>
-    <span class="nv">subBounds = </span><span class="kc">undefined</span>
-    <span class="nv">newBounds = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">if</span> <span class="nx">@scrollFrame</span> <span class="o">is</span> <span class="kc">null</span>
     <span class="nv">subBounds = </span><span class="nx">@submorphBounds</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">subBounds</span> <span class="o">and</span> <span class="p">(</span><span class="o">not</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">isTextLineWrapping</span><span class="p">)</span>

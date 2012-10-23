@@ -9,7 +9,6 @@
     <span class="vi">@borderColor = </span><span class="nx">borderColor</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">()</span>
     <span class="k">super</span><span class="p">()</span>
   </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>BoxMorph drawing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
-    <span class="nv">context = </span><span class="kc">undefined</span>
     <span class="vi">@image = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">@edge</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nx">@border</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span>
@@ -47,8 +46,7 @@
     <span class="p">),</span> <span class="s">&quot;set the corner&#39;s\nradius&quot;</span>
     <span class="nx">menu</span>
   
-  <span class="nv">setBorderWidth: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">newSize = </span><span class="kc">undefined</span>
-    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
+  <span class="nv">setBorderWidth: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
       <span class="vi">@border = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span>
       <span class="nv">newSize = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">size</span><span class="p">)</span>
@@ -61,8 +59,7 @@
       <span class="nx">@drawNew</span><span class="p">()</span>
       <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">setCornerSize: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">newSize = </span><span class="kc">undefined</span>
-    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
+  <span class="nv">setCornerSize: </span><span class="nf">(size) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">size</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
       <span class="vi">@edge = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span>
       <span class="nv">newSize = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">size</span><span class="p">)</span>

@@ -91,8 +91,6 @@ gotoSlot: (newSlot) ->
  @slot = Math.max(newSlot, 0)</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">gotoSlot: </span><span class="nf">(slot) -&gt;</span>
     <span class="nv">length = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span>
     <span class="nv">pos = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">slotPosition</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
-    <span class="nv">right = </span><span class="kc">undefined</span>
-    <span class="nv">left = </span><span class="kc">undefined</span>
     <span class="vi">@slot = </span><span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&gt;</span> <span class="nx">length</span> <span class="k">then</span> <span class="nx">length</span> <span class="k">else</span> <span class="nx">slot</span><span class="p">))</span>
     <span class="k">if</span> <span class="nx">@parent</span>
       <span class="nv">right = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@viewPadding</span>
@@ -154,7 +152,6 @@ gotoSlot: (newSlot) ->
     <span class="nx">@escalateEvent</span> <span class="s">&quot;cancel&quot;</span><span class="p">,</span> <span class="kc">null</span>
   
   <span class="nv">insert: </span><span class="nf">(aChar) -&gt;</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">tab</span><span class="p">(</span><span class="nx">@target</span><span class="p">)</span>  <span class="k">if</span> <span class="nx">aChar</span> <span class="o">is</span> <span class="s">&quot;\t&quot;</span>
     <span class="k">if</span> <span class="o">not</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">isNumeric</span> <span class="o">or</span> <span class="o">not</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">aChar</span><span class="p">))</span> <span class="o">or</span> <span class="nx">contains</span><span class="p">([</span><span class="s">&quot;-&quot;</span><span class="p">,</span> <span class="s">&quot;.&quot;</span><span class="p">],</span> <span class="nx">aChar</span><span class="p">)</span>
       <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span> <span class="o">isnt</span> <span class="s">&quot;&quot;</span>
@@ -184,7 +181,6 @@ gotoSlot: (newSlot) ->
       <span class="nx">@target</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
   
   <span class="nv">deleteRight: </span><span class="o">-&gt;</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span> <span class="o">isnt</span> <span class="s">&quot;&quot;</span>
       <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selectionStartSlot</span><span class="p">()</span>
       <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>
@@ -196,7 +192,6 @@ gotoSlot: (newSlot) ->
       <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
   
   <span class="nv">deleteLeft: </span><span class="o">-&gt;</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span>
       <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selectionStartSlot</span><span class="p">()</span>
       <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>

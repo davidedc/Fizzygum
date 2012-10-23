@@ -21,8 +21,8 @@
     <span class="nx">@children</span><span class="p">.</span><span class="nx">splice</span> <span class="nx">idx</span><span class="p">,</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">idx</span> <span class="o">isnt</span> <span class="o">-</span><span class="mi">1</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>MorphicNode functions:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">root: </span><span class="o">-&gt;</span>
-    <span class="k">return</span> <span class="nx">@</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="kc">null</span>
-    <span class="nx">@parent</span><span class="p">.</span><span class="nx">root</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">root</span><span class="p">()</span> <span class="nx">unless</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="kc">null</span>
+    <span class="nx">@</span>
   
   <span class="nv">depth: </span><span class="o">-&gt;</span>
     <span class="k">return</span> <span class="mi">0</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="kc">null</span>

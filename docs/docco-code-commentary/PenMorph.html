@@ -21,13 +21,7 @@ alert @morphStaticMethod()</p>             </td>             <td class="code">  
       <span class="nx">@parent</span><span class="p">.</span><span class="nx">childChanged</span> <span class="nx">@</span>  <span class="k">if</span> <span class="nx">@parent</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>PenMorph display:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawNew: </span><span class="nf">(facing) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>my orientation can be overridden with the "facing" parameter to
-   implement Scratch-style rotation styles</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">context = </span><span class="kc">undefined</span>
-    <span class="nv">start = </span><span class="kc">undefined</span>
-    <span class="nv">dest = </span><span class="kc">undefined</span>
-    <span class="nv">left = </span><span class="kc">undefined</span>
-    <span class="nv">right = </span><span class="kc">undefined</span>
-    <span class="nv">len = </span><span class="kc">undefined</span>
-    <span class="nv">direction = </span><span class="nx">facing</span> <span class="o">or</span> <span class="nx">@heading</span>
+   implement Scratch-style rotation styles</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">direction = </span><span class="nx">facing</span> <span class="o">or</span> <span class="nx">@heading</span>
     <span class="k">if</span> <span class="nx">@isWarped</span>
       <span class="vi">@wantsRedraw = </span><span class="kc">true</span>
       <span class="k">return</span> <span class="kc">null</span>
@@ -80,7 +74,6 @@ alert @morphStaticMethod()</p>             </td>             <td class="code">  
   
   <span class="nv">forward: </span><span class="nf">(steps) -&gt;</span>
     <span class="nv">start = </span><span class="nx">@center</span><span class="p">()</span>
-    <span class="nv">dest = </span><span class="kc">undefined</span>
     <span class="nv">dist = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">steps</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">dist</span> <span class="o">&gt;=</span> <span class="mi">0</span>
       <span class="nv">dest = </span><span class="nx">@position</span><span class="p">().</span><span class="nx">distanceAngle</span><span class="p">(</span><span class="nx">dist</span><span class="p">,</span> <span class="nx">@heading</span><span class="p">)</span>
@@ -123,7 +116,6 @@ try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})</p>         
     <span class="nx">@warpOp</span> <span class="s">&quot;sierpinski&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">length</span><span class="p">,</span> <span class="nx">min</span><span class="p">]</span>
   
   <span class="nv">sierpinski: </span><span class="nf">(length, min) -&gt;</span>
-    <span class="nv">i = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">length</span> <span class="o">&gt;</span> <span class="nx">min</span>
       <span class="nv">i = </span><span class="mi">0</span>
       <span class="k">while</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">3</span>

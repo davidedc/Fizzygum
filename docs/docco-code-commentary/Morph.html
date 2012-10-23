@@ -61,9 +61,6 @@ endLayout()
   
   </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Morph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">stepFrame: </span><span class="o">-&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@step</span>
-    <span class="nv">current = </span><span class="kc">undefined</span>
-    <span class="nv">elapsed = </span><span class="kc">undefined</span>
-    <span class="nv">leftover = </span><span class="kc">undefined</span>
     <span class="nv">current = </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span>
     <span class="nv">elapsed = </span><span class="nx">current</span> <span class="o">-</span> <span class="nx">@lastTime</span>
     <span class="k">if</span> <span class="nx">@fps</span> <span class="o">&gt;</span> <span class="mi">0</span>
@@ -138,13 +135,11 @@ endLayout()
     <span class="nx">@bounds</span><span class="p">.</span><span class="nx">height</span><span class="p">()</span>
   
   <span class="nv">fullBounds: </span><span class="o">-&gt;</span>
-    <span class="nv">result = </span><span class="kc">undefined</span>
     <span class="nv">result = </span><span class="nx">@bounds</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
       <span class="nv">result = </span><span class="nx">result</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">child</span><span class="p">.</span><span class="nx">fullBounds</span><span class="p">())</span>  <span class="k">if</span> <span class="nx">child</span><span class="p">.</span><span class="nx">isVisible</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">result</span>
   
-  <span class="nv">fullBoundsNoShadow: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>answer my full bounds but ignore any shadow</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">result = </span><span class="kc">undefined</span>
-    <span class="nv">result = </span><span class="nx">@bounds</span>
+  <span class="nv">fullBoundsNoShadow: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>answer my full bounds but ignore any shadow</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">result = </span><span class="nx">@bounds</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
       <span class="nv">result = </span><span class="nx">result</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">child</span><span class="p">.</span><span class="nx">fullBounds</span><span class="p">())</span>  <span class="k">if</span> <span class="p">(</span><span class="nx">child</span> <span class="o">not</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nx">child</span><span class="p">.</span><span class="nx">isVisible</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">result</span>
   
@@ -192,11 +187,7 @@ endLayout()
   
   <span class="nv">setFullCenter: </span><span class="nf">(aPoint) -&gt;</span>
     <span class="nx">@setPosition</span> <span class="nx">aPoint</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">extent</span><span class="p">().</span><span class="nx">floorDivideBy</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-  
-  <span class="nv">keepWithin: </span><span class="nf">(aMorph) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>make sure I am completely within another Morph's bounds</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">leftOff = </span><span class="kc">undefined</span>
-    <span class="nv">rightOff = </span><span class="kc">undefined</span>
-    <span class="nv">topOff = </span><span class="kc">undefined</span>
-    <span class="nv">bottomOff = </span><span class="kc">undefined</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>make sure I am completely within another Morph's bounds</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">keepWithin: </span><span class="nf">(aMorph) -&gt;</span>
     <span class="nv">leftOff = </span><span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">left</span><span class="p">()</span> <span class="o">-</span> <span class="nx">aMorph</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span>
     <span class="nx">@moveBy</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="o">-</span><span class="nx">leftOff</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="k">if</span> <span class="nx">leftOff</span> <span class="o">&lt;</span> <span class="mi">0</span>
     <span class="nv">rightOff = </span><span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">aMorph</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span>
@@ -214,9 +205,6 @@ endLayout()
       <span class="nx">@drawNew</span><span class="p">()</span>
   
   <span class="nv">silentSetExtent: </span><span class="nf">(aPoint) -&gt;</span>
-    <span class="nv">ext = </span><span class="kc">undefined</span>
-    <span class="nv">newWidth = </span><span class="kc">undefined</span>
-    <span class="nv">newHeight = </span><span class="kc">undefined</span>
     <span class="nv">ext = </span><span class="nx">aPoint</span><span class="p">.</span><span class="nx">round</span><span class="p">()</span>
     <span class="nv">newWidth = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">ext</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="nv">newHeight = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">ext</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -258,8 +246,6 @@ endLayout()
     <span class="nv">bg = </span><span class="nx">@cachedTexture</span>
     <span class="nv">cols = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@image</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span>
     <span class="nv">lines = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@image</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span>
-    <span class="nv">x = </span><span class="kc">undefined</span>
-    <span class="nv">y = </span><span class="kc">undefined</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">y = </span><span class="mi">0</span>
     <span class="k">while</span> <span class="nx">y</span> <span class="o">&lt;=</span> <span class="nx">lines</span>
@@ -277,15 +263,6 @@ context.fillStyle = pattern;
    context.fillRect(0, 0, this.image.width, this.image.height);
    this.changed();
 };</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
-    <span class="nv">rectangle = </span><span class="kc">undefined</span>
-    <span class="nv">area = </span><span class="kc">undefined</span>
-    <span class="nv">delta = </span><span class="kc">undefined</span>
-    <span class="nv">src = </span><span class="kc">undefined</span>
-    <span class="nv">context = </span><span class="kc">undefined</span>
-    <span class="nv">w = </span><span class="kc">undefined</span>
-    <span class="nv">h = </span><span class="kc">undefined</span>
-    <span class="nv">sl = </span><span class="kc">undefined</span>
-    <span class="nv">st = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@isVisible</span>
     <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@bounds</span><span class="p">()</span>
     <span class="nv">area = </span><span class="nx">rectangle</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">).</span><span class="nx">round</span><span class="p">()</span>
@@ -335,7 +312,6 @@ context.fillStyle = pattern;
         );
 }
 </code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">fullDrawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
-    <span class="nv">rectangle = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@isVisible</span>
     <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@fullBounds</span><span class="p">()</span>
     <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
@@ -370,9 +346,6 @@ context.fillStyle = pattern;
     <span class="nx">img</span>
   
   <span class="nv">fullImage: </span><span class="o">-&gt;</span>
-    <span class="nv">img = </span><span class="kc">undefined</span>
-    <span class="nv">ctx = </span><span class="kc">undefined</span>
-    <span class="nv">fb = </span><span class="kc">undefined</span>
     <span class="nv">img = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">extent</span><span class="p">())</span>
     <span class="nv">ctx = </span><span class="nx">img</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">fb = </span><span class="nx">@fullBounds</span><span class="p">()</span>
@@ -381,12 +354,7 @@ context.fillStyle = pattern;
         <span class="nv">ctx.globalAlpha = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">alpha</span>
         <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">image</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">fb</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">x</span><span class="p">),</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">fb</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">img</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Morph shadow:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">shadowImage: </span><span class="nf">(off_, color) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>fallback for Windows Chrome-Shadow bug</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">fb = </span><span class="kc">undefined</span>
-    <span class="nv">img = </span><span class="kc">undefined</span>
-    <span class="nv">outline = </span><span class="kc">undefined</span>
-    <span class="nv">sha = </span><span class="kc">undefined</span>
-    <span class="nv">ctx = </span><span class="kc">undefined</span>
-    <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>Morph shadow:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">shadowImage: </span><span class="nf">(off_, color) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>fallback for Windows Chrome-Shadow bug</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
     <span class="nv">clr = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="nv">fb = </span><span class="nx">@fullBounds</span><span class="p">().</span><span class="nx">extent</span><span class="p">()</span>
     <span class="nv">img = </span><span class="nx">@fullImage</span><span class="p">()</span>
@@ -404,10 +372,6 @@ context.fillStyle = pattern;
     <span class="nx">sha</span>
   
   <span class="nv">shadowImageBlurred: </span><span class="nf">(off_, color) -&gt;</span>
-    <span class="nv">fb = </span><span class="kc">undefined</span>
-    <span class="nv">img = </span><span class="kc">undefined</span>
-    <span class="nv">sha = </span><span class="kc">undefined</span>
-    <span class="nv">ctx = </span><span class="kc">undefined</span>
     <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
     <span class="nv">blur = </span><span class="nx">@shadowBlur</span>
     <span class="nv">clr = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -444,7 +408,6 @@ context.fillStyle = pattern;
     <span class="nx">shadow</span>
   
   <span class="nv">addShadow: </span><span class="nf">(off_, a, color) -&gt;</span>
-    <span class="nv">shadow = </span><span class="kc">undefined</span>
     <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
     <span class="nv">alpha = </span><span class="nx">a</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="p">(</span><span class="nx">a</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.2</span><span class="p">))</span>
     <span class="nv">shadow = </span><span class="nx">@shadow</span><span class="p">(</span><span class="nx">offset</span><span class="p">,</span> <span class="nx">alpha</span><span class="p">,</span> <span class="nx">color</span><span class="p">)</span>
@@ -453,7 +416,6 @@ context.fillStyle = pattern;
     <span class="nx">shadow</span>
   
   <span class="nv">getShadow: </span><span class="o">-&gt;</span>
-    <span class="nv">shadows = </span><span class="kc">undefined</span>
     <span class="nv">shadows = </span><span class="nx">@children</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">reverse</span><span class="p">().</span><span class="nx">filter</span><span class="p">(</span><span class="nf">(child) -&gt;</span>
       <span class="nx">child</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span>
     <span class="p">)</span>
@@ -500,7 +462,6 @@ override this method for Morphs that need to adjust accordingly</p>             
     <span class="nx">@addChildFirst</span> <span class="nx">aMorph</span>
   
   <span class="nv">topMorphSuchThat: </span><span class="nf">(predicate) -&gt;</span>
-    <span class="nv">next = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">predicate</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">@</span><span class="p">)</span>
       <span class="nv">next = </span><span class="nx">detect</span><span class="p">(</span><span class="nx">@children</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">reverse</span><span class="p">(),</span> <span class="nx">predicate</span><span class="p">)</span>
       <span class="k">return</span> <span class="nx">next</span><span class="p">.</span><span class="nx">topMorphSuchThat</span><span class="p">(</span><span class="nx">predicate</span><span class="p">)</span>  <span class="k">if</span> <span class="nx">next</span>
@@ -525,23 +486,16 @@ return this.topMorphSuchThat(function (m) {
     <span class="nv">fb = </span><span class="nx">@fullBounds</span><span class="p">()</span>
     <span class="nv">allParents = </span><span class="nx">@allParents</span><span class="p">()</span>
     <span class="nv">allChildren = </span><span class="nx">@allChildren</span><span class="p">()</span>
-    <span class="nv">morphs = </span><span class="kc">undefined</span>
     <span class="nv">morphs = </span><span class="nx">world</span><span class="p">.</span><span class="nx">allChildren</span><span class="p">()</span>
     <span class="nx">morphs</span><span class="p">.</span><span class="nx">filter</span> <span class="p">(</span><span class="nx">m</span><span class="p">)</span> <span class="o">=&gt;</span>
       <span class="nx">m</span><span class="p">.</span><span class="nx">isVisible</span> <span class="o">and</span> <span class="nx">m</span> <span class="o">isnt</span> <span class="nx">@</span> <span class="o">and</span> <span class="nx">m</span> <span class="o">isnt</span> <span class="nx">world</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">allParents</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">allChildren</span><span class="p">,</span> <span class="nx">m</span><span class="p">)</span> <span class="o">and</span> <span class="nx">m</span><span class="p">.</span><span class="nx">fullBounds</span><span class="p">().</span><span class="nx">intersects</span><span class="p">(</span><span class="nx">fb</span><span class="p">)</span>
   </pre></div>             </td>           </tr>                               <tr id="section-39">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-39">&#182;</a>               </div>               <p>Morph pixel access:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">getPixelColor: </span><span class="nf">(aPoint) -&gt;</span>
-    <span class="nv">point = </span><span class="kc">undefined</span>
-    <span class="nv">context = </span><span class="kc">undefined</span>
-    <span class="nv">data = </span><span class="kc">undefined</span>
     <span class="nv">point = </span><span class="nx">aPoint</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="nv">data = </span><span class="nx">context</span><span class="p">.</span><span class="nx">getImageData</span><span class="p">(</span><span class="nx">point</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">point</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
   
   <span class="nv">isTransparentAt: </span><span class="nf">(aPoint) -&gt;</span>
-    <span class="nv">point = </span><span class="kc">undefined</span>
-    <span class="nv">context = </span><span class="kc">undefined</span>
-    <span class="nv">data = </span><span class="kc">undefined</span>
     <span class="k">if</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">aPoint</span><span class="p">)</span>
       <span class="k">return</span> <span class="kc">false</span>  <span class="k">if</span> <span class="nx">@texture</span>
       <span class="nv">point = </span><span class="nx">aPoint</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>
@@ -560,7 +514,6 @@ return this.topMorphSuchThat(function (m) {
 mentioned more than once are all directed to a single new copy.
 Other properties are also <em>shallow</em> copied, so you must override
 to deep copy Arrays and (complex) Objects</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">dict = </span><span class="p">{}</span>
-    <span class="nv">c = </span><span class="kc">undefined</span>
     <span class="nv">c = </span><span class="nx">@copyRecordingReferences</span><span class="p">(</span><span class="nx">dict</span><span class="p">)</span>
     <span class="nx">c</span><span class="p">.</span><span class="nx">forAllChildren</span> <span class="nf">(m) -&gt;</span>
       <span class="nx">m</span><span class="p">.</span><span class="nx">updateReferences</span> <span class="nx">dict</span></pre></div>             </td>           </tr>                               <tr id="section-42">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-42">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">c</span>
@@ -581,8 +534,7 @@ should be copied when the morph is duplicated.</p>             </td>            
   <span class="nv">updateReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-45">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-45">&#182;</a>               </div>               <p>Update intra-morph references within a composite morph that has
 been copied. For example, if a button refers to morph X in the
 orginal composite then the copy of that button in the new composite
-should refer to the copy of X in new composite, not the original X.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">property = </span><span class="kc">undefined</span>
-    <span class="k">for</span> <span class="nx">property</span> <span class="k">of</span> <span class="nx">@</span>
+should refer to the copy of X in new composite, not the original X.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">for</span> <span class="nx">property</span> <span class="k">of</span> <span class="nx">@</span>
       <span class="nx">@</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span> <span class="o">=</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">property</span><span class="p">.</span><span class="nx">isMorph</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-46">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-46">&#182;</a>               </div>               <p>Morph dragging and dropping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">rootForGrab: </span><span class="o">-&gt;</span>
@@ -640,8 +592,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">@world</span><span class="p">().</span><span class="nv">activeHandle = </span><span class="k">new</span> <span class="nx">HandleMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s">&quot;move&quot;</span><span class="p">)</span>
   
   <span class="nv">hint: </span><span class="nf">(msg) -&gt;</span>
-    <span class="nv">m = </span><span class="kc">undefined</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="nv">text = </span><span class="nx">msg</span>
     <span class="k">if</span> <span class="nx">msg</span>
       <span class="nv">text = </span><span class="nx">msg</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">toString</span>
@@ -652,8 +602,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">m</span><span class="p">.</span><span class="nx">popUpCenteredAtHand</span> <span class="nx">@world</span><span class="p">()</span>
   
   <span class="nv">inform: </span><span class="nf">(msg) -&gt;</span>
-    <span class="nv">m = </span><span class="kc">undefined</span>
-    <span class="nv">text = </span><span class="kc">undefined</span>
     <span class="nv">text = </span><span class="nx">msg</span>
     <span class="k">if</span> <span class="nx">msg</span>
       <span class="nv">text = </span><span class="nx">msg</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">toString</span>
@@ -665,10 +613,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">m</span><span class="p">.</span><span class="nx">popUpCenteredAtHand</span> <span class="nx">@world</span><span class="p">()</span>
   
   <span class="nv">prompt: </span><span class="nf">(msg, callback, environment, defaultContents, width, floorNum, ceilingNum, isRounded) -&gt;</span>
-    <span class="nv">menu = </span><span class="kc">undefined</span>
-    <span class="nv">entryField = </span><span class="kc">undefined</span>
-    <span class="nv">slider = </span><span class="kc">undefined</span>
-    <span class="nv">isNumeric = </span><span class="kc">undefined</span>
     <span class="nv">isNumeric = </span><span class="kc">true</span>  <span class="k">if</span> <span class="nx">ceilingNum</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">callback</span> <span class="o">or</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">msg</span> <span class="o">or</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="nx">environment</span> <span class="o">or</span> <span class="kc">null</span><span class="p">)</span>
     <span class="nv">entryField = </span><span class="k">new</span> <span class="nx">StringFieldMorph</span><span class="p">(</span><span class="nx">defaultContents</span> <span class="o">or</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="nx">width</span> <span class="o">or</span> <span class="mi">100</span><span class="p">,</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">prompterFontSize</span><span class="p">,</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">prompterFontName</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">isNumeric</span><span class="p">)</span>
@@ -705,8 +649,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">entryField</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
   
   <span class="nv">pickColor: </span><span class="nf">(msg, callback, environment, defaultContents) -&gt;</span>
-    <span class="nv">menu = </span><span class="kc">undefined</span>
-    <span class="nv">colorPicker = </span><span class="kc">undefined</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">callback</span> <span class="o">or</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">msg</span> <span class="o">or</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="nx">environment</span> <span class="o">or</span> <span class="kc">null</span><span class="p">)</span>
     <span class="nv">colorPicker = </span><span class="k">new</span> <span class="nx">ColorPickerMorph</span><span class="p">(</span><span class="nx">defaultContents</span><span class="p">)</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">push</span> <span class="nx">colorPicker</span>
@@ -718,7 +660,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
   
   <span class="nv">inspect: </span><span class="nf">(anotherObject) -&gt;</span>
     <span class="nv">world = </span><span class="nx">@world</span><span class="p">()</span>
-    <span class="nv">inspector = </span><span class="kc">undefined</span>
     <span class="nv">inspectee = </span><span class="nx">@</span>
     <span class="nv">inspectee = </span><span class="nx">anotherObject</span>  <span class="k">if</span> <span class="nx">anotherObject</span>
     <span class="nv">inspector = </span><span class="k">new</span> <span class="nx">InspectorMorph</span><span class="p">(</span><span class="nx">inspectee</span><span class="p">)</span>
@@ -728,7 +669,6 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">inspector</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-54">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-54">&#182;</a>               </div>               <p>Morph menus:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">contextMenu: </span><span class="o">-&gt;</span>
-    <span class="nv">world = </span><span class="kc">undefined</span>
     <span class="k">return</span> <span class="nx">@customContextMenu</span>  <span class="k">if</span> <span class="nx">@customContextMenu</span>
     <span class="nv">world = </span><span class="nx">@world</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">world</span> <span class="o">and</span> <span class="nx">world</span><span class="p">.</span><span class="nx">isDevMode</span>
@@ -783,9 +723,7 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
   <span class="nv">userMenu: </span><span class="o">-&gt;</span>
     <span class="kc">null</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-58">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-58">&#182;</a>               </div>               <p>Morph menu actions</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">setAlphaScaled: </span><span class="nf">(alpha) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-59">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-59">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">newAlpha = </span><span class="kc">undefined</span>
-    <span class="nv">unscaled = </span><span class="kc">undefined</span>
-    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">alpha</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-58">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-58">&#182;</a>               </div>               <p>Morph menu actions</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">setAlphaScaled: </span><span class="nf">(alpha) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-59">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-59">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="k">typeof</span> <span class="nx">alpha</span> <span class="o">is</span> <span class="s">&quot;number&quot;</span>
       <span class="nv">unscaled = </span><span class="nx">alpha</span> <span class="o">/</span> <span class="mi">100</span>
       <span class="vi">@alpha = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">unscaled</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">else</span>
@@ -863,7 +801,6 @@ prev.edit();
     <span class="nx">handler</span><span class="p">[</span><span class="nx">functionName</span><span class="p">]</span> <span class="nx">arg</span>  <span class="k">if</span> <span class="nx">handler</span><span class="p">[</span><span class="nx">functionName</span><span class="p">]</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-69">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-69">&#182;</a>               </div>               <p>Morph eval:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">evaluateString: </span><span class="nf">(code) -&gt;</span>
-    <span class="nv">result = </span><span class="kc">undefined</span>
     <span class="k">try</span>
       <span class="nv">result = </span><span class="nb">eval</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span>
       <span class="nx">@drawNew</span><span class="p">()</span>
