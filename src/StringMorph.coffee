@@ -45,16 +45,6 @@ class StringMorph extends Morph
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
   
   drawNew: ->
-    context = undefined
-    width = undefined
-    start = undefined
-    stop = undefined
-    i = undefined
-    p = undefined
-    c = undefined
-    x = undefined
-    y = undefined
-    #
     # initialize my surface property
     @image = newCanvas()
     context = @image.getContext("2d")
@@ -133,10 +123,6 @@ class StringMorph extends Morph
     # where the cursor should be placed
     dest = Math.min(Math.max(slot, 0), @text.length)
     context = @image.getContext("2d")
-    xOffset = undefined
-    x = undefined
-    y = undefined
-    idx = undefined
     xOffset = 0
     idx = 0
     while idx < dest
@@ -243,7 +229,6 @@ class StringMorph extends Morph
   
   setFontSize: (size) ->
     # for context menu demo purposes
-    newSize = undefined
     if typeof size is "number"
       @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
     else
@@ -270,8 +255,6 @@ class StringMorph extends Morph
     @root().edit @
   
   selection: ->
-    start = undefined
-    stop = undefined
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     @text.slice start, stop
@@ -287,9 +270,6 @@ class StringMorph extends Morph
     @changed()
   
   deleteSelection: ->
-    start = undefined
-    stop = undefined
-    text = undefined
     text = @text
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)

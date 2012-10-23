@@ -7,7 +7,6 @@ class MenuItemMorph extends TriggerMorph
     super target, action, labelString, fontSize, fontStyle, environment, hint, color
   
   createLabel: ->
-    np = undefined
     @label.destroy()  if @label isnt null
     # bold
     # italic

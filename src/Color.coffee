@@ -28,12 +28,6 @@ class Color
   # Color conversion (hsv):
   hsv: ->
     # ignore alpha
-    max = undefined
-    min = undefined
-    h = undefined
-    s = undefined
-    v = undefined
-    d = undefined
     rr = @r / 255
     gg = @g / 255
     bb = @b / 255
@@ -59,11 +53,6 @@ class Color
   
   set_hsv: (h, s, v) ->
     # ignore alpha, h, s and v are to be within [0, 1]
-    i = undefined
-    f = undefined
-    p = undefined
-    q = undefined
-    t = undefined
     i = Math.floor(h * 6)
     f = h * 6 - i
     p = v * (1 - s)

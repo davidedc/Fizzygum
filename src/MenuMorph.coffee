@@ -29,7 +29,6 @@ class MenuMorph extends BoxMorph
     @items.push [0, width or 1]
   
   createLabel: ->
-    text = undefined
     @label.destroy()  if @label isnt null
     text = new TextMorph(localize(@title), @fontSize or WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center")
     text.alignment = "center"
@@ -45,10 +44,6 @@ class MenuMorph extends BoxMorph
     @label.text = text
   
   drawNew: ->
-    item = undefined
-    fb = undefined
-    x = undefined
-    y = undefined
     isLine = false
     @children.forEach (m) ->
       m.destroy()

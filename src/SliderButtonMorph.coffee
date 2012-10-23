@@ -33,8 +33,6 @@ class SliderButtonMorph extends CircleBoxMorph
   
   drawEdges: ->
     context = @image.getContext("2d")
-    gradient = undefined
-    radius = undefined
     w = @width()
     h = @height()
     context.lineJoin = "round"

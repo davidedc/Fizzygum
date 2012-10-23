@@ -15,7 +15,6 @@ class BoxMorph extends Morph
   
   # BoxMorph drawing:
   drawNew: ->
-    context = undefined
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
     if (@edge is 0) and (@border is 0)
@@ -65,7 +64,6 @@ class BoxMorph extends Morph
   
   setBorderWidth: (size) ->
     # for context menu demo purposes
-    newSize = undefined
     if typeof size is "number"
       @border = Math.max(size, 0)
     else
@@ -83,7 +81,6 @@ class BoxMorph extends Morph
   
   setCornerSize: (size) ->
     # for context menu demo purposes
-    newSize = undefined
     if typeof size is "number"
       @edge = Math.max(size, 0)
     else

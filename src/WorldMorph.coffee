@@ -284,7 +284,6 @@ class WorldMorph extends FrameMorph
   
   # WorldMorph menu:
   contextMenu: ->
-    menu = undefined
     if @isDevMode
       menu = new MenuMorph(@, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
@@ -322,8 +321,6 @@ class WorldMorph extends FrameMorph
     create = (aMorph) =>
       aMorph.isDraggable = true
       aMorph.pickUp @
-    menu = undefined
-    newMorph = undefined
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
       create new Morph()
@@ -392,11 +389,6 @@ class WorldMorph extends FrameMorph
       create newMorph
     
     menu.addItem "animation demo", ->
-      foo = undefined
-      bar = undefined
-      baz = undefined
-      garply = undefined
-      fred = undefined
       foo = new BouncerMorph()
       foo.setPosition new Point(50, 20)
       foo.setExtent new Point(300, 200)
@@ -466,7 +458,6 @@ class WorldMorph extends FrameMorph
   
   about: ->
     versions = ""
-    module = undefined
     for module of modules
       versions += ("\n" + module + " (" + modules[module] + ")")  if modules.hasOwnProperty(module)
     versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  if versions isnt ""
@@ -492,8 +483,6 @@ class WorldMorph extends FrameMorph
   slide: (aStringOrTextMorph) ->
     # display a slider for numeric text entries
     val = parseFloat(aStringOrTextMorph.text)
-    menu = undefined
-    slider = undefined
     val = 0  if isNaN(val)
     menu = new MenuMorph()
     slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")

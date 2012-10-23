@@ -12,12 +12,6 @@ class ColorPaletteMorph extends Morph
     @drawNew()
   
   drawNew: ->
-    context = undefined
-    ext = undefined
-    x = undefined
-    y = undefined
-    h = undefined
-    l = undefined
     ext = @extent()
     @image = newCanvas(@extent())
     context = @image.getContext("2d")

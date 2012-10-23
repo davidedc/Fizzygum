@@ -16,10 +16,6 @@ class ColorPickerMorph extends Morph
     @buildSubmorphs()
   
   buildSubmorphs: ->
-    cpal = undefined
-    gpal = undefined
-    x = undefined
-    y = undefined
     @children.forEach (child) ->
       child.destroy()
     @children = []

@@ -114,8 +114,6 @@ class CursorMorph extends BlinkerMorph
   gotoSlot: (slot) ->
     length = @target.text.length
     pos = @target.slotPosition(slot)
-    right = undefined
-    left = undefined
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
     if @parent
       right = @parent.right() - @viewPadding
@@ -179,7 +177,6 @@ class CursorMorph extends BlinkerMorph
     @escalateEvent "cancel", null
   
   insert: (aChar) ->
-    text = undefined
     return @target.tab(@target)  if aChar is "\t"
     if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)
       if @target.selection() isnt ""
@@ -209,7 +206,6 @@ class CursorMorph extends BlinkerMorph
       @target.selectAll()
   
   deleteRight: ->
-    text = undefined
     if @target.selection() isnt ""
       @gotoSlot @target.selectionStartSlot()
       @target.deleteSelection()
@@ -221,7 +217,6 @@ class CursorMorph extends BlinkerMorph
       @target.drawNew()
   
   deleteLeft: ->
-    text = undefined
     if @target.selection()
       @gotoSlot @target.selectionStartSlot()
       return @target.deleteSelection()

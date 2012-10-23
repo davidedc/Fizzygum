@@ -65,7 +65,6 @@ class SpeechBubbleMorph extends BoxMorph
     offset = radius + inset
     w = @width()
     h = @height()
-    rad = undefined
     #
     # top left:
     context.arc offset, offset, radius, radians(-180), radians(-90), false

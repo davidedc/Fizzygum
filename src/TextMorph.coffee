@@ -65,8 +65,6 @@ class TextMorph extends Morph
     canvas = newCanvas()
     context = canvas.getContext("2d")
     oldline = ""
-    newline = undefined
-    w = undefined
     slot = 0
     context.font = @font()
     @maxLineWidth = 0
@@ -100,21 +98,6 @@ class TextMorph extends Morph
   
   
   drawNew: ->
-    context = undefined
-    height = undefined
-    i = undefined
-    line = undefined
-    width = undefined
-    shadowHeight = undefined
-    shadowWidth = undefined
-    offx = undefined
-    offy = undefined
-    x = undefined
-    y = undefined
-    start = undefined
-    stop = undefined
-    p = undefined
-    c = undefined
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
@@ -204,8 +187,6 @@ class TextMorph extends Morph
   # TextMorph mesuring:
   columnRow: (slot) ->
     # answer the logical position point of the given index ("slot")
-    row = undefined
-    col = undefined
     idx = 0
     row = 0
     while row < @lines.length
@@ -227,10 +208,6 @@ class TextMorph extends Morph
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
     xOffset = 0
-    yOffset = undefined
-    x = undefined
-    y = undefined
-    idx = undefined
     yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
     idx = 0
     while idx < colRow.x
@@ -257,7 +234,6 @@ class TextMorph extends Morph
   
   upFrom: (slot) ->
     # answer the slot above the given one
-    above = undefined
     colRow = @columnRow(slot)
     return slot  if colRow.y < 1
     above = @lines[colRow.y - 1]
@@ -266,7 +242,6 @@ class TextMorph extends Morph
   
   downFrom: (slot) ->
     # answer the slot below the given one
-    below = undefined
     colRow = @columnRow(slot)
     return slot  if colRow.y > @lines.length - 2
     below = @lines[colRow.y + 1]
@@ -287,8 +262,6 @@ class TextMorph extends Morph
     @root().edit @
   
   selection: ->
-    start = undefined
-    stop = undefined
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     @text.slice start, stop
@@ -304,9 +277,6 @@ class TextMorph extends Morph
     @changed()
   
   deleteSelection: ->
-    start = undefined
-    stop = undefined
-    text = undefined
     text = @text
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
@@ -435,7 +405,6 @@ class TextMorph extends Morph
   
   setFontSize: (size) ->
     # for context menu demo purposes
-    newSize = undefined
     if typeof size is "number"
       @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
     else
@@ -475,7 +444,6 @@ class TextMorph extends Morph
   inspectIt: ->
     result = @receiver.evaluateString(@selection())
     world = @world()
-    inspector = undefined
     if result isnt null
       inspector = new InspectorMorph(result)
       inspector.setPosition world.hand.position()

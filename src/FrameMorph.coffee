@@ -26,15 +26,14 @@ class FrameMorph extends Morph
     @image
   
   fullDrawOn: (aCanvas, aRect) ->
-    rectangle = undefined
     return null  unless @isVisible
-    rectangle = aRect or @fullBounds()
-    @drawOn aCanvas, rectangle
+    boundsRectangle = aRect or @fullBounds()
+    @drawOn aCanvas, boundsRectangle
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.fullDrawOn aCanvas, rectangle
+        child.fullDrawOn aCanvas, boundsRectangle
       else
-        child.fullDrawOn aCanvas, @bounds.intersect(rectangle)
+        child.fullDrawOn aCanvas, @bounds.intersect(boundsRectangle)
   
   
   # FrameMorph scrolling optimization:
@@ -63,8 +62,6 @@ class FrameMorph extends Morph
     @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)  if @bottom() < @scrollFrame.bottom()
   
   adjustBounds: ->
-    subBounds = undefined
-    newBounds = undefined
     return null  if @scrollFrame is null
     subBounds = @submorphBounds()
     if subBounds and (not @scrollFrame.isTextLineWrapping)

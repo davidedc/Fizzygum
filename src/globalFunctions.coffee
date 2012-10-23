@@ -28,7 +28,6 @@ contains = (list, element) ->
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null
-  i = undefined
   size = list.length
   i = 0
   while i < size
@@ -54,8 +53,6 @@ fontHeight = (height) ->
 
 newCanvas = (extentPoint) ->  
   # answer a new empty instance of Canvas, don't display anywhere
-  canvas = undefined
-  ext = undefined
   ext = extentPoint or
     x: 0
     y: 0
@@ -69,11 +66,6 @@ getMinimumFontHeight = ->
   str = "I"
   size = 50
   canvas = document.createElement("canvas")
-  ctx = undefined
-  maxX = undefined
-  data = undefined
-  x = undefined
-  y = undefined
   canvas.width = size
   canvas.height = size
   ctx = canvas.getContext("2d")
@@ -95,9 +87,6 @@ getMinimumFontHeight = ->
 getBlurredShadowSupport = ->  
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
-  source = undefined
-  target = undefined
-  ctx = undefined
   source = document.createElement("canvas")
   source.width = 10
   source.height = 10
@@ -118,8 +107,6 @@ getBlurredShadowSupport = ->
 
 getDocumentPositionOf = (aDOMelement) ->  
   # answer the absolute coordinates of a DOM element in the document
-  pos = undefined
-  offsetParent = undefined
   if aDOMelement is null
     return (
       x: 0
@@ -149,9 +136,6 @@ clone = (target) ->
 
 copy = (target) ->  
   # answer a shallow copy of target
-  value = undefined
-  c = undefined
-  property = undefined
   return target  if typeof target isnt "object"
   value = target.valueOf()
   return new target.constructor(value)  if target isnt value
@@ -170,11 +154,6 @@ getMinimumFontHeight = ->
   str = "I"
   size = 50
   canvas = document.createElement("canvas")
-  ctx = undefined
-  maxX = undefined
-  data = undefined
-  x = undefined
-  y = undefined
   canvas.width = size
   canvas.height = size
   ctx = canvas.getContext("2d")
@@ -197,9 +176,6 @@ getMinimumFontHeight = ->
 getBlurredShadowSupport = ->  
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
-  source = undefined
-  target = undefined
-  ctx = undefined
   source = document.createElement("canvas")
   source.width = 10
   source.height = 10
@@ -220,8 +196,6 @@ getBlurredShadowSupport = ->
 
 getDocumentPositionOf = (aDOMelement) ->  
   # answer the absolute coordinates of a DOM element in the document
-  pos = undefined
-  offsetParent = undefined
   if aDOMelement is null
     return (
       x: 0
@@ -252,9 +226,6 @@ clone = (target) ->
 
 copy = (target) ->  
   # answer a shallow copy of target
-  value = undefined
-  c = undefined
-  property = undefined
   return target  if typeof target isnt "object"
   value = target.valueOf()
   return new target.constructor(value)  if target isnt value

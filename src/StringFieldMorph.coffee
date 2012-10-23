@@ -17,7 +17,6 @@ class StringFieldMorph extends FrameMorph
     @drawNew()
   
   drawNew: ->
-    txt = undefined
     txt = (if @text then @string() else @defaultContents)
     @text = null
     @children.forEach (child) ->

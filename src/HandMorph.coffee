@@ -19,7 +19,6 @@ class HandMorph extends Morph
     @bounds = new Rectangle()
   
   changed: ->
-    b = undefined
     if @world isnt null
       b = @fullBounds()
       @world.broken.push @fullBounds().spread()  unless b.extent().eq(new Point())
@@ -86,8 +85,6 @@ class HandMorph extends Morph
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
   
   drop: ->
-    target = undefined
-    morphToDrop = undefined
     if @children.length isnt 0
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
@@ -117,9 +114,6 @@ class HandMorph extends Morph
   #		mouseScroll
   #
   processMouseDown: (event) ->
-    morph = undefined
-    expectedClick = undefined
-    actualClick = undefined
     @destroyTemporaries()
     @morphToGrab = null
     if @children.length isnt 0
@@ -174,9 +168,6 @@ class HandMorph extends Morph
   
   processMouseUp: ->
     morph = @morphAtPointer()
-    context = undefined
-    contextMenu = undefined
-    expectedClick = undefined
     @destroyTemporaries()
     if @children.length isnt 0
       @drop()
@@ -221,13 +212,9 @@ class HandMorph extends Morph
     #    events to interested Morphs at the mouse pointer
     #
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
-    file = undefined
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
-    src = undefined
     targetDrop = @morphAtPointer()
     img = new Image()
-    canvas = undefined
-    i = undefined
     #
     readImage = (aFile) ->
       pic = new Image()
@@ -262,8 +249,6 @@ class HandMorph extends Morph
     
     parseImgURL = (html) ->
       url = ""
-      i = undefined
-      c = undefined
       start = html.indexOf("<img src=\"")
       return null  if start is -1
       start += 10
@@ -317,12 +302,7 @@ class HandMorph extends Morph
     @fullChanged()
   
   processMouseMove: (event) ->
-    pos = undefined
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
-    mouseOverNew = undefined
-    morph = undefined
-    topMorph = undefined
-    fb = undefined
     pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
     @setPosition pos
     #

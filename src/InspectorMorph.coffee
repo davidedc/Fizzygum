@@ -36,9 +36,6 @@ class InspectorMorph extends BoxMorph
   
   buildPanes: ->
     attribs = []
-    property = undefined
-    ctrl = undefined
-    ev = undefined
     #
     # remove existing panes
     @children.forEach (m) ->
@@ -164,9 +161,6 @@ class InspectorMorph extends BoxMorph
       else null
     ))
     @list.action = (selected) =>
-      val = undefined
-      txt = undefined
-      cnts = undefined
       val = @target[selected]
       # this is for finding the static variables
       if val is undefined
@@ -224,7 +218,6 @@ class InspectorMorph extends BoxMorph
     @buttonSubset = new TriggerMorph()
     @buttonSubset.labelString = "show..."
     @buttonSubset.action = =>
-      menu = undefined
       menu = new MenuMorph()
       menu.addItem "attributes", =>
         @showing = "attributes"
@@ -251,9 +244,6 @@ class InspectorMorph extends BoxMorph
     @buttonInspect = new TriggerMorph()
     @buttonInspect.labelString = "inspect..."
     @buttonInspect.action = =>
-      menu = undefined
-      world = undefined
-      inspector = undefined
       if isObject(@currentProperty)
         menu = new MenuMorph()
         menu.addItem "in new inspector...", =>
@@ -277,7 +267,6 @@ class InspectorMorph extends BoxMorph
     @buttonEdit = new TriggerMorph()
     @buttonEdit.labelString = "edit..."
     @buttonEdit.action = =>
-      menu = undefined
       menu = new MenuMorph(@)
       menu.addItem "save", "save", "accept changes"
       menu.addLine()
@@ -303,12 +292,6 @@ class InspectorMorph extends BoxMorph
     @fixLayout()
   
   fixLayout: ->
-    x = undefined
-    y = undefined
-    r = undefined
-    b = undefined
-    w = undefined
-    h = undefined
     Morph::trackChanges = false
     #
     # label

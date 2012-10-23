@@ -36,11 +36,6 @@ class HandleMorph extends Morph
   
   drawOnCanvas: (aCanvas, color, shadowColor) ->
     context = aCanvas.getContext("2d")
-    p1 = undefined
-    p11 = undefined
-    p2 = undefined
-    p22 = undefined
-    i = undefined
     context.lineWidth = 1
     context.lineCap = "round"
     context.strokeStyle = color.toString()
@@ -112,8 +107,6 @@ class HandleMorph extends Morph
     offset = pos.subtract(@bounds.origin)
     return null  unless @target
     @step = =>
-      newPos = undefined
-      newExt = undefined
       if world.hand.mouseButton
         newPos = world.hand.bounds.origin.copy().subtract(offset)
         if @type is "resize"

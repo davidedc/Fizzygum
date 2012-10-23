@@ -89,8 +89,6 @@ class Rectangle
     @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
   
   abs: ->
-    newOrigin = undefined
-    newCorner = undefined
     newOrigin = @origin.abs()
     newCorner = @corner.max(newOrigin)
     newOrigin.corner newCorner
@@ -142,8 +140,6 @@ class Rectangle
     #    aRectangle. when all of me cannot be made to fit, prefer to keep
     #    my topLeft inside. Taken from Squeak.
     #
-    dx = undefined
-    dy = undefined
     dx = aRect.right() - @right()  if @right() > aRect.right()
     dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
     dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()

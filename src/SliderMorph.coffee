@@ -39,10 +39,6 @@ class SliderMorph extends CircleBoxMorph
     (@width() - @button.width()) / @rangeSize()
   
   drawNew: ->
-    bw = undefined
-    bh = undefined
-    posX = undefined
-    posY = undefined
     super()
     @button.orientation = @orientation
     if @orientation is "vertical"
@@ -62,7 +58,6 @@ class SliderMorph extends CircleBoxMorph
     @button.changed()
   
   updateValue: ->
-    relPos = undefined
     if @orientation is "vertical"
       relPos = @button.top() - @top()
     else
@@ -113,7 +108,6 @@ class SliderMorph extends CircleBoxMorph
   
   setStart: (num) ->
     # for context menu demo purposes
-    newStart = undefined
     if typeof num is "number"
       @start = Math.min(Math.max(num, 0), @stop - @size)
     else
@@ -126,7 +120,6 @@ class SliderMorph extends CircleBoxMorph
   
   setStop: (num) ->
     # for context menu demo purposes
-    newStop = undefined
     if typeof num is "number"
       @stop = Math.max(num, @start + @size)
     else
@@ -139,7 +132,6 @@ class SliderMorph extends CircleBoxMorph
   
   setSize: (num) ->
     # for context menu demo purposes
-    newSize = undefined
     if typeof num is "number"
       @size = Math.min(Math.max(num, 1), @stop - @start)
     else
@@ -185,16 +177,12 @@ class SliderMorph extends CircleBoxMorph
   # SliderMorph stepping:
   step = null
   mouseDownLeft: (pos) ->
-    world = undefined
     unless @button.bounds.containsPoint(pos)
       @offset = new Point() # return null;
     else
       @offset = pos.subtract(@button.bounds.origin)
     world = @root()
     @step = =>
-      mousePos = undefined
-      newX = undefined
-      newY = undefined
       if world.hand.mouseButton
         mousePos = world.hand.bounds.origin
         if @orientation is "vertical"

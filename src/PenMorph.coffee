@@ -39,12 +39,6 @@ class PenMorph extends Morph
     #    implement Scratch-style rotation styles
     #    
     #
-    context = undefined
-    start = undefined
-    dest = undefined
-    left = undefined
-    right = undefined
-    len = undefined
     direction = facing or @heading
     if @isWarped
       @wantsRedraw = true
@@ -104,7 +98,6 @@ class PenMorph extends Morph
   
   forward: (steps) ->
     start = @center()
-    dest = undefined
     dist = parseFloat(steps)
     if dist >= 0
       dest = @position().distanceAngle(dist, @heading)
@@ -151,7 +144,6 @@ class PenMorph extends Morph
     @warpOp "sierpinski", [length, min]
   
   sierpinski: (length, min) ->
-    i = undefined
     if length > min
       i = 0
       while i < 3

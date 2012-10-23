@@ -29,9 +29,6 @@ class MorphsListMorph extends BoxMorph
   
   buildPanes: ->
     attribs = []
-    property = undefined
-    ctrl = undefined
-    ev = undefined
     #
     # remove existing panes
     @children.forEach (m) ->
@@ -56,9 +53,6 @@ class MorphsListMorph extends BoxMorph
     #
     # so far nothing happens when items are selected
     #@morphsList.action = (selected) ->
-    #  val = undefined
-    #  txt = undefined
-    #  cnts = undefined
     #  val = myself.target[selected]
     #  myself.currentProperty = val
     #  if val is null
@@ -92,12 +86,6 @@ class MorphsListMorph extends BoxMorph
     @fixLayout()
   
   fixLayout: ->
-    x = undefined
-    y = undefined
-    r = undefined
-    b = undefined
-    w = undefined
-    h = undefined
     Morph::trackChanges = false
     #
     # label

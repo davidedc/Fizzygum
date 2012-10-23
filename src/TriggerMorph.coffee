@@ -31,7 +31,6 @@ class TriggerMorph extends Morph
     @createLabel()  if @labelString isnt null
   
   createBackgrounds: ->
-    context = undefined
     ext = @extent()
     @normalImage = newCanvas(ext)
     context = @normalImage.getContext("2d")

@@ -78,9 +78,6 @@ class Morph extends MorphicNode
   # Morph stepping:
   stepFrame: ->
     return null  unless @step
-    current = undefined
-    elapsed = undefined
-    leftover = undefined
     current = Date.now()
     elapsed = current - @lastTime
     if @fps > 0
@@ -157,7 +154,6 @@ class Morph extends MorphicNode
     @bounds.height()
   
   fullBounds: ->
-    result = undefined
     result = @bounds
     @children.forEach (child) ->
       result = result.merge(child.fullBounds())  if child.isVisible
@@ -166,7 +162,6 @@ class Morph extends MorphicNode
   
   fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
-    result = undefined
     result = @bounds
     @children.forEach (child) ->
       result = result.merge(child.fullBounds())  if (child not instanceof ShadowMorph) and (child.isVisible)
@@ -226,12 +221,8 @@ class Morph extends MorphicNode
   setFullCenter: (aPoint) ->
     @setPosition aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
+  # make sure I am completely within another Morph's bounds
   keepWithin: (aMorph) ->
-    # make sure I am completely within another Morph's bounds
-    leftOff = undefined
-    rightOff = undefined
-    topOff = undefined
-    bottomOff = undefined
     leftOff = @fullBounds().left() - aMorph.left()
     @moveBy new Point(-leftOff, 0)  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
@@ -251,9 +242,6 @@ class Morph extends MorphicNode
       @drawNew()
   
   silentSetExtent: (aPoint) ->
-    ext = undefined
-    newWidth = undefined
-    newHeight = undefined
     ext = aPoint.round()
     newWidth = Math.max(ext.x, 0)
     newHeight = Math.max(ext.y, 0)
@@ -305,8 +293,6 @@ class Morph extends MorphicNode
     bg = @cachedTexture
     cols = Math.floor(@image.width / bg.width)
     lines = Math.floor(@image.height / bg.height)
-    x = undefined
-    y = undefined
     context = @image.getContext("2d")
     y = 0
     while y <= lines
@@ -328,15 +314,6 @@ class Morph extends MorphicNode
   #};
   #
   drawOn: (aCanvas, aRect) ->
-    rectangle = undefined
-    area = undefined
-    delta = undefined
-    src = undefined
-    context = undefined
-    w = undefined
-    h = undefined
-    sl = undefined
-    st = undefined
     return null  unless @isVisible
     rectangle = aRect or @bounds()
     area = rectangle.intersect(@bounds).round()
@@ -388,7 +365,6 @@ class Morph extends MorphicNode
   #		}
   #	
   fullDrawOn: (aCanvas, aRect) ->
-    rectangle = undefined
     return null  unless @isVisible
     rectangle = aRect or @fullBounds()
     @drawOn aCanvas, rectangle
@@ -427,9 +403,6 @@ class Morph extends MorphicNode
     img
   
   fullImage: ->
-    img = undefined
-    ctx = undefined
-    fb = undefined
     img = newCanvas(@fullBounds().extent())
     ctx = img.getContext("2d")
     fb = @fullBounds()
@@ -444,11 +417,6 @@ class Morph extends MorphicNode
   # Morph shadow:
   shadowImage: (off_, color) ->
     # fallback for Windows Chrome-Shadow bug
-    fb = undefined
-    img = undefined
-    outline = undefined
-    sha = undefined
-    ctx = undefined
     offset = off_ or new Point(7, 7)
     clr = color or new Color(0, 0, 0)
     fb = @fullBounds().extent()
@@ -467,10 +435,6 @@ class Morph extends MorphicNode
     sha
   
   shadowImageBlurred: (off_, color) ->
-    fb = undefined
-    img = undefined
-    sha = undefined
-    ctx = undefined
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
@@ -507,7 +471,6 @@ class Morph extends MorphicNode
     shadow
   
   addShadow: (off_, a, color) ->
-    shadow = undefined
     offset = off_ or new Point(7, 7)
     alpha = a or ((if (a is 0) then 0 else 0.2))
     shadow = @shadow(offset, alpha, color)
@@ -516,7 +479,6 @@ class Morph extends MorphicNode
     shadow
   
   getShadow: ->
-    shadows = undefined
     shadows = @children.slice(0).reverse().filter((child) ->
       child instanceof ShadowMorph
     )
@@ -573,7 +535,6 @@ class Morph extends MorphicNode
     @addChildFirst aMorph
   
   topMorphSuchThat: (predicate) ->
-    next = undefined
     if predicate.call(null, @)
       next = detect(@children.slice(0).reverse(), predicate)
       return next.topMorphSuchThat(predicate)  if next
@@ -606,25 +567,18 @@ class Morph extends MorphicNode
     fb = @fullBounds()
     allParents = @allParents()
     allChildren = @allChildren()
-    morphs = undefined
     morphs = world.allChildren()
     morphs.filter (m) =>
       m.isVisible and m isnt @ and m isnt world and not contains(allParents, m) and not contains(allChildren, m) and m.fullBounds().intersects(fb)
   
   # Morph pixel access:
   getPixelColor: (aPoint) ->
-    point = undefined
-    context = undefined
-    data = undefined
     point = aPoint.subtract(@bounds.origin)
     context = @image.getContext("2d")
     data = context.getImageData(point.x, point.y, 1, 1)
     new Color(data.data[0], data.data[1], data.data[2], data.data[3])
   
   isTransparentAt: (aPoint) ->
-    point = undefined
-    context = undefined
-    data = undefined
     if @bounds.containsPoint(aPoint)
       return false  if @texture
       point = aPoint.subtract(@bounds.origin)
@@ -649,7 +603,6 @@ class Morph extends MorphicNode
     #	to deep copy Arrays and (complex) Objects
     #	
     dict = {}
-    c = undefined
     c = @copyRecordingReferences(dict)
     c.forAllChildren (m) ->
       m.updateReferences dict
@@ -682,7 +635,6 @@ class Morph extends MorphicNode
     #	orginal composite then the copy of that button in the new composite
     #	should refer to the copy of X in new composite, not the original X.
     #	
-    property = undefined
     for property of @
       @[property] = dict[property]  if property.isMorph and dict[property]
   
@@ -749,8 +701,6 @@ class Morph extends MorphicNode
     @world().activeHandle = new HandleMorph(@, null, null, null, null, "move")
   
   hint: (msg) ->
-    m = undefined
-    text = undefined
     text = msg
     if msg
       text = msg.toString()  if msg.toString
@@ -761,8 +711,6 @@ class Morph extends MorphicNode
     m.popUpCenteredAtHand @world()
   
   inform: (msg) ->
-    m = undefined
-    text = undefined
     text = msg
     if msg
       text = msg.toString()  if msg.toString
@@ -774,10 +722,6 @@ class Morph extends MorphicNode
     m.popUpCenteredAtHand @world()
   
   prompt: (msg, callback, environment, defaultContents, width, floorNum, ceilingNum, isRounded) ->
-    menu = undefined
-    entryField = undefined
-    slider = undefined
-    isNumeric = undefined
     isNumeric = true  if ceilingNum
     menu = new MenuMorph(callback or null, msg or "", environment or null)
     entryField = new StringFieldMorph(defaultContents or "", width or 100, WorldMorph.MorphicPreferences.prompterFontSize, WorldMorph.MorphicPreferences.prompterFontName, false, false, isNumeric)
@@ -818,8 +762,6 @@ class Morph extends MorphicNode
     entryField.text.edit()
   
   pickColor: (msg, callback, environment, defaultContents) ->
-    menu = undefined
-    colorPicker = undefined
     menu = new MenuMorph(callback or null, msg or "", environment or null)
     colorPicker = new ColorPickerMorph(defaultContents)
     menu.items.push colorPicker
@@ -835,7 +777,6 @@ class Morph extends MorphicNode
   
   inspect: (anotherObject) ->
     world = @world()
-    inspector = undefined
     inspectee = @
     inspectee = anotherObject  if anotherObject
     inspector = new InspectorMorph(inspectee)
@@ -847,7 +788,6 @@ class Morph extends MorphicNode
   
   # Morph menus:
   contextMenu: ->
-    world = undefined
     return @customContextMenu  if @customContextMenu
     world = @world()
     if world and world.isDevMode
@@ -912,8 +852,6 @@ class Morph extends MorphicNode
   # Morph menu actions
   setAlphaScaled: (alpha) ->
     # for context menu demo purposes
-    newAlpha = undefined
-    unscaled = undefined
     if typeof alpha is "number"
       unscaled = alpha / 100
       @alpha = Math.min(Math.max(unscaled, 0.1), 1)
@@ -1019,7 +957,6 @@ class Morph extends MorphicNode
   
   # Morph eval:
   evaluateString: (code) ->
-    result = undefined
     try
       result = eval(code)
       @drawNew()

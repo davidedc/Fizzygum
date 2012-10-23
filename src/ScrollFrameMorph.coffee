@@ -87,7 +87,6 @@ class ScrollFrameMorph extends FrameMorph
     l = @left()
     cw = @contents.width()
     r = @right()
-    newX = undefined
     newX = cl + steps
     newX = l  if newX > l
     newX = r - cw  if newX + cw < r
@@ -98,7 +97,6 @@ class ScrollFrameMorph extends FrameMorph
     t = @top()
     ch = @contents.height()
     b = @bottom()
-    newY = undefined
     newY = ct + steps
     newY = t  if newY > t
     newY = b - ch  if newY + ch < b
@@ -115,7 +113,6 @@ class ScrollFrameMorph extends FrameMorph
     deltaY = 0
     friction = 0.8
     @step = =>
-      newPos = undefined
       if world.hand.mouseButton and (world.hand.children.length is 0) and (@bounds.containsPoint(world.hand.position()))
         newPos = world.hand.bounds.origin
         deltaX = newPos.x - oldPos.x
@@ -139,9 +136,6 @@ class ScrollFrameMorph extends FrameMorph
   startAutoScrolling: ->
     inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
     world = @world()
-    hand = undefined
-    inner = undefined
-    pos = undefined
     return null  unless world
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
@@ -155,8 +149,6 @@ class ScrollFrameMorph extends FrameMorph
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->
-    inset = undefined
-    area = undefined
     return null  if Date.now() - @autoScrollTrigger < 500
     inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
     area = @topLeft().extent(new Point(@width(), inset))

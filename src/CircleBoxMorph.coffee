@@ -18,15 +18,6 @@ class CircleBoxMorph extends Morph
       @orientation = "horizontal"
   
   drawNew: ->
-    radius = undefined
-    center1 = undefined
-    center2 = undefined
-    rect = undefined
-    points = undefined
-    x = undefined
-    y = undefined
-    context = undefined
-    ext = undefined
     @autoOrientation()  if @autoOrient
     @image = newCanvas(@extent())
     context = @image.getContext("2d")

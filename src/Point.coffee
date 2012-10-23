@@ -93,8 +93,6 @@ class Point
     #    answer the angle I make with origin in degrees.
     #    Right is 0, down is 90
     #
-    tan = undefined
-    theta = undefined
     if @x is 0
       return 90  if @y >= 0
       return 270
@@ -110,8 +108,6 @@ class Point
     #    answer the angle I make with origin in radians.
     #    Right is 0, down is 90
     #
-    tan = undefined
-    theta = undefined
     if @x is 0
       return radians(90)  if @y >= 0
       return radians(270)
@@ -148,8 +144,6 @@ class Point
   
   distanceAngle: (dist, angle) ->
     deg = angle
-    x = undefined
-    y = undefined
     if deg > 270
       deg = deg - 360
     else deg = deg + 360  if deg < -270
@@ -188,8 +182,6 @@ class Point
   
   rectangle: (aPoint) ->
     # answer a new Rectangle
-    org = undefined
-    crn = undefined
     org = @min(aPoint)
     crn = @max(aPoint)
     new Rectangle(org.x, org.y, crn.x, crn.y)
