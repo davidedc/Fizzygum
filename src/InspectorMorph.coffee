@@ -20,7 +20,8 @@ class InspectorMorph extends BoxMorph
   constructor: (@target) ->
     super()
     # override inherited properties:
-    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
+    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20,
+      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
     @edge = 5

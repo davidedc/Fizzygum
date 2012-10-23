@@ -31,7 +31,9 @@ class HandMorph extends Morph
     morphs = @world.allChildren().slice(0).reverse()
     result = null
     morphs.forEach (m) =>
-      result = m  if m.visibleBounds().containsPoint(@bounds.origin) and result is null and m.isVisible and (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
+      result = m  if m.visibleBounds().containsPoint(@bounds.origin) and
+        result is null and m.isVisible and (m.noticesTransparentClick or
+        (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
     #
     return result  if result isnt null
     @world
@@ -128,8 +130,12 @@ class HandMorph extends Morph
           @world.activeMenu.destroy()
         else
           clearInterval @touchHoldTimeout
-      @world.activeHandle.destroy()  if morph isnt @world.activeHandle  if @world.activeHandle
-      @world.stopEditing()  if morph isnt @world.cursor.target  if @world.cursor
+      if @world.activeHandle
+        if morph isnt @world.activeHandle
+          @world.activeHandle.destroy()    
+      if @world.cursor
+        if morph isnt @world.cursor.target  
+          @world.stopEditing()  
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
       if event.button is 2 or event.ctrlKey
         @mouseButton = "right"
@@ -363,7 +369,9 @@ class HandMorph extends Morph
       # autoScrolling support:
       if @children.length > 0
           if newMorph instanceof ScrollFrameMorph
-              if !newMorph.bounds.insetBy( WorldMorph.MorphicPreferences.scrollBarSize * 3).containsPoint(@bounds.origin)
+              if !newMorph.bounds.insetBy(
+                WorldMorph.MorphicPreferences.scrollBarSize * 3
+                ).containsPoint(@bounds.origin)
                   newMorph.startAutoScrolling();
     #
     @mouseOverList = mouseOverNew
