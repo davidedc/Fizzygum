@@ -7,7 +7,7 @@
   <span class="nv">isDown: </span><span class="kc">true</span>
   
   <span class="nv">constructor: </span><span class="nf">() -&gt;</span>
-    <span class="vi">@penSize = </span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">4</span>
+    <span class="vi">@penSize = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">4</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@penSize</span><span class="p">,</span> <span class="nx">@penSize</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>todo we need to change the size two times, for getting the right size
 of the arrow and of the line. Probably should make the two distinct</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@penSize = </span><span class="mi">1</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>alert @morphMethod() # works
