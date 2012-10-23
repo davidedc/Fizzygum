@@ -12,7 +12,17 @@ class TriggerMorph extends Morph
   hint: null
   fontSize: null
   fontStyle: null
+  # careful: this Color object is shared with all the instances of this class.
+  # if you modify it, then all the objects will get the change
+  # but if you replace it with a new Color, then that will only affect the
+  # specific object instance. Same behaviour as with arrays.
+  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   highlightColor: new Color(192, 192, 192)
+  # careful: this Color object is shared with all the instances of this class.
+  # if you modify it, then all the objects will get the change
+  # but if you replace it with a new Color, then that will only affect the
+  # specific object instance. Same behaviour as with arrays.
+  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   pressColor: new Color(128, 128, 128)
   labelColor: null
 
