@@ -82,6 +82,12 @@ class Morph extends MorphicNode
   
   # Morph stepping:
   stepFrame: ->
+    # step is the function that this Morph wants to run at each step.
+    # If the Morph wants to do nothing and let no-one of the children do nothing,
+    # then step is set to null.
+    # If the morph wants to do nothing but the children might want to do something,
+    # then step is set to the function that does nothing (i.e. a function nop() that
+    # only returns null) 
     return null  unless @step
     current = Date.now()
     elapsed = current - @lastTime
@@ -96,6 +102,10 @@ class Morph extends MorphicNode
         child.stepFrame()
   
   
+  # leaving this function as step means that the morph want to do nothing
+  # but the children *are* traversed and their step function is invoked.
+  # If a Morph wants to do nothing and wants to prevent the children to be
+  # traversed, then this function should be set to null.
   step: ->
     nop()
   
