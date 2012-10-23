@@ -7,11 +7,13 @@
 #
 
 class SpeechBubbleMorph extends BoxMorph
-  constructor: (contents, color, edge, border, borderColor, padding, isThought) ->
-    @isPointingRight = true # orientation of text
-    @contents = contents or ""
-    @padding = padding or 0 # additional vertical pixels
-    @isThought = isThought or false # draw "think" bubble
+
+  isPointingRight: true # orientation of text
+  contents: null
+  padding: null # additional vertical pixels
+  isThought: null # draw "think" bubble
+
+  constructor: (@contents="", color, edge, border, borderColor, @padding = 0, @isThought = false) ->
     super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
     @color = color or new Color(230, 230, 230)
     @drawNew()
