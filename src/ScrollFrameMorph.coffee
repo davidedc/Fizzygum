@@ -16,8 +16,11 @@ class ScrollFrameMorph extends FrameMorph
   hBar: null
   vBar: null
 
-  constructor: (@contents = new FrameMorph(@), @scrollBarSize = MorphicPreferences.scrollBarSize, sliderColor) ->
+  constructor: (contents, scrollBarSize, sliderColor) ->
+    @contents = contents or new FrameMorph(@);
+    @scrollBarSize = scrollBarSize or MorphicPreferences.scrollBarSize
     super()
+    @add @contents
     @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
     @hBar.setHeight @scrollBarSize
     @hBar.action = (num) =>
@@ -166,17 +169,6 @@ class ScrollFrameMorph extends FrameMorph
     @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
     @adjustScrollBars()
   
-  # ScrollFrameMorph scrolling by editing text:
-  scrollCursorIntoView: (morph, padding) ->
-    ft = @top() + padding
-    fb = @bottom() - padding
-    if morph.top() < ft
-      morph.target.setTop morph.target.top() + ft - morph.top()
-      morph.setTop ft
-    else if morph.bottom() > fb
-      morph.target.setBottom morph.target.bottom() + fb - morph.bottom()
-      morph.setBottom fb
-    @adjustScrollBars()
   
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
