@@ -1,9 +1,11 @@
 # Points //////////////////////////////////////////////////////////////
 
 class Point
-  constructor: (x, y) ->
-    @x = x or 0
-    @y = y or 0  
+
+  x: null
+  y: null
+   
+  constructor: (@x = 0, @y = 0) ->
   
   # Point string representation: e.g. '12@68'
   toString: ->

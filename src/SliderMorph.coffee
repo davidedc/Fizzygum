@@ -4,20 +4,23 @@
 # REQUIRES globalFunctions
 
 class SliderMorph extends CircleBoxMorph
-  constructor: (start, stop, value, size, orientation, color) ->
-    @target = null
-    @action = null
-    @start = start or 1
-    @stop = stop or 100
-    @value = value or 50
-    @size = size or 10
-    @offset = null
+
+  target: null
+  action: null
+  start: null
+  stop: null
+  value: null
+  size: null
+  offset: null
+  button: null
+
+  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
     @button = new SliderButtonMorph()
     @button.isDraggable = false
     @button.color = new Color(200, 200, 200)
     @button.highlightColor = new Color(210, 210, 255)
     @button.pressColor = new Color(180, 180, 255)
-    super orientation or "vertical"
+    super orientation # if null, then a vertical one will be created
     @add @button
     @alpha = 0.3
     @color = color or new Color(0, 0, 0)

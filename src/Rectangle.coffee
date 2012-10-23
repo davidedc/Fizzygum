@@ -1,7 +1,12 @@
 # Rectangles //////////////////////////////////////////////////////////
 
 class Rectangle
+
+  origin: null
+  corner: null
+  
   constructor: (left, top, right, bottom) ->
+    
     @origin = new Point((left or 0), (top or 0))
     @corner = new Point((right or 0), (bottom or 0))
   
