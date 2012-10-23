@@ -120,7 +120,7 @@ class HandleMorph extends Morph
         @step = null
     
     unless @target.step
-      @target.step = noOpFunction
+      @target.step = nop()
   
   
   # HandleMorph dragging and dropping:
