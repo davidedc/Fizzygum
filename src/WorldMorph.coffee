@@ -7,6 +7,10 @@
 # I represent the <canvas> element
 class WorldMorph extends FrameMorph
 
+  # this variable shouldn't be static to the World, because
+  # in pure theory you could have multiple worlds in the same
+  # page with different settings
+  # (but anyways, it was global before, so it's not any worse than before)
   @MorphicPreferences = standardSettings
 
   constructor: (aCanvas, fillPage) ->
