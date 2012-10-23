@@ -7,14 +7,16 @@ class HandMorph extends Morph
 
   world: null
   mouseButton: null
-  mouseOverList: []
   mouseDownMorph: null
   morphToGrab: null
   grabOrigin: null
-  temporaries: []
+  mouseOverList: null
+  temporaries: null
   touchHoldTimeout: null
 
   constructor: (@world) ->
+    @mouseOverList = []
+    @temporaries = []
     super()
     @bounds = new Rectangle()
   
