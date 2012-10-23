@@ -7,7 +7,7 @@ class StringMorph extends Morph
     # additional properties:
     @text = text or ((if (text is "") then "" else "StringMorph"))
     @fontSize = fontSize or 12
-    @fontName = fontName or MorphicPreferences.globalFontFamily
+    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
     @fontStyle = fontStyle or "sans-serif"
     @isBold = bold or false
     @isItalic = italic or false

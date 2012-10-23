@@ -2,9 +2,13 @@
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
+# REQUIRES globalSettings
 
 # I represent the <canvas> element
 class WorldMorph extends FrameMorph
+
+  @MorphicPreferences = standardSettings
+
   constructor: (aCanvas, fillPage) ->
     super()
     @color = new Color(205, 205, 205) # (130, 130, 130)
@@ -113,7 +117,7 @@ class WorldMorph extends FrameMorph
     if @virtualKeyboard
       document.body.removeChild @virtualKeyboard
       @virtualKeyboard = null
-    return  unless MorphicPreferences.useVirtualKeyboard
+    return  unless WorldMorph.MorphicPreferences.useVirtualKeyboard
     @virtualKeyboard = document.createElement("input")
     @virtualKeyboard.type = "text"
     @virtualKeyboard.style.color = "transparent"
@@ -296,7 +300,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "color...", (->
         @pickColor menu.title + "\ncolor:", @setColor, @, @color
       ), "choose the World's\nbackground color"
-      if MorphicPreferences is standardSettings
+      if WorldMorph.MorphicPreferences is standardSettings
         menu.addItem "touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders"
       else
         menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"
@@ -471,11 +475,11 @@ class WorldMorph extends FrameMorph
     aStringOrTextMorph.parent.add @cursor
     @keyboardReceiver = @cursor
     @initVirtualKeyboard()
-    if MorphicPreferences.useVirtualKeyboard
+    if WorldMorph.MorphicPreferences.useVirtualKeyboard
       @virtualKeyboard.style.top = @cursor.top() + pos.y + "px"
       @virtualKeyboard.style.left = @cursor.left() + pos.x + "px"
       @virtualKeyboard.focus()
-    if MorphicPreferences.useSliderForInput
+    if WorldMorph.MorphicPreferences.useSliderForInput
       if !aStringOrTextMorph.parentThatIsA(MenuMorph)
         @slide aStringOrTextMorph
   
@@ -494,8 +498,8 @@ class WorldMorph extends FrameMorph
     slider.button.highlightColor.b += 100
     slider.button.pressColor = slider.button.color.copy()
     slider.button.pressColor.b += 150
-    slider.silentSetHeight MorphicPreferences.scrollBarSize
-    slider.silentSetWidth MorphicPreferences.menuFontSize * 10
+    slider.silentSetHeight WorldMorph.MorphicPreferences.scrollBarSize
+    slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10
     slider.drawNew()
     slider.action = (num) ->
       aStringOrTextMorph.changed()
@@ -522,7 +526,7 @@ class WorldMorph extends FrameMorph
     useBlurredShadows = not useBlurredShadows
   
   togglePreferences: ->
-    if MorphicPreferences is standardSettings
-      MorphicPreferences = touchScreenSettings
+    if WorldMorph.MorphicPreferences is standardSettings
+      WorldMorph.MorphicPreferences = touchScreenSettings
     else
-      MorphicPreferences = standardSettings
+      WorldMorph.MorphicPreferences = standardSettings

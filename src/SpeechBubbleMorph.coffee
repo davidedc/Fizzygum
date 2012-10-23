@@ -38,14 +38,14 @@ class SpeechBubbleMorph extends BoxMorph
     if @contents instanceof Morph
       @contentsMorph = @contents
     else if isString(@contents)
-      @contentsMorph = new TextMorph(@contents, MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+      @contentsMorph = new TextMorph(@contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
     else if @contents instanceof HTMLCanvasElement
       @contentsMorph = new Morph()
       @contentsMorph.silentSetWidth @contents.width
       @contentsMorph.silentSetHeight @contents.height
       @contentsMorph.image = @contents
     else
-      @contentsMorph = new TextMorph(@contents.toString(), MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+      @contentsMorph = new TextMorph(@contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
     @add @contentsMorph
     #
     # adjust my layout

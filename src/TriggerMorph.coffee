@@ -11,7 +11,7 @@ class TriggerMorph extends Morph
     @labelString = labelString or null
     @label = null
     @hint = hint or null
-    @fontSize = fontSize or MorphicPreferences.menuFontSize
+    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
     @highlightColor = new Color(192, 192, 192)
     @pressColor = new Color(128, 128, 128)

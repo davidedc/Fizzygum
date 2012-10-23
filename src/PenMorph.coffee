@@ -11,7 +11,7 @@ class PenMorph extends Morph
   isDown: true
   
   constructor: () ->
-    @penSize = MorphicPreferences.handleSize * 4
+    @penSize = WorldMorph.MorphicPreferences.handleSize * 4
     super()
     @setExtent new Point(@penSize, @penSize)
     # todo we need to change the size two times, for getting the right size

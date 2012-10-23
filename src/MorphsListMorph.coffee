@@ -8,7 +8,7 @@ class MorphsListMorph extends BoxMorph
     super()
     #
     # override inherited properties:
-    @silentSetExtent new Point(MorphicPreferences.handleSize * 10, MorphicPreferences.handleSize * 20 * 2 / 3)
+    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
     @edge = 5
@@ -42,7 +42,7 @@ class MorphsListMorph extends BoxMorph
     #
     # label
     @label = new TextMorph("Morphs List")
-    @label.fontSize = MorphicPreferences.menuFontSize
+    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
     @label.drawNew()
@@ -117,7 +117,7 @@ class MorphsListMorph extends BoxMorph
     y = @label.bottom() + 2
     w = @width() - @edge
     w -= @edge
-    b = @bottom() - (2 * @edge) - MorphicPreferences.handleSize
+    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize
     h = b - y
     @morphsList.setPosition new Point(x, y)
     @morphsList.setExtent new Point(w, h)
@@ -125,7 +125,7 @@ class MorphsListMorph extends BoxMorph
     # close button
     x = @morphsList.left()
     y = @morphsList.bottom() + @edge
-    h = MorphicPreferences.handleSize
+    h = WorldMorph.MorphicPreferences.handleSize
     w = @morphsList.width() - h - @edge
     @buttonClose.setPosition new Point(x, y)
     @buttonClose.setExtent new Point(w, h)

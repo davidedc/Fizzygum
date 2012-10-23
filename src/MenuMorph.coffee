@@ -31,7 +31,7 @@ class MenuMorph extends BoxMorph
   createLabel: ->
     text = undefined
     @label.destroy()  if @label isnt null
-    text = new TextMorph(localize(@title), @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, true, false, "center")
+    text = new TextMorph(localize(@title), @fontSize or WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center")
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
     text.backgroundColor = @borderColor
@@ -82,7 +82,7 @@ class MenuMorph extends BoxMorph
         item.setHeight tuple[1]
       else
         # bubble help hint
-        item = new MenuItemMorph(@target, tuple[1], tuple[0], @fontSize or MorphicPreferences.menuFontSize, MorphicPreferences.menuFontName, @environment, tuple[2], tuple[3]) # color
+        item = new MenuItemMorph(@target, tuple[1], tuple[0], @fontSize or WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, @environment, tuple[2], tuple[3]) # color
       y += 1  if isLine
       item.setPosition new Point(x, y)
       @add item

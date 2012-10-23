@@ -5,22 +5,23 @@
 
 class ScrollFrameMorph extends FrameMorph
 
-  scrollBarSize: null
   autoScrollTrigger: null
-  isScrollingByDragging: true # change if desired
   hasVelocity: true # dto.
   padding: 0 # around the scrollable area
   growth: 0 # pixels or Point to grow right/left when near edge
   isTextLineWrapping: false
+  isScrollingByDragging: true
+  scrollBarSize: null
   contents: null
-  hBar: null
   vBar: null
+  hBar: null
 
   constructor: (contents, scrollBarSize, sliderColor) ->
-    @contents = contents or new FrameMorph(@);
-    @scrollBarSize = scrollBarSize or MorphicPreferences.scrollBarSize
     super()
+    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize
+    @contents = contents or new FrameMorph(@)
     @add @contents
+    #
     @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
     @hBar.setHeight @scrollBarSize
     @hBar.action = (num) =>
@@ -32,7 +33,6 @@ class ScrollFrameMorph extends FrameMorph
     @vBar.setWidth @scrollBarSize
     @vBar.action = (num) =>
       @contents.setPosition new Point(@contents.position().x, @top() - num)
-    #
     @vBar.isDraggable = false
     @add @vBar
   
@@ -40,7 +40,7 @@ class ScrollFrameMorph extends FrameMorph
     hWidth = @width() - @scrollBarSize
     vHeight = @height() - @scrollBarSize
     @changed()
-    if @contents.width() > @width() + MorphicPreferences.scrollBarSize
+    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize
       @hBar.show()
       @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
       @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
@@ -137,7 +137,7 @@ class ScrollFrameMorph extends FrameMorph
       @adjustScrollBars()
   
   startAutoScrolling: ->
-    inset = MorphicPreferences.scrollBarSize * 3
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
     world = @world()
     hand = undefined
     inner = undefined
@@ -158,7 +158,7 @@ class ScrollFrameMorph extends FrameMorph
     inset = undefined
     area = undefined
     return null  if Date.now() - @autoScrollTrigger < 500
-    inset = MorphicPreferences.scrollBarSize * 3
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
     area = @topLeft().extent(new Point(@width(), inset))
     @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
     area = @topLeft().extent(new Point(inset, @height()))
@@ -167,13 +167,24 @@ class ScrollFrameMorph extends FrameMorph
     @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
     area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
     @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
+    @adjustScrollBars()  
+  
+  # ScrollFrameMorph scrolling by editing text:
+  scrollCursorIntoView: (morph, padding) ->
+    ft = @top() + padding
+    fb = @bottom() - padding
+    if morph.top() < ft
+      morph.target.setTop morph.target.top() + ft - morph.top()
+      morph.setTop ft
+    else if morph.bottom() > fb
+      morph.target.setBottom morph.target.bottom() + fb - morph.bottom()
+      morph.setBottom fb
     @adjustScrollBars()
-  
-  
+
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
-    @scrollY y * MorphicPreferences.mouseScrollAmount  if y
-    @scrollX x * MorphicPreferences.mouseScrollAmount  if x
+    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y
+    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x
     @adjustScrollBars()
   
   copyRecordingReferences: (dict) ->

@@ -37,7 +37,7 @@ class TextMorph extends Morph
     @shadowColor = null
     ) ->    
       @text = text or ((if text is "" then text else "TextMorph"))
-      @fontName = fontName or MorphicPreferences.globalFontFamily
+      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
       @shadowOffset = shadowOffset or new Point(0, 0)
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)

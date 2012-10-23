@@ -40,4 +40,3 @@ touchScreenSettings =
   useSliderForInput: true
   useVirtualKeyboard: true
 
-MorphicPreferences = standardSettings

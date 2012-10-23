@@ -382,7 +382,7 @@ class HandMorph extends Morph
       # autoScrolling support:
       if @children.length > 0
           if newMorph instanceof ScrollFrameMorph
-              if !newMorph.bounds.insetBy( MorphicPreferences.scrollBarSize * 3).containsPoint(@bounds.origin)
+              if !newMorph.bounds.insetBy( WorldMorph.MorphicPreferences.scrollBarSize * 3).containsPoint(@bounds.origin)
                   newMorph.startAutoScrolling();
     #
     @mouseOverList = mouseOverNew

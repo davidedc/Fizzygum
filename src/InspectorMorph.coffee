@@ -20,7 +20,7 @@ class InspectorMorph extends BoxMorph
   constructor: (@target) ->
     super()
     # override inherited properties:
-    @silentSetExtent new Point(MorphicPreferences.handleSize * 20, MorphicPreferences.handleSize * 20 * 2 / 3)
+    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
     @edge = 5
@@ -49,7 +49,7 @@ class InspectorMorph extends BoxMorph
     #
     # label
     @label = new TextMorph(@target.toString())
-    @label.fontSize = MorphicPreferences.menuFontSize
+    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
     @label.drawNew()
@@ -328,7 +328,7 @@ class InspectorMorph extends BoxMorph
     y = @label.bottom() + 2
     w = Math.min(Math.floor(@width() / 3), @list.listContents.width())
     w -= @edge
-    b = @bottom() - (2 * @edge) - MorphicPreferences.handleSize
+    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize
     h = b - y
     @list.setPosition new Point(x, y)
     @list.setExtent new Point(w, h)
@@ -349,13 +349,13 @@ class InspectorMorph extends BoxMorph
     x = @list.left()
     y = @list.bottom() + @edge
     w = @list.width()
-    h = MorphicPreferences.handleSize
+    h = WorldMorph.MorphicPreferences.handleSize
     @buttonSubset.setPosition new Point(x, y)
     @buttonSubset.setExtent new Point(w, h)
     #
     # inspect button
     x = @detail.left()
-    w = @detail.width() - @edge - MorphicPreferences.handleSize
+    w = @detail.width() - @edge - WorldMorph.MorphicPreferences.handleSize
     w = w / 3 - @edge / 3
     @buttonInspect.setPosition new Point(x, y)
     @buttonInspect.setExtent new Point(w, h)
@@ -367,7 +367,7 @@ class InspectorMorph extends BoxMorph
     #
     # close button
     x = @buttonEdit.right() + @edge
-    r = @detail.right() - @edge - MorphicPreferences.handleSize
+    r = @detail.right() - @edge - WorldMorph.MorphicPreferences.handleSize
     w = r - x
     @buttonClose.setPosition new Point(x, y)
     @buttonClose.setExtent new Point(w, h)

@@ -780,9 +780,9 @@ class Morph extends MorphicNode
     isNumeric = undefined
     isNumeric = true  if ceilingNum
     menu = new MenuMorph(callback or null, msg or "", environment or null)
-    entryField = new StringFieldMorph(defaultContents or "", width or 100, MorphicPreferences.prompterFontSize, MorphicPreferences.prompterFontName, false, false, isNumeric)
+    entryField = new StringFieldMorph(defaultContents or "", width or 100, WorldMorph.MorphicPreferences.prompterFontSize, WorldMorph.MorphicPreferences.prompterFontName, false, false, isNumeric)
     menu.items.push entryField
-    if ceilingNum or MorphicPreferences.useSliderForInput
+    if ceilingNum or WorldMorph.MorphicPreferences.useSliderForInput
       slider = new SliderMorph(floorNum or 0, ceilingNum, parseFloat(defaultContents), Math.floor((ceilingNum - floorNum) / 4), "horizontal")
       slider.alpha = 1
       slider.color = new Color(225, 225, 225)
@@ -791,7 +791,7 @@ class Morph extends MorphicNode
       slider.button.highlightColor.b += 100
       slider.button.pressColor = slider.button.color.copy()
       slider.button.pressColor.b += 150
-      slider.setHeight MorphicPreferences.prompterSliderSize
+      slider.setHeight WorldMorph.MorphicPreferences.prompterSliderSize
       if isRounded
         slider.action = (num) ->
           entryField.changed()

@@ -19,7 +19,7 @@ class HandleMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true
-    size = MorphicPreferences.handleSize
+    size = WorldMorph.MorphicPreferences.handleSize
     @setExtent new Point(size, size)  
   
   # HandleMorph drawing:
