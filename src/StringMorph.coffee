@@ -3,29 +3,60 @@
 # I am a single line of text
 
 class StringMorph extends Morph
-  constructor: (text, fontSize, fontStyle, bold, italic, isNumeric, shadowOffset, shadowColor, color, fontName) ->
+
+  text: null
+  fontSize: null
+  fontName: null
+  fontStyle: null
+  isBold: null
+  isItalic: null
+  isEditable: false
+  isNumeric: null
+  shadowOffset: null
+  shadowColor: null
+  isShowingBlanks: false
+  # careful: this Color object is shared with all the instances of this class.
+  # if you modify it, then all the objects will get the change
+  # but if you replace it with a new Color, then that will only affect the
+  # specific object instance. Same behaviour as with arrays.
+  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+  blanksColor: new Color(180, 140, 140)
+  #
+  # Properties for text-editing
+  currentlySelecting: false
+  startMark: 0
+  endMark: 0
+  # careful: this Color object is shared with all the instances of this class.
+  # if you modify it, then all the objects will get the change
+  # but if you replace it with a new Color, then that will only affect the
+  # specific object instance. Same behaviour as with arrays.
+  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+  markedTextColor: new Color(255, 255, 255)
+  # careful: this Color object is shared with all the instances of this class.
+  # if you modify it, then all the objects will get the change
+  # but if you replace it with a new Color, then that will only affect the
+  # specific object instance. Same behaviour as with arrays.
+  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+  markedBackgoundColor: new Color(60, 60, 120)
+
+  constructor: (
+      text,
+      @fontSize = 12,
+      @fontStyle = "sans-serif",
+      @isBold = false,
+      @isItalic = false,
+      @isNumeric = false,
+      shadowOffset,
+      shadowColor,
+      color,
+      fontName
+      ) ->
     # additional properties:
     @text = text or ((if (text is "") then "" else "StringMorph"))
-    @fontSize = fontSize or 12
     @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
-    @fontStyle = fontStyle or "sans-serif"
-    @isBold = bold or false
-    @isItalic = italic or false
-    @isEditable = false
-    @isNumeric = isNumeric or false
     @shadowOffset = shadowOffset or new Point(0, 0)
     @shadowColor = shadowColor or null
-    @isShowingBlanks = false
-    @blanksColor = new Color(180, 140, 140)
     #
-    # additional properties for text-editing:
-    @currentlySelecting = false
-    @startMark = 0
-    @endMark = 0
-    @markedTextColor = new Color(255, 255, 255)
-    @markedBackgoundColor = new Color(60, 60, 120)
-    #
-    # initialize inherited properties:
     super()
     #
     # override inherited properites:
