@@ -3,6 +3,7 @@
 # I automatically determine my bounds
 
 class MenuItemMorph extends TriggerMorph
+
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
     super target, action, labelString, fontSize, fontStyle, environment, hint, color
   
