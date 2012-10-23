@@ -12,8 +12,13 @@ class MenuMorph extends BoxMorph
   isListContents: false
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
+    # Note that Morph does a drawNew upon creation (TODO Why?), so we need
+    # to initialise the items before calling super. We can't initialise it
+    # outside the constructor because the array would be shared across instantiated
+    # objects.
     @items = []
     super()
+    @border = null # the Box Morph constructor puts this to 2
   
   addItem: (labelString, action, hint, color) ->
     @items.push [localize(labelString or "close"), action or nop, hint, color]
