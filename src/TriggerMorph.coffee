@@ -3,24 +3,27 @@
 # I provide basic button functionality
 
 class TriggerMorph extends Morph
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, labelColor) ->
+
+  target: null
+  action: null
+  environment: null
+  labelString: null
+  label: null
+  hint: null
+  fontSize: null
+  fontStyle: null
+  highlightColor: new Color(192, 192, 192)
+  pressColor: new Color(128, 128, 128)
+  labelColor: null
+
+  constructor: (@target = null, @action = null, @labelString = null, fontSize, fontStyle, @environment = null, @hint = null, labelColor) ->
     # additional properties:
-    @target = target or null
-    @action = action or null
-    @environment = environment or null
-    @labelString = labelString or null
-    @label = null
-    @hint = hint or null
     @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
-    @highlightColor = new Color(192, 192, 192)
-    @pressColor = new Color(128, 128, 128)
     @labelColor = labelColor or new Color(0, 0, 0)
     #
-    # initialize inherited properties:
     super()
     #
-    # override inherited properites:
     @color = new Color(255, 255, 255)
     @drawNew()
   
