@@ -1,7 +1,8 @@
 # GrayPaletteMorph ///////////////////////////////////////////////////
 
 class GrayPaletteMorph extends ColorPaletteMorph
-  constructor: (@target = null, @sizePoint = new Point(80, 10)) ->
+  constructor: (@target = null, sizePoint) ->
+    @sizePoint = sizePoint or new Point(80, 10)
     super @target, @sizePoint
   
   drawNew: ->
