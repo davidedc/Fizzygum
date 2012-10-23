@@ -27,8 +27,8 @@ class MorphicNode
   
   # MorphicNode functions:
   root: ->
-    return @  if @parent is null
-    @parent.root()
+    return @parent.root() unless @parent is null
+    @
   
   depth: ->
     return 0  if @parent is null

@@ -48,6 +48,8 @@ class WorldMorph extends FrameMorph
   
   fullDrawOn: (aCanvas, aRect) ->
     super aCanvas, aRect
+    # the mouse cursor is always drawn on top of everything
+    # and it'd not attached to the WorldMorph.
     @hand.fullDrawOn aCanvas, aRect
   
   updateBroken: ->

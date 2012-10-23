@@ -1,8 +1,7 @@
 # HandMorph ///////////////////////////////////////////////////////////
 
-# I represent the Mouse cursor
-
-# HandMorph inherits from Morph:
+# The mouse cursor. Note that it's not a child of the WorldMorph, this Morph
+# is never added to any other morph. [TODO] Find out why and write explanation.
 
 class HandMorph extends Morph
 
