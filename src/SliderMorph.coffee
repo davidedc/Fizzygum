@@ -203,13 +203,17 @@ class SliderMorph extends CircleBoxMorph
   
   
   # SliderMorph stepping:
-  step = null
   mouseDownLeft: (pos) ->
     unless @button.bounds.containsPoint(pos)
       @offset = new Point() # return null;
     else
       @offset = pos.subtract(@button.bounds.origin)
     world = @root()
+    # this is to create the "drag the slider" effect
+    # basically if the mouse is pressing within the boundaries
+    # then in the next step you remember to check again where the mouse
+    # is and update the scrollbar. As soon as the mouse is unpressed
+    # then the step function is set to null to save cycles.
     @step = =>
       if world.hand.mouseButton
         mousePos = world.hand.bounds.origin
