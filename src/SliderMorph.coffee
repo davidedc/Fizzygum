@@ -49,13 +49,17 @@ class SliderMorph extends CircleBoxMorph
       bh = Math.max(bw, Math.round(@height() * @ratio()))
       @button.silentSetExtent new Point(bw, bh)
       posX = 1
-      posY = Math.min(Math.round((@value - @start) * @unitSize()), @height() - @button.height())
+      posY = Math.min(
+        Math.round((@value - @start) * @unitSize()),
+        @height() - @button.height())
     else
       bh = @height() - 2
       bw = Math.max(bh, Math.round(@width() * @ratio()))
       @button.silentSetExtent new Point(bw, bh)
       posY = 1
-      posX = Math.min(Math.round((@value - @start) * @unitSize()), @width() - @button.width())
+      posX = Math.min(
+        Math.round((@value - @start) * @unitSize()),
+        @width() - @button.width())
     @button.setPosition new Point(posX, posY).add(@bounds.origin)
     @button.drawNew()
     @button.changed()
@@ -90,13 +94,34 @@ class SliderMorph extends CircleBoxMorph
     menu = super()
     menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"
     menu.addItem "floor...", (->
-      @prompt menu.title + "\nfloor:", @setStart, @, @start.toString(), null, 0, @stop - @size, true
+      @prompt menu.title + "\nfloor:",
+        @setStart,
+        @,
+        @start.toString(),
+        null,
+        0,
+        @stop - @size,
+        true
     ), "set the minimum value\nwhich can be selected"
     menu.addItem "ceiling...", (->
-      @prompt menu.title + "\nceiling:", @setStop, @, @stop.toString(), null, @start + @size, @size * 100, true
+      @prompt menu.title + "\nceiling:",
+        @setStop,
+        @,
+        @stop.toString(),
+        null,
+        @start + @size,
+        @size * 100,
+        true
     ), "set the maximum value\nwhich can be selected"
     menu.addItem "button size...", (->
-      @prompt menu.title + "\nbutton size:", @setSize, @, @size.toString(), null, 1, @stop - @start, true
+      @prompt menu.title + "\nbutton size:",
+        @setSize,
+        @,
+        @size.toString(),
+        null,
+        1,
+        @stop - @start,
+        true
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
     menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
@@ -190,10 +215,14 @@ class SliderMorph extends CircleBoxMorph
         mousePos = world.hand.bounds.origin
         if @orientation is "vertical"
           newX = @button.bounds.origin.x
-          newY = Math.max(Math.min(mousePos.y - @offset.y, @bottom() - @button.height()), @top())
+          newY = Math.max(
+            Math.min(mousePos.y - @offset.y,
+            @bottom() - @button.height()), @top())
         else
           newY = @button.bounds.origin.y
-          newX = Math.max(Math.min(mousePos.x - @offset.x, @right() - @button.width()), @left())
+          newX = Math.max(
+            Math.min(mousePos.x - @offset.x,
+            @right() - @button.width()), @left())
         @button.setPosition new Point(newX, newY)
         @updateValue()
       else

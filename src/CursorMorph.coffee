@@ -130,7 +130,8 @@ class CursorMorph extends BlinkerMorph
         @target.setRight right
     @show()
     @setPosition pos
-    @parent.parent.scrollCursorIntoView @, 6  if @parent and @parent.parent instanceof ScrollFrameMorph
+    if @parent and @parent.parent instanceof ScrollFrameMorph
+      @parent.parent.scrollCursorIntoView @, 6
   
   goLeft: ->
     @target.clearSelection()

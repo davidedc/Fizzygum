@@ -28,7 +28,9 @@ class MenuMorph extends BoxMorph
   
   createLabel: ->
     @label.destroy()  if @label isnt null
-    text = new TextMorph(localize(@title), @fontSize or WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center")
+    text = new TextMorph(localize(@title),
+      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
+      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
     text.backgroundColor = @borderColor
@@ -66,8 +68,10 @@ class MenuMorph extends BoxMorph
     y += 1
     @items.forEach (tuple) =>
       isLine = false
-      if tuple instanceof StringFieldMorph or tuple instanceof ColorPickerMorph or tuple instanceof SliderMorph
-        item = tuple
+      if tuple instanceof StringFieldMorph or
+        tuple instanceof ColorPickerMorph or
+        tuple instanceof SliderMorph
+          item = tuple
       else if tuple[0] is 0
         isLine = true
         item = new Morph()
@@ -75,7 +79,10 @@ class MenuMorph extends BoxMorph
         item.setHeight tuple[1]
       else
         # bubble help hint
-        item = new MenuItemMorph(@target, tuple[1], tuple[0], @fontSize or WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, @environment, tuple[2], tuple[3]) # color
+        item = new MenuItemMorph(@target, tuple[1], tuple[0],
+          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
+          WorldMorph.MorphicPreferences.menuFontName, @environment,
+          tuple[2], tuple[3]) # color
       y += 1  if isLine
       item.setPosition new Point(x, y)
       @add item
@@ -89,9 +96,15 @@ class MenuMorph extends BoxMorph
   
   maxWidth: ->
     w = 0
-    w = @parent.width()  if @parent.scrollFrame instanceof ScrollFrameMorph  if @parent instanceof FrameMorph
+    if @parent instanceof FrameMorph
+      if @parent.scrollFrame instanceof ScrollFrameMorph
+        w = @parent.width()    
     @children.forEach (item) ->
-      w = Math.max(w, item.width())  if (item instanceof MenuItemMorph) or (item instanceof StringFieldMorph) or (item instanceof ColorPickerMorph) or (item instanceof SliderMorph)
+      if (item instanceof MenuItemMorph) or
+        (item instanceof StringFieldMorph) or
+        (item instanceof ColorPickerMorph) or
+        (item instanceof SliderMorph)
+          w = Math.max(w, item.width())  
     #
     w = Math.max(w, @label.width())  if @label
     w
@@ -104,7 +117,8 @@ class MenuMorph extends BoxMorph
         item.createBackgrounds()
       else
         item.drawNew()
-        item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))  if item is @label
+        if item is @label
+          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
   
   
   unselectAllItems: ->

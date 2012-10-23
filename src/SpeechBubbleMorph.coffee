@@ -13,10 +13,17 @@ class SpeechBubbleMorph extends BoxMorph
   padding: null # additional vertical pixels
   isThought: null # draw "think" bubble
 
-  constructor: (@contents="", color, edge, border, borderColor, @padding = 0, @isThought = false) ->
-    super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
-    @color = color or new Color(230, 230, 230)
-    @drawNew()
+  constructor: (
+    @contents="",
+    color,
+    edge,
+    border,
+    borderColor,
+    @padding = 0,
+    @isThought = false) ->
+      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+      @color = color or new Color(230, 230, 230)
+      @drawNew()
   
   
   # SpeechBubbleMorph invoking:
@@ -40,14 +47,26 @@ class SpeechBubbleMorph extends BoxMorph
     if @contents instanceof Morph
       @contentsMorph = @contents
     else if isString(@contents)
-      @contentsMorph = new TextMorph(@contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+      @contentsMorph = new TextMorph(
+        @contents,
+        WorldMorph.MorphicPreferences.bubbleHelpFontSize,
+        null,
+        false,
+        true,
+        "center")
     else if @contents instanceof HTMLCanvasElement
       @contentsMorph = new Morph()
       @contentsMorph.silentSetWidth @contents.width
       @contentsMorph.silentSetHeight @contents.height
       @contentsMorph.image = @contents
     else
-      @contentsMorph = new TextMorph(@contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center")
+      @contentsMorph = new TextMorph(
+        @contents.toString(),
+        WorldMorph.MorphicPreferences.bubbleHelpFontSize,
+        null,
+        false,
+        true,
+        "center")
     @add @contentsMorph
     #
     # adjust my layout
@@ -58,7 +77,8 @@ class SpeechBubbleMorph extends BoxMorph
     super()
     #
     # position my contents
-    @contentsMorph.setPosition @position().add(new Point(@padding or @edge, @border + @padding + 1))
+    @contentsMorph.setPosition @position().add(
+      new Point(@padding or @edge, @border + @padding + 1))
   
   outlinePath: (context, radius, inset) ->
     circle = (x, y, r) ->

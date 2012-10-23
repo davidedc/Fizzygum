@@ -113,13 +113,15 @@ class ScrollFrameMorph extends FrameMorph
     deltaY = 0
     friction = 0.8
     @step = =>
-      if world.hand.mouseButton and (world.hand.children.length is 0) and (@bounds.containsPoint(world.hand.position()))
-        newPos = world.hand.bounds.origin
-        deltaX = newPos.x - oldPos.x
-        @scrollX deltaX  if deltaX isnt 0
-        deltaY = newPos.y - oldPos.y
-        @scrollY deltaY  if deltaY isnt 0
-        oldPos = newPos
+      if world.hand.mouseButton and
+        (world.hand.children.length is 0) and
+        (@bounds.containsPoint(world.hand.position()))
+          newPos = world.hand.bounds.origin
+          deltaX = newPos.x - oldPos.x
+          @scrollX deltaX  if deltaX isnt 0
+          deltaY = newPos.y - oldPos.y
+          @scrollY deltaY  if deltaY isnt 0
+          oldPos = newPos
       else
         unless @hasVelocity
           @step = noOpFunction
@@ -142,8 +144,10 @@ class ScrollFrameMorph extends FrameMorph
     @step = =>
       pos = hand.bounds.origin
       inner = @bounds.insetBy(inset)
-      if (@bounds.containsPoint(pos)) and (not (inner.containsPoint(pos))) and (hand.children.length > 0)
-        @autoScroll pos
+      if (@bounds.containsPoint(pos)) and
+        (not (inner.containsPoint(pos))) and
+        (hand.children.length > 0)
+          @autoScroll pos
       else
         @step = noOpFunction
         @autoScrollTrigger = null

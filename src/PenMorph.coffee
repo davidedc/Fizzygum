@@ -89,7 +89,8 @@ class PenMorph extends Morph
       context.moveTo from.x, from.y
       context.lineTo to.x, to.y
       context.stroke()
-      @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()  if @isWarped is false
+      if @isWarped is false
+        @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()
   
   
   # PenMorph turtle ops:

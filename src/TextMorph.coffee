@@ -331,7 +331,8 @@ class TextMorph extends Morph
     menu.addLine()
     menu.addItem "edit", "edit"
     menu.addItem "font size...", (->
-      @prompt menu.title + "\nfont\nsize:", @setFontSize, @, @fontSize.toString(), null, 6, 100, true
+      @prompt menu.title + "\nfont\nsize:",
+        @setFontSize, @, @fontSize.toString(), null, 6, 100, true
     ), "set this Text's\nfont point size"
     menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"
     menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"

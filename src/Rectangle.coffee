@@ -22,8 +22,12 @@ class Rectangle
   # Rectangle accessing - setting:
   setTo: (left, top, right, bottom) ->
     # note: all inputs are optional and can be omitted
-    @origin = new Point(left or ((if (left is 0) then 0 else @left())), top or ((if (top is 0) then 0 else @top())))
-    @corner = new Point(right or ((if (right is 0) then 0 else @right())), bottom or ((if (bottom is 0) then 0 else @bottom())))
+    @origin = new Point(
+      left or ((if (left is 0) then 0 else @left())),
+      top or ((if (top is 0) then 0 else @top())))
+    @corner = new Point(
+      right or ((if (right is 0) then 0 else @right())),
+      bottom or ((if (bottom is 0) then 0 else @bottom())))
   
   # Rectangle accessing - getting:
   area: ->
@@ -162,7 +166,10 @@ class Rectangle
   intersects: (aRect) ->
     ro = aRect.origin
     rc = aRect.corner
-    (rc.x >= @origin.x) and (rc.y >= @origin.y) and (ro.x <= @corner.x) and (ro.y <= @corner.y)
+    (rc.x >= @origin.x) and
+      (rc.y >= @origin.y) and
+      (ro.x <= @corner.x) and
+      (ro.y <= @corner.y)
   
   
   # Rectangle transforming:

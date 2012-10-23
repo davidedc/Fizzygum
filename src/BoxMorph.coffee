@@ -52,13 +52,27 @@ class BoxMorph extends Morph
     menu = super()
     menu.addLine()
     menu.addItem "border width...", (->
-      @prompt menu.title + "\nborder\nwidth:", @setBorderWidth, @, @border.toString(), null, 0, 100, true
+      @prompt menu.title + "\nborder\nwidth:",
+        @setBorderWidth,
+        @,
+        @border.toString(),
+        null,
+        0,
+        100,
+        true
     ), "set the border's\nline size"
     menu.addItem "border color...", (->
       @pickColor menu.title + "\nborder color:", @setBorderColor, @, @borderColor
     ), "set the border's\nline color"
     menu.addItem "corner size...", (->
-      @prompt menu.title + "\ncorner\nsize:", @setCornerSize, @, @edge.toString(), null, 0, 100, true
+      @prompt menu.title + "\ncorner\nsize:",
+        @setCornerSize,
+        @,
+        @edge.toString(),
+        null,
+        0,
+        100,
+        true
     ), "set the corner's\nradius"
     menu
   

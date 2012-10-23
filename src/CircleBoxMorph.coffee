@@ -26,13 +26,15 @@ class CircleBoxMorph extends Morph
       x = @center().x
       center1 = new Point(x, @top() + radius)
       center2 = new Point(x, @bottom() - radius)
-      rect = @bounds.origin.add(new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
+      rect = @bounds.origin.add(
+        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
     else
       radius = @height() / 2
       y = @center().y
       center1 = new Point(@left() + radius, y)
       center2 = new Point(@right() - radius, y)
-      rect = @bounds.origin.add(new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
+      rect = @bounds.origin.add(
+        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
     points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
     points.forEach (center) =>
       context.fillStyle = @color.toString()
@@ -42,7 +44,8 @@ class CircleBoxMorph extends Morph
       context.fill()
     rect = rect.translateBy(@bounds.origin.neg())
     ext = rect.extent()
-    context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()  if ext.x > 0 and ext.y > 0
+    if ext.x > 0 and ext.y > 0
+      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()
   
   
   # CircleBoxMorph menu:

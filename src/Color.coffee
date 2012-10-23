@@ -93,7 +93,10 @@ class Color
     # answer a copy of this color mixed with another color, ignore alpha
     frac1 = Math.min(Math.max(proportion, 0), 1)
     frac2 = 1 - frac1
-    new Color(@r * frac1 + otherColor.r * frac2, @g * frac1 + otherColor.g * frac2, @b * frac1 + otherColor.b * frac2)
+    new Color(
+      @r * frac1 + otherColor.r * frac2,
+      @g * frac1 + otherColor.g * frac2,
+      @b * frac1 + otherColor.b * frac2)
   
   darker: (percent) ->
     # return an rgb-interpolated darker copy of me, ignore alpha

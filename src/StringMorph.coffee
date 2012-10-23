@@ -83,7 +83,8 @@ class StringMorph extends Morph
     #
     # set my extent
     width = Math.max(context.measureText(@text).width + Math.abs(@shadowOffset.x), 1)
-    @bounds.corner = @bounds.origin.add(new Point(width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
+    @bounds.corner = @bounds.origin.add(new Point(
+      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
     @image.width = width
     @image.height = @height()
     #
@@ -116,7 +117,8 @@ class StringMorph extends Morph
       p = @slotPosition(i).subtract(@position())
       c = @text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x, fontHeight(@fontSize) + y
+      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,
+        fontHeight(@fontSize) + y
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x + x, fontHeight(@fontSize) + y
       i += 1
@@ -173,7 +175,9 @@ class StringMorph extends Morph
     while aPoint.x - @left() > charX
       charX += context.measureText(@text[idx]).width
       idx += 1
-      return idx  if (context.measureText(@text).width - (context.measureText(@text[idx - 1]).width / 2)) < (aPoint.x - @left())  if idx is @text.length
+      if idx is @text.length
+        if (context.measureText(@text).width - (context.measureText(@text[idx - 1]).width / 2)) < (aPoint.x - @left())  
+          return idx
     idx - 1
   
   upFrom: (slot) ->
@@ -202,7 +206,8 @@ class StringMorph extends Morph
     menu.addLine()
     menu.addItem "edit", "edit"
     menu.addItem "font size...", (->
-      @prompt menu.title + "\nfont\nsize:", @setFontSize, @, @fontSize.toString(), null, 6, 500, true
+      @prompt menu.title + "\nfont\nsize:",
+        @setFontSize, @, @fontSize.toString(), null, 6, 500, true
     ), "set this String's\nfont point size"
     menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
     menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"

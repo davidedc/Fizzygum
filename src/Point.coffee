@@ -81,7 +81,8 @@ class Point
     new Point(@x / other, @y / other)
   
   floorDivideBy: (other) ->
-    return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))  if other instanceof Point
+    if other instanceof Point
+      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))
     new Point(Math.floor(@x / other), Math.floor(@y / other))
   
   

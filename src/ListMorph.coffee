@@ -64,6 +64,8 @@ class ListMorph extends ScrollFrameMorph
   setExtent: (aPoint) ->
     lb = @listContents.bounds
     nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
-    @listContents.setRight nb.right()  if nb.right() > lb.right() and nb.width() <= lb.width()
-    @listContents.setBottom nb.bottom()  if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+    if nb.right() > lb.right() and nb.width() <= lb.width()
+      @listContents.setRight nb.right()
+    if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+      @listContents.setBottom nb.bottom()
     super aPoint

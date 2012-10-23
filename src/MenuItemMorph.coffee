@@ -14,7 +14,8 @@ class MenuItemMorph extends TriggerMorph
     # numeric
     # shadow offset
     # shadow color
-    @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+    @label = new StringMorph(
+      @labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
     @silentSetExtent @label.extent().add(new Point(8, 0))
     np = @position().add(new Point(4, 0))
     @label.bounds = np.extent(@label.extent())

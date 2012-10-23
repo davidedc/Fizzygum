@@ -68,7 +68,8 @@ class SliderButtonMorph extends CircleBoxMorph
       context.lineTo w - context.lineWidth * 0.5, h - w / 2
       context.stroke()
       if @hasMiddleDip
-        gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0)
+        gradient = context.createLinearGradient(
+          context.lineWidth, 0, w - context.lineWidth, 0)
         radius = w / 4
         gradient.addColorStop 0, "black"
         gradient.addColorStop 0.35, @color.toString()
@@ -98,7 +99,8 @@ class SliderButtonMorph extends CircleBoxMorph
       context.lineTo w - h / 2, h - context.lineWidth * 0.5
       context.stroke()
       if @hasMiddleDip
-        gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth)
+        gradient = context.createLinearGradient(
+          0, context.lineWidth, 0, h - context.lineWidth)
         radius = h / 4
         gradient.addColorStop 0, "black"
         gradient.addColorStop 0.35, @color.toString()

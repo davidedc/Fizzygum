@@ -142,7 +142,8 @@ class WorldMorph extends FrameMorph
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
       # supress backspace override
-      event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
+      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
+        event.preventDefault()  
       #
       # supress tab override and make sure tab gets
       # received by all browsers
@@ -155,7 +156,9 @@ class WorldMorph extends FrameMorph
       @currentKey = null
       #
       # dispatch to keyboard receiver
-      @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
+      if @keyboardReceiver
+        if @keyboardReceiver.processKeyUp
+          @keyboardReceiver.processKeyUp event  
       event.preventDefault()
     ), false
     @virtualKeyboard.addEventListener "keypress", ((event) =>
@@ -198,7 +201,8 @@ class WorldMorph extends FrameMorph
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
       # supress backspace override
-      event.preventDefault()  if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
+      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
+        event.preventDefault()
       #
       # supress tab override and make sure tab gets
       # received by all browsers
@@ -212,7 +216,9 @@ class WorldMorph extends FrameMorph
       @currentKey = null
       #
       # dispatch to keyboard receiver
-      @keyboardReceiver.processKeyUp event  if @keyboardReceiver.processKeyUp  if @keyboardReceiver
+      if @keyboardReceiver
+        if @keyboardReceiver.processKeyUp
+          @keyboardReceiver.processKeyUp event    
       event.preventDefault()
     ), false
     canvas.addEventListener "keypress", ((event) =>
@@ -285,7 +291,8 @@ class WorldMorph extends FrameMorph
   # WorldMorph menu:
   contextMenu: ->
     if @isDevMode
-      menu = new MenuMorph(@, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+      menu = new MenuMorph(
+        @, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
       menu = new MenuMorph(@, "Morphic")
     if @isDevMode
@@ -357,7 +364,21 @@ class WorldMorph extends FrameMorph
       create newMorph
     
     menu.addItem "text", ->
-      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " + "traurig bin, ein Märchen aus uralten Zeiten, das " + "kommt mir nicht aus dem Sinn. Die Luft ist kühl " + "und es dunkelt, und ruhig fließt der Rhein; der " + "Gipfel des Berges funkelt im Abendsonnenschein. " + "Die schönste Jungfrau sitzet dort oben wunderbar, " + "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " + "goldenes Haar, sie kämmt es mit goldenem Kamme, " + "und singt ein Lied dabei; das hat eine wundersame, " + "gewalt'ge Melodei. Den Schiffer im kleinen " + "Schiffe, ergreift es mit wildem Weh; er schaut " + "nicht die Felsenriffe, er schaut nur hinauf in " + "die Höh'. Ich glaube, die Wellen verschlingen " + "am Ende Schiffer und Kahn, und das hat mit ihrem " + "Singen, die Loreley getan.")
+      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
+        "traurig bin, ein Märchen aus uralten Zeiten, das " +
+        "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
+        "und es dunkelt, und ruhig fließt der Rhein; der " +
+        "Gipfel des Berges funkelt im Abendsonnenschein. " +
+        "Die schönste Jungfrau sitzet dort oben wunderbar, " +
+        "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " +
+        "goldenes Haar, sie kämmt es mit goldenem Kamme, " +
+        "und singt ein Lied dabei; das hat eine wundersame, " +
+        "gewalt'ge Melodei. Den Schiffer im kleinen " +
+        "Schiffe, ergreift es mit wildem Weh; er schaut " +
+        "nicht die Felsenriffe, er schaut nur hinauf in " +
+        "die Höh'. Ich glaube, die Wellen verschlingen " +
+        "am Ende Schiffer und Kahn, und das hat mit ihrem " +
+        "Singen, die Loreley getan.")
       newMorph.isEditable = true
       newMorph.maxWidth = 300
       newMorph.drawNew()
@@ -459,9 +480,16 @@ class WorldMorph extends FrameMorph
   about: ->
     versions = ""
     for module of modules
-      versions += ("\n" + module + " (" + modules[module] + ")")  if modules.hasOwnProperty(module)
-    versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  if versions isnt ""
-    @inform "morphic.js\n\n" + "a lively Web GUI\ninspired by Squeak\n" + morphicVersion + "\n\nwritten by Jens Mönig\njens@moenig.org" + versions
+      if modules.hasOwnProperty(module)
+        versions += ("\n" + module + " (" + modules[module] + ")")  
+    if versions isnt ""
+      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
+    @inform "morphic.js\n\n" +
+      "a lively Web GUI\ninspired by Squeak\n" +
+      morphicVersion +
+      "\n\original from Jens Mönig's (jens@moenig.org) morphic.js\n" +
+      "\n\nported and extended by Davide Della Casa\n" +
+      versions
   
   edit: (aStringOrTextMorph) ->
     pos = getDocumentPositionOf(@worldCanvas)

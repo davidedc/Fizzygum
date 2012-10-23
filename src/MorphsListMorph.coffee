@@ -10,7 +10,9 @@ class MorphsListMorph extends BoxMorph
   constructor: (target) ->
     super()
     #
-    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
+    @silentSetExtent new Point(
+      WorldMorph.MorphicPreferences.handleSize * 10,
+      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
     @edge = 5
@@ -45,7 +47,8 @@ class MorphsListMorph extends BoxMorph
     ListOfMorphs = []
     for i of window
       theWordMorph = "Morph"
-      ListOfMorphs.push i  if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+      if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+        ListOfMorphs.push i
     @morphsList = new ListMorph(ListOfMorphs, null)
     #
     # so far nothing happens when items are selected

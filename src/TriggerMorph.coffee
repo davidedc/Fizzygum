@@ -26,7 +26,9 @@ class TriggerMorph extends Morph
   pressColor: new Color(128, 128, 128)
   labelColor: null
 
-  constructor: (@target = null, @action = null, @labelString = null, fontSize, fontStyle, @environment = null, @hint = null, labelColor) ->
+  constructor: (@target = null, @action = null, @labelString = null,
+    fontSize, fontStyle, @environment = null, @hint = null, labelColor) ->
+    
     # additional properties:
     @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
@@ -66,7 +68,8 @@ class TriggerMorph extends Morph
     # numeric
     # shadow offset
     # shadow color
-    @label = new StringMorph(@labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+    @label = new StringMorph(
+      @labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
     @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
     @add @label
   
@@ -141,4 +144,6 @@ class TriggerMorph extends Morph
       delete @step
   
   popUpbubbleHelp: (contents) ->
-    new SpeechBubbleMorph(localize(contents), null, null, 1).popUp @world(), @rightCenter().add(new Point(-8, 0))
+    new SpeechBubbleMorph(
+      localize(contents), null, null, 1).popUp @world(),
+      @rightCenter().add(new Point(-8, 0))

@@ -56,10 +56,14 @@ class FrameMorph extends Morph
   
   keepInScrollFrame: ->
     return null  if @scrollFrame is null
-    @moveBy new Point(@scrollFrame.left() - @left(), 0)  if @left() > @scrollFrame.left()
-    @moveBy new Point(@scrollFrame.right() - @right(), 0)  if @right() < @scrollFrame.right()
-    @moveBy new Point(0, @scrollFrame.top() - @top())  if @top() > @scrollFrame.top()
-    @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)  if @bottom() < @scrollFrame.bottom()
+    if @left() > @scrollFrame.left()
+      @moveBy new Point(@scrollFrame.left() - @left(), 0)
+    if @right() < @scrollFrame.right()
+      @moveBy new Point(@scrollFrame.right() - @right(), 0)  
+    if @top() > @scrollFrame.top()
+      @moveBy new Point(0, @scrollFrame.top() - @top())  
+    if @bottom() < @scrollFrame.bottom()
+      @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)
   
   adjustBounds: ->
     return null  if @scrollFrame is null

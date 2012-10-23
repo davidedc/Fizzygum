@@ -65,7 +65,12 @@ class Morph extends MorphicNode
   
   # Morph string representation: e.g. 'a Morph 2 [20@45 | 130@250]'
   toString: ->
-    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + " " + @children.length.toString() + " " + @bounds
+    "a " +
+      (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) +
+      " " +
+      @children.length.toString() +
+      " " +
+      @bounds
   
   
   # Morph deleting:
@@ -164,7 +169,8 @@ class Morph extends MorphicNode
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
-      result = result.merge(child.fullBounds())  if (child not instanceof ShadowMorph) and (child.isVisible)
+      if (child not instanceof ShadowMorph) and (child.isVisible)
+        result = result.merge(child.fullBounds())
     #
     result
   
@@ -327,7 +333,15 @@ class Morph extends MorphicNode
       w = Math.min(src.width(), @image.width - sl)
       h = Math.min(src.height(), @image.height - st)
       return null  if w < 1 or h < 1
-      context.drawImage @image, Math.round(src.left()), Math.round(src.top()), Math.round(w), Math.round(h), Math.round(area.left()), Math.round(area.top()), Math.round(w), Math.round(h)
+      context.drawImage @image,
+        Math.round(src.left()),
+        Math.round(src.top()),
+        Math.round(w),
+        Math.round(h),
+        Math.round(area.left()),
+        Math.round(area.top()),
+        Math.round(w),
+        Math.round(h)
   
   
   # "for debugging purposes:"
@@ -409,7 +423,9 @@ class Morph extends MorphicNode
     @allChildren().forEach (morph) ->
       if morph.isVisible
         ctx.globalAlpha = morph.alpha
-        ctx.drawImage morph.image, Math.round(morph.bounds.origin.x - fb.origin.x), Math.round(morph.bounds.origin.y - fb.origin.y)
+        ctx.drawImage morph.image,
+          Math.round(morph.bounds.origin.x - fb.origin.x),
+          Math.round(morph.bounds.origin.y - fb.origin.y)
     #
     img
   
@@ -569,7 +585,12 @@ class Morph extends MorphicNode
     allChildren = @allChildren()
     morphs = world.allChildren()
     morphs.filter (m) =>
-      m.isVisible and m isnt @ and m isnt world and not contains(allParents, m) and not contains(allChildren, m) and m.fullBounds().intersects(fb)
+      m.isVisible and
+        m isnt @ and
+        m isnt world and
+        not contains(allParents, m) and
+        not contains(allChildren, m) and
+        m.fullBounds().intersects(fb)
   
   # Morph pixel access:
   getPixelColor: (aPoint) ->
@@ -643,12 +664,19 @@ class Morph extends MorphicNode
   rootForGrab: ->
     return @parent.rootForGrab()  if @ instanceof ShadowMorph
     return @parent  if @parent instanceof ScrollFrameMorph
-    return @  if @parent is null or @parent instanceof WorldMorph or @parent instanceof FrameMorph or @isDraggable is true
+    if @parent is null or
+      @parent instanceof WorldMorph or
+      @parent instanceof FrameMorph or
+      @isDraggable is true
+        return @  
     @parent.rootForGrab()
   
   wantsDropOf: (aMorph) ->
     # default is to answer the general flag - change for my heirs
-    return false  if (aMorph instanceof HandleMorph) or (aMorph instanceof MenuMorph) or (aMorph instanceof InspectorMorph)
+    if (aMorph instanceof HandleMorph) or
+      (aMorph instanceof MenuMorph) or
+      (aMorph instanceof InspectorMorph)
+        return false  
     @acceptsDrops
   
   pickUp: (wrrld) ->
@@ -721,13 +749,26 @@ class Morph extends MorphicNode
     m.isDraggable = true
     m.popUpCenteredAtHand @world()
   
-  prompt: (msg, callback, environment, defaultContents, width, floorNum, ceilingNum, isRounded) ->
+  prompt: (msg, callback, environment, defaultContents, width, floorNum,
+    ceilingNum, isRounded) ->
     isNumeric = true  if ceilingNum
     menu = new MenuMorph(callback or null, msg or "", environment or null)
-    entryField = new StringFieldMorph(defaultContents or "", width or 100, WorldMorph.MorphicPreferences.prompterFontSize, WorldMorph.MorphicPreferences.prompterFontName, false, false, isNumeric)
+    entryField = new StringFieldMorph(
+      defaultContents or "",
+      width or 100,
+      WorldMorph.MorphicPreferences.prompterFontSize,
+      WorldMorph.MorphicPreferences.prompterFontName,
+      false,
+      false,
+      isNumeric)
     menu.items.push entryField
     if ceilingNum or WorldMorph.MorphicPreferences.useSliderForInput
-      slider = new SliderMorph(floorNum or 0, ceilingNum, parseFloat(defaultContents), Math.floor((ceilingNum - floorNum) / 4), "horizontal")
+      slider = new SliderMorph(
+        floorNum or 0,
+        ceilingNum,
+        parseFloat(defaultContents),
+        Math.floor((ceilingNum - floorNum) / 4),
+        "horizontal")
       slider.alpha = 1
       slider.color = new Color(225, 225, 225)
       slider.button.color = menu.borderColor
@@ -810,7 +851,9 @@ class Morph extends MorphicNode
     # 'name' is not an official property of a function, hence:
     world = @world()
     userMenu = @userMenu() or (@parent and @parent.userMenu())
-    menu = new MenuMorph(@, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+    menu = new MenuMorph(
+      @,
+      @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
         userMenu.popUpAtHand world
@@ -820,7 +863,12 @@ class Morph extends MorphicNode
       @pickColor menu.title + "\ncolor:", @setColor, @, @color
     ), "choose another color \nfor this morph"
     menu.addItem "transparency...", (->
-      @prompt menu.title + "\nalpha\nvalue:", @setAlphaScaled, @, (@alpha * 100).toString(), null, 1, 100, true
+      @prompt menu.title + "\nalpha\nvalue:",
+        @setAlphaScaled, @, (@alpha * 100).toString(),
+        null,
+        1,
+        100,
+        true
     ), "set this morph's\nalpha value"
     menu.addItem "resize...", "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
     menu.addLine()
@@ -981,7 +1029,11 @@ class Morph extends MorphicNode
     oImg = newCanvas(oRect.extent())
     ctx = oImg.getContext("2d")
     return newCanvas(new Point(1, 1))  if oRect.width() < 1 or oRect.height() < 1
-    ctx.drawImage @fullImage(), Math.round(oRect.origin.x - fb.origin.x), Math.round(oRect.origin.y - fb.origin.y)
+    ctx.drawImage @fullImage(),
+      Math.round(oRect.origin.x - fb.origin.x),
+      Math.round(oRect.origin.y - fb.origin.y)
     ctx.globalCompositeOperation = "source-in"
-    ctx.drawImage otherMorph.fullImage(), Math.round(otherFb.origin.x - oRect.origin.x), Math.round(otherFb.origin.y - oRect.origin.y)
+    ctx.drawImage otherMorph.fullImage(),
+      Math.round(otherFb.origin.x - oRect.origin.x),
+      Math.round(otherFb.origin.y - oRect.origin.y)
     oImg
