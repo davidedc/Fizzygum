@@ -52,9 +52,10 @@ task :default do
         # check if this extends anything
         itRequires = line.match('\sREQUIRES\s*(\w+)')
         extends = line.match('\sextends\s*(\w+)')
+        dependencyInInstanceVariableInit = line.match('\s\w+:\s*new\s*(\w+)')
         dependencies[f] = [] if !dependencies.has_key?(f)
  
-        if extends or itRequires
+        if extends or itRequires or dependencyInInstanceVariableInit
           if extends
           	dependencies[f] << extends[1]
           	print f,' extends ',extends[1],"\n"
@@ -62,6 +63,10 @@ task :default do
           if itRequires
           	dependencies[f] << itRequires[1] 
           	print f,' requires ',itRequires[1],"\n"
+          end
+          if dependencyInInstanceVariableInit
+          	dependencies[f] << dependencyInInstanceVariableInit[1] 
+          	print f,' has class init in instance variable ',dependencyInInstanceVariableInit[1],"\n"
           end
         end
 
