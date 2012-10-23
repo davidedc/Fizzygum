@@ -101,13 +101,15 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">deltaY = </span><span class="mi">0</span>
     <span class="nv">friction = </span><span class="mf">0.8</span>
     <span class="vi">@step = </span><span class="o">=&gt;</span>
-      <span class="k">if</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">mouseButton</span> <span class="o">and</span> <span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()))</span>
-        <span class="nv">newPos = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
-        <span class="nv">deltaX = </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">oldPos</span><span class="p">.</span><span class="nx">x</span>
-        <span class="nx">@scrollX</span> <span class="nx">deltaX</span>  <span class="k">if</span> <span class="nx">deltaX</span> <span class="o">isnt</span> <span class="mi">0</span>
-        <span class="nv">deltaY = </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">oldPos</span><span class="p">.</span><span class="nx">y</span>
-        <span class="nx">@scrollY</span> <span class="nx">deltaY</span>  <span class="k">if</span> <span class="nx">deltaY</span> <span class="o">isnt</span> <span class="mi">0</span>
-        <span class="nv">oldPos = </span><span class="nx">newPos</span>
+      <span class="k">if</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">mouseButton</span> <span class="o">and</span>
+        <span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="o">and</span>
+        <span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()))</span>
+          <span class="nv">newPos = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
+          <span class="nv">deltaX = </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">oldPos</span><span class="p">.</span><span class="nx">x</span>
+          <span class="nx">@scrollX</span> <span class="nx">deltaX</span>  <span class="k">if</span> <span class="nx">deltaX</span> <span class="o">isnt</span> <span class="mi">0</span>
+          <span class="nv">deltaY = </span><span class="nx">newPos</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">oldPos</span><span class="p">.</span><span class="nx">y</span>
+          <span class="nx">@scrollY</span> <span class="nx">deltaY</span>  <span class="k">if</span> <span class="nx">deltaY</span> <span class="o">isnt</span> <span class="mi">0</span>
+          <span class="nv">oldPos = </span><span class="nx">newPos</span>
       <span class="k">else</span>
         <span class="nx">unless</span> <span class="nx">@hasVelocity</span>
           <span class="vi">@step = </span><span class="nx">noOpFunction</span>
@@ -130,8 +132,10 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="vi">@step = </span><span class="o">=&gt;</span>
       <span class="nv">pos = </span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
       <span class="nv">inner = </span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">insetBy</span><span class="p">(</span><span class="nx">inset</span><span class="p">)</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">))</span> <span class="o">and</span> <span class="p">(</span><span class="o">not</span> <span class="p">(</span><span class="nx">inner</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)))</span> <span class="o">and</span> <span class="p">(</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="nx">@autoScroll</span> <span class="nx">pos</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">))</span> <span class="o">and</span>
+        <span class="p">(</span><span class="o">not</span> <span class="p">(</span><span class="nx">inner</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)))</span> <span class="o">and</span>
+        <span class="p">(</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+          <span class="nx">@autoScroll</span> <span class="nx">pos</span>
       <span class="k">else</span>
         <span class="vi">@step = </span><span class="nx">noOpFunction</span>
         <span class="vi">@autoScrollTrigger = </span><span class="kc">null</span>

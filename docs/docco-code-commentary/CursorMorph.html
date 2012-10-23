@@ -107,7 +107,8 @@ gotoSlot: (newSlot) ->
         <span class="nx">@target</span><span class="p">.</span><span class="nx">setRight</span> <span class="nx">right</span>
     <span class="nx">@show</span><span class="p">()</span>
     <span class="nx">@setPosition</span> <span class="nx">pos</span>
-    <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">scrollCursorIntoView</span> <span class="nx">@</span><span class="p">,</span> <span class="mi">6</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
+    <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
+      <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">scrollCursorIntoView</span> <span class="nx">@</span><span class="p">,</span> <span class="mi">6</span>
   
   <span class="nv">goLeft: </span><span class="o">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>

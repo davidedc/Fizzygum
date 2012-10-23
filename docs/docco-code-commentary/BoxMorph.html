@@ -36,13 +36,27 @@
     <span class="nv">menu = </span><span class="k">super</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;border width...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
-      <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nborder\nwidth:&quot;</span><span class="p">,</span> <span class="nx">@setBorderWidth</span><span class="p">,</span> <span class="nx">@</span><span class="p">,</span> <span class="nx">@border</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="kc">true</span>
+      <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nborder\nwidth:&quot;</span><span class="p">,</span>
+        <span class="nx">@setBorderWidth</span><span class="p">,</span>
+        <span class="nx">@</span><span class="p">,</span>
+        <span class="nx">@border</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">100</span><span class="p">,</span>
+        <span class="kc">true</span>
     <span class="p">),</span> <span class="s">&quot;set the border&#39;s\nline size&quot;</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;border color...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
       <span class="nx">@pickColor</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nborder color:&quot;</span><span class="p">,</span> <span class="nx">@setBorderColor</span><span class="p">,</span> <span class="nx">@</span><span class="p">,</span> <span class="nx">@borderColor</span>
     <span class="p">),</span> <span class="s">&quot;set the border&#39;s\nline color&quot;</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;corner size...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
-      <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\ncorner\nsize:&quot;</span><span class="p">,</span> <span class="nx">@setCornerSize</span><span class="p">,</span> <span class="nx">@</span><span class="p">,</span> <span class="nx">@edge</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="kc">null</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="kc">true</span>
+      <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\ncorner\nsize:&quot;</span><span class="p">,</span>
+        <span class="nx">@setCornerSize</span><span class="p">,</span>
+        <span class="nx">@</span><span class="p">,</span>
+        <span class="nx">@edge</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="mi">0</span><span class="p">,</span>
+        <span class="mi">100</span><span class="p">,</span>
+        <span class="kc">true</span>
     <span class="p">),</span> <span class="s">&quot;set the corner&#39;s\nradius&quot;</span>
     <span class="nx">menu</span>
   
