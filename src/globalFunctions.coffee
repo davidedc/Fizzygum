@@ -1,8 +1,10 @@
 # Global Functions ////////////////////////////////////////////////////
 
 nop = ->
-  # do explicitly nothing
-  null
+  # returns the function that does nothing
+  ->    
+    # this is the function that does nothing
+    null
 
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"

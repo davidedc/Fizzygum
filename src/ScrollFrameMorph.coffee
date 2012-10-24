@@ -102,9 +102,6 @@ class ScrollFrameMorph extends FrameMorph
     newY = b - ch  if newY + ch < b
     @contents.setTop newY  if newY isnt ct
   
-  step: ->
-      nop()
-  
   mouseDownLeft: (pos) ->
     return null  unless @isScrollingByDragging
     world = @root()

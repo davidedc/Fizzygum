@@ -729,9 +729,6 @@ class Morph extends MorphicNode
   
   
   # Morph utilities:
-  nop: ->
-    nop()
-  
   resize: ->
     @world().activeHandle = new HandleMorph(@)
   

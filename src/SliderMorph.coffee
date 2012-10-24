@@ -25,6 +25,7 @@ class SliderMorph extends CircleBoxMorph
     @alpha = 0.3
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
+    @step = null
   
   
   # this.drawNew();
