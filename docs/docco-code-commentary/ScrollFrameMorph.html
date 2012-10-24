@@ -90,9 +90,6 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">newY = </span><span class="nx">b</span> <span class="o">-</span> <span class="nx">ch</span>  <span class="k">if</span> <span class="nx">newY</span> <span class="o">+</span> <span class="nx">ch</span> <span class="o">&lt;</span> <span class="nx">b</span>
     <span class="nx">@contents</span><span class="p">.</span><span class="nx">setTop</span> <span class="nx">newY</span>  <span class="k">if</span> <span class="nx">newY</span> <span class="o">isnt</span> <span class="nx">ct</span>
   
-  <span class="nv">step: </span><span class="o">-&gt;</span>
-      <span class="nx">nop</span><span class="p">()</span>
-  
   <span class="nv">mouseDownLeft: </span><span class="nf">(pos) -&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="nx">unless</span> <span class="nx">@isScrollingByDragging</span>
     <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span>
@@ -112,10 +109,10 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
           <span class="nv">oldPos = </span><span class="nx">newPos</span>
       <span class="k">else</span>
         <span class="nx">unless</span> <span class="nx">@hasVelocity</span>
-          <span class="vi">@step = </span><span class="nx">noOpFunction</span>
+          <span class="vi">@step = </span><span class="nx">noOperation</span>
         <span class="k">else</span>
           <span class="k">if</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">deltaX</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">and</span> <span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">abs</span><span class="p">(</span><span class="nx">deltaY</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">)</span>
-            <span class="vi">@step = </span><span class="nx">noOpFunction</span>
+            <span class="vi">@step = </span><span class="nx">noOperation</span>
           <span class="k">else</span>
             <span class="nv">deltaX = </span><span class="nx">deltaX</span> <span class="o">*</span> <span class="nx">friction</span>
             <span class="nx">@scrollX</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">deltaX</span><span class="p">)</span>
@@ -137,7 +134,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
         <span class="p">(</span><span class="nx">hand</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
           <span class="nx">@autoScroll</span> <span class="nx">pos</span>
       <span class="k">else</span>
-        <span class="vi">@step = </span><span class="nx">noOpFunction</span>
+        <span class="vi">@step = </span><span class="nx">noOperation</span>
         <span class="vi">@autoScrollTrigger = </span><span class="kc">null</span>
   
   <span class="nv">autoScroll: </span><span class="nf">(pos) -&gt;</span>

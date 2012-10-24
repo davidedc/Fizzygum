@@ -21,9 +21,10 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="vi">@alpha = </span><span class="mf">0.3</span>
     <span class="vi">@color = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="vi">@step = </span><span class="kc">null</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>this.drawNew();</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">autoOrientation: </span><span class="o">-&gt;</span>
-      <span class="nx">nop</span><span class="p">()</span>
+      <span class="nx">noOperation</span>
   
   <span class="nv">rangeSize: </span><span class="o">-&gt;</span>
     <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@start</span>
@@ -175,14 +176,16 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nx">list</span><span class="p">.</span><span class="nx">push</span> <span class="s">&quot;setStart&quot;</span><span class="p">,</span> <span class="s">&quot;setStop&quot;</span><span class="p">,</span> <span class="s">&quot;setSize&quot;</span>
     <span class="nx">list</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>SliderMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">step = </span><span class="kc">null</span>
-  <span class="nv">mouseDownLeft: </span><span class="nf">(pos) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>SliderMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseDownLeft: </span><span class="nf">(pos) -&gt;</span>
     <span class="nx">unless</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
       <span class="vi">@offset = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">()</span> <span class="c1"># return null;</span>
     <span class="k">else</span>
       <span class="vi">@offset = </span><span class="nx">pos</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>
-    <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span>
-    <span class="vi">@step = </span><span class="o">=&gt;</span>
+    <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>this is to create the "drag the slider" effect
+basically if the mouse is pressing within the boundaries
+then in the next step you remember to check again where the mouse
+is and update the scrollbar. As soon as the mouse is unpressed
+then the step function is set to null to save cycles.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@step = </span><span class="o">=&gt;</span>
       <span class="k">if</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">mouseButton</span>
         <span class="nv">mousePos = </span><span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span>
         <span class="k">if</span> <span class="nx">@orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>

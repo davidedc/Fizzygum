@@ -41,7 +41,7 @@ and it'd not attached to the WorldMorph.</p>             </td>             <td c
     <span class="vi">@broken = </span><span class="p">[]</span>
   
   <span class="nv">doOneCycle: </span><span class="o">-&gt;</span>
-    <span class="nx">@stepFrame</span><span class="p">()</span>
+    <span class="nx">@runChildrensStepFunction</span><span class="p">()</span>
     <span class="nx">@updateBroken</span><span class="p">()</span>
   
   <span class="nv">fillPage: </span><span class="o">-&gt;</span>
@@ -187,16 +187,16 @@ received by all browsers</p>             </td>             <td class="code">    
       <span class="nv">msg = </span><span class="s">&quot;Are you sure you want to leave?&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-28">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-28">&#182;</a>               </div>               <p>For IE and Firefox</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nv">e.returnValue = </span><span class="nx">msg</span>  <span class="k">if</span> <span class="nx">e</span></pre></div>             </td>           </tr>                               <tr id="section-29">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-29">&#182;</a>               </div>               <p>For Safari / chrome</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">msg</span>
   
   <span class="nv">mouseDownLeft: </span><span class="o">-&gt;</span>
-    <span class="nx">nop</span><span class="p">()</span>
+    <span class="nx">noOperation</span>
   
   <span class="nv">mouseClickLeft: </span><span class="o">-&gt;</span>
-    <span class="nx">nop</span><span class="p">()</span>
+    <span class="nx">noOperation</span>
   
   <span class="nv">mouseDownRight: </span><span class="o">-&gt;</span>
-    <span class="nx">nop</span><span class="p">()</span>
+    <span class="nx">noOperation</span>
   
   <span class="nv">mouseClickRight: </span><span class="o">-&gt;</span>
-    <span class="nx">nop</span><span class="p">()</span>
+    <span class="nx">noOperation</span>
   
   <span class="nv">wantsDropOf: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-30">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-30">&#182;</a>               </div>               <p>allow handle drops if any drops are allowed</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@acceptsDrops</span>
   
