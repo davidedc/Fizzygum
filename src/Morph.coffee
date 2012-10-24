@@ -89,14 +89,13 @@ class Morph extends MorphicNode
     # then step is set to the function that does nothing (i.e. a function noOperation that
     # only returns null) 
     return null  unless @step
-    current = Date.now()
-    elapsed = current - @lastTime
+    elapsed = WorldMorph.currentTime - @lastTime
     if @fps > 0
       leftover = (1000 / @fps) - elapsed
     else
       leftover = 0
     if leftover < 1
-      @lastTime = current
+      @lastTime = WorldMorph.currentTime
       @step()
       @children.forEach (child) ->
         child.runChildrensStepFunction()

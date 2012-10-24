@@ -11,7 +11,8 @@ class WorldMorph extends FrameMorph
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)
-  @MorphicPreferences = standardSettings
+  @MorphicPreferences: standardSettings
+  @currentTime: null
 
   constructor: (aCanvas, fillPage) ->
     super()
@@ -53,11 +54,13 @@ class WorldMorph extends FrameMorph
     @hand.fullDrawOn aCanvas, aRect
   
   updateBroken: ->
+    #console.log "number of broken rectangles: " + @broken.length
     @broken.forEach (rect) =>
       @fullDrawOn @worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
     @broken = []
   
   doOneCycle: ->
+    WorldMorph.currentTime = Date.now();
     @runChildrensStepFunction()
     @updateBroken()
   
