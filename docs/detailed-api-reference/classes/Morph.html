@@ -393,8 +393,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#fullBounds-instance'>
-        - (void) <strong>fullBounds</strong>()
+      <a href='#boundsIncludingChildren-instance'>
+        - (void) <strong>boundsIncludingChildren</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -403,8 +403,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#fullBoundsNoShadow-instance'>
-        - (void) <strong>fullBoundsNoShadow</strong>()
+      <a href='#boundsIncludingChildrenNoShadow-instance'>
+        - (void) <strong>boundsIncludingChildrenNoShadow</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -688,7 +688,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph full image:
+      this function is not used.
     </span>
   </li>
   <li>
@@ -778,7 +778,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph updating:
+      Morph updating ///////////////////////////////////////////////////////////////
     </span>
   </li>
   <li>
@@ -808,7 +808,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph accessing - structure:
+      Morph accessing - structure //////////////////////////////////////////////
     </span>
   </li>
   <li>
@@ -858,7 +858,7 @@
       </a>
     </span>
     <span class='desc'>
-      alternative - more elegant and possibly more performant - solution for morphAt.
+      used for example: - to determine which morphs you can attach a morph to - for a SliderMorph&#39;s &quot;set target&quot; so you can change properties of another Morph - by the HandleMorph when you attach it to some other morph
     </span>
   </li>
   <li>
@@ -888,7 +888,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph duplicating:
+      
     </span>
   </li>
   <li>
@@ -928,7 +928,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph dragging and dropping:
+      
     </span>
   </li>
   <li>
@@ -988,7 +988,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph utilities:
+      
     </span>
   </li>
   <li>
@@ -1058,7 +1058,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph menus:
+      
     </span>
   </li>
   <li>
@@ -1148,7 +1148,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph entry field tabbing:
+      
     </span>
   </li>
   <li>
@@ -1218,7 +1218,7 @@
       </a>
     </span>
     <span class='desc'>
-      Morph collision detection:
+      
     </span>
   </li>
   <li>
@@ -1451,15 +1451,15 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='fullBounds-instance'>
-      - (void) <strong>fullBounds</strong>()
+    <p class='signature' id='boundsIncludingChildren-instance'>
+      - (void) <strong>boundsIncludingChildren</strong>()
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='fullBoundsNoShadow-instance'>
-      - (void) <strong>fullBoundsNoShadow</strong>()
+    <p class='signature' id='boundsIncludingChildrenNoShadow-instance'>
+      - (void) <strong>boundsIncludingChildrenNoShadow</strong>()
     </p>
     <div class='tags'>
 </div>
@@ -1710,7 +1710,7 @@ context.fillStyle = pattern;
       - (void) <strong>fullImageClassic</strong>()
     </p>
     <div class='docstring'>
-  <p>Morph full image:</p>
+  <p>this function is not used.</p>
 </div>
 <div class='tags'>
 </div>
@@ -1782,7 +1782,7 @@ context.fillStyle = pattern;
       - (void) <strong>changed</strong>()
     </p>
     <div class='docstring'>
-  <p>Morph updating:</p>
+  <p>Morph updating ///////////////////////////////////////////////////////////////</p>
 </div>
 <div class='tags'>
 </div>
@@ -1806,7 +1806,7 @@ context.fillStyle = pattern;
       - (void) <strong>world</strong>()
     </p>
     <div class='docstring'>
-  <p>Morph accessing - structure:</p>
+  <p>Morph accessing - structure //////////////////////////////////////////////</p>
 </div>
 <div class='tags'>
 </div>
@@ -1844,13 +1844,10 @@ context.fillStyle = pattern;
       - (void) <strong>overlappedMorphs</strong>()
     </p>
     <div class='docstring'>
-  <p>alternative -  more elegant and possibly more
-performant - solution for morphAt.
-Has some issues, commented out for now</p><p>Morph.prototype.morphAt = function (aPoint) {
-return this.topMorphSuchThat(function (m) {
-    return m.fullBounds().containsPoint(aPoint);
-});
-};</p>
+  <p>used for example:
+- to determine which morphs you can attach a morph to
+- for a SliderMorph&#39;s &quot;set target&quot; so you can change properties of another Morph
+- by the HandleMorph when you attach it to some other morph</p>
 </div>
 <div class='tags'>
 </div>
@@ -1876,10 +1873,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='copy-instance'>
       - (void) <strong>copy</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph duplicating:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -1907,10 +1901,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='rootForGrab-instance'>
       - (void) <strong>rootForGrab</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph dragging and dropping:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -1952,10 +1943,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='resize-instance'>
       - (void) <strong>resize</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph utilities:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -2004,10 +1992,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='contextMenu-instance'>
       - (void) <strong>contextMenu</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph menus:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -2073,10 +2058,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='allEntryFields-instance'>
       - (void) <strong>allEntryFields</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph entry field tabbing:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -2131,10 +2113,7 @@ return this.topMorphSuchThat(function (m) {
     <p class='signature' id='isTouching-instance'>
       - (void) <strong>isTouching</strong>(otherMorph)
     </p>
-    <div class='docstring'>
-  <p>Morph collision detection:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -2148,7 +2127,7 @@ return this.topMorphSuchThat(function (m) {
     </div>
     <div id='footer'>
   Generated on
-  Wed Oct 24 2012 02:30:33 GMT+0100 (BST)
+  Wed Oct 24 2012 20:01:20 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.1
