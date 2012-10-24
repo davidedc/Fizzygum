@@ -1,6 +1,7 @@
 # FrameMorph //////////////////////////////////////////////////////////
 
-# I clip my submorphs at my bounds
+# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+# and event handling.
 
 class FrameMorph extends Morph
 
@@ -28,12 +29,26 @@ class FrameMorph extends Morph
   fullDrawOn: (aCanvas, aRect) ->
     return null  unless @isVisible
     boundsRectangle = aRect or @boundsIncludingChildren()
-    @drawOn aCanvas, boundsRectangle
+    
+    # the part to be redrawn could be outside the frame entirely,
+    # in which case we can stop going down the morphs inside the frame
+    # since the whole point of the frame is to clip everything to a specific
+    # rectangle.
+    # So, check which part of the Frame should be redrawn:
+    dirtyPartOfFrame = @bounds.intersect(boundsRectangle)
+    
+    # if there is no dirty part in the frame then do nothing
+    return null unless dirtyPartOfFrame.extent().gt(new Point(0, 0))
+    
+    # this draws the background of the frame itself, which could
+    # contain an image or a pentrail
+    @drawOn aCanvas, dirtyPartOfFrame
+    
     @children.forEach (child) =>
       if child instanceof ShadowMorph
         child.fullDrawOn aCanvas, boundsRectangle
       else
-        child.fullDrawOn aCanvas, @bounds.intersect(boundsRectangle)
+        child.fullDrawOn aCanvas, dirtyPartOfFrame
   
   
   # FrameMorph scrolling optimization:
