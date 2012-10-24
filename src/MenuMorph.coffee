@@ -19,6 +19,12 @@ class MenuMorph extends BoxMorph
     @items = []
     super()
     @border = null # the Box Morph constructor puts this to 2
+    # important not to traverse all the children for stepping through, because
+    # there could be a lot of entries for example in the inspector the number
+    # of properties of an object - there could be a 100 of those and we don't
+    # want to traverse them all. Setting step to null (as opposed to nop) means
+    # that
+    @step = null
   
   addItem: (labelString, action, hint, color) ->
     @items.push [localize(labelString or "close"), action or nop, hint, color]
