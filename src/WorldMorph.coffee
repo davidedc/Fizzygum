@@ -13,6 +13,7 @@ class WorldMorph extends FrameMorph
   # (but anyways, it was global before, so it's not any worse than before)
   @MorphicPreferences: standardSettings
   @currentTime: null
+  @showRedraws: false
 
   constructor: (aCanvas, fillPage) ->
     super()
@@ -47,7 +48,14 @@ class WorldMorph extends FrameMorph
       rect.intersects fb
   
   
+  # all fullDraws result into actual blittings of images done
+  # by the drawOn function.
+  # The drawOn function is defined in Morph and is not overriden by
+  # any morph.
   fullDrawOn: (aCanvas, aRect) ->
+    # invokes the Morph's fullDrawOn, which has only two implementations:
+    # the default one by Morph which just invokes the drawOn of all children
+    # and the interesting one in FrameMorph which 
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
     # and it'd not attached to the WorldMorph.

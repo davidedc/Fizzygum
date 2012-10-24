@@ -345,6 +345,7 @@ class Morph extends MorphicNode
       w = Math.min(src.width(), @image.width - sl)
       h = Math.min(src.height(), @image.height - st)
       return null  if w < 1 or h < 1
+
       context.drawImage @image,
         Math.round(src.left()),
         Math.round(src.top()),
@@ -354,6 +355,14 @@ class Morph extends MorphicNode
         Math.round(area.top()),
         Math.round(w),
         Math.round(h)
+
+      if WorldMorph.showRedraws
+        randomR = Math.round(Math.random()*255)
+        randomG = Math.round(Math.random()*255)
+        randomB = Math.round(Math.random()*255)
+        context.globalAlpha = 0.5
+        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        context.fillRect(Math.round(area.left()),Math.round(area.top()),Math.round(w),Math.round(h));
   
   
   # "for debugging purposes:"
@@ -420,6 +429,8 @@ class Morph extends MorphicNode
   
   
   # Morph full image:
+  
+  # this function is not used.
   fullImageClassic: ->
     # why doesn't this work for all Morphs?
     fb = @boundsIncludingChildren()
