@@ -1,13 +1,13 @@
 # WorldMorph //////////////////////////////////////////////////////////
 
-# this comment below is needed to figure our dependencies between classes
+# these comments below needed to figure our dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES globalSettings
 
 # I represent the <canvas> element
 class WorldMorph extends FrameMorph
 
-  # this variable shouldn't be static to the World, because
+  # these variables shouldn't be static to the WorldMorph, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)

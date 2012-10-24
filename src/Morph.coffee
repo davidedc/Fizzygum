@@ -526,7 +526,7 @@ class Morph extends MorphicNode
     @image
   
   
-  # Morph updating:
+  # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
     if @trackChanges
       w = @root()
@@ -545,7 +545,7 @@ class Morph extends MorphicNode
     @parent.childChanged @  if @parent
   
   
-  # Morph accessing - structure:
+  # Morph accessing - structure //////////////////////////////////////////////
   world: ->
     root = @root()
     return root  if root instanceof WorldMorph
@@ -577,7 +577,6 @@ class Morph extends MorphicNode
     #
     result
   
-  
   #
   #	alternative -  more elegant and possibly more
   #	performant - solution for morphAt.
@@ -589,8 +588,18 @@ class Morph extends MorphicNode
   #	});
   #};
   #
+  
+  # used for example:
+  # - to determine which morphs you can attach a morph to
+  # - for a SliderMorph's "set target" so you can change properties of another Morph
+  # - by the HandleMorph when you attach it to some other morph
   overlappedMorphs: ->
-    #exclude the World
+    # find all morphs in the world that intersect me,
+    # excluding myself and the World
+    # and any of my parents
+    #    (cause I'm already attached to them directly or indirectly)
+    # or any of my children
+    #    (cause they are already attached to me directly or indirectly)
     world = @world()
     fb = @boundsIncludingChildren()
     allParents = @allParents()
@@ -617,10 +626,12 @@ class Morph extends MorphicNode
       point = aPoint.subtract(@bounds.origin)
       context = @image.getContext("2d")
       data = context.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1)
+      # check the 4th byte - the Alpha (RGBA)
       return data.data[3] is 0
     false
   
-  # Morph duplicating:
+  # Morph duplicating ////////////////////////////////////////////////////
+  
   copy: ->
     c = copy(@)
     c.parent = null
@@ -672,7 +683,8 @@ class Morph extends MorphicNode
       @[property] = dict[property]  if property.isMorph and dict[property]
   
   
-  # Morph dragging and dropping:
+  # Morph dragging and dropping /////////////////////////////////////////
+  
   rootForGrab: ->
     return @parent.rootForGrab()  if @ instanceof ShadowMorph
     return @parent  if @parent instanceof ScrollFrameMorph
@@ -730,7 +742,8 @@ class Morph extends MorphicNode
         @fps = oldFps
   
   
-  # Morph utilities:
+  # Morph utilities ////////////////////////////////////////////////////////
+  
   resize: ->
     @world().activeHandle = new HandleMorph(@)
   
@@ -836,7 +849,8 @@ class Morph extends MorphicNode
     inspector.changed()
   
   
-  # Morph menus:
+  # Morph menus ////////////////////////////////////////////////////////////////
+  
   contextMenu: ->
     return @customContextMenu  if @customContextMenu
     world = @world()
@@ -942,7 +956,8 @@ class Morph extends MorphicNode
     ["setLeft", "setTop", "setWidth", "setHeight", "setAlphaScaled"]
   
   
-  # Morph entry field tabbing:
+  # Morph entry field tabbing //////////////////////////////////////////////
+  
   allEntryFields: ->
     @allChildren().filter (each) ->
       each.isEditable
@@ -1023,7 +1038,8 @@ class Morph extends MorphicNode
     result
   
   
-  # Morph collision detection:
+  # Morph collision detection - not used anywhere at the moment ////////////////////////
+  
   isTouching: (otherMorph) ->
     oImg = @overlappingImage(otherMorph)
     data = oImg.getContext("2d").getImageData(1, 1, oImg.width, oImg.height).data

@@ -310,6 +310,7 @@ class HandMorph extends Morph
     @fullChanged()
   
   processMouseMove: (event) ->
+    #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
     @setPosition pos
@@ -340,6 +341,9 @@ class HandMorph extends Morph
           @bounds.origin = fb.center()
           @grab morph
           @setPosition pos
+    #endProcessMouseMove = new Date().getTime()
+    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
+    #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);
     
     #
     #	original, more cautious code for grabbing Morphs,
