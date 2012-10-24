@@ -89,12 +89,16 @@ class Morph extends MorphicNode
     # then step is set to the function that does nothing (i.e. a function noOperation that
     # only returns null) 
     return null  unless @step
+
+    # for objects where @fps is defined, check which ones are due to be stepped
+    # and which ones want to wait. 
     elapsed = WorldMorph.currentTime - @lastTime
     if @fps > 0
-      leftover = (1000 / @fps) - elapsed
+      timeRemainingToWaitedFrame = (1000 / @fps) - elapsed
     else
-      leftover = 0
-    if leftover < 1
+      timeRemainingToWaitedFrame = 0
+    
+    if timeRemainingToWaitedFrame < 1
       @lastTime = WorldMorph.currentTime
       @step()
       @children.forEach (child) ->
