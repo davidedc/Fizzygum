@@ -24,7 +24,6 @@ class MenuMorph extends BoxMorph
     # of properties of an object - there could be a 100 of those and we don't
     # want to traverse them all. Setting step to null (as opposed to nop) means
     # that
-    @step = null
   
   addItem: (labelString, action, hint, color) ->
     @items.push [localize(labelString or "close"), action or nop, hint, color]

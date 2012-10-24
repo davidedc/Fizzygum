@@ -58,7 +58,7 @@ class WorldMorph extends FrameMorph
     @broken = []
   
   doOneCycle: ->
-    @stepFrame()
+    @runChildrensStepFunction()
     @updateBroken()
   
   fillPage: ->
@@ -256,16 +256,16 @@ class WorldMorph extends FrameMorph
       msg
   
   mouseDownLeft: ->
-    nop()
+    noOperation
   
   mouseClickLeft: ->
-    nop()
+    noOperation
   
   mouseDownRight: ->
-    nop()
+    noOperation
   
   mouseClickRight: ->
-    nop()
+    noOperation
   
   wantsDropOf: ->
     # allow handle drops if any drops are allowed

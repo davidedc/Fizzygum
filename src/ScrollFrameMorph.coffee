@@ -121,10 +121,10 @@ class ScrollFrameMorph extends FrameMorph
           oldPos = newPos
       else
         unless @hasVelocity
-          @step = nop()
+          @step = noOperation
         else
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
-            @step = nop()
+            @step = noOperation
           else
             deltaX = deltaX * friction
             @scrollX Math.round(deltaX)
@@ -146,7 +146,7 @@ class ScrollFrameMorph extends FrameMorph
         (hand.children.length > 0)
           @autoScroll pos
       else
-        @step = nop()
+        @step = noOperation
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->

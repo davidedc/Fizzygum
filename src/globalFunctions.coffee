@@ -6,6 +6,9 @@ nop = ->
     # this is the function that does nothing
     null
 
+noOperation = ->
+    null
+
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
 

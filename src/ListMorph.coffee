@@ -37,6 +37,9 @@ class ListMorph extends ScrollFrameMorph
         return element.toSource()  if element.toSource
         element.toString()
     @buildListContents()
+    # it's important to leave the step as the default noOperation
+    # instead of null because the scrollbars (inherited from scrollframe)
+    # need the step function to react to mouse drag.
   
   buildListContents: ->
     @listContents.destroy()  if @listContents

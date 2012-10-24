@@ -25,7 +25,7 @@ class SliderButtonMorph extends CircleBoxMorph
     super orientation
   
   autoOrientation: ->
-      nop()
+      noOperation
   
   drawNew: ->
     colorBak = @color.copy()
@@ -133,4 +133,4 @@ class SliderButtonMorph extends CircleBoxMorph
   
   # prevent my parent from getting picked up
   mouseMove: ->
-      nop()
+      noOperation
