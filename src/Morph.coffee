@@ -170,19 +170,19 @@ class Morph extends MorphicNode
   height: ->
     @bounds.height()
   
-  fullBounds: ->
+  boundsIncludingChildren: ->
     result = @bounds
     @children.forEach (child) ->
-      result = result.merge(child.fullBounds())  if child.isVisible
+      result = result.merge(child.boundsIncludingChildren())  if child.isVisible
     #
     result
   
-  fullBoundsNoShadow: ->
+  boundsIncludingChildrenNoShadow: ->
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
       if (child not instanceof ShadowMorph) and (child.isVisible)
-        result = result.merge(child.fullBounds())
+        result = result.merge(child.boundsIncludingChildren())
     #
     result
   
@@ -237,17 +237,17 @@ class Morph extends MorphicNode
     @setPosition aPoint.subtract(@extent().floorDivideBy(2))
   
   setFullCenter: (aPoint) ->
-    @setPosition aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
+    @setPosition aPoint.subtract(@boundsIncludingChildren().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
   keepWithin: (aMorph) ->
-    leftOff = @fullBounds().left() - aMorph.left()
+    leftOff = @boundsIncludingChildren().left() - aMorph.left()
     @moveBy new Point(-leftOff, 0)  if leftOff < 0
-    rightOff = @fullBounds().right() - aMorph.right()
+    rightOff = @boundsIncludingChildren().right() - aMorph.right()
     @moveBy new Point(-rightOff, 0)  if rightOff > 0
-    topOff = @fullBounds().top() - aMorph.top()
+    topOff = @boundsIncludingChildren().top() - aMorph.top()
     @moveBy new Point(0, -topOff)  if topOff < 0
-    bottomOff = @fullBounds().bottom() - aMorph.bottom()
+    bottomOff = @boundsIncludingChildren().bottom() - aMorph.bottom()
     @moveBy new Point(0, -bottomOff)  if bottomOff > 0
   
   
@@ -392,7 +392,7 @@ class Morph extends MorphicNode
   #	
   fullDrawOn: (aCanvas, aRect) ->
     return null  unless @isVisible
-    rectangle = aRect or @fullBounds()
+    rectangle = aRect or @boundsIncludingChildren()
     @drawOn aCanvas, rectangle
     @children.forEach (child) ->
       child.fullDrawOn aCanvas, rectangle
@@ -422,16 +422,16 @@ class Morph extends MorphicNode
   # Morph full image:
   fullImageClassic: ->
     # why doesn't this work for all Morphs?
-    fb = @fullBounds()
+    fb = @boundsIncludingChildren()
     img = newCanvas(fb.extent())
     @fullDrawOn img, fb
     img.globalAlpha = @alpha
     img
   
   fullImage: ->
-    img = newCanvas(@fullBounds().extent())
+    img = newCanvas(@boundsIncludingChildren().extent())
     ctx = img.getContext("2d")
-    fb = @fullBounds()
+    fb = @boundsIncludingChildren()
     @allChildren().forEach (morph) ->
       if morph.isVisible
         ctx.globalAlpha = morph.alpha
@@ -447,7 +447,7 @@ class Morph extends MorphicNode
     # fallback for Windows Chrome-Shadow bug
     offset = off_ or new Point(7, 7)
     clr = color or new Color(0, 0, 0)
-    fb = @fullBounds().extent()
+    fb = @boundsIncludingChildren().extent()
     img = @fullImage()
     outline = newCanvas(fb)
     ctx = outline.getContext("2d")
@@ -466,7 +466,7 @@ class Morph extends MorphicNode
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
-    fb = @fullBounds().extent().add(blur * 2)
+    fb = @boundsIncludingChildren().extent().add(blur * 2)
     img = @fullImage()
     sha = newCanvas(fb)
     ctx = sha.getContext("2d")
@@ -486,7 +486,7 @@ class Morph extends MorphicNode
     shadow = new ShadowMorph()
     offset = off_ or new Point(7, 7)
     alpha = a or ((if (a is 0) then 0 else 0.2))
-    fb = @fullBounds()
+    fb = @boundsIncludingChildren()
     shadow.setExtent fb.extent().add(@shadowBlur * 2)
     if useBlurredShadows
       shadow.image = @shadowImageBlurred(offset, color)
@@ -536,7 +536,7 @@ class Morph extends MorphicNode
   fullChanged: ->
     if @trackChanges
       w = @root()
-      w.broken.push @fullBounds().spread()  if w instanceof WorldMorph
+      w.broken.push @boundsIncludingChildren().spread()  if w instanceof WorldMorph
   
   childChanged: ->
     # react to a  change in one of my children,
@@ -573,7 +573,7 @@ class Morph extends MorphicNode
     morphs = @allChildren().slice(0).reverse()
     result = null
     morphs.forEach (m) ->
-      result = m  if m.fullBounds().containsPoint(aPoint) and (result is null)
+      result = m  if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
     #
     result
   
@@ -585,14 +585,14 @@ class Morph extends MorphicNode
   #
   #Morph.prototype.morphAt = function (aPoint) {
   #	return this.topMorphSuchThat(function (m) {
-  #		return m.fullBounds().containsPoint(aPoint);
+  #		return m.boundsIncludingChildren().containsPoint(aPoint);
   #	});
   #};
   #
   overlappedMorphs: ->
     #exclude the World
     world = @world()
-    fb = @fullBounds()
+    fb = @boundsIncludingChildren()
     allParents = @allParents()
     allChildren = @allChildren()
     morphs = world.allChildren()
@@ -602,7 +602,7 @@ class Morph extends MorphicNode
         m isnt world and
         not contains(allParents, m) and
         not contains(allChildren, m) and
-        m.fullBounds().intersects(fb)
+        m.boundsIncludingChildren().intersects(fb)
   
   # Morph pixel access:
   getPixelColor: (aPoint) ->
@@ -1032,8 +1032,8 @@ class Morph extends MorphicNode
     ) isnt null
   
   overlappingImage: (otherMorph) ->
-    fb = @fullBounds()
-    otherFb = otherMorph.fullBounds()
+    fb = @boundsIncludingChildren()
+    otherFb = otherMorph.boundsIncludingChildren()
     oRect = fb.intersect(otherFb)
     oImg = newCanvas(oRect.extent())
     ctx = oImg.getContext("2d")

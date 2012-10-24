@@ -22,8 +22,8 @@ class HandMorph extends Morph
   
   changed: ->
     if @world isnt null
-      b = @fullBounds()
-      @world.broken.push @fullBounds().spread()  unless b.extent().eq(new Point())
+      b = @boundsIncludingChildren()
+      @world.broken.push @boundsIncludingChildren().spread()  unless b.extent().eq(new Point())
   
   
   # HandMorph navigation:
@@ -334,8 +334,8 @@ class HandMorph extends Morph
           @grab morph
           @grabOrigin = @morphToGrab.situation()
         #
-        # if the mouse has left its fullBounds, center it
-        fb = morph.fullBounds()
+        # if the mouse has left its boundsIncludingChildren, center it
+        fb = morph.boundsIncludingChildren()
         unless fb.containsPoint(pos)
           @bounds.origin = fb.center()
           @grab morph

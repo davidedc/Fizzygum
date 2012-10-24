@@ -16,7 +16,7 @@ class FrameMorph extends Morph
       @noticesTransparentClick = false
       @alpha = 0
   
-  fullBounds: ->
+  boundsIncludingChildren: ->
     shadow = @getShadow()
     return @bounds.merge(shadow.bounds)  if shadow isnt null
     @bounds
@@ -27,7 +27,7 @@ class FrameMorph extends Morph
   
   fullDrawOn: (aCanvas, aRect) ->
     return null  unless @isVisible
-    boundsRectangle = aRect or @fullBounds()
+    boundsRectangle = aRect or @boundsIncludingChildren()
     @drawOn aCanvas, boundsRectangle
     @children.forEach (child) =>
       if child instanceof ShadowMorph
@@ -51,7 +51,7 @@ class FrameMorph extends Morph
     if @children.length > 0
       result = @children[0].bounds
       @children.forEach (child) ->
-        result = result.merge(child.fullBounds())
+        result = result.merge(child.boundsIncludingChildren())
     result
   
   keepInScrollFrame: ->

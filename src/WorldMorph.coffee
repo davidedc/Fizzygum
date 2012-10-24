@@ -42,7 +42,7 @@ class WorldMorph extends FrameMorph
   # World Morph display:
   brokenFor: (aMorph) ->
     # private
-    fb = aMorph.fullBounds()
+    fb = aMorph.boundsIncludingChildren()
     @broken.filter (rect) ->
       rect.intersects fb
   

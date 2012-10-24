@@ -41,12 +41,12 @@ class BouncerMorph extends Morph
           @moveDown()
         else
           @moveUp()
-        @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
-        @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
+        @direction = "down"  if @boundsIncludingChildren().top() < @parent.top() and @direction is "up"
+        @direction = "up"  if @boundsIncludingChildren().bottom() > @parent.bottom() and @direction is "down"
       else if @type is "horizontal"
         if @direction is "right"
           @moveRight()
         else
           @moveLeft()
-        @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
-        @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
+        @direction = "right"  if @boundsIncludingChildren().left() < @parent.left() and @direction is "left"
+        @direction = "left"  if @boundsIncludingChildren().right() > @parent.right() and @direction is "right"
