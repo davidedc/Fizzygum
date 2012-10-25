@@ -953,7 +953,7 @@
 /*global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 FileList, getBlurredShadowSupport*/
 
-var morphicVersion = '2012-October-22';
+var morphicVersion = '2012-October-25';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = getBlurredShadowSupport(); // check for Chrome-bug
 
@@ -5944,6 +5944,7 @@ InspectorMorph.prototype.buildPanes = function () {
 	};
 	this.list.hBar.alpha = 0.6;
 	this.list.vBar.alpha = 0.6;
+    this.list.contents.step = null;
 	this.add(this.list);
 
 	// details pane
@@ -8046,20 +8047,21 @@ FrameMorph.prototype.fullImage = function () {
 };
 
 FrameMorph.prototype.fullDrawOn = function (aCanvas, aRect) {
-	var myself = this, rectangle;
+	var rectangle, dirty;
 	if (!this.isVisible) {
 		return null;
 	}
 	rectangle = aRect || this.fullBounds();
-	this.drawOn(aCanvas, rectangle);
+    dirty = this.bounds.intersect(rectangle);
+    if (!dirty.extent().gt(new Point(0, 0))) {
+        return null;
+    }
+    this.drawOn(aCanvas, dirty);
 	this.children.forEach(function (child) {
 		if (child instanceof ShadowMorph) {
 			child.fullDrawOn(aCanvas, rectangle);
 		} else {
-			child.fullDrawOn(
-				aCanvas,
-				myself.bounds.intersect(rectangle)
-			);
+			child.fullDrawOn(aCanvas, dirty);
 		}
 	});
 };
