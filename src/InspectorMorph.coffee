@@ -182,11 +182,13 @@ class InspectorMorph extends BoxMorph
     @list.hBar.alpha = 0.6
     @list.vBar.alpha = 0.6
     # we know that the content of this list in this pane is not going to need the
-    # step function so we disable that form here. We could have disabled that from the
-    # constructor of MenuMorph, but who knows that someone might intend to use a MenuMorph
-    # in some animated way? We know that in this specific case it won't need animation so
+    # step function, so we disable that from here by setting it to null, which
+    # prevents the recursion to children. We could have disabled that from the
+    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph
+    # with some animated content? We know that in this specific case it won't need animation so
     # we set that here. Note that the ListMorph itself does require animation because of the
-    # scrollbars, but the MenuMorph that contains its contents doesn't.
+    # scrollbars, but the MenuMorph (which contains the actual list contents)
+    # in this context doesn't.
     @list.listContents.step = null
     @add @list
     #

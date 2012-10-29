@@ -1,7 +1,8 @@
-# FrameMorph //////////////////////////////////////////////////////////
-
-# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
-# and event handling.
+#| FrameMorph //////////////////////////////////////////////////////////
+#| 
+#| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+#| 
+#| and event handling.
 
 class FrameMorph extends Morph
 

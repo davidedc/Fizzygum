@@ -30,6 +30,7 @@ class MorphicNode
     return @parent.root() unless @parent is null
     @
   
+  # currently unused
   depth: ->
     return 0  if @parent is null
     @parent.depth() + 1
