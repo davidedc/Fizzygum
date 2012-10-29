@@ -13,7 +13,6 @@ import sys
 import re
 
 COMMON_FILES = [
-'docs/overview/headerDoc.txt',
 'src/FrameMorph.coffee',
 'src/InspectorMorph.coffee',
 'src/MorphicNode.coffee',
@@ -69,15 +68,22 @@ def filterOverviewDocComments(files):
 	text = re.split(r"\n+",text)
 
 	outfile = open('../docs/overview/filteredCommentsForReadableStandaloneDoc.md','w')
+	for line in open('../docs/overview/headerDoc.md'):
+		outfile.write("\n"+line)
+	outfile.write("\n\n")
+	outfile.close()
+
+	outfile2 = open('../docs/overview/filteredCommentsForReadableStandaloneDoc.md','a')
 	
 	pattern = re.compile('\s*#\| (.*)')
+
 	
 	for line in text:
 		found = pattern.match(line)
 		if found:
-			outfile.write("\n"+found.group(1))
-	outfile.write("\n"+line)
-	outfile.close()
+			outfile2.write("\n"+found.group(1))
+	outfile2.write("\n"+line)
+	outfile2.close()
 
 
 
