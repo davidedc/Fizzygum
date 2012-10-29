@@ -1,319 +1,211 @@
 
-morphic.js
+#Zombie-Kernel#
 
 
 
-a lively Web-GUI
+a lively Web-GUI.
 
-inspired by Squeak
 
 
+Built on Morphic.js, written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig.
 
-written by Jens Mönig
 
-jens@moenig.org
 
+This document adapted from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
 
 
-Copyright (C) 2012 by Jens Mönig
 
 
 
-This file is part of Snap!. 
 
 
+##Contents##
 
-Snap! is free software: you can redistribute it and/or modify
 
-it under the terms of the GNU Affero General Public License as
 
-published by the Free Software Foundation, either version 3 of
 
-the License, or (at your option) any later version.
 
+### High-level view###
 
 
-This program is distributed in the hope that it will be useful,
 
-but WITHOUT ANY WARRANTY; without even the implied warranty of
+1. Inheritance hierarchy
 
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+2. Yet to implement
 
-GNU Affero General Public License for more details.
+3. Open issues
 
+4. Browser compatibility
 
+5. The big picture
 
-You should have received a copy of the GNU Affero General Public License
 
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+### Programming guide###
 
 
 
+  1. setting up a web page - basics
 
-documentation contents
+  2. setting up a web page for single world
 
-----------------------
+  3. setting up a web page for multiple worlds
 
-I. inheritance hierarchy
+  4. setting up an application
 
-II. object definition toc
+  5. events into
 
-III. yet to implement
+  6. mouse events
 
-IV. open issues
+  7. mouse events - context menu
 
-V. browser compatibility
+  8. mouse events - dragging
 
-VI. the big picture
+  9. mouse events - dropping
 
-VII. programming guide
+  10. mouse events - resize event
 
-  (1) setting up a web page
+  11. keyboard events
 
-    (a) single world
+  12. combined mouse-keyboard events
 
-    (b) multiple worlds
+  13. stepping
 
-    (c) an application
+  14. creating new kinds of morphs
 
-  (2) manipulating morphs
+  15. development and user modes
 
-  (3) events
+  16. turtle graphics
 
-    (a) mouse events
+  17. damage list housekeeping
 
-    (b) context menu
+  18. minifying morphic.js
 
-    (c) dragging
 
-    (d) dropping
 
-    (e) keyboard events
+### Colophon###
 
-    (f) resize event
+18. acknowledgements
 
-          (g) combined mouse-keyboard events
+19. contributors
 
-  (4) stepping
 
-  (5) creating new kinds of morphs
 
-  (6) development and user modes
 
-  (7) turtle graphics
 
-  (8) damage list housekeeping
+#1. Hierarchy#
 
-  (9) minifying morphic.js
 
-VIII. acknowledgements
 
-IX. contributors
 
 
+The following tree lists all constructors hierarchically, indentation indicating inheritance. Refer to this list to get a contextual overview:
 
 
 
-I. hierarchy
 
--------------
 
-the following tree lists all constructors hierarchically,
 
-indentation indicating inheritance. Refer to this list to get a
 
-contextual overview:
+- Point
 
+- Rectangle
 
+- Color
 
-Color
+- Node
 
-Node
+- Morph
 
-  Morph
+    -  BlinkerMorph
 
-    BlinkerMorph
+    -  CursorMorph
 
-      CursorMorph
+    -  BouncerMorph*
 
-    BouncerMorph*
+    -  BoxMorph
 
-    BoxMorph
+    -  InspectorMorph
 
-      InspectorMorph
+    -  MenuMorph
 
-      MenuMorph
+    -  MouseSensorMorph*
 
-      MouseSensorMorph*
+    -  SpeechBubbleMorph
 
-      SpeechBubbleMorph
+    -  CircleBoxMorph
 
-    CircleBoxMorph
+        -  SliderButtonMorph
 
-      SliderButtonMorph
+        -  SliderMorph
 
-      SliderMorph
+    - ColorPaletteMorph
 
-    ColorPaletteMorph
+        -  GrayPaletteMorph
 
-      GrayPaletteMorph
+    - ColorPickerMorph
 
-    ColorPickerMorph
+    - FrameMorph
 
-    FrameMorph
+        - ScrollFrameMorph
 
-      ScrollFrameMorph
+            -  ListMorph
 
-        ListMorph
+        - StringFieldMorph
 
-      StringFieldMorph
+        - WorldMorph
 
-      WorldMorph
+    - HandleMorph
 
-    HandleMorph
+    - HandMorph
 
-    HandMorph
+    - PenMorph
 
-    PenMorph
+    - ShadowMorph
 
-    ShadowMorph
+    - StringMorph
 
-    StringMorph
+    - TextMorph
 
-    TextMorph
+    - TriggerMorph
 
-    TriggerMorph
+        -  MenuItemMorph
 
-      MenuItemMorph
 
-Point
 
-Rectangle
 
 
+#2. Yet to implement#
 
 
 
-II. toc
+Keyboard support for scroll frames and lists.
 
--------
 
-the following list shows the order in which all constructors are
 
-defined. Use this list to locate code in this document:
 
 
 
 
+#3. Open issues#
 
-Global settings
 
-Global functions
 
+Blurry shadows don't work well in Chrome.
 
 
-Color
 
-Point
 
-Rectangle
 
-Node
 
-Morph
 
-ShadowMorph
+#4. Browser compatibility#
 
-HandleMorph
 
-PenMorph
 
-ColorPaletteMorph
+Great care and considerable effort has been taken to make morphic.js runnable and appearing exactly the same on all current browsers:
 
-GrayPaletteMorph
 
-ColorPickerMorph
-
-BlinkerMorph
-
-CursorMorph
-
-BoxMorph
-
-SpeechBubbleMorph
-
-CircleBoxMorph
-
-SliderButtonMorph
-
-SliderMorph
-
-MouseSensorMorph*
-
-InspectorMorph
-
-MenuMorph
-
-StringMorph
-
-TextMorph
-
-TriggerMorph
-
-MenuItemMorph
-
-FrameMorph
-
-ScrollFrameMorph
-
-ListMorph
-
-StringFieldMorph
-
-BouncerMorph*
-
-HandMorph
-
-WorldMorph
-
-
-
-* included only for demo purposes
-
-
-
-
-
-III. yet to implement
-
----------------------
-
-- keyboard support for scroll frames and lists
-
-
-
-
-
-IV. open issues
-
-----------------
-
-- blurry shadows don't work well in Chrome
-
-
-
-
-
-V. browser compatibility
-
-------------------------
-
-I have taken great care and considerable effort to make morphic.js
-
-runnable and appearing exactly the same on all current browsers
-
-available to me:
 
 
 
@@ -327,7 +219,7 @@ available to me:
 
 - Safari for Windows
 
-- safari for Mac
+- Safari for Mac
 
 - Safari for iOS (mobile)
 
@@ -341,477 +233,443 @@ available to me:
 
 
 
-VI. the big picture
 
--------------------
 
-Morphic.js is completely based on Canvas and JavaScript, it is just
-
-Morphic, nothing else. Morphic.js is very basic and covers only the
-
-bare essentials:
+#5. The big picture#
 
 
 
-      * a stepping mechanism (a time-sharing multiplexer for lively
+Morphic.js is completely based on Canvas and JavaScript, it is just Morphic, nothing else. Morphic.js is very basic and covers only the bare essentials:
 
-        user interaction ontop of a single OS/browser thread)
 
-  * progressive display updates (only dirty rectangles are
 
-        redrawn in each display cycle)
+
+
+  * a stepping mechanism (a time-sharing multiplexer for lively user interaction  ontop of a single OS/browser thread)
+
+
+
+  * progressive display updates (only dirty rectangles are redrawn in each display cycle)
+
+
 
   * a tree structure
 
-  * a single World per Canvas element (although you can have
 
-        multiple worlds in multiple Canvas elements on the same web
 
-        page)
+  * a single World per Canvas element (although you can have multiple worlds in multiple Canvas elements on the same web page)
 
-  * a single Hand per World (but you can support multi-touch
 
-        events)
+
+  * a single Hand per World (but you can support multi-touch events)
+
+
 
   * a single text entry focus per World
 
 
 
-In its current state morphic.js doesn't support Transforms (you
 
-cannot rotate Morphs), but with PenMorph there already is a simple
 
-LOGO-like turtle that you can use to draw onto any Morph it is
+In its current state morphic.js doesn't support Transforms (you cannot rotate Morphs), but with PenMorph there already is a simple LOGO-like turtle that you can use to draw onto any Morph it is attached to. I'm planning to add special Morphs that support these operations later on, but not for every Morph in the system.
 
-attached to. I'm planning to add special Morphs that support these
+Therefore these additions ("sprites" etc.) are likely to be part of other libraries ("microworld.js") in separate files.
 
-operations later on, but not for every Morph in the system.
 
-Therefore these additions ("sprites" etc.) are likely to be part of
 
-other libraries ("microworld.js") in separate files.
 
 
+The purpose of morphic.js is to provide a malleable framework that will let me experiment with lively GUIs for my hobby horse, which is drag-and-drop, blocks based programming languages. Those things (BYOB4 - http://byob.berkeley.edu) will be written using morphic.js as a library.
 
-the purpose of morphic.js is to provide a malleable framework that
 
-will let me experiment with lively GUIs for my hobby horse, which
 
-is drag-and-drop, blocks based programming languages. Those things
 
-(BYOB4 - http://byob.berkeley.edu) will be written using morphic.js
 
-as a library.
 
 
+#6. Programming guide#
 
 
 
-VII. programming guide
+Morphic.js provides a library for lively GUIs inside single HTML Canvas elements. Each such canvas element functions as a "world" in which other visible shapes ("morphs") can be positioned and manipulated, often directly and interactively by the user. Morphs are tree nodes and may contain any number of submorphs ("children").
 
-----------------------
 
-Morphic.js provides a library for lively GUIs inside single HTML
 
-Canvas elements. Each such canvas element functions as a "world" in
+All things visible in a morphic World are morphs themselves, i.e. all text rendering, blinking cursors, entry fields, menus, buttons, sliders, windows and dialog boxes etc. are created with morphic.js rather than using HTML DOM elements, and as a consequence can be changed and adjusted by the programmer regardless of proprietary browser behavior.
 
-which other visible shapes ("morphs") can be positioned and
 
-manipulated, often directly and interactively by the user. Morphs
 
-are tree nodes and may contain any number of submorphs ("children").
+Each World has an - invisible - "Hand" resembling the mouse cursor (or the user's finger on touch screens) which handles mouse events, and may also have a keyboardReceiver to handle key events.
 
 
 
-All things visible in a morphic World are morphs themselves, i.e.
+The basic idea of Morphic is to continuously run display cycles and to incrementally update the screen by only redrawing those  World regions which have been "dirtied" since the last redraw. Before each shape is processed for redisplay it gets the chance to perform a "step" procedure, thus allowing for an illusion of concurrency.
 
-all text rendering, blinking cursors, entry fields, menus, buttons,
 
-sliders, windows and dialog boxes etc. are created with morphic.js
 
-rather than using HTML DOM elements, and as a consequence can be
 
-changed and adjusted by the programmer regardless of proprietary
 
-browser behavior.
+##1. Setting up a web page - basics##
 
 
 
-Each World has an - invisible - "Hand" resembling the mouse cursor
+Setting up a web page for Morphic always involves three steps: adding one or more Canvas elements, defining one or more worlds, initializing and starting the main loop.
 
-(or the user's finger on touch screens) which handles mouse events,
 
-and may also have a keyboardReceiver to handle key events.
 
 
 
-The basic idea of Morphic is to continuously run display cycles and
+##2. Setting up a web page for single world##
 
-to incrementally update the screen by only redrawing those  World
 
-regions	which have been "dirtied" since the last redraw. Before
 
-each shape is processed for redisplay it gets the chance to perform
+Most commonly you will want your World to fill the browsers's whole client area. This default situation is easiest and most straight forward.
 
-a "step" procedure, thus allowing for an illusion of concurrency.
 
 
+Example html file:
 
 
 
-(1) setting up a web page
 
--------------------------
 
-Setting up a web page for Morphic always involves three steps:
+    <!DOCTYPE html>  
 
-adding one or more Canvas elements, defining one or more worlds,
+    <html>
 
-initializing and starting the main loop.
+      <head>
 
+        <title>Morphic!</title>
 
+        <script type="text/javascript" src="morphic.js"></script>
 
+        <script type="text/javascript">
 
+    
 
-(a) single world
+          var world;
 
------------------
+    
 
-Most commonly you will want your World to fill the browsers's whole
+          window.onload = function () {
 
-client area. This default situation is easiest and most straight
+            world = new WorldMorph(
 
-forward.
+              document.getElementById('world'));
 
+            setInterval(loop, 50);
 
+          };
 
-example html file:
+    
 
+          function loop() {
 
-
-<!DOCTYPE html>
-
-<html>
-
-  <head>
-
-    <title>Morphic!</title>
-
-    <script type="text/javascript" src="morphic.js"></script>
-
-    <script type="text/javascript">
-
-      var world;
-
-
-
-      window.onload = function () {
-
-        world = new WorldMorph(
-
-          document.getElementById('world'));
-
-        setInterval(loop, 50);
-
-      };
-
-
-
-      function loop() {
-
-        world.doOneCycle();
-
-      }
-
-    </script>
-
-  </head>
-
-  <body>
-
-    <canvas id="world" tabindex="1" width="800" height="600">
-
-      <p>Your browser doesn't support canvas.</p>
-
-    </canvas>
-
-  </body>
-
-</html>
-
-
-
-if you use ScrollFrames or otherwise plan to support mouse wheel
-
-scrolling events, you might also add the following inline-CSS
-
-attribute to the Canvas element:
-
-
-
-  style="position: absolute;"
-
-
-
-which will prevent the World to be scrolled around instead of the
-
-elements inside of it in some browsers.
-
-
-
-
-
-(b) multiple worlds
-
--------------------
-
-If you wish to create a web page with more than one world, make
-
-sure to prevent each world from auto-filling the whole page and
-
-include	it in the main loop. It's also a good idea to give each
-
-world its own tabindex:
-
-
-
-example html file:
-
-
-
-<!DOCTYPE html>
-
-<html>
-
-  <head>
-
-    <title>Morphic!</title>
-
-    <script type="text/javascript" src="morphic.js"></script>
-
-    <script type="text/javascript">
-
-      var world1, world2;
-
-
-
-      window.onload = function () {
-
-        world1 = new WorldMorph(
-
-          document.getElementById('world1'), false);
-
-        world2 = new WorldMorph(
-
-          document.getElementById('world2'), false);
-
-        setInterval(loop, 50);
-
-      };
-
-
-
-      function loop() {
-
-        world1.doOneCycle();
-
-        world2.doOneCycle();
-
-      }
-
-    </script>
-
-  </head>
-
-  <body>
-
-    <p>first world:</p>
-
-    <canvas id="world1" tabindex="1" width="600" height="400">
-
-      <p>Your browser doesn't support canvas.</p>
-
-    </canvas>
-
-    <p>second world:</p>
-
-    <canvas id="world2" tabindex="2" width="400" height="600">
-
-      <p>Your browser doesn't support canvas.</p>
-
-    </canvas>
-
-  </body>
-
-</html>
-
-
-
-
-
-(c) an application
-
--------------------
-
-Of course, most of the time you don't want to just plain use the
-
-standard Morhic World "as is" out of the box, but write your own
-
-application (something like Scratch!) in it. For such an
-
-application you'll create your own morph prototypes, perhaps
-
-assemble your own "window frame" and bring it all to life in a
-
-customized World state. the following example creates a simple
-
-snake-like mouse drawing game.
-
-
-
-example html file:
-
-
-
-<!DOCTYPE html>
-
-<html>
-
-  <head>
-
-    <title>touch me!</title>
-
-    <script type="text/javascript" src="morphic.js"></script>
-
-    <script type="text/javascript">
-
-      var worldCanvas, sensor;
-
-
-
-      window.onload = function () {
-
-        var x, y, w, h;
-
-
-
-        worldCanvas = document.getElementById('world');
-
-        world = new WorldMorph(worldCanvas);
-
-        world.isDevMode = false;
-
-        world.color = new Color();
-
-
-
-        w = 100;
-
-        h = 100;
-
-
-
-        x = 0;
-
-        y = 0;
-
-
-
-        while ((y * h) < world.height()) {
-
-          while ((x * w) < world.width()) {
-
-            sensor = new MouseSensorMorph();
-
-            sensor.setPosition(new Point(x * w, y * h));
-
-            sensor.alpha = 0;
-
-            sensor.setExtent(new Point(w, h));
-
-            world.add(sensor);
-
-            x += 1;
+            world.doOneCycle();
 
           }
 
-          x = 0;
+    
 
-          y += 1;
+        </script>
 
-        }
+      </head>
 
-        setInterval(loop, 50);
+      <body>
 
-      };
+    
 
+        <canvas id="world" tabindex="1" width="800" height="600">
 
+          <p>Your browser doesn't support canvas.</p>
 
-      function loop() {
+        </canvas>
 
-        world.doOneCycle();
+    
 
-      }
+      </body>
 
-    </script>
-
-  </head>
-
-  <body bgcolor='black'>
-
-    <canvas id="world" width="800" height="600">
-
-      <p>Your browser doesn't support canvas.</p>
-
-    </canvas>
-
-  </body>
-
-</html>
+    </html>
 
 
 
-To get an idea how you can craft your own custom morph prototypes
 
-I've included two examples which should give you an idea how to add
 
-properties, override inherited methods and use the stepping
 
-mechanism for "livelyness":
+
+if you use ScrollFrames or otherwise plan to support mouse wheel scrolling events, you might also add the following inline-CSS attribute to the Canvas element:
+
+
+
+    style="position: absolute;"
+
+
+
+which will prevent the World to be scrolled around instead of the elements inside of it in some browsers.
+
+
+
+
+
+###(b) multiple worlds###
+
+
+
+If you wish to create a web page with more than one world, make sure to prevent each world from auto-filling the whole page and include	it in the main loop. It's also a good idea to give each world its own tabindex:
+
+
+
+Example html file:
+
+
+
+    <!DOCTYPE html>
+
+    <html>
+
+      <head>
+
+        <title>Morphic!</title>
+
+        <script type="text/javascript" src="morphic.js"></script>
+
+        <script type="text/javascript">
+
+    
+
+          var world1, world2;
+
+    
+
+          window.onload = function () {
+
+            world1 = new WorldMorph(document.getElementById('world1'), false);
+
+            world2 = new WorldMorph(document.getElementById('world2'), false);
+
+            setInterval(loop, 50);
+
+          };
+
+    
+
+    
+
+          function loop() {
+
+            world1.doOneCycle();
+
+            world2.doOneCycle();
+
+          }
+
+    
+
+        </script>
+
+      </head>
+
+      <body>
+
+    
+
+        <p>first world:</p>
+
+    
+
+        <canvas id="world1" tabindex="1" width="600" height="400">
+
+          <p>Your browser doesn't support canvas.</p>
+
+        </canvas>
+
+    
+
+        <p>second world:</p>
+
+    
+
+        <canvas id="world2" tabindex="2" width="400" height="600">
+
+          <p>Your browser doesn't support canvas.</p>
+
+        </canvas>
+
+    
+
+      </body>
+
+    </html>
+
+
+
+
+
+###(c) an application###
+
+
+
+Of course, most of the time you don't want to just plain use the standard Morhic World "as is" out of the box, but write your own application (something like Scratch!) in it. For such an application you'll create your own morph prototypes, perhaps assemble your own "window frame" and bring it all to life in a customized World state. the following example creates a simple snake-like mouse drawing game.
+
+
+
+Example html file:
+
+
+
+    <!DOCTYPE html>
+
+    <html>
+
+      <head>
+
+        <title>touch me!</title>
+
+        <script type="text/javascript" src="morphic.js"></script>
+
+        <script type="text/javascript">
+
+    
+
+          var worldCanvas, sensor;
+
+    
+
+          window.onload = function () {
+
+    
+
+            var x, y, w, h;
+
+            worldCanvas = document.getElementById('world');
+
+            world = new WorldMorph(worldCanvas);
+
+            world.isDevMode = false;
+
+            world.color = new Color();
+
+    
+
+            w = 100;
+
+            h = 100;
+
+    
+
+            x = 0;
+
+            y = 0;
+
+    
+
+            while ((y * h) < world.height()) {
+
+              while ((x * w) < world.width()) {
+
+    
+
+                sensor = new MouseSensorMorph();
+
+                sensor.setPosition(new Point(x * w, y * h));
+
+                sensor.alpha = 0;
+
+                sensor.setExtent(new Point(w, h));
+
+                world.add(sensor);
+
+                x += 1;
+
+    
+
+              }
+
+              
+
+              x = 0;
+
+              y += 1;
+
+    
+
+            }
+
+            setInterval(loop, 50);
+
+          };
+
+    
+
+    
+
+          function loop() {
+
+            world.doOneCycle();
+
+          }
+
+    
+
+        </script>
+
+      </head>
+
+    
+
+      <body bgcolor='black'>
+
+        <canvas id="world" width="800" height="600">
+
+          <p>Your browser doesn't support canvas.</p>
+
+        </canvas>
+
+      </body>
+
+    </html>
+
+
+
+
+
+
+
+To get an idea how you can craft your own custom morph prototypes I've included two examples which should give you an idea how to add properties, override inherited methods and use the stepping mechanism for "livelyness":
 
 
 
   BouncerMorph
 
+
+
   MouseSensorMorph
 
 
 
-For the sake of sharing a single file I've included those examples
-
-in morphic.js itself. Usually you'll define your additions in a
-
-separate file and keep morphic.js untouched.
+For the sake of sharing a single file I've included those examples in morphic.js itself. Usually you'll define your additions in a separate file and keep morphic.js untouched.
 
 
 
 
 
-(2) manipulating morphs
+###(2) manipulating morphs###
 
------------------------
 
-There are many methods to programmatically manipulate morphs. Among
 
-the most important and common ones among all morphs are the
+There are many methods to programmatically manipulate morphs. Among the most important and common ones among all morphs are the following nine:
 
-following nine:
+
 
 
 
 * hide()
 
 * show()
+
+
+
+
 
 
 
@@ -823,9 +681,17 @@ following nine:
 
 
 
+
+
+
+
 * add(submorph)			- attaches submorph ontop
 
 * addBack(submorph)		- attaches submorph underneath
+
+
+
+
 
 
 
@@ -837,15 +703,11 @@ following nine:
 
 
 
-(3) events
+###(3) events###
 
-----------
 
-All user (and system) interaction is triggered by events, which are
 
-passed on from the root element - the World - to its submorphs. The
-
-World contains a list of system (browser) events it reacts to in its
+All user (and system) interaction is triggered by events, which are passed on from the root element - the World - to its submorphs. The World contains a list of system (browser) events it reacts to in its
 
 
 
@@ -871,21 +733,17 @@ events.
 
 
 
-These system events are dispatched within the morphic World by the
-
-World's Hand and its keyboardReceiver (usually the active text
-
-cursor).
+These system events are dispatched within the morphic World by the World's Hand and its keyboardReceiver (usually the active text cursor).
 
 
 
+###(a) mouse events:###
 
 
-(a) mouse events:
-
------------------
 
 The Hand dispatches the following mouse events to relevant morphs:
+
+
 
 
 
@@ -911,9 +769,9 @@ The Hand dispatches the following mouse events to relevant morphs:
 
 
 
-If you wish your morph to react to any such event, simply add a
 
-method of the same name as the event, e.g:
+
+If you wish your morph to react to any such event, simply add a method of the same name as the event, e.g:
 
 
 
@@ -921,11 +779,7 @@ method of the same name as the event, e.g:
 
 
 
-The only optional parameter of such a method is a Point object
-
-indicating the current position of the Hand inside the World's
-
-coordinate system.
+The only optional parameter of such a method is a Point object indicating the current position of the Hand inside the World's coordinate system.
 
 
 
@@ -941,25 +795,17 @@ in the event handler method's code.
 
 
 
-Likewise, removing the event handler method will render your morph
-
-passive to the event in question.
+Likewise, removing the event handler method will render your morph passive to the event in question.
 
 
 
 
 
-(b) context menu:
+###(b) context menu:###
 
------------------
 
-By default right-clicking (or single-finger tap-and-hold) on a morph
 
-also invokes its context menu (in addition to firing the
-
-mouseClickRight event). A morph's context menu can be customized by
-
-assigning a Menu instance to its
+By default right-clicking (or single-finger tap-and-hold) on a morph also invokes its context menu (in addition to firing the mouseClickRight event). A morph's context menu can be customized by assigning a Menu instance to its
 
 
 
@@ -981,13 +827,13 @@ method.
 
 
 
-(c) dragging:
+###(c) dragging:###
 
--------------
 
-Dragging a morph is initiated when the left mouse button is pressed,
 
-held and the mouse is moved.
+Dragging a morph is initiated when the left mouse button is pressed, held and the mouse is moved.
+
+
 
 
 
@@ -999,25 +845,11 @@ You can control whether a morph is draggable by setting its
 
 
 
-property either to false or true. If a morph isn't draggable itself
-
-it will pass the pick-up request up its owner chain. This lets you
-
-create draggable composite morphs like Windows, DialogBoxes,
-
-Sliders etc.
+property either to false or true. If a morph isn't draggable itself it will pass the pick-up request up its owner chain. This lets you create draggable composite morphs like Windows, DialogBoxes, Sliders etc.
 
 
 
-Sometimes it is desireable to make "template" shapes which cannot be
-
-moved themselves, but from which instead duplicates can be peeled
-
-off. This is especially useful for building blocks in construction
-
-kits, e.g. the MIT-Scratch palette. Morphic.js lets you control this
-
-functionality by setting the
+Sometimes it is desireable to make "template" shapes which cannot be moved themselves, but from which instead duplicates can be peeled off. This is especially useful for building blocks in construction kits, e.g. the MIT-Scratch palette. Morphic.js lets you control this functionality by setting the
 
 
 
@@ -1025,25 +857,13 @@ functionality by setting the
 
 
 
-property flag to true for any morph whose "isDraggable" property is
-
-turned off. When dragging such a Morph the hand will instead grab
-
-a duplicate of the template whose "isDraggable" flag is true and
-
-whose "isTemplate" flag is false, in other words: a non-template.
+property flag to true for any morph whose "isDraggable" property is turned off. When dragging such a Morph the hand will instead grab a duplicate of the template whose "isDraggable" flag is true and whose "isTemplate" flag is false, in other words: a non-template.
 
 
 
-Dragging is indicated by adding a drop shadow to the morph in hand.
+Dragging is indicated by adding a drop shadow to the morph in hand. If a morph follows the hand without displaying a drop shadow it is merely being moved about without changing its parent (owner morph), e.g. when "dragging" a morph handle to resize its owner, or when "dragging" a slider button.
 
-If a morph follows the hand without displaying a drop shadow it is
 
-merely being moved about without changing its parent (owner morph),
-
-e.g. when "dragging" a morph handle to resize its owner, or when
-
-"dragging" a slider button.
 
 
 
@@ -1055,9 +875,7 @@ Right before a morph is picked up its
 
 
 
-method is invoked, if it is present. Immediately after the pick-up
-
-the former parent's
+method is invoked, if it is present. Immediately after the pick-up the former parent's
 
 
 
@@ -1069,33 +887,27 @@ method is called, again only if it exists.
 
 
 
-Similar to events, these  methods are optional and don't exist by
 
-default. For a simple example of how they can be used to adjust
 
-scroll bars in a scroll frame please have a look at their
-
-implementation in FrameMorph.
+Similar to events, these  methods are optional and don't exist by default. For a simple example of how they can be used to adjust scroll bars in a scroll frame please have a look at their implementation in FrameMorph.
 
 
 
 
 
-(d) dropping:
+###(d) dropping:###
 
--------------
 
-Dropping is triggered when the left mouse button is either pressed
 
-or released while the Hand is dragging a morph.
+Dropping is triggered when the left mouse button is either pressed or released while the Hand is dragging a morph.
 
 
 
 Dropping a morph causes it to become embedded in a new owner morph.
 
-You can control this embedding behavior by setting the prospective
 
-drop target's
+
+You can control this embedding behavior by setting the prospective drop target's
 
 
 
@@ -1112,6 +924,8 @@ property to either true or false, or by overriding its inherited
 
 
 method.
+
+
 
 
 
@@ -1135,15 +949,9 @@ method is invoked, again only if each method exists.
 
 
 
-Similar to events, these  methods are optional and by default are
 
-not present in morphs by default (watch out for inheritance,
 
-though!). For a simple example of how they can be used to adjust
-
-scroll bars in a scroll frame please have a look at their
-
-implementation in FrameMorph.
+Similar to events, these  methods are optional and by default are not present in morphs by default (watch out for inheritance, though!). For a simple example of how they can be used to adjust scroll bars in a scroll frame please have a look at their implementation in FrameMorph.
 
 
 
@@ -1155,29 +963,17 @@ Drops of image elements from outside the world canvas are dispatched as
 
 
 
-events to interested Morphs at the mouse pointer. If you want you Morph
-
-to e.g. import outside images you can add the droppedImage() method to
-
-it. The parameter passed to the event handles is a new offscreen
-
-canvas element representing a copy of the original image element which
-
-can be directly used, e.g. by assigning it to another Morph's image
-
-property.
+events to interested Morphs at the mouse pointer. If you want you Morph to e.g. import outside images you can add the droppedImage() method to it. The parameter passed to the event handles is a new offscreen canvas element representing a copy of the original image element which can be directly used, e.g. by assigning it to another Morph's image property.
 
 
 
-The same applies to drops of audio or text files from outside the world
-
-canvas.
+The same applies to drops of audio or text files from outside the world canvas.
 
 
 
-Those are dispatched as
+Those are dispatched as  
 
-  
+
 
   droppedAudio(anAudio, name)
 
@@ -1191,31 +987,35 @@ events to interested Morphs at the mouse pointer.
 
 
 
-(e) keyboard events
 
--------------------
 
-The World dispatches the following key events to its active
+###(e) keyboard events###
 
-keyboardReceiver:
+
+
+The World dispatches the following key events to its active keyboardReceiver:
+
+
 
 
 
   keypress
 
+
+
   keydown
+
+
 
       keyup
 
 
 
-Currently the only morph which acts as keyboard receiver is
 
-CursorMorph, the basic text editing widget. If you wish to add
 
-keyboard support to your morph you need to add event handling
 
-methods for
+
+Currently the only morph which acts as keyboard receiver is CursorMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
 
 
@@ -1237,27 +1037,17 @@ and activate them by assigning your morph to the World's
 
 property.
 
-  
 
-Note that processKeyUp() is optional and doesn't have to be present
 
-if your morph doesn't require it.
+Note that processKeyUp() is optional and doesn't have to be present if your morph doesn't require it.
 
 
 
+###(f) resize event###
 
 
-(f) resize event
 
-----------------
-
-The Window resize event is handled by the World and allows the
-
-World's extent to be adjusted so that it always completely fills
-
-the browser's visible page. You can turn off this default behavior
-
-by setting the World's
+The Window resize event is handled by the World and allows the World's extent to be adjusted so that it always completely fills the browser's visible page. You can turn off this default behavior by setting the World's
 
 
 
@@ -1269,11 +1059,9 @@ property to false.
 
 
 
-Alternatively you can also initialize the World with the
 
-useFillPage switch turned off from the beginning by passing the
 
-false value as second parameter to the World's constructor:
+Alternatively you can also initialize the World with the useFillPage switch turned off from the beginning by passing the false value as second parameter to the World's constructor:
 
 
 
@@ -1293,15 +1081,7 @@ if "useFillPage" is turned on the World dispatches an
 
 
 
-events to all of its children (toplevel only), allowing each to
-
-adjust to the new World bounds by implementing a corresponding
-
-method, the passed argument being the World's new dimensions after
-
-completing the resize. By default, the "reactToWorldResize" Method
-
-does not exist.
+events to all of its children (toplevel only), allowing each to adjust to the new World bounds by implementing a corresponding method, the passed argument being the World's new dimensions after completing the resize. By default, the "reactToWorldResize" Method does not exist.
 
 
 
@@ -1309,39 +1089,31 @@ Example:
 
 
 
-Add the following method to your Morph to let it automatically
-
-fill the whole World, but leave a 10 pixel border uncovered:
+Add the following method to your Morph to let it automatically fill the whole World, but leave a 10 pixel border uncovered:
 
 
 
-  MyMorph.prototype.reactToWorldResize = function (rect) {
+    MyMorph.prototype.reactToWorldResize = function (rect) {
 
-    this.changed();
+      this.changed();
 
-    this.bounds = rect.insetBy(10);
+      this.bounds = rect.insetBy(10);
 
-    this.drawNew();
+      this.drawNew();
 
-    this.changed();
+      this.changed();
 
-  };
+    };
 
 
 
 
 
-(g) combined mouse-keyboard events
+###(g) combined mouse-keyboard events###
 
-----------------------------------
 
-Occasionally you'll want an object to react differently to a mouse
 
-click or to some other mouse event while the user holds down a key
-
-on the keyboard. Such "shift-click", "ctl-click", or "alt-click"
-
-events can be implemented by querying the World's
+Occasionally you'll want an object to react differently to a mouse click or to some other mouse event while the user holds down a key on the keyboard. Such "shift-click", "ctl-click", or "alt-click" events can be implemented by querying the World's
 
 
 
@@ -1349,9 +1121,7 @@ events can be implemented by querying the World's
 
 
 
-property inside the function that reacts to the mouse event. This
-
-property stores the keyCode of the key that's currently pressed.
+property inside the function that reacts to the mouse event. This property stores the keyCode of the key that's currently pressed.
 
 Once the key is released by the user it reverts to null.
 
@@ -1359,17 +1129,11 @@ Once the key is released by the user it reverts to null.
 
 
 
+###(4) stepping###
 
 
-(4) stepping
 
-------------
-
-Stepping is what makes Morphic "magical". Two properties control
-
-a morph's stepping behavior: the fps attribute and the step()
-
-method.
+Stepping is what makes Morphic "magical". Two properties control a morph's stepping behavior: the fps attribute and the step() method.
 
 
 
@@ -1381,27 +1145,19 @@ By default the
 
 
 
-method does nothing. As you can see in the examples of BouncerMorph
-
-and MouseSensorMorph you can easily override this inherited method
-
-to suit your needs.
+method does nothing. As you can see in the examples of BouncerMorph and MouseSensorMorph you can easily override this inherited method to suit your needs.
 
 
 
 By default the step() method is called once per display cycle.
 
-Depending on the number of actively stepping morphs and the
 
-complexity of your step() methods this can cause quite a strain on
 
-your CPU, and also result in your application behaving differently
-
-on slower computers than on fast ones.
+Depending on the number of actively stepping morphs and the complexity of your step() methods this can cause quite a strain on your CPU, and also result in your application behaving differently on slower computers than on fast ones.
 
 
 
-setting
+Setting
 
 
 
@@ -1409,25 +1165,17 @@ setting
 
 
 
-to a number lower than the interval for the main loop lets you free
-
-system resources (albeit at the cost of a less responsive or slower
-
-behavior for this particular morph).
+to a number lower than the interval for the main loop lets you free system resources (albeit at the cost of a less responsive or slower behavior for this particular morph).
 
 
 
 
 
-(5) creating new kinds of morphs
+###(5) creating new kinds of morphs###
 
---------------------------------
 
-The real fun begins when you start to create new kinds of morphs
 
-with customized shapes. Imagine, e.g. jigsaw puzzle pieces or
-
-musical notes. For this you have to override the default
+The real fun begins when you start to create new kinds of morphs with customized shapes. Imagine, e.g. jigsaw puzzle pieces or musical notes. For this you have to override the default
 
 
 
@@ -1439,9 +1187,7 @@ method.
 
 
 
-This method creates a new offscreen Canvas and stores it in
-
-the morph's
+This method creates a new offscreen Canvas and stores it in the morph's
 
 
 
@@ -1457,25 +1203,21 @@ Use the following template for a start:
 
 
 
-  MyMorph.prototype.drawNew = function() {
+    MyMorph.prototype.drawNew = function() {
 
-    var context;
+      var context;
 
-    this.image = newCanvas(this.extent());
+      this.image = newCanvas(this.extent());
 
-    context = this.image.getContext('2d');
+      context = this.image.getContext('2d');
 
-    // use context to paint stuff here
+      // use context to paint stuff here
 
-  };
+    };
 
 
 
-If your new morph stores or references other morphs outside of the
-
-submorph tree in other properties, be sure to also override the
-
-default
+If your new morph stores or references other morphs outside of the submorph tree in other properties, be sure to also override the default
 
 
 
@@ -1487,23 +1229,11 @@ method accordingly if you want it to support duplication.
 
 
 
+###(6) development and user modes###
 
 
-(6) development and user modes
 
-------------------------------
-
-When working with Squeak on Scratch or BYOB among the features I
-
-like the best and use the most is inspecting what's going on in
-
-the World while it is up and running. That's what development mode
-
-is for (you could also call it debug mode). In essence development
-
-mode controls which context menu shows up. In user mode right
-
-clicking (or double finger tapping) a morph invokes its
+When working with Squeak on Scratch or BYOB among the features I like the best and use the most is inspecting what's going on in the World while it is up and running. That's what development mode is for (you could also call it debug mode). In essence development mode controls which context menu shows up. In user mode right clicking (or double finger tapping) a morph invokes its
 
 
 
@@ -1519,75 +1249,39 @@ property, whereas in development mode only the general
 
 
 
-method is called and the resulting menu invoked. The developers'
+method is called and the resulting menu invoked. The developers' menu features Gui-Builder-wise functionality to directly inspect, take apart, reassamble and otherwise manipulate morphs and theircontents.
 
-menu features Gui-Builder-wise functionality to directly inspect,
 
-take apart, reassamble and otherwise manipulate morphs and their
 
-contents.
+Instead of using the "customContextMenu" property you can also assign a more dynamic contextMenu by overriding the general
 
-  
 
-Instead of using the "customContextMenu" property you can also
-
-assign a more dynamic contextMenu by overriding the general
-
-  
 
   userMenu()
 
-  
-
-method with a customized menu constructor. The difference between
-
-the customContextMenu property and the userMenu() method is that
-
-the former is also present in development mode and overrides the
-
-developersMenu() result. For an example of how to use the
-
-customContextMenu property have a look at TextMorph's evaluation
-
-menu, which is used for the Inspector's evaluation pane.
 
 
 
-When in development mode you can inspect every Morph's properties
 
-with the inspector, including all of its methods. The inspector
-
-also lets you add, remove and rename properties, and even edit
-
-their values at runtime. Like in a Smalltalk environment the inspect
-
-features an evaluation pane into which you can type in arbitrary
-
-JavaScript code and evaluate it in the context of the inspectee.
+method with a customized menu constructor. The difference between the customContextMenu property and the userMenu() method is that the former is also present in development mode and overrides the developersMenu() result. For an example of how to use the customContextMenu property have a look at TextMorph's evaluation menu, which is used for the Inspector's evaluation pane.
 
 
 
-Use switching between user and development modes while you are
+When in development mode you can inspect every Morph's properties with the inspector, including all of its methods. The inspector also lets you add, remove and rename properties, and even edit their values at runtime. Like in a Smalltalk environment the inspect features an evaluation pane into which you can type in arbitrary JavaScript code and evaluate it in the context of the inspectee.
 
-developing an application and disable switching to development once
 
-you're done and deploying, because generally you don't want to
 
-confuse end-users with inspectors and meta-level stuff.
+Use switching between user and development modes while you are developing an application and disable switching to development once you're done and deploying, because generally you don't want to confuse end-users with inspectors and meta-level stuff.
 
 
 
 
 
-(7) turtle graphics
-
--------------------
+###(7) turtle graphics###
 
 
 
-The basic Morphic kernel features a simple LOGO turtle constructor
-
-called
+The basic Morphic kernel features a simple LOGO turtle constructor called
 
 
 
@@ -1595,17 +1289,7 @@ called
 
 
 
-which you can use to draw onto its parent Morph. By default every
-
-Morph in the system (including the World) is able to act as turtle
-
-canvas and can display pen trails. Pen trails will be lost whenever
-
-the trails morph (the pen's parent) performs a "drawNew()"
-
-operation. If you want to create your own pen trails canvas, you
-
-may wish to modify its
+which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its
 
 
 
@@ -1613,15 +1297,11 @@ may wish to modify its
 
 
 
-property, so that it keeps a separate offscreen canvas for pen
-
-trails (and doesn't loose these on redraw).
+property, so that it keeps a separate offscreen canvas for pen trails (and doesn't loose these on redraw).
 
 
 
-the following properties of PenMorph are relevant for turtle
-
-graphics:
+The following properties of PenMorph are relevant for turtle graphics:
 
 
 
@@ -1635,7 +1315,7 @@ graphics:
 
 
 
-the following commands can be used to actually draw something:
+The following commands can be used to actually draw something:
 
 
 
@@ -1651,17 +1331,11 @@ the following commands can be used to actually draw something:
 
 
 
-Turtle graphics can best be explored interactively by creating a
-
-new PenMorph object and by manipulating it with the inspector
-
-widget.
+Turtle graphics can best be explored interactively by creating a new PenMorph object and by manipulating it with the inspector widget.
 
 
 
-NOTE: PenMorph has a special optimization for recursive operations
-
-called
+NOTE: PenMorph has a special optimization for recursive operations called
 
 
 
@@ -1669,51 +1343,33 @@ called
 
 
 
-You can significantly speed up recursive ops and increase the depth
-
-of recursion that's displayable by wrapping WARP around your
-
-recursive function call:
+You can significantly speed up recursive ops and increase the depth of recursion that's displayable by wrapping WARP around your recursive function call:
 
 
 
-example:
+Example:
 
 
 
-  myPen.warp(function () {
+    myPen.warp(function () {
 
-    myPen.tree(12, 120, 20);
+      myPen.tree(12, 120, 20);
 
-  })
+    })
 
 
 
-will be much faster than just invoking the tree function, because it
-
-prevents the parent's parent from keeping track of every single line
-
-segment and instead redraws the outcome in a single pass.
+will be much faster than just invoking the tree function, because it prevents the parent's parent from keeping track of every single line segment and instead redraws the outcome in a single pass.
 
 
 
 
 
-(8) damage list housekeeping
+###(8) damage list housekeeping###
 
-----------------------------
 
-Morphic's progressive display update comes at the cost of having to
 
-cycle through a list of "broken rectangles" every display cycle. If
-
-this list gets very long working this damage list can lead to a
-
-seemingly dramatic slow-down of the Morphic system. Typically this
-
-occurs when updating the layout of complex Morphs with very many
-
-submorphs, e.g. when resizing an inspector window.
+Morphic's progressive display update comes at the cost of having to cycle through a list of "broken rectangles" every display cycle. If this list gets very long working this damage list can lead to a seemingly dramatic slow-down of the Morphic system. Typically this occurs when updating the layout of complex Morphs with very many submorphs, e.g. when resizing an inspector window.
 
 
 
@@ -1723,37 +1379,19 @@ An effective strategy to cope with this is to use the inherited
 
   trackChanges
 
-  
+
 
 property of the Morph prototype for damage list housekeeping.
 
 
 
-The trackChanges property of the Morph prototype is a Boolean switch
+The trackChanges property of the Morph prototype is a Boolean switch that determines whether the World's damage list ('broken' rectangles) tracks changes. By default the switch is always on. If set to false changes are not stored. This can be very useful for housekeeping of the damage list in situations where a large number of (sub-) morphs are changed more or less at once. Instead of keeping track of every single submorph's changes tremendous performance improvements can be achieved by setting the trackChanges flag to false before propagating the layout changes, setting it to true again and then storing the full bounds of the surrounding morph. An an example refer to the
 
-that determines whether the World's damage list ('broken' rectangles)
 
-tracks changes. By default the switch is always on. If set to false
-
-changes are not stored. This can be very useful for housekeeping of
-
-the damage list in situations where a large number of (sub-) morphs
-
-are changed more or less at once. Instead of keeping track of every
-
-single submorph's changes tremendous performance improvements can be
-
-achieved by setting the trackChanges flag to false before propagating
-
-the layout changes, setting it to true again and then storing the full
-
-bounds of the surrounding morph. An an example refer to the
-
-  
 
   moveBy()
 
-  
+
 
 method of HandMorph, and to the
 
@@ -1761,7 +1399,7 @@ method of HandMorph, and to the
 
   fixLayout()
 
-  
+
 
 method of InspectorMorph, or the
 
@@ -1777,121 +1415,70 @@ methods of SyntaxElementMorph in the Snap application.
 
 
 
+ 
 
+###(9) minifying morphic.js###
 
-(9) minifying morphic.js
 
-------------------------
 
-Coming from Smalltalk and being a Squeaker at heart I am a huge fan
+Coming from Smalltalk and being a Squeaker at heart I am a huge fan of browsing the code itself to make sense of it. Therefore I have included this documentation and (too little) inline comments so all you need to get going is this very file.
 
-of browsing the code itself to make sense of it. Therefore I have
 
-included this documentation and (too little) inline comments so all
 
-you need to get going is this very file.
+Nowadays with live streaming HD video even on mobile phones 250 KB shouldn't be a big strain on bandwith, still minifying and even compressing morphic.js down do about 100 KB may sometimes improve performance in production use.
 
 
 
-Nowadays with live streaming HD video even on mobile phones 250 KB
+Being an attorney-at-law myself you programmer folk keep harassing me with rabulistic nitpickings about free software licenses. I'm releasing morphic.js under an AGPL license. Therefore please make sure to adhere to that license in any minified or compressed version.
 
-shouldn't be a big strain on bandwith, still minifying and even
 
-compressing morphic.js down do about 100 KB may sometimes improve
 
-performance in production use.
 
 
+##Colophon##
 
-Being an attorney-at-law myself you programmer folk keep harassing
 
-me with rabulistic nitpickings about free software licenses. I'm
 
-releasing morphic.js under an AGPL license. Therefore please make
+###VIII. acknowledgements###
 
-sure to adhere to that license in any minified or compressed version.
 
 
+The original Morphic was designed and written by Randy Smith and John Maloney for the SELF programming language, and later ported to Squeak (Smalltalk) by John Maloney and Dan Ingalls, who has also ported it to JavaScript (the Lively Kernel), once again setting a "Gold Standard" for self sustaining systems which morphic.js cannot and does not aspire to meet.
 
 
 
-VIII. acknowledgements
+This Morphic implementation for JavaScript is not a direct port of Squeak's Morphic, but still many individual functions have been ported almost literally from Squeak, sometimes even including their comments, e.g. the morph duplication mechanism fullCopy(). Squeak has been a treasure trove, and if morphic.js looks, feels and smells a lot like Squeak, I'll take it as a compliment.
 
-----------------------
 
-The original Morphic was designed and written by Randy Smith and
 
-John Maloney for the SELF programming language, and later ported to
+Evelyn Eastmond has inspired and encouraged me with her wonderful implementation of DesignBlocksJS. Thanks for sharing code, ideas and enthusiasm for programming.
 
-Squeak (Smalltalk) by John Maloney and Dan Ingalls, who has also
 
-ported it to JavaScript (the Lively Kernel), once again setting
 
-a "Gold Standard" for self sustaining systems which morphic.js
+John Maloney has been my mentor and my source of inspiration for these Morphic experiments. Thanks for the critique, the suggestions and explanations for all things Morphic and for being my all time programming hero.
 
-cannot and does not aspire to meet.
 
 
+I have originally written morphic.js in Florian Balmer's Notepad2 editor for Windows and later switched to Apple's Dashcode. I've also come to depend on both Douglas Crockford's JSLint, Mozilla's Firebug and Google's Chrome to get it right.
 
-This Morphic implementation for JavaScript is not a direct port of
 
-Squeak's Morphic, but still many individual functions have been
 
-ported almost literally from Squeak, sometimes even including their
 
-comments, e.g. the morph duplication mechanism fullCopy(). Squeak
 
-has been a treasure trove, and if morphic.js looks, feels and
+###IX. contributors###
 
-smells a lot like Squeak, I'll take it as a compliment.
 
 
+- Joe Otto found and fixed many early bugs and taught me some tricks.
 
-Evelyn Eastmond has inspired and encouraged me with her wonderful
+- Nathan Dinsmore contributed mouse wheel scrolling, cached background texture handling and countless bug fixes.
 
-implementation of DesignBlocksJS. Thanks for sharing code, ideas
+- Ian Reynolds contributed backspace key handling for Chrome.
 
-and enthusiasm for programming.
 
 
+Jens Mönig
 
-John Maloney has been my mentor and my source of inspiration for
-
-these Morphic experiments. Thanks for the critique, the suggestions
-
-and explanations for all things Morphic and for being my all time
-
-programming hero.
-
-
-
-I have originally written morphic.js in Florian Balmer's Notepad2
-
-editor for Windows and later switched to Apple's Dashcode. I've also
-
-come to depend on both Douglas Crockford's JSLint, Mozilla's Firebug
-
-and Google's Chrome to get it right.
-
-
-
-
-
-IX. contributors
-
-----------------------
-
-Joe Otto found and fixed many early bugs and taught me some tricks.
-
-Nathan Dinsmore contributed mouse wheel scrolling, cached
-
-background texture handling and countless bug fixes.
-
-Ian Reynolds contributed backspace key handling for Chrome.
-
-
-
-- Jens Mönig
 
 
 FrameMorph //////////////////////////////////////////////////////////
