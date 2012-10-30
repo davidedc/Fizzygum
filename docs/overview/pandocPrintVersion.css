@@ -1,0 +1,42 @@
+body {
+  //font: Arial;
+   
+  font: 18px/27px 'YanoneKaffeesatzRegular', Arial, sans-serif;
+  //font-family:"Myriad Pro",georgia, helvetica, arial, sans serif; 
+  
+font-size:larger; 
+background:white; color:black; margin-left:50px; width:700px; padding:20px}
+a {color:black; background:white; text-decoration:none;}
+a:hover {color:white; background:black;}
+em {color:#f88;}
+/* the line height 50% below is due to pandoc inserting
+   an empty line for each line in the code blocks. Which is mysterious. */
+code {color:#3ad; font-size:12px; font-family:monaco; line-height:50%;}
+table {border-collapse:collapse; border:2px solid white;}
+td, th {border:1px solid white; padding:2px 4px;}
+
+h1 {
+    margin-top:40px;
+}
+
+h2 {
+    margin-top:40px;
+}
+
+h3 {
+    margin-top:40px;
+}
+
+li {
+    margin-bottom:-20px;
+}
+
+
+#TOC {font-size:16px; left:0px; width:290px; top:100px; bottom:0; overflow:auto; background:white;}
+
+#TOC ul li {
+    list-style-type: none;
+    margin-bottom:0px;
+}
+
+#TOC a {text-decoration:underline;}
