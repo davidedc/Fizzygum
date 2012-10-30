@@ -40,6 +40,7 @@ This document adapted from the original Morphic.js documentation, written by Jen
   17. damage list housekeeping
   18. minifying morphic.js
 
+
 ### Colophon###
 18. acknowledgements
 19. contributors
@@ -163,7 +164,6 @@ Setting up a web page for Morphic always involves three steps: adding one or mor
 Most commonly you will want your World to fill the browsers's whole client area. This default situation is easiest and most straight forward.
 
 Example html file:
-
 
     <!DOCTYPE html>  
     <html>
@@ -316,11 +316,7 @@ Example html file:
 
 
 
-To get an idea how you can craft your own custom morph prototypes I've included two examples which should give you an idea how to add properties, override inherited methods and use the stepping mechanism for "livelyness":
-
-  BouncerMorph
-
-  MouseSensorMorph
+To get an idea how you can craft your own custom morph prototypes I've included two examples which should give you an idea how to add properties, override inherited methods and use the stepping mechanism for "livelyness": **BouncerMorph** and **MouseSensorMorph**.
 
 For the sake of sharing a single file I've included those examples in morphic.js itself. Usually you'll define your additions in a separate file and keep morphic.js untouched.
 
@@ -329,37 +325,29 @@ For the sake of sharing a single file I've included those examples in morphic.js
 
 There are many methods to programmatically manipulate morphs. Among the most important and common ones among all morphs are the following nine:
 
-
 * hide()
 * show()
-
-
 
 * setPosition(aPoint)
 * setExtent(aPoint)
 * setColor(aColor)
 
-
-
 * add(submorph)			- attaches submorph ontop
 * addBack(submorph)		- attaches submorph underneath
 
-
-
 * fullCopy()			- duplication
 * destroy()				- deletion
-
 
 ###(3) events###
 
 All user (and system) interaction is triggered by events, which are passed on from the root element - the World - to its submorphs. The World contains a list of system (browser) events it reacts to in its
 
-  initEventListeners()
+    initEventListeners()
 
-method. Currently there are
+method. Currently there are:
 
   - mouse
-      - drop
+  - drop
   - keyboard
   - (window) resize
 
@@ -371,28 +359,26 @@ These system events are dispatched within the morphic World by the World's Hand 
 
 The Hand dispatches the following mouse events to relevant morphs:
 
-
-  mouseDownLeft
-  mouseDownRight
-  mouseClickLeft
-  mouseClickRight
-  mouseEnter
-  mouseLeave
-  mouseEnterDragging
-  mouseLeaveDragging
-  mouseMove
-  mouseScroll
-
+  - mouseDownLeft
+  - mouseDownRight
+  - mouseClickLeft
+  - mouseClickRight
+  - mouseEnter
+  - mouseLeave
+  - mouseEnterDragging
+  - mouseLeaveDragging
+  - mouseMove
+  - mouseScroll
 
 If you wish your morph to react to any such event, simply add a method of the same name as the event, e.g:
 
-  MyMorph.prototype.mouseMove = function(pos) {};
+    MyMorph.prototype.mouseMove = function(pos) {};
 
 The only optional parameter of such a method is a Point object indicating the current position of the Hand inside the World's coordinate system.
 
 Events may be "bubbled" up a morph's owner chain by calling
 
-  this.escalateEvent(functionName, arg)
+    this.escalateEvent(functionName, arg)
 
 in the event handler method's code.
 
@@ -401,15 +387,7 @@ Likewise, removing the event handler method will render your morph passive to th
 
 ###(b) context menu:###
 
-By default right-clicking (or single-finger tap-and-hold) on a morph also invokes its context menu (in addition to firing the mouseClickRight event). A morph's context menu can be customized by assigning a Menu instance to its
-
-  customContextMenu
-
-property, or altogether suppressed by overriding its inherited
-
-  contextMenu()
-
-method.
+By default right-clicking (or single-finger tap-and-hold) on a morph also invokes its context menu (in addition to firing the mouseClickRight event). A morph's context menu can be customized by assigning a Menu instance to its **customContextMenu**. property, or altogether suppressed by overriding its inherited **contextMenu()** method.
 
 
 ###(c) dragging:###
@@ -417,31 +395,13 @@ method.
 Dragging a morph is initiated when the left mouse button is pressed, held and the mouse is moved.
 
 
-You can control whether a morph is draggable by setting its
+You can control whether a morph is draggable by setting its **isDraggable** property either to false or true. If a morph isn't draggable itself it will pass the pick-up request up its owner chain. This lets you create draggable composite morphs like Windows, DialogBoxes, Sliders etc.
 
-  isDraggable
-
-property either to false or true. If a morph isn't draggable itself it will pass the pick-up request up its owner chain. This lets you create draggable composite morphs like Windows, DialogBoxes, Sliders etc.
-
-Sometimes it is desireable to make "template" shapes which cannot be moved themselves, but from which instead duplicates can be peeled off. This is especially useful for building blocks in construction kits, e.g. the MIT-Scratch palette. Morphic.js lets you control this functionality by setting the
-
-  isTemplate
-
-property flag to true for any morph whose "isDraggable" property is turned off. When dragging such a Morph the hand will instead grab a duplicate of the template whose "isDraggable" flag is true and whose "isTemplate" flag is false, in other words: a non-template.
+Sometimes it is desireable to make "template" shapes which cannot be moved themselves, but from which instead duplicates can be peeled off. This is especially useful for building blocks in construction kits, e.g. the MIT-Scratch palette. Morphic.js lets you control this functionality by setting the **isTemplate** property flag to true for any morph whose "isDraggable" property is turned off. When dragging such a Morph the hand will instead grab a duplicate of the template whose "isDraggable" flag is true and whose "isTemplate" flag is false, in other words: a non-template.
 
 Dragging is indicated by adding a drop shadow to the morph in hand. If a morph follows the hand without displaying a drop shadow it is merely being moved about without changing its parent (owner morph), e.g. when "dragging" a morph handle to resize its owner, or when "dragging" a slider button.
 
-
-Right before a morph is picked up its
-
-  prepareToBeGrabbed(handMorph)
-
-method is invoked, if it is present. Immediately after the pick-up the former parent's
-
-  reactToGrabOf(grabbedMorph)
-
-method is called, again only if it exists.
-
+Right before a morph is picked up its **prepareToBeGrabbed(handMorph)** method is invoked, if it is present. Immediately after the pick-up the former parent's **reactToGrabOf(grabbedMorph)** method is called, again only if it exists.
 
 Similar to events, these  methods are optional and don't exist by default. For a simple example of how they can be used to adjust scroll bars in a scroll frame please have a look at their implementation in FrameMorph.
 
@@ -452,94 +412,54 @@ Dropping is triggered when the left mouse button is either pressed or released w
 
 Dropping a morph causes it to become embedded in a new owner morph.
 
-You can control this embedding behavior by setting the prospective drop target's
-
-  acceptsDrops
-
-property to either true or false, or by overriding its inherited
-
-  wantsDropOf(aMorph)
-
-method.
+You can control this embedding behavior by setting the prospective drop target's **acceptsDrops** property to either true or false, or by overriding its inherited **wantsDropOf(aMorph)** method.
 
 
-Right after a morph has been dropped its
-
-  justDropped(handMorph)
-
-method is called, and its new parent's
-
-  reactToDropOf(droppedMorph, handMorph)
-
-method is invoked, again only if each method exists.
+Right after a morph has been dropped its **justDropped(handMorph)** method is called, and its new parent's **reactToDropOf(droppedMorph, handMorph)** method is invoked, again only if each method exists.
 
 
 Similar to events, these  methods are optional and by default are not present in morphs by default (watch out for inheritance, though!). For a simple example of how they can be used to adjust scroll bars in a scroll frame please have a look at their implementation in FrameMorph.
 
-Drops of image elements from outside the world canvas are dispatched as
-
-  droppedImage(aCanvas, name)
-
-events to interested Morphs at the mouse pointer. If you want you Morph to e.g. import outside images you can add the droppedImage() method to it. The parameter passed to the event handles is a new offscreen canvas element representing a copy of the original image element which can be directly used, e.g. by assigning it to another Morph's image property.
+Drops of image elements from outside the world canvas are dispatched as **droppedImage(aCanvas, name)** events to interested Morphs at the mouse pointer. If you want you Morph to e.g. import outside images you can add the droppedImage() method to it. The parameter passed to the event handles is a new offscreen canvas element representing a copy of the original image element which can be directly used, e.g. by assigning it to another Morph's image property.
 
 The same applies to drops of audio or text files from outside the world canvas.
 
 Those are dispatched as  
 
-  droppedAudio(anAudio, name)
-  droppedText(aString, name)
+    droppedAudio(anAudio, name)
+    droppedText(aString, name)
 
 events to interested Morphs at the mouse pointer.
-
-
 
 ###(e) keyboard events###
 
 The World dispatches the following key events to its active keyboardReceiver:
 
-
-  keypress
-
-  keydown
-
-      keyup
-
-
+  - keypress
+  - keydown
+  - keyup
 
 Currently the only morph which acts as keyboard receiver is CursorMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
-  processKeyPress(event)
-  processKeyDown(event)
-  processKeyUp(event)
+  - processKeyPress(event)
+  - processKeyDown(event)
+  - processKeyUp(event)
 
-and activate them by assigning your morph to the World's
-
-  keyboardReceiver
-
-property.
+and activate them by assigning your morph to the World's **keyboardReceiver** property.
 
 Note that processKeyUp() is optional and doesn't have to be present if your morph doesn't require it.
 
 ###(f) resize event###
 
-The Window resize event is handled by the World and allows the World's extent to be adjusted so that it always completely fills the browser's visible page. You can turn off this default behavior by setting the World's
-
-  useFillPage
-
-property to false.
-
+The Window resize event is handled by the World and allows the World's extent to be adjusted so that it always completely fills the browser's visible page. You can turn off this default behavior by setting the World's **useFillPage** property to false.
 
 Alternatively you can also initialize the World with the useFillPage switch turned off from the beginning by passing the false value as second parameter to the World's constructor:
 
-  world = new World(aCanvas, false);
+    world = new World(aCanvas, false);
 
 Use this when creating a web page with multiple Worlds.
 
-if "useFillPage" is turned on the World dispatches an
-
-  reactToWorldResize(newBounds)
-
-events to all of its children (toplevel only), allowing each to adjust to the new World bounds by implementing a corresponding method, the passed argument being the World's new dimensions after completing the resize. By default, the "reactToWorldResize" Method does not exist.
+if "useFillPage" is turned on the World dispatches an **reactToWorldResize(newBounds)** events to all of its children (toplevel only), allowing each to adjust to the new World bounds by implementing a corresponding method, the passed argument being the World's new dimensions after completing the resize. By default, the "reactToWorldResize" Method does not exist.
 
 Example:
 
@@ -555,11 +475,7 @@ Add the following method to your Morph to let it automatically fill the whole Wo
 
 ###(g) combined mouse-keyboard events###
 
-Occasionally you'll want an object to react differently to a mouse click or to some other mouse event while the user holds down a key on the keyboard. Such "shift-click", "ctl-click", or "alt-click" events can be implemented by querying the World's
-
-  currentKey
-
-property inside the function that reacts to the mouse event. This property stores the keyCode of the key that's currently pressed.
+Occasionally you'll want an object to react differently to a mouse click or to some other mouse event while the user holds down a key on the keyboard. Such "shift-click", "ctl-click", or "alt-click" events can be implemented by querying the World's **currentKey** property inside the function that reacts to the mouse event. This property stores the keyCode of the key that's currently pressed.
 Once the key is released by the user it reverts to null.
 
 
@@ -567,36 +483,20 @@ Once the key is released by the user it reverts to null.
 
 Stepping is what makes Morphic "magical". Two properties control a morph's stepping behavior: the fps attribute and the step() method.
 
-By default the
-
-  step()
-
-method does nothing. As you can see in the examples of BouncerMorph and MouseSensorMorph you can easily override this inherited method to suit your needs.
+By default the **step()** method does nothing. As you can see in the examples of BouncerMorph and MouseSensorMorph you can easily override this inherited method to suit your needs.
 
 By default the step() method is called once per display cycle.
 
 Depending on the number of actively stepping morphs and the complexity of your step() methods this can cause quite a strain on your CPU, and also result in your application behaving differently on slower computers than on fast ones.
 
-Setting
-
-  myMorph.fps
-
-to a number lower than the interval for the main loop lets you free system resources (albeit at the cost of a less responsive or slower behavior for this particular morph).
+Setting **myMorph.fps** to a number lower than the interval for the main loop lets you free system resources (albeit at the cost of a less responsive or slower behavior for this particular morph).
 
 
 ###(5) creating new kinds of morphs###
 
-The real fun begins when you start to create new kinds of morphs with customized shapes. Imagine, e.g. jigsaw puzzle pieces or musical notes. For this you have to override the default
+The real fun begins when you start to create new kinds of morphs with customized shapes. Imagine, e.g. jigsaw puzzle pieces or musical notes. For this you have to override the default **drawNew()** method.
 
-  drawNew()
-
-method.
-
-This method creates a new offscreen Canvas and stores it in the morph's
-
-  image
-
-property.
+This method creates a new offscreen Canvas and stores it in the morph's **image** property.
 
 Use the following template for a start:
 
@@ -607,68 +507,40 @@ Use the following template for a start:
       // use context to paint stuff here
     };
 
-If your new morph stores or references other morphs outside of the submorph tree in other properties, be sure to also override the default
-
-  copyRecordingReferences()
-
-method accordingly if you want it to support duplication.
+If your new morph stores or references other morphs outside of the submorph tree in other properties, be sure to also override the default **copyRecordingReferences()** method accordingly if you want it to support duplication.
 
 ###(6) development and user modes###
 
-When working with Squeak on Scratch or BYOB among the features I like the best and use the most is inspecting what's going on in the World while it is up and running. That's what development mode is for (you could also call it debug mode). In essence development mode controls which context menu shows up. In user mode right clicking (or double finger tapping) a morph invokes its
+When working with Squeak on Scratch or BYOB among the features I like the best and use the most is inspecting what's going on in the World while it is up and running. That's what development mode is for (you could also call it debug mode). In essence development mode controls which context menu shows up. In user mode right clicking (or double finger tapping) a morph invokes its **customContextMenu** property, whereas in development mode only the general **developersMenu()** method is called and the resulting menu invoked. The developers' menu features Gui-Builder-wise functionality to directly inspect, take apart, reassamble and otherwise manipulate morphs and theircontents.
 
-  customContextMenu
-
-property, whereas in development mode only the general
-
-  developersMenu()
-
-method is called and the resulting menu invoked. The developers' menu features Gui-Builder-wise functionality to directly inspect, take apart, reassamble and otherwise manipulate morphs and theircontents.
-
-Instead of using the "customContextMenu" property you can also assign a more dynamic contextMenu by overriding the general
-
-  userMenu()
-
-
-method with a customized menu constructor. The difference between the customContextMenu property and the userMenu() method is that the former is also present in development mode and overrides the developersMenu() result. For an example of how to use the customContextMenu property have a look at TextMorph's evaluation menu, which is used for the Inspector's evaluation pane.
+Instead of using the "customContextMenu" property you can also assign a more dynamic contextMenu by overriding the general **userMenu()** method with a customized menu constructor. The difference between the customContextMenu property and the userMenu() method is that the former is also present in development mode and overrides the developersMenu() result. For an example of how to use the customContextMenu property have a look at TextMorph's evaluation menu, which is used for the Inspector's evaluation pane.
 
 When in development mode you can inspect every Morph's properties with the inspector, including all of its methods. The inspector also lets you add, remove and rename properties, and even edit their values at runtime. Like in a Smalltalk environment the inspect features an evaluation pane into which you can type in arbitrary JavaScript code and evaluate it in the context of the inspectee.
 
 Use switching between user and development modes while you are developing an application and disable switching to development once you're done and deploying, because generally you don't want to confuse end-users with inspectors and meta-level stuff.
 
-
 ###(7) turtle graphics###
 
-The basic Morphic kernel features a simple LOGO turtle constructor called
-
-  PenMorph
-
-which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its
-
-  penTrails()
-
-property, so that it keeps a separate offscreen canvas for pen trails (and doesn't loose these on redraw).
+The basic Morphic kernel features a simple LOGO turtle constructor called **PenMorph** , which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its **penTrails()** property, so that it keeps a separate offscreen canvas for pen trails (and doesn't loose these on redraw).
 
 The following properties of PenMorph are relevant for turtle graphics:
 
-  color		- a Color
-  size		- line width of pen trails
-  heading		- degrees
-  isDown		- drawing state
+  - color		, a Color
+  - size		, line width of pen trails
+  - heading	, degrees
+  - isDown	, drawing state
 
 The following commands can be used to actually draw something:
 
-  up()		- lift the pen up, further movements leave no trails
-  down()		- set down, further movements leave trails
-  clear()		- remove all trails from the current parent
-  forward(n)	- move n steps in the current direction (heading)
-  turn(n)		- turn right n degrees
+  - up()		, lift the pen up, further movements leave no trails
+  - down()	, set down, further movements leave trails
+  - clear()	, remove all trails from the current parent
+  - forward(n) , move n steps in the current direction (heading)
+  - turn(n) , turn right n degrees
 
 Turtle graphics can best be explored interactively by creating a new PenMorph object and by manipulating it with the inspector widget.
 
-NOTE: PenMorph has a special optimization for recursive operations called
-
-  warp(function)
+NOTE: PenMorph has a special optimization for recursive operations called **warp(function)**.
 
 You can significantly speed up recursive ops and increase the depth of recursion that's displayable by wrapping WARP around your recursive function call:
 
@@ -685,24 +557,12 @@ will be much faster than just invoking the tree function, because it prevents th
 
 Morphic's progressive display update comes at the cost of having to cycle through a list of "broken rectangles" every display cycle. If this list gets very long working this damage list can lead to a seemingly dramatic slow-down of the Morphic system. Typically this occurs when updating the layout of complex Morphs with very many submorphs, e.g. when resizing an inspector window.
 
-An effective strategy to cope with this is to use the inherited
+An effective strategy to cope with this is to use the inherited **trackChanges** property of the Morph prototype for damage list housekeeping.
 
-  trackChanges
+The trackChanges property of the Morph prototype is a Boolean switch that determines whether the World's damage list ('broken' rectangles) tracks changes. By default the switch is always on. If set to false changes are not stored. This can be very useful for housekeeping of the damage list in situations where a large number of (sub-) morphs are changed more or less at once. Instead of keeping track of every single submorph's changes tremendous performance improvements can be achieved by setting the trackChanges flag to false before propagating the layout changes, setting it to true again and then storing the full bounds of the surrounding morph. An an example refer to the **moveBy()** method of HandMorph, and to the **fixLayout()** method of InspectorMorph, or the
 
-property of the Morph prototype for damage list housekeeping.
-
-The trackChanges property of the Morph prototype is a Boolean switch that determines whether the World's damage list ('broken' rectangles) tracks changes. By default the switch is always on. If set to false changes are not stored. This can be very useful for housekeeping of the damage list in situations where a large number of (sub-) morphs are changed more or less at once. Instead of keeping track of every single submorph's changes tremendous performance improvements can be achieved by setting the trackChanges flag to false before propagating the layout changes, setting it to true again and then storing the full bounds of the surrounding morph. An an example refer to the
-
-  moveBy()
-
-method of HandMorph, and to the
-
-  fixLayout()
-
-method of InspectorMorph, or the
-
-  startLayout()
-  endLayout()
+  - startLayout()
+  - endLayout()
 
 methods of SyntaxElementMorph in the Snap application.	
 
