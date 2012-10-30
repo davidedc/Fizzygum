@@ -1,74 +1,43 @@
 body {
-    margin: auto;
-    padding-right: 1em;
-    padding-left: 1em;
-    max-width: 44em; 
-    border-left: 1px solid black;
-    border-right: 1px solid black;
-    color: black;
-    font-family: Verdana, sans-serif;
-    font-size: 100%;
-    line-height: 140%;
-    color: #333; 
-}
-pre {
-    border: 1px dotted gray;
-    background-color: #ececec;
-    color: #1111111;
-    padding: 0.5em;
-}
-code {
-    font-family: monospace;
-}
-h1 a, h2 a, h3 a, h4 a, h5 a { 
-    text-decoration: none;
-    color: #7a5ada; 
-}
-h1, h2, h3, h4, h5 { font-family: verdana;
-                     font-weight: bold;
-                     border-bottom: 1px dotted black;
-                     color: #7a5ada; }
+  //font: Arial;
+   
+  font: 18px/27px 'YanoneKaffeesatzRegular', Arial, sans-serif;
+  //font-family:"Myriad Pro",georgia, helvetica, arial, sans serif; 
+  
+font-size:larger; 
+background:white; color:black; margin-left:300px; width:500px; padding:20px}
+a {color:black; background:white; text-decoration:none; }
+a:hover {color:white; background:black;}
+em {color:#f88;}
+/* the line height 50% below is due to pandoc inserting
+   an empty line for each line in the code blocks. Which is mysterious. */
+code {color:#3ad; font-size:12px; font-family:monaco; line-height:50%;}
+table {border-collapse:collapse; border:2px solid white;}
+td, th {border:1px solid white; padding:2px 4px;}
+
 h1 {
-        font-size: 130%;
+    margin-top:40px;
 }
 
 h2 {
-        font-size: 110%;
+    margin-top:40px;
 }
 
 h3 {
-        font-size: 95%;
+    margin-top:40px;
 }
 
-h4 {
-        font-size: 90%;
-        font-style: italic;
+li {
+    margin-bottom:-20px;
 }
 
-h5 {
-        font-size: 90%;
-        font-style: italic;
+
+#TOC {font-size:16px; position:fixed; left:0px; width:290px; top:100px; bottom:0; overflow:auto; background:white;}
+
+#TOC ul li {
+    list-style-type: none;
+    margin-bottom:0px;
 }
 
-h1.title {
-        font-size: 200%;
-        font-weight: bold;
-        padding-top: 0.2em;
-        padding-bottom: 0.2em;
-        text-align: left;
-        border: none;
-}
 
-dt code {
-        font-weight: bold;
-}
-dd p {
-        margin-top: 0;
-}
-
-#footer {
-        padding-top: 1em;
-        font-size: 70%;
-        color: gray;
-        text-align: center;
-}
+#TOC a {text-decoration:underline;}
