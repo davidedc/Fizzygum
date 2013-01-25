@@ -167,12 +167,16 @@ class CursorMorph extends BlinkerMorph
   
   cancel: ->
     world = @root()
+    @undo()
     world.stopEditing()  if world
+    @escalateEvent 'cancel', null
+    
+  undo: ->
     @target.text = @originalContents
     @target.changed()
     @target.drawNew()
     @target.changed()
-    @escalateEvent "cancel", null
+    @gotoSlot 0
   
   insert: (aChar, shiftKey) ->
     if aChar is "\t"
@@ -193,6 +197,8 @@ class CursorMorph extends BlinkerMorph
   ctrl: (aChar) ->
     if (aChar is 97) or (aChar is 65)
       @target.selectAll()
+    else if aChar is 90
+      @undo()
     else if aChar is 123
       @insert "{"
     else if aChar is 125
@@ -205,6 +211,8 @@ class CursorMorph extends BlinkerMorph
   cmd: (aChar) ->
     if aChar is 65
       @target.selectAll()
+    else if aChar is 90
+      @undo()
   
   deleteRight: ->
     if @target.selection() isnt ""
