@@ -241,8 +241,11 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
     <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="nx">@changed</span><span class="p">()</span>
 
-  <span class="nv">mouseDownLeft: </span><span class="nf">-&gt;</span>
-    <span class="nx">@clearSelection</span><span class="p">();</span>
+  <span class="nv">mouseDownLeft: </span><span class="nf">(pos) -&gt;</span>
+    <span class="k">if</span> <span class="nx">@isEditable</span>
+      <span class="nx">@clearSelection</span><span class="p">()</span>
+    <span class="k">else</span>
+      <span class="nx">@escalateEvent</span> <span class="s">&quot;mouseDownLeft&quot;</span><span class="p">,</span> <span class="nx">pos</span>
 
   <span class="nv">mouseClickLeft: </span><span class="nf">(pos) -&gt;</span>
     <span class="k">if</span> <span class="nx">@isEditable</span>
