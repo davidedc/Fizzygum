@@ -8,9 +8,9 @@
     <span class="vi">@origin = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">((</span><span class="nx">left</span> <span class="o">or</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="nx">top</span> <span class="o">or</span> <span class="mi">0</span><span class="p">))</span>
     <span class="vi">@corner = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">((</span><span class="nx">right</span> <span class="o">or</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="nx">bottom</span> <span class="o">or</span> <span class="mi">0</span><span class="p">))</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Rectangle string representation: e.g. '[0@0 | 160@80]'</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">toString: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Rectangle string representation: e.g. '[0@0 | 160@80]'</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">toString: </span><span class="nf">-&gt;</span>
     <span class="s">&quot;[&quot;</span> <span class="o">+</span> <span class="nx">@origin</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot; | &quot;</span> <span class="o">+</span> <span class="nx">@extent</span><span class="p">().</span><span class="nx">toString</span><span class="p">()</span> <span class="o">+</span> <span class="s">&quot;]&quot;</span>
-  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Rectangle copying:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copy: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Rectangle copying:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copy: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">@left</span><span class="p">(),</span> <span class="nx">@top</span><span class="p">(),</span> <span class="nx">@right</span><span class="p">(),</span> <span class="nx">@bottom</span><span class="p">())</span>
   </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Rectangle accessing - setting:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">setTo: </span><span class="nf">(left, top, right, bottom) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>note: all inputs are optional and can be omitted</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@origin = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span>
       <span class="nx">left</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="p">(</span><span class="nx">left</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="nx">@left</span><span class="p">())),</span>
@@ -18,70 +18,70 @@
     <span class="vi">@corner = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span>
       <span class="nx">right</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="p">(</span><span class="nx">right</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="nx">@right</span><span class="p">())),</span>
       <span class="nx">bottom</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="p">(</span><span class="nx">bottom</span> <span class="o">is</span> <span class="mi">0</span><span class="p">)</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="nx">@bottom</span><span class="p">())))</span>
-  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Rectangle accessing - getting:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">area: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>requires width() and height() to be defined</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">w = </span><span class="nx">@width</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Rectangle accessing - getting:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">area: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>requires width() and height() to be defined</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">w = </span><span class="nx">@width</span><span class="p">()</span>
     <span class="k">return</span> <span class="mi">0</span>  <span class="k">if</span> <span class="nx">w</span> <span class="o">&lt;</span> <span class="mi">0</span>
     <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span> <span class="nx">w</span> <span class="o">*</span> <span class="nx">@height</span><span class="p">(),</span> <span class="mi">0</span>
   
-  <span class="nv">bottom: </span><span class="o">-&gt;</span>
+  <span class="nv">bottom: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">y</span>
   
-  <span class="nv">bottomCenter: </span><span class="o">-&gt;</span>
+  <span class="nv">bottomCenter: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@center</span><span class="p">().</span><span class="nx">x</span><span class="p">,</span> <span class="nx">@bottom</span><span class="p">())</span>
   
-  <span class="nv">bottomLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">bottomLeft: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@origin</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span>
   
-  <span class="nv">bottomRight: </span><span class="o">-&gt;</span>
+  <span class="nv">bottomRight: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">copy</span><span class="p">()</span>
   
-  <span class="nv">boundingBox: </span><span class="o">-&gt;</span>
+  <span class="nv">boundingBox: </span><span class="nf">-&gt;</span>
     <span class="nx">@</span>
   
-  <span class="nv">center: </span><span class="o">-&gt;</span>
+  <span class="nv">center: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span><span class="p">.</span><span class="nx">add</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@origin</span><span class="p">).</span><span class="nx">floorDivideBy</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
   
-  <span class="nv">corners: </span><span class="o">-&gt;</span>
+  <span class="nv">corners: </span><span class="nf">-&gt;</span>
     <span class="p">[</span><span class="nx">@origin</span><span class="p">,</span> <span class="nx">@bottomLeft</span><span class="p">(),</span> <span class="nx">@corner</span><span class="p">,</span> <span class="nx">@topRight</span><span class="p">()]</span>
   
-  <span class="nv">extent: </span><span class="o">-&gt;</span>
+  <span class="nv">extent: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">subtract</span> <span class="nx">@origin</span>
   
-  <span class="nv">height: </span><span class="o">-&gt;</span>
+  <span class="nv">height: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">y</span> <span class="o">-</span> <span class="nx">@origin</span><span class="p">.</span><span class="nx">y</span>
   
-  <span class="nv">left: </span><span class="o">-&gt;</span>
+  <span class="nv">left: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span><span class="p">.</span><span class="nx">x</span>
   
-  <span class="nv">leftCenter: </span><span class="o">-&gt;</span>
+  <span class="nv">leftCenter: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@left</span><span class="p">(),</span> <span class="nx">@center</span><span class="p">().</span><span class="nx">y</span><span class="p">)</span>
   
-  <span class="nv">right: </span><span class="o">-&gt;</span>
+  <span class="nv">right: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">x</span>
   
-  <span class="nv">rightCenter: </span><span class="o">-&gt;</span>
+  <span class="nv">rightCenter: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@right</span><span class="p">(),</span> <span class="nx">@center</span><span class="p">().</span><span class="nx">y</span><span class="p">)</span>
   
-  <span class="nv">top: </span><span class="o">-&gt;</span>
+  <span class="nv">top: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span><span class="p">.</span><span class="nx">y</span>
   
-  <span class="nv">topCenter: </span><span class="o">-&gt;</span>
+  <span class="nv">topCenter: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@center</span><span class="p">().</span><span class="nx">x</span><span class="p">,</span> <span class="nx">@top</span><span class="p">())</span>
   
-  <span class="nv">topLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">topLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span>
   
-  <span class="nv">topRight: </span><span class="o">-&gt;</span>
+  <span class="nv">topRight: </span><span class="nf">-&gt;</span>
     <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@corner</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">@origin</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span>
   
-  <span class="nv">width: </span><span class="o">-&gt;</span>
+  <span class="nv">width: </span><span class="nf">-&gt;</span>
     <span class="nx">@corner</span><span class="p">.</span><span class="nx">x</span> <span class="o">-</span> <span class="nx">@origin</span><span class="p">.</span><span class="nx">x</span>
   
-  <span class="nv">position: </span><span class="o">-&gt;</span>
+  <span class="nv">position: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span>
   </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Rectangle comparison:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">eq: </span><span class="nf">(aRect) -&gt;</span>
     <span class="nx">@origin</span><span class="p">.</span><span class="nx">eq</span><span class="p">(</span><span class="nx">aRect</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span> <span class="o">and</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">eq</span><span class="p">(</span><span class="nx">aRect</span><span class="p">.</span><span class="nx">corner</span><span class="p">)</span>
   
-  <span class="nv">abs: </span><span class="o">-&gt;</span>
+  <span class="nv">abs: </span><span class="nf">-&gt;</span>
     <span class="nv">newOrigin = </span><span class="nx">@origin</span><span class="p">.</span><span class="nx">abs</span><span class="p">()</span>
     <span class="nv">newCorner = </span><span class="nx">@corner</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newOrigin</span><span class="p">)</span>
     <span class="nx">newOrigin</span><span class="p">.</span><span class="nx">corner</span> <span class="nx">newCorner</span>
@@ -112,10 +112,10 @@
     <span class="nv">result.corner = </span><span class="nx">@corner</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">aRect</span><span class="p">.</span><span class="nx">corner</span><span class="p">)</span>
     <span class="nx">result</span>
   
-  <span class="nv">round: </span><span class="o">-&gt;</span>
+  <span class="nv">round: </span><span class="nf">-&gt;</span>
     <span class="nx">@origin</span><span class="p">.</span><span class="nx">round</span><span class="p">().</span><span class="nx">corner</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">round</span><span class="p">()</span>
   
-  <span class="nv">spread: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>round me by applying floor() to my origin and ceil() to my corner</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@origin</span><span class="p">.</span><span class="nx">floor</span><span class="p">().</span><span class="nx">corner</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">ceil</span><span class="p">()</span>
+  <span class="nv">spread: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>round me by applying floor() to my origin and ceil() to my corner</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@origin</span><span class="p">.</span><span class="nx">floor</span><span class="p">().</span><span class="nx">corner</span> <span class="nx">@corner</span><span class="p">.</span><span class="nx">ceil</span><span class="p">()</span>
   
   <span class="nv">amountToTranslateWithin: </span><span class="nf">(aRect) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>Answer a Point, delta, such that self + delta is forced within
    aRectangle. when all of me cannot be made to fit, prefer to keep
@@ -147,10 +147,10 @@
     <span class="nv">c = </span><span class="nx">@corner</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">factor</span><span class="p">)</span>
     <span class="k">new</span> <span class="nx">Rectangle</span><span class="p">(</span><span class="nx">o</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">o</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">c</span><span class="p">.</span><span class="nx">y</span><span class="p">)</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Rectangle converting:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">asArray: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>Rectangle converting:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">asArray: </span><span class="nf">-&gt;</span>
     <span class="p">[</span><span class="nx">@left</span><span class="p">(),</span> <span class="nx">@top</span><span class="p">(),</span> <span class="nx">@right</span><span class="p">(),</span> <span class="nx">@bottom</span><span class="p">()]</span>
   
-  <span class="nv">asArray_xywh: </span><span class="o">-&gt;</span>
+  <span class="nv">asArray_xywh: </span><span class="nf">-&gt;</span>
     <span class="p">[</span><span class="nx">@left</span><span class="p">(),</span> <span class="nx">@top</span><span class="p">(),</span> <span class="nx">@width</span><span class="p">(),</span> <span class="nx">@height</span><span class="p">()]</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

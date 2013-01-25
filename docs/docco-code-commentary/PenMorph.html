@@ -6,15 +6,15 @@
   <span class="nv">wantsRedraw: </span><span class="kc">false</span> <span class="c1"># internal optimization</span>
   <span class="nv">isDown: </span><span class="kc">true</span>
   
-  <span class="nv">constructor: </span><span class="nf">() -&gt;</span>
+  <span class="nv">constructor: </span><span class="p">()</span> <span class="nf">-&gt;</span>
     <span class="vi">@penSize = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">4</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@penSize</span><span class="p">,</span> <span class="nx">@penSize</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>todo we need to change the size two times, for getting the right size
 of the arrow and of the line. Probably should make the two distinct</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@penSize = </span><span class="mi">1</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>alert @morphMethod() # works
 doesn't work cause coffeescript doesn't support static inheritance
 alert @morphStaticMethod()</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="vi">@staticVariable: </span><span class="mi">1</span>
-  <span class="vi">@staticFunction: </span><span class="o">-&gt;</span> <span class="mf">3.14</span>
-    </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>PenMorph updating - optimized for warping, i.e atomic recursion</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">changed: </span><span class="o">-&gt;</span>
+  <span class="vi">@staticFunction: </span><span class="nf">-&gt;</span> <span class="mf">3.14</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>PenMorph updating - optimized for warping, i.e atomic recursion</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">changed: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@isWarped</span> <span class="o">is</span> <span class="kc">false</span>
       <span class="nv">w = </span><span class="nx">@root</span><span class="p">()</span>
       <span class="nx">w</span><span class="p">.</span><span class="nx">broken</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@visibleBounds</span><span class="p">().</span><span class="nx">spread</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">w</span> <span class="k">instanceof</span> <span class="nx">WorldMorph</span>
@@ -83,20 +83,20 @@ alert @morphStaticMethod()</p>             </td>             <td class="code">  
     <span class="nx">@setPosition</span> <span class="nx">dest</span>
     <span class="nx">@drawLine</span> <span class="nx">start</span><span class="p">,</span> <span class="nx">@center</span><span class="p">()</span>
   
-  <span class="nv">down: </span><span class="o">-&gt;</span>
+  <span class="nv">down: </span><span class="nf">-&gt;</span>
     <span class="vi">@isDown = </span><span class="kc">true</span>
   
-  <span class="nv">up: </span><span class="o">-&gt;</span>
+  <span class="nv">up: </span><span class="nf">-&gt;</span>
     <span class="vi">@isDown = </span><span class="kc">false</span>
   
-  <span class="nv">clear: </span><span class="o">-&gt;</span>
+  <span class="nv">clear: </span><span class="nf">-&gt;</span>
     <span class="nx">@parent</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
     <span class="nx">@parent</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>PenMorph optimization for atomic recursion:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">startWarp: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>PenMorph optimization for atomic recursion:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">startWarp: </span><span class="nf">-&gt;</span>
     <span class="vi">@isWarped = </span><span class="kc">true</span>
   
-  <span class="nv">endWarp: </span><span class="o">-&gt;</span>
+  <span class="nv">endWarp: </span><span class="nf">-&gt;</span>
     <span class="nx">@drawNew</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@wantsRedraw</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@parent</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>

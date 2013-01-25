@@ -9,7 +9,7 @@
     <span class="nx">@silentSetExtent</span> <span class="nx">sizePoint</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="nv">ext = </span><span class="nx">@extent</span><span class="p">()</span>
     <span class="vi">@image = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
@@ -33,7 +33,7 @@
     <span class="vi">@choice = </span><span class="nx">@getPixelColor</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
     <span class="nx">@updateTarget</span><span class="p">()</span>
   
-  <span class="nv">updateTarget: </span><span class="o">-&gt;</span>
+  <span class="nv">updateTarget: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@target</span> <span class="k">instanceof</span> <span class="nx">Morph</span> <span class="o">and</span> <span class="nx">@choice</span> <span class="o">isnt</span> <span class="kc">null</span>
       <span class="k">if</span> <span class="nx">@target</span><span class="p">[</span><span class="nx">@targetSetter</span><span class="p">]</span> <span class="k">instanceof</span> <span class="nb">Function</span>
         <span class="nx">@target</span><span class="p">[</span><span class="nx">@targetSetter</span><span class="p">]</span> <span class="nx">@choice</span>
@@ -45,33 +45,33 @@
   </pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>ColorPaletteMorph duplicating:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copyRecordingReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>inherited, see comment in Morph</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>
     <span class="nv">c.target = </span><span class="p">(</span><span class="nx">dict</span><span class="p">[</span><span class="nx">@target</span><span class="p">])</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">target</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@target</span><span class="p">]</span>
     <span class="nx">c</span>
-  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>ColorPaletteMorph menu:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>ColorPaletteMorph menu:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="nf">-&gt;</span>
     <span class="nv">menu = </span><span class="k">super</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;set target&quot;</span><span class="p">,</span> <span class="s">&quot;setTarget&quot;</span><span class="p">,</span> <span class="s">&quot;choose another morph\nwhose color property\n will be&quot;</span> <span class="o">+</span> <span class="s">&quot; controlled by this one&quot;</span>
     <span class="nx">menu</span>
   
-  <span class="nv">setTarget: </span><span class="o">-&gt;</span>
+  <span class="nv">setTarget: </span><span class="nf">-&gt;</span>
     <span class="nv">choices = </span><span class="nx">@overlappedMorphs</span><span class="p">()</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="s">&quot;choose target:&quot;</span><span class="p">)</span>
     <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@world</span><span class="p">()</span>
-    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) =&gt;</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">=&gt;</span>
         <span class="vi">@target = </span><span class="nx">each</span>
         <span class="nx">@setTargetSetter</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
       <span class="vi">@target = </span><span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
       <span class="nx">@setTargetSetter</span><span class="p">()</span>
-    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span>
   
-  <span class="nv">setTargetSetter: </span><span class="o">-&gt;</span>
+  <span class="nv">setTargetSetter: </span><span class="nf">-&gt;</span>
     <span class="nv">choices = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">colorSetters</span><span class="p">()</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="s">&quot;choose target property:&quot;</span><span class="p">)</span>
-    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) =&gt;</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">=&gt;</span>
         <span class="vi">@targetSetter = </span><span class="nx">each</span>
     <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
       <span class="vi">@targetSetter = </span><span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

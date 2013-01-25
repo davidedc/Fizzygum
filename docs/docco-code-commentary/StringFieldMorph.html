@@ -23,7 +23,7 @@
     <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="nv">txt = </span><span class="p">(</span><span class="k">if</span> <span class="nx">@text</span> <span class="k">then</span> <span class="nx">@string</span><span class="p">()</span> <span class="k">else</span> <span class="nx">@defaultContents</span><span class="p">)</span>
     <span class="vi">@text = </span><span class="kc">null</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
@@ -38,10 +38,10 @@
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@add</span> <span class="nx">@text</span>
   
-  <span class="nv">string: </span><span class="o">-&gt;</span>
+  <span class="nv">string: </span><span class="nf">-&gt;</span>
     <span class="nx">@text</span><span class="p">.</span><span class="nx">text</span>
   
-  <span class="nv">mouseClickLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseClickLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@text</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@isEditable</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>StringFieldMorph duplicating:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copyRecordingReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>inherited, see comment in Morph</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>

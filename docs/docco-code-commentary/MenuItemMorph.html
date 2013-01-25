@@ -3,7 +3,7 @@
   <span class="nv">constructor: </span><span class="nf">(target, action, labelString, fontSize, fontStyle, environment, hint, color) -&gt;</span>
     <span class="k">super</span> <span class="nx">target</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">labelString</span><span class="p">,</span> <span class="nx">fontSize</span><span class="p">,</span> <span class="nx">fontStyle</span><span class="p">,</span> <span class="nx">environment</span><span class="p">,</span> <span class="nx">hint</span><span class="p">,</span> <span class="nx">color</span>
   
-  <span class="nv">createLabel: </span><span class="o">-&gt;</span>
+  <span class="nv">createLabel: </span><span class="nf">-&gt;</span>
     <span class="nx">@label</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@label</span> <span class="o">isnt</span> <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>bold
 italic
 numeric
@@ -15,14 +15,14 @@ shadow color</p>             </td>             <td class="code">               <
     <span class="vi">@label.bounds = </span><span class="nx">np</span><span class="p">.</span><span class="nx">extent</span><span class="p">(</span><span class="nx">@label</span><span class="p">.</span><span class="nx">extent</span><span class="p">())</span>
     <span class="nx">@add</span> <span class="nx">@label</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>MenuItemMorph events:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseEnter: </span><span class="o">-&gt;</span>
-    <span class="nx">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>MenuItemMorph events:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseEnter: </span><span class="nf">-&gt;</span>
+    <span class="k">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
       <span class="vi">@image = </span><span class="nx">@highlightImage</span>
       <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@bubbleHelp</span> <span class="nx">@hint</span>  <span class="k">if</span> <span class="nx">@hint</span>
   
-  <span class="nv">mouseLeave: </span><span class="o">-&gt;</span>
-    <span class="nx">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
+  <span class="nv">mouseLeave: </span><span class="nf">-&gt;</span>
+    <span class="k">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
       <span class="vi">@image = </span><span class="nx">@normalImage</span>
       <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@world</span><span class="p">().</span><span class="nx">hand</span><span class="p">.</span><span class="nx">destroyTemporaries</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@hint</span>
@@ -34,20 +34,20 @@ shadow color</p>             </td>             <td class="code">               <
     <span class="vi">@image = </span><span class="nx">@pressImage</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">mouseMove: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseMove: </span><span class="nf">-&gt;</span>
     <span class="nx">@escalateEvent</span> <span class="s">&quot;mouseMove&quot;</span>  <span class="k">if</span> <span class="nx">@isListItem</span><span class="p">()</span>
   
-  <span class="nv">mouseClickLeft: </span><span class="o">-&gt;</span>
-    <span class="nx">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
+  <span class="nv">mouseClickLeft: </span><span class="nf">-&gt;</span>
+    <span class="k">unless</span> <span class="nx">@isListItem</span><span class="p">()</span>
       <span class="nx">@parent</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
       <span class="nx">@root</span><span class="p">().</span><span class="nv">activeMenu = </span><span class="kc">null</span>
     <span class="nx">@trigger</span><span class="p">()</span>
   
-  <span class="nv">isListItem: </span><span class="o">-&gt;</span>
+  <span class="nv">isListItem: </span><span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">isListContents</span>  <span class="k">if</span> <span class="nx">@parent</span>
     <span class="kc">false</span>
   
-  <span class="nv">isSelectedListItem: </span><span class="o">-&gt;</span>
+  <span class="nv">isSelectedListItem: </span><span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="nx">@image</span> <span class="o">is</span> <span class="nx">@pressImage</span>  <span class="k">if</span> <span class="nx">@isListItem</span><span class="p">()</span>
     <span class="kc">false</span>
 

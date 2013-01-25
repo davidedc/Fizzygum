@@ -25,7 +25,7 @@
       <span class="k">return</span> <span class="kc">null</span>
     <span class="nv">navigation = </span><span class="p">[</span><span class="mi">8</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">27</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">40</span><span class="p">]</span>
     <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span> <span class="c1"># Opera doesn&#39;t support charCode</span>
-      <span class="nx">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">navigation</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span><span class="p">)</span>
+      <span class="k">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">navigation</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span><span class="p">)</span>
         <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">ctrlKey</span>
           <span class="nx">@ctrl</span> <span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span>
         <span class="k">else</span> <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">metaKey</span>
@@ -33,7 +33,7 @@
         <span class="k">else</span>
           <span class="nx">@insert</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span><span class="p">)</span>
     <span class="k">else</span> <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">charCode</span> <span class="c1"># all other browsers</span>
-      <span class="nx">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">navigation</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">charCode</span><span class="p">)</span>
+      <span class="k">unless</span> <span class="nx">contains</span><span class="p">(</span><span class="nx">navigation</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">charCode</span><span class="p">)</span>
         <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">ctrlKey</span>
           <span class="nx">@ctrl</span> <span class="nx">event</span><span class="p">.</span><span class="nx">charCode</span>
         <span class="k">else</span> <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">metaKey</span>
@@ -110,27 +110,27 @@ gotoSlot: (newSlot) ->
     <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
       <span class="nx">@parent</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">scrollCursorIntoView</span> <span class="nx">@</span><span class="p">,</span> <span class="mi">6</span>
   
-  <span class="nv">goLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">goLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@slot</span> <span class="o">-</span> <span class="mi">1</span>
   
-  <span class="nv">goRight: </span><span class="o">-&gt;</span>
+  <span class="nv">goRight: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@slot</span> <span class="o">+</span> <span class="mi">1</span>
   
-  <span class="nv">goUp: </span><span class="o">-&gt;</span>
+  <span class="nv">goUp: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">upFrom</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
   
-  <span class="nv">goDown: </span><span class="o">-&gt;</span>
+  <span class="nv">goDown: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">downFrom</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
   
-  <span class="nv">goHome: </span><span class="o">-&gt;</span>
+  <span class="nv">goHome: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">startOfLine</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
   
-  <span class="nv">goEnd: </span><span class="o">-&gt;</span>
+  <span class="nv">goEnd: </span><span class="nf">-&gt;</span>
     <span class="nx">@target</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
     <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">endOfLine</span><span class="p">(</span><span class="nx">@slot</span><span class="p">)</span>
   
@@ -138,12 +138,12 @@ gotoSlot: (newSlot) ->
     <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">slotAt</span><span class="p">(</span><span class="nx">aPoint</span><span class="p">)</span>
     <span class="nx">@show</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>CursorMorph editing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">accept: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>CursorMorph editing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">accept: </span><span class="nf">-&gt;</span>
     <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span>
     <span class="nx">world</span><span class="p">.</span><span class="nx">stopEditing</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">world</span>
     <span class="nx">@escalateEvent</span> <span class="s">&quot;accept&quot;</span><span class="p">,</span> <span class="kc">null</span>
   
-  <span class="nv">cancel: </span><span class="o">-&gt;</span>
+  <span class="nv">cancel: </span><span class="nf">-&gt;</span>
     <span class="nv">world = </span><span class="nx">@root</span><span class="p">()</span>
     <span class="nx">world</span><span class="p">.</span><span class="nx">stopEditing</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">world</span>
     <span class="vi">@target.text = </span><span class="nx">@originalContents</span>
@@ -181,7 +181,7 @@ gotoSlot: (newSlot) ->
     <span class="k">if</span> <span class="nx">aChar</span> <span class="o">is</span> <span class="mi">65</span>
       <span class="nx">@target</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
   
-  <span class="nv">deleteRight: </span><span class="o">-&gt;</span>
+  <span class="nv">deleteRight: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span> <span class="o">isnt</span> <span class="s">&quot;&quot;</span>
       <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selectionStartSlot</span><span class="p">()</span>
       <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>
@@ -192,7 +192,7 @@ gotoSlot: (newSlot) ->
       <span class="vi">@target.text = </span><span class="nx">text</span>
       <span class="nx">@target</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
   
-  <span class="nv">deleteLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">deleteLeft: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selection</span><span class="p">()</span>
       <span class="nx">@gotoSlot</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">selectionStartSlot</span><span class="p">()</span>
       <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">deleteSelection</span><span class="p">()</span>

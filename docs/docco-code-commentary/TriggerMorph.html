@@ -25,11 +25,11 @@ see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
     <span class="vi">@labelColor = </span><span class="nx">labelColor</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">super</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>TriggerMorph drawing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>TriggerMorph drawing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="nx">@createBackgrounds</span><span class="p">()</span>
     <span class="nx">@createLabel</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@labelString</span> <span class="o">isnt</span> <span class="kc">null</span>
   
-  <span class="nv">createBackgrounds: </span><span class="o">-&gt;</span>
+  <span class="nv">createBackgrounds: </span><span class="nf">-&gt;</span>
     <span class="nv">ext = </span><span class="nx">@extent</span><span class="p">()</span>
     <span class="vi">@normalImage = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">ext</span><span class="p">)</span>
     <span class="nv">context = </span><span class="nx">@normalImage</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
@@ -45,7 +45,7 @@ see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
     <span class="nx">context</span><span class="p">.</span><span class="nx">fillRect</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">y</span>
     <span class="vi">@image = </span><span class="nx">@normalImage</span>
   
-  <span class="nv">createLabel: </span><span class="o">-&gt;</span>
+  <span class="nv">createLabel: </span><span class="nf">-&gt;</span>
     <span class="nx">@label</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@label</span> <span class="o">isnt</span> <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>bold
 italic
 numeric
@@ -59,7 +59,7 @@ shadow color</p>             </td>             <td class="code">               <
     <span class="nv">c.label = </span><span class="p">(</span><span class="nx">dict</span><span class="p">[</span><span class="nx">@label</span><span class="p">])</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">label</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@label</span><span class="p">]</span>
     <span class="nx">c</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>TriggerMorph action:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">trigger: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>if target is a function, use it as callback:
+  </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>TriggerMorph action:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">trigger: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>if target is a function, use it as callback:
 execute target as callback function with action as argument
 in the environment as optionally specified.
 Note: if action is also a function, instead of becoming
@@ -86,21 +86,21 @@ for selector-like actions
       <span class="k">else</span> <span class="c1"># assume it&#39;s a String</span>
         <span class="nx">@target</span><span class="p">[</span><span class="nx">@action</span><span class="p">]()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>TriggerMorph events:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseEnter: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>TriggerMorph events:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseEnter: </span><span class="nf">-&gt;</span>
     <span class="vi">@image = </span><span class="nx">@highlightImage</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@bubbleHelp</span> <span class="nx">@hint</span>  <span class="k">if</span> <span class="nx">@hint</span>
   
-  <span class="nv">mouseLeave: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseLeave: </span><span class="nf">-&gt;</span>
     <span class="vi">@image = </span><span class="nx">@normalImage</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@world</span><span class="p">().</span><span class="nx">hand</span><span class="p">.</span><span class="nx">destroyTemporaries</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@hint</span>
   
-  <span class="nv">mouseDownLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseDownLeft: </span><span class="nf">-&gt;</span>
     <span class="vi">@image = </span><span class="nx">@pressImage</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">mouseClickLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseClickLeft: </span><span class="nf">-&gt;</span>
     <span class="vi">@image = </span><span class="nx">@highlightImage</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@trigger</span><span class="p">()</span>

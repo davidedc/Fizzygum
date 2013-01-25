@@ -11,8 +11,8 @@
     <span class="vi">@noticesTransparentClick = </span><span class="kc">false</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  <span class="nv">touch: </span><span class="o">-&gt;</span>
-    <span class="nx">unless</span> <span class="nx">@isTouched</span>
+  <span class="nv">touch: </span><span class="nf">-&gt;</span>
+    <span class="k">unless</span> <span class="nx">@isTouched</span>
       <span class="vi">@isTouched = </span><span class="kc">true</span>
       <span class="vi">@alpha = </span><span class="mf">0.6</span>
       <span class="vi">@step = </span><span class="o">=&gt;</span>
@@ -25,19 +25,19 @@
           <span class="vi">@step = </span><span class="kc">null</span>
         <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">unTouch: </span><span class="o">-&gt;</span>
+  <span class="nv">unTouch: </span><span class="nf">-&gt;</span>
     <span class="vi">@isTouched = </span><span class="kc">false</span>
   
-  <span class="nv">mouseEnter: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseEnter: </span><span class="nf">-&gt;</span>
     <span class="nx">@touch</span><span class="p">()</span>
   
-  <span class="nv">mouseLeave: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseLeave: </span><span class="nf">-&gt;</span>
     <span class="nx">@unTouch</span><span class="p">()</span>
   
-  <span class="nv">mouseDownLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseDownLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@touch</span><span class="p">()</span>
   
-  <span class="nv">mouseClickLeft: </span><span class="o">-&gt;</span>
+  <span class="nv">mouseClickLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@unTouch</span><span class="p">()</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

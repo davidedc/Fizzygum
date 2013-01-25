@@ -3,7 +3,7 @@
   <span class="nv">constructor: </span><span class="nf">(@target = null, sizePoint) -&gt;</span>
     <span class="k">super</span> <span class="nx">@target</span><span class="p">,</span> <span class="nx">sizePoint</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
   
-  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="nv">ext = </span><span class="nx">@extent</span><span class="p">()</span>
     <span class="vi">@image = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>

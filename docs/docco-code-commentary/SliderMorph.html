@@ -9,6 +9,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
   <span class="nv">size: </span><span class="kc">null</span>
   <span class="nv">offset: </span><span class="kc">null</span>
   <span class="nv">button: </span><span class="kc">null</span>
+  <span class="nv">step: </span><span class="kc">null</span>
 
   <span class="nv">constructor: </span><span class="nf">(@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) -&gt;</span>
     <span class="vi">@button = </span><span class="k">new</span> <span class="nx">SliderButtonMorph</span><span class="p">()</span>
@@ -21,22 +22,21 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="vi">@alpha = </span><span class="mf">0.3</span>
     <span class="vi">@color = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
-    <span class="vi">@step = </span><span class="kc">null</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>this.drawNew();</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">autoOrientation: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>this.drawNew();</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">autoOrientation: </span><span class="nf">-&gt;</span>
       <span class="nx">noOperation</span>
   
-  <span class="nv">rangeSize: </span><span class="o">-&gt;</span>
+  <span class="nv">rangeSize: </span><span class="nf">-&gt;</span>
     <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@start</span>
   
-  <span class="nv">ratio: </span><span class="o">-&gt;</span>
+  <span class="nv">ratio: </span><span class="nf">-&gt;</span>
     <span class="nx">@size</span> <span class="o">/</span> <span class="nx">@rangeSize</span><span class="p">()</span>
   
-  <span class="nv">unitSize: </span><span class="o">-&gt;</span>
+  <span class="nv">unitSize: </span><span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="p">(</span><span class="nx">@height</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">height</span><span class="p">())</span> <span class="o">/</span> <span class="nx">@rangeSize</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
     <span class="p">(</span><span class="nx">@width</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">width</span><span class="p">())</span> <span class="o">/</span> <span class="nx">@rangeSize</span><span class="p">()</span>
   
-  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="vi">@button.orientation = </span><span class="nx">@orientation</span>
     <span class="k">if</span> <span class="nx">@orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
@@ -59,7 +59,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nx">@button</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
     <span class="nx">@button</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
   
-  <span class="nv">updateValue: </span><span class="o">-&gt;</span>
+  <span class="nv">updateValue: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@orientation</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
       <span class="nv">relPos = </span><span class="nx">@button</span><span class="p">.</span><span class="nx">top</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@top</span><span class="p">()</span>
     <span class="k">else</span>
@@ -67,7 +67,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="vi">@value = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">relPos</span> <span class="o">/</span> <span class="nx">@unitSize</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@start</span><span class="p">)</span>
     <span class="nx">@updateTarget</span><span class="p">()</span>
   
-  <span class="nv">updateTarget: </span><span class="o">-&gt;</span>
+  <span class="nv">updateTarget: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@action</span>
       <span class="k">if</span> <span class="k">typeof</span> <span class="nx">@action</span> <span class="o">is</span> <span class="s">&quot;function&quot;</span>
         <span class="nx">@action</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@target</span><span class="p">,</span> <span class="nx">@value</span>
@@ -79,10 +79,10 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nv">c.button = </span><span class="p">(</span><span class="nx">dict</span><span class="p">[</span><span class="nx">@button</span><span class="p">])</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">button</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@button</span><span class="p">]</span>
     <span class="nx">c</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>SliderMorph menu:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="o">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>SliderMorph menu:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="nf">-&gt;</span>
     <span class="nv">menu = </span><span class="k">super</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;show value...&quot;</span><span class="p">,</span> <span class="s">&quot;showValue&quot;</span><span class="p">,</span> <span class="s">&quot;display a dialog box\nshowing the selected number&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;floor...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;floor...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">-&gt;</span>
       <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nfloor:&quot;</span><span class="p">,</span>
         <span class="nx">@setStart</span><span class="p">,</span>
         <span class="nx">@</span><span class="p">,</span>
@@ -92,7 +92,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
         <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@size</span><span class="p">,</span>
         <span class="kc">true</span>
     <span class="p">),</span> <span class="s">&quot;set the minimum value\nwhich can be selected&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;ceiling...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;ceiling...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">-&gt;</span>
       <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nceiling:&quot;</span><span class="p">,</span>
         <span class="nx">@setStop</span><span class="p">,</span>
         <span class="nx">@</span><span class="p">,</span>
@@ -102,7 +102,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
         <span class="nx">@size</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
         <span class="kc">true</span>
     <span class="p">),</span> <span class="s">&quot;set the maximum value\nwhich can be selected&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;button size...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="o">-&gt;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;button size...&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">-&gt;</span>
       <span class="nx">@prompt</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s">&quot;\nbutton size:&quot;</span><span class="p">,</span>
         <span class="nx">@setSize</span><span class="p">,</span>
         <span class="nx">@</span><span class="p">,</span>
@@ -116,7 +116,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;set target&quot;</span><span class="p">,</span> <span class="s">&quot;setTarget&quot;</span><span class="p">,</span> <span class="s">&quot;select another morph\nwhose numerical property\nwill be &quot;</span> <span class="o">+</span> <span class="s">&quot;controlled by this one&quot;</span>
     <span class="nx">menu</span>
   
-  <span class="nv">showValue: </span><span class="o">-&gt;</span>
+  <span class="nv">showValue: </span><span class="nf">-&gt;</span>
     <span class="nx">@inform</span> <span class="nx">@value</span>
   
   <span class="nv">userSetStart: </span><span class="nf">(num) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">num</span><span class="p">,</span> <span class="nx">@stop</span><span class="p">)</span>
@@ -125,7 +125,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
       <span class="vi">@start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">num</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@size</span><span class="p">)</span>
     <span class="k">else</span>
       <span class="nv">newStart = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span>
-      <span class="vi">@start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newStart</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@size</span><span class="p">)</span>  <span class="nx">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newStart</span><span class="p">)</span>
+      <span class="vi">@start = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newStart</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@size</span><span class="p">)</span>  <span class="k">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newStart</span><span class="p">)</span>
     <span class="vi">@value = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">@value</span><span class="p">,</span> <span class="nx">@start</span><span class="p">)</span>
     <span class="nx">@updateTarget</span><span class="p">()</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
@@ -135,7 +135,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
       <span class="vi">@stop = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">num</span><span class="p">,</span> <span class="nx">@start</span> <span class="o">+</span> <span class="nx">@size</span><span class="p">)</span>
     <span class="k">else</span>
       <span class="nv">newStop = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span>
-      <span class="vi">@stop = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newStop</span><span class="p">,</span> <span class="nx">@start</span> <span class="o">+</span> <span class="nx">@size</span><span class="p">)</span>  <span class="nx">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newStop</span><span class="p">)</span>
+      <span class="vi">@stop = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newStop</span><span class="p">,</span> <span class="nx">@start</span> <span class="o">+</span> <span class="nx">@size</span><span class="p">)</span>  <span class="k">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newStop</span><span class="p">)</span>
     <span class="vi">@value = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@value</span><span class="p">,</span> <span class="nx">@stop</span><span class="p">)</span>
     <span class="nx">@updateTarget</span><span class="p">()</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
@@ -145,39 +145,39 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
       <span class="vi">@size = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">num</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@start</span><span class="p">)</span>
     <span class="k">else</span>
       <span class="nv">newSize = </span><span class="nb">parseFloat</span><span class="p">(</span><span class="nx">num</span><span class="p">)</span>
-      <span class="vi">@size = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newSize</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@start</span><span class="p">)</span>  <span class="nx">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newSize</span><span class="p">)</span>
+      <span class="vi">@size = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">newSize</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@start</span><span class="p">)</span>  <span class="k">unless</span> <span class="nb">isNaN</span><span class="p">(</span><span class="nx">newSize</span><span class="p">)</span>
     <span class="vi">@value = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">@value</span><span class="p">,</span> <span class="nx">@stop</span> <span class="o">-</span> <span class="nx">@size</span><span class="p">)</span>
     <span class="nx">@updateTarget</span><span class="p">()</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">setTarget: </span><span class="o">-&gt;</span>
+  <span class="nv">setTarget: </span><span class="nf">-&gt;</span>
     <span class="nv">choices = </span><span class="nx">@overlappedMorphs</span><span class="p">()</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="s">&quot;choose target:&quot;</span><span class="p">)</span>
     <span class="nx">choices</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@world</span><span class="p">()</span>
-    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) =&gt;</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="o">=&gt;</span>
         <span class="vi">@target = </span><span class="nx">each</span>
         <span class="nx">@setTargetSetter</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
       <span class="vi">@target = </span><span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
       <span class="nx">@setTargetSetter</span><span class="p">()</span>
-    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span>
   
-  <span class="nv">setTargetSetter: </span><span class="o">-&gt;</span>
+  <span class="nv">setTargetSetter: </span><span class="nf">-&gt;</span>
     <span class="nv">choices = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">numericalSetters</span><span class="p">()</span>
     <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="s">&quot;choose target property:&quot;</span><span class="p">)</span>
-    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="p">(</span><span class="nx">each</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="nx">choices</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(each) =&gt;</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">each</span><span class="p">,</span> <span class="o">=&gt;</span>
         <span class="vi">@action = </span><span class="nx">each</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span>
       <span class="vi">@action = </span><span class="nx">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">else</span> <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">choices</span><span class="p">.</span><span class="nx">length</span>
   
-  <span class="nv">numericalSetters: </span><span class="o">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">list = </span><span class="k">super</span><span class="p">()</span>
+  <span class="nv">numericalSetters: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>for context menu demo purposes</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">list = </span><span class="k">super</span><span class="p">()</span>
     <span class="nx">list</span><span class="p">.</span><span class="nx">push</span> <span class="s">&quot;setStart&quot;</span><span class="p">,</span> <span class="s">&quot;setStop&quot;</span><span class="p">,</span> <span class="s">&quot;setSize&quot;</span>
     <span class="nx">list</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>SliderMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">mouseDownLeft: </span><span class="nf">(pos) -&gt;</span>
-    <span class="nx">unless</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
+    <span class="k">unless</span> <span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">containsPoint</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
       <span class="vi">@offset = </span><span class="k">new</span> <span class="nx">Point</span><span class="p">()</span> <span class="c1"># return null;</span>
     <span class="k">else</span>
       <span class="vi">@offset = </span><span class="nx">pos</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="nx">@button</span><span class="p">.</span><span class="nx">bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">)</span>

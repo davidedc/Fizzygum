@@ -9,11 +9,11 @@
     <span class="nx">@silentSetExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">)</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
   
-  <span class="nv">drawNew: </span><span class="o">-&gt;</span>
+  <span class="nv">drawNew: </span><span class="nf">-&gt;</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@buildSubmorphs</span><span class="p">()</span>
   
-  <span class="nv">buildSubmorphs: </span><span class="o">-&gt;</span>
+  <span class="nv">buildSubmorphs: </span><span class="nf">-&gt;</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
       <span class="nx">child</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
     <span class="vi">@children = </span><span class="p">[]</span>
@@ -31,10 +31,10 @@
     <span class="nx">@feedback</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>
     <span class="nx">@add</span> <span class="nx">@feedback</span>
   
-  <span class="nv">getChoice: </span><span class="o">-&gt;</span>
+  <span class="nv">getChoice: </span><span class="nf">-&gt;</span>
     <span class="nx">@feedback</span><span class="p">.</span><span class="nx">color</span>
   
-  <span class="nv">rootForGrab: </span><span class="o">-&gt;</span>
+  <span class="nv">rootForGrab: </span><span class="nf">-&gt;</span>
     <span class="nx">@</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
