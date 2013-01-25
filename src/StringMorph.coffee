@@ -317,12 +317,15 @@ class StringMorph extends Morph
     @endMark = @text.length
     @drawNew()
     @changed()
-  
+
+  mouseDownLeft: ->
+    @clearSelection();
+
   mouseClickLeft: (pos) ->
     if @isEditable
       @edit()  unless @currentlySelecting
       @root().cursor.gotoPos pos
-      @currentlySelecting = false
+      @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos
   
@@ -345,6 +348,6 @@ class StringMorph extends Morph
           @changed()
   
   disableSelecting: ->
-    mouseDownLeft = ->
-      @clearSelection()
+    # re-establish the original definition of the method
+    @mouseDownLeft = StringMorph::mouseDownLeft
     delete @mouseMove

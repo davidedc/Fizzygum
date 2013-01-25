@@ -23,7 +23,7 @@ class CursorMorph extends BlinkerMorph
   
   # CursorMorph event processing:
   processKeyPress: (event) ->
-    # this.inspectKeyEvent(event);
+    # @inspectKeyEvent event
     if @keyDownEventUsed
       @keyDownEventUsed = false
       return null
