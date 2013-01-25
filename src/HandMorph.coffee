@@ -262,9 +262,9 @@ class HandMorph extends Morph
 
     readBinary = (aFile) ->
       frd = new FileReader()
-      target = target.parent  until target.droppedBinary
+      targetDrop = targetDrop.parent  until targetDrop.droppedBinary
       frd.onloadend = (e) ->
-        target.droppedBinary e.target.result, aFile.name
+        targetDrop.droppedBinary e.target.result, aFile.name
       frd.readAsArrayBuffer aFile
 
     parseImgURL = (html) ->
