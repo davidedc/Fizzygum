@@ -318,8 +318,11 @@ class StringMorph extends Morph
     @drawNew()
     @changed()
 
-  mouseDownLeft: ->
-    @clearSelection();
+  mouseDownLeft: (pos) ->
+    if @isEditable
+      @clearSelection()
+    else
+      @escalateEvent "mouseDownLeft", pos
 
   mouseClickLeft: (pos) ->
     if @isEditable
