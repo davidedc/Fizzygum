@@ -60,11 +60,11 @@ class MorphicNode
   allParents: ->
     # includes myself
     result = [@]
-    result = result.concat(@parent.allParents())  if @parent isnt null
+    result = result.concat(@parent.allParents())  if @parent?
     result
   
   siblings: ->
-    return []  if @parent is null
+    return []  if !@parent?
     @parent.children.filter (child) =>
       child isnt @
   
