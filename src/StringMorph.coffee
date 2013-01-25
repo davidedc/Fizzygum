@@ -12,6 +12,7 @@ class StringMorph extends Morph
   isItalic: null
   isEditable: false
   isNumeric: null
+  isPassword: false
   shadowOffset: null
   shadowColor: null
   isShowingBlanks: false
@@ -67,6 +68,12 @@ class StringMorph extends Morph
     # e.g. 'a StringMorph("Hello World")'
     "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"
   
+  password: (letter, length) ->
+    ans = ""
+    for i in [0...length]
+      ans += letter
+    ans
+
   font: ->
     # answer a font string, e.g. 'bold italic 12px sans-serif'
     font = ""
@@ -75,13 +82,14 @@ class StringMorph extends Morph
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
   
   drawNew: ->
+    text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
     #
     # set my extent
-    width = Math.max(context.measureText(@text).width + Math.abs(@shadowOffset.x), 1)
+    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
     @image.width = width
@@ -97,7 +105,7 @@ class StringMorph extends Morph
       x = Math.max(@shadowOffset.x, 0)
       y = Math.max(@shadowOffset.y, 0)
       context.fillStyle = @shadowColor.toString()
-      context.fillText @text, x, fontHeight(@fontSize) + y
+      context.fillText text, x, fontHeight(@fontSize) + y
     #
     # now draw the actual text
     x = Math.abs(Math.min(@shadowOffset.x, 0))
@@ -106,7 +114,7 @@ class StringMorph extends Morph
     if @isShowingBlanks
       @renderWithBlanks context, x, fontHeight(@fontSize) + y
     else
-      context.fillText @text, x, fontHeight(@fontSize) + y
+      context.fillText text, x, fontHeight(@fontSize) + y
     #
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -114,7 +122,7 @@ class StringMorph extends Morph
     i = start
     while i < stop
       p = @slotPosition(i).subtract(@position())
-      c = @text.charAt(i)
+      c = text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
       context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,
         fontHeight(@fontSize) + y
@@ -153,12 +161,13 @@ class StringMorph extends Morph
   slotPosition: (slot) ->
     # answer the position point of the given index ("slot")
     # where the cursor should be placed
-    dest = Math.min(Math.max(slot, 0), @text.length)
+    text = (if @isPassword then @password("*", @text.length) else @text)
+    dest = Math.min(Math.max(slot, 0), text.length)
     context = @image.getContext("2d")
     xOffset = 0
     idx = 0
     while idx < dest
-      xOffset += context.measureText(@text[idx]).width
+      xOffset += context.measureText(text[idx]).width
       idx += 1
     @pos = dest
     x = @left() + xOffset
@@ -168,14 +177,15 @@ class StringMorph extends Morph
   slotAt: (aPoint) ->
     # answer the slot (index) closest to the given point
     # so the cursor can be moved accordingly
+    text = (if @isPassword then @password("*", @text.length) else @text)
     idx = 0
     charX = 0
     context = @image.getContext("2d")
     while aPoint.x - @left() > charX
-      charX += context.measureText(@text[idx]).width
+      charX += context.measureText(text[idx]).width
       idx += 1
-      if idx is @text.length
-        if (context.measureText(@text).width - (context.measureText(@text[idx - 1]).width / 2)) < (aPoint.x - @left())  
+      if idx is text.length
+        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   
@@ -210,18 +220,27 @@ class StringMorph extends Morph
     ), "set this String's\nfont point size"
     menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
     menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"
+
     if @isBold
       menu.addItem "normal weight", "toggleWeight"
     else
       menu.addItem "bold", "toggleWeight"
+
     if @isItalic
       menu.addItem "normal style", "toggleItalic"
     else
       menu.addItem "italic", "toggleItalic"
+
     if @isShowingBlanks
       menu.addItem "hide blanks", "toggleShowBlanks"
     else
       menu.addItem "show blanks", "toggleShowBlanks"
+
+    if @isPassword
+      menu.addItem "show characters", "toggleIsPassword"
+    else
+      menu.addItem "hide characters", "toggleIsPassword"
+
     menu
   
   toggleIsDraggable: ->
@@ -246,6 +265,12 @@ class StringMorph extends Morph
   
   toggleItalic: ->
     @isItalic = not @isItalic
+    @changed()
+    @drawNew()
+    @changed()
+  
+  toggleIsPassword: ->
+    @isPassword = not @isPassword
     @changed()
     @drawNew()
     @changed()
