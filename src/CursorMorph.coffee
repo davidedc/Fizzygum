@@ -116,7 +116,7 @@ class CursorMorph extends BlinkerMorph
     length = @target.text.length
     pos = @target.slotPosition(slot)
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
-    if @parent
+    if @parent and @target.isScrollable
       right = @parent.right() - @viewPadding
       left = @parent.left() + @viewPadding
       if pos.x > right

@@ -24,6 +24,7 @@ class StringMorph extends Morph
   blanksColor: new Color(180, 140, 140)
   #
   # Properties for text-editing
+  isScrollable: true
   currentlySelecting: false
   startMark: 0
   endMark: 0
