@@ -93,7 +93,7 @@ gotoSlot: (newSlot) ->
     <span class="nv">length = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span>
     <span class="nv">pos = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">slotPosition</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
     <span class="vi">@slot = </span><span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&gt;</span> <span class="nx">length</span> <span class="k">then</span> <span class="nx">length</span> <span class="k">else</span> <span class="nx">slot</span><span class="p">))</span>
-    <span class="k">if</span> <span class="nx">@parent</span>
+    <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">isScrollable</span>
       <span class="nv">right = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@viewPadding</span>
       <span class="nv">left = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">@viewPadding</span>
       <span class="k">if</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span> <span class="o">&gt;</span> <span class="nx">right</span>
