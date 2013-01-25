@@ -31,6 +31,14 @@ detect = (list, predicate) ->
     return element  if predicate.call(null, element)
   null
 
+sizeOf = (object) ->
+  # answer the number of own properties
+  size = 0
+  key = undefined
+  for key of object
+    size += 1  if object.hasOwnProperty(key)
+  size
+
 isString = (target) ->
   typeof target is "string" or target instanceof String
 
