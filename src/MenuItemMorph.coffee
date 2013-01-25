@@ -4,24 +4,46 @@
 
 class MenuItemMorph extends TriggerMorph
 
+  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
   constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color) ->
     super target, action, labelString, fontSize, fontStyle, environment, hint, color
   
   createLabel: ->
     @label.destroy()  if @label isnt null
-    # bold
-    # italic
-    # numeric
-    # shadow offset
-    # shadow color
-    @label = new StringMorph(
-      @labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+
+    if isString(@labelString)
+      @label = @createLabelString(@labelString)
+    else if @labelString instanceof Array      
+      # assume its pattern is: [icon, string] 
+      @label = new Morph()
+      @label.alpha = 0 # transparent
+      @label.add icon = @createIcon(@labelString[0])
+      @label.add lbl = @createLabelString(@labelString[1])
+      lbl.setCenter icon.center()
+      lbl.setLeft icon.right() + 4
+      @label.bounds = (icon.bounds.merge(lbl.bounds))
+      @label.drawNew()
+    else # assume it's either a Morph or a Canvas
+      @label = @createIcon(@labelString)
+  
     @silentSetExtent @label.extent().add(new Point(8, 0))
     np = @position().add(new Point(4, 0))
     @label.bounds = np.extent(@label.extent())
     @add @label
   
-  
+  createIcon: (source) ->
+    # source can be either a Morph or an HTMLCanvasElement
+    icon = new Morph()
+    icon.image = (if source instanceof Morph then source.fullImage() else source)
+    icon.silentSetWidth icon.image.width
+    icon.silentSetHeight icon.image.height
+    icon
+
+  createLabelString: (string) ->
+    lbl = new TextMorph(string, @fontSize, @fontStyle)
+    lbl.setColor @labelColor
+    lbl  
+
   # MenuItemMorph events:
   mouseEnter: ->
     unless @isListItem()

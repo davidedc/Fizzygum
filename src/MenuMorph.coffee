@@ -26,6 +26,11 @@ class MenuMorph extends BoxMorph
     # that
   
   addItem: (labelString, action, hint, color) ->
+    # labelString is normally a single-line string. But it can also be one
+    # of the following:
+    #     * a multi-line string (containing line breaks)
+    #     * an icon (either a Morph or a Canvas)
+    #     * a tuple of format: [icon, string]
     @items.push [localize(labelString or "close"), action or nop, hint, color]
   
   addLine: (width) ->
