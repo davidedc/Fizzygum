@@ -271,7 +271,7 @@ class Morph extends MorphicNode
   silentSetWidth: (width) ->
     # do not drawNew() just yet
     w = Math.max(Math.round(width or 0), 0)
-    @bounds.corner = new Point(@bounds.origin.x + (w), @bounds.corner.y)
+    @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
     @setExtent new Point(@width(), height or 0)
