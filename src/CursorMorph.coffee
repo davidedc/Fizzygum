@@ -33,23 +33,20 @@ class CursorMorph extends BlinkerMorph
     if (event.keyCode is 37) or event.charCode is 37
       @insert "%"
       return null
-    navigation = [8, 13, 18, 27, 35, 36, 37, 38, 40]
     if event.keyCode # Opera doesn't support charCode
-      unless contains(navigation, event.keyCode)
-        if event.ctrlKey
-          @ctrl event.keyCode
-        else if event.metaKey
-          @cmd event.keyCode
-        else
-          @insert String.fromCharCode(event.keyCode)
+      if event.ctrlKey
+        @ctrl event.keyCode
+      else if event.metaKey
+        @cmd event.keyCode
+      else
+        @insert String.fromCharCode(event.keyCode)
     else if event.charCode # all other browsers
-      unless contains(navigation, event.charCode)
-        if event.ctrlKey
-          @ctrl event.charCode
-        else if event.metaKey
-          @cmd event.keyCode
-        else
-          @insert String.fromCharCode(event.charCode)
+      if event.ctrlKey
+        @ctrl event.charCode
+      else if event.metaKey
+        @cmd event.keyCode
+      else
+        @insert String.fromCharCode(event.charCode)
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", event
   
