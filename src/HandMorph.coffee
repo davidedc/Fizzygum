@@ -219,9 +219,9 @@ class HandMorph extends Morph
     #    
     #    events to interested Morphs at the mouse pointer
     #    if none of the above content types can be determined, the file contents
-    #    are dispatched as binary string to interested Morphs:
+    #    is dispatched as an ArrayBuffer to interested Morphs:
     #
-    #    ```droppedBinary(aBinaryString, name)```
+    #    ```droppedBinary(anArrayBuffer, name)```
 
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
@@ -265,7 +265,7 @@ class HandMorph extends Morph
       target = target.parent  until target.droppedBinary
       frd.onloadend = (e) ->
         target.droppedBinary e.target.result, aFile.name
-      frd.readAsBinaryString aFile
+      frd.readAsArrayBuffer aFile
 
     parseImgURL = (html) ->
       url = ""
