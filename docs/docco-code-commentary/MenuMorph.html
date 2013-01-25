@@ -94,10 +94,11 @@ of the following:
     <span class="nv">w = </span><span class="mi">0</span>
     <span class="k">if</span> <span class="nx">@parent</span> <span class="k">instanceof</span> <span class="nx">FrameMorph</span>
       <span class="k">if</span> <span class="nx">@parent</span><span class="p">.</span><span class="nx">scrollFrame</span> <span class="k">instanceof</span> <span class="nx">ScrollFrameMorph</span>
-        <span class="nv">w = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>    
+        <span class="nv">w = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">scrollFrame</span><span class="p">.</span><span class="nx">width</span><span class="p">()</span>    
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(item) -&gt;</span>
-      <span class="k">if</span> <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">MenuItemMorph</span><span class="p">)</span> <span class="o">or</span>
-        <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">StringFieldMorph</span><span class="p">)</span> <span class="o">or</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">MenuItemMorph</span><span class="p">)</span>
+        <span class="nv">w = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">item</span><span class="p">.</span><span class="nx">children</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">width</span><span class="p">()</span> <span class="o">+</span> <span class="mi">8</span><span class="p">)</span>
+      <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">StringFieldMorph</span><span class="p">)</span> <span class="o">or</span>
         <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">ColorPickerMorph</span><span class="p">)</span> <span class="o">or</span>
         <span class="p">(</span><span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">SliderMorph</span><span class="p">)</span>
           <span class="nv">w = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">item</span><span class="p">.</span><span class="nx">width</span><span class="p">())</span>  </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">w = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">w</span><span class="p">,</span> <span class="nx">@label</span><span class="p">.</span><span class="nx">width</span><span class="p">())</span>  <span class="k">if</span> <span class="nx">@label</span>
@@ -108,7 +109,9 @@ of the following:
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(item) =&gt;</span>
       <span class="nx">item</span><span class="p">.</span><span class="nx">silentSetWidth</span> <span class="nx">w</span>
       <span class="k">if</span> <span class="nx">item</span> <span class="k">instanceof</span> <span class="nx">MenuItemMorph</span>
+        <span class="nv">isSelected = </span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">image</span> <span class="o">==</span> <span class="nx">item</span><span class="p">.</span><span class="nx">pressImage</span><span class="p">)</span>
         <span class="nx">item</span><span class="p">.</span><span class="nx">createBackgrounds</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nx">isSelected</span> <span class="k">then</span> <span class="nv">item.image = </span><span class="nx">item</span><span class="p">.</span><span class="nx">pressImage</span>          
       <span class="k">else</span>
         <span class="nx">item</span><span class="p">.</span><span class="nx">drawNew</span><span class="p">()</span>
         <span class="k">if</span> <span class="nx">item</span> <span class="o">is</span> <span class="nx">@label</span>
