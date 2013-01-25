@@ -108,10 +108,11 @@ class MenuMorph extends BoxMorph
     w = 0
     if @parent instanceof FrameMorph
       if @parent.scrollFrame instanceof ScrollFrameMorph
-        w = @parent.width()    
+        w = @parent.scrollFrame.width()    
     @children.forEach (item) ->
-      if (item instanceof MenuItemMorph) or
-        (item instanceof StringFieldMorph) or
+      if (item instanceof MenuItemMorph)
+        w = Math.max(w, item.children[0].width() + 8)
+      else if (item instanceof StringFieldMorph) or
         (item instanceof ColorPickerMorph) or
         (item instanceof SliderMorph)
           w = Math.max(w, item.width())  
@@ -124,7 +125,9 @@ class MenuMorph extends BoxMorph
     @children.forEach (item) =>
       item.silentSetWidth w
       if item instanceof MenuItemMorph
+        isSelected = (item.image == item.pressImage)
         item.createBackgrounds()
+        if isSelected then item.image = item.pressImage          
       else
         item.drawNew()
         if item is @label
