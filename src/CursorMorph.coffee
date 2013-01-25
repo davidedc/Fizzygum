@@ -52,6 +52,7 @@ class CursorMorph extends BlinkerMorph
   
   processKeyDown: (event) ->
     # this.inspectKeyEvent(event);
+    shift = event.shiftKey
     @keyDownEventUsed = false
     if event.ctrlKey
       @ctrl event.keyCode
@@ -65,22 +66,22 @@ class CursorMorph extends BlinkerMorph
       return
     switch event.keyCode
       when 37
-        @goLeft()
+        @goLeft(shift)
         @keyDownEventUsed = true
       when 39
-        @goRight()
+        @goRight(shift)
         @keyDownEventUsed = true
       when 38
-        @goUp()
+        @goUp(shift)
         @keyDownEventUsed = true
       when 40
-        @goDown()
+        @goDown(shift)
         @keyDownEventUsed = true
       when 36
-        @goHome()
+        @goHome(shift)
         @keyDownEventUsed = true
       when 35
-        @goEnd()
+        @goEnd(shift)
         @keyDownEventUsed = true
       when 46
         @deleteRight()
@@ -130,34 +131,51 @@ class CursorMorph extends BlinkerMorph
     if @parent and @parent.parent instanceof ScrollFrameMorph
       @parent.parent.scrollCursorIntoView @, 6
   
-  goLeft: ->
-    @target.clearSelection()
+  goLeft: (shift) ->
+    @updateSelection shift
     @gotoSlot @slot - 1
+    @updateSelection shift
   
-  goRight: ->
-    @target.clearSelection()
+  goRight: (shift) ->
+    @updateSelection shift
     @gotoSlot @slot + 1
+    @updateSelection shift
   
-  goUp: ->
-    @target.clearSelection()
+  goUp: (shift) ->
+    @updateSelection shift
     @gotoSlot @target.upFrom(@slot)
+    @updateSelection shift
   
-  goDown: ->
-    @target.clearSelection()
+  goDown: (shift) ->
+    @updateSelection shift
     @gotoSlot @target.downFrom(@slot)
+    @updateSelection shift
   
-  goHome: ->
-    @target.clearSelection()
+  goHome: (shift) ->
+    @updateSelection shift
     @gotoSlot @target.startOfLine(@slot)
+    @updateSelection shift
   
-  goEnd: ->
-    @target.clearSelection()
+  goEnd: (shift) ->
+    @updateSelection shift
     @gotoSlot @target.endOfLine(@slot)
+    @updateSelection shift
   
   gotoPos: (aPoint) ->
     @gotoSlot @target.slotAt(aPoint)
     @show()
-  
+
+  updateSelection: (shift) ->
+    if shift
+      if not @target.endMark and not @target.startMark
+        @target.startMark = @slot
+        @target.endMark = @slot
+      else if @target.endMark isnt @slot
+        @target.endMark = @slot
+        @target.drawNew()
+        @target.changed()
+    else
+      @target.clearSelection()  
   
   # CursorMorph editing:
   accept: ->
