@@ -971,22 +971,25 @@ class Morph extends MorphicNode
   
   allEntryFields: ->
     @allChildren().filter (each) ->
-      each.isEditable
+      each.isEditable && (each instanceof StringMorph || each instanceof TextMorph);
   
   
   nextEntryField: (current) ->
     fields = @allEntryFields()
     idx = fields.indexOf(current)
     if idx isnt -1
-      return fields[idx + 1]  if fields.length > (idx - 1)
-      fields[0]
+      if fields.length > (idx + 1)
+        return fields[idx + 1]
+    return fields[0]
   
   previousEntryField: (current) ->
     fields = @allEntryFields()
     idx = fields.indexOf(current)
     if idx isnt -1
-      return fields[idx - 1]  if (idx - 1) > fields.length
-      fields[fields.length + 1]
+      if idx > 0
+        return fields[idx - 1]
+      return fields[fields.length - 1]
+    return fields[0]
   
   tab: (editField) ->
     #

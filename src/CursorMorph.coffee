@@ -39,14 +39,14 @@ class CursorMorph extends BlinkerMorph
       else if event.metaKey
         @cmd event.keyCode
       else
-        @insert String.fromCharCode(event.keyCode)
+        @insert String.fromCharCode(event.keyCode), event.shiftKey
     else if event.charCode # all other browsers
       if event.ctrlKey
         @ctrl event.charCode
       else if event.metaKey
         @cmd event.keyCode
       else
-        @insert String.fromCharCode(event.charCode)
+        @insert String.fromCharCode(event.charCode), event.shiftKey
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", event
   
@@ -174,8 +174,11 @@ class CursorMorph extends BlinkerMorph
     @target.changed()
     @escalateEvent "cancel", null
   
-  insert: (aChar) ->
-    return @target.tab(@target)  if aChar is "\t"
+  insert: (aChar, shiftKey) ->
+    if aChar is "\t"
+      if shiftKey
+        return @target.backTab(@target);
+      return @target.tab(@target)
     if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)
       if @target.selection() isnt ""
         @gotoSlot @target.selectionStartSlot()

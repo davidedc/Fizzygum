@@ -288,15 +288,17 @@ class WorldMorph extends FrameMorph
   # WorldMorph text field tabbing:
   nextTab: (editField) ->
     next = @nextEntryField(editField)
-    editField.clearSelection()
-    next.selectAll()
-    next.edit()
+    if next
+      editField.clearSelection()
+      next.selectAll()
+      next.edit()
   
   previousTab: (editField) ->
     prev = @previousEntryField(editField)
-    editField.clearSelection()
-    prev.selectAll()
-    prev.edit()
+    if prev
+      editField.clearSelection()
+      prev.selectAll()
+      prev.edit()
   
   
   # WorldMorph menu:
