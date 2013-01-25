@@ -552,6 +552,7 @@ class WorldMorph extends FrameMorph
     if @cursor
       @lastEditedText = @cursor.target
       @cursor.destroy()
+      @cursor = null
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
     @keyboardReceiver = null
     if @virtualKeyboard
