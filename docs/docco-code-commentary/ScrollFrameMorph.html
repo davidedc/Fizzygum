@@ -62,7 +62,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
   <span class="nv">setContents: </span><span class="nf">(aMorph) -&gt;</span>
     <span class="nx">@contents</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span>
       <span class="nx">m</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@contents.children = </span><span class="p">[]</span>
-    <span class="nx">aMorph</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@position</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="nx">aMorph</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@position</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="nx">@padding</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
     <span class="nx">@addContents</span> <span class="nx">aMorph</span>
   
   <span class="nv">setExtent: </span><span class="nf">(aPoint) -&gt;</span>
