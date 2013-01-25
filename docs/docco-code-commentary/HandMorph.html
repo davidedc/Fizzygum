@@ -195,7 +195,11 @@ mouseScroll
    droppedAudio(audio, name)
 </code></pre>
 
-<p>events to interested Morphs at the mouse pointer</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">files = </span><span class="p">(</span><span class="k">if</span> <span class="nx">event</span> <span class="k">instanceof</span> <span class="nx">FileList</span> <span class="k">then</span> <span class="nx">event</span> <span class="k">else</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">files</span> <span class="o">||</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span><span class="p">.</span><span class="nx">files</span><span class="p">))</span>
+<p>events to interested Morphs at the mouse pointer
+   if none of the above content types can be determined, the file contents
+   are dispatched as binary string to interested Morphs:</p>
+
+<p><code>droppedBinary(aBinaryString, name)</code></p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">files = </span><span class="p">(</span><span class="k">if</span> <span class="nx">event</span> <span class="k">instanceof</span> <span class="nx">FileList</span> <span class="k">then</span> <span class="nx">event</span> <span class="k">else</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">files</span> <span class="o">||</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span><span class="p">.</span><span class="nx">files</span><span class="p">))</span>
     <span class="nv">txt = </span><span class="p">(</span><span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span> <span class="k">then</span> <span class="nx">event</span><span class="p">.</span><span class="nx">dataTransfer</span><span class="p">.</span><span class="nx">getData</span><span class="p">(</span><span class="s">&quot;Text/HTML&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">null</span><span class="p">)</span>
     <span class="nv">targetDrop = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
     <span class="nv">img = </span><span class="k">new</span> <span class="nx">Image</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">readImage = </span><span class="nf">(aFile) -&gt;</span>
@@ -222,7 +226,15 @@ mouseScroll
       <span class="nv">frd.onloadend = </span><span class="nf">(e) -&gt;</span>
         <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedText</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span><span class="p">,</span> <span class="nx">aFile</span><span class="p">.</span><span class="nx">name</span>
       <span class="nx">frd</span><span class="p">.</span><span class="nx">readAsText</span> <span class="nx">aFile</span>
-    
+
+
+    <span class="nv">readBinary = </span><span class="nf">(aFile) -&gt;</span>
+      <span class="nv">frd = </span><span class="k">new</span> <span class="nx">FileReader</span><span class="p">()</span>
+      <span class="nv">target = </span><span class="nx">target</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">until</span> <span class="nx">target</span><span class="p">.</span><span class="nx">droppedBinary</span>
+      <span class="nv">frd.onloadend = </span><span class="nf">(e) -&gt;</span>
+        <span class="nx">target</span><span class="p">.</span><span class="nx">droppedBinary</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">result</span><span class="p">,</span> <span class="nx">aFile</span><span class="p">.</span><span class="nx">name</span>
+      <span class="nx">frd</span><span class="p">.</span><span class="nx">readAsBinaryString</span> <span class="nx">aFile</span>
+
     <span class="nv">parseImgURL = </span><span class="nf">(html) -&gt;</span>
       <span class="nv">url = </span><span class="s">&quot;&quot;</span>
       <span class="nv">start = </span><span class="nx">html</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;&lt;img src=\&quot;&quot;</span><span class="p">)</span>
@@ -242,7 +254,10 @@ mouseScroll
           <span class="nx">readImage</span> <span class="nx">file</span>
         <span class="k">else</span> <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;audio&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
           <span class="nx">readAudio</span> <span class="nx">file</span>
-        <span class="k">else</span> <span class="nx">readText</span> <span class="nx">file</span>  <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s">&quot;text&quot;</span><span class="p">)</span> <span class="o">is</span> <span class="mi">0</span>
+          <span class="nx">readText</span> <span class="nx">file</span>
+        <span class="k">else</span>
+          <span class="nx">readBinary</span> <span class="nx">file</span>
     <span class="k">else</span> <span class="k">if</span> <span class="nx">txt</span>
       <span class="nv">targetDrop = </span><span class="nx">targetDrop</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">until</span> <span class="nx">targetDrop</span><span class="p">.</span><span class="nx">droppedImage</span>
       <span class="nv">img = </span><span class="k">new</span> <span class="nx">Image</span><span class="p">()</span>

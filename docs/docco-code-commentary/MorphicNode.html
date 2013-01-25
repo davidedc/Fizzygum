@@ -42,11 +42,11 @@
       <span class="nx">result</span><span class="p">.</span><span class="nx">push</span> <span class="nx">element</span>  <span class="k">if</span> <span class="o">!</span><span class="nx">element</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">result</span>
   
   <span class="nv">allParents: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>includes myself</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">result = </span><span class="p">[</span><span class="nx">@</span><span class="p">]</span>
-    <span class="nv">result = </span><span class="nx">result</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">@parent</span><span class="p">.</span><span class="nx">allParents</span><span class="p">())</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">isnt</span> <span class="kc">null</span>
+    <span class="nv">result = </span><span class="nx">result</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">@parent</span><span class="p">.</span><span class="nx">allParents</span><span class="p">())</span>  <span class="k">if</span> <span class="nx">@parent</span><span class="o">?</span>
     <span class="nx">result</span>
   
   <span class="nv">siblings: </span><span class="nf">-&gt;</span>
-    <span class="k">return</span> <span class="p">[]</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="kc">null</span>
+    <span class="k">return</span> <span class="p">[]</span>  <span class="k">if</span> <span class="o">!</span><span class="nx">@parent</span><span class="o">?</span>
     <span class="nx">@parent</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">filter</span> <span class="nf">(child) =&gt;</span>
       <span class="nx">child</span> <span class="o">isnt</span> <span class="nx">@</span>
   
