@@ -11,18 +11,15 @@
 <div id="TOC">
 <ul>
 <li><a href="#zombie-kernel">Zombie-Kernel</a><ul>
-<li><a href="#contents">Contents</a><ul>
-<li><a href="#high-level-view">High-level view</a></li>
-<li><a href="#programming-guide">Programming guide</a></li>
-<li><a href="#colophon">Colophon</a></li>
-</ul></li>
+<li><a href="#what-is-zombie-kernel">What is Zombie-Kernel?</a></li>
+<li><a href="#document-structure">Document structure</a></li>
 </ul></li>
 <li><a href="#hierarchy">1. Hierarchy</a></li>
 <li><a href="#yet-to-implement">2. Yet to implement</a></li>
 <li><a href="#open-issues">3. Open issues</a></li>
 <li><a href="#browser-compatibility">4. Browser compatibility</a></li>
 <li><a href="#the-big-picture">5. The big picture</a></li>
-<li><a href="#programming-guide-1">6. Programming guide</a><ul>
+<li><a href="#programming-guide">6. Programming guide</a><ul>
 <li><a href="#setting-up-a-web-page---basics">1. Setting up a web page - basics</a></li>
 <li><a href="#setting-up-a-web-page-for-single-world">2. Setting up a web page for single world</a><ul>
 <li><a href="#b-multiple-worlds">(b) multiple worlds</a></li>
@@ -43,7 +40,7 @@
 <li><a href="#damage-list-housekeeping">(8) damage list housekeeping</a></li>
 <li><a href="#minifying-morphic.js">(9) minifying morphic.js</a></li>
 </ul></li>
-<li><a href="#colophon-1">Colophon</a><ul>
+<li><a href="#colophon">Colophon</a><ul>
 <li><a href="#viii.-acknowledgements">VIII. acknowledgements</a></li>
 <li><a href="#ix.-contributors">IX. contributors</a></li>
 </ul></li>
@@ -51,44 +48,46 @@
 </ul>
 </div>
 <h1 id="zombie-kernel"><a href="#TOC">Zombie-Kernel</a></h1>
-<p>a lively Web-GUI.</p>
-<p>Built on Morphic.js, written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig.</p>
-<p>This document adapted from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).</p>
-<h2 id="contents"><a href="#TOC">Contents</a></h2>
-<h3 id="high-level-view"><a href="#TOC">High-level view</a></h3>
-<ol style="list-style-type: decimal">
-<li><p>Inheritance hierarchy</p></li>
-<li><p>Yet to implement</p></li>
-<li><p>Open issues</p></li>
-<li><p>Browser compatibility</p></li>
-<li><p>The big picture</p></li>
-</ol>
-<h3 id="programming-guide"><a href="#TOC">Programming guide</a></h3>
-<ol style="list-style-type: decimal">
-<li><p>setting up a web page - basics</p></li>
-<li><p>setting up a web page for single world</p></li>
-<li><p>setting up a web page for multiple worlds</p></li>
-<li><p>setting up an application</p></li>
-<li><p>events into</p></li>
-<li><p>mouse events</p></li>
-<li><p>mouse events - context menu</p></li>
-<li><p>mouse events - dragging</p></li>
-<li><p>mouse events - dropping</p></li>
-<li><p>mouse events - resize event</p></li>
-<li><p>keyboard events</p></li>
-<li><p>combined mouse-keyboard events</p></li>
-<li><p>stepping</p></li>
-<li><p>creating new kinds of morphs</p></li>
-<li><p>development and user modes</p></li>
-<li><p>turtle graphics</p></li>
-<li><p>damage list housekeeping</p></li>
-<li><p>minifying morphic.js</p></li>
-</ol>
-<h3 id="colophon"><a href="#TOC">Colophon</a></h3>
-<ol start="18" style="list-style-type: decimal">
-<li><p>acknowledgements</p></li>
-<li><p>contributors</p></li>
-</ol>
+<p>This document was adapted/extended from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).</p>
+<h2 id="what-is-zombie-kernel"><a href="#TOC">What is Zombie-Kernel?</a></h2>
+<p>Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig. Think of it as a crazy web desktop environment.</p>
+<h2 id="document-structure"><a href="#TOC">Document structure</a></h2>
+<ul>
+<li><p>Ch.1 <strong>Hierarchy</strong> explains what a Morph is and which classes extend it.</p></li>
+<li><p>Ch.2 <strong>Yet to implement</strong> gives some ideas on what could be next.</p></li>
+<li><p>Ch.3 <strong>Open issues</strong> elaborates on some of the current “problems”.</p></li>
+<li><p>Ch.4 <strong>Browser compatibility</strong> lists the browsers that can successfully run Zombie Kernel</p></li>
+<li><p>Ch.5 <strong>The big picture</strong> explains</p></li>
+<li><p>Ch.6 <strong>Programming guide</strong></p>
+<ul>
+<li><p>Ch.6.1 <strong>Setting up words</strong></p>
+<ul>
+<li><p>Ch.6.1.1 <strong>Setting up a web page - basics</strong> shows the basic steps of how to create worlds</p></li>
+<li><p>Ch.6.1.2 <strong>Setting up a web page for single world</strong> shows how to create a simple world with one html file</p></li>
+<li><p>Ch.6.1.3 <strong>Setting up a web page for multiple worlds</strong> illustrates how to put more than one world in the same page.</p></li>
+<li><p>Ch.6.1.4 <strong>Setting up an application</strong>, i.e. how to make your world to run and host an application.</p></li>
+</ul></li>
+<li><p>Ch.6.2 <strong>Events</strong></p>
+<ul>
+<li><p>Ch.6.2.1 <strong>Mouse events</strong></p>
+<ul>
+<li><p>Ch.6.2.1.1 <strong>Mouse events - context menu</strong></p></li>
+<li><p>Ch.6.2.1.2 <strong>Mouse events - dragging</strong></p></li>
+<li><p>Ch.6.2.1.3 <strong>Mouse events - dropping</strong></p></li>
+<li><p>Ch.6.2.1.4 <strong>Mouse events - resize event</strong></p></li>
+</ul></li>
+<li><p>Ch.6.2.2 <strong>Keyboard events</strong></p></li>
+<li><p>Ch.6.2.3 <strong>Combined mouse-keyboard events</strong></p></li>
+</ul></li>
+<li><p>Ch.6.3 <strong>Stepping</strong></p></li>
+<li><p>Ch.6.4 <strong>Creating new kinds of morphs</strong></p></li>
+<li><p>Ch.6.5 <strong>Development and user modes</strong></p></li>
+<li><p>Ch.6.5 <strong>Turtle graphics</strong></p></li>
+<li><p>Ch.6.5 <strong>Damage list housekeeping</strong></p></li>
+<li><p>Ch.6.5 <strong>Minifying morphic.js</strong></p></li>
+</ul></li>
+<li><p>Ch.6.2 <strong>Aknowlegments</strong></p></li>
+</ul>
 <h1 id="hierarchy"><a href="#TOC">1. Hierarchy</a></h1>
 <p>The following tree lists all constructors hierarchically, indentation indicating inheritance. Refer to this list to get a contextual overview:</p>
 <ul>
@@ -168,7 +167,7 @@
 <p>In its current state morphic.js doesn’t support Transforms (you cannot rotate Morphs), but with PenMorph there already is a simple LOGO-like turtle that you can use to draw onto any Morph it is attached to. I’m planning to add special Morphs that support these operations later on, but not for every Morph in the system.</p>
 <p>Therefore these additions (“sprites” etc.) are likely to be part of other libraries (“microworld.js”) in separate files.</p>
 <p>The purpose of morphic.js is to provide a malleable framework that will let me experiment with lively GUIs for my hobby horse, which is drag-and-drop, blocks based programming languages. Those things (BYOB4 - http://byob.berkeley.edu) will be written using morphic.js as a library.</p>
-<h1 id="programming-guide-1"><a href="#TOC">6. Programming guide</a></h1>
+<h1 id="programming-guide"><a href="#TOC">6. Programming guide</a></h1>
 <p>Morphic.js provides a library for lively GUIs inside single HTML Canvas elements. Each such canvas element functions as a “world” in which other visible shapes (“morphs”) can be positioned and manipulated, often directly and interactively by the user. Morphs are tree nodes and may contain any number of submorphs (“children”).</p>
 <p>All things visible in a morphic World are morphs themselves, i.e. all text rendering, blinking cursors, entry fields, menus, buttons, sliders, windows and dialog boxes etc. are created with morphic.js rather than using HTML DOM elements, and as a consequence can be changed and adjusted by the programmer regardless of proprietary browser behavior.</p>
 <p>Each World has an - invisible - “Hand” resembling the mouse cursor (or the user’s finger on touch screens) which handles mouse events, and may also have a keyboardReceiver to handle key events.</p>
@@ -606,7 +605,7 @@ droppedText(aString, name)</code></pre>
 <p>Coming from Smalltalk and being a Squeaker at heart I am a huge fan of browsing the code itself to make sense of it. Therefore I have included this documentation and (too little) inline comments so all you need to get going is this very file.</p>
 <p>Nowadays with live streaming HD video even on mobile phones 250 KB shouldn’t be a big strain on bandwith, still minifying and even compressing morphic.js down do about 100 KB may sometimes improve performance in production use.</p>
 <p>Being an attorney-at-law myself you programmer folk keep harassing me with rabulistic nitpickings about free software licenses. I’m releasing morphic.js under an AGPL license. Therefore please make sure to adhere to that license in any minified or compressed version.</p>
-<h2 id="colophon-1"><a href="#TOC">Colophon</a></h2>
+<h2 id="colophon"><a href="#TOC">Colophon</a></h2>
 <h3 id="viii.-acknowledgements"><a href="#TOC">VIII. acknowledgements</a></h3>
 <p>The original Morphic was designed and written by Randy Smith and John Maloney for the SELF programming language, and later ported to Squeak (Smalltalk) by John Maloney and Dan Ingalls, who has also ported it to JavaScript (the Lively Kernel), once again setting a “Gold Standard” for self sustaining systems which morphic.js cannot and does not aspire to meet.</p>
 <p>This Morphic implementation for JavaScript is not a direct port of Squeak’s Morphic, but still many individual functions have been ported almost literally from Squeak, sometimes even including their comments, e.g. the morph duplication mechanism fullCopy(). Squeak has been a treasure trove, and if morphic.js looks, feels and smells a lot like Squeak, I’ll take it as a compliment.</p>

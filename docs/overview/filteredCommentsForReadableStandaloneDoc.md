@@ -3,93 +3,71 @@
 
 
 
-a lively Web-GUI.
+This document was adapted/extended from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
 
 
 
-Built on Morphic.js, written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig.
+##What is Zombie-Kernel?##
+
+Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig. Think of it as a crazy web desktop environment.
 
 
 
-This document adapted from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
+##Document structure##
 
 
 
+* Ch.1 **Hierarchy** explains what a Morph is and which classes extend it.
 
+* Ch.2 **Yet to implement** gives some ideas on what could be next.
 
+* Ch.3 **Open issues** elaborates on some of the current "problems".
 
+* Ch.4 **Browser compatibility** lists the browsers that can successfully run Zombie Kernel
 
-##Contents##
+* Ch.5 **The big picture** explains
 
+* Ch.6 **Programming guide**
 
+    * Ch.6.1 **Setting up words**
 
+        * Ch.6.1.1 **Setting up a web page - basics** shows the basic steps of how to create worlds
 
+        * Ch.6.1.2 **Setting up a web page for single world** shows how to create a simple world with one html file
 
-### High-level view###
+        * Ch.6.1.3 **Setting up a web page for multiple worlds** illustrates how to put more than one world in the same page.
 
+        * Ch.6.1.4 **Setting up an application**, i.e. how to make your world to run and host an application.
 
+    * Ch.6.2 **Events**
 
-1. Inheritance hierarchy
+        * Ch.6.2.1 **Mouse events**
 
-2. Yet to implement
+            * Ch.6.2.1.1 **Mouse events - context menu**
 
-3. Open issues
+            * Ch.6.2.1.2 **Mouse events - dragging**
 
-4. Browser compatibility
+            * Ch.6.2.1.3 **Mouse events - dropping**
 
-5. The big picture
+            * Ch.6.2.1.4 **Mouse events - resize event**
 
+        * Ch.6.2.2 **Keyboard events**
 
+        * Ch.6.2.3 **Combined mouse-keyboard events**
 
-### Programming guide###
+    * Ch.6.3 **Stepping**
 
+    * Ch.6.4 **Creating new kinds of morphs**
 
+    * Ch.6.5 **Development and user modes**
 
-  1. setting up a web page - basics
+    * Ch.6.5 **Turtle graphics**
 
-  2. setting up a web page for single world
+    * Ch.6.5 **Damage list housekeeping**
 
-  3. setting up a web page for multiple worlds
+    * Ch.6.5 **Minifying morphic.js**
 
-  4. setting up an application
-
-  5. events into
-
-  6. mouse events
-
-  7. mouse events - context menu
-
-  8. mouse events - dragging
-
-  9. mouse events - dropping
-
-  10. mouse events - resize event
-
-  11. keyboard events
-
-  12. combined mouse-keyboard events
-
-  13. stepping
-
-  14. creating new kinds of morphs
-
-  15. development and user modes
-
-  16. turtle graphics
-
-  17. damage list housekeeping
-
-  18. minifying morphic.js
-
-
-
-
-
-### Colophon###
-
-18. acknowledgements
-
-19. contributors
+* Ch.6.2 **Aknowlegments**
 
 
 
