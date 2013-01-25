@@ -8,7 +8,7 @@
     written by Jens Mšnig
     jens@moenig.org
 
-    Copyright (C) 2012 by Jens Mšnig
+    Copyright (C) 2013 by Jens Mšnig
 
     This file is part of Snap!. 
 
@@ -1021,7 +1021,7 @@
 /*global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 FileList, getBlurredShadowSupport*/
 
-var morphicVersion = '2012-December-19';
+var morphicVersion = '2013-January-25';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = getBlurredShadowSupport(); // check for Chrome-bug
 
@@ -3253,7 +3253,8 @@ Morph.prototype.pickColor = function (
 };
 
 Morph.prototype.inspect = function (anotherObject) {
-    var world = this.world(),
+    var world = this.world instanceof Function ?
+            this.world() : this.root() || this.world,
         inspector,
         inspectee = this;
 
@@ -3275,7 +3276,7 @@ Morph.prototype.contextMenu = function () {
     if (this.customContextMenu) {
         return this.customContextMenu;
     }
-    world = this.world();
+    world = this.world instanceof Function ? this.world() : this.world;
     if (world && world.isDevMode) {
         if (this.parent === world) {
             return this.developersMenu();
@@ -3288,7 +3289,7 @@ Morph.prototype.contextMenu = function () {
 
 Morph.prototype.hierarchyMenu = function () {
     var parents = this.allParents(),
-        world = this.world(),
+        world = this.world instanceof Function ? this.world() : this.world,
         menu = new MenuMorph(this, null);
 
     parents.forEach(function (each) {
@@ -3303,7 +3304,7 @@ Morph.prototype.hierarchyMenu = function () {
 
 Morph.prototype.developersMenu = function () {
     // 'name' is not an official property of a function, hence:
-    var world = this.world(),
+    var world = this.world instanceof Function ? this.world() : this.world,
         userMenu = this.userMenu() ||
             (this.parent && this.parent.userMenu()),
         menu = new MenuMorph(this, this.constructor.name ||
@@ -4551,8 +4552,10 @@ CursorMorph.prototype.gotoSlot = function (slot) {
     }
     this.show();
     this.setPosition(pos);
-    if (this.parent && this.parent.parent instanceof ScrollFrameMorph) {
-        this.parent.parent.scrollCursorIntoView(this, 6);
+    if (this.parent
+            && this.parent.parent instanceof ScrollFrameMorph
+            && this.target.isScrollable) {
+        this.parent.parent.scrollCursorIntoView(this);
     }
 };
 
@@ -6664,13 +6667,14 @@ MenuMorph.prototype.maxWidth = function () {
 
     if (this.parent instanceof FrameMorph) {
         if (this.parent.scrollFrame instanceof ScrollFrameMorph) {
-            w = this.parent.width();
+            w = this.parent.scrollFrame.width();
         }
     }
-
     this.children.forEach(function (item) {
-        if ((item instanceof MenuItemMorph) ||
-                (item instanceof StringFieldMorph) ||
+
+        if (item instanceof MenuItemMorph) {
+            w = Math.max(w, item.children[0].width() + 8);
+        } else if ((item instanceof StringFieldMorph) ||
                 (item instanceof ColorPickerMorph) ||
                 (item instanceof SliderMorph)) {
             w = Math.max(w, item.width());
@@ -6684,11 +6688,16 @@ MenuMorph.prototype.maxWidth = function () {
 
 MenuMorph.prototype.adjustWidths = function () {
     var w = this.maxWidth(),
+        isSelected,
         myself = this;
     this.children.forEach(function (item) {
         item.silentSetWidth(w);
         if (item instanceof MenuItemMorph) {
+            isSelected = (item.image === item.pressImage);
             item.createBackgrounds();
+            if (isSelected) {
+                item.image = item.pressImage;
+            }
         } else {
             item.drawNew();
             if (item === myself.label) {
@@ -7238,11 +7247,14 @@ StringMorph.prototype.mouseDownLeft = function (pos) {
 };
 
 StringMorph.prototype.mouseClickLeft = function (pos) {
+    var cursor = this.root().cursor;
     if (this.isEditable) {
         if (!this.currentlySelecting) {
             this.edit();
         }
-        this.root().cursor.gotoPos(pos);
+        if (cursor) {
+            cursor.gotoPos(pos);
+        }
         this.currentlySelecting = true;
     } else {
         this.escalateEvent('mouseClickLeft', pos);
@@ -8499,7 +8511,7 @@ ScrollFrameMorph.prototype.setContents = function (aMorph) {
         m.destroy();
     });
     this.contents.children = [];
-    aMorph.setPosition(this.position().add(new Point(2, 2)));
+    aMorph.setPosition(this.position().add(this.padding + 2));
     this.addContents(aMorph);
 };
 
@@ -8666,14 +8678,17 @@ ScrollFrameMorph.prototype.autoScroll = function (pos) {
 
 // ScrollFrameMorph scrolling by editing text:
 
-ScrollFrameMorph.prototype.scrollCursorIntoView = function (morph, padding) {
-    var ft = this.top() + padding,
-        fb = this.bottom() - padding;
+ScrollFrameMorph.prototype.scrollCursorIntoView = function (morph) {
+    var txt = morph.target,
+        offset = txt.position().subtract(this.contents.position()),
+        ft = this.top() + this.padding,
+        fb = this.bottom() - this.padding;
+    this.contents.setExtent(txt.extent().add(offset).add(this.padding));
     if (morph.top() < ft) {
-        morph.target.setTop(morph.target.top() + ft - morph.top());
+        this.contents.setTop(this.contents.top() + ft - morph.top());
         morph.setTop(ft);
     } else if (morph.bottom() > fb) {
-        morph.target.setBottom(morph.target.bottom() + fb - morph.bottom());
+        this.contents.setBottom(this.contents.bottom() + fb - morph.bottom());
         morph.setBottom(fb);
     }
     this.adjustScrollBars();
