@@ -137,3 +137,57 @@ class SpeechBubbleMorph extends BoxMorph
         # top bubble:
         rad = radius / 2.8
         circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
+
+  # SpeechBubbleMorph shadow
+  #
+  #    only take the 'plain' image, so the box rounding and the
+  #    shadow doesn't become conflicted by embedded scrolling panes
+  #
+  shadowImage: (off_, color) ->
+    
+    # fallback for Windows Chrome-Shadow bug
+    fb = undefined
+    img = undefined
+    outline = undefined
+    sha = undefined
+    ctx = undefined
+    offset = off_ or new Point(7, 7)
+    clr = color or new Color(0, 0, 0)
+    fb = @extent()
+    img = @image
+    outline = newCanvas(fb)
+    ctx = outline.getContext("2d")
+    ctx.drawImage img, 0, 0
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.drawImage img, -offset.x, -offset.y
+    sha = newCanvas(fb)
+    ctx = sha.getContext("2d")
+    ctx.drawImage outline, 0, 0
+    ctx.globalCompositeOperation = "source-atop"
+    ctx.fillStyle = clr.toString()
+    ctx.fillRect 0, 0, fb.x, fb.y
+    sha
+
+  shadowImageBlurred: (off_, color) ->
+    fb = undefined
+    img = undefined
+    sha = undefined
+    ctx = undefined
+    offset = off_ or new Point(7, 7)
+    blur = @shadowBlur
+    clr = color or new Color(0, 0, 0)
+    fb = @extent().add(blur * 2)
+    img = @image
+    sha = newCanvas(fb)
+    ctx = sha.getContext("2d")
+    ctx.shadowOffsetX = offset.x
+    ctx.shadowOffsetY = offset.y
+    ctx.shadowBlur = blur
+    ctx.shadowColor = clr.toString()
+    ctx.drawImage img, blur - offset.x, blur - offset.y
+    ctx.shadowOffsetX = 0
+    ctx.shadowOffsetY = 0
+    ctx.shadowBlur = 0
+    ctx.globalCompositeOperation = "destination-out"
+    ctx.drawImage img, blur - offset.x, blur - offset.y
+    sha
