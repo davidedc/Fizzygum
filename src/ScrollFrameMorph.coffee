@@ -72,7 +72,7 @@ class ScrollFrameMorph extends FrameMorph
       m.destroy()
     #
     @contents.children = []
-    aMorph.setPosition @position().add(new Point(2, 2))
+    aMorph.setPosition @position().add(@padding + 2)
     @addContents aMorph
   
   setExtent: (aPoint) ->
