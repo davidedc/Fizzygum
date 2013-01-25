@@ -176,6 +176,7 @@ gotoSlot: (newSlot) ->
   
   <span class="nv">insert: </span><span class="nf">(aChar, shiftKey) -&gt;</span>
     <span class="k">if</span> <span class="nx">aChar</span> <span class="o">is</span> <span class="s">&quot;\t&quot;</span>
+      <span class="nx">@target</span><span class="p">.</span><span class="nx">escalateEvent</span> <span class="s">&#39;reactToEdit&#39;</span><span class="p">,</span> <span class="nx">@target</span>
       <span class="k">if</span> <span class="nx">shiftKey</span>
         <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">backTab</span><span class="p">(</span><span class="nx">@target</span><span class="p">);</span>
       <span class="k">return</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">tab</span><span class="p">(</span><span class="nx">@target</span><span class="p">)</span>
