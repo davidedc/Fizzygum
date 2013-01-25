@@ -218,7 +218,11 @@ class HandMorph extends Morph
     #        droppedAudio(audio, name)
     #    
     #    events to interested Morphs at the mouse pointer
+    #    if none of the above content types can be determined, the file contents
+    #    are dispatched as binary string to interested Morphs:
     #
+    #    ```droppedBinary(aBinaryString, name)```
+
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
     targetDrop = @morphAtPointer()
@@ -254,7 +258,15 @@ class HandMorph extends Morph
       frd.onloadend = (e) ->
         targetDrop.droppedText e.target.result, aFile.name
       frd.readAsText aFile
-    
+
+
+    readBinary = (aFile) ->
+      frd = new FileReader()
+      target = target.parent  until target.droppedBinary
+      frd.onloadend = (e) ->
+        target.droppedBinary e.target.result, aFile.name
+      frd.readAsBinaryString aFile
+
     parseImgURL = (html) ->
       url = ""
       start = html.indexOf("<img src=\"")
@@ -274,7 +286,10 @@ class HandMorph extends Morph
           readImage file
         else if file.type.indexOf("audio") is 0
           readAudio file
-        else readText file  if file.type.indexOf("text") is 0
+        else if file.type.indexOf("text") is 0
+          readText file
+        else
+          readBinary file
     else if txt
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       img = new Image()
