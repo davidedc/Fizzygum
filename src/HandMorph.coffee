@@ -309,9 +309,10 @@ class HandMorph extends Morph
     #	that it needs to remove them. The primary purpose of temporaries is
     #	to display tools tips of speech bubble help.
     #
-    @temporaries.forEach (morph) ->
-      morph.destroy()
-    @temporaries = []
+    @temporaries.forEach (morph) =>
+      unless morph.isClickable and morph.bounds.containsPoint(@position())
+        morph.destroy()
+        @temporaries.splice @temporaries.indexOf(morph), 1
   
   
   # HandMorph dragging optimization

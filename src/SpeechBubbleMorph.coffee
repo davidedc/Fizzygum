@@ -12,6 +12,7 @@ class SpeechBubbleMorph extends BoxMorph
   contents: null
   padding: null # additional vertical pixels
   isThought: null # draw "think" bubble
+  isClickable: false
 
   constructor: (
     @contents="",
@@ -27,7 +28,7 @@ class SpeechBubbleMorph extends BoxMorph
   
   
   # SpeechBubbleMorph invoking:
-  popUp: (world, pos) ->
+  popUp: (world, pos, isClickable) ->
     @drawNew()
     @setPosition pos.subtract(new Point(0, @height()))
     @addShadow new Point(2, 2), 80
@@ -36,8 +37,12 @@ class SpeechBubbleMorph extends BoxMorph
     @changed()
     world.hand.destroyTemporaries()
     world.hand.temporaries.push @
-    @mouseEnter = ->
-      @destroy()
+    if isClickable
+      @mouseEnter = ->
+        @destroy()
+    else
+      @isClickable = false
+    
   
   
   # SpeechBubbleMorph drawing:
@@ -191,3 +196,9 @@ class SpeechBubbleMorph extends BoxMorph
     ctx.globalCompositeOperation = "destination-out"
     ctx.drawImage img, blur - offset.x, blur - offset.y
     sha
+
+  # SpeechBubbleMorph resizing
+  fixLayout: ->
+    @removeShadow()
+    @drawNew()
+    @addShadow new Point(2, 2), 80
