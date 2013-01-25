@@ -129,10 +129,10 @@ class TextMorph extends Morph
     if @shadowColor
       offx = Math.max(@shadowOffset.x, 0)
       offy = Math.max(@shadowOffset.y, 0)
+      #console.log 'shadow x: ' + offx + " y: " + offy
       context.fillStyle = @shadowColor.toString()
       i = 0
-      while i < @lines.length
-        line = @lines[i]
+      for line in @lines
         width = context.measureText(line).width + shadowWidth
         if @alignment is "right"
           x = @width() - width
@@ -141,16 +141,16 @@ class TextMorph extends Morph
         else # 'left'
           x = 0
         y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+        i++
         context.fillText line, x + offx, y + offy
-        i = i + 1
     #
     # now draw the actual text
     offx = Math.abs(Math.min(@shadowOffset.x, 0))
     offy = Math.abs(Math.min(@shadowOffset.y, 0))
+    #console.log 'maintext x: ' + offx + " y: " + offy
     context.fillStyle = @color.toString()
     i = 0
-    while i < @lines.length
-      line = @lines[i]
+    for line in @lines
       width = context.measureText(line).width + shadowWidth
       if @alignment is "right"
         x = @width() - width
@@ -159,8 +159,8 @@ class TextMorph extends Morph
       else # 'left'
         x = 0
       y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+      i++
       context.fillText line, x + offx, y + offy
-      i = i + 1
     #
     # draw the selection
     start = Math.min(@startMark, @endMark)
