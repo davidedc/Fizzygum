@@ -236,17 +236,19 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
     <span class="nx">@clearSelection</span><span class="p">()</span>
   
   <span class="nv">selectAll: </span><span class="nf">-&gt;</span>
-    <span class="k">if</span> <span class="nx">@mouseDownLeft</span> <span class="c1"># make sure selecting is enabled</span>
-      <span class="vi">@startMark = </span><span class="mi">0</span>
-      <span class="vi">@endMark = </span><span class="nx">@text</span><span class="p">.</span><span class="nx">length</span>
-      <span class="nx">@drawNew</span><span class="p">()</span>
-      <span class="nx">@changed</span><span class="p">()</span>
-  
+    <span class="vi">@startMark = </span><span class="mi">0</span>
+    <span class="vi">@endMark = </span><span class="nx">@text</span><span class="p">.</span><span class="nx">length</span>
+    <span class="nx">@drawNew</span><span class="p">()</span>
+    <span class="nx">@changed</span><span class="p">()</span>
+
+  <span class="nv">mouseDownLeft: </span><span class="nf">-&gt;</span>
+    <span class="nx">@clearSelection</span><span class="p">();</span>
+
   <span class="nv">mouseClickLeft: </span><span class="nf">(pos) -&gt;</span>
     <span class="k">if</span> <span class="nx">@isEditable</span>
       <span class="nx">@edit</span><span class="p">()</span>  <span class="k">unless</span> <span class="nx">@currentlySelecting</span>
       <span class="nx">@root</span><span class="p">().</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">gotoPos</span> <span class="nx">pos</span>
-      <span class="vi">@currentlySelecting = </span><span class="kc">false</span>
+      <span class="vi">@currentlySelecting = </span><span class="kc">true</span>
     <span class="k">else</span>
       <span class="nx">@escalateEvent</span> <span class="s">&quot;mouseClickLeft&quot;</span><span class="p">,</span> <span class="nx">pos</span>
   
@@ -268,8 +270,7 @@ so the cursor can be moved accordingly</p>             </td>             <td cla
           <span class="nx">@drawNew</span><span class="p">()</span>
           <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">disableSelecting: </span><span class="nf">-&gt;</span>
-    <span class="k">delete</span> <span class="nx">@mouseDownLeft</span>
+  <span class="nv">disableSelecting: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>re-establish the original definition of the method</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@mouseDownLeft = </span><span class="nx">StringMorph</span><span class="o">::</span><span class="nx">mouseDownLeft</span>
     <span class="k">delete</span> <span class="nx">@mouseMove</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

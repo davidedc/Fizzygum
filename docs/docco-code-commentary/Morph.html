@@ -819,22 +819,25 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
   </pre></div>             </td>           </tr>                               <tr id="section-70">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-70">&#182;</a>               </div>               <p>Morph entry field tabbing //////////////////////////////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre>  
   <span class="nv">allEntryFields: </span><span class="nf">-&gt;</span>
     <span class="nx">@allChildren</span><span class="p">().</span><span class="nx">filter</span> <span class="nf">(each) -&gt;</span>
-      <span class="nx">each</span><span class="p">.</span><span class="nx">isEditable</span>
+      <span class="nx">each</span><span class="p">.</span><span class="nx">isEditable</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">each</span> <span class="k">instanceof</span> <span class="nx">StringMorph</span> <span class="o">||</span> <span class="nx">each</span> <span class="k">instanceof</span> <span class="nx">TextMorph</span><span class="p">);</span>
   
   
   <span class="nv">nextEntryField: </span><span class="nf">(current) -&gt;</span>
     <span class="nv">fields = </span><span class="nx">@allEntryFields</span><span class="p">()</span>
     <span class="nv">idx = </span><span class="nx">fields</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">current</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">idx</span> <span class="o">isnt</span> <span class="o">-</span><span class="mi">1</span>
-      <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="nx">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">fields</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="p">(</span><span class="nx">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-      <span class="nx">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">fields</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="p">(</span><span class="nx">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="nx">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
   
   <span class="nv">previousEntryField: </span><span class="nf">(current) -&gt;</span>
     <span class="nv">fields = </span><span class="nx">@allEntryFields</span><span class="p">()</span>
     <span class="nv">idx = </span><span class="nx">fields</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">current</span><span class="p">)</span>
     <span class="k">if</span> <span class="nx">idx</span> <span class="o">isnt</span> <span class="o">-</span><span class="mi">1</span>
-      <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="nx">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>  <span class="k">if</span> <span class="p">(</span><span class="nx">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nx">fields</span><span class="p">.</span><span class="nx">length</span>
-      <span class="nx">fields</span><span class="p">[</span><span class="nx">fields</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">idx</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="nx">idx</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+      <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="nx">fields</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nx">fields</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
   
   <span class="nv">tab: </span><span class="nf">(editField) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-71">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-71">&#182;</a>               </div>               <p>the <tab> key was pressed in one of my edit fields.
 invoke my "nextTab()" function if it exists, else

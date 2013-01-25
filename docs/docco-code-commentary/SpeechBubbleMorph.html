@@ -6,6 +6,7 @@ If I am invoked using popUp() I behave like a tool tip.</p>             </td>   
   <span class="nv">contents: </span><span class="kc">null</span>
   <span class="nv">padding: </span><span class="kc">null</span> <span class="c1"># additional vertical pixels</span>
   <span class="nv">isThought: </span><span class="kc">null</span> <span class="c1"># draw &quot;think&quot; bubble</span>
+  <span class="nv">isClickable: </span><span class="kc">false</span>
 
   <span class="nv">constructor: </span><span class="nf">(</span>
 <span class="nf">    @contents=&quot;&quot;,</span>
@@ -19,7 +20,7 @@ If I am invoked using popUp() I behave like a tool tip.</p>             </td>   
       <span class="vi">@color = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">)</span>
       <span class="nx">@drawNew</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>SpeechBubbleMorph invoking:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">popUp: </span><span class="nf">(world, pos) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>SpeechBubbleMorph invoking:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">popUp: </span><span class="nf">(world, pos, isClickable) -&gt;</span>
     <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="nx">@setPosition</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">subtract</span><span class="p">(</span><span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">@height</span><span class="p">()))</span>
     <span class="nx">@addShadow</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">80</span>
@@ -28,8 +29,12 @@ If I am invoked using popUp() I behave like a tool tip.</p>             </td>   
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">destroyTemporaries</span><span class="p">()</span>
     <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">temporaries</span><span class="p">.</span><span class="nx">push</span> <span class="nx">@</span>
-    <span class="vi">@mouseEnter = </span><span class="nf">-&gt;</span>
-      <span class="nx">@destroy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">isClickable</span>
+      <span class="vi">@mouseEnter = </span><span class="nf">-&gt;</span>
+        <span class="nx">@destroy</span><span class="p">()</span>
+    <span class="k">else</span>
+      <span class="vi">@isClickable = </span><span class="kc">false</span>
+    
   
   </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>SpeechBubbleMorph drawing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawNew: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>re-build my contents</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@contentsMorph</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@contentsMorph</span>
     <span class="k">if</span> <span class="nx">@contents</span> <span class="k">instanceof</span> <span class="nx">Morph</span>
@@ -80,6 +85,57 @@ If I am invoked using popUp() I behave like a tool tip.</p>             </td>   
       <span class="k">else</span> <span class="c1"># pointing left</span></pre></div>             </td>           </tr>                               <tr id="section-18">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-18">&#182;</a>               </div>               <p>tip bubble:</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nv">rad = </span><span class="nx">radius</span> <span class="o">/</span> <span class="mi">4</span>
         <span class="nx">circle</span> <span class="nx">w</span> <span class="o">-</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">+</span> <span class="nx">inset</span><span class="p">),</span> <span class="nx">h</span> <span class="o">-</span> <span class="nx">rad</span> <span class="o">-</span> <span class="nx">inset</span><span class="p">,</span> <span class="nx">rad</span></pre></div>             </td>           </tr>                               <tr id="section-19">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-19">&#182;</a>               </div>               <p>middle bubble:</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nv">rad = </span><span class="nx">radius</span> <span class="o">/</span> <span class="mf">3.2</span>
         <span class="nx">circle</span> <span class="nx">w</span> <span class="o">-</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="nx">inset</span><span class="p">),</span> <span class="nx">h</span> <span class="o">-</span> <span class="nx">rad</span> <span class="o">-</span> <span class="nx">inset</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">rad</span></pre></div>             </td>           </tr>                               <tr id="section-20">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-20">&#182;</a>               </div>               <p>top bubble:</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="nv">rad = </span><span class="nx">radius</span> <span class="o">/</span> <span class="mf">2.8</span>
-        <span class="nx">circle</span> <span class="nx">w</span> <span class="o">-</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="nx">inset</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">h</span> <span class="o">-</span> <span class="nx">rad</span> <span class="o">-</span> <span class="nx">inset</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="nx">rad</span>
+        <span class="nx">circle</span> <span class="nx">w</span> <span class="o">-</span> <span class="p">(</span><span class="nx">rad</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">+</span> <span class="nx">inset</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span> <span class="nx">h</span> <span class="o">-</span> <span class="nx">rad</span> <span class="o">-</span> <span class="nx">inset</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="nx">rad</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>SpeechBubbleMorph shadow</p>
+
+<p>only take the 'plain' image, so the box rounding and the
+   shadow doesn't become conflicted by embedded scrolling panes</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">shadowImage: </span><span class="nf">(off_, color) -&gt;</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>fallback for Windows Chrome-Shadow bug</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">fb = </span><span class="kc">undefined</span>
+    <span class="nv">img = </span><span class="kc">undefined</span>
+    <span class="nv">outline = </span><span class="kc">undefined</span>
+    <span class="nv">sha = </span><span class="kc">undefined</span>
+    <span class="nv">ctx = </span><span class="kc">undefined</span>
+    <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+    <span class="nv">clr = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="nv">fb = </span><span class="nx">@extent</span><span class="p">()</span>
+    <span class="nv">img = </span><span class="nx">@image</span>
+    <span class="nv">outline = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">fb</span><span class="p">)</span>
+    <span class="nv">ctx = </span><span class="nx">outline</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="nv">ctx.globalCompositeOperation = </span><span class="s">&quot;destination-out&quot;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">img</span><span class="p">,</span> <span class="o">-</span><span class="nx">offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="o">-</span><span class="nx">offset</span><span class="p">.</span><span class="nx">y</span>
+    <span class="nv">sha = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">fb</span><span class="p">)</span>
+    <span class="nv">ctx = </span><span class="nx">sha</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">outline</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+    <span class="nv">ctx.globalCompositeOperation = </span><span class="s">&quot;source-atop&quot;</span>
+    <span class="nv">ctx.fillStyle = </span><span class="nx">clr</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillRect</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">fb</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">fb</span><span class="p">.</span><span class="nx">y</span>
+    <span class="nx">sha</span>
+
+  <span class="nv">shadowImageBlurred: </span><span class="nf">(off_, color) -&gt;</span>
+    <span class="nv">fb = </span><span class="kc">undefined</span>
+    <span class="nv">img = </span><span class="kc">undefined</span>
+    <span class="nv">sha = </span><span class="kc">undefined</span>
+    <span class="nv">ctx = </span><span class="kc">undefined</span>
+    <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+    <span class="nv">blur = </span><span class="nx">@shadowBlur</span>
+    <span class="nv">clr = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="nv">fb = </span><span class="nx">@extent</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="nx">blur</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="nv">img = </span><span class="nx">@image</span>
+    <span class="nv">sha = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">fb</span><span class="p">)</span>
+    <span class="nv">ctx = </span><span class="nx">sha</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
+    <span class="nv">ctx.shadowOffsetX = </span><span class="nx">offset</span><span class="p">.</span><span class="nx">x</span>
+    <span class="nv">ctx.shadowOffsetY = </span><span class="nx">offset</span><span class="p">.</span><span class="nx">y</span>
+    <span class="nv">ctx.shadowBlur = </span><span class="nx">blur</span>
+    <span class="nv">ctx.shadowColor = </span><span class="nx">clr</span><span class="p">.</span><span class="nx">toString</span><span class="p">()</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">blur</span> <span class="o">-</span> <span class="nx">offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">blur</span> <span class="o">-</span> <span class="nx">offset</span><span class="p">.</span><span class="nx">y</span>
+    <span class="nv">ctx.shadowOffsetX = </span><span class="mi">0</span>
+    <span class="nv">ctx.shadowOffsetY = </span><span class="mi">0</span>
+    <span class="nv">ctx.shadowBlur = </span><span class="mi">0</span>
+    <span class="nv">ctx.globalCompositeOperation = </span><span class="s">&quot;destination-out&quot;</span>
+    <span class="nx">ctx</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">blur</span> <span class="o">-</span> <span class="nx">offset</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="nx">blur</span> <span class="o">-</span> <span class="nx">offset</span><span class="p">.</span><span class="nx">y</span>
+    <span class="nx">sha</span></pre></div>             </td>           </tr>                               <tr id="section-23">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-23">&#182;</a>               </div>               <p>SpeechBubbleMorph resizing</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">fixLayout: </span><span class="nf">-&gt;</span>
+    <span class="nx">@removeShadow</span><span class="p">()</span>
+    <span class="nx">@drawNew</span><span class="p">()</span>
+    <span class="nx">@addShadow</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">80</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

@@ -209,15 +209,17 @@ received by all browsers</p>             </td>             <td class="code">    
     <span class="kc">null</span>
   </pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>WorldMorph text field tabbing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">nextTab: </span><span class="nf">(editField) -&gt;</span>
     <span class="nv">next = </span><span class="nx">@nextEntryField</span><span class="p">(</span><span class="nx">editField</span><span class="p">)</span>
-    <span class="nx">editField</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
-    <span class="nx">next</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
-    <span class="nx">next</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">next</span>
+      <span class="nx">editField</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
+      <span class="nx">next</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
+      <span class="nx">next</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
   
   <span class="nv">previousTab: </span><span class="nf">(editField) -&gt;</span>
     <span class="nv">prev = </span><span class="nx">@previousEntryField</span><span class="p">(</span><span class="nx">editField</span><span class="p">)</span>
-    <span class="nx">editField</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
-    <span class="nx">prev</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
-    <span class="nx">prev</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">prev</span>
+      <span class="nx">editField</span><span class="p">.</span><span class="nx">clearSelection</span><span class="p">()</span>
+      <span class="nx">prev</span><span class="p">.</span><span class="nx">selectAll</span><span class="p">()</span>
+      <span class="nx">prev</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-35">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-35">&#182;</a>               </div>               <p>WorldMorph menu:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">contextMenu: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@isDevMode</span>
@@ -467,6 +469,7 @@ received by all browsers</p>             </td>             <td class="code">    
     <span class="k">if</span> <span class="nx">@cursor</span>
       <span class="vi">@lastEditedText = </span><span class="nx">@cursor</span><span class="p">.</span><span class="nx">target</span>
       <span class="nx">@cursor</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>
+      <span class="vi">@cursor = </span><span class="kc">null</span>
       <span class="nx">@lastEditedText</span><span class="p">.</span><span class="nx">escalateEvent</span> <span class="s">&quot;reactToEdit&quot;</span><span class="p">,</span> <span class="nx">@lastEditedText</span>
     <span class="vi">@keyboardReceiver = </span><span class="kc">null</span>
     <span class="k">if</span> <span class="nx">@virtualKeyboard</span>

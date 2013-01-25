@@ -4,10 +4,10 @@
 	a lively Web-GUI
 	inspired by Squeak
 
-	written by Jens MÃ¶nig
+	written by Jens Mönig
 	jens@moenig.org
 
-	Copyright (C) 2012 by Jens MÃ¶nig
+	Copyright (C) 2012 by Jens Mönig
 
 	This file is part of Snap!. 
 
@@ -47,6 +47,7 @@
 			(e) keyboard events
 			(f) resize event
             (g) combined mouse-keyboard events
+            (h) text editing events
 		(4) stepping
 		(5) creating new kinds of morphs
 		(6) development and user modes
@@ -593,6 +594,11 @@
 		droppedText(aString, name)
 
 	events to interested Morphs at the mouse pointer.
+    
+    if none of the above content types can be determined, the file contents
+    is dispatched as an ArrayBuffer to interested Morphs:
+
+        droppedBinary(anArrayBuffer, name)
 
 
 	(e) keyboard events
@@ -678,6 +684,66 @@
 	property stores the keyCode of the key that's currently pressed.
 	Once the key is released by the user it reverts to null.
 
+
+    (h) text editing events
+    -----------------------
+    Much of Morphic's "liveliness" comes out of allowing text elements
+    (instances of either single-lined StringMorph or multi-lined TextMorph)
+    to be directly manipulated and edited by users. This requires other
+    objects which may have an interest in the text element's state to react
+    appropriately. Therefore text elements and their manipulators emit
+    a stream of events, mostly by "bubbling" them up the text element's
+    owner chain. Text elements' parents are notified about the following
+    events:
+    
+    Whenever the user presses a key on the keyboard while a text element
+    is being edited, a
+    
+        reactToKeystroke(event)
+
+    is escalated up its parent chain, the "event" parameter being the
+    original one received by the World.
+    
+    Once the user has completed the edit, the following events are
+    dispatched:
+    
+        accept() - <enter> was pressed on a single line of text
+        cancel() - <esc> was pressed on any text element
+
+    Note that "accept" only gets triggered by single-line texte elements,
+    as the <enter> key is used to insert line breaks in multi-line
+    elements. Therefore, whenever a text edit is terminated by the user
+    (accepted, cancelled or otherwise), 
+
+        reactToEdit(StringOrTextMorph)
+
+    is triggered.
+
+    If the MorphicPreference's
+    
+        useSliderForInput
+    
+    setting is turned on, a slider is popped up underneath the currently
+    edited text element letting the user insert numbers out of the given
+    slider range. Whenever this happens, i.e. whenever the slider is moved
+    or while the slider button is pressed, a stream of
+
+        reactToSliderEdit(StringOrTextMorph)
+
+    events is dispatched, allowing for "Bret-Victor" style "live coding"
+    applications.
+
+    In addition to user-initiated events text elements also emit
+    change notifications to their direct parents whenever their drawNew()
+    method is invoked. That way complex Morphs containing text elements
+    get a chance to react if something about the embedded text has been
+    modified programmatically. These events are:
+    
+        layoutChanged() - sent from instances of TextMorph
+        fixLayout() - sent from instances of StringMorph
+
+    they are different so that Morphs which contain both multi-line and
+    single-line text elements can hold them apart.
 
 
 	(4) stepping
@@ -944,8 +1010,9 @@
 	Nathan Dinsmore contributed mouse wheel scrolling, cached
 	background texture handling and countless bug fixes.
 	Ian Reynolds contributed backspace key handling for Chrome.
+    Davide Della Casa contributed performance optimizations for Firefox.
 
-	- Jens MÃ¶nig
+	- Jens Mönig
 */
 
 // Global settings /////////////////////////////////////////////////////
@@ -953,7 +1020,7 @@
 /*global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 FileList, getBlurredShadowSupport*/
 
-var morphicVersion = '2012-October-25';
+var morphicVersion = '2012-November-29';
 var modules = {}; // keep track of additional loaded modules
 var useBlurredShadows = getBlurredShadowSupport(); // check for Chrome-bug
 
@@ -2038,6 +2105,8 @@ var ColorPickerMorph;
 var SliderMorph;
 var ScrollFrameMorph;
 var InspectorMorph;
+var StringMorph;
+var TextMorph;
 
 // Morph inherits from Node:
 
@@ -3390,7 +3459,9 @@ Morph.prototype.numericalSetters = function () {
 
 Morph.prototype.allEntryFields = function () {
 	return this.allChildren().filter(function (each) {
-		return each.isEditable;
+		return each.isEditable &&
+            (each instanceof StringMorph ||
+                each instanceof TextMorph);
 	});
 };
 
@@ -3398,22 +3469,23 @@ Morph.prototype.nextEntryField = function (current) {
 	var	fields = this.allEntryFields(),
 		idx = fields.indexOf(current);
 	if (idx !== -1) {
-		if (fields.length > (idx - 1)) {
+		if (fields.length > idx + 1) {
 			return fields[idx + 1];
 		}
-        return fields[0];
 	}
+    return fields[0];
 };
 
 Morph.prototype.previousEntryField = function (current) {
 	var	fields = this.allEntryFields(),
 		idx = fields.indexOf(current);
 	if (idx !== -1) {
-		if ((idx - 1) > fields.length) {
+		if (idx > 0) {
 			return fields[idx - 1];
 		}
-        return fields[fields.length + 1];
+        return fields[fields.length - 1];
 	}
+    return fields[0];
 };
 
 Morph.prototype.tab = function (editField) {
@@ -4279,7 +4351,6 @@ BlinkerMorph.prototype.step = function () {
 
 // CursorMorph: referenced constructors
 
-var StringMorph;
 var CursorMorph;
 
 // CursorMorph inherits from BlinkerMorph:
@@ -4317,7 +4388,7 @@ CursorMorph.prototype.init = function (aStringOrTextMorph) {
 // CursorMorph event processing:
 
 CursorMorph.prototype.processKeyPress = function (event) {
-	// this.inspectKeyEvent(event);
+	//this.inspectKeyEvent(event);
 	if (this.keyDownEventUsed) {
 		this.keyDownEventUsed = false;
 		return null;
@@ -4330,23 +4401,28 @@ CursorMorph.prototype.processKeyPress = function (event) {
 		this.insert('%');
 		return null;
 	}
-	var navigation = [8, 13, 18, 27, 35, 36, 37, 38, 40];
 	if (event.keyCode) { // Opera doesn't support charCode
-		if (!contains(navigation, event.keyCode)) {
-			if (event.ctrlKey) {
-				this.ctrl(event.keyCode);
-			} else {
-				this.insert(String.fromCharCode(event.keyCode));
-			}
-		}
+        if (event.ctrlKey) {
+            this.ctrl(event.keyCode);
+        } else if (event.metaKey) {
+            this.cmd(event.keyCode);
+        } else {
+            this.insert(
+                String.fromCharCode(event.keyCode),
+                event.shiftKey
+            );
+        }
 	} else if (event.charCode) { // all other browsers
-		if (!contains(navigation, event.charCode)) {
-			if (event.ctrlKey) {
-				this.ctrl(event.charCode);
-			} else {
-				this.insert(String.fromCharCode(event.charCode));
-			}
-		}
+        if (event.ctrlKey) {
+            this.ctrl(event.charCode);
+        } else if (event.metaKey) {
+            this.cmd(event.keyCode);
+        } else {
+            this.insert(
+                String.fromCharCode(event.charCode),
+                event.shiftKey
+            );
+        }
 	}
     // notify target's parent of key event
     this.target.escalateEvent('reactToKeystroke', event);
@@ -4361,6 +4437,13 @@ CursorMorph.prototype.processKeyDown = function (event) {
         this.target.escalateEvent('reactToKeystroke', event);
         return;
 	}
+    if (event.metaKey) {
+        this.cmd(event.keyCode);
+        // notify target's parent of key event
+        this.target.escalateEvent('reactToKeystroke', event);
+        return;
+	}
+
 	switch (event.keyCode) {
 	case 37:
 		this.goLeft();
@@ -4430,7 +4513,7 @@ CursorMorph.prototype.gotoSlot = function (slot) {
         right,
         left;
 	this.slot = slot < 0 ? 0 : slot > length ? length : slot;
-	if (this.parent) {
+	if (this.parent && this.target.isScrollable) {
 		right = this.parent.right() - this.viewPadding;
 		left = this.parent.left() + this.viewPadding;
 		if (pos.x > right) {
@@ -4502,19 +4585,27 @@ CursorMorph.prototype.accept = function () {
 
 CursorMorph.prototype.cancel = function () {
 	var	world = this.root();
+    this.undo();
 	if (world) {
 		world.stopEditing();
 	}
+	this.escalateEvent('cancel', null);
+};
+
+CursorMorph.prototype.undo = function () {
 	this.target.text = this.originalContents;
 	this.target.changed();
 	this.target.drawNew();
 	this.target.changed();
-	this.escalateEvent('cancel', null);
+    this.gotoSlot(0);
 };
 
-CursorMorph.prototype.insert = function (aChar) {
+CursorMorph.prototype.insert = function (aChar, shiftKey) {
 	var text;
     if (aChar === '\u0009') {
+        if (shiftKey) {
+            return this.target.backTab(this.target);
+        }
 		return this.target.tab(this.target);
 	}
 	if (!this.target.isNumeric ||
@@ -4538,24 +4629,25 @@ CursorMorph.prototype.insert = function (aChar) {
 CursorMorph.prototype.ctrl = function (aChar) {
 	if ((aChar === 97) || (aChar === 65)) {
 		this.target.selectAll();
-		return null;
-	}
-	if (aChar === 123) {
+    } else if (aChar === 90) {
+        this.undo();
+	} else if (aChar === 123) {
 		this.insert('{');
-		return null;
-	}
-	if (aChar === 125) {
+	} else if (aChar === 125) {
 		this.insert('}');
-		return null;
-	}
-	if (aChar === 91) {
+	} else if (aChar === 91) {
 		this.insert('[');
-		return null;
-	}
-	if (aChar === 93) {
+	} else if (aChar === 93) {
 		this.insert(']');
-		return null;
 	}
+};
+
+CursorMorph.prototype.cmd = function (aChar) {
+	if (aChar === 65) {
+		this.target.selectAll();
+	} else if (aChar === 90) {
+        this.undo();
+    }
 };
 
 CursorMorph.prototype.deleteRight = function () {
@@ -4598,10 +4690,14 @@ CursorMorph.prototype.inspectKeyEvent = function (event) {
 			event.charCode.toString() +
 			'\nkeyCode: ' +
 			event.keyCode.toString() +
+			'\nshiftKey: ' +
+			event.shiftKey.toString() +
 			'\naltKey: ' +
 			event.altKey.toString() +
 			'\nctrlKey: ' +
-			event.ctrlKey.toString()
+			event.ctrlKey.toString() +
+			'\ncmdKey: ' +
+			event.metaKey.toString()
 	);
 };
 
@@ -4818,7 +4914,6 @@ BoxMorph.prototype.numericalSetters = function () {
 // SpeechBubbleMorph: referenced constructors
 
 var SpeechBubbleMorph;
-var TextMorph;
 
 // SpeechBubbleMorph inherits from BoxMorph:
 
@@ -4853,6 +4948,7 @@ SpeechBubbleMorph.prototype.init = function (
 	this.contents = contents || '';
     this.padding = padding || 0; // additional vertical pixels
     this.isThought = isThought || false; // draw "think" bubble
+    this.isClickable = false;
 	SpeechBubbleMorph.uber.init.call(
 		this,
 		edge || 6,
@@ -4865,7 +4961,7 @@ SpeechBubbleMorph.prototype.init = function (
 
 // SpeechBubbleMorph invoking:
 
-SpeechBubbleMorph.prototype.popUp = function (world, pos) {
+SpeechBubbleMorph.prototype.popUp = function (world, pos, isClickable) {
 	this.drawNew();
 	this.setPosition(pos.subtract(new Point(0, this.height())));
 	this.addShadow(new Point(2, 2), 80);
@@ -4875,9 +4971,13 @@ SpeechBubbleMorph.prototype.popUp = function (world, pos) {
 	world.hand.destroyTemporaries();
 	world.hand.temporaries.push(this);
 
-	this.mouseEnter = function () {
-		this.destroy();
-	};
+    if (!isClickable) {
+        this.mouseEnter = function () {
+            this.destroy();
+        };
+    } else {
+        this.isClickable = true;
+    }
 };
 
 // SpeechBubbleMorph drawing:
@@ -5037,6 +5137,76 @@ SpeechBubbleMorph.prototype.outlinePath = function (
             circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
         }
     }
+};
+
+// SpeechBubbleMorph shadow
+
+/*
+    only take the 'plain' image, so the box rounding and the
+    shadow doesn't become conflicted by embedded scrolling panes
+*/
+
+SpeechBubbleMorph.prototype.shadowImage = function (off, color) {
+	// fallback for Windows Chrome-Shadow bug
+	var	fb, img, outline, sha, ctx,
+		offset = off || new Point(7, 7),
+        clr = color || new Color(0, 0, 0);
+	fb = this.extent();
+	img = this.image;
+	outline = newCanvas(fb);
+	ctx = outline.getContext('2d');
+	ctx.drawImage(img, 0, 0);
+	ctx.globalCompositeOperation = 'destination-out';
+	ctx.drawImage(
+		img,
+		-offset.x,
+		-offset.y
+	);
+	sha = newCanvas(fb);
+	ctx = sha.getContext('2d');
+	ctx.drawImage(outline, 0, 0);
+	ctx.globalCompositeOperation = 'source-atop';
+    ctx.fillStyle = clr.toString();
+	ctx.fillRect(0, 0, fb.x, fb.y);
+	return sha;
+};
+
+SpeechBubbleMorph.prototype.shadowImageBlurred = function (off, color) {
+    var	fb, img, sha, ctx,
+        offset = off || new Point(7, 7),
+        blur = this.shadowBlur,
+        clr = color || new Color(0, 0, 0);
+    fb = this.extent().add(blur * 2);
+    img = this.image;
+    sha = newCanvas(fb);
+    ctx = sha.getContext('2d');
+    ctx.shadowOffsetX = offset.x;
+    ctx.shadowOffsetY = offset.y;
+    ctx.shadowBlur = blur;
+    ctx.shadowColor = clr.toString();
+    ctx.drawImage(
+        img,
+        blur - offset.x,
+        blur - offset.y
+    );
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.drawImage(
+        img,
+        blur - offset.x,
+        blur - offset.y
+    );
+    return sha;
+};
+
+// SpeechBubbleMorph resizing
+
+SpeechBubbleMorph.prototype.fixLayout = function () {
+    this.removeShadow();
+    this.drawNew();
+    this.addShadow(new Point(2, 2), 80);
 };
 
 // CircleBoxMorph //////////////////////////////////////////////////////
@@ -6318,6 +6488,14 @@ MenuMorph.prototype.init = function (target, title, environment, fontSize) {
 };
 
 MenuMorph.prototype.addItem = function (labelString, action, hint, color) {
+    /*
+    labelString is normally a single-line string. But it can also be one
+    of the following:
+    
+        * a multi-line string (containing line breaks)
+        * an icon (either a Morph or a Canvas)
+        * a tuple of format: [icon, string]
+    */
 	this.items.push([
         localize(labelString || 'close'),
         action || nop,
@@ -6585,6 +6763,7 @@ StringMorph.prototype.init = function (
     this.blanksColor = new Color(180, 140, 140);
 
 	// additional properties for text-editing:
+    this.isScrollable = true; // scrolls into view when edited
 	this.currentlySelecting = false;
 	this.startMark = 0;
 	this.endMark = 0;
@@ -7080,6 +7259,7 @@ TextMorph.prototype.init = function (
 	this.receiver = null;
 
 	// additional properties for text-editing:
+    this.isScrollable = true; // scrolls into view when edited
 	this.currentlySelecting = false;
 	this.startMark = 0;
 	this.endMark = 0;
@@ -7904,7 +8084,7 @@ MenuItemMorph.uber = TriggerMorph.prototype;
 function MenuItemMorph(
 	target,
 	action,
-	labelString,
+	labelString, // can also be a Morph or a Canvas or a tuple: [icon, string]
 	fontSize,
 	fontStyle,
 	environment,
@@ -7924,25 +8104,59 @@ function MenuItemMorph(
 }
 
 MenuItemMorph.prototype.createLabel = function () {
-	var np;
+	var icon, lbl, np;
 	if (this.label !== null) {
 		this.label.destroy();
-	}
-	this.label = new StringMorph(
-		this.labelString,
-		this.fontSize,
-		this.fontStyle,
-        false, // bold
-        false, // italic
-        false, // numeric
-        null, // shadow offset
-        null, // shadow color
-        this.labelColor
-	);
+    }
+    if (isString(this.labelString)) {
+        this.label = this.createLabelString(this.labelString);
+    } else if (this.labelString instanceof Array) {
+        // assume its pattern is: [icon, string] 
+        this.label = new Morph();
+        this.label.alpha = 0; // transparent
+        this.label.add(icon = this.createIcon(this.labelString[0]));
+        this.label.add(lbl = this.createLabelString(this.labelString[1]));
+        lbl.setCenter(icon.center());
+        lbl.setLeft(icon.right() + 4);
+        this.label.bounds = (icon.bounds.merge(lbl.bounds));
+        this.label.drawNew();
+    } else { // assume it's either a Morph or a Canvas
+        this.label = this.createIcon(this.labelString);
+    }
 	this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
 	np = this.position().add(new Point(4, 0));
 	this.label.bounds = np.extent(this.label.extent());
 	this.add(this.label);
+};
+
+MenuItemMorph.prototype.createIcon = function (source) {
+    // source can be either a Morph or an HTMLCanvasElement
+    var icon = new Morph(),
+        src;
+    icon.image = source instanceof Morph ? source.fullImage() : source;
+    // adjust shadow dimensions
+    if (source instanceof Morph && source.getShadow()) {
+        src = icon.image;
+        icon.image = newCanvas(
+            source.fullBounds().extent().subtract(
+                this.shadowBlur * (useBlurredShadows ? 1 : 2)
+            )
+        );
+        icon.image.getContext('2d').drawImage(src, 0, 0);
+    }
+    icon.silentSetWidth(icon.image.width);
+    icon.silentSetHeight(icon.image.height);
+    return icon;
+};
+
+MenuItemMorph.prototype.createLabelString = function (string) {
+    var lbl = new TextMorph(
+        string,
+        this.fontSize,
+        this.fontStyle
+    );
+    lbl.setColor(this.labelColor);
+    return lbl;
 };
 
 // MenuItemMorph events:
@@ -9364,6 +9578,17 @@ HandMorph.prototype.processDrop = function (event) {
         frd.readAsText(aFile);
     }
 
+    function readBinary(aFile) {
+        var frd = new FileReader();
+        while (!target.droppedBinary) {
+            target = target.parent;
+        }
+        frd.onloadend = function (e) {
+            target.droppedBinary(e.target.result, aFile.name);
+        };
+        frd.readAsArrayBuffer(aFile);
+    }
+
     function parseImgURL(html) {
         var url = '',
             i,
@@ -9390,6 +9615,8 @@ HandMorph.prototype.processDrop = function (event) {
                 readAudio(file);
             } else if (file.type.indexOf("text") === 0) {
                 readText(file);
+            } else { // assume it's meant to be binary
+                readBinary(file);
             }
         }
     } else if (txt) {
@@ -9416,10 +9643,14 @@ HandMorph.prototype.destroyTemporaries = function () {
 	that it needs to remove them. The primary purpose of temporaries is
 	to display tools tips of speech bubble help.
 */
+    var myself = this;
 	this.temporaries.forEach(function (morph) {
-		morph.destroy();
+        if (!(morph.isClickable
+                && morph.bounds.containsPoint(myself.position()))) {
+            morph.destroy();
+            myself.temporaries.splice(myself.temporaries.indexOf(morph), 1);
+        }
 	});
-	this.temporaries = [];
 };
 
 // HandMorph dragging optimization
@@ -9866,16 +10097,20 @@ WorldMorph.prototype.droppedImage = function () {
 
 WorldMorph.prototype.nextTab = function (editField) {
 	var	next = this.nextEntryField(editField);
-	editField.clearSelection();
-	next.selectAll();
-	next.edit();
+    if (next) {
+        editField.clearSelection();
+        next.selectAll();
+        next.edit();
+    }
 };
 
 WorldMorph.prototype.previousTab = function (editField) {
 	var	prev = this.previousEntryField(editField);
-	editField.clearSelection();
-	prev.selectAll();
-	prev.edit();
+    if (prev) {
+        editField.clearSelection();
+        prev.selectAll();
+        prev.edit();
+    }
 };
 
 // WorldMorph menu:
@@ -10225,6 +10460,10 @@ WorldMorph.prototype.slide = function (aStringOrTextMorph) {
 		aStringOrTextMorph.text = Math.round(num).toString();
 		aStringOrTextMorph.drawNew();
 		aStringOrTextMorph.changed();
+        aStringOrTextMorph.escalateEvent(
+            'reactToSliderEdit',
+            aStringOrTextMorph
+        );
 	};
 	menu.items.push(slider);
 	menu.popup(this, aStringOrTextMorph.bottomLeft().add(new Point(0, 5)));
@@ -10234,6 +10473,7 @@ WorldMorph.prototype.stopEditing = function () {
 	if (this.cursor) {
 		this.lastEditedText = this.cursor.target;
 		this.cursor.destroy();
+        this.cursor = null;
         this.lastEditedText.escalateEvent('reactToEdit', this.lastEditedText);
 	}
 	this.keyboardReceiver = null;

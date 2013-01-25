@@ -134,7 +134,7 @@
   <li>
     <span class='signature'>
       <a href='#popUp-instance'>
-        - (void) <strong>popUp</strong>(world, pos)
+        - (void) <strong>popUp</strong>(world, pos, isClickable)
       </a>
     </span>
     <span class='desc'>
@@ -159,6 +159,36 @@
     </span>
     <span class='desc'>
       
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#shadowImage-instance'>
+        - (void) <strong>shadowImage</strong>(off_, color)
+      </a>
+    </span>
+    <span class='desc'>
+      SpeechBubbleMorph shadow only take the &#39;plain&#39; image, so the box rounding and the shadow doesn&#39;t become conflicted by embedded scrolling panes
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#shadowImageBlurred-instance'>
+        - (void) <strong>shadowImageBlurred</strong>(off_, color)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#fixLayout-instance'>
+        - (void) <strong>fixLayout</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      SpeechBubbleMorph resizing
     </span>
   </li>
 </ul>
@@ -329,7 +359,7 @@
       <div class='methods'>
   <div class='method_details'>
     <p class='signature' id='popUp-instance'>
-      - (void) <strong>popUp</strong>(world, pos)
+      - (void) <strong>popUp</strong>(world, pos, isClickable)
     </p>
     <div class='docstring'>
   <p>SpeechBubbleMorph invoking:</p>
@@ -354,11 +384,39 @@
     <div class='tags'>
 </div>
   </div>
+  <div class='method_details'>
+    <p class='signature' id='shadowImage-instance'>
+      - (void) <strong>shadowImage</strong>(off_, color)
+    </p>
+    <div class='docstring'>
+  <p>SpeechBubbleMorph shadow</p><p>   only take the &#39;plain&#39; image, so the box rounding and the
+   shadow doesn&#39;t become conflicted by embedded scrolling panes</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='shadowImageBlurred-instance'>
+      - (void) <strong>shadowImageBlurred</strong>(off_, color)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='fixLayout-instance'>
+      - (void) <strong>fixLayout</strong>()
+    </p>
+    <div class='docstring'>
+  <p>SpeechBubbleMorph resizing</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
 </div>
     </div>
     <div id='footer'>
   Generated on
-  Fri Jan 25 2013 13:06:56 GMT+0000 (GMT)
+  Fri Jan 25 2013 17:35:21 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4

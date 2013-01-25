@@ -164,7 +164,7 @@
   <li>
     <span class='signature'>
       <a href='#goLeft-instance'>
-        - (void) <strong>goLeft</strong>()
+        - (void) <strong>goLeft</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -174,7 +174,7 @@
   <li>
     <span class='signature'>
       <a href='#goRight-instance'>
-        - (void) <strong>goRight</strong>()
+        - (void) <strong>goRight</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -184,7 +184,7 @@
   <li>
     <span class='signature'>
       <a href='#goUp-instance'>
-        - (void) <strong>goUp</strong>()
+        - (void) <strong>goUp</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -194,7 +194,7 @@
   <li>
     <span class='signature'>
       <a href='#goDown-instance'>
-        - (void) <strong>goDown</strong>()
+        - (void) <strong>goDown</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -204,7 +204,7 @@
   <li>
     <span class='signature'>
       <a href='#goHome-instance'>
-        - (void) <strong>goHome</strong>()
+        - (void) <strong>goHome</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -214,7 +214,7 @@
   <li>
     <span class='signature'>
       <a href='#goEnd-instance'>
-        - (void) <strong>goEnd</strong>()
+        - (void) <strong>goEnd</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -225,6 +225,16 @@
     <span class='signature'>
       <a href='#gotoPos-instance'>
         - (void) <strong>gotoPos</strong>(aPoint)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#updateSelection-instance'>
+        - (void) <strong>updateSelection</strong>(shift)
       </a>
     </span>
     <span class='desc'>
@@ -253,8 +263,18 @@
   </li>
   <li>
     <span class='signature'>
+      <a href='#undo-instance'>
+        - (void) <strong>undo</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
       <a href='#insert-instance'>
-        - (void) <strong>insert</strong>(aChar)
+        - (void) <strong>insert</strong>(aChar, shiftKey)
       </a>
     </span>
     <span class='desc'>
@@ -496,42 +516,42 @@
   </div>
   <div class='method_details'>
     <p class='signature' id='goLeft-instance'>
-      - (void) <strong>goLeft</strong>()
+      - (void) <strong>goLeft</strong>(shift)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='goRight-instance'>
-      - (void) <strong>goRight</strong>()
+      - (void) <strong>goRight</strong>(shift)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='goUp-instance'>
-      - (void) <strong>goUp</strong>()
+      - (void) <strong>goUp</strong>(shift)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='goDown-instance'>
-      - (void) <strong>goDown</strong>()
+      - (void) <strong>goDown</strong>(shift)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='goHome-instance'>
-      - (void) <strong>goHome</strong>()
+      - (void) <strong>goHome</strong>(shift)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='goEnd-instance'>
-      - (void) <strong>goEnd</strong>()
+      - (void) <strong>goEnd</strong>(shift)
     </p>
     <div class='tags'>
 </div>
@@ -539,6 +559,13 @@
   <div class='method_details'>
     <p class='signature' id='gotoPos-instance'>
       - (void) <strong>gotoPos</strong>(aPoint)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='updateSelection-instance'>
+      - (void) <strong>updateSelection</strong>(shift)
     </p>
     <div class='tags'>
 </div>
@@ -561,8 +588,15 @@
 </div>
   </div>
   <div class='method_details'>
+    <p class='signature' id='undo-instance'>
+      - (void) <strong>undo</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
     <p class='signature' id='insert-instance'>
-      - (void) <strong>insert</strong>(aChar)
+      - (void) <strong>insert</strong>(aChar, shiftKey)
     </p>
     <div class='tags'>
 </div>
@@ -609,7 +643,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Fri Jan 25 2013 13:06:56 GMT+0000 (GMT)
+  Fri Jan 25 2013 17:35:21 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4
