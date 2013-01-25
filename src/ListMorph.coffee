@@ -44,7 +44,7 @@ class ListMorph extends ScrollFrameMorph
   buildListContents: ->
     @listContents.destroy()  if @listContents
     @listContents = new MenuMorph(@select, null, @)
-    @elements = ["(empty)"]  if @elements.length is 0
+    @elements = ["(empty)"]  if !@elements.length
     @elements.forEach (element) =>
       color = null
       @format.forEach (pair) ->

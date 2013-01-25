@@ -27,12 +27,12 @@ class MorphicNode
   
   # MorphicNode functions:
   root: ->
-    return @parent.root() unless @parent is null
+    return @parent.root() if @parent?
     @
   
   # currently unused
   depth: ->
-    return 0  if @parent is null
+    return 0  if !@parent?
     @parent.depth() + 1
   
   allChildren: ->
@@ -44,7 +44,7 @@ class MorphicNode
     result
   
   forAllChildren: (aFunction) ->
-    if @children.length > 0
+    if @children.length
       @children.forEach (child) ->
         child.forAllChildren aFunction
     #
@@ -53,7 +53,7 @@ class MorphicNode
   allLeafs: ->
     result = []
     @allChildren().forEach (element) ->
-      result.push element  if element.children.length is 0
+      result.push element  if !element.children.length
     #
     result
   

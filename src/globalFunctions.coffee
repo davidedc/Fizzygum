@@ -27,18 +27,15 @@ contains = (list, element) ->
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null
-  size = list.length
-  i = 0
-  while i < size
-    return list[i]  if predicate.call(null, list[i])
-    i += 1
+  for element in list
+    return element  if predicate.call(null, element)
   null
 
 isString = (target) ->
   typeof target is "string" or target instanceof String
 
 isObject = (target) ->
-  target isnt null and (typeof target is "object" or target instanceof Object)
+  target? and (typeof target is "object" or target instanceof Object)
 
 radians = (degrees) ->
   degrees * Math.PI / 180

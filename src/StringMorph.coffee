@@ -47,7 +47,7 @@ class StringMorph extends Morph
       @isItalic = false,
       @isNumeric = false,
       shadowOffset,
-      shadowColor,
+      @shadowColor,
       color,
       fontName
       ) ->
@@ -55,7 +55,6 @@ class StringMorph extends Morph
     @text = text or ((if (text is "") then "" else "StringMorph"))
     @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
     @shadowOffset = shadowOffset or new Point(0, 0)
-    @shadowColor = shadowColor or null
     #
     super()
     #

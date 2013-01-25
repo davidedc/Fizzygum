@@ -156,4 +156,4 @@ class HandleMorph extends Morph
         @target = each
         @drawNew()
         @noticesTransparentClick = true
-    menu.popUpAtHand @world()  if choices.length > 0
+    menu.popUpAtHand @world()  if choices.length

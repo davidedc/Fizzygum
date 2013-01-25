@@ -440,12 +440,12 @@ class TextMorph extends Morph
   
   showIt: ->
     result = @receiver.evaluateString(@selection())
-    @inform result  if result isnt null
+    if result? then @inform result
   
   inspectIt: ->
     result = @receiver.evaluateString(@selection())
     world = @world()
-    if result isnt null
+    if result?
       inspector = new InspectorMorph(result)
       inspector.setPosition world.hand.position()
       inspector.keepWithin world

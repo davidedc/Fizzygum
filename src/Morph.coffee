@@ -521,7 +521,7 @@ class Morph extends MorphicNode
     shadows = @children.slice(0).reverse().filter((child) ->
       child instanceof ShadowMorph
     )
-    return shadows[0]  if shadows.length isnt 0
+    return shadows[0]  if shadows.length
     null
   
   removeShadow: ->
@@ -565,12 +565,12 @@ class Morph extends MorphicNode
   
   add: (aMorph) ->
     owner = aMorph.parent
-    owner.removeChild aMorph  if owner isnt null
+    owner.removeChild aMorph  if owner?
     @addChild aMorph
   
   addBack: (aMorph) ->
     owner = aMorph.parent
-    owner.removeChild aMorph  if owner isnt null
+    owner.removeChild aMorph  if owner?
     @addChildFirst aMorph
   
   topMorphSuchThat: (predicate) ->
@@ -952,7 +952,7 @@ class Morph extends MorphicNode
         each.add @
         @isDraggable = false
     #
-    menu.popUpAtHand @world()  if choices.length > 0
+    menu.popUpAtHand @world()  if choices.length
   
   toggleIsDraggable: ->
     # for context menu demo purposes
@@ -1034,7 +1034,7 @@ class Morph extends MorphicNode
   # Morph events:
   escalateEvent: (functionName, arg) ->
     handler = @parent
-    handler = handler.parent  while not handler[functionName] and handler.parent isnt null
+    handler = handler.parent  while not handler[functionName] and handler.parent?
     handler[functionName] arg  if handler[functionName]
   
   

@@ -13,6 +13,7 @@ class SliderMorph extends CircleBoxMorph
   size: null
   offset: null
   button: null
+  step: null
 
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
     @button = new SliderButtonMorph()
@@ -25,7 +26,6 @@ class SliderMorph extends CircleBoxMorph
     @alpha = 0.3
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
-    @step = null
   
   
   # this.drawNew();
@@ -183,7 +183,7 @@ class SliderMorph extends CircleBoxMorph
     if choices.length is 1
       @target = choices[0]
       @setTargetSetter()
-    else menu.popUpAtHand @world()  if choices.length > 0
+    else menu.popUpAtHand @world()  if choices.length
   
   setTargetSetter: ->
     choices = @target.numericalSetters()
@@ -194,7 +194,7 @@ class SliderMorph extends CircleBoxMorph
     #
     if choices.length is 1
       @action = choices[0]
-    else menu.popUpAtHand @world()  if choices.length > 0
+    else menu.popUpAtHand @world()  if choices.length
   
   numericalSetters: ->
     # for context menu demo purposes

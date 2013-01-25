@@ -64,7 +64,7 @@ class FrameMorph extends Morph
   # FrameMorph scrolling support:
   submorphBounds: ->
     result = null
-    if @children.length > 0
+    if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
         result = result.merge(child.boundsIncludingChildren())
@@ -119,7 +119,7 @@ class FrameMorph extends Morph
   # FrameMorph menus:
   developersMenu: ->
     menu = super()
-    if @children.length > 0
+    if @children.length
       menu.addLine()
       menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
     menu

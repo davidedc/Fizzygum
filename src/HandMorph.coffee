@@ -79,7 +79,7 @@ class HandMorph extends Morph
   grab: (aMorph) ->
     oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
-    if @children.length is 0
+    if !@children.length
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
       aMorph.addShadow()
@@ -89,7 +89,7 @@ class HandMorph extends Morph
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
   
   drop: ->
-    if @children.length isnt 0
+    if @children.length
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
       @changed()
@@ -120,7 +120,7 @@ class HandMorph extends Morph
   processMouseDown: (event) ->
     @destroyTemporaries()
     @morphToGrab = null
-    if @children.length isnt 0
+    if @children.length
       @drop()
       @mouseButton = null
     else
@@ -177,7 +177,7 @@ class HandMorph extends Morph
   processMouseUp: ->
     morph = @morphAtPointer()
     @destroyTemporaries()
-    if @children.length isnt 0
+    if @children.length
       @drop()
     else
       if @mouseButton is "left"
@@ -268,16 +268,13 @@ class HandMorph extends Morph
         i += 1
       null
     
-    if files.length > 0
-      i = 0
-      while i < files.length
-        file = files[i]
+    if files.length
+      for file in files
         if file.type.indexOf("image") is 0
           readImage file
         else if file.type.indexOf("audio") is 0
           readAudio file
         else readText file  if file.type.indexOf("text") is 0
-        i += 1
     else if txt
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       img = new Image()
@@ -318,7 +315,7 @@ class HandMorph extends Morph
     # determine the new mouse-over-list:
     # mouseOverNew = this.allMorphsAtPointer();
     mouseOverNew = @morphAtPointer().allParents()
-    if (@children.length is 0) and (@mouseButton is "left")
+    if (!@children.length) and (@mouseButton is "left")
       topMorph = @morphAtPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
@@ -371,7 +368,7 @@ class HandMorph extends Morph
         newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
       #
       # autoScrolling support:
-      if @children.length > 0
+      if @children.length
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
                 WorldMorph.MorphicPreferences.scrollBarSize * 3
