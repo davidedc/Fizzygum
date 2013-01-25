@@ -850,7 +850,7 @@ class Morph extends MorphicNode
     menu.popUpAtHand @world()
   
   inspect: (anotherObject) ->
-    world = @world()
+    world = (if @world instanceof Function then @world() else (@root() or @world))
     inspectee = @
     inspectee = anotherObject  if anotherObject
     inspector = new InspectorMorph(inspectee)
@@ -864,7 +864,7 @@ class Morph extends MorphicNode
   
   contextMenu: ->
     return @customContextMenu  if @customContextMenu
-    world = @world()
+    world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
       return @hierarchyMenu()
@@ -872,7 +872,7 @@ class Morph extends MorphicNode
   
   hierarchyMenu: ->
     parents = @allParents()
-    world = @world()
+    world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
@@ -883,7 +883,7 @@ class Morph extends MorphicNode
   
   developersMenu: ->
     # 'name' is not an official property of a function, hence:
-    world = @world()
+    world = (if @world instanceof Function then @world() else (@root() or @world))
     userMenu = @userMenu() or (@parent and @parent.userMenu())
     menu = new MenuMorph(
       @,
