@@ -313,11 +313,10 @@ class StringMorph extends Morph
     @clearSelection()
   
   selectAll: ->
-    if @mouseDownLeft # make sure selecting is enabled
-      @startMark = 0
-      @endMark = @text.length
-      @drawNew()
-      @changed()
+    @startMark = 0
+    @endMark = @text.length
+    @drawNew()
+    @changed()
   
   mouseClickLeft: (pos) ->
     if @isEditable
@@ -346,5 +345,6 @@ class StringMorph extends Morph
           @changed()
   
   disableSelecting: ->
-    delete @mouseDownLeft
+    mouseDownLeft = ->
+      @clearSelection()
     delete @mouseMove

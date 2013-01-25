@@ -2,7 +2,30 @@
 
 # I am a multi-line, word-wrapping String
 
-class TextMorph extends Morph
+# Jens has made this quasi-inheriting from StringMorph i.e. he is copying
+# over manually the following methods like so:
+#
+#  TextMorph::font = StringMorph::font
+#  TextMorph::edit = StringMorph::edit
+#  TextMorph::selection = StringMorph::selection
+#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot
+#  TextMorph::clearSelection = StringMorph::clearSelection
+#  TextMorph::deleteSelection = StringMorph::deleteSelection
+#  TextMorph::selectAll = StringMorph::selectAll
+#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft
+#  TextMorph::enableSelecting = StringMorph::enableSelecting 
+#  TextMorph::disableSelecting = StringMorph::disableSelecting
+#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable
+#  TextMorph::toggleWeight = StringMorph::toggleWeight
+#  TextMorph::toggleItalic = StringMorph::toggleItalic
+#  TextMorph::setSerif = StringMorph::setSerif
+#  TextMorph::setSansSerif = StringMorph::setSansSerif
+#  TextMorph::setText = StringMorph::setText
+#  TextMorph::setFontSize = StringMorph::setFontSize
+#  TextMorph::numericalSetters = StringMorph::numericalSetters
+
+
+class TextMorph extends StringMorph
 
   text: null
   words: []
@@ -36,29 +59,23 @@ class TextMorph extends Morph
     @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
     @shadowColor = null
     ) ->    
-      @text = text or ((if text is "" then text else "TextMorph"))
-      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
-      @shadowOffset = shadowOffset or new Point(0, 0)
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       #
       super()
       #
       # override inherited properites:
+      @text = text or ((if text is "" then text else "TextMorph"))
+      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
+      @shadowOffset = shadowOffset or new Point(0, 0)
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
       @drawNew()
-  
+
   toString: ->
     # e.g. 'a TextMorph("Hello World")'
     "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
   
-  font: ->
-    # answer a font string, e.g. 'bold italic 12px sans-serif'
-    font = ""
-    font = font + "bold "  if @isBold
-    font = font + "italic "  if @isItalic
-    font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
   
   parse: ->
     paragraphs = @text.split("\n")
@@ -183,7 +200,6 @@ class TextMorph extends Morph
     @changed()
     @drawNew()
   
-  
   # TextMorph mesuring:
   columnRow: (slot) ->
     # answer the logical position point of the given index ("slot")
@@ -256,75 +272,6 @@ class TextMorph extends Morph
     # answer the slot (index) indicating the EOL for the given slot
     @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1
   
-  
-  # TextMorph editing:
-  edit: ->
-    @root().edit @
-  
-  selection: ->
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
-    @text.slice start, stop
-  
-  selectionStartSlot: ->
-    Math.min @startMark, @endMark
-  
-  clearSelection: ->
-    @currentlySelecting = false
-    @startMark = 0
-    @endMark = 0
-    @drawNew()
-    @changed()
-  
-  deleteSelection: ->
-    text = @text
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
-    @text = text.slice(0, start) + text.slice(stop)
-    @changed()
-    @clearSelection()
-  
-  selectAll: ->
-    @startMark = 0
-    @endMark = @text.length
-    @drawNew()
-    @changed()
-  
-  selectAllAndEdit: ->
-    @edit()
-    @selectAll()
-  
-  mouseClickLeft: (pos) ->
-    if @isEditable
-      @edit()  unless @currentlySelecting
-      @root().cursor.gotoPos pos
-      @currentlySelecting = false
-    else
-      @escalateEvent "mouseClickLeft", pos
-  
-  enableSelecting: ->
-    @mouseDownLeft = (pos) ->
-      @clearSelection()
-      if @isEditable and (not @isDraggable)
-        @edit()
-        @root().cursor.gotoPos pos
-        @startMark = @slotAt(pos)
-        @endMark = @startMark
-        @currentlySelecting = true
-    #
-    @mouseMove = (pos) ->
-      if @isEditable and @currentlySelecting and (not @isDraggable)
-        newMark = @slotAt(pos)
-        if newMark isnt @endMark
-          @endMark = newMark
-          @drawNew()
-          @changed()
-  
-  disableSelecting: ->
-    delete @mouseDownLeft
-    delete @mouseMove
-  
-  
   # TextMorph menus:
   developersMenu: ->
     menu = super()
@@ -350,14 +297,6 @@ class TextMorph extends Morph
       menu.addItem "italic", "toggleItalic"
     menu
   
-  toggleIsDraggable: ->
-    # for context menu demo purposes
-    @isDraggable = not @isDraggable
-    if @isDraggable
-      @disableSelecting()
-    else
-      @enableSelecting()
-  
   setAlignmentToLeft: ->
     @alignment = "left"
     @drawNew()
@@ -371,54 +310,7 @@ class TextMorph extends Morph
   setAlignmentToCenter: ->
     @alignment = "center"
     @drawNew()
-    @changed()
-  
-  toggleWeight: ->
-    @isBold = not @isBold
-    @changed()
-    @drawNew()
-    @changed()
-  
-  toggleItalic: ->
-    @isItalic = not @isItalic
-    @changed()
-    @drawNew()
-    @changed()
-  
-  setSerif: ->
-    @fontStyle = "serif"
-    @changed()
-    @drawNew()
-    @changed()
-  
-  setSansSerif: ->
-    @fontStyle = "sans-serif"
-    @changed()
-    @drawNew()
-    @changed()
-  
-  setText: (size) ->
-    # for context menu demo purposes
-    @text = Math.round(size).toString()
-    @changed()
-    @drawNew()
-    @changed()
-  
-  setFontSize: (size) ->
-    # for context menu demo purposes
-    if typeof size is "number"
-      @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
-    else
-      newSize = parseFloat(size)
-      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
-    @changed()
-    @drawNew()
-    @changed()
-  
-  numericalSetters: ->
-    # for context menu demo purposes
-    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
-  
+    @changed()  
   
   # TextMorph evaluation:
   evaluationMenu: ->
@@ -429,7 +321,11 @@ class TextMorph extends Morph
     menu.addLine()
     menu.addItem "select all", "selectAllAndEdit"
     menu
-  
+
+  selectAllAndEdit: ->
+    @edit()
+    @selectAll()
+   
   setReceiver: (obj) ->
     @receiver = obj
     @customContextMenu = @evaluationMenu()
