@@ -93,7 +93,10 @@ class CursorMorph extends BlinkerMorph
         @deleteLeft()
         @keyDownEventUsed = true
       when 13
-        if @target instanceof StringMorph
+        # we can't check the class using instanceOf
+        # because TextMorphs are instances of StringMorphs
+        # but they want the enter to insert a carriage return.
+        if @target.constructor.name == "StringMorph"
           @accept()
         else
           @insert "\n"

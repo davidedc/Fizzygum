@@ -1,76 +1,58 @@
 # TextMorph ///////////////////////////////////////////////////////////
-# REQUIRES StringMorph
 
 # I am a multi-line, word-wrapping String
 
+# Jens has made this quasi-inheriting from StringMorph i.e. he is copying
+# over manually the following methods like so:
+#
+#  TextMorph::font = StringMorph::font
+#  TextMorph::edit = StringMorph::edit
+#  TextMorph::selection = StringMorph::selection
+#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot
+#  TextMorph::clearSelection = StringMorph::clearSelection
+#  TextMorph::deleteSelection = StringMorph::deleteSelection
+#  TextMorph::selectAll = StringMorph::selectAll
+#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft
+#  TextMorph::enableSelecting = StringMorph::enableSelecting 
+#  TextMorph::disableSelecting = StringMorph::disableSelecting
+#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable
+#  TextMorph::toggleWeight = StringMorph::toggleWeight
+#  TextMorph::toggleItalic = StringMorph::toggleItalic
+#  TextMorph::setSerif = StringMorph::setSerif
+#  TextMorph::setSansSerif = StringMorph::setSansSerif
+#  TextMorph::setText = StringMorph::setText
+#  TextMorph::setFontSize = StringMorph::setFontSize
+#  TextMorph::numericalSetters = StringMorph::numericalSetters
 
 
-class TextMorph extends Morph
+class TextMorph extends StringMorph
 
-  text: null
   words: []
   lines: []
   lineSlots: []
-  fontSize: null
-  fontName: null
-  fontStyle: null
-  isBold: null
-  isItalic: null
   alignment: null
-  shadowOffset: null
-  shadowColor: null
   maxWidth: null
   maxLineWidth: 0
   backgroundColor: null
-  isEditable: false
 
   #additional properties for ad-hoc evaluation:
   receiver: null
-
-  # additional properties for text-editing:
-  isScrollable: true
-  currentlySelecting: false
-  startMark: 0
-  endMark: 0
-  markedTextColor: null
-  markedBackgoundColor: null
 
   constructor: (
     text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,
     @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
     @shadowColor = null
     ) ->    
+      super()
+      # override inherited properites:
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       @text = text or ((if text is "" then text else "TextMorph"))
       @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
       @shadowOffset = shadowOffset or new Point(0, 0)
-      #
-      super()
-      #
-      # override inherited properites:
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
       @drawNew()
-
-  TextMorph::font = StringMorph::font
-  TextMorph::edit = StringMorph::edit
-  TextMorph::selection = StringMorph::selection
-  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot
-  TextMorph::clearSelection = StringMorph::clearSelection
-  TextMorph::deleteSelection = StringMorph::deleteSelection
-  TextMorph::selectAll = StringMorph::selectAll
-  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft
-  TextMorph::enableSelecting = StringMorph::enableSelecting 
-  TextMorph::disableSelecting = StringMorph::disableSelecting
-  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable
-  TextMorph::toggleWeight = StringMorph::toggleWeight
-  TextMorph::toggleItalic = StringMorph::toggleItalic
-  TextMorph::setSerif = StringMorph::setSerif
-  TextMorph::setSansSerif = StringMorph::setSansSerif
-  TextMorph::setText = StringMorph::setText
-  TextMorph::setFontSize = StringMorph::setFontSize
-  TextMorph::numericalSetters = StringMorph::numericalSetters
 
   toString: ->
     # e.g. 'a TextMorph("Hello World")'
