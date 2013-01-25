@@ -350,8 +350,10 @@ class StringMorph extends Morph
       @escalateEvent "mouseDownLeft", pos
 
   mouseClickLeft: (pos) ->
+    cursor = @root().cursor;
     if @isEditable
       @edit()  unless @currentlySelecting
+      if cursor then cursor.gotoPos pos
       @root().cursor.gotoPos pos
       @currentlySelecting = true
     else
