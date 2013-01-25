@@ -13,12 +13,15 @@ class CursorMorph extends BlinkerMorph
   constructor: (@target) ->
     # additional properties:
     @originalContents = @target.text
+    @originalAlignment = @target.alignment
     @slot = @target.text.length
     super()
     ls = fontHeight(@target.fontSize)
     @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
     @drawNew()
     @image.getContext("2d").font = @target.font()
+    if (@target instanceof TextMorph && (@target.alignment != 'left'))
+      @target.setAlignmentToLeft()
     @gotoSlot @slot
   
   # CursorMorph event processing:
@@ -252,7 +255,14 @@ class CursorMorph extends BlinkerMorph
     @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
     @target.drawNew()
     @goLeft()
-  
+
+  # CursorMorph destroying:
+  destroy: ->
+    if @target.alignment isnt @originalAlignment
+      @target.alignment = @originalAlignment
+      @target.drawNew()
+      @target.changed()
+    super  
   
   # CursorMorph utilities:
   inspectKeyEvent: (event) ->

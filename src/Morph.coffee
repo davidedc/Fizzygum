@@ -279,7 +279,7 @@ class Morph extends MorphicNode
   silentSetHeight: (height) ->
     # do not drawNew() just yet
     h = Math.max(Math.round(height or 0), 0)
-    @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + (h))
+    @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
   setColor: (aColor) ->
     if aColor
