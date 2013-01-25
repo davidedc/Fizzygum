@@ -201,6 +201,7 @@ class CursorMorph extends BlinkerMorph
   
   insert: (aChar, shiftKey) ->
     if aChar is "\t"
+      @target.escalateEvent 'reactToEdit', @target
       if shiftKey
         return @target.backTab(@target);
       return @target.tab(@target)
