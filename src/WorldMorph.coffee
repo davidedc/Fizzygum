@@ -540,6 +540,10 @@ class WorldMorph extends FrameMorph
       aStringOrTextMorph.text = Math.round(num).toString()
       aStringOrTextMorph.drawNew()
       aStringOrTextMorph.changed()
+      aStringOrTextMorph.escalateEvent(
+          'reactToSliderEdit',
+          aStringOrTextMorph
+      )
     #
     menu.items.push slider
     menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
