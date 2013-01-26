@@ -1,39 +1,65 @@
 #Zombie-Kernel#
 
-This document was adapted/extended from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
+This document was adapted/extended from the Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
 
-##What is Zombie-Kernel?##
-Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig. Think of it as a crazy web desktop environment.
+##Intro##
+Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js. Think of it as a crazy web desktop environment.
+Morphic.js is written by Jens Mönig (jens@moenig.org), Copyright (C) 2013 by Jens Mönig.
 
-##Document structure##
+##Contents of this guide##
 
+* Ch.1 **History of Morphic** where does Morphic come from.
 * Ch.1 **Hierarchy** explains what a Morph is and which classes extend it.
 * Ch.2 **Yet to implement** gives some ideas on what could be next.
 * Ch.3 **Open issues** elaborates on some of the current "problems".
 * Ch.4 **Browser compatibility** lists the browsers that can successfully run Zombie Kernel
 * Ch.5 **The big picture** explains
-* Ch.6 **Programming guide**
-    * Ch.6.1 **Setting up words**
-        * Ch.6.1.1 **Setting up a web page - basics** shows the basic steps of how to create worlds
-        * Ch.6.1.2 **Setting up a web page for single world** shows how to create a simple world with one html file
-        * Ch.6.1.3 **Setting up a web page for multiple worlds** illustrates how to put more than one world in the same page.
-        * Ch.6.1.4 **Setting up an application**, i.e. how to make your world to run and host an application.
-    * Ch.6.2 **Events**
-        * Ch.6.2.1 **Mouse events**
-            * Ch.6.2.1.1 **Mouse events - context menu**
-            * Ch.6.2.1.2 **Mouse events - dragging**
-            * Ch.6.2.1.3 **Mouse events - dropping**
-            * Ch.6.2.1.4 **Mouse events - resize event**
-        * Ch.6.2.2 **Keyboard events**
-        * Ch.6.2.3 **Combined mouse-keyboard events**
-    * Ch.6.3 **Stepping**
-    * Ch.6.4 **Creating new kinds of morphs**
-    * Ch.6.5 **Development and user modes**
-    * Ch.6.5 **Turtle graphics**
-    * Ch.6.5 **Damage list housekeeping**
-    * Ch.6.5 **Minifying morphic.js**
-* Ch.6.2 **Aknowlegments**
+* Ch.6 **Setting up words**
+    * Ch.6.1 **Setting up a web page - basics** shows the basic steps of how to create worlds
+    * Ch.6.2 **Setting up a web page for single world** shows how to create a simple world with one html file
+    * Ch.6.3 **Setting up a web page for multiple worlds** illustrates how to put more than one world in the same page.
+    * Ch.6.4 **Setting up an application**, i.e. how to make your world to run and host an application.
+* Ch.7 **Manipulating morphs**
+* Ch.8 **Events**
+    * Ch.8.1 **Mouse events**
+        * Ch.8.1.1 **Mouse events - context menu**
+        * Ch.8.1.2 **Mouse events - dragging**
+        * Ch.8.1.3 **Mouse events - dropping**
+        * Ch.8.1.4 **Mouse events - resize event**
+    * Ch.8.2 **Keyboard events**
+    * Ch.8.3 **Resize events**
+    * Ch.8.4 **Combined mouse-keyboard events**
+* Ch.9 **Stepping**
+* Ch.10 **Creating new kinds of morphs**
+* Ch.11 **Development and user modes**
+* Ch.12 **Turtle graphics**
+* Ch.13 **Damage list housekeeping**
+* Ch.14 **Minifying morphic.js**
+* Ch.15 **Aknowlegments and contributors**
 
+#1. History of Morphic#
+As mentioned, Zombie Kernel is based on Morphic.js, which is an implementation of an existing UI framework from
+the late 90s called Morphic.
+What makes Morphic special is that it's a) a direct manipulation system, b) it's highly compositive
+and c) it's highly orthogonal.
+What a) means is that the user can compose and decompose UIs (and their behaviour) by direct manipulation of what
+she sees on her desktop (as opposed to only via scripting). Think of it as a glorified powerpoint system,
+where one can add/remove/modify widgets just by clicking around. For example one can attach/detach a slider
+from a window by just hovering over it, right-clicking and selecting the "pick up" option from the menu.
+b) "highly compositive" means that any part of the system is made from a few common building blocks, which
+at the basic level consist of little more than simple shapes. For
+example the menu is not a special bar with particular privileges - it's just a list of strings. A window is
+basically a rounded rectangle with some added behaviours.
+"Highly-compositive" entails that any widget mostly consists of piecing together simple components, 
+meaning that the actual specific code for a new widget is small. Hence the "size" of the entire system
+is limited - Morphic.js and Zombie Kernel can be totally read and understood in a week-end. c) Highly-orthogonal
+means that any group of elements attempts to respond to the same operations that the basic elements respond to.
+An example of this is the following: in powerpoint, when one creates a rectangle shape one expects at the
+very minimum to be able to stick it anywhere in the background of the slide. Beyond that, it follows that one
+can stick the same rectangle on any other shape or group of shapes. Similarly, in Morphic one can
+create a rectangle and stick it on the desktop, or inside any other shape. Since applies to a rectangle
+applies to any other widget, so one can stick a window inside a scrollable panel for example. Compare that
+to mainstream windowing system: can one normally drag a window and stick it inside another window?
 
 #1. Hierarchy#
 
@@ -132,7 +158,7 @@ The purpose of morphic.js is to provide a malleable framework that will let me e
 
 
 
-#6. Programming guide#
+#6. Setting up words#
 
 Morphic.js provides a library for lively GUIs inside single HTML Canvas elements. Each such canvas element functions as a "world" in which other visible shapes ("morphs") can be positioned and manipulated, often directly and interactively by the user. Morphs are tree nodes and may contain any number of submorphs ("children").
 
@@ -193,7 +219,7 @@ if you use ScrollFrames or otherwise plan to support mouse wheel scrolling event
 which will prevent the World to be scrolled around instead of the elements inside of it in some browsers.
 
 
-###(b) multiple worlds###
+##3. Setting up multiple worlds##
 
 If you wish to create a web page with more than one world, make sure to prevent each world from auto-filling the whole page and include	it in the main loop. It's also a good idea to give each world its own tabindex:
 
@@ -240,7 +266,7 @@ Example html file:
     </html>
 
 
-###(c) an application###
+##4. Setting up an application##
 
 Of course, most of the time you don't want to just plain use the standard Morhic World "as is" out of the box, but write your own application (something like Scratch!) in it. For such an application you'll create your own morph prototypes, perhaps assemble your own "window frame" and bring it all to life in a customized World state. the following example creates a simple snake-like mouse drawing game.
 
@@ -310,7 +336,7 @@ To get an idea how you can craft your own custom morph prototypes I've included 
 For the sake of sharing a single file I've included those examples in morphic.js itself. Usually you'll define your additions in a separate file and keep morphic.js untouched.
 
 
-###(2) manipulating morphs###
+#7. Manipulating morphs#
 
 There are many methods to programmatically manipulate morphs. Among the most important and common ones among all morphs are the following nine:
 
@@ -327,7 +353,7 @@ There are many methods to programmatically manipulate morphs. Among the most imp
 * fullCopy()			- duplication
 * destroy()				- deletion
 
-###(3) events###
+#8. Events#
 
 All user (and system) interaction is triggered by events, which are passed on from the root element - the World - to its submorphs. The World contains a list of system (browser) events it reacts to in its
 
@@ -344,7 +370,7 @@ events.
 
 These system events are dispatched within the morphic World by the World's Hand and its keyboardReceiver (usually the active text cursor).
 
-###(a) mouse events:###
+##8.1 Mouse events##
 
 The Hand dispatches the following mouse events to relevant morphs:
 
@@ -374,12 +400,12 @@ in the event handler method's code.
 Likewise, removing the event handler method will render your morph passive to the event in question.
 
 
-###(b) context menu:###
+###8.1.1 Context menu###
 
 By default right-clicking (or single-finger tap-and-hold) on a morph also invokes its context menu (in addition to firing the mouseClickRight event). A morph's context menu can be customized by assigning a Menu instance to its **customContextMenu**. property, or altogether suppressed by overriding its inherited **contextMenu()** method.
 
 
-###(c) dragging:###
+###8.1.2 Dragging###
 
 Dragging a morph is initiated when the left mouse button is pressed, held and the mouse is moved.
 
@@ -395,7 +421,7 @@ Right before a morph is picked up its **prepareToBeGrabbed(handMorph)** method i
 Similar to events, these  methods are optional and don't exist by default. For a simple example of how they can be used to adjust scroll bars in a scroll frame please have a look at their implementation in FrameMorph.
 
 
-###(d) dropping:###
+###8.1.3 Dropping###
 
 Dropping is triggered when the left mouse button is either pressed or released while the Hand is dragging a morph.
 
@@ -420,7 +446,7 @@ Those are dispatched as
 
 events to interested Morphs at the mouse pointer.
 
-###(e) keyboard events###
+##8.1 Keyboard events##
 
 The World dispatches the following key events to its active keyboardReceiver:
 
@@ -438,7 +464,7 @@ and activate them by assigning your morph to the World's **keyboardReceiver** pr
 
 Note that processKeyUp() is optional and doesn't have to be present if your morph doesn't require it.
 
-###(f) resize event###
+##8.3 Resize events##
 
 The Window resize event is handled by the World and allows the World's extent to be adjusted so that it always completely fills the browser's visible page. You can turn off this default behavior by setting the World's **useFillPage** property to false.
 
@@ -462,13 +488,13 @@ Add the following method to your Morph to let it automatically fill the whole Wo
     };
 
 
-###(g) combined mouse-keyboard events###
+##8.4 Combined mouse-keyboard events##
 
 Occasionally you'll want an object to react differently to a mouse click or to some other mouse event while the user holds down a key on the keyboard. Such "shift-click", "ctl-click", or "alt-click" events can be implemented by querying the World's **currentKey** property inside the function that reacts to the mouse event. This property stores the keyCode of the key that's currently pressed.
 Once the key is released by the user it reverts to null.
 
 
-###(4) stepping###
+#9 Stepping#
 
 Stepping is what makes Morphic "magical". Two properties control a morph's stepping behavior: the fps attribute and the step() method.
 
@@ -481,7 +507,7 @@ Depending on the number of actively stepping morphs and the complexity of your s
 Setting **myMorph.fps** to a number lower than the interval for the main loop lets you free system resources (albeit at the cost of a less responsive or slower behavior for this particular morph).
 
 
-###(5) creating new kinds of morphs###
+#10. Creating new kinds of morphs#
 
 The real fun begins when you start to create new kinds of morphs with customized shapes. Imagine, e.g. jigsaw puzzle pieces or musical notes. For this you have to override the default **drawNew()** method.
 
@@ -498,7 +524,7 @@ Use the following template for a start:
 
 If your new morph stores or references other morphs outside of the submorph tree in other properties, be sure to also override the default **copyRecordingReferences()** method accordingly if you want it to support duplication.
 
-###(6) development and user modes###
+#11 Development and user modes#
 
 When working with Squeak on Scratch or BYOB among the features I like the best and use the most is inspecting what's going on in the World while it is up and running. That's what development mode is for (you could also call it debug mode). In essence development mode controls which context menu shows up. In user mode right clicking (or double finger tapping) a morph invokes its **customContextMenu** property, whereas in development mode only the general **developersMenu()** method is called and the resulting menu invoked. The developers' menu features Gui-Builder-wise functionality to directly inspect, take apart, reassamble and otherwise manipulate morphs and theircontents.
 
@@ -508,7 +534,7 @@ When in development mode you can inspect every Morph's properties with the inspe
 
 Use switching between user and development modes while you are developing an application and disable switching to development once you're done and deploying, because generally you don't want to confuse end-users with inspectors and meta-level stuff.
 
-###(7) turtle graphics###
+#12 Turtle graphics#
 
 The basic Morphic kernel features a simple LOGO turtle constructor called **PenMorph** , which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its **penTrails()** property, so that it keeps a separate offscreen canvas for pen trails (and doesn't loose these on redraw).
 
@@ -542,7 +568,7 @@ Example:
 will be much faster than just invoking the tree function, because it prevents the parent's parent from keeping track of every single line segment and instead redraws the outcome in a single pass.
 
 
-###(8) damage list housekeeping###
+#13 Damage list housekeeping#
 
 Morphic's progressive display update comes at the cost of having to cycle through a list of "broken rectangles" every display cycle. If this list gets very long working this damage list can lead to a seemingly dramatic slow-down of the Morphic system. Typically this occurs when updating the layout of complex Morphs with very many submorphs, e.g. when resizing an inspector window.
 
@@ -556,7 +582,7 @@ The trackChanges property of the Morph prototype is a Boolean switch that determ
 methods of SyntaxElementMorph in the Snap application.	
 
  
-###(9) minifying morphic.js###
+#14 Minifying morphic.js#
 
 Coming from Smalltalk and being a Squeaker at heart I am a huge fan of browsing the code itself to make sense of it. Therefore I have included this documentation and (too little) inline comments so all you need to get going is this very file.
 
@@ -565,9 +591,7 @@ Nowadays with live streaming HD video even on mobile phones 250 KB shouldn't be 
 Being an attorney-at-law myself you programmer folk keep harassing me with rabulistic nitpickings about free software licenses. I'm releasing morphic.js under an AGPL license. Therefore please make sure to adhere to that license in any minified or compressed version.
 
 
-##Colophon##
-
-###VIII. acknowledgements###
+#15 Aknowlegments and contributors#
 
 The original Morphic was designed and written by Randy Smith and John Maloney for the SELF programming language, and later ported to Squeak (Smalltalk) by John Maloney and Dan Ingalls, who has also ported it to JavaScript (the Lively Kernel), once again setting a "Gold Standard" for self sustaining systems which morphic.js cannot and does not aspire to meet.
 
@@ -580,10 +604,8 @@ John Maloney has been my mentor and my source of inspiration for these Morphic e
 I have originally written morphic.js in Florian Balmer's Notepad2 editor for Windows and later switched to Apple's Dashcode. I've also come to depend on both Douglas Crockford's JSLint, Mozilla's Firebug and Google's Chrome to get it right.
 
 
-###IX. contributors###
+###Contributors###
 
 - Joe Otto found and fixed many early bugs and taught me some tricks.
 - Nathan Dinsmore contributed mouse wheel scrolling, cached background texture handling and countless bug fixes.
 - Ian Reynolds contributed backspace key handling for Chrome.
-
-Jens Mönig
