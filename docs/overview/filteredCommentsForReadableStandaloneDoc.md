@@ -3,19 +3,23 @@
 
 
 
-This document was adapted/extended from the original Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
+This document was adapted/extended from the Morphic.js documentation, written by Jens Mönig (jens@moenig.org).
 
 
 
-##What is Zombie-Kernel?##
+##Intro##
 
-Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js written by Jens Mönig (jens@moenig.org), Copyright (C) 2012 by Jens Mönig. Think of it as a crazy web desktop environment.
+Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version of) Morphic.js. Think of it as a crazy web desktop environment.
 
-
-
-##Document structure##
+Morphic.js is written by Jens Mönig (jens@moenig.org), Copyright (C) 2013 by Jens Mönig.
 
 
+
+##Contents of this guide##
+
+
+
+* Ch.1 **History of Morphic** where does Morphic come from.
 
 * Ch.1 **Hierarchy** explains what a Morph is and which classes extend it.
 
@@ -27,49 +31,97 @@ Zombie Kernel is a lively Web-GUI built on top of a (slightly modified version o
 
 * Ch.5 **The big picture** explains
 
-* Ch.6 **Programming guide**
+* Ch.6 **Setting up words**
 
-    * Ch.6.1 **Setting up words**
+    * Ch.6.1 **Setting up a web page - basics** shows the basic steps of how to create worlds
 
-        * Ch.6.1.1 **Setting up a web page - basics** shows the basic steps of how to create worlds
+    * Ch.6.2 **Setting up a web page for single world** shows how to create a simple world with one html file
 
-        * Ch.6.1.2 **Setting up a web page for single world** shows how to create a simple world with one html file
+    * Ch.6.3 **Setting up a web page for multiple worlds** illustrates how to put more than one world in the same page.
 
-        * Ch.6.1.3 **Setting up a web page for multiple worlds** illustrates how to put more than one world in the same page.
+    * Ch.6.4 **Setting up an application**, i.e. how to make your world to run and host an application.
 
-        * Ch.6.1.4 **Setting up an application**, i.e. how to make your world to run and host an application.
+* Ch.7 **Manipulating morphs**
 
-    * Ch.6.2 **Events**
+* Ch.8 **Events**
 
-        * Ch.6.2.1 **Mouse events**
+    * Ch.8.1 **Mouse events**
 
-            * Ch.6.2.1.1 **Mouse events - context menu**
+        * Ch.8.1.1 **Mouse events - context menu**
 
-            * Ch.6.2.1.2 **Mouse events - dragging**
+        * Ch.8.1.2 **Mouse events - dragging**
 
-            * Ch.6.2.1.3 **Mouse events - dropping**
+        * Ch.8.1.3 **Mouse events - dropping**
 
-            * Ch.6.2.1.4 **Mouse events - resize event**
+        * Ch.8.1.4 **Mouse events - resize event**
 
-        * Ch.6.2.2 **Keyboard events**
+    * Ch.8.2 **Keyboard events**
 
-        * Ch.6.2.3 **Combined mouse-keyboard events**
+    * Ch.8.3 **Resize events**
 
-    * Ch.6.3 **Stepping**
+    * Ch.8.4 **Combined mouse-keyboard events**
 
-    * Ch.6.4 **Creating new kinds of morphs**
+* Ch.9 **Stepping**
 
-    * Ch.6.5 **Development and user modes**
+* Ch.10 **Creating new kinds of morphs**
 
-    * Ch.6.5 **Turtle graphics**
+* Ch.11 **Development and user modes**
 
-    * Ch.6.5 **Damage list housekeeping**
+* Ch.12 **Turtle graphics**
 
-    * Ch.6.5 **Minifying morphic.js**
+* Ch.13 **Damage list housekeeping**
 
-* Ch.6.2 **Aknowlegments**
+* Ch.14 **Minifying morphic.js**
+
+* Ch.15 **Aknowlegments and contributors**
 
 
+
+#1. History of Morphic#
+
+As mentioned, Zombie Kernel is based on Morphic.js, which is an implementation of an existing UI framework from
+
+the late 90s called Morphic.
+
+What makes Morphic special is that it's a) a direct manipulation system, b) it's highly compositive
+
+and c) it's highly orthogonal.
+
+What a) means is that the user can compose and decompose UIs (and their behaviour) by direct manipulation of what
+
+she sees on her desktop (as opposed to only via scripting). Think of it as a glorified powerpoint system,
+
+where one can add/remove/modify widgets just by clicking around. For example one can attach/detach a slider
+
+from a window by just hovering over it, right-clicking and selecting the "pick up" option from the menu.
+
+b) "highly compositive" means that any part of the system is made from a few common building blocks, which
+
+at the basic level consist of little more than simple shapes. For
+
+example the menu is not a special bar with particular privileges - it's just a list of strings. A window is
+
+basically a rounded rectangle with some added behaviours.
+
+"Highly-compositive" entails that any widget mostly consists of piecing together simple components, 
+
+meaning that the actual specific code for a new widget is small. Hence the "size" of the entire system
+
+is limited - Morphic.js and Zombie Kernel can be totally read and understood in a week-end. c) Highly-orthogonal
+
+means that any group of elements attempts to respond to the same operations that the basic elements respond to.
+
+An example of this is the following: in powerpoint, when one creates a rectangle shape one expects at the
+
+very minimum to be able to stick it anywhere in the background of the slide. Beyond that, it follows that one
+
+can stick the same rectangle on any other shape or group of shapes. Similarly, in Morphic one can
+
+create a rectangle and stick it on the desktop, or inside any other shape. Since applies to a rectangle
+
+applies to any other widget, so one can stick a window inside a scrollable panel for example. Compare that
+
+to mainstream windowing system: can one normally drag a window and stick it inside another window?
 
 
 
@@ -267,7 +319,7 @@ The purpose of morphic.js is to provide a malleable framework that will let me e
 
 
 
-#6. Programming guide#
+#6. Setting up words#
 
 
 
@@ -389,7 +441,7 @@ which will prevent the World to be scrolled around instead of the elements insid
 
 
 
-###(b) multiple worlds###
+##3. Setting up multiple worlds##
 
 
 
@@ -483,7 +535,7 @@ Example html file:
 
 
 
-###(c) an application###
+##4. Setting up an application##
 
 
 
@@ -623,7 +675,7 @@ For the sake of sharing a single file I've included those examples in morphic.js
 
 
 
-###(2) manipulating morphs###
+#7. Manipulating morphs#
 
 
 
@@ -657,7 +709,7 @@ There are many methods to programmatically manipulate morphs. Among the most imp
 
 
 
-###(3) events###
+#8. Events#
 
 
 
@@ -691,7 +743,7 @@ These system events are dispatched within the morphic World by the World's Hand 
 
 
 
-###(a) mouse events:###
+##8.1 Mouse events##
 
 
 
@@ -751,7 +803,7 @@ Likewise, removing the event handler method will render your morph passive to th
 
 
 
-###(b) context menu:###
+###8.1.1 Context menu###
 
 
 
@@ -761,7 +813,7 @@ By default right-clicking (or single-finger tap-and-hold) on a morph also invoke
 
 
 
-###(c) dragging:###
+###8.1.2 Dragging###
 
 
 
@@ -793,7 +845,7 @@ Similar to events, these  methods are optional and don't exist by default. For a
 
 
 
-###(d) dropping:###
+###8.1.3 Dropping###
 
 
 
@@ -843,7 +895,7 @@ events to interested Morphs at the mouse pointer.
 
 
 
-###(e) keyboard events###
+##8.1 Keyboard events##
 
 
 
@@ -879,7 +931,7 @@ Note that processKeyUp() is optional and doesn't have to be present if your morp
 
 
 
-###(f) resize event###
+##8.3 Resize events##
 
 
 
@@ -927,7 +979,7 @@ Add the following method to your Morph to let it automatically fill the whole Wo
 
 
 
-###(g) combined mouse-keyboard events###
+##8.4 Combined mouse-keyboard events##
 
 
 
@@ -939,7 +991,7 @@ Once the key is released by the user it reverts to null.
 
 
 
-###(4) stepping###
+#9 Stepping#
 
 
 
@@ -965,7 +1017,7 @@ Setting **myMorph.fps** to a number lower than the interval for the main loop le
 
 
 
-###(5) creating new kinds of morphs###
+#10. Creating new kinds of morphs#
 
 
 
@@ -999,7 +1051,7 @@ If your new morph stores or references other morphs outside of the submorph tree
 
 
 
-###(6) development and user modes###
+#11 Development and user modes#
 
 
 
@@ -1019,7 +1071,7 @@ Use switching between user and development modes while you are developing an app
 
 
 
-###(7) turtle graphics###
+#12 Turtle graphics#
 
 
 
@@ -1087,7 +1139,7 @@ will be much faster than just invoking the tree function, because it prevents th
 
 
 
-###(8) damage list housekeeping###
+#13 Damage list housekeeping#
 
 
 
@@ -1115,7 +1167,7 @@ methods of SyntaxElementMorph in the Snap application.
 
  
 
-###(9) minifying morphic.js###
+#14 Minifying morphic.js#
 
 
 
@@ -1133,11 +1185,7 @@ Being an attorney-at-law myself you programmer folk keep harassing me with rabul
 
 
 
-##Colophon##
-
-
-
-###VIII. acknowledgements###
+#15 Aknowlegments and contributors#
 
 
 
@@ -1163,7 +1211,7 @@ I have originally written morphic.js in Florian Balmer's Notepad2 editor for Win
 
 
 
-###IX. contributors###
+###Contributors###
 
 
 
@@ -1172,10 +1220,6 @@ I have originally written morphic.js in Florian Balmer's Notepad2 editor for Win
 - Nathan Dinsmore contributed mouse wheel scrolling, cached background texture handling and countless bug fixes.
 
 - Ian Reynolds contributed backspace key handling for Chrome.
-
-
-
-Jens Mönig
 
 
 
