@@ -1,6 +1,7 @@
 # BouncerMorph ////////////////////////////////////////////////////////
 # fishy constructor
 # I am a Demo of a stepping custom Morph
+# Bounces vertically or horizontally within the parent
 
 class BouncerMorph extends Morph
 

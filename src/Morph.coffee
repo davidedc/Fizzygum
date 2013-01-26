@@ -98,6 +98,7 @@ class Morph extends MorphicNode
     else
       timeRemainingToWaitedFrame = 0
     
+    # Question: why 1 here below?
     if timeRemainingToWaitedFrame < 1
       @lastTime = WorldMorph.currentTime
       @step()
@@ -200,6 +201,8 @@ class Morph extends MorphicNode
   
   # Morph accessing - simple changes:
   moveBy: (delta) ->
+    # question: why is changed() called two times?
+    # question: can't we use silentMoveBy?
     @changed()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
@@ -254,6 +257,7 @@ class Morph extends MorphicNode
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
     unless aPoint.eq(@extent())
+      # question: why two "changed" invocations?
       @changed()
       @silentSetExtent aPoint
       @changed()
@@ -307,6 +311,7 @@ class Morph extends MorphicNode
     #
     @cachedTexture.src = @texture = url # make absolute
   
+  # tiles the texture
   drawCachedTexture: ->
     bg = @cachedTexture
     cols = Math.floor(@image.width / bg.width)
@@ -331,10 +336,13 @@ class Morph extends MorphicNode
   #    this.changed();
   #};
   #
+  
+  # This method used for example to draw a text in a frame
   drawOn: (aCanvas, aRect) ->
     return null  unless @isVisible
     rectangle = aRect or @bounds()
     area = rectangle.intersect(@bounds).round()
+    # test below is to check whether anything is visible
     if area.extent().gt(new Point(0, 0))
       delta = @position().neg()
       src = area.copy().translateBy(delta).round()
