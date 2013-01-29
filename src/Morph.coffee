@@ -350,17 +350,19 @@ class Morph extends MorphicNode
       context.globalAlpha = @alpha
       sl = src.left()
       st = src.top()
+      al = area.left()
+      at = area.top()
       w = Math.min(src.width(), @image.width - sl)
       h = Math.min(src.height(), @image.height - st)
       return null  if w < 1 or h < 1
 
       context.drawImage @image,
-        Math.round(src.left()),
-        Math.round(src.top()),
+        Math.round(sl),
+        Math.round(st),
         Math.round(w),
         Math.round(h),
-        Math.round(area.left()),
-        Math.round(area.top()),
+        Math.round(al),
+        Math.round(at),
         Math.round(w),
         Math.round(h)
 
@@ -370,7 +372,7 @@ class Morph extends MorphicNode
         randomB = Math.round(Math.random()*255)
         context.globalAlpha = 0.5
         context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect(Math.round(area.left()),Math.round(area.top()),Math.round(w),Math.round(h));
+        context.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));
   
   
   # "for debugging purposes:"
