@@ -196,7 +196,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      Returns all the internal/terminal nodes in the subtree starting at this node - including this node
     </span>
   </li>
   <li>
@@ -206,7 +206,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      A shorthand to run a function on all the internal/terminal nodes in the subtree starting at this node - including this node.
     </span>
   </li>
   <li>
@@ -226,7 +226,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      Return all &quot;parent&quot; nodes from this node up to the root (including both)
     </span>
   </li>
   <li>
@@ -236,7 +236,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      The direct children of the parent of this node.
     </span>
   </li>
   <li>
@@ -246,7 +246,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      returns the first parent (going up from this node) that is of a particular class (includes this particular node) This is a subcase of &quot;parentThatIsAnyOf&quot;.
     </span>
   </li>
   <li>
@@ -256,7 +256,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      returns the first parent (going up from this node) that belongs to a set of classes.
     </span>
   </li>
 </ul>
@@ -330,14 +330,24 @@
     <p class='signature' id='allChildren-instance'>
       - (void) <strong>allChildren</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>Returns all the internal/terminal nodes in the subtree starting
+at this node - including this node</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='forAllChildren-instance'>
       - (void) <strong>forAllChildren</strong>(aFunction)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>A shorthand to run a function on all the internal/terminal nodes in the subtree
+starting at this node - including this node.
+Note that the function is run starting form the &quot;bottom&quot; leaf and the all the
+way &quot;up&quot; to the current node.</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -351,35 +361,50 @@
     <p class='signature' id='allParents-instance'>
       - (void) <strong>allParents</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>Return all &quot;parent&quot; nodes from this node up to the root (including both)</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='siblings-instance'>
       - (void) <strong>siblings</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>The direct children of the parent of this node. (current node not included)</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='parentThatIsA-instance'>
       - (void) <strong>parentThatIsA</strong>(constructor)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>returns the first parent (going up from this node) that is of a particular class
+(includes this particular node)
+This is a subcase of &quot;parentThatIsAnyOf&quot;.</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='parentThatIsAnyOf-instance'>
       - (void) <strong>parentThatIsAnyOf</strong>(constructors)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>returns the first parent (going up from this node) that belongs to a set
+of classes. (includes this particular node).</p>
+</div>
+<div class='tags'>
 </div>
   </div>
 </div>
     </div>
     <div id='footer'>
   Generated on
-  Tue Jan 29 2013 19:01:51 GMT+0000 (GMT)
+  Wed Jan 30 2013 23:27:04 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4
