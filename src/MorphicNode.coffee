@@ -32,22 +32,25 @@ class MorphicNode
   
   # currently unused
   depth: ->
-    return 0  if !@parent?
+    return 0  unless @parent
     @parent.depth() + 1
   
-  allChildren: ->
-    # includes myself
-    result = [@]
+  # Returns all the internal/terminal nodes in the subtree starting
+  # at this node - including this node
+  allChildren: ->    
+    result = [@] # includes myself
     @children.forEach (child) ->
       result = result.concat(child.allChildren())
-    #
     result
   
+  # A shorthand to run a function on all the internal/terminal nodes in the subtree
+  # starting at this node - including this node.
+  # Note that the function is run starting form the "bottom" leaf and the all the
+  # way "up" to the current node.
   forAllChildren: (aFunction) ->
     if @children.length
       @children.forEach (child) ->
         child.forAllChildren aFunction
-    #
     aFunction.call null, @
   
   allLeafs: ->
@@ -57,31 +60,35 @@ class MorphicNode
     #
     result
   
+  # Return all "parent" nodes from this node up to the root (including both)
   allParents: ->
     # includes myself
     result = [@]
     result = result.concat(@parent.allParents())  if @parent?
     result
   
+  # The direct children of the parent of this node. (current node not included)
   siblings: ->
-    return []  if !@parent?
+    return []  unless @parent
     @parent.children.filter (child) =>
       child isnt @
   
+  # returns the first parent (going up from this node) that is of a particular class
+  # (includes this particular node)
+  # This is a subcase of "parentThatIsAnyOf".
   parentThatIsA: (constructor) ->
     # including myself
-    return @  if @ instanceof constructor
+    return @ if @ instanceof constructor
     return null  unless @parent
     @parent.parentThatIsA constructor
   
+  # returns the first parent (going up from this node) that belongs to a set
+  # of classes. (includes this particular node).
   parentThatIsAnyOf: (constructors) ->
     # including myself
-    yup = false
     constructors.forEach (each) =>
       if @constructor is each
-        yup = true
-        return
+        return @
     #
-    return @  if yup
     return null  unless @parent
     @parent.parentThatIsAnyOf constructors
