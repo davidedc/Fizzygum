@@ -16,16 +16,13 @@ class ColorPaletteMorph extends Morph
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
     @choice = new Color()
-    x = 0
-    while x <= ext.x
+    for x in [0..ext.x]
       h = 360 * x / ext.x
       y = 0
-      while y <= ext.y
+      for y in [0..ext.y]
         l = 100 - (y / ext.y * 100)
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
-        y += 1
-      x += 1
   
   mouseMove: (pos) ->
     @choice = @getPixelColor(pos)
