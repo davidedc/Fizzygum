@@ -14,16 +14,13 @@
     <span class="vi">@image = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
     <span class="vi">@choice = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">()</span>
-    <span class="nv">x = </span><span class="mi">0</span>
-    <span class="k">while</span> <span class="nx">x</span> <span class="o">&lt;=</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">x</span>
+    <span class="k">for</span> <span class="nx">x</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">..</span><span class="nx">ext</span><span class="p">.</span><span class="nx">x</span><span class="p">]</span>
       <span class="nv">h = </span><span class="mi">360</span> <span class="o">*</span> <span class="nx">x</span> <span class="o">/</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">x</span>
       <span class="nv">y = </span><span class="mi">0</span>
-      <span class="k">while</span> <span class="nx">y</span> <span class="o">&lt;=</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">y</span>
+      <span class="k">for</span> <span class="nx">y</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">..</span><span class="nx">ext</span><span class="p">.</span><span class="nx">y</span><span class="p">]</span>
         <span class="nv">l = </span><span class="mi">100</span> <span class="o">-</span> <span class="p">(</span><span class="nx">y</span> <span class="o">/</span> <span class="nx">ext</span><span class="p">.</span><span class="nx">y</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
         <span class="nv">context.fillStyle = </span><span class="s">&quot;hsl(&quot;</span> <span class="o">+</span> <span class="nx">h</span> <span class="o">+</span> <span class="s">&quot;,100%,&quot;</span> <span class="o">+</span> <span class="nx">l</span> <span class="o">+</span> <span class="s">&quot;%)&quot;</span>
         <span class="nx">context</span><span class="p">.</span><span class="nx">fillRect</span> <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span>
-        <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>
-      <span class="nx">x</span> <span class="o">+=</span> <span class="mi">1</span>
   
   <span class="nv">mouseMove: </span><span class="nf">(pos) -&gt;</span>
     <span class="vi">@choice = </span><span class="nx">@getPixelColor</span><span class="p">(</span><span class="nx">pos</span><span class="p">)</span>
