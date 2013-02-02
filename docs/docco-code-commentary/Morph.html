@@ -255,13 +255,9 @@ question: can't we use silentMoveBy?</p>             </td>             <td class
     <span class="nv">cols = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@image</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">width</span><span class="p">)</span>
     <span class="nv">lines = </span><span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nx">@image</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span>
     <span class="nv">context = </span><span class="nx">@image</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
-    <span class="nv">y = </span><span class="mi">0</span>
-    <span class="k">while</span> <span class="nx">y</span> <span class="o">&lt;=</span> <span class="nx">lines</span>
-      <span class="nv">x = </span><span class="mi">0</span>
-      <span class="k">while</span> <span class="nx">x</span> <span class="o">&lt;=</span> <span class="nx">cols</span>
+    <span class="k">for</span> <span class="nx">y</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">..</span><span class="nx">lines</span><span class="p">]</span>
+      <span class="k">for</span> <span class="nx">x</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">..</span><span class="nx">cols</span><span class="p">]</span>
         <span class="nx">context</span><span class="p">.</span><span class="nx">drawImage</span> <span class="nx">bg</span><span class="p">,</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">x</span> <span class="o">*</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">width</span><span class="p">),</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">y</span> <span class="o">*</span> <span class="nx">bg</span><span class="p">.</span><span class="nx">height</span><span class="p">)</span>
-        <span class="nx">x</span> <span class="o">+=</span> <span class="mi">1</span>
-      <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>Morph.prototype.drawCachedTexture = function () {

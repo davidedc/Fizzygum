@@ -118,12 +118,10 @@ try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})</p>         
   
   <span class="nv">sierpinski: </span><span class="nf">(length, min) -&gt;</span>
     <span class="k">if</span> <span class="nx">length</span> <span class="o">&gt;</span> <span class="nx">min</span>
-      <span class="nv">i = </span><span class="mi">0</span>
-      <span class="k">while</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">3</span>
+      <span class="k">for</span> <span class="nx">i</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="mi">3</span><span class="p">]</span>
         <span class="nx">@sierpinski</span> <span class="nx">length</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span> <span class="nx">min</span>
         <span class="nx">@turn</span> <span class="mi">120</span>
         <span class="nx">@forward</span> <span class="nx">length</span>
-        <span class="nx">i</span> <span class="o">+=</span> <span class="mi">1</span>
   
   <span class="nv">warpTree: </span><span class="nf">(level, length, angle) -&gt;</span>
     <span class="nx">@warpOp</span> <span class="s">&quot;tree&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nx">level</span><span class="p">,</span> <span class="nx">length</span><span class="p">,</span> <span class="nx">angle</span><span class="p">]</span>

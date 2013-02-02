@@ -60,14 +60,10 @@ true, otherwise answer null</p>             </td>             <td class="code"> 
   <span class="nv">ctx.fillStyle = </span><span class="s">&quot;black&quot;</span>
   <span class="nv">ctx.textBaseline = </span><span class="s">&quot;bottom&quot;</span>
   <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillText</span> <span class="nx">str</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span>
-  <span class="nv">y = </span><span class="mi">0</span>
-  <span class="k">while</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">size</span>
-    <span class="nv">x = </span><span class="mi">0</span>
-    <span class="k">while</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">maxX</span>
+  <span class="k">for</span> <span class="nx">y</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">size</span><span class="p">]</span>
+    <span class="k">for</span> <span class="nx">x</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">maxX</span><span class="p">]</span>
       <span class="nv">data = </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">getImageData</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
       <span class="k">return</span> <span class="nx">size</span> <span class="o">-</span> <span class="nx">y</span> <span class="o">+</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">isnt</span> <span class="mi">0</span>
-      <span class="nx">x</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>
   <span class="mi">0</span>
 
 <span class="nv">getBlurredShadowSupport = </span><span class="nf">-&gt;</span>  </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>check for Chrome issue 90001
@@ -138,14 +134,10 @@ http://code.google.com/p/chromium/issues/detail?id=90001</p>             </td>  
   <span class="nv">ctx.fillStyle = </span><span class="s">&quot;black&quot;</span>
   <span class="nv">ctx.textBaseline = </span><span class="s">&quot;bottom&quot;</span>
   <span class="nx">ctx</span><span class="p">.</span><span class="nx">fillText</span> <span class="nx">str</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">size</span>
-  <span class="nv">y = </span><span class="mi">0</span>
-  <span class="k">while</span> <span class="nx">y</span> <span class="o">&lt;</span> <span class="nx">size</span>
-    <span class="nv">x = </span><span class="mi">0</span>
-    <span class="k">while</span> <span class="nx">x</span> <span class="o">&lt;</span> <span class="nx">maxX</span>
+  <span class="k">for</span> <span class="nx">y</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">size</span><span class="p">]</span>
+    <span class="k">for</span> <span class="nx">x</span> <span class="k">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">...</span><span class="nx">maxX</span><span class="p">]</span>
       <span class="nv">data = </span><span class="nx">ctx</span><span class="p">.</span><span class="nx">getImageData</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
       <span class="k">return</span> <span class="nx">size</span> <span class="o">-</span> <span class="nx">y</span> <span class="o">+</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">isnt</span> <span class="mi">0</span>
-      <span class="nx">x</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>
   <span class="mi">0</span>
 
 
