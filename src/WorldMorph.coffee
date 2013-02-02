@@ -64,7 +64,7 @@ class WorldMorph extends FrameMorph
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @broken.forEach (rect) =>
-      @fullDrawOn @worldCanvas, rect  if rect.extent().gt(new Point(0, 0))
+      @fullDrawOn @worldCanvas, rect  if rect.isNotEmpty()
     @broken = []
   
   doOneCycle: ->

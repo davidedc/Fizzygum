@@ -60,6 +60,16 @@ class Rectangle
   extent: ->
     @corner.subtract @origin
   
+  isEmpty: ->
+    # The subtract method creates a new Point
+    theExtent = @corner.subtract @origin
+    theExtent.x = 0 or theExtent.y = 0
+
+  isNotEmpty: ->
+    # The subtract method creates a new Point
+    theExtent = @corner.subtract @origin
+    theExtent.x > 0 and theExtent.y > 0
+  
   height: ->
     @corner.y - @origin.y
   

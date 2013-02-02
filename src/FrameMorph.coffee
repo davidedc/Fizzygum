@@ -39,7 +39,7 @@ class FrameMorph extends Morph
     dirtyPartOfFrame = @bounds.intersect(boundsRectangle)
     
     # if there is no dirty part in the frame then do nothing
-    return null unless dirtyPartOfFrame.extent().gt(new Point(0, 0))
+    return null if dirtyPartOfFrame.isEmpty()
     
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail

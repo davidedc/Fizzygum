@@ -339,7 +339,7 @@ class Morph extends MorphicNode
     rectangle = aRect or @bounds()
     area = rectangle.intersect(@bounds).round()
     # test below is to check whether anything is visible
-    if area.extent().gt(new Point(0, 0))
+    if area.isNotEmpty()
       delta = @position().neg()
       src = area.copy().translateBy(delta).round()
       context = aCanvas.getContext("2d")
