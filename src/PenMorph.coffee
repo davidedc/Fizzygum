@@ -146,12 +146,10 @@ class PenMorph extends Morph
   
   sierpinski: (length, min) ->
     if length > min
-      i = 0
-      while i < 3
+      for i in [0...3]
         @sierpinski length * 0.5, min
         @turn 120
         @forward length
-        i += 1
   
   warpTree: (level, length, angle) ->
     @warpOp "tree", [level, length, angle]

@@ -317,13 +317,9 @@ class Morph extends MorphicNode
     cols = Math.floor(@image.width / bg.width)
     lines = Math.floor(@image.height / bg.height)
     context = @image.getContext("2d")
-    y = 0
-    while y <= lines
-      x = 0
-      while x <= cols
+    for y in [0..lines]
+      for x in [0..cols]
         context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)
-        x += 1
-      y += 1
     @changed()
   
   

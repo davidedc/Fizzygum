@@ -162,14 +162,10 @@ getMinimumFontHeight = ->
   ctx.fillStyle = "black"
   ctx.textBaseline = "bottom"
   ctx.fillText str, 0, size
-  y = 0
-  while y < size
-    x = 0
-    while x < maxX
+  for y in [0...size]
+    for x in [0...maxX]
       data = ctx.getImageData(x, y, 1, 1)
       return size - y + 1  if data.data[3] isnt 0
-      x += 1
-    y += 1
   0
 
 

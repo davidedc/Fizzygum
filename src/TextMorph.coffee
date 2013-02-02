@@ -164,15 +164,13 @@ class TextMorph extends StringMorph
     # draw the selection
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
-    i = start
-    while i < stop
+    for i in [start...stop]
       p = @slotPosition(i).subtract(@position())
       c = @text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
       context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x, p.y + fontHeight(@fontSize)
-      i += 1
     #
     # notify my parent of layout change
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
@@ -186,15 +184,11 @@ class TextMorph extends StringMorph
   columnRow: (slot) ->
     # answer the logical position point of the given index ("slot")
     idx = 0
-    row = 0
-    while row < @lines.length
+    for row in [0...@lines.length]
       idx = @lineSlots[row]
-      col = 0
-      while col < @lines[row].length
+      for col in [0...@lines[row].length]
         return new Point(col, row)  if idx is slot
         idx += 1
-        col += 1
-      row += 1
     #
     # return new Point(0, 0);
     new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
@@ -207,10 +201,8 @@ class TextMorph extends StringMorph
     shadowHeight = Math.abs(@shadowOffset.y)
     xOffset = 0
     yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
-    idx = 0
-    while idx < colRow.x
+    for idx in [0...colRow.x]
       xOffset += context.measureText(@lines[colRow.y][idx]).width
-      idx += 1
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)

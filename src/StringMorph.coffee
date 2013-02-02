@@ -120,8 +120,7 @@ class StringMorph extends Morph
     # draw the selection
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
-    i = start
-    while i < stop
+    for i in [start...stop]
       p = @slotPosition(i).subtract(@position())
       c = text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
@@ -129,7 +128,6 @@ class StringMorph extends Morph
         fontHeight(@fontSize) + y
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x + x, fontHeight(@fontSize) + y
-      i += 1
     #
     # notify my parent of layout change
     @parent.fixLayout()  if @parent.fixLayout  if @parent
@@ -166,10 +164,8 @@ class StringMorph extends Morph
     dest = Math.min(Math.max(slot, 0), text.length)
     context = @image.getContext("2d")
     xOffset = 0
-    idx = 0
-    while idx < dest
+    for idx in [0...dest]
       xOffset += context.measureText(text[idx]).width
-      idx += 1
     @pos = dest
     x = @left() + xOffset
     y = @top()

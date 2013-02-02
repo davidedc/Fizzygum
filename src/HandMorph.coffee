@@ -272,12 +272,10 @@ class HandMorph extends Morph
       start = html.indexOf("<img src=\"")
       return null  if start is -1
       start += 10
-      i = start
-      while i < html.length
+      for i in [start...html.length]
         c = html[i]
         return url  if c is "\""
         url = url.concat(c)
-        i += 1
       null
     
     if files.length
