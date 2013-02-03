@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='..&#47;assets/codo.css' type='text/css'>
+  <script src='..&#47;assets/codo.js'></script>
+  <script src='..&#47;assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='..&#47;'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='..&#47;class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>Point2</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='..&#47;class_list.html'>Classes</a>
+      <a id='file_list_link' href='..&#47;file_list.html'>Files</a>
+      <a id='method_list_link' href='..&#47;method_list.html'>Methods</a>
+      <a id='extra_list_link' href='..&#47;extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        Point2
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>.&#47;src&#47;Point2.coffee</td>
+        </tr>
+      </table>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#constructor-instance'>
+        - (void) <strong>constructor</strong>(x = 0, y = 0)
+      </a>
+    </span>
+    <span class='constructor note title'>Constructor</span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#toString-instance'>
+        - (void) <strong>toString</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 string representation: e.g.
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#copy-instance'>
+        - (void) <strong>copy</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 copying:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#eq-instance'>
+        - (void) <strong>eq</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 comparison:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#lt-instance'>
+        - (void) <strong>lt</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#gt-instance'>
+        - (void) <strong>gt</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#ge-instance'>
+        - (void) <strong>ge</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#le-instance'>
+        - (void) <strong>le</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#max-instance'>
+        - (void) <strong>max</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#min-instance'>
+        - (void) <strong>min</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#round-instance'>
+        - (void) <strong>round</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 conversion:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#abs-instance'>
+        - (void) <strong>abs</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#neg-instance'>
+        - (void) <strong>neg</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#mirror-instance'>
+        - (void) <strong>mirror</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#floor-instance'>
+        - (void) <strong>floor</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#ceil-instance'>
+        - (void) <strong>ceil</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#add-instance'>
+        - (void) <strong>add</strong>(other)
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 arithmetic:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#subtract-instance'>
+        - (void) <strong>subtract</strong>(other)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#multiplyBy-instance'>
+        - (void) <strong>multiplyBy</strong>(other)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#divideBy-instance'>
+        - (void) <strong>divideBy</strong>(other)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#floorDivideBy-instance'>
+        - (void) <strong>floorDivideBy</strong>(other)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#r-instance'>
+        - (void) <strong>r</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 polar coordinates: distance from the origin
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#degrees-instance'>
+        - (void) <strong>degrees</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#theta-instance'>
+        - (void) <strong>theta</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#crossProduct-instance'>
+        - (void) <strong>crossProduct</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      this function is a bit fishy.
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#distanceTo-instance'>
+        - (void) <strong>distanceTo</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#rotate-instance'>
+        - (void) <strong>rotate</strong>(direction, center)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#flip-instance'>
+        - (void) <strong>flip</strong>(direction, center)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#distanceAngle-instance'>
+        - (void) <strong>distanceAngle</strong>(dist, angle)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#scaleBy-instance'>
+        - (void) <strong>scaleBy</strong>(scalePoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 transforming:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#translateBy-instance'>
+        - (void) <strong>translateBy</strong>(deltaPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#rotateBy-instance'>
+        - (void) <strong>rotateBy</strong>(angle, centerPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#asArray-instance'>
+        - (void) <strong>asArray</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Point2 conversion:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#corner-instance'>
+        - (void) <strong>corner</strong>(cornerPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      creating Rectangle instances from Point2:
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#rectangle-instance'>
+        - (void) <strong>rectangle</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#extent-instance'>
+        - (void) <strong>extent</strong>(aPoint2)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+</ul>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-instance'>
+      - (void) <strong>constructor</strong>(x = 0, y = 0)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='toString-instance'>
+      - (void) <strong>toString</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Point2 string representation: e.g. &#39;12@68&#39;</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='copy-instance'>
+      - (void) <strong>copy</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Point2 copying:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='eq-instance'>
+      - (void) <strong>eq</strong>(aPoint2)
+    </p>
+    <div class='docstring'>
+  <p>Point2 comparison:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='lt-instance'>
+      - (void) <strong>lt</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='gt-instance'>
+      - (void) <strong>gt</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='ge-instance'>
+      - (void) <strong>ge</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='le-instance'>
+      - (void) <strong>le</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='max-instance'>
+      - (void) <strong>max</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='min-instance'>
+      - (void) <strong>min</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='round-instance'>
+      - (void) <strong>round</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Point2 conversion:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='abs-instance'>
+      - (void) <strong>abs</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='neg-instance'>
+      - (void) <strong>neg</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='mirror-instance'>
+      - (void) <strong>mirror</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='floor-instance'>
+      - (void) <strong>floor</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='ceil-instance'>
+      - (void) <strong>ceil</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='add-instance'>
+      - (void) <strong>add</strong>(other)
+    </p>
+    <div class='docstring'>
+  <p>Point2 arithmetic:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='subtract-instance'>
+      - (void) <strong>subtract</strong>(other)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='multiplyBy-instance'>
+      - (void) <strong>multiplyBy</strong>(other)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='divideBy-instance'>
+      - (void) <strong>divideBy</strong>(other)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='floorDivideBy-instance'>
+      - (void) <strong>floorDivideBy</strong>(other)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='r-instance'>
+      - (void) <strong>r</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Point2 polar coordinates:
+distance from the origin</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='degrees-instance'>
+      - (void) <strong>degrees</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='theta-instance'>
+      - (void) <strong>theta</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='crossProduct-instance'>
+      - (void) <strong>crossProduct</strong>(aPoint2)
+    </p>
+    <div class='docstring'>
+  <p>this function is a bit fishy.
+a cross product in 2d is probably not a vector
+see <a href="https://github.com/jmoenig/morphic.js/issues/6">https://github.com/jmoenig/morphic.js/issues/6</a>
+this function is not used</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='distanceTo-instance'>
+      - (void) <strong>distanceTo</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='rotate-instance'>
+      - (void) <strong>rotate</strong>(direction, center)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='flip-instance'>
+      - (void) <strong>flip</strong>(direction, center)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='distanceAngle-instance'>
+      - (void) <strong>distanceAngle</strong>(dist, angle)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='scaleBy-instance'>
+      - (void) <strong>scaleBy</strong>(scalePoint2)
+    </p>
+    <div class='docstring'>
+  <p>Point2 transforming:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='translateBy-instance'>
+      - (void) <strong>translateBy</strong>(deltaPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='rotateBy-instance'>
+      - (void) <strong>rotateBy</strong>(angle, centerPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='asArray-instance'>
+      - (void) <strong>asArray</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Point2 conversion:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='corner-instance'>
+      - (void) <strong>corner</strong>(cornerPoint2)
+    </p>
+    <div class='docstring'>
+  <p>creating Rectangle instances from Point2:</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='rectangle-instance'>
+      - (void) <strong>rectangle</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='extent-instance'>
+      - (void) <strong>extent</strong>(aPoint2)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Sun Feb 03 2013 22:28:18 GMT+0000 (GMT)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.4
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>
