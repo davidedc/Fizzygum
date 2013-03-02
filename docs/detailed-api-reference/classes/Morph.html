@@ -637,7 +637,7 @@
       </a>
     </span>
     <span class='desc'>
-      This method used for example to draw a text in a frame
+      This method only paints this very morph, doesn&#39;t descend the children recursively.
     </span>
   </li>
   <li>
@@ -697,7 +697,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      fixes <a href="https://github.com/jmoenig/morphic.js/issues/7">https://github.com/jmoenig/morphic.js/issues/7</a>
     </span>
   </li>
   <li>
@@ -1637,7 +1637,9 @@
       - (void) <strong>drawOn</strong>(aCanvas, aRect)
     </p>
     <div class='docstring'>
-  <p>This method used for example to draw a text in a frame</p>
+  <p>This method only paints this very morph, doesn&#39;t descend the children recursively.
+(fullDrawOn does the recursive drawing instead)
+Used for example to draw a text in a frame</p>
 </div>
 <div class='tags'>
 </div>
@@ -1715,7 +1717,10 @@
     <p class='signature' id='fullImage-instance'>
       - (void) <strong>fullImage</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>fixes <a href="https://github.com/jmoenig/morphic.js/issues/7">https://github.com/jmoenig/morphic.js/issues/7</a></p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -2123,7 +2128,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Sun Feb 03 2013 22:28:18 GMT+0000 (GMT)
+  Sat Mar 02 2013 00:03:53 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4

@@ -23,19 +23,17 @@
         
         <li><a href="#Morph">Morph</a></li>
         
-        <li><a href="#ColorPickerMorph">ColorPickerMorph</a></li>
+        <li><a href="#BlinkerMorph">BlinkerMorph</a></li>
+        
+        <li><a href="#CursorMorph">CursorMorph</a></li>
+        
+        <li><a href="#HandleMorph">HandleMorph</a></li>
+        
+        <li><a href="#HandMorph">HandMorph</a></li>
         
         <li><a href="#FrameMorph">FrameMorph</a></li>
         
         <li><a href="#ScrollFrameMorph">ScrollFrameMorph</a></li>
-        
-        <li><a href="#ListMorph">ListMorph</a></li>
-        
-        <li><a href="#BoxMorph">BoxMorph</a></li>
-        
-        <li><a href="#MenuMorph">MenuMorph</a></li>
-        
-        <li><a href="#SpeechBubbleMorph">SpeechBubbleMorph</a></li>
         
         <li><a href="#Color">Color</a></li>
         
@@ -43,49 +41,51 @@
         
         <li><a href="#MenuItemMorph">MenuItemMorph</a></li>
         
-        <li><a href="#Point2">Point2</a></li>
+        <li><a href="#BoxMorph">BoxMorph</a></li>
         
-        <li><a href="#BouncerMorph">BouncerMorph</a></li>
+        <li><a href="#MenuMorph">MenuMorph</a></li>
         
-        <li><a href="#BlinkerMorph">BlinkerMorph</a></li>
+        <li><a href="#Point">Point</a></li>
         
-        <li><a href="#CursorMorph">CursorMorph</a></li>
+        <li><a href="#StringFieldMorph">StringFieldMorph</a></li>
         
         <li><a href="#CircleBoxMorph">CircleBoxMorph</a></li>
         
+        <li><a href="#WorldMorph">WorldMorph</a></li>
+        
+        <li><a href="#BouncerMorph">BouncerMorph</a></li>
+        
+        <li><a href="#MorphsListMorph">MorphsListMorph</a></li>
+        
+        <li><a href="#ShadowMorph">ShadowMorph</a></li>
+        
         <li><a href="#SliderMorph">SliderMorph</a></li>
+        
+        <li><a href="#Rectangle">Rectangle</a></li>
+        
+        <li><a href="#ColorPickerMorph">ColorPickerMorph</a></li>
         
         <li><a href="#StringMorph">StringMorph</a></li>
         
         <li><a href="#TextMorph">TextMorph</a></li>
         
-        <li><a href="#WorldMorph">WorldMorph</a></li>
-        
-        <li><a href="#HandleMorph">HandleMorph</a></li>
+        <li><a href="#InspectorMorph">InspectorMorph</a></li>
         
         <li><a href="#PenMorph">PenMorph</a></li>
         
-        <li><a href="#ShadowMorph">ShadowMorph</a></li>
+        <li><a href="#SliderButtonMorph">SliderButtonMorph</a></li>
         
         <li><a href="#ColorPaletteMorph">ColorPaletteMorph</a></li>
         
         <li><a href="#GrayPaletteMorph">GrayPaletteMorph</a></li>
         
-        <li><a href="#SliderButtonMorph">SliderButtonMorph</a></li>
+        <li><a href="#ListMorph">ListMorph</a></li>
         
-        <li><a href="#StringFieldMorph">StringFieldMorph</a></li>
-        
-        <li><a href="#InspectorMorph">InspectorMorph</a></li>
-        
-        <li><a href="#MorphsListMorph">MorphsListMorph</a></li>
-        
-        <li><a href="#HandMorph">HandMorph</a></li>
+        <li><a href="#SpeechBubbleMorph">SpeechBubbleMorph</a></li>
         
         <li><a href="#MouseSensorMorph">MouseSensorMorph</a></li>
         
-        <li><a href="#Point">Point</a></li>
-        
-        <li><a href="#Rectangle">Rectangle</a></li>
+        <li><a href="#Point2">Point2</a></li>
         
       </ul>
       
@@ -816,7 +816,7 @@
         
         <div class="class">
           <div class="header">
-            <a id="ColorPickerMorph"><h3>ColorPickerMorph</h3></a>
+            <a id="BlinkerMorph"><h3>BlinkerMorph</h3></a>
             
             
             <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
@@ -832,7 +832,175 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor(defaultColor)</h4>
+                  <h4>constructor(@fps)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>step()</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="CursorMorph"><h3>CursorMorph</h3></a>
+            
+            
+            <a class="parent" href="#BlinkerMorph"><h3>extends BlinkerMorph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@target)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processKeyPress(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processKeyDown(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>gotoSlot(slot)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goLeft(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goRight(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goUp(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goDown(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goHome(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>goEnd(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>gotoPos(aPoint)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>updateSelection(shift)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>accept()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>cancel()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>undo()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>insert(aChar, shiftKey)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>ctrl(aChar)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>cmd(aChar)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>deleteRight()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>deleteLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>destroy()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>inspectKeyEvent(event)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="HandleMorph"><h3>HandleMorph</h3></a>
+            
+            
+            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@target, minX, minY, insetX, insetY, @type)</h4>
                   
                 </div>
                 
@@ -842,17 +1010,146 @@
                 </div>
                 
                 <div class="method">
-                  <h4>buildSubmorphs()</h4>
+                  <h4>drawOnCanvas(aCanvas, color, shadowColor)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>getChoice()</h4>
+                  <h4>mouseDownLeft(pos)</h4>
                   
                 </div>
                 
                 <div class="method">
                   <h4>rootForGrab()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseEnter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseLeave()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>copyRecordingReferences(dict)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>attach()</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="HandMorph"><h3>HandMorph</h3></a>
+            
+            
+            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@world)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>changed()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>morphAtPointer()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>allMorphsAtPointer()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>dropTargetFor(aMorph)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>grab(aMorph)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drop()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processMouseDown(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processTouchStart(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processTouchMove(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processTouchEnd(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processMouseUp()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processMouseScroll(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processDrop(event)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>destroyTemporaries()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>moveBy(delta)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>processMouseMove(event)</h4>
                   
                 </div>
                 
@@ -1041,262 +1338,6 @@
                 
                 <div class="method">
                   <h4>toggleTextLineWrapping()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="ListMorph"><h3>ListMorph</h3></a>
-            
-            
-            <a class="parent" href="#ScrollFrameMorph"><h3>extends ScrollFrameMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@elements, labelGetter, @format)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>buildListContents()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>select(item)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setExtent(aPoint)</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="BoxMorph"><h3>BoxMorph</h3></a>
-            
-            
-            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@edge, border, borderColor)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawNew()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>outlinePath(context, radius, inset)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>developersMenu()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setBorderWidth(size)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setBorderColor(color)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setCornerSize(size)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>colorSetters()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>numericalSetters()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="MenuMorph"><h3>MenuMorph</h3></a>
-            
-            
-            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@target, @title, @environment, @fontSize)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>addItem(labelString, action, hint, color)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>addLine(width)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>createLabel()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawNew()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>maxWidth()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>adjustWidths()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>unselectAllItems()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>popup(world, pos)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>popUpAtHand(world)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>popUpCenteredAtHand(world)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>popUpCenteredInWorld(world)</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="SpeechBubbleMorph"><h3>SpeechBubbleMorph</h3></a>
-            
-            
-            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@contents, color, edge, border, borderColor, @padding, @isThought)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>popUp(world, pos, isClickable)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawNew()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>outlinePath(context, radius, inset)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>shadowImage(off_, color)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>shadowImageBlurred(off_, color)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>fixLayout()</h4>
                   
                 </div>
                 
@@ -1542,7 +1583,160 @@
         
         <div class="class">
           <div class="header">
-            <a id="Point2"><h3>Point2</h3></a>
+            <a id="BoxMorph"><h3>BoxMorph</h3></a>
+            
+            
+            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@edge, border, borderColor)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>outlinePath(context, radius, inset)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>developersMenu()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setBorderWidth(size)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setBorderColor(color)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setCornerSize(size)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>colorSetters()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>numericalSetters()</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="MenuMorph"><h3>MenuMorph</h3></a>
+            
+            
+            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@target, @title, @environment, @fontSize)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>addItem(labelString, action, hint, color)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>addLine(width)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>createLabel()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>maxWidth()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>adjustWidths()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>unselectAllItems()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>popup(world, pos)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>popUpAtHand(world)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>popUpCenteredAtHand(world)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>popUpCenteredInWorld(world)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="Point"><h3>Point</h3></a>
             
           </div>
           <div class="class-content">
@@ -1569,37 +1763,37 @@
                 </div>
                 
                 <div class="method">
-                  <h4>eq(aPoint2)</h4>
+                  <h4>eq(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>lt(aPoint2)</h4>
+                  <h4>lt(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>gt(aPoint2)</h4>
+                  <h4>gt(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>ge(aPoint2)</h4>
+                  <h4>ge(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>le(aPoint2)</h4>
+                  <h4>le(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>max(aPoint2)</h4>
+                  <h4>max(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>min(aPoint2)</h4>
+                  <h4>min(aPoint)</h4>
                   
                 </div>
                 
@@ -1674,12 +1868,12 @@
                 </div>
                 
                 <div class="method">
-                  <h4>crossProduct(aPoint2)</h4>
+                  <h4>crossProduct(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>distanceTo(aPoint2)</h4>
+                  <h4>distanceTo(aPoint)</h4>
                   
                 </div>
                 
@@ -1699,17 +1893,17 @@
                 </div>
                 
                 <div class="method">
-                  <h4>scaleBy(scalePoint2)</h4>
+                  <h4>scaleBy(scalePoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>translateBy(deltaPoint2)</h4>
+                  <h4>translateBy(deltaPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>rotateBy(angle, centerPoint2)</h4>
+                  <h4>rotateBy(angle, centerPoint)</h4>
                   
                 </div>
                 
@@ -1719,17 +1913,279 @@
                 </div>
                 
                 <div class="method">
-                  <h4>corner(cornerPoint2)</h4>
+                  <h4>corner(cornerPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>rectangle(aPoint2)</h4>
+                  <h4>rectangle(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>extent(aPoint2)</h4>
+                  <h4>extent(aPoint)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="StringFieldMorph"><h3>StringFieldMorph</h3></a>
+            
+            
+            <a class="parent" href="#FrameMorph"><h3>extends FrameMorph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@defaultContents, @minWidth, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>string()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseClickLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>copyRecordingReferences(dict)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="CircleBoxMorph"><h3>CircleBoxMorph</h3></a>
+            
+            
+            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(@orientation)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>autoOrientation()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>developersMenu()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>toggleOrientation()</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="WorldMorph"><h3>WorldMorph</h3></a>
+            
+            
+            <a class="parent" href="#FrameMorph"><h3>extends FrameMorph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(aCanvas, fillPage)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>brokenFor(aMorph)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>fullDrawOn(aCanvas, aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>updateBroken()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>doOneCycle()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>fillPage()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>getGlobalPixelColor(point)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>initVirtualKeyboard()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>initEventListeners()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseDownLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseClickLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseDownRight()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseClickRight()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>wantsDropOf()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>droppedImage()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>nextTab(editField)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>previousTab(editField)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>contextMenu()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>userCreateMorph()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>toggleDevMode()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>hideAll()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>showAllHiddens()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>about()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>edit(aStringOrTextMorph)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>slide(aStringOrTextMorph)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>stopEditing()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>toggleBlurredShadows()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>togglePreferences()</h4>
                   
                 </div>
                 
@@ -1796,7 +2252,56 @@
         
         <div class="class">
           <div class="header">
-            <a id="BlinkerMorph"><h3>BlinkerMorph</h3></a>
+            <a id="MorphsListMorph"><h3>MorphsListMorph</h3></a>
+            
+            
+            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(target)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setTarget(target)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>buildPanes()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>fixLayout()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setExtent(aPoint)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="ShadowMorph"><h3>ShadowMorph</h3></a>
             
             
             <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
@@ -1812,195 +2317,7 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor(@fps)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>step()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="CursorMorph"><h3>CursorMorph</h3></a>
-            
-            
-            <a class="parent" href="#BlinkerMorph"><h3>extends BlinkerMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@target)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processKeyPress(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processKeyDown(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>gotoSlot(slot)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goLeft(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goRight(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goUp(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goDown(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goHome(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>goEnd(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>gotoPos(aPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>updateSelection(shift)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>accept()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>cancel()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>undo()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>insert(aChar, shiftKey)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>ctrl(aChar)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>cmd(aChar)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>deleteRight()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>deleteLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>destroy()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>inspectKeyEvent(event)</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="CircleBoxMorph"><h3>CircleBoxMorph</h3></a>
-            
-            
-            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@orientation)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>autoOrientation()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawNew()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>developersMenu()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>toggleOrientation()</h4>
+                  <h4>constructor()</h4>
                   
                 </div>
                 
@@ -2120,6 +2437,290 @@
                 
                 <div class="method">
                   <h4>mouseDownLeft(pos)</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="Rectangle"><h3>Rectangle</h3></a>
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(left, top, right, bottom)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>toString()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>copy()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>setTo(left, top, right, bottom)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>area()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>bottom()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>bottomCenter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>bottomLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>bottomRight()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>boundingBox()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>center()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>corners()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>extent()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>isEmpty()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>isNotEmpty()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>height()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>left()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>leftCenter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>right()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>rightCenter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>top()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>topCenter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>topLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>topRight()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>width()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>position()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>eq(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>abs()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>insetBy(delta)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>expandBy(delta)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>growBy(delta)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>intersect(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>merge(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>round()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>spread()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>amountToTranslateWithin(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>containsPoint(aPoint)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>containsRectangle(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>intersects(aRect)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>scaleBy(scale)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>translateBy(factor)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>asArray()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>asArray_xywh()</h4>
+                  
+                </div>
+                
+              </div>
+              
+              
+            </div>
+          </div>
+        </div>
+        
+        <div class="class">
+          <div class="header">
+            <a id="ColorPickerMorph"><h3>ColorPickerMorph</h3></a>
+            
+            
+            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            
+            
+          </div>
+          <div class="class-content">
+            
+            <div class="methods">
+              
+              
+              <div class="instancemethods">
+                <h3>Instance Methods</h3>
+                
+                <div class="method">
+                  <h4>constructor(defaultColor)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>buildSubmorphs()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>getChoice()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>rootForGrab()</h4>
                   
                 </div>
                 
@@ -2460,174 +3061,10 @@
         
         <div class="class">
           <div class="header">
-            <a id="WorldMorph"><h3>WorldMorph</h3></a>
+            <a id="InspectorMorph"><h3>InspectorMorph</h3></a>
             
             
-            <a class="parent" href="#FrameMorph"><h3>extends FrameMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(aCanvas, fillPage)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>brokenFor(aMorph)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>fullDrawOn(aCanvas, aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>updateBroken()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>doOneCycle()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>fillPage()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>getGlobalPixelColor(point)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>initVirtualKeyboard()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>initEventListeners()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseDownLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseClickLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseDownRight()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseClickRight()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>wantsDropOf()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>droppedImage()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>nextTab(editField)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>previousTab(editField)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>contextMenu()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>userCreateMorph()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>toggleDevMode()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>hideAll()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>showAllHiddens()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>about()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>edit(aStringOrTextMorph)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>slide(aStringOrTextMorph)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>stopEditing()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>toggleBlurredShadows()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>togglePreferences()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="HandleMorph"><h3>HandleMorph</h3></a>
-            
-            
-            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
             
             
           </div>
@@ -2640,47 +3077,47 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor(@target, minX, minY, insetX, insetY, @type)</h4>
+                  <h4>constructor(@target)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>drawNew()</h4>
+                  <h4>setTarget(target)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>drawOnCanvas(aCanvas, color, shadowColor)</h4>
+                  <h4>buildPanes()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>mouseDownLeft(pos)</h4>
+                  <h4>fixLayout()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>rootForGrab()</h4>
+                  <h4>setExtent(aPoint)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>mouseEnter()</h4>
+                  <h4>save()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>mouseLeave()</h4>
+                  <h4>addProperty()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>copyRecordingReferences(dict)</h4>
+                  <h4>renameProperty()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>attach()</h4>
+                  <h4>removeProperty()</h4>
                   
                 </div>
                 
@@ -2817,10 +3254,10 @@
         
         <div class="class">
           <div class="header">
-            <a id="ShadowMorph"><h3>ShadowMorph</h3></a>
+            <a id="SliderButtonMorph"><h3>SliderButtonMorph</h3></a>
             
             
-            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            <a class="parent" href="#CircleBoxMorph"><h3>extends CircleBoxMorph</h3></a>
             
             
           </div>
@@ -2833,7 +3270,47 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor()</h4>
+                  <h4>constructor(orientation)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>autoOrientation()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawNew()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>drawEdges()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseEnter()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseLeave()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseDownLeft(pos)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseClickLeft()</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>mouseMove()</h4>
                   
                 </div>
                 
@@ -2949,79 +3426,10 @@
         
         <div class="class">
           <div class="header">
-            <a id="SliderButtonMorph"><h3>SliderButtonMorph</h3></a>
+            <a id="ListMorph"><h3>ListMorph</h3></a>
             
             
-            <a class="parent" href="#CircleBoxMorph"><h3>extends CircleBoxMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(orientation)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>autoOrientation()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawNew()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>drawEdges()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseEnter()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseLeave()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseDownLeft(pos)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseClickLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseMove()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="StringFieldMorph"><h3>StringFieldMorph</h3></a>
-            
-            
-            <a class="parent" href="#FrameMorph"><h3>extends FrameMorph</h3></a>
+            <a class="parent" href="#ScrollFrameMorph"><h3>extends ScrollFrameMorph</h3></a>
             
             
           </div>
@@ -3034,140 +3442,17 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor(@defaultContents, @minWidth, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)</h4>
+                  <h4>constructor(@elements, labelGetter, @format)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>drawNew()</h4>
+                  <h4>buildListContents()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>string()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>mouseClickLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>copyRecordingReferences(dict)</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="InspectorMorph"><h3>InspectorMorph</h3></a>
-            
-            
-            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(@target)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setTarget(target)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>buildPanes()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>fixLayout()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setExtent(aPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>save()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>addProperty()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>renameProperty()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>removeProperty()</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="MorphsListMorph"><h3>MorphsListMorph</h3></a>
-            
-            
-            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
-            
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(target)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setTarget(target)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>buildPanes()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>fixLayout()</h4>
+                  <h4>select(item)</h4>
                   
                 </div>
                 
@@ -3185,10 +3470,10 @@
         
         <div class="class">
           <div class="header">
-            <a id="HandMorph"><h3>HandMorph</h3></a>
+            <a id="SpeechBubbleMorph"><h3>SpeechBubbleMorph</h3></a>
             
             
-            <a class="parent" href="#Morph"><h3>extends Morph</h3></a>
+            <a class="parent" href="#BoxMorph"><h3>extends BoxMorph</h3></a>
             
             
           </div>
@@ -3201,87 +3486,37 @@
                 <h3>Instance Methods</h3>
                 
                 <div class="method">
-                  <h4>constructor(@world)</h4>
+                  <h4>constructor(@contents, color, edge, border, borderColor, @padding, @isThought)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>changed()</h4>
+                  <h4>popUp(world, pos, isClickable)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>morphAtPointer()</h4>
+                  <h4>drawNew()</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>allMorphsAtPointer()</h4>
+                  <h4>outlinePath(context, radius, inset)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>dropTargetFor(aMorph)</h4>
+                  <h4>shadowImage(off_, color)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>grab(aMorph)</h4>
+                  <h4>shadowImageBlurred(off_, color)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>drop()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processMouseDown(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processTouchStart(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processTouchMove(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processTouchEnd(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processMouseUp()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processMouseScroll(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processDrop(event)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>destroyTemporaries()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>moveBy(delta)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>processMouseMove(event)</h4>
+                  <h4>fixLayout()</h4>
                   
                 </div>
                 
@@ -3353,7 +3588,7 @@
         
         <div class="class">
           <div class="header">
-            <a id="Point"><h3>Point</h3></a>
+            <a id="Point2"><h3>Point2</h3></a>
             
           </div>
           <div class="class-content">
@@ -3380,37 +3615,37 @@
                 </div>
                 
                 <div class="method">
-                  <h4>eq(aPoint)</h4>
+                  <h4>eq(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>lt(aPoint)</h4>
+                  <h4>lt(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>gt(aPoint)</h4>
+                  <h4>gt(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>ge(aPoint)</h4>
+                  <h4>ge(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>le(aPoint)</h4>
+                  <h4>le(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>max(aPoint)</h4>
+                  <h4>max(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>min(aPoint)</h4>
+                  <h4>min(aPoint2)</h4>
                   
                 </div>
                 
@@ -3485,12 +3720,12 @@
                 </div>
                 
                 <div class="method">
-                  <h4>crossProduct(aPoint)</h4>
+                  <h4>crossProduct(aPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>distanceTo(aPoint)</h4>
+                  <h4>distanceTo(aPoint2)</h4>
                   
                 </div>
                 
@@ -3510,262 +3745,17 @@
                 </div>
                 
                 <div class="method">
-                  <h4>scaleBy(scalePoint)</h4>
+                  <h4>scaleBy(scalePoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>translateBy(deltaPoint)</h4>
+                  <h4>translateBy(deltaPoint2)</h4>
                   
                 </div>
                 
                 <div class="method">
-                  <h4>rotateBy(angle, centerPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>asArray()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>corner(cornerPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>rectangle(aPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>extent(aPoint)</h4>
-                  
-                </div>
-                
-              </div>
-              
-              
-            </div>
-          </div>
-        </div>
-        
-        <div class="class">
-          <div class="header">
-            <a id="Rectangle"><h3>Rectangle</h3></a>
-            
-          </div>
-          <div class="class-content">
-            
-            <div class="methods">
-              
-              
-              <div class="instancemethods">
-                <h3>Instance Methods</h3>
-                
-                <div class="method">
-                  <h4>constructor(left, top, right, bottom)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>toString()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>copy()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>setTo(left, top, right, bottom)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>area()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>bottom()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>bottomCenter()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>bottomLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>bottomRight()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>boundingBox()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>center()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>corners()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>extent()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>isEmpty()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>isNotEmpty()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>height()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>left()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>leftCenter()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>right()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>rightCenter()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>top()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>topCenter()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>topLeft()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>topRight()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>width()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>position()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>eq(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>abs()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>insetBy(delta)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>expandBy(delta)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>growBy(delta)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>intersect(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>merge(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>round()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>spread()</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>amountToTranslateWithin(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>containsPoint(aPoint)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>containsRectangle(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>intersects(aRect)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>scaleBy(scale)</h4>
-                  
-                </div>
-                
-                <div class="method">
-                  <h4>translateBy(factor)</h4>
+                  <h4>rotateBy(angle, centerPoint2)</h4>
                   
                 </div>
                 
@@ -3775,7 +3765,17 @@
                 </div>
                 
                 <div class="method">
-                  <h4>asArray_xywh()</h4>
+                  <h4>corner(cornerPoint2)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>rectangle(aPoint2)</h4>
+                  
+                </div>
+                
+                <div class="method">
+                  <h4>extent(aPoint2)</h4>
                   
                 </div>
                 
