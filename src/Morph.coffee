@@ -29,6 +29,10 @@ class Morph extends MorphicNode
   customContextMenu: null
   trackChanges: true
   shadowBlur: 4
+  # note that image contains only the CURRENT morph, not the composition of this
+  # morph with all of the submorphs. I.e. for an inspector, this will only
+  # contain the background of the window pane. Not any of its contents.
+  # for the worldMorph, this only contains the background
   image: null
   
   constructor: () ->
@@ -333,7 +337,9 @@ class Morph extends MorphicNode
   #};
   #
   
-  # This method used for example to draw a text in a frame
+  # This method only paints this very morph, doesn't descend the children recursively.
+  # (fullDrawOn does the recursive drawing instead)
+  # Used for example to draw a text in a frame
   drawOn: (aCanvas, aRect) ->
     return null  unless @isVisible
     rectangle = aRect or @bounds()
@@ -444,18 +450,14 @@ class Morph extends MorphicNode
     @fullDrawOn img, fb
     img.globalAlpha = @alpha
     img
-  
+
+  # fixes https://github.com/jmoenig/morphic.js/issues/7
   fullImage: ->
-    img = newCanvas(@boundsIncludingChildren().extent())
+    boundsIncludingChildren = @boundsIncludingChildren()
+    img = newCanvas(boundsIncludingChildren.extent())
     ctx = img.getContext("2d")
-    fb = @boundsIncludingChildren()
-    @allChildren().forEach (morph) ->
-      if morph.isVisible
-        ctx.globalAlpha = morph.alpha
-        ctx.drawImage morph.image,
-          Math.round(morph.bounds.origin.x - fb.origin.x),
-          Math.round(morph.bounds.origin.y - fb.origin.y)
-    #
+    ctx.translate -@bounds.origin.x , -@bounds.origin.y
+    @fullDrawOn img, boundsIncludingChildren
     img
   
   
