@@ -34,7 +34,7 @@ class Morph extends MorphicNode
   # contain the background of the window pane. Not any of its contents.
   # for the worldMorph, this only contains the background
   image: null
-  onNextStep: null # optional function to be run once
+  onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
   
   constructor: () ->
     super()

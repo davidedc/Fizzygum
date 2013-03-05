@@ -265,12 +265,10 @@ class WorldMorph extends FrameMorph
           event.preventDefault()
           setStatus = event.clipboardData.setData("text/plain", selectedText)
 
-        #log('setData: ' + setStatus);
         if window.clipboardData
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
-        #log('setData: ' + setStatus);
     ), false
 
     document.body.addEventListener "paste", ((event) =>
