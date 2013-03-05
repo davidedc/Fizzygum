@@ -205,6 +205,7 @@ class HandMorph extends Morph
   #	drop event:
   #
   #        droppedImage
+  #        droppedSVG
   #        droppedAudio
   #        droppedText
   #
@@ -215,6 +216,7 @@ class HandMorph extends Morph
     #    element and dispatch the
     #    
     #        droppedImage(canvas, name)
+    #        droppedSVG(image, name)
     #        droppedAudio(audio, name)
     #    
     #    events to interested Morphs at the mouse pointer
@@ -227,7 +229,18 @@ class HandMorph extends Morph
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
     targetDrop = @morphAtPointer()
     img = new Image()
-    #
+
+    readSVG = (aFile) ->
+      pic = new Image()
+      frd = new FileReader()
+      target = target.parent  until target.droppedSVG
+      pic.onload = ->
+        target.droppedSVG pic, aFile.name
+      frd = new FileReader()
+      frd.onloadend = (e) ->
+        pic.src = e.target.result
+      frd.readAsDataURL aFile
+
     readImage = (aFile) ->
       pic = new Image()
       frd = new FileReader()
@@ -280,7 +293,9 @@ class HandMorph extends Morph
     
     if files.length
       for file in files
-        if file.type.indexOf("image") is 0
+        if file.type.indexOf("svg") != -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs
+          readSVG file
+        else if file.type.indexOf("image") is 0
           readImage file
         else if file.type.indexOf("audio") is 0
           readAudio file

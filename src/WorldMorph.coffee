@@ -284,7 +284,10 @@ class WorldMorph extends FrameMorph
   
   droppedImage: ->
     null
-  
+
+  droppedSVG: ->
+    null  
+
   # WorldMorph text field tabbing:
   nextTab: (editField) ->
     next = @nextEntryField(editField)

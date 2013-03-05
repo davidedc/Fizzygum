@@ -24,6 +24,7 @@ standardSettings =
   mouseScrollAmount: 40
   useSliderForInput: false
   useVirtualKeyboard: true
+  rasterizeSVGs: false
 
 touchScreenSettings =
   minimumFontHeight: standardSettings.minimumFontHeight
@@ -39,4 +40,5 @@ touchScreenSettings =
   mouseScrollAmount: 40
   useSliderForInput: true
   useVirtualKeyboard: true
+  rasterizeSVGs: false
 
