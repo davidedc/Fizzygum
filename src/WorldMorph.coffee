@@ -246,6 +246,51 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
+
+    # snippets of clipboard-handling code taken from
+    # http://codebits.glennjones.net/editing/setclipboarddata.htm
+    # Note that this works only in Chrome. Firefox and Safari need a piece of
+    # text to be selected in order to even trigger the copy event. Chrome does
+    # enable clipboard access instead even if nothing is selected.
+    # There are a couple of solutions to this - one is to keep a hidden textfield that
+    # handles all copy/paste operations.
+    # Another one is to not use a clipboard, but rather an internal string as
+    # local memory. So the OS clipboard wouldn't be used, but at least there would
+    # be some copy/paste working. Also one would need to intercept the copy/paste
+    # key combinations manually instead of from the copy/paste events.
+    document.body.addEventListener "copy", ((event) =>
+      if @cursor
+        selectedText = @cursor.target.selection()
+        if event.clipboardData
+          event.preventDefault()
+          setStatus = event.clipboardData.setData("text/plain", selectedText)
+
+        #log('setData: ' + setStatus);
+        if window.clipboardData
+          event.returnValue = false
+          setStatus = window.clipboardData.setData "Text", selectedText
+
+        #log('setData: ' + setStatus);
+    ), false
+
+    document.body.addEventListener "paste", ((event) =>
+      if @cursor
+        if event.clipboardData
+          # Look for access to data if types array is missing
+          text = event.clipboardData.getData("text/plain")
+          #url = event.clipboardData.getData("text/uri-list")
+          #html = event.clipboardData.getData("text/html")
+          #custom = event.clipboardData.getData("text/xcustom")
+        # IE event is attached to the window object
+        if window.clipboardData
+          # The schema is fixed
+          text = window.clipboardData.getData("Text")
+          #url = window.clipboardData.getData("URL")
+        
+        # Needs a few msec to excute paste
+        window.setTimeout ( => (@cursor.insert text)), 50, true
+    ), false
+
     window.addEventListener "dragover", ((event) ->
       event.preventDefault()
     ), false
