@@ -44,8 +44,7 @@ class HandleMorph extends Morph
       p11 = p1.copy()
       p2 = @topRight().subtract(@position())
       p22 = p2.copy()
-      i = 0
-      while i <= @height()
+      for i in [0..@height()] by 6
         p11.y = p1.y - i
         p22.y = p2.y - i
         context.beginPath()
@@ -53,13 +52,12 @@ class HandleMorph extends Morph
         context.lineTo p22.x, p22.y
         context.closePath()
         context.stroke()
-        i = i + 6
+
     p1 = @bottomLeft().subtract(@position())
     p11 = p1.copy()
     p2 = @topRight().subtract(@position())
     p22 = p2.copy()
-    i = 0
-    while i <= @width()
+    for i in [0..@width()] by 6
       p11.x = p1.x + i
       p22.x = p2.x + i
       context.beginPath()
@@ -67,15 +65,14 @@ class HandleMorph extends Morph
       context.lineTo p22.x, p22.y
       context.closePath()
       context.stroke()
-      i = i + 6
+
     context.strokeStyle = shadowColor.toString()
     if @type is "move"
       p1 = @bottomLeft().subtract(@position())
       p11 = p1.copy()
       p2 = @topRight().subtract(@position())
       p22 = p2.copy()
-      i = -2
-      while i <= @height()
+      for i in [-1..@height()] by 6
         p11.y = p1.y - i
         p22.y = p2.y - i
         context.beginPath()
@@ -83,13 +80,12 @@ class HandleMorph extends Morph
         context.lineTo p22.x, p22.y
         context.closePath()
         context.stroke()
-        i = i + 6
+
     p1 = @bottomLeft().subtract(@position())
     p11 = p1.copy()
     p2 = @topRight().subtract(@position())
     p22 = p2.copy()
-    i = 2
-    while i <= @width()
+    for i in [2..@width()] by 6
       p11.x = p1.x + i
       p22.x = p2.x + i
       context.beginPath()
@@ -97,7 +93,6 @@ class HandleMorph extends Morph
       context.lineTo p22.x, p22.y
       context.closePath()
       context.stroke()
-      i = i + 6
   
   
   # HandleMorph stepping:
