@@ -143,9 +143,9 @@ class CursorMorph extends BlinkerMorph
     @gotoSlot @slot - 1
     @updateSelection shift
   
-  goRight: (shift) ->
+  goRight: (shift, howMany) ->
     @updateSelection shift
-    @gotoSlot @slot + 1
+    @gotoSlot @slot + (howMany || 1)
     @updateSelection shift
   
   goUp: (shift) ->
@@ -218,7 +218,7 @@ class CursorMorph extends BlinkerMorph
       @target.text = text
       @target.drawNew()
       @target.changed()
-      @goRight()
+      @goRight false, aChar.length
   
   ctrl: (aChar) ->
     if (aChar is 97) or (aChar is 65)
