@@ -34,6 +34,7 @@ class Morph extends MorphicNode
   # contain the background of the window pane. Not any of its contents.
   # for the worldMorph, this only contains the background
   image: null
+  onNextStep: null # optional function to be run once
   
   constructor: () ->
     super()
@@ -105,10 +106,21 @@ class Morph extends MorphicNode
     # Question: why 1 here below?
     if timeRemainingToWaitedFrame < 1
       @lastTime = WorldMorph.currentTime
+      if @onNextStep
+        nxt = @onNextStep
+        @onNextStep = null
+        nxt.call(@)
       @step()
       @children.forEach (child) ->
         child.runChildrensStepFunction()
-  
+
+  nextSteps: (arrayOfFunctions) ->
+    lst = arrayOfFunctions or []
+    nxt = lst.shift()
+    if nxt
+      @onNextStep = =>
+        nxt.call @
+        @nextSteps lst  
   
   # leaving this function as step means that the morph want to do nothing
   # but the children *are* traversed and their step function is invoked.
