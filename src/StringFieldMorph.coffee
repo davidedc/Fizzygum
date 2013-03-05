@@ -45,8 +45,11 @@ class StringFieldMorph extends FrameMorph
   string: ->
     @text.text
   
-  mouseClickLeft: ->
-    @text.edit()  if @isEditable
+  mouseClickLeft: (pos)->
+    if @isEditable
+      @text.edit()
+    else
+      @escalateEvent 'mouseClickLeft', pos
   
   
   # StringFieldMorph duplicating:
