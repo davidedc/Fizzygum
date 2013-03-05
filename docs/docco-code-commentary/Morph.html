@@ -23,6 +23,7 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
 morph with all of the submorphs. I.e. for an inspector, this will only
 contain the background of the window pane. Not any of its contents.
 for the worldMorph, this only contains the background</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">image: </span><span class="kc">null</span>
+  <span class="nv">onNextStep: </span><span class="kc">null</span> <span class="c1"># optional function to be run once</span>
   
   <span class="nv">constructor: </span><span class="p">()</span> <span class="nf">-&gt;</span>
     <span class="k">super</span><span class="p">()</span>
@@ -79,10 +80,21 @@ and which ones want to wait. </p>             </td>             <td class="code"
       <span class="nv">timeRemainingToWaitedFrame = </span><span class="mi">0</span>
     </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>Question: why 1 here below?</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">timeRemainingToWaitedFrame</span> <span class="o">&lt;</span> <span class="mi">1</span>
       <span class="vi">@lastTime = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">currentTime</span>
+      <span class="k">if</span> <span class="nx">@onNextStep</span>
+        <span class="nv">nxt = </span><span class="nx">@onNextStep</span>
+        <span class="vi">@onNextStep = </span><span class="kc">null</span>
+        <span class="nx">nxt</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">@</span><span class="p">)</span>
       <span class="nx">@step</span><span class="p">()</span>
       <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
         <span class="nx">child</span><span class="p">.</span><span class="nx">runChildrensStepFunction</span><span class="p">()</span>
-  
+
+  <span class="nv">nextSteps: </span><span class="nf">(arrayOfFunctions) -&gt;</span>
+    <span class="nv">lst = </span><span class="nx">arrayOfFunctions</span> <span class="o">or</span> <span class="p">[]</span>
+    <span class="nv">nxt = </span><span class="nx">lst</span><span class="p">.</span><span class="nx">shift</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">nxt</span>
+      <span class="vi">@onNextStep = </span><span class="o">=&gt;</span>
+        <span class="nx">nxt</span><span class="p">.</span><span class="nx">call</span> <span class="nx">@</span>
+        <span class="nx">@nextSteps</span> <span class="nx">lst</span>  
   </pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>leaving this function as step means that the morph want to do nothing
 but the children <em>are</em> traversed and their step function is invoked.
 If a Morph wants to do nothing and wants to prevent the children to be

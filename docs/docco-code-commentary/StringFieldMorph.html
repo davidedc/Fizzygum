@@ -41,8 +41,11 @@
   <span class="nv">string: </span><span class="nf">-&gt;</span>
     <span class="nx">@text</span><span class="p">.</span><span class="nx">text</span>
   
-  <span class="nv">mouseClickLeft: </span><span class="nf">-&gt;</span>
-    <span class="nx">@text</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@isEditable</span>
+  <span class="nv">mouseClickLeft: </span><span class="nf">(pos)-&gt;</span>
+    <span class="k">if</span> <span class="nx">@isEditable</span>
+      <span class="nx">@text</span><span class="p">.</span><span class="nx">edit</span><span class="p">()</span>
+    <span class="k">else</span>
+      <span class="nx">@escalateEvent</span> <span class="s">&#39;mouseClickLeft&#39;</span><span class="p">,</span> <span class="nx">pos</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>StringFieldMorph duplicating:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copyRecordingReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>inherited, see comment in Morph</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>
     <span class="nv">c.text = </span><span class="p">(</span><span class="nx">dict</span><span class="p">[</span><span class="nx">@text</span><span class="p">])</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">text</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@text</span><span class="p">]</span>
