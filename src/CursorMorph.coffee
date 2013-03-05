@@ -233,6 +233,8 @@ class CursorMorph extends BlinkerMorph
       @insert "["
     else if aChar is 93
       @insert "]"
+    else if aChar is 64
+      @insert "@"
   
   cmd: (aChar) ->
     if aChar is 65
