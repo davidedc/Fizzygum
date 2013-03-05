@@ -7,8 +7,9 @@ class PenMorph extends Morph
   heading: 0
   penSize: null
   isWarped: false # internal optimization
-  wantsRedraw: false # internal optimization
   isDown: true
+  wantsRedraw: false # internal optimization
+  penPoint: 'tip' # or 'center'
   
   constructor: () ->
     @penSize = WorldMorph.MorphicPreferences.handleSize * 4
@@ -42,20 +43,29 @@ class PenMorph extends Morph
     direction = facing or @heading
     if @isWarped
       @wantsRedraw = true
-      return null
+      return
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
     len = @width() / 2
     start = @center().subtract(@bounds.origin)
-    dest = start.distanceAngle(len * 0.75, direction - 180)
-    left = start.distanceAngle(len, direction + 195)
-    right = start.distanceAngle(len, direction - 195)
+
+    if @penPoint is "tip"
+      dest = start.distanceAngle(len * 0.75, direction - 180)
+      left = start.distanceAngle(len, direction + 195)
+      right = start.distanceAngle(len, direction - 195)
+    else # 'middle'
+      dest = start.distanceAngle(len * 0.75, direction)
+      left = start.distanceAngle(len * 0.33, direction + 230)
+      right = start.distanceAngle(len * 0.33, direction - 230)
+
     context.fillStyle = @color.toString()
     context.beginPath()
+
     context.moveTo start.x, start.y
     context.lineTo left.x, left.y
     context.lineTo dest.x, dest.y
     context.lineTo right.x, right.y
+
     context.closePath()
     context.strokeStyle = "white"
     context.lineWidth = 3
@@ -70,9 +80,8 @@ class PenMorph extends Morph
   # PenMorph access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
-    if @isWarped is false
-      @drawNew()
-      @changed()
+    @drawNew()
+    @changed()
   
   
   # PenMorph drawing:
@@ -120,13 +129,15 @@ class PenMorph extends Morph
   
   # PenMorph optimization for atomic recursion:
   startWarp: ->
+    @wantsRedraw = false
     @isWarped = true
   
   endWarp: ->
-    @drawNew()  if @wantsRedraw
-    @changed()
-    @parent.changed()
     @isWarped = false
+    if @wantsRedraw
+      @drawNew()
+      @wantsRedraw = false
+    @parent.changed()
   
   warp: (fun) ->
     @startWarp()
