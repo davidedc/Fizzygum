@@ -4,51 +4,63 @@
 | 
 | and event handling.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">FrameMorph</span> <span class="k">extends</span> <span class="nx">Morph</span>
 
-  <span class="vi">@scrollFrame: </span><span class="kc">null</span>
-
-  <span class="nv">constructor: </span><span class="nf">(@scrollFrame = null) -&gt;</span>
+  <span class="vi">@scrollFrame: </span><span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>if this frame belongs to a scrollFrame, then
+the @scrollFrame points to it</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">constructor: </span><span class="nf">(@scrollFrame = null) -&gt;</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">245</span><span class="p">)</span>
-    <span class="nx">@drawNew</span><span class="p">()</span>
     <span class="vi">@acceptsDrops = </span><span class="kc">true</span>
     <span class="k">if</span> <span class="nx">@scrollFrame</span>
       <span class="vi">@isDraggable = </span><span class="kc">false</span>
       <span class="vi">@noticesTransparentClick = </span><span class="kc">false</span>
-      <span class="vi">@alpha = </span><span class="mi">0</span>
+    <span class="nx">@drawNew</span><span class="p">()</span>
+
+  <span class="nv">setColor: </span><span class="nf">(aColor) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>keep in synch the value of the container scrollFrame
+if there is one. Note that the container srollFrame
+is actually not painted.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@scrollFrame</span>
+      <span class="vi">@scrollFrame.color = </span><span class="nx">aColor</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">aColor</span><span class="p">)</span>
+
+  <span class="nv">setAlphaScaled: </span><span class="nf">(alpha) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>keep in synch the value of the container scrollFrame
+if there is one. Note that the container srollFrame
+is actually not painted.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@scrollFrame</span>
+      <span class="vi">@scrollFrame.alpha = </span><span class="nx">@calculateAlphaScaled</span><span class="p">(</span><span class="nx">alpha</span><span class="p">)</span>
+    <span class="k">super</span><span class="p">(</span><span class="nx">alpha</span><span class="p">)</span>
   
   <span class="nv">boundsIncludingChildren: </span><span class="nf">-&gt;</span>
     <span class="nv">shadow = </span><span class="nx">@getShadow</span><span class="p">()</span>
     <span class="k">return</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">merge</span><span class="p">(</span><span class="nx">shadow</span><span class="p">.</span><span class="nx">bounds</span><span class="p">)</span>  <span class="k">if</span> <span class="nx">shadow</span> <span class="o">isnt</span> <span class="kc">null</span>
     <span class="nx">@bounds</span>
-  
-  <span class="nv">fullImage: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>use only for shadows</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@image</span>
-  
-  <span class="nv">fullDrawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>This was in the original Morphic.js, but
+it would cause the frame (or scrollframe) not to paint its
+contents when "pic..." command is invoked.
+fullImage: ->
+ # use only for shadows
+ @image</p>             </td>             <td class="code">               <div class="highlight"><pre>  
+  <span class="nv">fullDrawOn: </span><span class="nf">(aCanvas, clippingRectangle = @bounds) -&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">unless</span> <span class="nx">@isVisible</span>
-    <span class="nv">boundsRectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@boundsIncludingChildren</span><span class="p">()</span>
-    </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>the part to be redrawn could be outside the frame entirely,
+    </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>the part to be redrawn could be outside the frame entirely,
 in which case we can stop going down the morphs inside the frame
 since the whole point of the frame is to clip everything to a specific
 rectangle.
-So, check which part of the Frame should be redrawn:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">dirtyPartOfFrame = </span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">boundsRectangle</span><span class="p">)</span>
-    </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>if there is no dirty part in the frame then do nothing</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">return</span> <span class="kc">null</span> <span class="k">if</span> <span class="nx">dirtyPartOfFrame</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">()</span>
-    </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>this draws the background of the frame itself, which could
+So, check which part of the Frame should be redrawn:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">dirtyPartOfFrame = </span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">clippingRectangle</span><span class="p">)</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>if there is no dirty part in the frame then do nothing</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">return</span> <span class="kc">null</span> <span class="k">if</span> <span class="nx">dirtyPartOfFrame</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">()</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>this draws the background of the frame itself, which could
 contain an image or a pentrail</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">dirtyPartOfFrame</span>
     
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) =&gt;</span>
       <span class="k">if</span> <span class="nx">child</span> <span class="k">instanceof</span> <span class="nx">ShadowMorph</span>
-        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">boundsRectangle</span>
+        <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">clippingRectangle</span>
       <span class="k">else</span>
         <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">dirtyPartOfFrame</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>FrameMorph scrolling optimization:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">moveBy: </span><span class="nf">(delta) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>FrameMorph scrolling optimization:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">moveBy: </span><span class="nf">(delta) -&gt;</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="vi">@bounds = </span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">translateBy</span><span class="p">(</span><span class="nx">delta</span><span class="p">)</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
       <span class="nx">child</span><span class="p">.</span><span class="nx">silentMoveBy</span> <span class="nx">delta</span>
     <span class="nx">@changed</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>FrameMorph scrolling support:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">submorphBounds: </span><span class="nf">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>FrameMorph scrolling support:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">submorphBounds: </span><span class="nf">-&gt;</span>
     <span class="nv">result = </span><span class="kc">null</span>
     <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span>
       <span class="nv">result = </span><span class="nx">@children</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">bounds</span>
@@ -85,17 +97,17 @@ contain an image or a pentrail</p>             </td>             <td class="code
           <span class="nx">@setHeight</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">max</span><span class="p">(</span><span class="nx">morph</span><span class="p">.</span><span class="nx">height</span><span class="p">(),</span> <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">height</span><span class="p">())</span>
     <span class="nx">@scrollFrame</span><span class="p">.</span><span class="nx">adjustScrollBars</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>FrameMorph dragging &amp; dropping of contents:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">reactToDropOf: </span><span class="nf">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>FrameMorph dragging &amp; dropping of contents:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">reactToDropOf: </span><span class="nf">-&gt;</span>
     <span class="nx">@adjustBounds</span><span class="p">()</span>
   
   <span class="nv">reactToGrabOf: </span><span class="nf">-&gt;</span>
     <span class="nx">@adjustBounds</span><span class="p">()</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>FrameMorph duplicating:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copyRecordingReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>inherited, see comment in Morph</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>FrameMorph duplicating:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">copyRecordingReferences: </span><span class="nf">(dict) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>inherited, see comment in Morph</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">c = </span><span class="k">super</span> <span class="nx">dict</span>
     <span class="nv">c.frame = </span><span class="p">(</span><span class="nx">dict</span><span class="p">[</span><span class="nx">@scrollFrame</span><span class="p">])</span>  <span class="k">if</span> <span class="nx">c</span><span class="p">.</span><span class="nx">frame</span> <span class="o">and</span> <span class="nx">dict</span><span class="p">[</span><span class="nx">@scrollFrame</span><span class="p">]</span>
     <span class="nx">c</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>FrameMorph menus:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="nf">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>FrameMorph menus:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">developersMenu: </span><span class="nf">-&gt;</span>
     <span class="nv">menu = </span><span class="k">super</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>

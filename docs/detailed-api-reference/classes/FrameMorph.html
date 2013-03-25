@@ -134,6 +134,26 @@
     </span>
     <span class='constructor note title'>Constructor</span>
     <span class='desc'>
+      if this frame belongs to a scrollFrame, then the @scrollFrame points to it
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#setColor-instance'>
+        - (void) <strong>setColor</strong>(aColor)
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#setAlphaScaled-instance'>
+        - (void) <strong>setAlphaScaled</strong>(alpha)
+      </a>
+    </span>
+    <span class='desc'>
       
     </span>
   </li>
@@ -149,18 +169,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#fullImage-instance'>
-        - (void) <strong>fullImage</strong>()
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
       <a href='#fullDrawOn-instance'>
-        - (void) <strong>fullDrawOn</strong>(aCanvas, aRect)
+        - (void) <strong>fullDrawOn</strong>(aCanvas, clippingRectangle = @bounds)
       </a>
     </span>
     <span class='desc'>
@@ -364,6 +374,7 @@
                 <a href='..&#47;classes/Morph.html#hierarchyMenu-instance'>#hierarchyMenu</a>,
                 <a href='..&#47;classes/Morph.html#developersMenu-instance'>#developersMenu</a>,
                 <a href='..&#47;classes/Morph.html#userMenu-instance'>#userMenu</a>,
+                <a href='..&#47;classes/Morph.html#calculateAlphaScaled-instance'>#calculateAlphaScaled</a>,
                 <a href='..&#47;classes/Morph.html#setAlphaScaled-instance'>#setAlphaScaled</a>,
                 <a href='..&#47;classes/Morph.html#attach-instance'>#attach</a>,
                 <a href='..&#47;classes/Morph.html#toggleIsDraggable-instance'>#toggleIsDraggable</a>,
@@ -405,12 +416,30 @@
     <p class='signature' id='constructor-instance'>
       - (void) <strong>constructor</strong>(scrollFrame = null)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>if this frame belongs to a scrollFrame, then
+the @scrollFrame points to it</p>
+</div>
+<div class='tags'>
 </div>
   </div>
 </div>
       <h2>Instance Method Details</h2>
       <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='setColor-instance'>
+      - (void) <strong>setColor</strong>(aColor)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='setAlphaScaled-instance'>
+      - (void) <strong>setAlphaScaled</strong>(alpha)
+    </p>
+    <div class='tags'>
+</div>
+  </div>
   <div class='method_details'>
     <p class='signature' id='boundsIncludingChildren-instance'>
       - (void) <strong>boundsIncludingChildren</strong>()
@@ -419,15 +448,8 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='fullImage-instance'>
-      - (void) <strong>fullImage</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
     <p class='signature' id='fullDrawOn-instance'>
-      - (void) <strong>fullDrawOn</strong>(aCanvas, aRect)
+      - (void) <strong>fullDrawOn</strong>(aCanvas, clippingRectangle = @bounds)
     </p>
     <div class='tags'>
 </div>
@@ -514,7 +536,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Mon Mar 25 2013 19:11:10 GMT+0000 (GMT)
+  Mon Mar 25 2013 22:20:52 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4
