@@ -471,7 +471,12 @@ class Morph extends MorphicNode
     ctx.translate -@bounds.origin.x , -@bounds.origin.y
     @fullDrawOn img, boundsIncludingChildren
     img
-  
+
+  fullImageData: ->
+    @fullImage().toDataURL()
+
+  fullImageHashCode: ->
+    return hashCode(@fullImageData())
   
   # Morph shadow:
   shadowImage: (off_, color) ->
@@ -933,7 +938,7 @@ class Morph extends MorphicNode
     menu.addItem "attach...", "attach", "stick this morph\nto another one"
     menu.addItem "move...", "move", "show a handle\nwhich can be dragged\nto move this morph"
     menu.addItem "inspect...", "inspect", "open a window\non all properties"
-    menu.addItem "pic...", (()->window.open(@fullImage().toDataURL())), "open a new window\nwith a picture of this morph"
+    menu.addItem "pic...", (()->window.open(@fullImageData())), "open a new window\nwith a picture of this morph"
     menu.addLine()
     if @isDraggable
       menu.addItem "lock", "toggleIsDraggable", "make this morph\nunmovable"
