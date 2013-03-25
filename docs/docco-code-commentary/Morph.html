@@ -280,12 +280,15 @@ question: can't we use silentMoveBy?</p>             </td>             <td class
 context.fillStyle = pattern;
    context.fillRect(0, 0, this.image.width, this.image.height);
    this.changed();
-};</p>             </td>             <td class="code">               <div class="highlight"><pre>  </pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>This method only paints this very morph, doesn't descend the children recursively.
-(fullDrawOn does the recursive drawing instead)
-Used for example to draw a text in a frame</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
+};</p>             </td>             <td class="code">               <div class="highlight"><pre>  </pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>This method only paints this very morph's "image",
+it doesn't descend the children
+recursively. The recursion mechanism is done by fullDrawOn, which
+eventually invokes drawOn.
+Note that this morph might paint something on the screen even if
+it's not a "leaf".</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawOn: </span><span class="p">(</span><span class="nx">aCanvas</span><span class="p">,</span> <span class="nv">clippingRectangle = </span><span class="nx">@bounds</span><span class="p">())</span> <span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">unless</span> <span class="nx">@isVisible</span>
-    <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@bounds</span><span class="p">()</span>
-    <span class="nv">area = </span><span class="nx">rectangle</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">).</span><span class="nx">round</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>test below is to check whether anything is visible</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">area</span><span class="p">.</span><span class="nx">isNotEmpty</span><span class="p">()</span>
+    <span class="nv">area = </span><span class="nx">clippingRectangle</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">).</span><span class="nx">round</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>test whether anything that we are going to be drawing
+is visible (i.e. within the clippingRectangle)</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">area</span><span class="p">.</span><span class="nx">isNotEmpty</span><span class="p">()</span>
       <span class="nv">delta = </span><span class="nx">@position</span><span class="p">().</span><span class="nx">neg</span><span class="p">()</span>
       <span class="nv">src = </span><span class="nx">area</span><span class="p">.</span><span class="nx">copy</span><span class="p">().</span><span class="nx">translateBy</span><span class="p">(</span><span class="nx">delta</span><span class="p">).</span><span class="nx">round</span><span class="p">()</span>
       <span class="nv">context = </span><span class="nx">aCanvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s">&quot;2d&quot;</span><span class="p">)</span>
@@ -349,12 +352,11 @@ Used for example to draw a text in a frame</p>             </td>             <td
         + '\n area.top ' + area.top()
         );
 }
-</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">fullDrawOn: </span><span class="nf">(aCanvas, aRect) -&gt;</span>
+</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">fullDrawOn: </span><span class="p">(</span><span class="nx">aCanvas</span><span class="p">,</span> <span class="nv">clippingRectangle = </span><span class="nx">@boundsIncludingChildren</span><span class="p">())</span> <span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">unless</span> <span class="nx">@isVisible</span>
-    <span class="nv">rectangle = </span><span class="nx">aRect</span> <span class="o">or</span> <span class="nx">@boundsIncludingChildren</span><span class="p">()</span>
-    <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
+    <span class="nx">@drawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">clippingRectangle</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
-      <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">rectangle</span>
+      <span class="nx">child</span><span class="p">.</span><span class="nx">fullDrawOn</span> <span class="nx">aCanvas</span><span class="p">,</span> <span class="nx">clippingRectangle</span>
   
   
   <span class="nv">hide: </span><span class="nf">-&gt;</span>
@@ -388,7 +390,12 @@ Used for example to draw a text in a frame</p>             </td>             <td
     <span class="nx">ctx</span><span class="p">.</span><span class="nx">translate</span> <span class="o">-</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">x</span> <span class="p">,</span> <span class="o">-</span><span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span><span class="p">.</span><span class="nx">y</span>
     <span class="nx">@fullDrawOn</span> <span class="nx">img</span><span class="p">,</span> <span class="nx">boundsIncludingChildren</span>
     <span class="nx">img</span>
-  
+
+  <span class="nv">fullImageData: </span><span class="nf">-&gt;</span>
+    <span class="nx">@fullImage</span><span class="p">().</span><span class="nx">toDataURL</span><span class="p">()</span>
+
+  <span class="nv">fullImageHashCode: </span><span class="nf">-&gt;</span>
+    <span class="k">return</span> <span class="nx">hashCode</span><span class="p">(</span><span class="nx">@fullImageData</span><span class="p">())</span>
   </pre></div>             </td>           </tr>                               <tr id="section-40">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-40">&#182;</a>               </div>               <p>Morph shadow:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">shadowImage: </span><span class="nf">(off_, color) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-41">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-41">&#182;</a>               </div>               <p>fallback for Windows Chrome-Shadow bug</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">offset = </span><span class="nx">off_</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
     <span class="nv">clr = </span><span class="nx">color</span> <span class="o">or</span> <span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="nv">fb = </span><span class="nx">@boundsIncludingChildren</span><span class="p">().</span><span class="nx">extent</span><span class="p">()</span>
@@ -780,7 +787,7 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;attach...&quot;</span><span class="p">,</span> <span class="s">&quot;attach&quot;</span><span class="p">,</span> <span class="s">&quot;stick this morph\nto another one&quot;</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;move...&quot;</span><span class="p">,</span> <span class="s">&quot;move&quot;</span><span class="p">,</span> <span class="s">&quot;show a handle\nwhich can be dragged\nto move this morph&quot;</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;inspect...&quot;</span><span class="p">,</span> <span class="s">&quot;inspect&quot;</span><span class="p">,</span> <span class="s">&quot;open a window\non all properties&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;pic...&quot;</span><span class="p">,</span> <span class="p">(()</span><span class="nf">-&gt;</span><span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">@fullImage</span><span class="p">().</span><span class="nx">toDataURL</span><span class="p">())),</span> <span class="s">&quot;open a new window\nwith a picture of this morph&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;pic...&quot;</span><span class="p">,</span> <span class="p">(()</span><span class="nf">-&gt;</span><span class="nb">window</span><span class="p">.</span><span class="nx">open</span><span class="p">(</span><span class="nx">@fullImageData</span><span class="p">())),</span> <span class="s">&quot;open a new window\nwith a picture of this morph&quot;</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
     <span class="k">if</span> <span class="nx">@isDraggable</span>
       <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;lock&quot;</span><span class="p">,</span> <span class="s">&quot;toggleIsDraggable&quot;</span><span class="p">,</span> <span class="s">&quot;make this morph\nunmovable&quot;</span>

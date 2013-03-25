@@ -27,7 +27,7 @@
     <span class="k">return</span> <span class="mi">0</span>  <span class="k">unless</span> <span class="nx">@parent</span>
     <span class="nx">@parent</span><span class="p">.</span><span class="nx">depth</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
   </pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>Returns all the internal/terminal nodes in the subtree starting
-at this node - including this node</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">allChildren: </span><span class="nf">-&gt;</span>    
+at this node - including this node</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">allChildren: </span><span class="nf">-&gt;</span>
     <span class="nv">result = </span><span class="p">[</span><span class="nx">@</span><span class="p">]</span> <span class="c1"># includes myself</span>
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(child) -&gt;</span>
       <span class="nv">result = </span><span class="nx">result</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">child</span><span class="p">.</span><span class="nx">allChildren</span><span class="p">())</span>
