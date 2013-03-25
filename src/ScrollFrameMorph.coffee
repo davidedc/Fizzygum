@@ -17,25 +17,56 @@ class ScrollFrameMorph extends FrameMorph
   hBar: null
 
   constructor: (contents, scrollBarSize, sliderColor) ->
+    # super() paints the scrollframe, which we don't want,
+    # so we set 0 opacity here.
+    @alpha = 0
     super()
     @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize
     @contents = contents or new FrameMorph(@)
     @add @contents
-    #
+
+    # the scrollFrame is never going to paint itself,
+    # but its values are going to mimick the values of the
+    # contained frame
+    @color = @contents.color
+    @alpha = @contents.alpha
+    # the scrollFrame is a container, it redirects most
+    # commands to the "contained" frame
+    @drawNew = @contents.drawNew
+    #@setColor = @contents.setColor
+    #@setAlphaScaled = @contents.setAlphaScaled
+
     @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
     @hBar.setHeight @scrollBarSize
     @hBar.action = (num) =>
       @contents.setPosition new Point(@left() - num, @contents.position().y)
     @hBar.isDraggable = false
     @add @hBar
-    #
+
     @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
     @vBar.setWidth @scrollBarSize
     @vBar.action = (num) =>
       @contents.setPosition new Point(@contents.position().x, @top() - num)
     @vBar.isDraggable = false
     @add @vBar
-  
+
+
+  setColor: (aColor) ->
+    # update the color of the scrollFrame - note
+    # that we are never going to paint the scrollFrame
+    # we are updating the color so that its value is the same as the
+    # contained frame
+    @color = aColor
+    @contents.setColor(aColor)
+
+  setAlphaScaled: (alpha) ->
+    # update the alpha of the scrollFrame - note
+    # that we are never going to paint the scrollFrame
+    # we are updating the alpha so that its value is the same as the
+    # contained frame
+    @alpha = @calculateAlphaScaled(alpha)
+    @contents.setAlphaScaled(alpha)
+
   adjustScrollBars: ->
     hWidth = @width() - @scrollBarSize
     vHeight = @height() - @scrollBarSize

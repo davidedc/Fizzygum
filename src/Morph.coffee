@@ -960,16 +960,18 @@ class Morph extends MorphicNode
   
   
   # Morph menu actions
-  setAlphaScaled: (alpha) ->
-    # for context menu demo purposes
+  calculateAlphaScaled: (alpha) ->
     if typeof alpha is "number"
       unscaled = alpha / 100
-      @alpha = Math.min(Math.max(unscaled, 0.1), 1)
+      return Math.min(Math.max(unscaled, 0.1), 1)
     else
       newAlpha = parseFloat(alpha)
       unless isNaN(newAlpha)
         unscaled = newAlpha / 100
-        @alpha = Math.min(Math.max(unscaled, 0.1), 1)
+        return Math.min(Math.max(unscaled, 0.1), 1)
+
+  setAlphaScaled: (alpha) ->
+    @alpha = @calculateAlphaScaled(alpha)
     @changed()
   
   attach: ->

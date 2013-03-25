@@ -8,15 +8,32 @@ class FrameMorph extends Morph
 
   @scrollFrame: null
 
+  # if this frame belongs to a scrollFrame, then
+  # the @scrollFrame points to it
   constructor: (@scrollFrame = null) ->
     super()
     @color = new Color(255, 250, 245)
-    @drawNew()
     @acceptsDrops = true
     if @scrollFrame
       @isDraggable = false
       @noticesTransparentClick = false
-      @alpha = 0
+    @drawNew()
+
+  setColor: (aColor) ->
+    # keep in synch the value of the container scrollFrame
+    # if there is one. Note that the container srollFrame
+    # is actually not painted.
+    if @scrollFrame
+      @scrollFrame.color = aColor
+    super(aColor)
+
+  setAlphaScaled: (alpha) ->
+    # keep in synch the value of the container scrollFrame
+    # if there is one. Note that the container srollFrame
+    # is actually not painted.
+    if @scrollFrame
+      @scrollFrame.alpha = @calculateAlphaScaled(alpha)
+    super(alpha)
   
   boundsIncludingChildren: ->
     shadow = @getShadow()
