@@ -34,7 +34,7 @@ class WorldMorph extends FrameMorph
     @hand = new HandMorph(@)
     @keyboardReceiver = null
     @lastEditedText = null
-    @cursor = null
+    @caret = null
     @activeMenu = null
     @activeHandle = null
     @virtualKeyboard = null
@@ -259,8 +259,8 @@ class WorldMorph extends FrameMorph
     # be some copy/paste working. Also one would need to intercept the copy/paste
     # key combinations manually instead of from the copy/paste events.
     document.body.addEventListener "copy", ((event) =>
-      if @cursor
-        selectedText = @cursor.target.selection()
+      if @caret
+        selectedText = @caret.target.selection()
         if event.clipboardData
           event.preventDefault()
           setStatus = event.clipboardData.setData("text/plain", selectedText)
@@ -272,7 +272,7 @@ class WorldMorph extends FrameMorph
     ), false
 
     document.body.addEventListener "paste", ((event) =>
-      if @cursor
+      if @caret
         if event.clipboardData
           # Look for access to data if types array is missing
           text = event.clipboardData.getData("text/plain")
@@ -286,7 +286,7 @@ class WorldMorph extends FrameMorph
           #url = window.clipboardData.getData("URL")
         
         # Needs a few msec to excute paste
-        window.setTimeout ( => (@cursor.insert text)), 50, true
+        window.setTimeout ( => (@caret.insert text)), 50, true
     ), false
 
     window.addEventListener "dragover", ((event) ->
@@ -553,15 +553,15 @@ class WorldMorph extends FrameMorph
   edit: (aStringOrTextMorph) ->
     pos = getDocumentPositionOf(@worldCanvas)
     return null  unless aStringOrTextMorph.isEditable
-    @cursor.destroy()  if @cursor
+    @caret.destroy()  if @caret
     @lastEditedText.clearSelection()  if @lastEditedText
-    @cursor = new CursorMorph(aStringOrTextMorph)
-    aStringOrTextMorph.parent.add @cursor
-    @keyboardReceiver = @cursor
+    @caret = new CaretMorph(aStringOrTextMorph)
+    aStringOrTextMorph.parent.add @caret
+    @keyboardReceiver = @caret
     @initVirtualKeyboard()
     if WorldMorph.MorphicPreferences.useVirtualKeyboard
-      @virtualKeyboard.style.top = @cursor.top() + pos.y + "px"
-      @virtualKeyboard.style.left = @cursor.left() + pos.x + "px"
+      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
+      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @virtualKeyboard.focus()
     if WorldMorph.MorphicPreferences.useSliderForInput
       if !aStringOrTextMorph.parentThatIsA(MenuMorph)
@@ -597,10 +597,10 @@ class WorldMorph extends FrameMorph
     menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
   
   stopEditing: ->
-    if @cursor
-      @lastEditedText = @cursor.target
-      @cursor.destroy()
-      @cursor = null
+    if @caret
+      @lastEditedText = @caret.target
+      @caret.destroy()
+      @caret = null
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
     @keyboardReceiver = null
     if @virtualKeyboard

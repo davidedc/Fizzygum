@@ -195,7 +195,7 @@ class TextMorph extends StringMorph
   
   slotPosition: (slot) ->
     # answer the physical position point of the given index ("slot")
-    # where the cursor should be placed
+    # where the caret should be placed
     colRow = @columnRow(slot)
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
@@ -209,7 +209,7 @@ class TextMorph extends StringMorph
   
   slotAt: (aPoint) ->
     # answer the slot (index) closest to the given point
-    # so the cursor can be moved accordingly
+    # so the caret can be moved accordingly
     charX = 0
     row = 0
     col = 0

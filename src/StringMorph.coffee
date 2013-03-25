@@ -159,7 +159,7 @@ class StringMorph extends Morph
   # StringMorph mesuring:
   slotPosition: (slot) ->
     # answer the position point of the given index ("slot")
-    # where the cursor should be placed
+    # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
     context = @image.getContext("2d")
@@ -173,7 +173,7 @@ class StringMorph extends Morph
   
   slotAt: (aPoint) ->
     # answer the slot (index) closest to the given point
-    # so the cursor can be moved accordingly
+    # so the caret can be moved accordingly
     text = (if @isPassword then @password("*", @text.length) else @text)
     idx = 0
     charX = 0
@@ -347,11 +347,11 @@ class StringMorph extends Morph
       @escalateEvent "mouseDownLeft", pos
 
   mouseClickLeft: (pos) ->
-    cursor = @root().cursor;
+    caret = @root().caret;
     if @isEditable
       @edit()  unless @currentlySelecting
-      if cursor then cursor.gotoPos pos
-      @root().cursor.gotoPos pos
+      if caret then caret.gotoPos pos
+      @root().caret.gotoPos pos
       @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos
@@ -361,7 +361,7 @@ class StringMorph extends Morph
       @clearSelection()
       if @isEditable and (not @isDraggable)
         @edit()
-        @root().cursor.gotoPos pos
+        @root().caret.gotoPos pos
         @startMark = @slotAt(pos)
         @endMark = @startMark
         @currentlySelecting = true

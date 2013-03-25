@@ -1,6 +1,6 @@
 # BlinkerMorph ////////////////////////////////////////////////////////
 
-# can be used for text cursors
+# can be used for text caret
 
 class BlinkerMorph extends Morph
   constructor: (@fps = 2) ->

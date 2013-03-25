@@ -163,7 +163,7 @@ class ScrollFrameMorph extends FrameMorph
     @adjustScrollBars()  
   
   # ScrollFrameMorph scrolling by editing text:
-  scrollCursorIntoView: (morph) ->
+  scrollCaretIntoView: (morph) ->
     txt = morph.target
     offset = txt.position().subtract(@contents.position())
     ft = @top() + @padding

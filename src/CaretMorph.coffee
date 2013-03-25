@@ -1,8 +1,8 @@
-# CursorMorph /////////////////////////////////////////////////////////
+# CaretMorph /////////////////////////////////////////////////////////
 
 # I am a String/Text editing widget
 
-class CursorMorph extends BlinkerMorph
+class CaretMorph extends BlinkerMorph
 
   keyDownEventUsed: false
   target: null
@@ -24,7 +24,7 @@ class CursorMorph extends BlinkerMorph
       @target.setAlignmentToLeft()
     @gotoSlot @slot
   
-  # CursorMorph event processing:
+  # CaretMorph event processing:
   processKeyPress: (event) ->
     # @inspectKeyEvent event
     if @keyDownEventUsed
@@ -110,7 +110,7 @@ class CursorMorph extends BlinkerMorph
     @target.escalateEvent "reactToKeystroke", event
   
   
-  # CursorMorph navigation - simple version
+  # CaretMorph navigation - simple version
   #gotoSlot: (newSlot) ->
   #  @setPosition @target.slotPosition(newSlot)
   #  @slot = Math.max(newSlot, 0)
@@ -136,7 +136,7 @@ class CursorMorph extends BlinkerMorph
     @setPosition pos
 
     if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
-      @parent.parent.scrollCursorIntoView @
+      @parent.parent.scrollCaretIntoView @
   
   goLeft: (shift) ->
     @updateSelection shift
@@ -184,7 +184,7 @@ class CursorMorph extends BlinkerMorph
     else
       @target.clearSelection()  
   
-  # CursorMorph editing:
+  # CaretMorph editing:
   accept: ->
     world = @root()
     world.stopEditing()  if world
@@ -263,7 +263,7 @@ class CursorMorph extends BlinkerMorph
     @target.drawNew()
     @goLeft()
 
-  # CursorMorph destroying:
+  # CaretMorph destroying:
   destroy: ->
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
@@ -271,7 +271,7 @@ class CursorMorph extends BlinkerMorph
       @target.changed()
     super  
   
-  # CursorMorph utilities:
+  # CaretMorph utilities:
   inspectKeyEvent: (event) ->
     # private
     @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()
