@@ -285,7 +285,7 @@ it doesn't descend the children
 recursively. The recursion mechanism is done by fullDrawOn, which
 eventually invokes drawOn.
 Note that this morph might paint something on the screen even if
-it's not a "leaf".</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawOn: </span><span class="p">(</span><span class="nx">aCanvas</span><span class="p">,</span> <span class="nv">clippingRectangle = </span><span class="nx">@bounds</span><span class="p">())</span> <span class="nf">-&gt;</span>
+it's not a "leaf".</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">drawOn: </span><span class="nf">(aCanvas, clippingRectangle = @bounds) -&gt;</span>
     <span class="k">return</span> <span class="kc">null</span>  <span class="k">unless</span> <span class="nx">@isVisible</span>
     <span class="nv">area = </span><span class="nx">clippingRectangle</span><span class="p">.</span><span class="nx">intersect</span><span class="p">(</span><span class="nx">@bounds</span><span class="p">).</span><span class="nx">round</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>test whether anything that we are going to be drawing
 is visible (i.e. within the clippingRectangle)</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">area</span><span class="p">.</span><span class="nx">isNotEmpty</span><span class="p">()</span>
