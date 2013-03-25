@@ -349,14 +349,17 @@ class Morph extends MorphicNode
   #};
   #
   
-  # This method only paints this very morph, doesn't descend the children recursively.
-  # (fullDrawOn does the recursive drawing instead)
-  # Used for example to draw a text in a frame
-  drawOn: (aCanvas, aRect) ->
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by fullDrawOn, which
+  # eventually invokes drawOn.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  drawOn: (aCanvas, clippingRectangle = @bounds()) ->
     return null  unless @isVisible
-    rectangle = aRect or @bounds()
-    area = rectangle.intersect(@bounds).round()
-    # test below is to check whether anything is visible
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
     if area.isNotEmpty()
       delta = @position().neg()
       src = area.copy().translateBy(delta).round()
@@ -423,12 +426,11 @@ class Morph extends MorphicNode
   #				);
   #		}
   #	
-  fullDrawOn: (aCanvas, aRect) ->
+  fullDrawOn: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
     return null  unless @isVisible
-    rectangle = aRect or @boundsIncludingChildren()
-    @drawOn aCanvas, rectangle
+    @drawOn aCanvas, clippingRectangle
     @children.forEach (child) ->
-      child.fullDrawOn aCanvas, rectangle
+      child.fullDrawOn aCanvas, clippingRectangle
   
   
   hide: ->
