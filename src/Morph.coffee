@@ -355,7 +355,7 @@ class Morph extends MorphicNode
   # eventually invokes drawOn.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  drawOn: (aCanvas, clippingRectangle = @bounds()) ->
+  drawOn: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless @isVisible
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
