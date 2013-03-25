@@ -23,20 +23,22 @@ class FrameMorph extends Morph
     return @bounds.merge(shadow.bounds)  if shadow isnt null
     @bounds
   
-  fullImage: ->
-    # use only for shadows
-    @image
+  # This was in the original Morphic.js, but
+  # it would cause the frame (or scrollframe) not to paint its
+  # contents when "pic..." command is invoked.
+  #fullImage: ->
+  #  # use only for shadows
+  #  @image
   
-  fullDrawOn: (aCanvas, aRect) ->
+  fullDrawOn: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless @isVisible
-    boundsRectangle = aRect or @boundsIncludingChildren()
     
     # the part to be redrawn could be outside the frame entirely,
     # in which case we can stop going down the morphs inside the frame
     # since the whole point of the frame is to clip everything to a specific
     # rectangle.
     # So, check which part of the Frame should be redrawn:
-    dirtyPartOfFrame = @bounds.intersect(boundsRectangle)
+    dirtyPartOfFrame = @bounds.intersect(clippingRectangle)
     
     # if there is no dirty part in the frame then do nothing
     return null if dirtyPartOfFrame.isEmpty()
@@ -47,7 +49,7 @@ class FrameMorph extends Morph
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.fullDrawOn aCanvas, boundsRectangle
+        child.fullDrawOn aCanvas, clippingRectangle
       else
         child.fullDrawOn aCanvas, dirtyPartOfFrame
   
