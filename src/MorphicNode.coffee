@@ -37,7 +37,7 @@ class MorphicNode
   
   # Returns all the internal/terminal nodes in the subtree starting
   # at this node - including this node
-  allChildren: ->    
+  allChildren: ->
     result = [@] # includes myself
     @children.forEach (child) ->
       result = result.concat(child.allChildren())

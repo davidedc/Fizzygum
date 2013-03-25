@@ -202,7 +202,7 @@ class StringMorph extends Morph
     # answer the slot (index) indicating the EOL for the given slot
     @text.length
 
-  rawHeight: ->  
+  rawHeight: ->
     # answer my corrected fontSize
     @height() / 1.2
     

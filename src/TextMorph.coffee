@@ -42,7 +42,7 @@ class TextMorph extends StringMorph
     text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,
     @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
     @shadowColor = null
-    ) ->    
+    ) ->
       super()
       # override inherited properites:
       @markedTextColor = new Color(255, 255, 255)

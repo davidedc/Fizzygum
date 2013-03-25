@@ -15,10 +15,10 @@ hashCode = (stringToBeHashed) ->
     hash = hash & hash # Convert to 32bit integer
   hash
 
+# returns the function that does nothing
 nop = ->
-  # returns the function that does nothing
-  ->    
-    # this is the function that does nothing
+  # this is the function that does nothing:
+  ->
     null
 
 noOperation = ->
@@ -34,7 +34,7 @@ localize = (string) ->
 isNil = (thing) ->
   thing is `undefined` or thing is null
 
-contains = (list, element) ->  
+contains = (list, element) ->
   # answer true if element is a member of list
   list.some (any) ->
     any is element
@@ -70,7 +70,7 @@ fontHeight = (height) ->
   minHeight = Math.max(height, WorldMorph.MorphicPreferences.minimumFontHeight)
   minHeight * 1.2 # assuming 1/5 font size for ascenders
 
-newCanvas = (extentPoint) ->  
+newCanvas = (extentPoint) ->
   # answer a new empty instance of Canvas, don't display anywhere
   ext = extentPoint or
     x: 0
@@ -99,7 +99,7 @@ getMinimumFontHeight = ->
       return size - y + 1  if data.data[3] isnt 0
   0
 
-getBlurredShadowSupport = ->  
+getBlurredShadowSupport = ->
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
   source = document.createElement("canvas")
@@ -120,7 +120,7 @@ getBlurredShadowSupport = ->
   ctx.drawImage source, 0, 0
   (if ctx.getImageData(0, 0, 1, 1).data[3] then true else false)
 
-getDocumentPositionOf = (aDOMelement) ->  
+getDocumentPositionOf = (aDOMelement) ->
   # answer the absolute coordinates of a DOM element in the document
   if aDOMelement is null
     return (
@@ -140,7 +140,7 @@ getDocumentPositionOf = (aDOMelement) ->
     offsetParent = offsetParent.offsetParent
   pos
 
-clone = (target) ->  
+clone = (target) ->
   # answer a new instance of target's type
   if typeof target is "object"
     Clone = ->
@@ -149,7 +149,7 @@ clone = (target) ->
     return new Clone()
   target
 
-copy = (target) ->  
+copy = (target) ->
   # answer a shallow copy of target
   return target  if typeof target isnt "object"
   value = target.valueOf()
@@ -164,7 +164,7 @@ copy = (target) ->
       c[property] = target[property]  unless c[property]
   c
 
-getMinimumFontHeight = ->  
+getMinimumFontHeight = ->
   # answer the height of the smallest font renderable in pixels
   str = "I"
   size = 50
@@ -184,7 +184,7 @@ getMinimumFontHeight = ->
   0
 
 
-getBlurredShadowSupport = ->  
+getBlurredShadowSupport = ->
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
   source = document.createElement("canvas")
@@ -205,7 +205,7 @@ getBlurredShadowSupport = ->
   ctx.drawImage source, 0, 0
   (if ctx.getImageData(0, 0, 1, 1).data[3] then true else false)
 
-getDocumentPositionOf = (aDOMelement) ->  
+getDocumentPositionOf = (aDOMelement) ->
   # answer the absolute coordinates of a DOM element in the document
   if aDOMelement is null
     return (
@@ -226,7 +226,7 @@ getDocumentPositionOf = (aDOMelement) ->
     offsetParent = offsetParent.offsetParent
   pos
 
-clone = (target) ->  
+clone = (target) ->
   # answer a new instance of target's type
   if typeof target is "object"
     Clone = ->
@@ -235,7 +235,7 @@ clone = (target) ->
     return new Clone()
   target
 
-copy = (target) ->  
+copy = (target) ->
   # answer a shallow copy of target
   return target  if typeof target isnt "object"
   value = target.valueOf()
