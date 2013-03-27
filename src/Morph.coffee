@@ -38,6 +38,7 @@ class Morph extends MorphicNode
   
   constructor: () ->
     super()
+    # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
     @updateRendering()
