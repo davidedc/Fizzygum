@@ -13,12 +13,14 @@ class HandMorph extends Morph
   mouseOverList: null
   temporaries: null
   touchHoldTimeout: null
+  mouseKeyboardEventsRecorderAndPlayer: null
 
   constructor: (@world) ->
     @mouseOverList = []
     @temporaries = []
     super()
     @bounds = new Rectangle()
+    @mouseKeyboardEventsRecorderAndPlayer = new MouseKeyboardEventsRecorderAndPlayer(@)
   
   changed: ->
     if @world isnt null
@@ -336,6 +338,8 @@ class HandMorph extends Morph
     @fullChanged()
   
   processMouseMove: (event) ->
+    @mouseKeyboardEventsRecorderAndPlayer.addMouseMoveEvent(event)
+    
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
