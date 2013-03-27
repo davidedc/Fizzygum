@@ -49,22 +49,22 @@ class WorldMorph extends FrameMorph
   
   
   # all fullDraws result into actual blittings of images done
-  # by the drawOn function.
-  # The drawOn function is defined in Morph and is not overriden by
+  # by the blit function.
+  # The blit function is defined in Morph and is not overriden by
   # any morph.
-  recursivelyBlitRendering: (aCanvas, aRect) ->
-    # invokes the Morph's recursivelyBlitRendering, which has only two implementations:
-    # the default one by Morph which just invokes the drawOn of all children
+  recursivelyBlit: (aCanvas, aRect) ->
+    # invokes the Morph's recursivelyBlit, which has only two implementations:
+    # the default one by Morph which just invokes the blit of all children
     # and the interesting one in FrameMorph which 
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
     # and it'd not attached to the WorldMorph.
-    @hand.recursivelyBlitRendering aCanvas, aRect
+    @hand.recursivelyBlit aCanvas, aRect
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @broken.forEach (rect) =>
-      @recursivelyBlitRendering @worldCanvas, rect  if rect.isNotEmpty()
+      @recursivelyBlit @worldCanvas, rect  if rect.isNotEmpty()
     @broken = []
   
   doOneCycle: ->

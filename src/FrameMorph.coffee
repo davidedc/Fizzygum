@@ -47,7 +47,7 @@ class FrameMorph extends Morph
   #  # use only for shadows
   #  @image
   
-  recursivelyBlitRendering: (aCanvas, clippingRectangle = @bounds) ->
+  recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless @isVisible
     
     # the part to be redrawn could be outside the frame entirely,
@@ -62,13 +62,13 @@ class FrameMorph extends Morph
     
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
-    @drawOn aCanvas, dirtyPartOfFrame
+    @blit aCanvas, dirtyPartOfFrame
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.recursivelyBlitRendering aCanvas, clippingRectangle
+        child.recursivelyBlit aCanvas, clippingRectangle
       else
-        child.recursivelyBlitRendering aCanvas, dirtyPartOfFrame
+        child.recursivelyBlit aCanvas, dirtyPartOfFrame
   
   
   # FrameMorph scrolling optimization:

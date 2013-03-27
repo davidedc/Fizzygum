@@ -314,12 +314,12 @@ class Morph extends MorphicNode
   # There are three fundamental methods for rendering and displaying anything.
   # * updateRendering: this one creates/updates the local canvas of this morph only
   #   i.e. not the children
-  # * drawOn: takes the local canvas and blits it to a specific area in a passed
+  # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
-  # * recursivelyBlitRendering: recursively draws all the local canvas of this morph and all
+  # * recursivelyBlit: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
-  
+
   updateRendering: ->
     # initialize my surface property
     @image = newCanvas(@extent())
@@ -361,11 +361,11 @@ class Morph extends MorphicNode
   
   # This method only paints this very morph's "image",
   # it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyBlitRendering, which
-  # eventually invokes drawOn.
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  drawOn: (aCanvas, clippingRectangle = @bounds) ->
+  blit: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless @isVisible
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
@@ -436,11 +436,11 @@ class Morph extends MorphicNode
   #				);
   #		}
   #	
-  recursivelyBlitRendering: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
+  recursivelyBlit: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
     return null  unless @isVisible
-    @drawOn aCanvas, clippingRectangle
+    @blit aCanvas, clippingRectangle
     @children.forEach (child) ->
-      child.recursivelyBlitRendering aCanvas, clippingRectangle
+      child.recursivelyBlit aCanvas, clippingRectangle
   
   
   hide: ->
@@ -471,7 +471,7 @@ class Morph extends MorphicNode
     # why doesn't this work for all Morphs?
     fb = @boundsIncludingChildren()
     img = newCanvas(fb.extent())
-    @recursivelyBlitRendering img, fb
+    @recursivelyBlit img, fb
     img.globalAlpha = @alpha
     img
 
@@ -481,7 +481,7 @@ class Morph extends MorphicNode
     img = newCanvas(boundsIncludingChildren.extent())
     ctx = img.getContext("2d")
     ctx.translate -@bounds.origin.x , -@bounds.origin.y
-    @recursivelyBlitRendering img, boundsIncludingChildren
+    @recursivelyBlit img, boundsIncludingChildren
     img
 
   fullImageData: ->
