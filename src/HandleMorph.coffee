@@ -26,15 +26,15 @@ class HandleMorph extends Morph
   updateRendering: ->
     @normalImage = newCanvas(@extent())
     @highlightImage = newCanvas(@extent())
-    @drawOnCanvas @normalImage, @color, new Color(100, 100, 100)
-    @drawOnCanvas @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
+    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)
+    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
     @image = @normalImage
     if @target
       @setPosition @target.bottomRight().subtract(@extent().add(@inset))
       @target.add @
       @target.changed()
   
-  drawOnCanvas: (aCanvas, color, shadowColor) ->
+  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->
     context = aCanvas.getContext("2d")
     context.lineWidth = 1
     context.lineCap = "round"
