@@ -119,7 +119,9 @@ class HandMorph extends Morph
   #		mouseMove
   #		mouseScroll
   #
-  processMouseDown: (event) ->
+  processMouseDown: (button, ctrlKey) ->
+    @mouseKeyboardEventsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
+
     @destroyTemporaries()
     @morphToGrab = null
     if @children.length
@@ -139,7 +141,7 @@ class HandMorph extends Morph
         if morph isnt @world.cursor.target  
           @world.stopEditing()  
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
-      if event.button is 2 or event.ctrlKey
+      if button is 2 or ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
         expectedClick = "mouseClickRight"
@@ -177,6 +179,8 @@ class HandMorph extends Morph
     @processMouseUp button: 0
   
   processMouseUp: ->
+    @mouseKeyboardEventsRecorderAndPlayer.addMouseUpEvent()
+
     morph = @morphAtPointer()
     @destroyTemporaries()
     if @children.length
@@ -336,13 +340,13 @@ class HandMorph extends Morph
     super delta
     Morph::trackChanges = true
     @fullChanged()
-  
-  processMouseMove: (event) ->
-    @mouseKeyboardEventsRecorderAndPlayer.addMouseMoveEvent(event)
+
+  processMouseMove: (pageX, pageY) ->
+    @mouseKeyboardEventsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
     
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
-    pos = new Point(event.pageX - posInDocument.x, event.pageY - posInDocument.y)
+    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
     @setPosition pos
     #
     # determine the new mouse-over-list:

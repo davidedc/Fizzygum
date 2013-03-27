@@ -1,6 +1,6 @@
 class MouseKeyboardEvent
-  constructor: (@type, @mouseX, @mouseY, @time, @event) ->
-    console.log @type + " " + @mouseX + " " + @mouseY + " " + @time
+  constructor: (@type, @mouseX, @mouseY, @time, @button, @ctrlKey) ->
+    console.log @type + " " + @mouseX + " " + @mouseY + " " + @time + " " + @button + " " + @ctrlKey
 
 class MouseKeyboardEventsRecorderAndPlayer
   eventQueue: []
@@ -13,7 +13,7 @@ class MouseKeyboardEventsRecorderAndPlayer
   constructor: (@handMorph) ->
 
   startRecording: ->
-    eventQueue = []
+    @eventQueue = []
     @recorderStartTime = new Date().getTime()
     @recordingMouseAndKeyboardEvents = true
     @replayingMouseAndKeyboardEvents = false
@@ -25,19 +25,47 @@ class MouseKeyboardEventsRecorderAndPlayer
     @playerStartTime = null
     @recordingMouseAndKeyboardEvents = false
     @replayingMouseAndKeyboardEvents = true
+    @replayEvents()
 
   stopPlaying: ->
     @replayingMouseAndKeyboardEvents = false
 
-  addMouseMoveEvent: (event) ->
+  addMouseMoveEvent: (pageX, pageY) ->
     return if not @recordingMouseAndKeyboardEvents
     @eventQueue.push(
       new MouseKeyboardEvent(
-        "mousemove",
-        event.pageX,
-        event.pageY,
+        "mouseMove",
+        pageX,
+        pageY,
         new Date().getTime() - @recorderStartTime,
-        event
+        null,
+        null
+      )
+    )
+
+  addMouseDownEvent: (pageX, pageY, button, ctrlKey) ->
+    return if not @recordingMouseAndKeyboardEvents
+    @eventQueue.push(
+      new MouseKeyboardEvent(
+        "mouseDown",
+        pageX,
+        pageY,
+        new Date().getTime() - @recorderStartTime,
+        button,
+        ctrlKey
+      )
+    )
+
+  addMouseUpEvent: () ->
+    return if not @recordingMouseAndKeyboardEvents
+    @eventQueue.push(
+      new MouseKeyboardEvent(
+        "mouseUp",
+        null,
+        null,
+        new Date().getTime() - @recorderStartTime,
+        null,
+        null
       )
     )
 
@@ -49,5 +77,12 @@ class MouseKeyboardEventsRecorderAndPlayer
     if @playerStartTime is null
       @playerStartTime = new Date().getTime()
 
-    if queuedEvent.type == 'mousemove'
-      setTimeout(@handMorph.processMouseMove(queuedEvent.e), queuedEvent.time)
+    if queuedEvent.type == 'mouseMove'
+      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)
+    else if queuedEvent.type == 'mouseDown'
+      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)
+    else if queuedEvent.type == 'mouseUp'
+      callback = => @handMorph.processMouseUp()
+    else return
+
+    setTimeout callback, queuedEvent.time

@@ -184,7 +184,7 @@ class WorldMorph extends FrameMorph
     else
       @changed()
     canvas.addEventListener "mousedown", ((event) =>
-      @hand.processMouseDown event
+      @hand.processMouseDown event.button, event.ctrlKey
     ), false
     canvas.addEventListener "touchstart", ((event) =>
       @hand.processTouchStart event
@@ -197,7 +197,7 @@ class WorldMorph extends FrameMorph
       @hand.processTouchEnd event
     ), false
     canvas.addEventListener "mousemove", ((event) =>
-      @hand.processMouseMove event
+      @hand.processMouseMove  event.pageX, event.pageY
     ), false
     canvas.addEventListener "touchmove", ((event) =>
       @hand.processTouchMove event
