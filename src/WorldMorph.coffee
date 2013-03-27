@@ -14,6 +14,7 @@ class WorldMorph extends FrameMorph
   @MorphicPreferences: standardSettings
   @currentTime: null
   @showRedraws: false
+  systemTestsRecorderAndPlayer: null
 
   constructor: (aCanvas, fillPage) ->
     super()
@@ -39,6 +40,7 @@ class WorldMorph extends FrameMorph
     @activeHandle = null
     @virtualKeyboard = null
     @initEventListeners()
+    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@hand)
   
   # World Morph display:
   brokenFor: (aMorph) ->

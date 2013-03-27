@@ -1,11 +1,11 @@
-class MouseKeyboardEvent
+class SystemTestsEvent
   constructor: (@type, @mouseX, @mouseY, @time, @button, @ctrlKey) ->
     console.log @type + " " + @mouseX + " " + @mouseY + " " + @time + " " + @button + " " + @ctrlKey
 
-class MouseKeyboardEventsRecorderAndPlayer
+class SystemTestsRecorderAndPlayer
   eventQueue: []
-  recordingMouseAndKeyboardEvents = false
-  replayingMouseAndKeyboardEvents = false
+  recordingASystemTest = false
+  replayingASystemTest = false
   recorderStartTime = null
   playerStartTime = null
   handMorph = null
@@ -15,25 +15,25 @@ class MouseKeyboardEventsRecorderAndPlayer
   startRecording: ->
     @eventQueue = []
     @recorderStartTime = new Date().getTime()
-    @recordingMouseAndKeyboardEvents = true
-    @replayingMouseAndKeyboardEvents = false
+    @recordingASystemTest = true
+    @replayingASystemTest = false
 
   stopRecording: ->
-    @recordingMouseAndKeyboardEvents = false
+    @recordingASystemTest = false
 
   startPlaying: ->
     @playerStartTime = null
-    @recordingMouseAndKeyboardEvents = false
-    @replayingMouseAndKeyboardEvents = true
+    @recordingASystemTest = false
+    @replayingASystemTest = true
     @replayEvents()
 
   stopPlaying: ->
-    @replayingMouseAndKeyboardEvents = false
+    @replayingASystemTest = false
 
   addMouseMoveEvent: (pageX, pageY) ->
-    return if not @recordingMouseAndKeyboardEvents
+    return if not @recordingASystemTest
     @eventQueue.push(
-      new MouseKeyboardEvent(
+      new SystemTestsEvent(
         "mouseMove",
         pageX,
         pageY,
@@ -44,9 +44,9 @@ class MouseKeyboardEventsRecorderAndPlayer
     )
 
   addMouseDownEvent: (pageX, pageY, button, ctrlKey) ->
-    return if not @recordingMouseAndKeyboardEvents
+    return if not @recordingASystemTest
     @eventQueue.push(
-      new MouseKeyboardEvent(
+      new SystemTestsEvent(
         "mouseDown",
         pageX,
         pageY,
@@ -57,9 +57,9 @@ class MouseKeyboardEventsRecorderAndPlayer
     )
 
   addMouseUpEvent: () ->
-    return if not @recordingMouseAndKeyboardEvents
+    return if not @recordingASystemTest
     @eventQueue.push(
-      new MouseKeyboardEvent(
+      new SystemTestsEvent(
         "mouseUp",
         null,
         null,

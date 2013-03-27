@@ -13,14 +13,12 @@ class HandMorph extends Morph
   mouseOverList: null
   temporaries: null
   touchHoldTimeout: null
-  mouseKeyboardEventsRecorderAndPlayer: null
 
   constructor: (@world) ->
     @mouseOverList = []
     @temporaries = []
     super()
     @bounds = new Rectangle()
-    @mouseKeyboardEventsRecorderAndPlayer = new MouseKeyboardEventsRecorderAndPlayer(@)
   
   changed: ->
     if @world isnt null
@@ -120,7 +118,7 @@ class HandMorph extends Morph
   #		mouseScroll
   #
   processMouseDown: (button, ctrlKey) ->
-    @mouseKeyboardEventsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
+    @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
 
     @destroyTemporaries()
     @morphToGrab = null
@@ -179,7 +177,7 @@ class HandMorph extends Morph
     @processMouseUp button: 0
   
   processMouseUp: ->
-    @mouseKeyboardEventsRecorderAndPlayer.addMouseUpEvent()
+    @world.systemTestsRecorderAndPlayer.addMouseUpEvent()
 
     morph = @morphAtPointer()
     @destroyTemporaries()
@@ -342,7 +340,7 @@ class HandMorph extends Morph
     @fullChanged()
 
   processMouseMove: (pageX, pageY) ->
-    @mouseKeyboardEventsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
+    @world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
     
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
