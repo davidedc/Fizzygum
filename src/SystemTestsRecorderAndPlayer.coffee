@@ -4,17 +4,16 @@ class SystemTestsEvent
 
 class SystemTestsRecorderAndPlayer
   eventQueue: []
-  recordingASystemTest = false
-  replayingASystemTest = false
-  recorderStartTime = null
-  playerStartTime = null
-  handMorph = null
+  recordingASystemTest: false
+  replayingASystemTest: false
+  lastRecordedEventTime: null
+  handMorph: null
 
   constructor: (@handMorph) ->
 
   startRecording: ->
     @eventQueue = []
-    @recorderStartTime = new Date().getTime()
+    @lastRecordedEventTime = new Date().getTime()
     @recordingASystemTest = true
     @replayingASystemTest = false
 
@@ -22,7 +21,6 @@ class SystemTestsRecorderAndPlayer
     @recordingASystemTest = false
 
   startPlaying: ->
-    @playerStartTime = null
     @recordingASystemTest = false
     @replayingASystemTest = true
     @replayEvents()
@@ -32,51 +30,57 @@ class SystemTestsRecorderAndPlayer
 
   addMouseMoveEvent: (pageX, pageY) ->
     return if not @recordingASystemTest
+    currentTime = new Date().getTime()
     @eventQueue.push(
       new SystemTestsEvent(
         "mouseMove",
         pageX,
         pageY,
-        new Date().getTime() - @recorderStartTime,
+        currentTime - @lastRecordedEventTime,
         null,
         null
       )
     )
+    @lastRecordedEventTime = currentTime
 
   addMouseDownEvent: (pageX, pageY, button, ctrlKey) ->
     return if not @recordingASystemTest
+    currentTime = new Date().getTime()
     @eventQueue.push(
       new SystemTestsEvent(
         "mouseDown",
         pageX,
         pageY,
-        new Date().getTime() - @recorderStartTime,
+        currentTime - @lastRecordedEventTime,
         button,
         ctrlKey
       )
     )
+    @lastRecordedEventTime = currentTime
 
   addMouseUpEvent: () ->
     return if not @recordingASystemTest
+    currentTime = new Date().getTime()
     @eventQueue.push(
       new SystemTestsEvent(
         "mouseUp",
         null,
         null,
-        new Date().getTime() - @recorderStartTime,
+        currentTime - @lastRecordedEventTime,
         null,
         null
       )
     )
+    @lastRecordedEventTime = currentTime
 
   replayEvents: () ->
-    for queuedEvent in @eventQueue
-      @replayEvent queuedEvent
+   lastPlayedEventTime = 0
+   console.log "events: " + @eventQueue
+   for queuedEvent in @eventQueue
+      lastPlayedEventTime += queuedEvent.time
+      @scheduleEvent(queuedEvent, lastPlayedEventTime)
 
-  replayEvent: (queuedEvent) ->
-    if @playerStartTime is null
-      @playerStartTime = new Date().getTime()
-
+  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->
     if queuedEvent.type == 'mouseMove'
       callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)
     else if queuedEvent.type == 'mouseDown'
@@ -85,4 +89,5 @@ class SystemTestsRecorderAndPlayer
       callback = => @handMorph.processMouseUp()
     else return
 
-    setTimeout callback, queuedEvent.time
+    setTimeout callback, lastPlayedEventTime
+    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime
