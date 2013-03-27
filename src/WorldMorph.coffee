@@ -52,19 +52,19 @@ class WorldMorph extends FrameMorph
   # by the drawOn function.
   # The drawOn function is defined in Morph and is not overriden by
   # any morph.
-  fullDrawOn: (aCanvas, aRect) ->
-    # invokes the Morph's fullDrawOn, which has only two implementations:
+  recursivelyBlitRendering: (aCanvas, aRect) ->
+    # invokes the Morph's recursivelyBlitRendering, which has only two implementations:
     # the default one by Morph which just invokes the drawOn of all children
     # and the interesting one in FrameMorph which 
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
     # and it'd not attached to the WorldMorph.
-    @hand.fullDrawOn aCanvas, aRect
+    @hand.recursivelyBlitRendering aCanvas, aRect
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @broken.forEach (rect) =>
-      @fullDrawOn @worldCanvas, rect  if rect.isNotEmpty()
+      @recursivelyBlitRendering @worldCanvas, rect  if rect.isNotEmpty()
     @broken = []
   
   doOneCycle: ->
