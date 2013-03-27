@@ -23,9 +23,9 @@ class StringFieldMorph extends FrameMorph
       ) ->
     super()
     @color = new Color(255, 255, 255)
-    @drawNew()
+    @updateRendering()
   
-  drawNew: ->
+  updateRendering: ->
     txt = (if @text then @string() else @defaultContents)
     @text = null
     @children.forEach (child) ->

@@ -40,7 +40,7 @@ class Morph extends MorphicNode
     super()
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @drawNew()
+    @updateRendering()
     @lastTime = Date.now()
   
   #
@@ -277,7 +277,7 @@ class Morph extends MorphicNode
       @changed()
       @silentSetExtent aPoint
       @changed()
-      @drawNew()
+      @updateRendering()
   
   silentSetExtent: (aPoint) ->
     ext = aPoint.round()
@@ -289,7 +289,7 @@ class Morph extends MorphicNode
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
-    # do not drawNew() just yet
+    # do not updateRendering() just yet
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
@@ -297,7 +297,7 @@ class Morph extends MorphicNode
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
-    # do not drawNew() just yet
+    # do not updateRendering() just yet
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
@@ -306,13 +306,13 @@ class Morph extends MorphicNode
       unless @color.eq(aColor)
         @color = aColor
         @changed()
-        @drawNew()
+        @updateRendering()
   
   
   # Morph displaying ###########################################################
 
   # There are three fundamental methods for rendering and displaying anything.
-  # * drawNew: this one creates/updates the local canvas of this morph only
+  # * updateRendering: this one creates/updates the local canvas of this morph only
   #   i.e. not the children
   # * drawOn: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
@@ -320,7 +320,7 @@ class Morph extends MorphicNode
   # * fullDrawOn: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
   
-  drawNew: ->
+  updateRendering: ->
     # initialize my surface property
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
@@ -851,14 +851,14 @@ class Morph extends MorphicNode
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = Math.round(num).toString()
-          entryField.text.drawNew()
+          entryField.text.updateRendering()
           entryField.text.changed()
           entryField.text.edit()
       else
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = num.toString()
-          entryField.text.drawNew()
+          entryField.text.updateRendering()
           entryField.text.changed()
       menu.items.push slider
     menu.addLine 2
@@ -1085,7 +1085,7 @@ class Morph extends MorphicNode
   evaluateString: (code) ->
     try
       result = eval(code)
-      @drawNew()
+      @updateRendering()
       @changed()
     catch err
       @inform err

@@ -17,7 +17,7 @@ class CircleBoxMorph extends Morph
     else
       @orientation = "horizontal"
   
-  drawNew: ->
+  updateRendering: ->
     @autoOrientation()  if @autoOrient
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
@@ -67,5 +67,5 @@ class CircleBoxMorph extends Morph
       @orientation = "vertical"
     @silentSetExtent new Point(@height(), @width())
     @setCenter center
-    @drawNew()
+    @updateRendering()
     @changed()

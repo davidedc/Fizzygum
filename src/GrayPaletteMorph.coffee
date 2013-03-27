@@ -5,7 +5,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point(80, 10)
   
-  drawNew: ->
+  updateRendering: ->
     ext = @extent()
     @image = newCanvas(@extent())
     context = @image.getContext("2d")

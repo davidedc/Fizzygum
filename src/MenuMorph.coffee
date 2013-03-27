@@ -12,7 +12,7 @@ class MenuMorph extends BoxMorph
   isListContents: false
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
-    # Note that Morph does a drawNew upon creation (TODO Why?), so we need
+    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
     # to initialise the items before calling super. We can't initialise it
     # outside the constructor because the array would be shared across instantiated
     # objects.
@@ -44,16 +44,16 @@ class MenuMorph extends BoxMorph
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
     text.backgroundColor = @borderColor
-    text.drawNew()
+    text.updateRendering()
     @label = new BoxMorph(3, 0)
     @label.color = @borderColor
     @label.borderColor = @borderColor
     @label.setExtent text.extent().add(4)
-    @label.drawNew()
+    @label.updateRendering()
     @label.add text
     @label.text = text
   
-  drawNew: ->
+  updateRendering: ->
     isLine = false
     @children.forEach (m) ->
       m.destroy()
@@ -129,7 +129,7 @@ class MenuMorph extends BoxMorph
         item.createBackgrounds()
         if isSelected then item.image = item.pressImage          
       else
-        item.drawNew()
+        item.updateRendering()
         if item is @label
           item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
   
@@ -141,7 +141,7 @@ class MenuMorph extends BoxMorph
     @changed()
   
   popup: (world, pos) ->
-    @drawNew()
+    @updateRendering()
     @setPosition pos
     @addShadow new Point(2, 2), 80
     @keepWithin world
@@ -156,10 +156,10 @@ class MenuMorph extends BoxMorph
   
   popUpCenteredAtHand: (world) ->
     wrrld = world or @world
-    @drawNew()
+    @updateRendering()
     @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
   
   popUpCenteredInWorld: (world) ->
     wrrld = world or @world
-    @drawNew()
+    @updateRendering()
     @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))

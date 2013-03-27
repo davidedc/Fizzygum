@@ -52,7 +52,7 @@ class TextMorph extends StringMorph
       @shadowOffset = shadowOffset or new Point(0, 0)
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
-      @drawNew()
+      @updateRendering()
 
   toString: ->
     # e.g. 'a TextMorph("Hello World")'
@@ -96,7 +96,7 @@ class TextMorph extends StringMorph
         slot += word.length + 1
   
   
-  drawNew: ->
+  updateRendering: ->
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
@@ -178,7 +178,7 @@ class TextMorph extends StringMorph
   setExtent: (aPoint) ->
     @maxWidth = Math.max(aPoint.x, 0)
     @changed()
-    @drawNew()
+    @updateRendering()
   
   # TextMorph mesuring:
   columnRow: (slot) ->
@@ -273,17 +273,17 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @drawNew()
+    @updateRendering()
     @changed()  
   
   # TextMorph evaluation:

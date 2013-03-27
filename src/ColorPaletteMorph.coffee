@@ -9,9 +9,9 @@ class ColorPaletteMorph extends Morph
   constructor: (@target = null, sizePoint) ->
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
-    @drawNew()
+    @updateRendering()
   
-  drawNew: ->
+  updateRendering: ->
     ext = @extent()
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
@@ -38,7 +38,7 @@ class ColorPaletteMorph extends Morph
         @target[@targetSetter] @choice
       else
         @target[@targetSetter] = @choice
-        @target.drawNew()
+        @target.updateRendering()
         @target.changed()
   
   

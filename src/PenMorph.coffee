@@ -34,7 +34,7 @@ class PenMorph extends Morph
   
   
   # PenMorph display:
-  drawNew: (facing) ->
+  updateRendering: (facing) ->
     #
     #    my orientation can be overridden with the "facing" parameter to
     #    implement Scratch-style rotation styles
@@ -80,7 +80,7 @@ class PenMorph extends Morph
   # PenMorph access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
-    @drawNew()
+    @updateRendering()
     @changed()
   
   
@@ -123,7 +123,7 @@ class PenMorph extends Morph
     @isDown = false
   
   clear: ->
-    @parent.drawNew()
+    @parent.updateRendering()
     @parent.changed()
   
   
@@ -135,7 +135,7 @@ class PenMorph extends Morph
   endWarp: ->
     @isWarped = false
     if @wantsRedraw
-      @drawNew()
+      @updateRendering()
       @wantsRedraw = false
     @parent.changed()
   

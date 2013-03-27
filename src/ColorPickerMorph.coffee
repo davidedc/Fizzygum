@@ -9,9 +9,9 @@ class ColorPickerMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
-    @drawNew()
+    @updateRendering()
   
-  drawNew: ->
+  updateRendering: ->
     super()
     @buildSubmorphs()
   

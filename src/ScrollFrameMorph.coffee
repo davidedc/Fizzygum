@@ -32,7 +32,7 @@ class ScrollFrameMorph extends FrameMorph
     @alpha = @contents.alpha
     # the scrollFrame is a container, it redirects most
     # commands to the "contained" frame
-    @drawNew = @contents.drawNew
+    @updateRendering = @contents.updateRendering
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
@@ -79,7 +79,7 @@ class ScrollFrameMorph extends FrameMorph
       @hBar.stop = @contents.width() - @width()
       @hBar.size = @width() / @contents.width() * @hBar.stop
       @hBar.value = @left() - @contents.left()
-      @hBar.drawNew()
+      @hBar.updateRendering()
     else
       @hBar.hide()
     if @contents.height() > @height() + @scrollBarSize
@@ -90,7 +90,7 @@ class ScrollFrameMorph extends FrameMorph
       @vBar.stop = @contents.height() - @height()
       @vBar.size = @height() / @contents.height() * @vBar.stop
       @vBar.value = @top() - @contents.top()
-      @vBar.drawNew()
+      @vBar.updateRendering()
     else
       @vBar.hide()
   

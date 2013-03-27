@@ -40,11 +40,11 @@ class TriggerMorph extends Morph
     super()
     #
     @color = new Color(255, 255, 255)
-    @drawNew()
+    @updateRendering()
   
   
   # TriggerMorph drawing:
-  drawNew: ->
+  updateRendering: ->
     @createBackgrounds()
     @createLabel()  if @labelString isnt null
   

@@ -23,7 +23,7 @@ class HandleMorph extends Morph
     @setExtent new Point(size, size)  
   
   # HandleMorph drawing:
-  drawNew: ->
+  updateRendering: ->
     @normalImage = newCanvas(@extent())
     @highlightImage = newCanvas(@extent())
     @drawOnCanvas @normalImage, @color, new Color(100, 100, 100)
@@ -149,6 +149,6 @@ class HandleMorph extends Morph
       menu.addItem each.toString().slice(0, 50), ->
         @isDraggable = false
         @target = each
-        @drawNew()
+        @updateRendering()
         @noticesTransparentClick = true
     menu.popUpAtHand @world()  if choices.length

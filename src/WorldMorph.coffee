@@ -20,7 +20,7 @@ class WorldMorph extends FrameMorph
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
     @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
-    @drawNew()
+    @updateRendering()
     @isVisible = true
     @isDraggable = false
     @currentKey = null # currently pressed key code
@@ -440,7 +440,7 @@ class WorldMorph extends FrameMorph
         "Singen, die Loreley getan.")
       newMorph.isEditable = true
       newMorph.maxWidth = 300
-      newMorph.drawNew()
+      newMorph.updateRendering()
       create newMorph
     
     menu.addItem "speech bubble", ->
@@ -582,11 +582,11 @@ class WorldMorph extends FrameMorph
     slider.button.pressColor.b += 150
     slider.silentSetHeight WorldMorph.MorphicPreferences.scrollBarSize
     slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10
-    slider.drawNew()
+    slider.updateRendering()
     slider.action = (num) ->
       aStringOrTextMorph.changed()
       aStringOrTextMorph.text = Math.round(num).toString()
-      aStringOrTextMorph.drawNew()
+      aStringOrTextMorph.updateRendering()
       aStringOrTextMorph.changed()
       aStringOrTextMorph.escalateEvent(
           'reactToSliderEdit',

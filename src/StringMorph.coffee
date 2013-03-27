@@ -63,7 +63,7 @@ class StringMorph extends Morph
     # override inherited properites:
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
-    @drawNew()
+    @updateRendering()
   
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
@@ -82,7 +82,7 @@ class StringMorph extends Morph
     font = font + "italic "  if @isItalic
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
   
-  drawNew: ->
+  updateRendering: ->
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     @image = newCanvas()
@@ -251,37 +251,37 @@ class StringMorph extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setFontSize: (size) ->
@@ -292,14 +292,14 @@ class StringMorph extends Morph
       newSize = parseFloat(size)
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setText: (size) ->
     # for context menu demo purposes
     @text = Math.round(size).toString()
     @changed()
-    @drawNew()
+    @updateRendering()
     @changed()
   
   numericalSetters: ->
@@ -323,7 +323,7 @@ class StringMorph extends Morph
     @currentlySelecting = false
     @startMark = 0
     @endMark = 0
-    @drawNew()
+    @updateRendering()
     @changed()
   
   deleteSelection: ->
@@ -337,7 +337,7 @@ class StringMorph extends Morph
   selectAll: ->
     @startMark = 0
     @endMark = @text.length
-    @drawNew()
+    @updateRendering()
     @changed()
 
   mouseDownLeft: (pos) ->
@@ -371,7 +371,7 @@ class StringMorph extends Morph
         newMark = @slotAt(pos)
         if newMark isnt @endMark
           @endMark = newMark
-          @drawNew()
+          @updateRendering()
           @changed()
   
   disableSelecting: ->

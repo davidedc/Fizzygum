@@ -12,7 +12,7 @@ class MouseSensorMorph extends BoxMorph
     @upStep = 0.05
     @downStep = 0.02
     @noticesTransparentClick = false
-    @drawNew()
+    @updateRendering()
   
   touch: ->
     unless @isTouched

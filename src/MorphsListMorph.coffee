@@ -18,7 +18,7 @@ class MorphsListMorph extends BoxMorph
     @edge = 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
-    @drawNew()
+    @updateRendering()
     @buildPanes()
   
   setTarget: (target) ->
@@ -41,7 +41,7 @@ class MorphsListMorph extends BoxMorph
     @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
-    @label.drawNew()
+    @label.updateRendering()
     @add @label
     #
     ListOfMorphs = []
@@ -97,9 +97,9 @@ class MorphsListMorph extends BoxMorph
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @silentSetHeight @label.height() + 50
-      @drawNew()
+      @updateRendering()
       @changed()
-      @resizer.drawNew()
+      @resizer.updateRendering()
     #
     # morphsList
     y = @label.bottom() + 2

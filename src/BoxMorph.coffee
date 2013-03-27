@@ -14,7 +14,7 @@ class BoxMorph extends Morph
     super()
   
   # BoxMorph drawing:
-  drawNew: ->
+  updateRendering: ->
     @image = newCanvas(@extent())
     context = @image.getContext("2d")
     if (@edge is 0) and (@border is 0)
@@ -83,14 +83,14 @@ class BoxMorph extends Morph
     else
       newSize = parseFloat(size)
       @border = Math.max(newSize, 0)  unless isNaN(newSize)
-    @drawNew()
+    @updateRendering()
     @changed()
   
   setBorderColor: (color) ->
     # for context menu demo purposes
     if color
       @borderColor = color
-      @drawNew()
+      @updateRendering()
       @changed()
   
   setCornerSize: (size) ->
@@ -100,7 +100,7 @@ class BoxMorph extends Morph
     else
       newSize = parseFloat(size)
       @edge = Math.max(newSize, 0)  unless isNaN(newSize)
-    @drawNew()
+    @updateRendering()
     @changed()
   
   colorSetters: ->

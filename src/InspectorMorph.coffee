@@ -27,7 +27,7 @@ class InspectorMorph extends BoxMorph
     @edge = 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
-    @drawNew()
+    @updateRendering()
     @buildPanes()  if @target
   
   setTarget: (target) ->
@@ -50,7 +50,7 @@ class InspectorMorph extends BoxMorph
     @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
-    @label.drawNew()
+    @label.updateRendering()
     @add @label
     
     # properties list. Note that this picks up ALL properties
@@ -313,9 +313,9 @@ class InspectorMorph extends BoxMorph
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @silentSetHeight @label.height() + 50
-      @drawNew()
+      @updateRendering()
       @changed()
-      @resizer.drawNew()
+      @resizer.updateRendering()
     #
     # list
     y = @label.bottom() + 2
@@ -380,9 +380,9 @@ class InspectorMorph extends BoxMorph
       #
       # this.target[prop] = evaluate(txt);
       @target.evaluateString "this." + prop + " = " + txt
-      if @target.drawNew
+      if @target.updateRendering
         @target.changed()
-        @target.drawNew()
+        @target.updateRendering()
         @target.changed()
     catch err
       @inform err
@@ -392,9 +392,9 @@ class InspectorMorph extends BoxMorph
       if prop
         @target[prop] = null
         @buildPanes()
-        if @target.drawNew
+        if @target.updateRendering
           @target.changed()
-          @target.drawNew()
+          @target.updateRendering()
           @target.changed()
     ), @, "property" # Chrome cannot handle empty strings (others do)
   
@@ -407,9 +407,9 @@ class InspectorMorph extends BoxMorph
       catch err
         @inform err
       @buildPanes()
-      if @target.drawNew
+      if @target.updateRendering
         @target.changed()
-        @target.drawNew()
+        @target.updateRendering()
         @target.changed()
     ), @, propertyName
   
@@ -420,9 +420,9 @@ class InspectorMorph extends BoxMorph
       #
       @currentProperty = null
       @buildPanes()
-      if @target.drawNew
+      if @target.updateRendering
         @target.changed()
-        @target.drawNew()
+        @target.updateRendering()
         @target.changed()
     catch err
       @inform err

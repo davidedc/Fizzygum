@@ -17,7 +17,7 @@ class FrameMorph extends Morph
     if @scrollFrame
       @isDraggable = false
       @noticesTransparentClick = false
-    @drawNew()
+    @updateRendering()
 
   setColor: (aColor) ->
     # keep in synch the value of the container scrollFrame
@@ -109,7 +109,7 @@ class FrameMorph extends Morph
       newBounds = @scrollFrame.bounds.copy()
     unless @bounds.eq(newBounds)
       @bounds = newBounds
-      @drawNew()
+      @updateRendering()
       @keepInScrollFrame()
     if @scrollFrame.isTextLineWrapping
       @children.forEach (morph) =>

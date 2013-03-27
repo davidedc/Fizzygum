@@ -27,7 +27,7 @@ class SliderButtonMorph extends CircleBoxMorph
   autoOrientation: ->
       noOperation
   
-  drawNew: ->
+  updateRendering: ->
     colorBak = @color.copy()
     super()
     @drawEdges()  if @is3D

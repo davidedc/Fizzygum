@@ -24,12 +24,12 @@ class SpeechBubbleMorph extends BoxMorph
     @isThought = false) ->
       super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
       @color = color or new Color(230, 230, 230)
-      @drawNew()
+      @updateRendering()
   
   
   # SpeechBubbleMorph invoking:
   popUp: (world, pos, isClickable) ->
-    @drawNew()
+    @updateRendering()
     @setPosition pos.subtract(new Point(0, @height()))
     @addShadow new Point(2, 2), 80
     @keepWithin world
@@ -46,7 +46,7 @@ class SpeechBubbleMorph extends BoxMorph
   
   
   # SpeechBubbleMorph drawing:
-  drawNew: ->
+  updateRendering: ->
     # re-build my contents
     @contentsMorph.destroy()  if @contentsMorph
     if @contents instanceof Morph
@@ -200,5 +200,5 @@ class SpeechBubbleMorph extends BoxMorph
   # SpeechBubbleMorph resizing
   fixLayout: ->
     @removeShadow()
-    @drawNew()
+    @updateRendering()
     @addShadow new Point(2, 2), 80
