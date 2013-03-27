@@ -309,7 +309,17 @@ class Morph extends MorphicNode
         @drawNew()
   
   
-  # Morph displaying:
+  # Morph displaying ###########################################################
+
+  # There are three fundamental methods for rendering and displaying anything.
+  # * drawNew: this one creates/updates the local canvas of this morph only
+  #   i.e. not the children
+  # * drawOn: takes the local canvas and blits it to a specific area in a passed
+  #   canvas. The local canvas doesn't contain any rendering of the children of
+  #   this morph.
+  # * fullDrawOn: recursively draws all the local canvas of this morph and all
+  #   its children into a specific area of a passed canvas.
+  
   drawNew: ->
     # initialize my surface property
     @image = newCanvas(@extent())
