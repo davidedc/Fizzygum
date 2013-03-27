@@ -7,8 +7,9 @@ class TriggerMorph extends Morph
   target: null
   action: null
   environment: null
-  labelString: null
   label: null
+  labelString: null
+  labelColor: null
   hint: null
   fontSize: null
   fontStyle: null
@@ -18,13 +19,15 @@ class TriggerMorph extends Morph
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   highlightColor: new Color(192, 192, 192)
+  highlightImage: null
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   pressColor: new Color(128, 128, 128)
-  labelColor: null
+  normalImage: null
+  pressImage: null
 
   constructor: (@target = null, @action = null, @labelString = null,
     fontSize, fontStyle, @environment = null, @hint = null, labelColor) ->
