@@ -150,13 +150,6 @@ class WorldMorph extends FrameMorph
     @virtualKeyboard.style.height = "0px"
     document.body.appendChild @virtualKeyboard
 
-    # when recording a test, the caps lock
-    # takes a screenshot
-    document.addEventListener "keydown", ((event) =>
-      if event.keyCode == 20
-        @systemTestsRecorderAndPlayer.takeScreenshot()
-    ), false
-
     @virtualKeyboard.addEventListener "keydown", ((event) =>
       # remember the keyCode in the world's currentKey property
       @currentKey = event.keyCode
@@ -298,6 +291,13 @@ class WorldMorph extends FrameMorph
         
         # Needs a few msec to excute paste
         window.setTimeout ( => (@caret.insert text)), 50, true
+    ), false
+
+    # when recording a test, the caps lock
+    # takes a screenshot
+    document.body.addEventListener "keydown", ((event) =>
+      if event.keyCode == 20
+        @systemTestsRecorderAndPlayer.takeScreenshot()
     ), false
 
     window.addEventListener "dragover", ((event) ->
