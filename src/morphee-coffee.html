@@ -60,7 +60,10 @@
 				})();
 				// place the rAF *before* the render() to assure as close to 
 				// 60fps with the setTimeout fallback.
-				
+
+			    if(window.location.href.indexOf("runAllTests") > -1) {
+			       world.runSystemTests();
+			    }
 				
 			};
 
