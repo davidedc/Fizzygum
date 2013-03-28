@@ -1,5 +1,5 @@
 # How to play a test:
-# from the Chrome console (Option-Command-J):
+# from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
 # window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData
 # window.world.systemTestsRecorderAndPlayer.startPlaying()
 
@@ -11,9 +11,10 @@
 # window.world.systemTestsRecorderAndPlayer.startPlaying()
 # then to save the test:
 # console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))
-# copy that blurb BUT YOU HAVE TO REPLACE THE DATA URL BECAUSE
-# THE ONE OF THE BLURB HAS AN ELLIPSIS
-# So: find that url and right-click: open in new tab and then copy the
+# copy that blurb
+# Note for Chrome: You have to replace the data URL because
+# it contains an ellipsis for more comfortable viewing in the console.
+# Workaround: find that url and right-click: open in new tab and then copy the
 # full data URL from the location bar and subsitute it with the one
 # of the ellipses.
 # Then pass the JSON into http://js2coffee.org/
