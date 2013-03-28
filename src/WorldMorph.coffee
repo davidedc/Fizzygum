@@ -357,7 +357,12 @@ class WorldMorph extends FrameMorph
       prev.selectAll()
       prev.edit()
   
-  
+  testsList: () ->
+    # Check which objects have the right name start
+    console.log Object.keys(window)
+    (Object.keys(window)).filter (i) ->
+      console.log i.indexOf("SystemTest_")
+      i.indexOf("SystemTest_") == 0
   # WorldMorph menu:
   contextMenu: ->
     if @isDevMode
