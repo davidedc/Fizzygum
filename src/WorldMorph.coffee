@@ -363,6 +363,15 @@ class WorldMorph extends FrameMorph
     (Object.keys(window)).filter (i) ->
       console.log i.indexOf("SystemTest_")
       i.indexOf("SystemTest_") == 0
+
+  runSystemTests: () ->
+    console.log @testsList()
+    for i in @testsList()
+      console.log window[i]
+      @systemTestsRecorderAndPlayer.eventQueue = (window[i]).testData
+      @changed()
+      @systemTestsRecorderAndPlayer.startPlaying()
+
   # WorldMorph menu:
   contextMenu: ->
     if @isDevMode
@@ -393,6 +402,8 @@ class WorldMorph extends FrameMorph
       else
         menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"
       menu.addLine()
+    menu.addItem "run system tests",  "runSystemTests", "runs all the system tests"
+    menu.addLine()
     if @isDevMode
       menu.addItem "user mode...", "toggleDevMode", "disable developers'\ncontext menus"
     else
