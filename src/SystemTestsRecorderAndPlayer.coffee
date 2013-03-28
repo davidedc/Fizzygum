@@ -1,7 +1,3 @@
-class SystemTestsEvent
-  constructor: (@type, @mouseX, @mouseY, @time, @button, @ctrlKey, @screenShotImageData = '') ->
-    console.log @type + " " + @mouseX + " " + @mouseY + " " + @time + " " + @button + " " + @ctrlKey + " " + hashCode(@screenShotImageData)
-
 class SystemTestsRecorderAndPlayer
   eventQueue: []
   recordingASystemTest: false
@@ -31,64 +27,58 @@ class SystemTestsRecorderAndPlayer
   addMouseMoveEvent: (pageX, pageY) ->
     return if not @recordingASystemTest
     currentTime = new Date().getTime()
-    @eventQueue.push(
-      new SystemTestsEvent(
-        "mouseMove",
-        pageX,
-        pageY,
-        currentTime - @lastRecordedEventTime,
-        null,
-        null
-      )
-    )
+    systemTestEvent = {}
+    systemTestEvent.type = "mouseMove"
+    systemTestEvent.mouseX = pageX
+    systemTestEvent.mouseY = pageY
+    systemTestEvent.time = currentTime - @lastRecordedEventTime
+    #systemTestEvent.button
+    #systemTestEvent.ctrlKey
+    #systemTestEvent.screenShotImageData
+    @eventQueue.push systemTestEvent
     @lastRecordedEventTime = currentTime
 
   addMouseDownEvent: (button, ctrlKey) ->
     return if not @recordingASystemTest
     currentTime = new Date().getTime()
-    @eventQueue.push(
-      new SystemTestsEvent(
-        "mouseDown",
-        null,
-        null,
-        currentTime - @lastRecordedEventTime,
-        button,
-        ctrlKey,
-        null
-      )
-    )
+    systemTestEvent = {}
+    systemTestEvent.type = "mouseDown"
+    #systemTestEvent.mouseX = pageX
+    #systemTestEvent.mouseY = pageY
+    systemTestEvent.time = currentTime - @lastRecordedEventTime
+    systemTestEvent.button = button
+    systemTestEvent.ctrlKey = ctrlKey
+    #systemTestEvent.screenShotImageData
+    @eventQueue.push systemTestEvent
     @lastRecordedEventTime = currentTime
 
   addMouseUpEvent: () ->
     return if not @recordingASystemTest
     currentTime = new Date().getTime()
-    @eventQueue.push(
-      new SystemTestsEvent(
-        "mouseUp",
-        null,
-        null,
-        currentTime - @lastRecordedEventTime,
-        null,
-        null,
-        null
-      )
-    )
+    systemTestEvent = {}
+    systemTestEvent.type = "mouseUp"
+    #systemTestEvent.mouseX = pageX
+    #systemTestEvent.mouseY = pageY
+    systemTestEvent.time = currentTime - @lastRecordedEventTime
+    #systemTestEvent.button
+    #systemTestEvent.ctrlKey
+    #systemTestEvent.screenShotImageData
+    @eventQueue.push systemTestEvent
     @lastRecordedEventTime = currentTime
 
   takeScreenshot: () ->
     return if not @recordingASystemTest
+    console.log "taking screenshot"
     currentTime = new Date().getTime()
-    @eventQueue.push(
-      new SystemTestsEvent(
-        "takeScreenshot",
-        null,
-        null,
-        currentTime - @lastRecordedEventTime,
-        null,
-        null,
-        @worldMorph.fullImageData()
-      )
-    )
+    systemTestEvent = {}
+    systemTestEvent.type = "takeScreenshot"
+    #systemTestEvent.mouseX = pageX
+    #systemTestEvent.mouseY = pageY
+    systemTestEvent.time = currentTime - @lastRecordedEventTime
+    #systemTestEvent.button
+    #systemTestEvent.ctrlKey
+    systemTestEvent.screenShotImageData = @worldMorph.fullImageData()
+    @eventQueue.push systemTestEvent
     @lastRecordedEventTime = currentTime
 
   compareScreenshots: (expected) ->
