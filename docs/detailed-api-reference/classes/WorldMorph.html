@@ -149,12 +149,12 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#fullDrawOn-instance'>
-        - (void) <strong>fullDrawOn</strong>(aCanvas, aRect)
+      <a href='#recursivelyBlit-instance'>
+        - (void) <strong>recursivelyBlit</strong>(aCanvas, aRect)
       </a>
     </span>
     <span class='desc'>
-      all fullDraws result into actual blittings of images done by the drawOn function.
+      all fullDraws result into actual blittings of images done by the blit function.
     </span>
   </li>
   <li>
@@ -430,7 +430,7 @@
                 <a href='..&#47;classes/FrameMorph.html#setColor-instance'>#setColor</a>,
                 <a href='..&#47;classes/FrameMorph.html#setAlphaScaled-instance'>#setAlphaScaled</a>,
                 <a href='..&#47;classes/FrameMorph.html#boundsIncludingChildren-instance'>#boundsIncludingChildren</a>,
-                <a href='..&#47;classes/FrameMorph.html#fullDrawOn-instance'>#fullDrawOn</a>,
+                <a href='..&#47;classes/FrameMorph.html#recursivelyBlit-instance'>#recursivelyBlit</a>,
                 <a href='..&#47;classes/FrameMorph.html#moveBy-instance'>#moveBy</a>,
                 <a href='..&#47;classes/FrameMorph.html#submorphBounds-instance'>#submorphBounds</a>,
                 <a href='..&#47;classes/FrameMorph.html#keepInScrollFrame-instance'>#keepInScrollFrame</a>,
@@ -493,11 +493,11 @@
                 <a href='..&#47;classes/Morph.html#setHeight-instance'>#setHeight</a>,
                 <a href='..&#47;classes/Morph.html#silentSetHeight-instance'>#silentSetHeight</a>,
                 <a href='..&#47;classes/Morph.html#setColor-instance'>#setColor</a>,
-                <a href='..&#47;classes/Morph.html#drawNew-instance'>#drawNew</a>,
+                <a href='..&#47;classes/Morph.html#updateRendering-instance'>#updateRendering</a>,
                 <a href='..&#47;classes/Morph.html#drawTexture-instance'>#drawTexture</a>,
                 <a href='..&#47;classes/Morph.html#drawCachedTexture-instance'>#drawCachedTexture</a>,
-                <a href='..&#47;classes/Morph.html#drawOn-instance'>#drawOn</a>,
-                <a href='..&#47;classes/Morph.html#fullDrawOn-instance'>#fullDrawOn</a>,
+                <a href='..&#47;classes/Morph.html#blit-instance'>#blit</a>,
+                <a href='..&#47;classes/Morph.html#recursivelyBlit-instance'>#recursivelyBlit</a>,
                 <a href='..&#47;classes/Morph.html#hide-instance'>#hide</a>,
                 <a href='..&#47;classes/Morph.html#show-instance'>#show</a>,
                 <a href='..&#47;classes/Morph.html#toggleVisibility-instance'>#toggleVisibility</a>,
@@ -603,13 +603,13 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='fullDrawOn-instance'>
-      - (void) <strong>fullDrawOn</strong>(aCanvas, aRect)
+    <p class='signature' id='recursivelyBlit-instance'>
+      - (void) <strong>recursivelyBlit</strong>(aCanvas, aRect)
     </p>
     <div class='docstring'>
   <p>all fullDraws result into actual blittings of images done
-by the drawOn function.
-The drawOn function is defined in Morph and is not overriden by
+by the blit function.
+The blit function is defined in Morph and is not overriden by
 any morph.</p>
 </div>
 <div class='tags'>
@@ -813,7 +813,7 @@ any morph.</p>
     </div>
     <div id='footer'>
   Generated on
-  Mon Mar 25 2013 22:20:52 GMT+0000 (GMT)
+  Thu Mar 28 2013 00:52:52 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4

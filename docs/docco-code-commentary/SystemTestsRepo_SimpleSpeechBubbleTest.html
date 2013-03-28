@@ -1,0 +1,1493 @@
+<!DOCTYPE html>  <html> <head>   <title>SystemTestsRepo_SimpleSpeechBubbleTest.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="BlinkerMorph.html">                 BlinkerMorph.coffee               </a>                                           <a class="source" href="BouncerMorph.html">                 BouncerMorph.coffee               </a>                                           <a class="source" href="BoxMorph.html">                 BoxMorph.coffee               </a>                                           <a class="source" href="CaretMorph.html">                 CaretMorph.coffee               </a>                                           <a class="source" href="CircleBoxMorph.html">                 CircleBoxMorph.coffee               </a>                                           <a class="source" href="Color.html">                 Color.coffee               </a>                                           <a class="source" href="ColorPaletteMorph.html">                 ColorPaletteMorph.coffee               </a>                                           <a class="source" href="ColorPickerMorph.html">                 ColorPickerMorph.coffee               </a>                                           <a class="source" href="FrameMorph.html">                 FrameMorph.coffee               </a>                                           <a class="source" href="GrayPaletteMorph.html">                 GrayPaletteMorph.coffee               </a>                                           <a class="source" href="HandMorph.html">                 HandMorph.coffee               </a>                                           <a class="source" href="HandleMorph.html">                 HandleMorph.coffee               </a>                                           <a class="source" href="InspectorMorph.html">                 InspectorMorph.coffee               </a>                                           <a class="source" href="ListMorph.html">                 ListMorph.coffee               </a>                                           <a class="source" href="MenuItemMorph.html">                 MenuItemMorph.coffee               </a>                                           <a class="source" href="MenuMorph.html">                 MenuMorph.coffee               </a>                                           <a class="source" href="Morph.html">                 Morph.coffee               </a>                                           <a class="source" href="MorphicNode.html">                 MorphicNode.coffee               </a>                                           <a class="source" href="MorphsListMorph.html">                 MorphsListMorph.coffee               </a>                                           <a class="source" href="MouseSensorMorph.html">                 MouseSensorMorph.coffee               </a>                                           <a class="source" href="PenMorph.html">                 PenMorph.coffee               </a>                                           <a class="source" href="Point.html">                 Point.coffee               </a>                                           <a class="source" href="Point2.html">                 Point2.coffee               </a>                                           <a class="source" href="Rectangle.html">                 Rectangle.coffee               </a>                                           <a class="source" href="ScrollFrameMorph.html">                 ScrollFrameMorph.coffee               </a>                                           <a class="source" href="ShadowMorph.html">                 ShadowMorph.coffee               </a>                                           <a class="source" href="SliderButtonMorph.html">                 SliderButtonMorph.coffee               </a>                                           <a class="source" href="SliderMorph.html">                 SliderMorph.coffee               </a>                                           <a class="source" href="SpeechBubbleMorph.html">                 SpeechBubbleMorph.coffee               </a>                                           <a class="source" href="StringFieldMorph.html">                 StringFieldMorph.coffee               </a>                                           <a class="source" href="StringMorph.html">                 StringMorph.coffee               </a>                                           <a class="source" href="SystemTestsRecorderAndPlayer.html">                 SystemTestsRecorderAndPlayer.coffee               </a>                                           <a class="source" href="SystemTestsRepo_SimpleSpeechBubbleTest.html">                 SystemTestsRepo_SimpleSpeechBubbleTest.coffee               </a>                                           <a class="source" href="TextMorph.html">                 TextMorph.coffee               </a>                                           <a class="source" href="TriggerMorph.html">                 TriggerMorph.coffee               </a>                                           <a class="source" href="WorldMorph.html">                 WorldMorph.coffee               </a>                                           <a class="source" href="globalFunctions.html">                 globalFunctions.coffee               </a>                                           <a class="source" href="globalSettings.html">                 globalSettings.coffee               </a>                                           <a class="source" href="morphicVersion.html">                 morphicVersion.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               SystemTestsRepo_SimpleSpeechBubbleTest.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>How to play a test:
+from the Chrome console (Option-Command-J):
+window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData
+window.world.systemTestsRecorderAndPlayer.startPlaying()</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>How to save a test:
+window.world.systemTestsRecorderAndPlayer.startRecording()
+...do the test...
+window.world.systemTestsRecorderAndPlayer.stopRecording()
+if you want to verify the test on the spot:
+window.world.systemTestsRecorderAndPlayer.startPlaying()
+then to save the test:
+console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))
+copy that blurb BUT YOU HAVE TO REPLACE THE DATA URL BECAUSE
+THE ONE OF THE BLURB HAS AN ELLIPSIS
+So: find that url and right-click: open in new tab and then copy the
+full data URL from the location bar and subsitute it with the one
+of the ellipses.
+Then pass the JSON into http://js2coffee.org/
+and save it in this file.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">SystemTestsRepo_SimpleSpeechBubbleTest</span>
+  <span class="vi">@testData: </span><span class="p">[</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">158</span>
+    <span class="nv">mouseY: </span><span class="mi">26</span>
+    <span class="nv">time: </span><span class="mi">479</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">218</span>
+    <span class="nv">mouseY: </span><span class="mi">27</span>
+    <span class="nv">time: </span><span class="mi">15</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">803</span>
+    <span class="nv">mouseY: </span><span class="mi">97</span>
+    <span class="nv">time: </span><span class="mi">1215</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">7</span>
+    <span class="nv">button: </span><span class="mi">2</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">803</span>
+    <span class="nv">mouseY: </span><span class="mi">100</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">803</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">38</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">107</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">804</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">81</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">805</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">75</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">806</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">300</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">807</span>
+    <span class="nv">mouseY: </span><span class="mi">102</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">815</span>
+    <span class="nv">mouseY: </span><span class="mi">108</span>
+    <span class="nv">time: </span><span class="mi">16</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">819</span>
+    <span class="nv">mouseY: </span><span class="mi">110</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">820</span>
+    <span class="nv">mouseY: </span><span class="mi">112</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">822</span>
+    <span class="nv">mouseY: </span><span class="mi">115</span>
+    <span class="nv">time: </span><span class="mi">16</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">823</span>
+    <span class="nv">mouseY: </span><span class="mi">118</span>
+    <span class="nv">time: </span><span class="mi">22</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">824</span>
+    <span class="nv">mouseY: </span><span class="mi">118</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">824</span>
+    <span class="nv">mouseY: </span><span class="mi">120</span>
+    <span class="nv">time: </span><span class="mi">49</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">825</span>
+    <span class="nv">mouseY: </span><span class="mi">121</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">825</span>
+    <span class="nv">mouseY: </span><span class="mi">122</span>
+    <span class="nv">time: </span><span class="mi">16</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">825</span>
+    <span class="nv">mouseY: </span><span class="mi">123</span>
+    <span class="nv">time: </span><span class="mi">18</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">826</span>
+    <span class="nv">mouseY: </span><span class="mi">123</span>
+    <span class="nv">time: </span><span class="mi">149</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">826</span>
+    <span class="nv">mouseY: </span><span class="mi">124</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">826</span>
+    <span class="nv">mouseY: </span><span class="mi">126</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">827</span>
+    <span class="nv">mouseY: </span><span class="mi">129</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">827</span>
+    <span class="nv">mouseY: </span><span class="mi">134</span>
+    <span class="nv">time: </span><span class="mi">22</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">829</span>
+    <span class="nv">mouseY: </span><span class="mi">142</span>
+    <span class="nv">time: </span><span class="mi">18</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">166</span>
+    <span class="nv">time: </span><span class="mi">44</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">171</span>
+    <span class="nv">time: </span><span class="mi">16</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">174</span>
+    <span class="nv">time: </span><span class="mi">19</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">177</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">176</span>
+    <span class="nv">time: </span><span class="mi">180</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">173</span>
+    <span class="nv">time: </span><span class="mi">19</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">170</span>
+    <span class="nv">time: </span><span class="mi">14</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">167</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">164</span>
+    <span class="nv">time: </span><span class="mi">21</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">162</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">161</span>
+    <span class="nv">time: </span><span class="mi">117</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">160</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">159</span>
+    <span class="nv">time: </span><span class="mi">18</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">156</span>
+    <span class="nv">time: </span><span class="mi">15</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">154</span>
+    <span class="nv">time: </span><span class="mi">17</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">153</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">831</span>
+    <span class="nv">mouseY: </span><span class="mi">151</span>
+    <span class="nv">time: </span><span class="mi">94</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">830</span>
+    <span class="nv">mouseY: </span><span class="mi">151</span>
+    <span class="nv">time: </span><span class="mi">15</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">830</span>
+    <span class="nv">mouseY: </span><span class="mi">148</span>
+    <span class="nv">time: </span><span class="mi">25</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">196</span>
+    <span class="nv">button: </span><span class="mi">0</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">67</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">828</span>
+    <span class="nv">mouseY: </span><span class="mi">148</span>
+    <span class="nv">time: </span><span class="mi">370</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">825</span>
+    <span class="nv">mouseY: </span><span class="mi">148</span>
+    <span class="nv">time: </span><span class="mi">41</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">768</span>
+    <span class="nv">mouseY: </span><span class="mi">145</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">723</span>
+    <span class="nv">mouseY: </span><span class="mi">141</span>
+    <span class="nv">time: </span><span class="mi">27</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">471</span>
+    <span class="nv">mouseY: </span><span class="mi">131</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">341</span>
+    <span class="nv">mouseY: </span><span class="mi">123</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">282</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">266</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">260</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">12</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">257</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">256</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">63</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">255</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">38</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">251</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">246</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">243</span>
+    <span class="nv">mouseY: </span><span class="mi">114</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">242</span>
+    <span class="nv">mouseY: </span><span class="mi">113</span>
+    <span class="nv">time: </span><span class="mi">95</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">241</span>
+    <span class="nv">mouseY: </span><span class="mi">113</span>
+    <span class="nv">time: </span><span class="mi">66</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">239</span>
+    <span class="nv">mouseY: </span><span class="mi">113</span>
+    <span class="nv">time: </span><span class="mi">40</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">236</span>
+    <span class="nv">mouseY: </span><span class="mi">113</span>
+    <span class="nv">time: </span><span class="mi">37</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">224</span>
+    <span class="nv">mouseY: </span><span class="mi">112</span>
+    <span class="nv">time: </span><span class="mi">38</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">222</span>
+    <span class="nv">mouseY: </span><span class="mi">111</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">213</span>
+    <span class="nv">mouseY: </span><span class="mi">108</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">209</span>
+    <span class="nv">mouseY: </span><span class="mi">107</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">208</span>
+    <span class="nv">mouseY: </span><span class="mi">105</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">205</span>
+    <span class="nv">mouseY: </span><span class="mi">104</span>
+    <span class="nv">time: </span><span class="mi">2</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">203</span>
+    <span class="nv">mouseY: </span><span class="mi">102</span>
+    <span class="nv">time: </span><span class="mi">30</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">202</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">4</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">200</span>
+    <span class="nv">mouseY: </span><span class="mi">100</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">199</span>
+    <span class="nv">mouseY: </span><span class="mi">100</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">118</span>
+    <span class="nv">button: </span><span class="mi">2</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">130</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">199</span>
+    <span class="nv">mouseY: </span><span class="mi">101</span>
+    <span class="nv">time: </span><span class="mi">356</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">202</span>
+    <span class="nv">mouseY: </span><span class="mi">103</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">202</span>
+    <span class="nv">mouseY: </span><span class="mi">108</span>
+    <span class="nv">time: </span><span class="mi">30</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">205</span>
+    <span class="nv">mouseY: </span><span class="mi">110</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">208</span>
+    <span class="nv">mouseY: </span><span class="mi">116</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">118</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">121</span>
+    <span class="nv">time: </span><span class="mi">27</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">121</span>
+    <span class="nv">time: </span><span class="mi">40</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">122</span>
+    <span class="nv">time: </span><span class="mi">24</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">123</span>
+    <span class="nv">time: </span><span class="mi">41</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">124</span>
+    <span class="nv">time: </span><span class="mi">110</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">126</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">128</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">131</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">210</span>
+    <span class="nv">mouseY: </span><span class="mi">132</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">215</span>
+    <span class="nv">button: </span><span class="mi">0</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">135</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">211</span>
+    <span class="nv">mouseY: </span><span class="mi">132</span>
+    <span class="nv">time: </span><span class="mi">501</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">217</span>
+    <span class="nv">mouseY: </span><span class="mi">147</span>
+    <span class="nv">time: </span><span class="mi">39</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">224</span>
+    <span class="nv">mouseY: </span><span class="mi">184</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">229</span>
+    <span class="nv">mouseY: </span><span class="mi">216</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">235</span>
+    <span class="nv">mouseY: </span><span class="mi">234</span>
+    <span class="nv">time: </span><span class="mi">48</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">236</span>
+    <span class="nv">mouseY: </span><span class="mi">237</span>
+    <span class="nv">time: </span><span class="mi">50</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">237</span>
+    <span class="nv">mouseY: </span><span class="mi">238</span>
+    <span class="nv">time: </span><span class="mi">51</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">238</span>
+    <span class="nv">mouseY: </span><span class="mi">238</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">239</span>
+    <span class="nv">mouseY: </span><span class="mi">239</span>
+    <span class="nv">time: </span><span class="mi">22</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">240</span>
+    <span class="nv">mouseY: </span><span class="mi">239</span>
+    <span class="nv">time: </span><span class="mi">46</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">240</span>
+    <span class="nv">mouseY: </span><span class="mi">240</span>
+    <span class="nv">time: </span><span class="mi">30</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">240</span>
+    <span class="nv">mouseY: </span><span class="mi">241</span>
+    <span class="nv">time: </span><span class="mi">308</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">240</span>
+    <span class="nv">mouseY: </span><span class="mi">242</span>
+    <span class="nv">time: </span><span class="mi">151</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">241</span>
+    <span class="nv">mouseY: </span><span class="mi">248</span>
+    <span class="nv">time: </span><span class="mi">55</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">241</span>
+    <span class="nv">mouseY: </span><span class="mi">248</span>
+    <span class="nv">time: </span><span class="mi">30</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">241</span>
+    <span class="nv">mouseY: </span><span class="mi">249</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">242</span>
+    <span class="nv">mouseY: </span><span class="mi">249</span>
+    <span class="nv">time: </span><span class="mi">66</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">242</span>
+    <span class="nv">mouseY: </span><span class="mi">250</span>
+    <span class="nv">time: </span><span class="mi">402</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">243</span>
+    <span class="nv">mouseY: </span><span class="mi">256</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">243</span>
+    <span class="nv">mouseY: </span><span class="mi">259</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">244</span>
+    <span class="nv">mouseY: </span><span class="mi">263</span>
+    <span class="nv">time: </span><span class="mi">18</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">268</span>
+    <span class="nv">time: </span><span class="mi">23</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">271</span>
+    <span class="nv">time: </span><span class="mi">38</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">272</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">274</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">276</span>
+    <span class="nv">time: </span><span class="mi">38</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">278</span>
+    <span class="nv">time: </span><span class="mi">15</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">279</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">245</span>
+    <span class="nv">mouseY: </span><span class="mi">280</span>
+    <span class="nv">time: </span><span class="mi">6</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">282</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">283</span>
+    <span class="nv">time: </span><span class="mi">37</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">284</span>
+    <span class="nv">time: </span><span class="mi">29</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">285</span>
+    <span class="nv">time: </span><span class="mi">64</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">286</span>
+    <span class="nv">time: </span><span class="mi">11</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">287</span>
+    <span class="nv">time: </span><span class="mi">6</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">289</span>
+    <span class="nv">time: </span><span class="mi">44</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">248</span>
+    <span class="nv">mouseY: </span><span class="mi">291</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">248</span>
+    <span class="nv">mouseY: </span><span class="mi">292</span>
+    <span class="nv">time: </span><span class="mi">73</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">248</span>
+    <span class="nv">mouseY: </span><span class="mi">293</span>
+    <span class="nv">time: </span><span class="mi">83</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">249</span>
+    <span class="nv">mouseY: </span><span class="mi">293</span>
+    <span class="nv">time: </span><span class="mi">150</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="mi">0</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">95</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">248</span>
+    <span class="nv">mouseY: </span><span class="mi">292</span>
+    <span class="nv">time: </span><span class="mi">104</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">247</span>
+    <span class="nv">mouseY: </span><span class="mi">290</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">240</span>
+    <span class="nv">mouseY: </span><span class="mi">270</span>
+    <span class="nv">time: </span><span class="mi">41</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">217</span>
+    <span class="nv">mouseY: </span><span class="mi">218</span>
+    <span class="nv">time: </span><span class="mi">51</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">214</span>
+    <span class="nv">mouseY: </span><span class="mi">208</span>
+    <span class="nv">time: </span><span class="mi">52</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">207</span>
+    <span class="nv">mouseY: </span><span class="mi">191</span>
+    <span class="nv">time: </span><span class="mi">54</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">198</span>
+    <span class="nv">mouseY: </span><span class="mi">170</span>
+    <span class="nv">time: </span><span class="mi">49</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">195</span>
+    <span class="nv">mouseY: </span><span class="mi">163</span>
+    <span class="nv">time: </span><span class="mi">50</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">195</span>
+    <span class="nv">mouseY: </span><span class="mi">162</span>
+    <span class="nv">time: </span><span class="mi">50</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">191</span>
+    <span class="nv">mouseY: </span><span class="mi">159</span>
+    <span class="nv">time: </span><span class="mi">55</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">180</span>
+    <span class="nv">mouseY: </span><span class="mi">141</span>
+    <span class="nv">time: </span><span class="mi">51</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">179</span>
+    <span class="nv">mouseY: </span><span class="mi">140</span>
+    <span class="nv">time: </span><span class="mi">42</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseDown&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">124</span>
+    <span class="nv">button: </span><span class="mi">0</span>
+    <span class="nv">ctrlKey: </span><span class="kc">false</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseUp&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">106</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">183</span>
+    <span class="nv">mouseY: </span><span class="mi">141</span>
+    <span class="nv">time: </span><span class="mi">63</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">189</span>
+    <span class="nv">mouseY: </span><span class="mi">145</span>
+    <span class="nv">time: </span><span class="mi">12</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">200</span>
+    <span class="nv">mouseY: </span><span class="mi">151</span>
+    <span class="nv">time: </span><span class="mi">27</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">237</span>
+    <span class="nv">mouseY: </span><span class="mi">177</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">261</span>
+    <span class="nv">mouseY: </span><span class="mi">191</span>
+    <span class="nv">time: </span><span class="mi">30</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">294</span>
+    <span class="nv">mouseY: </span><span class="mi">204</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">329</span>
+    <span class="nv">mouseY: </span><span class="mi">205</span>
+    <span class="nv">time: </span><span class="mi">33</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">343</span>
+    <span class="nv">mouseY: </span><span class="mi">204</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">363</span>
+    <span class="nv">mouseY: </span><span class="mi">202</span>
+    <span class="nv">time: </span><span class="mi">41</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">366</span>
+    <span class="nv">mouseY: </span><span class="mi">201</span>
+    <span class="nv">time: </span><span class="mi">25</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">369</span>
+    <span class="nv">mouseY: </span><span class="mi">201</span>
+    <span class="nv">time: </span><span class="mi">7</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">372</span>
+    <span class="nv">mouseY: </span><span class="mi">200</span>
+    <span class="nv">time: </span><span class="mi">28</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">382</span>
+    <span class="nv">mouseY: </span><span class="mi">194</span>
+    <span class="nv">time: </span><span class="mi">35</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">389</span>
+    <span class="nv">mouseY: </span><span class="mi">185</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">394</span>
+    <span class="nv">mouseY: </span><span class="mi">171</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">394</span>
+    <span class="nv">mouseY: </span><span class="mi">162</span>
+    <span class="nv">time: </span><span class="mi">36</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">395</span>
+    <span class="nv">mouseY: </span><span class="mi">158</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">394</span>
+    <span class="nv">mouseY: </span><span class="mi">154</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">392</span>
+    <span class="nv">mouseY: </span><span class="mi">152</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">391</span>
+    <span class="nv">mouseY: </span><span class="mi">149</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">388</span>
+    <span class="nv">mouseY: </span><span class="mi">146</span>
+    <span class="nv">time: </span><span class="mi">6</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">387</span>
+    <span class="nv">mouseY: </span><span class="mi">142</span>
+    <span class="nv">time: </span><span class="mi">27</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">385</span>
+    <span class="nv">mouseY: </span><span class="mi">135</span>
+    <span class="nv">time: </span><span class="mi">32</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">385</span>
+    <span class="nv">mouseY: </span><span class="mi">131</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">385</span>
+    <span class="nv">mouseY: </span><span class="mi">119</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">385</span>
+    <span class="nv">mouseY: </span><span class="mi">115</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">383</span>
+    <span class="nv">mouseY: </span><span class="mi">113</span>
+    <span class="nv">time: </span><span class="mi">34</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">383</span>
+    <span class="nv">mouseY: </span><span class="mi">111</span>
+    <span class="nv">time: </span><span class="mi">31</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">382</span>
+    <span class="nv">mouseY: </span><span class="mi">111</span>
+    <span class="nv">time: </span><span class="mi">75</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">383</span>
+    <span class="nv">mouseY: </span><span class="mi">111</span>
+    <span class="nv">time: </span><span class="mi">1566</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;takeScreenshot&quot;</span>
+    <span class="nv">mouseX: </span><span class="kc">null</span>
+    <span class="nv">mouseY: </span><span class="kc">null</span>
+    <span class="nv">time: </span><span class="mi">1475</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+UAAAJ2CAYAAAA5RiPTAAAgAElEQVR4Xu3dd4hd9dbH4Z+iudbYDdhFo8TYY8OGIvaGFYmCDUUFsWDDgihiww6K2Asq9oYNFHtvsQej2BvYFdEo8WXtlxnGmEkz5DtJngNyvc7MWXues/75zN77nNleffXVv5sHAQIECBAgQIAAAQIECBAgMN0FZhPl093cQAIECBAgQIAAAQIECBAg0AmIcotAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HZgigbFjx7aPP/64/fTTT23OOedsP/zwwxT9/Kz0zQsttFD7888/2wILLNCWW265NmjQoFnp1/e7EiBAgAABAgQIECAwGQKifDKQfMv/C3z77bdt9OjRbcSIEW3w4MFt0UUXRTMJgTKrP2C89tprbdiwYW2RRRZhRoAAAQIECBAgQIAAgV4BUW4ZJkug4rL+2XzzzSfr+33TvwUee+yxtvjii/tjhuUgQIAAAQIECBAgQECU24HJF6hL1l966aW2xx57TP4P+c4JCtx+++1t/fXX7y799yBAgAABAgQIECBAgIAz5XZgkgJjxoxpSy+9dFt++eX/8b1//PFH23rrrdtll13WVlllld6vPfLII+3mm29u1157bZt99tn7ff66N3233XZrTz75ZHcWvuff55tvvkke0/jfcPLJJ3f3bh977LHdl+qS8W222aYdddRRbc899+z+W83baqut2hNPPNGWWGKJyZrR9xjHP65PP/207bDDDu3pp5/uZp966qndveP7779/v8/9wQcftC+//LINHTp0sub7JgIECBAgQIAAAQIEZm4BUT5zv77T5Ld7+eWX24Ybbvivy64ryjfbbLN2+eWXtzXWWKN31v3339+uv/76dtttt00yynfaaacuausN43r+vQJ3Sh/33XdfO/fcc7vgnmOOOdorr7zSPd+WW27Z+8eBhx9+uJ122mnt8ccfb3PNNddkjago7++4Pvvss7b99tv3RvnRRx/dVltttYlGef3x4bnnnmvrrrvuZM33TQQIECBAgAABAgQIzNwConzmfn2nyW83atSotu222/7ruXqi/Oqrr/7XmfIrr7yyN8rrjHLF8EMPPdQOPPDAVvFa70zeN3jHj/K33nqrHXzwwe2TTz5pe+21VzvllFO6n+nv0XMWvAJ/yJAh7cILL2zPPvtse//997sIrzdYqzPZddl4nVXv7/nrLHb9QaHO/NfMm266qe2999694f3666+3ww47rDuWCuu7776792uHHnpoW2+99SYa5XX85bDmmmtOk9fGkxAgQIAAAQIECBAgMGMLiPIZ+/WbLkdfUTty5MgJRnldvl5niysy6+O/KnrrjHSdEa7L13/55Ze2ySabdDG+4447dmezv/nmm1b3Vn/++ee9Z6H7Rnlder7BBhu08847r/vZs88+u73xxhu9Z8En9Ev3XEpf31thXGfIL7744nbmmWe2ww8/vLuPu/7bSSed1FZcccV+n7+OqeeqgLPOOquttNJK3WX1FfsV7FtssUX3B4a11167N757Ll+/9dZbuzP+hxxyyERfl7q03xvmTZfVNYQAAQIECBAgQIDAgBcQ5QP+Jcof4MSifLvttmvvvfded9l2z6POQu+8887t0ksvbQ888EA755xzeoO6gnyttdZqL7zwQhs3btwEo7yi/qmnnup+vh4V9htttFEX8iuvvHK/IHUGfKmllmq77LJLF+B1CXuFcs3cb7/92uqrr979t4ro/p7/f//7X3ffeV1iXh/51vdsfr17ev3Tc1x1f/iuu+7ae6b8nnvuaV9//bUoz6+sIyBAgAABAgQIECAwwwiI8hnmpcod6MSivO4pv+qqq9rw4cN7D7DvPeUPPvhgdxn6+I+6hLvuHZ/QPeUnnHBCF+H77LNP92M9Z8EvuuiiiV72XW8wV5eTV1T3xHP9weCggw7qLl2vM9x1z3mdOe/v+RdccMF/3EPeN8rPOOOM7t75nuMa/35zZ8pzO2oyAQIECBAgQIAAgRlVQJTPqK/cdDzuSUX5xN7orc4e33jjjd395X/99Vf3z9tvv93WWWed9sUXX0wwyq+55po222yztSOPPLL7LX/77bfucvNJnSmvN16ry9TrUX8oqLP49bP1v3Vv+fHHH9+OOOKI7n7z/p6/zpT3fWO3vuF9wQUXdPeS9xzX+O++Pnr06O4S/r5XDUzoZXL5+nRcXqMIECBAgAABAgQIDHABUT7AX6CBcHiTeqO3iUX5O++8092Tfe+997Zhw4a1O+64o51++und557Xpd4TOlP+7rvvtn333bfVWfa6//uKK67o7k+vS87//vvvVm8sV288Vx8/1vdRQVyXzddl5Y8++mhbZpllui+feOKJ7brrrmt33XVXF/fPP/98v8/f9w8FdSa/b5T3HFddkr/sssu2uuf8zjvv7L18vS55r6gfMWLERF82b/Q2ELbaMRAgQIAAAQIECBAYGAKifGC8DgP6KOoj0TbeeOO28MIL/+M4+/uc8ron/JZbbun9KLI6M3zMMcf0/mx9ve7v7gneitl6Y7gK9Pr3eeedt11yySXdvej1qHu769LwivqaWe96fsMNN0zwUvbzzz+/i/eK5fpotHrUvOOOO673Xdgr7Pt7/r7HVJ9L3vf/13HV2fKaUY/dd9+9e4f3uiR+/vnn7z4jfYUVVpjoPeXff/99e+aZZ3wk2oDeeAdHgAABAgQIECBAYPoJiPLpZz3DTqpLv+usdJ0dntpHvVlbXbpe8doTy5N6rnoX9t9//737OLO+P1P3htcZ8f/6sWL9Pf+kjuvHH3/sPn998ODBk/rWf339o48+anWZ/dChQ6f4Z/0AAQIECBAgQIAAAQIzn4Aon/le02n+G40dO7bV2fI6M5x+1Jnyukf9gAMO6MJ4RnvU5ft13/vk/mFiRvv9HC8BAgQIECBAgAABAlMmIMqnzGuW/e6ff/65+2ixTTfddJY1+K+/eF1WP2TIkKk6w/5fZ/t5AgQIECBAgAABAgQGpoAoH5ivy4A8ql9//bW9+eab3RuZ1aXb499jPiAPOnxQdQ95Xbpfn49eH6dW96V7ECBAgAABAgQIECBAoEdAlNuFKRKojxKrjwL77rvv2qBBg9oWW2zxj5+vr40ZM6Y7qz6rP+qseF36X/fE1zvB1xvMeRAgQIAAAQIECBAgQKCvgCi3D1MlUG9WNvfcc/d+Jve4ceO6dzev/1111VWn6jn9EAECBAgQIECAAAECBGY1AVE+q73i0+j3rQAfOXJk92wffvhhe/HFF7sYX2yxxabRBE9DgAABAgQIECBAgACBmV9AlM/8r/E0/w17zpIPHz7c2fFprusJCRAgQIAAAQIECBCYlQRE+az0ak+j37XOktfHejk7Po1APQ0BAgQIECBAgAABArOsgCifZV/6qfvF6yz5V1991eaZZx73jk8doZ8iQIAAAQIECBAgQIBAr4AotwxTJDBq1Ki25JJLund8itR8MwECBAgQIECAAAECBCYsIMptBgECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIED1XExoAABhBSURBVAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQEOV2gAABAgQIECBAgAABAgQIhAREeQjeWAIECBAgQIAAAQIECBAgIMrtAAECBAgQIECAAAECBAgQCAmI8hC8sQQIECBAgAABAgQIECBAQJTbAQIECBAgQIAAAQIECBAgEBIQ5SF4YwkQIECAAAECBAgQIECAgCi3AwQIECBAgAABAgQIECBAICQgykPwxhIgQIAAAQIECBAgQIAAAVFuBwgQIECAAAECBAgQIECAQEhAlIfgjSVAgAABAgQIECBAgAABAqLcDhAgQIAAAQIECBAgQIAAgZCAKA/BG0uAAAECBAgQIECAAAECBES5HSBAgAABAgQIECBAgAABAiEBUR6CN5YAAQIECBAgQIAAAQIECIhyO0CAAAECBAgQIECAAAECBEICojwEbywBAgQIECBAgAABAgQIEBDldoAAAQIECBAgQIAAAQIECIQERHkI3lgCBAgQIECAAAECBAgQICDK7QABAgQIECBAgAABAgQIEAgJiPIQvLEECBAgQIAAAQIECBAgQECU2wECBAgQIECAAAECBAgQIBASEOUheGMJECBAgAABAgQIECBAgIAotwMECBAgQIAAAQIECBAgQCAkIMpD8MYSIECAAAECBAgQIECAAAFRbgcIECBAgAABAgQIECBAgEBIQJSH4I0lQIAAAQIECBAgQIAAAQKi3A4QIECAAAECBAgQIECAAIGQgCgPwRtLgAABAgQIECBAgAABAgREuR0gQIAAAQIECBAgQIAAAQIhAVEegjeWAAECBAgQIECAAAECBAiIcjtAgAABAgQIECBAgAABAgRCAqI8BG8sAQIECBAgQIAAAQIECBAQ5XaAAAECBAgQIECAAAECBAiEBER5CN5YAgQIECBAgAABAgQIECAgyu0AAQIECBAgQIAAAQIECBAICYjyELyxBAgQIECAAAECBAgQIEBAlNsBAgQIECBAgAABAgQIECAQEhDlIXhjCRAgQIAAAQIECBAgQICAKLcDBAgQIECAAAECBAgQIEAgJCDKQ/DGEiBAgAABAgQIECBAgAABUW4HCBAgQIAAAQIECBAgQIBASECUh+CNJUCAAAECBAgQIECAAAECotwOECBAgAABAgQIECBAgACBkIAoD8EbS4AAAQIECBAgQIAAAQIERLkdIECAAAECBAgQIECAAAECIQFRHoI3lgABAgQIECBAgAABAgQIiHI7QIAAAQIECBAgQIAAAQIEQgKiPARvLAECBAgQIECAAAECBAgQ+D+KzGgvI76PYwAAAABJRU5ErkJggg==&quot;</span>
+  <span class="p">,</span>
+    <span class="nv">type: </span><span class="s">&quot;mouseMove&quot;</span>
+    <span class="nv">mouseX: </span><span class="mi">381</span>
+    <span class="nv">mouseY: </span><span class="mi">111</span>
+    <span class="nv">time: </span><span class="mi">791</span>
+    <span class="nv">button: </span><span class="kc">null</span>
+    <span class="nv">ctrlKey: </span><span class="kc">null</span>
+    <span class="nv">screenShotImageData: </span><span class="s">&quot;&quot;</span>
+  <span class="p">]</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

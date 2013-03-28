@@ -612,12 +612,12 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#drawNew-instance'>
-        - (void) <strong>drawNew</strong>()
+      <a href='#updateRendering-instance'>
+        - (void) <strong>updateRendering</strong>()
       </a>
     </span>
     <span class='desc'>
-      Morph displaying:
+      
     </span>
   </li>
   <li>
@@ -642,8 +642,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#drawOn-instance'>
-        - (void) <strong>drawOn</strong>(aCanvas, clippingRectangle = @bounds)
+      <a href='#blit-instance'>
+        - (void) <strong>blit</strong>(aCanvas, clippingRectangle = @bounds)
       </a>
     </span>
     <span class='desc'>
@@ -652,8 +652,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#fullDrawOn-instance'>
-        - (void) <strong>fullDrawOn</strong>(aCanvas, clippingRectangle)
+      <a href='#recursivelyBlit-instance'>
+        - (void) <strong>recursivelyBlit</strong>(aCanvas, clippingRectangle)
       </a>
     </span>
     <span class='desc'>
@@ -1653,13 +1653,10 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='drawNew-instance'>
-      - (void) <strong>drawNew</strong>()
+    <p class='signature' id='updateRendering-instance'>
+      - (void) <strong>updateRendering</strong>()
     </p>
-    <div class='docstring'>
-  <p>Morph displaying:</p>
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -1680,14 +1677,14 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='drawOn-instance'>
-      - (void) <strong>drawOn</strong>(aCanvas, clippingRectangle = @bounds)
+    <p class='signature' id='blit-instance'>
+      - (void) <strong>blit</strong>(aCanvas, clippingRectangle = @bounds)
     </p>
     <div class='docstring'>
   <p>This method only paints this very morph&#39;s &quot;image&quot;,
 it doesn&#39;t descend the children
-recursively. The recursion mechanism is done by fullDrawOn, which
-eventually invokes drawOn.
+recursively. The recursion mechanism is done by recursivelyBlit, which
+eventually invokes blit.
 Note that this morph might paint something on the screen even if
 it&#39;s not a &quot;leaf&quot;.</p>
 </div>
@@ -1695,8 +1692,8 @@ it&#39;s not a &quot;leaf&quot;.</p>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='fullDrawOn-instance'>
-      - (void) <strong>fullDrawOn</strong>(aCanvas, clippingRectangle)
+    <p class='signature' id='recursivelyBlit-instance'>
+      - (void) <strong>recursivelyBlit</strong>(aCanvas, clippingRectangle)
     </p>
     <div class='docstring'>
   <p>&quot;for debugging purposes:&quot;</p><pre><code>try {    context.drawImage(
@@ -2199,7 +2196,7 @@ it&#39;s not a &quot;leaf&quot;.</p>
     </div>
     <div id='footer'>
   Generated on
-  Mon Mar 25 2013 22:20:52 GMT+0000 (GMT)
+  Thu Mar 28 2013 00:52:52 GMT+0000 (GMT)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.5.4

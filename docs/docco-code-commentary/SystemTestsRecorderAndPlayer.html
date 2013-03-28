@@ -1,0 +1,118 @@
+<!DOCTYPE html>  <html> <head>   <title>SystemTestsRecorderAndPlayer.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="BlinkerMorph.html">                 BlinkerMorph.coffee               </a>                                           <a class="source" href="BouncerMorph.html">                 BouncerMorph.coffee               </a>                                           <a class="source" href="BoxMorph.html">                 BoxMorph.coffee               </a>                                           <a class="source" href="CaretMorph.html">                 CaretMorph.coffee               </a>                                           <a class="source" href="CircleBoxMorph.html">                 CircleBoxMorph.coffee               </a>                                           <a class="source" href="Color.html">                 Color.coffee               </a>                                           <a class="source" href="ColorPaletteMorph.html">                 ColorPaletteMorph.coffee               </a>                                           <a class="source" href="ColorPickerMorph.html">                 ColorPickerMorph.coffee               </a>                                           <a class="source" href="FrameMorph.html">                 FrameMorph.coffee               </a>                                           <a class="source" href="GrayPaletteMorph.html">                 GrayPaletteMorph.coffee               </a>                                           <a class="source" href="HandMorph.html">                 HandMorph.coffee               </a>                                           <a class="source" href="HandleMorph.html">                 HandleMorph.coffee               </a>                                           <a class="source" href="InspectorMorph.html">                 InspectorMorph.coffee               </a>                                           <a class="source" href="ListMorph.html">                 ListMorph.coffee               </a>                                           <a class="source" href="MenuItemMorph.html">                 MenuItemMorph.coffee               </a>                                           <a class="source" href="MenuMorph.html">                 MenuMorph.coffee               </a>                                           <a class="source" href="Morph.html">                 Morph.coffee               </a>                                           <a class="source" href="MorphicNode.html">                 MorphicNode.coffee               </a>                                           <a class="source" href="MorphsListMorph.html">                 MorphsListMorph.coffee               </a>                                           <a class="source" href="MouseSensorMorph.html">                 MouseSensorMorph.coffee               </a>                                           <a class="source" href="PenMorph.html">                 PenMorph.coffee               </a>                                           <a class="source" href="Point.html">                 Point.coffee               </a>                                           <a class="source" href="Point2.html">                 Point2.coffee               </a>                                           <a class="source" href="Rectangle.html">                 Rectangle.coffee               </a>                                           <a class="source" href="ScrollFrameMorph.html">                 ScrollFrameMorph.coffee               </a>                                           <a class="source" href="ShadowMorph.html">                 ShadowMorph.coffee               </a>                                           <a class="source" href="SliderButtonMorph.html">                 SliderButtonMorph.coffee               </a>                                           <a class="source" href="SliderMorph.html">                 SliderMorph.coffee               </a>                                           <a class="source" href="SpeechBubbleMorph.html">                 SpeechBubbleMorph.coffee               </a>                                           <a class="source" href="StringFieldMorph.html">                 StringFieldMorph.coffee               </a>                                           <a class="source" href="StringMorph.html">                 StringMorph.coffee               </a>                                           <a class="source" href="SystemTestsRecorderAndPlayer.html">                 SystemTestsRecorderAndPlayer.coffee               </a>                                           <a class="source" href="SystemTestsRepo_SimpleSpeechBubbleTest.html">                 SystemTestsRepo_SimpleSpeechBubbleTest.coffee               </a>                                           <a class="source" href="TextMorph.html">                 TextMorph.coffee               </a>                                           <a class="source" href="TriggerMorph.html">                 TriggerMorph.coffee               </a>                                           <a class="source" href="WorldMorph.html">                 WorldMorph.coffee               </a>                                           <a class="source" href="globalFunctions.html">                 globalFunctions.coffee               </a>                                           <a class="source" href="globalSettings.html">                 globalSettings.coffee               </a>                                           <a class="source" href="morphicVersion.html">                 morphicVersion.coffee               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               SystemTestsRecorderAndPlayer.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="k">class</span> <span class="nx">SystemTestsEvent</span>
+  <span class="nv">constructor: </span><span class="nf">(@type, @mouseX, @mouseY, @time, @button, @ctrlKey, @screenShotImageData = &#39;&#39;) -&gt;</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">@type</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@mouseX</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@mouseY</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@time</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@button</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">@ctrlKey</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nx">hashCode</span><span class="p">(</span><span class="nx">@screenShotImageData</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nx">SystemTestsRecorderAndPlayer</span>
+  <span class="nv">eventQueue: </span><span class="p">[]</span>
+  <span class="nv">recordingASystemTest: </span><span class="kc">false</span>
+  <span class="nv">replayingASystemTest: </span><span class="kc">false</span>
+  <span class="nv">lastRecordedEventTime: </span><span class="kc">null</span>
+  <span class="nv">handMorph: </span><span class="kc">null</span>
+
+  <span class="nv">constructor: </span><span class="nf">(@worldMorph, @handMorph) -&gt;</span>
+
+  <span class="nv">startRecording: </span><span class="nf">-&gt;</span>
+    <span class="vi">@eventQueue = </span><span class="p">[]</span>
+    <span class="vi">@lastRecordedEventTime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span>
+    <span class="vi">@recordingASystemTest = </span><span class="kc">true</span>
+    <span class="vi">@replayingASystemTest = </span><span class="kc">false</span>
+
+  <span class="nv">stopRecording: </span><span class="nf">-&gt;</span>
+    <span class="vi">@recordingASystemTest = </span><span class="kc">false</span>
+
+  <span class="nv">startPlaying: </span><span class="nf">-&gt;</span>
+    <span class="vi">@recordingASystemTest = </span><span class="kc">false</span>
+    <span class="vi">@replayingASystemTest = </span><span class="kc">true</span>
+    <span class="nx">@replayEvents</span><span class="p">()</span>
+
+  <span class="nv">stopPlaying: </span><span class="nf">-&gt;</span>
+    <span class="vi">@replayingASystemTest = </span><span class="kc">false</span>
+
+  <span class="nv">addMouseMoveEvent: </span><span class="nf">(pageX, pageY) -&gt;</span>
+    <span class="k">return</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">@recordingASystemTest</span>
+    <span class="nv">currentTime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span>
+    <span class="nx">@eventQueue</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+      <span class="k">new</span> <span class="nx">SystemTestsEvent</span><span class="p">(</span>
+        <span class="s">&quot;mouseMove&quot;</span><span class="p">,</span>
+        <span class="nx">pageX</span><span class="p">,</span>
+        <span class="nx">pageY</span><span class="p">,</span>
+        <span class="nx">currentTime</span> <span class="o">-</span> <span class="nx">@lastRecordedEventTime</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span>
+      <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="vi">@lastRecordedEventTime = </span><span class="nx">currentTime</span>
+
+  <span class="nv">addMouseDownEvent: </span><span class="nf">(button, ctrlKey) -&gt;</span>
+    <span class="k">return</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">@recordingASystemTest</span>
+    <span class="nv">currentTime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span>
+    <span class="nx">@eventQueue</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+      <span class="k">new</span> <span class="nx">SystemTestsEvent</span><span class="p">(</span>
+        <span class="s">&quot;mouseDown&quot;</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">currentTime</span> <span class="o">-</span> <span class="nx">@lastRecordedEventTime</span><span class="p">,</span>
+        <span class="nx">button</span><span class="p">,</span>
+        <span class="nx">ctrlKey</span><span class="p">,</span>
+        <span class="kc">null</span>
+      <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="vi">@lastRecordedEventTime = </span><span class="nx">currentTime</span>
+
+  <span class="nv">addMouseUpEvent: </span><span class="p">()</span> <span class="nf">-&gt;</span>
+    <span class="k">return</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">@recordingASystemTest</span>
+    <span class="nv">currentTime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span>
+    <span class="nx">@eventQueue</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+      <span class="k">new</span> <span class="nx">SystemTestsEvent</span><span class="p">(</span>
+        <span class="s">&quot;mouseUp&quot;</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">currentTime</span> <span class="o">-</span> <span class="nx">@lastRecordedEventTime</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span>
+      <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="vi">@lastRecordedEventTime = </span><span class="nx">currentTime</span>
+
+  <span class="nv">takeScreenshot: </span><span class="p">()</span> <span class="nf">-&gt;</span>
+    <span class="k">return</span> <span class="k">if</span> <span class="o">not</span> <span class="nx">@recordingASystemTest</span>
+    <span class="nv">currentTime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">().</span><span class="nx">getTime</span><span class="p">()</span>
+    <span class="nx">@eventQueue</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+      <span class="k">new</span> <span class="nx">SystemTestsEvent</span><span class="p">(</span>
+        <span class="s">&quot;takeScreenshot&quot;</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">currentTime</span> <span class="o">-</span> <span class="nx">@lastRecordedEventTime</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">@worldMorph</span><span class="p">.</span><span class="nx">fullImageData</span><span class="p">()</span>
+      <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="vi">@lastRecordedEventTime = </span><span class="nx">currentTime</span>
+
+  <span class="nv">compareScreenshots: </span><span class="nf">(expected) -&gt;</span>
+   <span class="k">if</span> <span class="nx">expected</span> <span class="o">==</span> <span class="nx">@worldMorph</span><span class="p">.</span><span class="nx">fullImageData</span><span class="p">()</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;PASS - screenshot as expected&quot;</span>
+   <span class="k">else</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;FAIL - screenshot is different from expected&quot;</span>
+
+  <span class="nv">replayEvents: </span><span class="p">()</span> <span class="nf">-&gt;</span>
+   <span class="nv">lastPlayedEventTime = </span><span class="mi">0</span>
+   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s">&quot;events: &quot;</span> <span class="o">+</span> <span class="nx">@eventQueue</span>
+   <span class="k">for</span> <span class="nx">queuedEvent</span> <span class="k">in</span> <span class="nx">@eventQueue</span>
+      <span class="nx">lastPlayedEventTime</span> <span class="o">+=</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">time</span>
+      <span class="nx">@scheduleEvent</span><span class="p">(</span><span class="nx">queuedEvent</span><span class="p">,</span> <span class="nx">lastPlayedEventTime</span><span class="p">)</span>
+
+  <span class="nv">scheduleEvent: </span><span class="nf">(queuedEvent, lastPlayedEventTime) -&gt;</span>
+    <span class="k">if</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;mouseMove&#39;</span>
+      <span class="nv">callback = </span><span class="o">=&gt;</span> <span class="nx">@handMorph</span><span class="p">.</span><span class="nx">processMouseMove</span><span class="p">(</span><span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">mouseX</span><span class="p">,</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">mouseY</span><span class="p">)</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;mouseDown&#39;</span>
+      <span class="nv">callback = </span><span class="o">=&gt;</span> <span class="nx">@handMorph</span><span class="p">.</span><span class="nx">processMouseDown</span><span class="p">(</span><span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">button</span><span class="p">,</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">ctrlKey</span><span class="p">)</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;mouseUp&#39;</span>
+      <span class="nv">callback = </span><span class="o">=&gt;</span> <span class="nx">@handMorph</span><span class="p">.</span><span class="nx">processMouseUp</span><span class="p">()</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">type</span> <span class="o">==</span> <span class="s">&#39;takeScreenshot&#39;</span>
+      <span class="nv">callback = </span><span class="o">=&gt;</span> <span class="nx">@compareScreenshots</span><span class="p">(</span><span class="nx">queuedEvent</span><span class="p">.</span><span class="nx">screenShotImageData</span><span class="p">)</span>
+    <span class="k">else</span> <span class="k">return</span>
+
+    <span class="nx">setTimeout</span> <span class="nx">callback</span><span class="p">,</span> <span class="nx">lastPlayedEventTime</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime</p>             </td>             <td class="code">               <div class="highlight"><pre></pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
