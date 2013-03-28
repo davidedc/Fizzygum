@@ -20,7 +20,8 @@
 # Then pass the JSON into http://js2coffee.org/
 # and save it in this file.
 
-class SystemTestsRepo_SimpleSpeechBubbleTest
+# Tests name must start with "SystemTest_"
+class SystemTest_SimpleSpeechBubbleTest
   @testData: [
     type: "mouseMove"
     mouseX: 158
