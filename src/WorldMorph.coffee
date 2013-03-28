@@ -369,6 +369,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "demo...", "userCreateMorph", "sample morphs"
       menu.addLine()
       menu.addItem "hide all...", "hideAll"
+      menu.addItem "delete all...", "destroyAll"
       menu.addItem "show all...", "showAllHiddens"
       menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addItem "inspect...", "inspect", "open a window on\nall properties"
