@@ -9,7 +9,7 @@ class MorphsListMorph extends BoxMorph
 
   constructor: (target) ->
     super()
-    #
+
     @silentSetExtent new Point(
       WorldMorph.MorphicPreferences.handleSize * 10,
       WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
@@ -28,14 +28,14 @@ class MorphsListMorph extends BoxMorph
   
   buildPanes: ->
     attribs = []
-    #
+
     # remove existing panes
     @children.forEach (m) ->
       # keep work pane around
       m.destroy()  if m isnt @work
-    #
+
     @children = []
-    #
+
     # label
     @label = new TextMorph("Morphs List")
     @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
@@ -49,7 +49,7 @@ class MorphsListMorph extends BoxMorph
     ListOfMorphs = (Object.keys(window)).filter (i) ->
       i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
     @morphsList = new ListMorph(ListOfMorphs, null)
-    #
+
     # so far nothing happens when items are selected
     #@morphsList.action = (selected) ->
     #  val = myself.target[selected]
@@ -65,28 +65,28 @@ class MorphsListMorph extends BoxMorph
     #  cnts.enableSelecting()
     #  cnts.setReceiver myself.target
     #  myself.detail.setContents cnts
-    #
+
     @morphsList.hBar.alpha = 0.6
     @morphsList.vBar.alpha = 0.6
     @add @morphsList
-    #
+
     # close button
     @buttonClose = new TriggerMorph()
     @buttonClose.labelString = "close"
     @buttonClose.action = =>
       @destroy()
-    #
+
     @add @buttonClose
-    #
+
     # resizer
     @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
-    #
+
     # update layout
     @fixLayout()
   
   fixLayout: ->
     Morph::trackChanges = false
-    #
+
     # label
     x = @left() + @edge
     y = @top() + @edge
@@ -99,7 +99,7 @@ class MorphsListMorph extends BoxMorph
       @updateRendering()
       @changed()
       @resizer.updateRendering()
-    #
+
     # morphsList
     y = @label.bottom() + 2
     w = @width() - @edge
@@ -108,7 +108,7 @@ class MorphsListMorph extends BoxMorph
     h = b - y
     @morphsList.setPosition new Point(x, y)
     @morphsList.setExtent new Point(w, h)
-    #
+
     # close button
     x = @morphsList.left()
     y = @morphsList.bottom() + @edge
