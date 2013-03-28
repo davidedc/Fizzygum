@@ -1495,3 +1495,4 @@ class SystemTest_SimpleSpeechBubbleTest
     ctrlKey: null
     screenShotImageData: ""
   ]
+  
