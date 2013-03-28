@@ -293,12 +293,10 @@ class WorldMorph extends FrameMorph
         window.setTimeout ( => (@caret.insert text)), 50, true
     ), false
 
-    # when recording a test, the caps lock
-    # takes a screenshot
-    document.body.addEventListener "keydown", ((event) =>
-      if event.keyCode == 20
-        @systemTestsRecorderAndPlayer.takeScreenshot()
-    ), false
+    console.log "binding wit mousetrap"
+    Mousetrap.bind ["command+k", "ctrl+k"], (e) =>
+      @systemTestsRecorderAndPlayer.takeScreenshot()
+      false
 
     window.addEventListener "dragover", ((event) ->
       event.preventDefault()
