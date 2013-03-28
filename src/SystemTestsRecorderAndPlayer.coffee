@@ -13,6 +13,28 @@ class SystemTestsRecorderAndPlayer
     @recordingASystemTest = true
     @replayingASystemTest = false
 
+    systemTestEvent = {}
+    systemTestEvent.type = "systemInfo"
+    systemTestEvent.zombieKernelTestHarnessVersionMajor = 0
+    systemTestEvent.zombieKernelTestHarnessVersionMinor = 1
+    systemTestEvent.zombieKernelTestHarnessVersionRelease = 0
+    systemTestEvent.time = 0
+    systemTestEvent.userAgent = navigator.userAgent
+    systemTestEvent.screenWidth = window.screen.width
+    systemTestEvent.screenHeight = window.screen.height
+    systemTestEvent.screenColorDepth = window.screen.colorDepth
+    if window.devicePixelRatio?
+      systemTestEvent.screenPixelRatio = window.devicePixelRatio
+    else
+      systemTestEvent.screenPixelRatio = window.devicePixelRatio
+    systemTestEvent.appCodeName = navigator.appCodeName
+    systemTestEvent.appName = navigator.appName
+    systemTestEvent.appVersion = navigator.appVersion
+    systemTestEvent.cookieEnabled = navigator.cookieEnabled
+    systemTestEvent.platform = navigator.platform
+    systemTestEvent.systemLanguage = navigator.systemLanguage
+    @eventQueue.push systemTestEvent
+
   stopRecording: ->
     @recordingASystemTest = false
 
