@@ -43,12 +43,11 @@ class MorphsListMorph extends BoxMorph
     @label.color = new Color(255, 255, 255)
     @label.updateRendering()
     @add @label
-    #
-    ListOfMorphs = []
-    for i of window
-      theWordMorph = "Morph"
-      if i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
-        ListOfMorphs.push i
+
+    # Check which objects end with the word Morph
+    theWordMorph = "Morph"
+    ListOfMorphs = (Object.keys(window)).filter (i) ->
+      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
     @morphsList = new ListMorph(ListOfMorphs, null)
     #
     # so far nothing happens when items are selected
