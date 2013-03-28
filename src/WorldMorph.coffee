@@ -367,7 +367,11 @@ class WorldMorph extends FrameMorph
     for i in @testsList()
       console.log window[i]
       @systemTestsRecorderAndPlayer.eventQueue = (window[i]).testData
+      # the Zombie kernel safari pop-up is painted weird, needs a refresh
+      # for some unknown reason
       @changed()
+      # start from clean slate
+      @destroyAll()
       @systemTestsRecorderAndPlayer.startPlaying()
 
   # WorldMorph menu:
