@@ -1,6 +1,6 @@
 class SystemTestsEvent
-  constructor: (@type, @mouseX, @mouseY, @time, @button, @ctrlKey) ->
-    console.log @type + " " + @mouseX + " " + @mouseY + " " + @time + " " + @button + " " + @ctrlKey
+  constructor: (@type, @mouseX, @mouseY, @time, @button, @ctrlKey, @screenShotImageData = '') ->
+    console.log @type + " " + @mouseX + " " + @mouseY + " " + @time + " " + @button + " " + @ctrlKey + " " + hashCode(@screenShotImageData)
 
 class SystemTestsRecorderAndPlayer
   eventQueue: []
@@ -9,7 +9,7 @@ class SystemTestsRecorderAndPlayer
   lastRecordedEventTime: null
   handMorph: null
 
-  constructor: (@handMorph) ->
+  constructor: (@worldMorph, @handMorph) ->
 
   startRecording: ->
     @eventQueue = []
@@ -43,17 +43,18 @@ class SystemTestsRecorderAndPlayer
     )
     @lastRecordedEventTime = currentTime
 
-  addMouseDownEvent: (pageX, pageY, button, ctrlKey) ->
+  addMouseDownEvent: (button, ctrlKey) ->
     return if not @recordingASystemTest
     currentTime = new Date().getTime()
     @eventQueue.push(
       new SystemTestsEvent(
         "mouseDown",
-        pageX,
-        pageY,
+        null,
+        null,
         currentTime - @lastRecordedEventTime,
         button,
-        ctrlKey
+        ctrlKey,
+        null
       )
     )
     @lastRecordedEventTime = currentTime
@@ -68,10 +69,33 @@ class SystemTestsRecorderAndPlayer
         null,
         currentTime - @lastRecordedEventTime,
         null,
+        null,
         null
       )
     )
     @lastRecordedEventTime = currentTime
+
+  takeScreenshot: () ->
+    return if not @recordingASystemTest
+    currentTime = new Date().getTime()
+    @eventQueue.push(
+      new SystemTestsEvent(
+        "takeScreenshot",
+        null,
+        null,
+        currentTime - @lastRecordedEventTime,
+        null,
+        null,
+        @worldMorph.fullImageData()
+      )
+    )
+    @lastRecordedEventTime = currentTime
+
+  compareScreenshots: (expected) ->
+   if expected == @worldMorph.fullImageData()
+    console.log "PASS - screenshot as expected"
+   else
+    console.log "FAIL - screenshot is different from expected"
 
   replayEvents: () ->
    lastPlayedEventTime = 0
@@ -87,6 +111,8 @@ class SystemTestsRecorderAndPlayer
       callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)
     else if queuedEvent.type == 'mouseUp'
       callback = => @handMorph.processMouseUp()
+    else if queuedEvent.type == 'takeScreenshot'
+      callback = => @compareScreenshots(queuedEvent.screenShotImageData)
     else return
 
     setTimeout callback, lastPlayedEventTime

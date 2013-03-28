@@ -40,7 +40,7 @@ class WorldMorph extends FrameMorph
     @activeHandle = null
     @virtualKeyboard = null
     @initEventListeners()
-    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@hand)
+    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
   
   # World Morph display:
   brokenFor: (aMorph) ->
@@ -149,9 +149,18 @@ class WorldMorph extends FrameMorph
     @virtualKeyboard.style.width = "0px"
     @virtualKeyboard.style.height = "0px"
     document.body.appendChild @virtualKeyboard
+
+    # when recording a test, the caps lock
+    # takes a screenshot
+    document.addEventListener "keydown", ((event) =>
+      if event.keyCode == 20
+        @systemTestsRecorderAndPlayer.takeScreenshot()
+    ), false
+
     @virtualKeyboard.addEventListener "keydown", ((event) =>
       # remember the keyCode in the world's currentKey property
       @currentKey = event.keyCode
+
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
       # supress backspace override
