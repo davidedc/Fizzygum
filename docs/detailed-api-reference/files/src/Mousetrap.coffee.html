@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>CoffeeScript API Documentation</title>
+  <link rel='stylesheet' href='..&#47;..&#47;..&#47;assets/codo.css' type='text/css'>
+  <script src='..&#47;..&#47;..&#47;assets/codo.js'></script>
+  <script src='..&#47;..&#47;..&#47;assets/search_data.js'></script>
+</head>
+  <body>
+    <div id='base' data-path='..&#47;..&#47;..&#47;'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='..&#47;..&#47;..&#47;class_index.html' title='Index'>Index</a>
+    &raquo;
+    <span class='title'>.</span>
+    &raquo;
+    <span class='title'>src</span>
+    &raquo;
+    <span class='title'>Mousetrap.coffee</span>
+    <nav>
+      <ul>
+        <li class='noframes'>
+          (<a class='noframes' href='#'>no frames</a>)
+        </li>
+      </ul>
+    </nav>
+    <div id='search'>
+      <a id='class_list_link' href='..&#47;..&#47;..&#47;class_list.html'>Classes</a>
+      <a id='file_list_link' href='..&#47;..&#47;..&#47;file_list.html'>Files</a>
+      <a id='method_list_link' href='..&#47;..&#47;..&#47;method_list.html'>Methods</a>
+      <a id='extra_list_link' href='..&#47;..&#47;..&#47;extra_list.html'>Extras</a>
+    </div>
+  </div>
+  <iframe id='search_frame'></iframe>
+  <div id='fuzzySearch'>
+    <input type='text'>
+    <ol></ol>
+  </div>
+  <div id='help'>
+    <p>
+      Quickly fuzzy find classes, mixins, methods, file:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-T</span>
+        Open fuzzy finder dialog
+      </li>
+    </ul>
+    <p>
+      In frame mode you can toggle the list naviation frame on the left side:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-L</span>
+        Toggle list view
+      </li>
+    </ul>
+    <p>
+      You can focus a list in frame mode or toggle a tab in frameless mode:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-C</span>
+        Class list
+      </li>
+      <li>
+        <span>Ctrl-I</span>
+        Mixin list
+      </li>
+      <li>
+        <span>Ctrl-F</span>
+        File list
+      </li>
+      <li>
+        <span>Ctrl-M</span>
+        Method list
+      </li>
+      <li>
+        <span>Ctrl-E</span>
+        Extras list
+      </li>
+    </ul>
+    <p>
+      You can focus and blur the search input:
+    </p>
+    <ul>
+      <li>
+        <span>Ctrl-S</span>
+        Focus search input
+      </li>
+      <li>
+        <span>Esc</span>
+        Blur search input
+      </li>
+    </ul>
+    <p>
+      In frameless mode you can close the list tab:
+    </p>
+    <ul>
+      <li>
+        <span>Esc</span>
+        Close list tab
+      </li>
+    </ul>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        File:
+        Mousetrap.coffee
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>.&#47;src</td>
+        </tr>
+      </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#_addEvent-file'>
+        ? (void) <strong>_addEvent</strong>(object, type, callback)
+      </a>
+    </span>
+    <span class='desc'>
+      cross browser add event method @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_characterFromEvent-file'>
+        ? (string) <strong>_characterFromEvent</strong>(e)
+      </a>
+    </span>
+    <span class='desc'>
+      takes the event and returns the key character
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_modifiersMatch-file'>
+        ? (void) <strong>_modifiersMatch</strong>(modifiers1, modifiers2)
+      </a>
+    </span>
+    <span class='desc'>
+      checks if two arrays are equal @returns {boolean}
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_resetSequences-file'>
+        ? (void) <strong>_resetSequences</strong>(doNotReset, maxLevel)
+      </a>
+    </span>
+    <span class='desc'>
+      resets all sequence counters except for the ones passed in @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_getMatches-file'>
+        ? (void) <strong>_getMatches</strong>(character, modifiers, e, remove, combination)
+      </a>
+    </span>
+    <span class='desc'>
+      finds all callbacks that match based on the keycode, modifiers, and action @returns {Array}
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_eventModifiers-file'>
+        ? (void) <strong>_eventModifiers</strong>(e)
+      </a>
+    </span>
+    <span class='desc'>
+      takes a key event and figures out what the modifiers are @returns {Array}
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_fireCallback-file'>
+        ? (void) <strong>_fireCallback</strong>(callback, e, combo)
+      </a>
+    </span>
+    <span class='desc'>
+      actually calls the callback function if your callback function returns false this will use the jquery convention - prevent default and stop propogation on the event @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_handleCharacter-file'>
+        ? (void) <strong>_handleCharacter</strong>(character, e)
+      </a>
+    </span>
+    <span class='desc'>
+      handles a character key event @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_handleKey-file'>
+        ? (void) <strong>_handleKey</strong>(e)
+      </a>
+    </span>
+    <span class='desc'>
+      handles a keydown event @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_isModifier-file'>
+        ? (void) <strong>_isModifier</strong>(key)
+      </a>
+    </span>
+    <span class='desc'>
+      determines if the keycode specified is a modifier key or not @returns {boolean}
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_resetSequenceTimer-file'>
+        ? (void) <strong>_resetSequenceTimer</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      called to set a 1 second timeout on the specified sequence this is so after each key press in the sequence you have 1 second to press the next key before you have to start over @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_getReverseMap-file'>
+        ? (Object) <strong>_getReverseMap</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      reverses the map lookup so that we can look for specific keys to see what can and can&#39;t use keypress
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_pickBestAction-file'>
+        ? (void) <strong>_pickBestAction</strong>(key, modifiers, action)
+      </a>
+    </span>
+    <span class='desc'>
+      picks the best action based on the key combination
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_bindSequence-file'>
+        ? (void) <strong>_bindSequence</strong>(combo, keys, callback, action)
+      </a>
+    </span>
+    <span class='desc'>
+      binds a key sequence to an event @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_bindSingle-file'>
+        ? (void) <strong>_bindSingle</strong>(combination, callback, action, sequenceName, level)
+      </a>
+    </span>
+    <span class='desc'>
+      binds a single keyboard combination @returns void
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_bindMultiple-file'>
+        ? (void) <strong>_bindMultiple</strong>(combinations, callback, action)
+      </a>
+    </span>
+    <span class='desc'>
+      binds multiple combinations to the same callback @returns void
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='_addEvent-file'>
+      ? (void) <strong>_addEvent</strong>(object, type, callback)
+    </p>
+    <div class='docstring'>
+  <p>cross browser add event method</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>object</span>
+      <span class='type'>
+        (<tt>Element|HTMLDocument</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>type</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (<tt>Function</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_characterFromEvent-file'>
+      ? (string) <strong>_characterFromEvent</strong>(e)
+    </p>
+    <div class='docstring'>
+  <p>takes the event and returns the key character</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event</tt>)
+      </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span><tt>string</tt></li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_modifiersMatch-file'>
+      ? (void) <strong>_modifiersMatch</strong>(modifiers1, modifiers2)
+    </p>
+    <div class='docstring'>
+  <p>checks if two arrays are equal</p><p>@returns {boolean}</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>modifiers1</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>modifiers2</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_resetSequences-file'>
+      ? (void) <strong>_resetSequences</strong>(doNotReset, maxLevel)
+    </p>
+    <div class='docstring'>
+  <p>resets all sequence counters except for the ones passed in</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>doNotReset</span>
+      <span class='type'>
+        (<tt>Object</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_getMatches-file'>
+      ? (void) <strong>_getMatches</strong>(character, modifiers, e, remove, combination)
+    </p>
+    <div class='docstring'>
+  <p>finds all callbacks that match based on the keycode, modifiers,
+and action</p><p>@returns {Array}</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>character</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>modifiers</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event|Object</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>remove</span>
+      <span class='type'>
+        (<tt>boolean=</tt>)
+      </span>
+      &mdash;
+      <span class='desc'><ul>should we remove any matches
+</ul>
+</span>
+    </li>
+    <li>
+      <span class='name'>combination</span>
+      <span class='type'>
+        (<tt>string=</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_eventModifiers-file'>
+      ? (void) <strong>_eventModifiers</strong>(e)
+    </p>
+    <div class='docstring'>
+  <p>takes a key event and figures out what the modifiers are</p><p>@returns {Array}</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_fireCallback-file'>
+      ? (void) <strong>_fireCallback</strong>(callback, e, combo)
+    </p>
+    <div class='docstring'>
+  <p>actually calls the callback function</p><p>if your callback function returns false this will use the jquery
+convention - prevent default and stop propogation on the event</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (<tt>Function</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_handleCharacter-file'>
+      ? (void) <strong>_handleCharacter</strong>(character, e)
+    </p>
+    <div class='docstring'>
+  <p>handles a character key event</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>character</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_handleKey-file'>
+      ? (void) <strong>_handleKey</strong>(e)
+    </p>
+    <div class='docstring'>
+  <p>handles a keydown event</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>e</span>
+      <span class='type'>
+        (<tt>Event</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_isModifier-file'>
+      ? (void) <strong>_isModifier</strong>(key)
+    </p>
+    <div class='docstring'>
+  <p>determines if the keycode specified is a modifier key or not</p><p>@returns {boolean}</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>key</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_resetSequenceTimer-file'>
+      ? (void) <strong>_resetSequenceTimer</strong>()
+    </p>
+    <div class='docstring'>
+  <p>called to set a 1 second timeout on the specified sequence</p><p>this is so after each key press in the sequence you have 1 second
+to press the next key before you have to start over</p><p>@returns void</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_getReverseMap-file'>
+      ? (Object) <strong>_getReverseMap</strong>()
+    </p>
+    <div class='docstring'>
+  <p>reverses the map lookup so that we can look for specific keys
+to see what can and can&#39;t use keypress</p>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span><tt>Object</tt></li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_pickBestAction-file'>
+      ? (void) <strong>_pickBestAction</strong>(key, modifiers, action)
+    </p>
+    <div class='docstring'>
+  <p>picks the best action based on the key combination</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>key</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+      &mdash;
+      <span class='desc'><ul>character for key
+</ul>
+</span>
+    </li>
+    <li>
+      <span class='name'>modifiers</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>action</span>
+      <span class='type'>
+        (<tt>string=</tt>)
+      </span>
+      &mdash;
+      <span class='desc'>passed in</span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_bindSequence-file'>
+      ? (void) <strong>_bindSequence</strong>(combo, keys, callback, action)
+    </p>
+    <div class='docstring'>
+  <p>binds a key sequence to an event</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>combo</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+      &mdash;
+      <span class='desc'><ul>combo specified in bind call
+</ul>
+</span>
+    </li>
+    <li>
+      <span class='name'>keys</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (<tt>Function</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>action</span>
+      <span class='type'>
+        (<tt>string=</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_bindSingle-file'>
+      ? (void) <strong>_bindSingle</strong>(combination, callback, action, sequenceName, level)
+    </p>
+    <div class='docstring'>
+  <p>binds a single keyboard combination</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>combination</span>
+      <span class='type'>
+        (<tt>string</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (<tt>Function</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>action</span>
+      <span class='type'>
+        (<tt>string=</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>sequenceName</span>
+      <span class='type'>
+        (<tt>string=</tt>)
+      </span>
+      &mdash;
+      <span class='desc'><ul>name of sequence if part of sequence
+</ul>
+</span>
+    </li>
+    <li>
+      <span class='name'>level</span>
+      <span class='type'>
+        (<tt>number=</tt>)
+      </span>
+      &mdash;
+      <span class='desc'><ul>what part of the sequence the command is
+</ul>
+</span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_bindMultiple-file'>
+      ? (void) <strong>_bindMultiple</strong>(combinations, callback, action)
+    </p>
+    <div class='docstring'>
+  <p>binds multiple combinations to the same callback</p><p>@returns void</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>combinations</span>
+      <span class='type'>
+        (<tt>Array</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>callback</span>
+      <span class='type'>
+        (<tt>Function</tt>)
+      </span>
+    </li>
+    <li>
+      <span class='name'>action</span>
+      <span class='type'>
+        (<tt>string|undefined</tt>)
+      </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  Generated on
+  Thu Mar 28 2013 18:33:04 GMT+0000 (GMT)
+  by
+  <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
+  v1.5.4
+  (Node.js v0.8.12).
+  &#10034;
+  Press Ctrl-h to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/#!/netzpirat'>@netzpirat</a>
+  &#10034;
+  <a href='https://mksoft.ch'>mksoft.ch</a>
+</div>
+  </body>
+</html>
