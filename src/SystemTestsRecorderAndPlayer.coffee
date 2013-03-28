@@ -4,35 +4,43 @@ class SystemTestsRecorderAndPlayer
   replayingASystemTest: false
   lastRecordedEventTime: null
   handMorph: null
+  systemInfo: null
 
   constructor: (@worldMorph, @handMorph) ->
 
+  initialiseSystemInfo: ->
+    @systemInfo = {}
+    @systemInfo.zombieKernelTestHarnessVersionMajor = 0
+    @systemInfo.zombieKernelTestHarnessVersionMinor = 1
+    @systemInfo.zombieKernelTestHarnessVersionRelease = 0
+    @systemInfo.userAgent = navigator.userAgent
+    @systemInfo.screenWidth = window.screen.width
+    @systemInfo.screenHeight = window.screen.height
+    @systemInfo.screenColorDepth = window.screen.colorDepth
+    if window.devicePixelRatio?
+      @systemInfo.screenPixelRatio = window.devicePixelRatio
+    else
+      @systemInfo.screenPixelRatio = window.devicePixelRatio
+    @systemInfo.appCodeName = navigator.appCodeName
+    @systemInfo.appName = navigator.appName
+    @systemInfo.appVersion = navigator.appVersion
+    @systemInfo.cookieEnabled = navigator.cookieEnabled
+    @systemInfo.platform = navigator.platform
+    @systemInfo.systemLanguage = navigator.systemLanguage
+
   startRecording: ->
+    # clean up the world so we start from clean slate
+    @worldMorph.destroyAll()
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
     @recordingASystemTest = true
     @replayingASystemTest = false
 
+    @initialiseSystemInfo()
     systemTestEvent = {}
     systemTestEvent.type = "systemInfo"
-    systemTestEvent.zombieKernelTestHarnessVersionMajor = 0
-    systemTestEvent.zombieKernelTestHarnessVersionMinor = 1
-    systemTestEvent.zombieKernelTestHarnessVersionRelease = 0
     systemTestEvent.time = 0
-    systemTestEvent.userAgent = navigator.userAgent
-    systemTestEvent.screenWidth = window.screen.width
-    systemTestEvent.screenHeight = window.screen.height
-    systemTestEvent.screenColorDepth = window.screen.colorDepth
-    if window.devicePixelRatio?
-      systemTestEvent.screenPixelRatio = window.devicePixelRatio
-    else
-      systemTestEvent.screenPixelRatio = window.devicePixelRatio
-    systemTestEvent.appCodeName = navigator.appCodeName
-    systemTestEvent.appName = navigator.appName
-    systemTestEvent.appVersion = navigator.appVersion
-    systemTestEvent.cookieEnabled = navigator.cookieEnabled
-    systemTestEvent.platform = navigator.platform
-    systemTestEvent.systemLanguage = navigator.systemLanguage
+    systemTestEvent.systemInfo = @systemInfo
     @eventQueue.push systemTestEvent
 
   stopRecording: ->
@@ -89,8 +97,9 @@ class SystemTestsRecorderAndPlayer
     @lastRecordedEventTime = currentTime
 
   takeScreenshot: () ->
-    return if not @recordingASystemTest
     console.log "taking screenshot"
+    if @systemInfo is null
+      @initialiseSystemInfo()
     currentTime = new Date().getTime()
     systemTestEvent = {}
     systemTestEvent.type = "takeScreenshot"
@@ -99,15 +108,23 @@ class SystemTestsRecorderAndPlayer
     systemTestEvent.time = currentTime - @lastRecordedEventTime
     #systemTestEvent.button
     #systemTestEvent.ctrlKey
-    systemTestEvent.screenShotImageData = @worldMorph.fullImageData()
+    systemTestEvent.screenShotImageData = []
+    systemTestEvent.screenShotImageData.push [@systemInfo, @worldMorph.fullImageData()]
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = currentTime
+    if not @recordingASystemTest
+      return systemTestEvent
 
   compareScreenshots: (expected) ->
-   if expected == @worldMorph.fullImageData()
-    console.log "PASS - screenshot as expected"
-   else
-    console.log "FAIL - screenshot is different from expected"
+   i = 0
+   console.log "expected length " + expected.length
+   for a in expected
+     console.log "trying to match screenshot: " + i
+     i++
+     if a[1] == @worldMorph.fullImageData()
+      console.log "PASS - screenshot (" + i + ") matched"
+      return
+   console.log "FAIL - no screenshots like this one"
 
   replayEvents: () ->
    lastPlayedEventTime = 0
