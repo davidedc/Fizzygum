@@ -86,8 +86,15 @@ task :default do
       inclusion_order.each do |f|
         output.write(File.read(f))
         lines = File.readlines(f)
+
+        # let's add a newline between coffeescript files
+        # otherwise the end of one and the start of the
+        # next could end up on the same line.
         output.write("\n")
 
+        # first check whether this file is a class
+        # we do that by scanning all the lines looking
+        # for a class ... declaration
         fileIsAClass = false
         lines.each do |line|
           # check if this is a class
@@ -96,8 +103,12 @@ task :default do
           end
         end
 
+        # if the file is a class, then we add its
+        # source code as a static variable as a
+        # string block. If there is a string block in
+        # the source, then we need to escape it.
         if fileIsAClass
-          output.puts "  @source: '''"
+          output.puts "  @coffeeScriptSourceOfThisClass: '''"
           lines.each do |line|
             line.gsub(/'''/, "\\'\\'\\'")
             output.puts line
