@@ -46,9 +46,10 @@ task :default do
     FILES = FileList["src/*.coffee"]
  
     FILES.each do |f|
-      file = File.new(f)
+      file = File.new(f, "r+")
       lines = file.readlines
       lines.each do |line|
+
         # check if this extends anything
         itRequires = line.match('\sREQUIRES\s*(\w+)')
         extends = line.match('\sextends\s*(\w+)')
@@ -57,20 +58,21 @@ task :default do
  
         if extends or itRequires or dependencyInInstanceVariableInit
           if extends
-          	dependencies[f] << extends[1]
-          	print f,' extends ',extends[1],"\n"
+            dependencies[f] << extends[1]
+            print f,' extends ',extends[1],"\n"
           end
           if itRequires
-          	dependencies[f] << itRequires[1] 
-          	print f,' requires ',itRequires[1],"\n"
+            dependencies[f] << itRequires[1] 
+            print f,' requires ',itRequires[1],"\n"
           end
           if dependencyInInstanceVariableInit
-          	dependencies[f] << dependencyInInstanceVariableInit[1] 
-          	print f,' has class init in instance variable ',dependencyInInstanceVariableInit[1],"\n"
+            dependencies[f] << dependencyInInstanceVariableInit[1] 
+            print f,' has class init in instance variable ',dependencyInInstanceVariableInit[1],"\n"
           end
         end
 
       end
+      file.close
     end
  
     # generate inclusion order for files to handle dependencies
@@ -83,6 +85,25 @@ task :default do
     File.open(JS_FILE, 'w') do |output|
       inclusion_order.each do |f|
         output.write(File.read(f))
+        lines = File.readlines(f)
+        output.write("\n")
+
+        fileIsAClass = false
+        lines.each do |line|
+          # check if this is a class
+          if fileIsAClass == false
+            fileIsAClass = ((line =~ /class\s+(\w+)/)!=nil)
+          end
+        end
+
+        if fileIsAClass
+          output.puts "  @source: '''"
+          lines.each do |line|
+            line.gsub(/'''/, "\\'\\'\\'")
+            output.puts line
+          end
+          output.puts "  '''"
+        end # end of if file is a class
       end
     end
   
