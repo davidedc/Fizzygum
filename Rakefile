@@ -1,5 +1,48 @@
-JS_FILE = 'build/morphee-coffee.coffee'
+# This rake file performs only some of the
+# steps of the build:
+#  1) generates an ordered list of the coffee
+#     files, so the order respects the
+#     dependencies between the files
+#  2) for each class file (not all of the
+#     coffee files are class files), it
+#     adds a special string that contains
+#     the source of the file itself.
+#     This is so we can allow some editing
+#     of the classes in coffeescript, and do
+#     something like generating the
+#     documentation on the fly.
+#  3) finally, combine the "extended" coffee
+#     files.
+# Note that 2) is a bit naive because we just
+# do some simple string checks. So, there
+# could be strings in the source code that
+# mangle this process. It's not likely
+# though.
+
+finalOutputFile = 'build/morphee-coffee.coffee'
  
+# The order in which the files are combined does matter.
+# There are three cases where order matters:
+#   1) if class A extends class B, then B needs
+#      to be before class A. This dependency can be
+#      figured out automatically (although at the
+#      moment in a sort of naive way) by looking at the
+#      source code.
+#   2) no objects of a class can be instantiated before
+#      the definition of the class. This dependency can be
+#      figured out automatically (although at the
+#      moment in a sort of naive way) by looking at the
+#      source code.
+#   3) some classes use global functions or global
+#      variables. These dependencies must be manually
+#      specified by creating a specially formatted comment.
+
+# These two functions search for "requires" comments in the
+# files and generate a list of the order in which the files
+# should be combined. Basically creates a directed graph
+# and creates the list making sure that the dependencies
+# are respected.
+
 def generate_inclusion_order(dependencies)
   inclusion_order = []
   nodes = {}
@@ -39,6 +82,12 @@ def visit(file, nodes, inclusion_order)
   inclusion_order << file if !inclusion_order.include?(file)
 end
 
+# The main Rake task.
+# Invokes the ordering of the coffee files, then
+# goes through the ordered list, adds the source code
+# to each file and the combine all into one final
+# output file.
+
 task :default do
     dependencies = {}
  
@@ -50,7 +99,7 @@ task :default do
       lines = file.readlines
       lines.each do |line|
 
-        # check if this extends anything
+        # There are three sorts of dependencies
         itRequires = line.match('\sREQUIRES\s*(\w+)')
         extends = line.match('\sextends\s*(\w+)')
         dependencyInInstanceVariableInit = line.match('\s\w+:\s*new\s*(\w+)')
@@ -75,14 +124,15 @@ task :default do
       file.close
     end
  
-    # generate inclusion order for files to handle dependencies
+    # Generate inclusion order for files to handle dependencies
+    # and prints it.
     inclusion_order = generate_inclusion_order(dependencies)
     puts "Order /////////////////"
     inclusion_order.each do |i|
       puts i
     end
  
-    File.open(JS_FILE, 'w') do |output|
+    File.open(finalOutputFile, 'w') do |output|
       inclusion_order.each do |f|
         output.write(File.read(f))
         lines = File.readlines(f)
@@ -117,13 +167,5 @@ task :default do
         end # end of if file is a class
       end
     end
-  
- 
-  desc "Merges all Javascript files into a single file keeping the dependencies in mind"
-  task :combine do
-    # delete any existing file
-    File.delete(JS_FILE) if File.exists?(JS_FILE)
-    Rake::Task[JS_FILE].invoke
-  end
-end 
+end # end of default task
  
