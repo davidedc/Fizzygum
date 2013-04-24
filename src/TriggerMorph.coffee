@@ -42,7 +42,7 @@ class TriggerMorph extends Morph
       labelColor,
       @labelBold = false,
       @labelItalic = false) ->
-    
+
     # additional properties:
     @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
@@ -161,6 +161,9 @@ class TriggerMorph extends Morph
     @changed()
     @trigger()
   
+  # Disable dragging compound Morphs by Triggers
+  rootForGrab: ->
+    null
   
   # TriggerMorph bubble help:
   bubbleHelp: (contents) ->
