@@ -136,7 +136,8 @@ class WorldMorph extends FrameMorph
     if @virtualKeyboard
       document.body.removeChild @virtualKeyboard
       @virtualKeyboard = null
-    return  unless WorldMorph.MorphicPreferences.useVirtualKeyboard
+    unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)
+      return
     @virtualKeyboard = document.createElement("input")
     @virtualKeyboard.type = "text"
     @virtualKeyboard.style.color = "transparent"
@@ -148,6 +149,7 @@ class WorldMorph extends FrameMorph
     @virtualKeyboard.style.left = "0px"
     @virtualKeyboard.style.width = "0px"
     @virtualKeyboard.style.height = "0px"
+    @virtualKeyboard.autocapitalize = "none" # iOS specific
     document.body.appendChild @virtualKeyboard
 
     @virtualKeyboard.addEventListener "keydown", ((event) =>
@@ -589,7 +591,7 @@ class WorldMorph extends FrameMorph
     aStringOrTextMorph.parent.add @caret
     @keyboardReceiver = @caret
     @initVirtualKeyboard()
-    if WorldMorph.MorphicPreferences.useVirtualKeyboard
+    if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
       @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @virtualKeyboard.focus()

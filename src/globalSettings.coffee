@@ -24,6 +24,7 @@ standardSettings =
   mouseScrollAmount: 40
   useSliderForInput: false
   useVirtualKeyboard: true
+  isTouchDevice: false # turned on by touch events, don't set
   rasterizeSVGs: false
 
 touchScreenSettings =
@@ -40,5 +41,6 @@ touchScreenSettings =
   mouseScrollAmount: 40
   useSliderForInput: true
   useVirtualKeyboard: true
+  isTouchDevice: false
   rasterizeSVGs: false
 

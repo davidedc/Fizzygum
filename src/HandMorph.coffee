@@ -153,6 +153,7 @@ class HandMorph extends Morph
       morph[actualClick] @bounds.origin
   
   processTouchStart: (event) ->
+    WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
       # simulate mouseRightClick
@@ -173,6 +174,7 @@ class HandMorph extends Morph
       clearInterval @touchHoldTimeout
   
   processTouchEnd: (event) ->
+    WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
     @processMouseUp button: 0
   
