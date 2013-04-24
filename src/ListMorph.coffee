@@ -6,7 +6,8 @@ class ListMorph extends ScrollFrameMorph
   labelGetter: null
   format: null
   listContents: null
-  selected: null
+  selected: null # actual element currently selected
+  active: null # menu item representing the selected element
   action: null
 
   constructor: (@elements = [], labelGetter, @format = []) ->
@@ -16,13 +17,16 @@ class ListMorph extends ScrollFrameMorph
     #
     #        [
     #            [<color>, <single-argument predicate>],
+    #            ['bold', <single-argument predicate>],
+    #            ['italic', <single-argument predicate>],
     #            ...
     #        ]
     #
-    #    multiple color conditions can be passed in such a format list, the
+    #    multiple conditions can be passed in such a format list, the
     #    last predicate to evaluate true when given the list element sets
-    #    the given color. If no condition is met, the default color (black)
-    #    will be assigned.
+    #    the given format category (color, bold, italic).
+    #    If no condition is met, the default format (color black, non-bold,
+    #    non-italic) will be assigned.
     #    
     #    An example of how to use fomats can be found in the InspectorMorph's
     #    "markOwnProperties" mechanism.
@@ -47,21 +51,30 @@ class ListMorph extends ScrollFrameMorph
     @elements = ["(empty)"]  if !@elements.length
     @elements.forEach (element) =>
       color = null
+      bold = false
+      italic = false
       @format.forEach (pair) ->
-        color = pair[0]  if pair[1].call(null, element)
+        if pair[1].call(null, element)
+          if pair[0] == 'bold'
+            bold = true
+          else if pair[0] == 'italic'
+            italic = true
+          else # assume it's a color
+            color = pair[0]
       #
       # label string
       # action
       # hint
-      @listContents.addItem @labelGetter(element), element, null, color
+      @listContents.addItem @labelGetter(element), element, null, color, bold, italic
     #
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
     @listContents.updateRendering()
     @addContents @listContents
   
-  select: (item) ->
+  select: (item, trigger) ->
     @selected = item
+    @active = trigger
     @action.call null, item  if @action
   
   setExtent: (aPoint) ->

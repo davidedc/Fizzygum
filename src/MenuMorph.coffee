@@ -25,13 +25,20 @@ class MenuMorph extends BoxMorph
     # want to traverse them all. Setting step to null (as opposed to nop) means
     # that
   
-  addItem: (labelString, action, hint, color) ->
+  addItem: (labelString, action, hint, color, bold = false, italic = false) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
     #     * a multi-line string (containing line breaks)
     #     * an icon (either a Morph or a Canvas)
     #     * a tuple of format: [icon, string]
-    @items.push [localize(labelString or "close"), action or nop, hint, color]
+    @items.push [
+      localize(labelString or "close"),
+      action or nop,
+      hint,
+      color,
+      bold,
+      italic
+    ]
   
   addLine: (width) ->
     @items.push [0, width or 1]
@@ -89,10 +96,17 @@ class MenuMorph extends BoxMorph
         item.setHeight tuple[1]
       else
         # bubble help hint
-        item = new MenuItemMorph(@target, tuple[1], tuple[0],
+        item = new MenuItemMorph(
+          @target,
+          tuple[1],
+          tuple[0],
           @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
           WorldMorph.MorphicPreferences.menuFontName, @environment,
-          tuple[2], tuple[3]) # color
+          tuple[2],
+          tuple[3], # color
+          tuple[4], # bold
+          tuple[5]  # italic
+          )
       y += 1  if isLine
       item.setPosition new Point(x, y)
       @add item

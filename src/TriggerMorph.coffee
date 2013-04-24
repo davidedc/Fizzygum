@@ -10,6 +10,8 @@ class TriggerMorph extends Morph
   label: null
   labelString: null
   labelColor: null
+  labelBold: null
+  labelItalic: null
   hint: null
   fontSize: null
   fontStyle: null
@@ -29,8 +31,17 @@ class TriggerMorph extends Morph
   normalImage: null
   pressImage: null
 
-  constructor: (@target = null, @action = null, @labelString = null,
-    fontSize, fontStyle, @environment = null, @hint = null, labelColor) ->
+  constructor: (
+      @target = null,
+      @action = null,
+      @labelString = null,
+      fontSize,
+      fontStyle,
+      @environment = null,
+      @hint = null,
+      labelColor,
+      @labelBold = false,
+      @labelItalic = false) ->
     
     # additional properties:
     @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
@@ -72,7 +83,18 @@ class TriggerMorph extends Morph
     # shadow offset
     # shadow color
     @label = new StringMorph(
-      @labelString, @fontSize, @fontStyle, false, false, false, null, null, @labelColor)
+      @labelString,
+      @fontSize,
+      @fontStyle,
+      false,
+      false,
+      false,
+      null,
+      null,
+      @labelColor,
+      @labelBold,
+      @labelItalic
+    )
     @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
     @add @label
   
@@ -93,7 +115,9 @@ class TriggerMorph extends Morph
     #	in the environment as optionally specified.
     #	Note: if action is also a function, instead of becoming
     #	the argument itself it will be called to answer the argument.
-    #	for selections, Yes/No Choices etc:
+    #	for selections, Yes/No Choices etc. As second argument pass
+    # myself, so I can be modified to reflect status changes, e.g.
+    # inside a list box:
     #
     #	else (if target is not a function):
     #
@@ -107,9 +131,9 @@ class TriggerMorph extends Morph
     #	
     if typeof @target is "function"
       if typeof @action is "function"
-        @target.call @environment, @action.call()
+        @target.call @environment, @action.call(), @
       else
-        @target.call @environment, @action
+        @target.call @environment, @action, @
     else
       if typeof @action is "function"
         @action.call @target
