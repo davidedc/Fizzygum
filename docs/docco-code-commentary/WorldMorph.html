@@ -101,7 +101,8 @@ applied globally.</p>             </td>             <td class="code">           
     <span class="k">if</span> <span class="nx">@virtualKeyboard</span>
       <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">removeChild</span> <span class="nx">@virtualKeyboard</span>
       <span class="vi">@virtualKeyboard = </span><span class="kc">null</span>
-    <span class="k">return</span>  <span class="k">unless</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">useVirtualKeyboard</span>
+    <span class="k">unless</span> <span class="p">(</span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isTouchDevice</span> <span class="o">and</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">useVirtualKeyboard</span><span class="p">)</span>
+      <span class="k">return</span>
     <span class="vi">@virtualKeyboard = </span><span class="nb">document</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s">&quot;input&quot;</span><span class="p">)</span>
     <span class="vi">@virtualKeyboard.type = </span><span class="s">&quot;text&quot;</span>
     <span class="vi">@virtualKeyboard.style.color = </span><span class="s">&quot;transparent&quot;</span>
@@ -113,6 +114,7 @@ applied globally.</p>             </td>             <td class="code">           
     <span class="vi">@virtualKeyboard.style.left = </span><span class="s">&quot;0px&quot;</span>
     <span class="vi">@virtualKeyboard.style.width = </span><span class="s">&quot;0px&quot;</span>
     <span class="vi">@virtualKeyboard.style.height = </span><span class="s">&quot;0px&quot;</span>
+    <span class="vi">@virtualKeyboard.autocapitalize = </span><span class="s">&quot;none&quot;</span> <span class="c1"># iOS specific</span>
     <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">appendChild</span> <span class="nx">@virtualKeyboard</span>
 
     <span class="nx">@virtualKeyboard</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="s">&quot;keydown&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">(event) =&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>remember the keyCode in the world's currentKey property</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="vi">@currentKey = </span><span class="nx">event</span><span class="p">.</span><span class="nx">keyCode</span>
@@ -487,7 +489,7 @@ for some unknown reason</p>             </td>             <td class="code">     
     <span class="nx">aStringOrTextMorph</span><span class="p">.</span><span class="nx">parent</span><span class="p">.</span><span class="nx">add</span> <span class="nx">@caret</span>
     <span class="vi">@keyboardReceiver = </span><span class="nx">@caret</span>
     <span class="nx">@initVirtualKeyboard</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">useVirtualKeyboard</span>
+    <span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isTouchDevice</span> <span class="o">and</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">useVirtualKeyboard</span>
       <span class="vi">@virtualKeyboard.style.top = </span><span class="nx">@caret</span><span class="p">.</span><span class="nx">top</span><span class="p">()</span> <span class="o">+</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">y</span> <span class="o">+</span> <span class="s">&quot;px&quot;</span>
       <span class="vi">@virtualKeyboard.style.left = </span><span class="nx">@caret</span><span class="p">.</span><span class="nx">left</span><span class="p">()</span> <span class="o">+</span> <span class="nx">pos</span><span class="p">.</span><span class="nx">x</span> <span class="o">+</span> <span class="s">&quot;px&quot;</span>
       <span class="nx">@virtualKeyboard</span><span class="p">.</span><span class="nx">focus</span><span class="p">()</span>

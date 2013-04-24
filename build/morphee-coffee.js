@@ -1687,682 +1687,418 @@ Morph = (function(_super) {
 
 })(MorphicNode);
 
-BouncerMorph = (function(_super) {
-  __extends(BouncerMorph, _super);
+CircleBoxMorph = (function(_super) {
+  __extends(CircleBoxMorph, _super);
 
-  BouncerMorph.prototype.isStopped = false;
+  CircleBoxMorph.prototype.orientation = null;
 
-  BouncerMorph.prototype.type = null;
+  CircleBoxMorph.prototype.autoOrient = true;
 
-  BouncerMorph.prototype.direction = null;
+  function CircleBoxMorph(orientation) {
+    this.orientation = orientation != null ? orientation : "vertical";
+    CircleBoxMorph.__super__.constructor.call(this);
+    this.setExtent(new Point(20, 100));
+  }
 
-  BouncerMorph.prototype.speed = null;
-
-  function BouncerMorph(type, speed) {
-    this.type = type != null ? type : "vertical";
-    this.speed = speed != null ? speed : 1;
-    BouncerMorph.__super__.constructor.call(this);
-    this.fps = 50;
-    if (this.type === "vertical") {
-      this.direction = "down";
+  CircleBoxMorph.prototype.autoOrientation = function() {
+    if (this.height() > this.width()) {
+      return this.orientation = "vertical";
     } else {
-      this.direction = "right";
-    }
-  }
-
-  BouncerMorph.prototype.moveUp = function() {
-    return this.moveBy(new Point(0, -this.speed));
-  };
-
-  BouncerMorph.prototype.moveDown = function() {
-    return this.moveBy(new Point(0, this.speed));
-  };
-
-  BouncerMorph.prototype.moveRight = function() {
-    return this.moveBy(new Point(this.speed, 0));
-  };
-
-  BouncerMorph.prototype.moveLeft = function() {
-    return this.moveBy(new Point(-this.speed, 0));
-  };
-
-  BouncerMorph.prototype.step = function() {
-    if (!this.isStopped) {
-      if (this.type === "vertical") {
-        if (this.direction === "down") {
-          this.moveDown();
-        } else {
-          this.moveUp();
-        }
-        if (this.boundsIncludingChildren().top() < this.parent.top() && this.direction === "up") {
-          this.direction = "down";
-        }
-        if (this.boundsIncludingChildren().bottom() > this.parent.bottom() && this.direction === "down") {
-          return this.direction = "up";
-        }
-      } else if (this.type === "horizontal") {
-        if (this.direction === "right") {
-          this.moveRight();
-        } else {
-          this.moveLeft();
-        }
-        if (this.boundsIncludingChildren().left() < this.parent.left() && this.direction === "left") {
-          this.direction = "right";
-        }
-        if (this.boundsIncludingChildren().right() > this.parent.right() && this.direction === "right") {
-          return this.direction = "left";
-        }
-      }
+      return this.orientation = "horizontal";
     }
   };
 
-  BouncerMorph.coffeeScriptSourceOfThisClass = '# BouncerMorph ////////////////////////////////////////////////////////\n# fishy constructor\n# I am a Demo of a stepping custom Morph\n# Bounces vertically or horizontally within the parent\n\nclass BouncerMorph extends Morph\n\n  isStopped: false\n  type: null\n  direction: null\n  speed: null\n\n  constructor: (@type = "vertical", @speed = 1) ->\n    super()\n    @fps = 50\n    # additional properties:\n    if @type is "vertical"\n      @direction = "down"\n    else\n      @direction = "right"\n  \n  \n  # BouncerMorph moving:\n  moveUp: ->\n    @moveBy new Point(0, -@speed)\n  \n  moveDown: ->\n    @moveBy new Point(0, @speed)\n  \n  moveRight: ->\n    @moveBy new Point(@speed, 0)\n  \n  moveLeft: ->\n    @moveBy new Point(-@speed, 0)\n  \n  \n  # BouncerMorph stepping:\n  step: ->\n    unless @isStopped\n      if @type is "vertical"\n        if @direction is "down"\n          @moveDown()\n        else\n          @moveUp()\n        @direction = "down"  if @boundsIncludingChildren().top() < @parent.top() and @direction is "up"\n        @direction = "up"  if @boundsIncludingChildren().bottom() > @parent.bottom() and @direction is "down"\n      else if @type is "horizontal"\n        if @direction is "right"\n          @moveRight()\n        else\n          @moveLeft()\n        @direction = "right"  if @boundsIncludingChildren().left() < @parent.left() and @direction is "left"\n        @direction = "left"  if @boundsIncludingChildren().right() > @parent.right() and @direction is "right"';
-
-  return BouncerMorph;
-
-})(Morph);
-
-FrameMorph = (function(_super) {
-  __extends(FrameMorph, _super);
-
-  FrameMorph.scrollFrame = null;
-
-  function FrameMorph(scrollFrame) {
-    this.scrollFrame = scrollFrame != null ? scrollFrame : null;
-    FrameMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 250, 245);
-    this.acceptsDrops = true;
-    if (this.scrollFrame) {
-      this.isDraggable = false;
-      this.noticesTransparentClick = false;
-    }
-    this.updateRendering();
-  }
-
-  FrameMorph.prototype.setColor = function(aColor) {
-    if (this.scrollFrame) {
-      this.scrollFrame.color = aColor;
-    }
-    return FrameMorph.__super__.setColor.call(this, aColor);
-  };
-
-  FrameMorph.prototype.setAlphaScaled = function(alpha) {
-    if (this.scrollFrame) {
-      this.scrollFrame.alpha = this.calculateAlphaScaled(alpha);
-    }
-    return FrameMorph.__super__.setAlphaScaled.call(this, alpha);
-  };
-
-  FrameMorph.prototype.boundsIncludingChildren = function() {
-    var shadow;
-
-    shadow = this.getShadow();
-    if (shadow !== null) {
-      return this.bounds.merge(shadow.bounds);
-    }
-    return this.bounds;
-  };
-
-  FrameMorph.prototype.recursivelyBlit = function(aCanvas, clippingRectangle) {
-    var dirtyPartOfFrame,
+  CircleBoxMorph.prototype.updateRendering = function() {
+    var center1, center2, context, ext, points, radius, rect, x, y,
       _this = this;
 
-    if (clippingRectangle == null) {
-      clippingRectangle = this.bounds;
+    if (this.autoOrient) {
+      this.autoOrientation();
     }
-    if (!this.isVisible) {
-      return null;
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    if (this.orientation === "vertical") {
+      radius = this.width() / 2;
+      x = this.center().x;
+      center1 = new Point(x, this.top() + radius);
+      center2 = new Point(x, this.bottom() - radius);
+      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
+    } else {
+      radius = this.height() / 2;
+      y = this.center().y;
+      center1 = new Point(this.left() + radius, y);
+      center2 = new Point(this.right() - radius, y);
+      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
     }
-    dirtyPartOfFrame = this.bounds.intersect(clippingRectangle);
-    if (dirtyPartOfFrame.isEmpty()) {
-      return null;
-    }
-    this.blit(aCanvas, dirtyPartOfFrame);
-    return this.children.forEach(function(child) {
-      if (child instanceof ShadowMorph) {
-        return child.recursivelyBlit(aCanvas, clippingRectangle);
-      } else {
-        return child.recursivelyBlit(aCanvas, dirtyPartOfFrame);
-      }
+    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
+    points.forEach(function(center) {
+      context.fillStyle = _this.color.toString();
+      context.beginPath();
+      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+      context.closePath();
+      return context.fill();
     });
+    rect = rect.translateBy(this.bounds.origin.neg());
+    ext = rect.extent();
+    if (ext.x > 0 && ext.y > 0) {
+      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
+    }
   };
 
-  FrameMorph.prototype.moveBy = function(delta) {
+  CircleBoxMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = CircleBoxMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    if (this.orientation === "vertical") {
+      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
+    } else {
+      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
+    }
+    return menu;
+  };
+
+  CircleBoxMorph.prototype.toggleOrientation = function() {
+    var center;
+
+    center = this.center();
     this.changed();
-    this.bounds = this.bounds.translateBy(delta);
-    this.children.forEach(function(child) {
-      return child.silentMoveBy(delta);
-    });
+    if (this.orientation === "vertical") {
+      this.orientation = "horizontal";
+    } else {
+      this.orientation = "vertical";
+    }
+    this.silentSetExtent(new Point(this.height(), this.width()));
+    this.setCenter(center);
+    this.updateRendering();
     return this.changed();
   };
 
-  FrameMorph.prototype.submorphBounds = function() {
-    var result;
+  CircleBoxMorph.coffeeScriptSourceOfThisClass = '# CircleBoxMorph //////////////////////////////////////////////////////\n\n# I can be used for sliders\n\nclass CircleBoxMorph extends Morph\n\n  orientation: null\n  autoOrient: true\n\n  constructor: (@orientation = "vertical") ->\n    super()\n    @setExtent new Point(20, 100)\n  \n  autoOrientation: ->\n    if @height() > @width()\n      @orientation = "vertical"\n    else\n      @orientation = "horizontal"\n  \n  updateRendering: ->\n    @autoOrientation()  if @autoOrient\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    if @orientation is "vertical"\n      radius = @width() / 2\n      x = @center().x\n      center1 = new Point(x, @top() + radius)\n      center2 = new Point(x, @bottom() - radius)\n      rect = @bounds.origin.add(\n        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))\n    else\n      radius = @height() / 2\n      y = @center().y\n      center1 = new Point(@left() + radius, y)\n      center2 = new Point(@right() - radius, y)\n      rect = @bounds.origin.add(\n        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))\n    points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]\n    points.forEach (center) =>\n      context.fillStyle = @color.toString()\n      context.beginPath()\n      context.arc center.x, center.y, radius, 0, 2 * Math.PI, false\n      context.closePath()\n      context.fill()\n    rect = rect.translateBy(@bounds.origin.neg())\n    ext = rect.extent()\n    if ext.x > 0 and ext.y > 0\n      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()\n  \n  \n  # CircleBoxMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    if @orientation is "vertical"\n      menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"\n    else\n      menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"\n    menu\n  \n  toggleOrientation: ->\n    center = @center()\n    @changed()\n    if @orientation is "vertical"\n      @orientation = "horizontal"\n    else\n      @orientation = "vertical"\n    @silentSetExtent new Point(@height(), @width())\n    @setCenter center\n    @updateRendering()\n    @changed()';
 
-    result = null;
-    if (this.children.length) {
-      result = this.children[0].bounds;
-      this.children.forEach(function(child) {
-        return result = result.merge(child.boundsIncludingChildren());
-      });
-    }
-    return result;
-  };
-
-  FrameMorph.prototype.keepInScrollFrame = function() {
-    if (this.scrollFrame === null) {
-      return null;
-    }
-    if (this.left() > this.scrollFrame.left()) {
-      this.moveBy(new Point(this.scrollFrame.left() - this.left(), 0));
-    }
-    if (this.right() < this.scrollFrame.right()) {
-      this.moveBy(new Point(this.scrollFrame.right() - this.right(), 0));
-    }
-    if (this.top() > this.scrollFrame.top()) {
-      this.moveBy(new Point(0, this.scrollFrame.top() - this.top()));
-    }
-    if (this.bottom() < this.scrollFrame.bottom()) {
-      return this.moveBy(0, new Point(this.scrollFrame.bottom() - this.bottom(), 0));
-    }
-  };
-
-  FrameMorph.prototype.adjustBounds = function() {
-    var newBounds, subBounds,
-      _this = this;
-
-    if (this.scrollFrame === null) {
-      return null;
-    }
-    subBounds = this.submorphBounds();
-    if (subBounds && (!this.scrollFrame.isTextLineWrapping)) {
-      newBounds = subBounds.expandBy(this.scrollFrame.padding).growBy(this.scrollFrame.growth).merge(this.scrollFrame.bounds);
-    } else {
-      newBounds = this.scrollFrame.bounds.copy();
-    }
-    if (!this.bounds.eq(newBounds)) {
-      this.bounds = newBounds;
-      this.updateRendering();
-      this.keepInScrollFrame();
-    }
-    if (this.scrollFrame.isTextLineWrapping) {
-      this.children.forEach(function(morph) {
-        if (morph instanceof TextMorph) {
-          morph.setWidth(_this.width());
-          return _this.setHeight(Math.max(morph.height(), _this.scrollFrame.height()));
-        }
-      });
-    }
-    return this.scrollFrame.adjustScrollBars();
-  };
-
-  FrameMorph.prototype.reactToDropOf = function() {
-    return this.adjustBounds();
-  };
-
-  FrameMorph.prototype.reactToGrabOf = function() {
-    return this.adjustBounds();
-  };
-
-  FrameMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = FrameMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.frame && dict[this.scrollFrame]) {
-      c.frame = dict[this.scrollFrame];
-    }
-    return c;
-  };
-
-  FrameMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = FrameMorph.__super__.developersMenu.call(this);
-    if (this.children.length) {
-      menu.addLine();
-      menu.addItem("move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible");
-    }
-    return menu;
-  };
-
-  FrameMorph.prototype.keepAllSubmorphsWithin = function() {
-    var _this = this;
-
-    return this.children.forEach(function(m) {
-      return m.keepWithin(_this);
-    });
-  };
-
-  FrameMorph.coffeeScriptSourceOfThisClass = '#| FrameMorph //////////////////////////////////////////////////////////\n#| \n#| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing\n#| \n#| and event handling.\n\nclass FrameMorph extends Morph\n\n  @scrollFrame: null\n\n  # if this frame belongs to a scrollFrame, then\n  # the @scrollFrame points to it\n  constructor: (@scrollFrame = null) ->\n    super()\n    @color = new Color(255, 250, 245)\n    @acceptsDrops = true\n    if @scrollFrame\n      @isDraggable = false\n      @noticesTransparentClick = false\n    @updateRendering()\n\n  setColor: (aColor) ->\n    # keep in synch the value of the container scrollFrame\n    # if there is one. Note that the container srollFrame\n    # is actually not painted.\n    if @scrollFrame\n      @scrollFrame.color = aColor\n    super(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # keep in synch the value of the container scrollFrame\n    # if there is one. Note that the container srollFrame\n    # is actually not painted.\n    if @scrollFrame\n      @scrollFrame.alpha = @calculateAlphaScaled(alpha)\n    super(alpha)\n  \n  boundsIncludingChildren: ->\n    shadow = @getShadow()\n    return @bounds.merge(shadow.bounds)  if shadow isnt null\n    @bounds\n  \n  # This was in the original Morphic.js, but\n  # it would cause the frame (or scrollframe) not to paint its\n  # contents when "pic..." command is invoked.\n  #fullImage: ->\n  #  # use only for shadows\n  #  @image\n  \n  recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->\n    return null  unless @isVisible\n    \n    # the part to be redrawn could be outside the frame entirely,\n    # in which case we can stop going down the morphs inside the frame\n    # since the whole point of the frame is to clip everything to a specific\n    # rectangle.\n    # So, check which part of the Frame should be redrawn:\n    dirtyPartOfFrame = @bounds.intersect(clippingRectangle)\n    \n    # if there is no dirty part in the frame then do nothing\n    return null if dirtyPartOfFrame.isEmpty()\n    \n    # this draws the background of the frame itself, which could\n    # contain an image or a pentrail\n    @blit aCanvas, dirtyPartOfFrame\n    \n    @children.forEach (child) =>\n      if child instanceof ShadowMorph\n        child.recursivelyBlit aCanvas, clippingRectangle\n      else\n        child.recursivelyBlit aCanvas, dirtyPartOfFrame\n  \n  \n  # FrameMorph scrolling optimization:\n  moveBy: (delta) ->\n    @changed()\n    @bounds = @bounds.translateBy(delta)\n    @children.forEach (child) ->\n      child.silentMoveBy delta\n    @changed()\n  \n  \n  # FrameMorph scrolling support:\n  submorphBounds: ->\n    result = null\n    if @children.length\n      result = @children[0].bounds\n      @children.forEach (child) ->\n        result = result.merge(child.boundsIncludingChildren())\n    result\n  \n  keepInScrollFrame: ->\n    return null  if @scrollFrame is null\n    if @left() > @scrollFrame.left()\n      @moveBy new Point(@scrollFrame.left() - @left(), 0)\n    if @right() < @scrollFrame.right()\n      @moveBy new Point(@scrollFrame.right() - @right(), 0)  \n    if @top() > @scrollFrame.top()\n      @moveBy new Point(0, @scrollFrame.top() - @top())  \n    if @bottom() < @scrollFrame.bottom()\n      @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)\n  \n  adjustBounds: ->\n    return null  if @scrollFrame is null\n    subBounds = @submorphBounds()\n    if subBounds and (not @scrollFrame.isTextLineWrapping)\n      newBounds = subBounds.expandBy(@scrollFrame.padding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)\n    else\n      newBounds = @scrollFrame.bounds.copy()\n    unless @bounds.eq(newBounds)\n      @bounds = newBounds\n      @updateRendering()\n      @keepInScrollFrame()\n    if @scrollFrame.isTextLineWrapping\n      @children.forEach (morph) =>\n        if morph instanceof TextMorph\n          morph.setWidth @width()\n          @setHeight Math.max(morph.height(), @scrollFrame.height())\n    @scrollFrame.adjustScrollBars()\n  \n  \n  # FrameMorph dragging & dropping of contents:\n  reactToDropOf: ->\n    @adjustBounds()\n  \n  reactToGrabOf: ->\n    @adjustBounds()\n  \n  \n  # FrameMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]\n    c\n  \n  \n  # FrameMorph menus:\n  developersMenu: ->\n    menu = super()\n    if @children.length\n      menu.addLine()\n      menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"\n    menu\n  \n  keepAllSubmorphsWithin: ->\n    @children.forEach (m) =>\n      m.keepWithin @';
-
-  return FrameMorph;
+  return CircleBoxMorph;
 
 })(Morph);
 
-ScrollFrameMorph = (function(_super) {
-  __extends(ScrollFrameMorph, _super);
+SliderMorph = (function(_super) {
+  __extends(SliderMorph, _super);
 
-  ScrollFrameMorph.prototype.autoScrollTrigger = null;
+  SliderMorph.prototype.target = null;
 
-  ScrollFrameMorph.prototype.hasVelocity = true;
+  SliderMorph.prototype.action = null;
 
-  ScrollFrameMorph.prototype.padding = 0;
+  SliderMorph.prototype.start = null;
 
-  ScrollFrameMorph.prototype.growth = 0;
+  SliderMorph.prototype.stop = null;
 
-  ScrollFrameMorph.prototype.isTextLineWrapping = false;
+  SliderMorph.prototype.value = null;
 
-  ScrollFrameMorph.prototype.isScrollingByDragging = true;
+  SliderMorph.prototype.size = null;
 
-  ScrollFrameMorph.prototype.scrollBarSize = null;
+  SliderMorph.prototype.offset = null;
 
-  ScrollFrameMorph.prototype.contents = null;
+  SliderMorph.prototype.button = null;
 
-  ScrollFrameMorph.prototype.vBar = null;
+  SliderMorph.prototype.step = null;
 
-  ScrollFrameMorph.prototype.hBar = null;
-
-  function ScrollFrameMorph(contents, scrollBarSize, sliderColor) {
-    var _this = this;
-
-    this.alpha = 0;
-    ScrollFrameMorph.__super__.constructor.call(this);
-    this.scrollBarSize = scrollBarSize || WorldMorph.MorphicPreferences.scrollBarSize;
-    this.contents = contents || new FrameMorph(this);
-    this.add(this.contents);
-    this.color = this.contents.color;
-    this.alpha = this.contents.alpha;
-    this.updateRendering = this.contents.updateRendering;
-    this.hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor);
-    this.hBar.setHeight(this.scrollBarSize);
-    this.hBar.action = function(num) {
-      return _this.contents.setPosition(new Point(_this.left() - num, _this.contents.position().y));
-    };
-    this.hBar.isDraggable = false;
-    this.add(this.hBar);
-    this.vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor);
-    this.vBar.setWidth(this.scrollBarSize);
-    this.vBar.action = function(num) {
-      return _this.contents.setPosition(new Point(_this.contents.position().x, _this.top() - num));
-    };
-    this.vBar.isDraggable = false;
-    this.add(this.vBar);
+  function SliderMorph(start, stop, value, size, orientation, color) {
+    this.start = start != null ? start : 1;
+    this.stop = stop != null ? stop : 100;
+    this.value = value != null ? value : 50;
+    this.size = size != null ? size : 10;
+    this.button = new SliderButtonMorph();
+    this.button.isDraggable = false;
+    this.button.color = new Color(200, 200, 200);
+    this.button.highlightColor = new Color(210, 210, 255);
+    this.button.pressColor = new Color(180, 180, 255);
+    SliderMorph.__super__.constructor.call(this, orientation);
+    this.add(this.button);
+    this.alpha = 0.3;
+    this.color = color || new Color(0, 0, 0);
+    this.setExtent(new Point(20, 100));
   }
 
-  ScrollFrameMorph.prototype.setColor = function(aColor) {
-    this.color = aColor;
-    return this.contents.setColor(aColor);
+  SliderMorph.prototype.autoOrientation = function() {
+    return noOperation;
   };
 
-  ScrollFrameMorph.prototype.setAlphaScaled = function(alpha) {
-    this.alpha = this.calculateAlphaScaled(alpha);
-    return this.contents.setAlphaScaled(alpha);
+  SliderMorph.prototype.rangeSize = function() {
+    return this.stop - this.start;
   };
 
-  ScrollFrameMorph.prototype.adjustScrollBars = function() {
-    var hWidth, vHeight;
+  SliderMorph.prototype.ratio = function() {
+    return this.size / this.rangeSize();
+  };
 
-    hWidth = this.width() - this.scrollBarSize;
-    vHeight = this.height() - this.scrollBarSize;
-    this.changed();
-    if (this.contents.width() > this.width() + WorldMorph.MorphicPreferences.scrollBarSize) {
-      this.hBar.show();
-      if (this.hBar.width() !== hWidth) {
-        this.hBar.setWidth(hWidth);
-      }
-      this.hBar.setPosition(new Point(this.left(), this.bottom() - this.hBar.height()));
-      this.hBar.start = 0;
-      this.hBar.stop = this.contents.width() - this.width();
-      this.hBar.size = this.width() / this.contents.width() * this.hBar.stop;
-      this.hBar.value = this.left() - this.contents.left();
-      this.hBar.updateRendering();
+  SliderMorph.prototype.unitSize = function() {
+    if (this.orientation === "vertical") {
+      return (this.height() - this.button.height()) / this.rangeSize();
+    }
+    return (this.width() - this.button.width()) / this.rangeSize();
+  };
+
+  SliderMorph.prototype.updateRendering = function() {
+    var bh, bw, posX, posY;
+
+    SliderMorph.__super__.updateRendering.call(this);
+    this.button.orientation = this.orientation;
+    if (this.orientation === "vertical") {
+      bw = this.width() - 2;
+      bh = Math.max(bw, Math.round(this.height() * this.ratio()));
+      this.button.silentSetExtent(new Point(bw, bh));
+      posX = 1;
+      posY = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.height() - this.button.height());
     } else {
-      this.hBar.hide();
+      bh = this.height() - 2;
+      bw = Math.max(bh, Math.round(this.width() * this.ratio()));
+      this.button.silentSetExtent(new Point(bw, bh));
+      posY = 1;
+      posX = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.width() - this.button.width());
     }
-    if (this.contents.height() > this.height() + this.scrollBarSize) {
-      this.vBar.show();
-      if (this.vBar.height() !== vHeight) {
-        this.vBar.setHeight(vHeight);
-      }
-      this.vBar.setPosition(new Point(this.right() - this.vBar.width(), this.top()));
-      this.vBar.start = 0;
-      this.vBar.stop = this.contents.height() - this.height();
-      this.vBar.size = this.height() / this.contents.height() * this.vBar.stop;
-      this.vBar.value = this.top() - this.contents.top();
-      return this.vBar.updateRendering();
+    this.button.setPosition(new Point(posX, posY).add(this.bounds.origin));
+    this.button.updateRendering();
+    return this.button.changed();
+  };
+
+  SliderMorph.prototype.updateValue = function() {
+    var relPos;
+
+    if (this.orientation === "vertical") {
+      relPos = this.button.top() - this.top();
     } else {
-      return this.vBar.hide();
+      relPos = this.button.left() - this.left();
     }
+    this.value = Math.round(relPos / this.unitSize() + this.start);
+    return this.updateTarget();
   };
 
-  ScrollFrameMorph.prototype.addContents = function(aMorph) {
-    this.contents.add(aMorph);
-    return this.contents.adjustBounds();
-  };
-
-  ScrollFrameMorph.prototype.setContents = function(aMorph) {
-    this.contents.children.forEach(function(m) {
-      return m.destroy();
-    });
-    this.contents.children = [];
-    aMorph.setPosition(this.position().add(this.padding + 2));
-    return this.addContents(aMorph);
-  };
-
-  ScrollFrameMorph.prototype.setExtent = function(aPoint) {
-    if (this.isTextLineWrapping) {
-      this.contents.setPosition(this.position().copy());
-    }
-    ScrollFrameMorph.__super__.setExtent.call(this, aPoint);
-    return this.contents.adjustBounds();
-  };
-
-  ScrollFrameMorph.prototype.scrollX = function(steps) {
-    var cl, cw, l, newX, r;
-
-    cl = this.contents.left();
-    l = this.left();
-    cw = this.contents.width();
-    r = this.right();
-    newX = cl + steps;
-    if (newX > l) {
-      newX = l;
-    }
-    if (newX + cw < r) {
-      newX = r - cw;
-    }
-    if (newX !== cl) {
-      return this.contents.setLeft(newX);
-    }
-  };
-
-  ScrollFrameMorph.prototype.scrollY = function(steps) {
-    var b, ch, ct, newY, t;
-
-    ct = this.contents.top();
-    t = this.top();
-    ch = this.contents.height();
-    b = this.bottom();
-    newY = ct + steps;
-    if (newY > t) {
-      newY = t;
-    }
-    if (newY + ch < b) {
-      newY = b - ch;
-    }
-    if (newY !== ct) {
-      return this.contents.setTop(newY);
-    }
-  };
-
-  ScrollFrameMorph.prototype.mouseDownLeft = function(pos) {
-    var deltaX, deltaY, friction, oldPos, world,
-      _this = this;
-
-    if (!this.isScrollingByDragging) {
-      return null;
-    }
-    world = this.root();
-    oldPos = pos;
-    deltaX = 0;
-    deltaY = 0;
-    friction = 0.8;
-    return this.step = function() {
-      var newPos;
-
-      if (world.hand.mouseButton && (!world.hand.children.length) && (_this.bounds.containsPoint(world.hand.position()))) {
-        newPos = world.hand.bounds.origin;
-        deltaX = newPos.x - oldPos.x;
-        if (deltaX !== 0) {
-          _this.scrollX(deltaX);
-        }
-        deltaY = newPos.y - oldPos.y;
-        if (deltaY !== 0) {
-          _this.scrollY(deltaY);
-        }
-        oldPos = newPos;
+  SliderMorph.prototype.updateTarget = function() {
+    if (this.action) {
+      if (typeof this.action === "function") {
+        return this.action.call(this.target, this.value);
       } else {
-        if (!_this.hasVelocity) {
-          _this.step = noOperation;
-        } else {
-          if ((Math.abs(deltaX) < 0.5) && (Math.abs(deltaY) < 0.5)) {
-            _this.step = noOperation;
-          } else {
-            deltaX = deltaX * friction;
-            _this.scrollX(Math.round(deltaX));
-            deltaY = deltaY * friction;
-            _this.scrollY(Math.round(deltaY));
-          }
-        }
+        return this.target[this.action](this.value);
       }
-      return _this.adjustScrollBars();
-    };
+    }
   };
 
-  ScrollFrameMorph.prototype.startAutoScrolling = function() {
-    var hand, inset, world,
-      _this = this;
-
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
-    world = this.world();
-    if (!world) {
-      return null;
-    }
-    hand = world.hand;
-    if (!this.autoScrollTrigger) {
-      this.autoScrollTrigger = Date.now();
-    }
-    return this.step = function() {
-      var inner, pos;
-
-      pos = hand.bounds.origin;
-      inner = _this.bounds.insetBy(inset);
-      if ((_this.bounds.containsPoint(pos)) && (!(inner.containsPoint(pos))) && hand.children.length) {
-        return _this.autoScroll(pos);
-      } else {
-        _this.step = noOperation;
-        return _this.autoScrollTrigger = null;
-      }
-    };
-  };
-
-  ScrollFrameMorph.prototype.autoScroll = function(pos) {
-    var area, inset;
-
-    if (Date.now() - this.autoScrollTrigger < 500) {
-      return null;
-    }
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
-    area = this.topLeft().extent(new Point(this.width(), inset));
-    if (area.containsPoint(pos)) {
-      this.scrollY(inset - (pos.y - this.top()));
-    }
-    area = this.topLeft().extent(new Point(inset, this.height()));
-    if (area.containsPoint(pos)) {
-      this.scrollX(inset - (pos.x - this.left()));
-    }
-    area = (new Point(this.right() - inset, this.top())).extent(new Point(inset, this.height()));
-    if (area.containsPoint(pos)) {
-      this.scrollX(-(inset - (this.right() - pos.x)));
-    }
-    area = (new Point(this.left(), this.bottom() - inset)).extent(new Point(this.width(), inset));
-    if (area.containsPoint(pos)) {
-      this.scrollY(-(inset - (this.bottom() - pos.y)));
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.scrollCaretIntoView = function(morph) {
-    var fb, ft, offset, txt;
-
-    txt = morph.target;
-    offset = txt.position().subtract(this.contents.position());
-    ft = this.top() + this.padding;
-    fb = this.bottom() - this.padding;
-    this.contents.setExtent(txt.extent().add(offset).add(this.padding));
-    if (morph.top() < ft) {
-      this.contents.setTop(this.contents.top() + ft - morph.top());
-      morph.setTop(ft);
-    } else if (morph.bottom() > fb) {
-      this.contents.setBottom(this.contents.bottom() + fb - morph.bottom());
-      morph.setBottom(fb);
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.mouseScroll = function(y, x) {
-    if (y) {
-      this.scrollY(y * WorldMorph.MorphicPreferences.mouseScrollAmount);
-    }
-    if (x) {
-      this.scrollX(x * WorldMorph.MorphicPreferences.mouseScrollAmount);
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
+  SliderMorph.prototype.copyRecordingReferences = function(dict) {
     var c;
 
-    c = ScrollFrameMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.contents && dict[this.contents]) {
-      c.contents = dict[this.contents];
+    c = SliderMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
     }
-    if (c.hBar && dict[this.hBar]) {
-      c.hBar = dict[this.hBar];
-      c.hBar.action = function(num) {
-        return c.contents.setPosition(new Point(c.left() - num, c.contents.position().y));
-      };
-    }
-    if (c.vBar && dict[this.vBar]) {
-      c.vBar = dict[this.vBar];
-      c.vBar.action = function(num) {
-        return c.contents.setPosition(new Point(c.contents.position().x, c.top() - num));
-      };
+    if (c.button && dict[this.button]) {
+      c.button = dict[this.button];
     }
     return c;
   };
 
-  ScrollFrameMorph.prototype.developersMenu = function() {
+  SliderMorph.prototype.developersMenu = function() {
     var menu;
 
-    menu = ScrollFrameMorph.__super__.developersMenu.call(this);
-    if (this.isTextLineWrapping) {
-      menu.addItem("auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff");
-    } else {
-      menu.addItem("auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping");
-    }
+    menu = SliderMorph.__super__.developersMenu.call(this);
+    menu.addItem("show value...", "showValue", "display a dialog box\nshowing the selected number");
+    menu.addItem("floor...", (function() {
+      return this.prompt(menu.title + "\nfloor:", this.setStart, this, this.start.toString(), null, 0, this.stop - this.size, true);
+    }), "set the minimum value\nwhich can be selected");
+    menu.addItem("ceiling...", (function() {
+      return this.prompt(menu.title + "\nceiling:", this.setStop, this, this.stop.toString(), null, this.start + this.size, this.size * 100, true);
+    }), "set the maximum value\nwhich can be selected");
+    menu.addItem("button size...", (function() {
+      return this.prompt(menu.title + "\nbutton size:", this.setSize, this, this.size.toString(), null, 1, this.stop - this.start, true);
+    }), "set the range\ncovered by\nthe slider button");
+    menu.addLine();
+    menu.addItem("set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one");
     return menu;
   };
 
-  ScrollFrameMorph.prototype.toggleTextLineWrapping = function() {
-    return this.isTextLineWrapping = !this.isTextLineWrapping;
+  SliderMorph.prototype.showValue = function() {
+    return this.inform(this.value);
   };
 
-  ScrollFrameMorph.coffeeScriptSourceOfThisClass = '# ScrollFrameMorph ////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass ScrollFrameMorph extends FrameMorph\n\n  autoScrollTrigger: null\n  hasVelocity: true # dto.\n  padding: 0 # around the scrollable area\n  growth: 0 # pixels or Point to grow right/left when near edge\n  isTextLineWrapping: false\n  isScrollingByDragging: true\n  scrollBarSize: null\n  contents: null\n  vBar: null\n  hBar: null\n\n  constructor: (contents, scrollBarSize, sliderColor) ->\n    # super() paints the scrollframe, which we don\'t want,\n    # so we set 0 opacity here.\n    @alpha = 0\n    super()\n    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize\n    @contents = contents or new FrameMorph(@)\n    @add @contents\n\n    # the scrollFrame is never going to paint itself,\n    # but its values are going to mimick the values of the\n    # contained frame\n    @color = @contents.color\n    @alpha = @contents.alpha\n    # the scrollFrame is a container, it redirects most\n    # commands to the "contained" frame\n    @updateRendering = @contents.updateRendering\n    #@setColor = @contents.setColor\n    #@setAlphaScaled = @contents.setAlphaScaled\n\n    @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)\n    @hBar.setHeight @scrollBarSize\n    @hBar.action = (num) =>\n      @contents.setPosition new Point(@left() - num, @contents.position().y)\n    @hBar.isDraggable = false\n    @add @hBar\n\n    @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)\n    @vBar.setWidth @scrollBarSize\n    @vBar.action = (num) =>\n      @contents.setPosition new Point(@contents.position().x, @top() - num)\n    @vBar.isDraggable = false\n    @add @vBar\n\n\n  setColor: (aColor) ->\n    # update the color of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the color so that its value is the same as the\n    # contained frame\n    @color = aColor\n    @contents.setColor(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # update the alpha of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the alpha so that its value is the same as the\n    # contained frame\n    @alpha = @calculateAlphaScaled(alpha)\n    @contents.setAlphaScaled(alpha)\n\n  adjustScrollBars: ->\n    hWidth = @width() - @scrollBarSize\n    vHeight = @height() - @scrollBarSize\n    @changed()\n    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize\n      @hBar.show()\n      @hBar.setWidth hWidth  if @hBar.width() isnt hWidth\n      @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())\n      @hBar.start = 0\n      @hBar.stop = @contents.width() - @width()\n      @hBar.size = @width() / @contents.width() * @hBar.stop\n      @hBar.value = @left() - @contents.left()\n      @hBar.updateRendering()\n    else\n      @hBar.hide()\n    if @contents.height() > @height() + @scrollBarSize\n      @vBar.show()\n      @vBar.setHeight vHeight  if @vBar.height() isnt vHeight\n      @vBar.setPosition new Point(@right() - @vBar.width(), @top())\n      @vBar.start = 0\n      @vBar.stop = @contents.height() - @height()\n      @vBar.size = @height() / @contents.height() * @vBar.stop\n      @vBar.value = @top() - @contents.top()\n      @vBar.updateRendering()\n    else\n      @vBar.hide()\n  \n  addContents: (aMorph) ->\n    @contents.add aMorph\n    @contents.adjustBounds()\n  \n  setContents: (aMorph) ->\n    @contents.children.forEach (m) ->\n      m.destroy()\n    #\n    @contents.children = []\n    aMorph.setPosition @position().add(@padding + 2)\n    @addContents aMorph\n  \n  setExtent: (aPoint) ->\n    @contents.setPosition @position().copy()  if @isTextLineWrapping\n    super aPoint\n    @contents.adjustBounds()\n  \n  \n  # ScrollFrameMorph scrolling by dragging:\n  scrollX: (steps) ->\n    cl = @contents.left()\n    l = @left()\n    cw = @contents.width()\n    r = @right()\n    newX = cl + steps\n    newX = l  if newX > l\n    newX = r - cw  if newX + cw < r\n    @contents.setLeft newX  if newX isnt cl\n  \n  scrollY: (steps) ->\n    ct = @contents.top()\n    t = @top()\n    ch = @contents.height()\n    b = @bottom()\n    newY = ct + steps\n    newY = t  if newY > t\n    newY = b - ch  if newY + ch < b\n    @contents.setTop newY  if newY isnt ct\n  \n  mouseDownLeft: (pos) ->\n    return null  unless @isScrollingByDragging\n    world = @root()\n    oldPos = pos\n    deltaX = 0\n    deltaY = 0\n    friction = 0.8\n    @step = =>\n      if world.hand.mouseButton and\n        (!world.hand.children.length) and\n        (@bounds.containsPoint(world.hand.position()))\n          newPos = world.hand.bounds.origin\n          deltaX = newPos.x - oldPos.x\n          @scrollX deltaX  if deltaX isnt 0\n          deltaY = newPos.y - oldPos.y\n          @scrollY deltaY  if deltaY isnt 0\n          oldPos = newPos\n      else\n        unless @hasVelocity\n          @step = noOperation\n        else\n          if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)\n            @step = noOperation\n          else\n            deltaX = deltaX * friction\n            @scrollX Math.round(deltaX)\n            deltaY = deltaY * friction\n            @scrollY Math.round(deltaY)\n      @adjustScrollBars()\n  \n  startAutoScrolling: ->\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    world = @world()\n    return null  unless world\n    hand = world.hand\n    @autoScrollTrigger = Date.now()  unless @autoScrollTrigger\n    @step = =>\n      pos = hand.bounds.origin\n      inner = @bounds.insetBy(inset)\n      if (@bounds.containsPoint(pos)) and\n        (not (inner.containsPoint(pos))) and\n        (hand.children.length)\n          @autoScroll pos\n      else\n        @step = noOperation\n        @autoScrollTrigger = null\n  \n  autoScroll: (pos) ->\n    return null  if Date.now() - @autoScrollTrigger < 500\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    area = @topLeft().extent(new Point(@width(), inset))\n    @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)\n    area = @topLeft().extent(new Point(inset, @height()))\n    @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)\n    area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))\n    @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)\n    area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))\n    @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)\n    @adjustScrollBars()  \n  \n  # ScrollFrameMorph scrolling by editing text:\n  scrollCaretIntoView: (morph) ->\n    txt = morph.target\n    offset = txt.position().subtract(@contents.position())\n    ft = @top() + @padding\n    fb = @bottom() - @padding\n    @contents.setExtent txt.extent().add(offset).add(@padding)\n    if morph.top() < ft\n      @contents.setTop @contents.top() + ft - morph.top()\n      morph.setTop ft\n    else if morph.bottom() > fb\n      @contents.setBottom @contents.bottom() + fb - morph.bottom()\n      morph.setBottom fb\n    @adjustScrollBars()\n\n  # ScrollFrameMorph events:\n  mouseScroll: (y, x) ->\n    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y\n    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x\n    @adjustScrollBars()\n  \n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.contents = (dict[@contents])  if c.contents and dict[@contents]\n    if c.hBar and dict[@hBar]\n      c.hBar = (dict[@hBar])\n      c.hBar.action = (num) ->\n        c.contents.setPosition new Point(c.left() - num, c.contents.position().y)\n    if c.vBar and dict[@vBar]\n      c.vBar = (dict[@vBar])\n      c.vBar.action = (num) ->\n        c.contents.setPosition new Point(c.contents.position().x, c.top() - num)\n    c\n  \n  developersMenu: ->\n    menu = super()\n    if @isTextLineWrapping\n      menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"\n    else\n      menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"\n    menu\n  \n  toggleTextLineWrapping: ->\n    @isTextLineWrapping = not @isTextLineWrapping';
+  SliderMorph.prototype.userSetStart = function(num) {
+    return this.start = Math.max(num, this.stop);
+  };
 
-  return ScrollFrameMorph;
+  SliderMorph.prototype.setStart = function(num) {
+    var newStart;
 
-})(FrameMorph);
-
-ListMorph = (function(_super) {
-  __extends(ListMorph, _super);
-
-  ListMorph.prototype.elements = null;
-
-  ListMorph.prototype.labelGetter = null;
-
-  ListMorph.prototype.format = null;
-
-  ListMorph.prototype.listContents = null;
-
-  ListMorph.prototype.selected = null;
-
-  ListMorph.prototype.active = null;
-
-  ListMorph.prototype.action = null;
-
-  function ListMorph(elements, labelGetter, format) {
-    this.elements = elements != null ? elements : [];
-    this.format = format != null ? format : [];
-    ListMorph.__super__.constructor.call(this);
-    this.contents.acceptsDrops = false;
-    this.color = new Color(255, 255, 255);
-    this.hBar.alpha = 0.6;
-    this.vBar.alpha = 0.6;
-    this.labelGetter = labelGetter || function(element) {
-      if (isString(element)) {
-        return element;
+    if (typeof num === "number") {
+      this.start = Math.min(Math.max(num, 0), this.stop - this.size);
+    } else {
+      newStart = parseFloat(num);
+      if (!isNaN(newStart)) {
+        this.start = Math.min(Math.max(newStart, 0), this.stop - this.size);
       }
-      if (element.toSource) {
-        return element.toSource();
+    }
+    this.value = Math.max(this.value, this.start);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  SliderMorph.prototype.setStop = function(num) {
+    var newStop;
+
+    if (typeof num === "number") {
+      this.stop = Math.max(num, this.start + this.size);
+    } else {
+      newStop = parseFloat(num);
+      if (!isNaN(newStop)) {
+        this.stop = Math.max(newStop, this.start + this.size);
       }
-      return element.toString();
-    };
-    this.buildListContents();
-  }
-
-  ListMorph.prototype.buildListContents = function() {
-    var _this = this;
-
-    if (this.listContents) {
-      this.listContents.destroy();
     }
-    this.listContents = new MenuMorph(this.select, null, this);
-    if (!this.elements.length) {
-      this.elements = ["(empty)"];
-    }
-    this.elements.forEach(function(element) {
-      var bold, color, italic;
+    this.value = Math.min(this.value, this.stop);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
 
-      color = null;
-      bold = false;
-      italic = false;
-      _this.format.forEach(function(pair) {
-        if (pair[1].call(null, element)) {
-          if (pair[0] === 'bold') {
-            return bold = true;
-          } else if (pair[0] === 'italic') {
-            return italic = true;
-          } else {
-            return color = pair[0];
-          }
-        }
+  SliderMorph.prototype.setSize = function(num) {
+    var newSize;
+
+    if (typeof num === "number") {
+      this.size = Math.min(Math.max(num, 1), this.stop - this.start);
+    } else {
+      newSize = parseFloat(num);
+      if (!isNaN(newSize)) {
+        this.size = Math.min(Math.max(newSize, 1), this.stop - this.start);
+      }
+    }
+    this.value = Math.min(this.value, this.stop - this.size);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  SliderMorph.prototype.setTarget = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.push(this.world());
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        _this.target = each;
+        return _this.setTargetSetter();
       });
-      return _this.listContents.addItem(_this.labelGetter(element), element, null, color, bold, italic);
     });
-    this.listContents.setPosition(this.contents.position());
-    this.listContents.isListContents = true;
-    this.listContents.updateRendering();
-    return this.addContents(this.listContents);
-  };
-
-  ListMorph.prototype.select = function(item, trigger) {
-    this.selected = item;
-    this.active = trigger;
-    if (this.action) {
-      return this.action.call(null, item);
+    if (choices.length === 1) {
+      this.target = choices[0];
+      return this.setTargetSetter();
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
     }
   };
 
-  ListMorph.prototype.setExtent = function(aPoint) {
-    var lb, nb;
+  SliderMorph.prototype.setTargetSetter = function() {
+    var choices, menu,
+      _this = this;
 
-    lb = this.listContents.bounds;
-    nb = this.bounds.origin.copy().corner(this.bounds.origin.add(aPoint));
-    if (nb.right() > lb.right() && nb.width() <= lb.width()) {
-      this.listContents.setRight(nb.right());
+    choices = this.target.numericalSetters();
+    menu = new MenuMorph(this, "choose target property:");
+    choices.forEach(function(each) {
+      return menu.addItem(each, function() {
+        return _this.action = each;
+      });
+    });
+    if (choices.length === 1) {
+      return this.action = choices[0];
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
     }
-    if (nb.bottom() > lb.bottom() && nb.height() <= lb.height()) {
-      this.listContents.setBottom(nb.bottom());
-    }
-    return ListMorph.__super__.setExtent.call(this, aPoint);
   };
 
-  ListMorph.coffeeScriptSourceOfThisClass = '# ListMorph ///////////////////////////////////////////////////////////\n\nclass ListMorph extends ScrollFrameMorph\n  \n  elements: null\n  labelGetter: null\n  format: null\n  listContents: null\n  selected: null # actual element currently selected\n  active: null # menu item representing the selected element\n  action: null\n\n  constructor: (@elements = [], labelGetter, @format = []) ->\n    #\n    #    passing a format is optional. If the format parameter is specified\n    #    it has to be of the following pattern:\n    #\n    #        [\n    #            [<color>, <single-argument predicate>],\n    #            [\'bold\', <single-argument predicate>],\n    #            [\'italic\', <single-argument predicate>],\n    #            ...\n    #        ]\n    #\n    #    multiple conditions can be passed in such a format list, the\n    #    last predicate to evaluate true when given the list element sets\n    #    the given format category (color, bold, italic).\n    #    If no condition is met, the default format (color black, non-bold,\n    #    non-italic) will be assigned.\n    #    \n    #    An example of how to use fomats can be found in the InspectorMorph\'s\n    #    "markOwnProperties" mechanism.\n    #\n    super()\n    @contents.acceptsDrops = false\n    @color = new Color(255, 255, 255)\n    @hBar.alpha = 0.6\n    @vBar.alpha = 0.6\n    @labelGetter = labelGetter or (element) ->\n        return element  if isString(element)\n        return element.toSource()  if element.toSource\n        element.toString()\n    @buildListContents()\n    # it\'s important to leave the step as the default noOperation\n    # instead of null because the scrollbars (inherited from scrollframe)\n    # need the step function to react to mouse drag.\n  \n  buildListContents: ->\n    @listContents.destroy()  if @listContents\n    @listContents = new MenuMorph(@select, null, @)\n    @elements = ["(empty)"]  if !@elements.length\n    @elements.forEach (element) =>\n      color = null\n      bold = false\n      italic = false\n      @format.forEach (pair) ->\n        if pair[1].call(null, element)\n          if pair[0] == \'bold\'\n            bold = true\n          else if pair[0] == \'italic\'\n            italic = true\n          else # assume it\'s a color\n            color = pair[0]\n      #\n      # label string\n      # action\n      # hint\n      @listContents.addItem @labelGetter(element), element, null, color, bold, italic\n    #\n    @listContents.setPosition @contents.position()\n    @listContents.isListContents = true\n    @listContents.updateRendering()\n    @addContents @listContents\n  \n  select: (item, trigger) ->\n    @selected = item\n    @active = trigger\n    @action.call null, item  if @action\n  \n  setExtent: (aPoint) ->\n    lb = @listContents.bounds\n    nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))\n    if nb.right() > lb.right() and nb.width() <= lb.width()\n      @listContents.setRight nb.right()\n    if nb.bottom() > lb.bottom() and nb.height() <= lb.height()\n      @listContents.setBottom nb.bottom()\n    super aPoint';
+  SliderMorph.prototype.numericalSetters = function() {
+    var list;
 
-  return ListMorph;
+    list = SliderMorph.__super__.numericalSetters.call(this);
+    list.push("setStart", "setStop", "setSize");
+    return list;
+  };
 
-})(ScrollFrameMorph);
+  SliderMorph.prototype.mouseDownLeft = function(pos) {
+    var world,
+      _this = this;
+
+    if (!this.button.bounds.containsPoint(pos)) {
+      this.offset = new Point();
+    } else {
+      this.offset = pos.subtract(this.button.bounds.origin);
+    }
+    world = this.root();
+    return this.step = function() {
+      var mousePos, newX, newY;
+
+      if (world.hand.mouseButton) {
+        mousePos = world.hand.bounds.origin;
+        if (_this.orientation === "vertical") {
+          newX = _this.button.bounds.origin.x;
+          newY = Math.max(Math.min(mousePos.y - _this.offset.y, _this.bottom() - _this.button.height()), _this.top());
+        } else {
+          newY = _this.button.bounds.origin.y;
+          newX = Math.max(Math.min(mousePos.x - _this.offset.x, _this.right() - _this.button.width()), _this.left());
+        }
+        _this.button.setPosition(new Point(newX, newY));
+        return _this.updateValue();
+      } else {
+        return _this.step = null;
+      }
+    };
+  };
+
+  SliderMorph.coffeeScriptSourceOfThisClass = '# SliderMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderMorph extends CircleBoxMorph\n\n  target: null\n  action: null\n  start: null\n  stop: null\n  value: null\n  size: null\n  offset: null\n  button: null\n  step: null\n\n  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->\n    @button = new SliderButtonMorph()\n    @button.isDraggable = false\n    @button.color = new Color(200, 200, 200)\n    @button.highlightColor = new Color(210, 210, 255)\n    @button.pressColor = new Color(180, 180, 255)\n    super orientation # if null, then a vertical one will be created\n    @add @button\n    @alpha = 0.3\n    @color = color or new Color(0, 0, 0)\n    @setExtent new Point(20, 100)\n  \n  \n  # this.updateRendering();\n  autoOrientation: ->\n      noOperation\n  \n  rangeSize: ->\n    @stop - @start\n  \n  ratio: ->\n    @size / @rangeSize()\n  \n  unitSize: ->\n    return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"\n    (@width() - @button.width()) / @rangeSize()\n  \n  updateRendering: ->\n    super()\n    @button.orientation = @orientation\n    if @orientation is "vertical"\n      bw = @width() - 2\n      bh = Math.max(bw, Math.round(@height() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posX = 1\n      posY = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @height() - @button.height())\n    else\n      bh = @height() - 2\n      bw = Math.max(bh, Math.round(@width() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posY = 1\n      posX = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @width() - @button.width())\n    @button.setPosition new Point(posX, posY).add(@bounds.origin)\n    @button.updateRendering()\n    @button.changed()\n  \n  updateValue: ->\n    if @orientation is "vertical"\n      relPos = @button.top() - @top()\n    else\n      relPos = @button.left() - @left()\n    @value = Math.round(relPos / @unitSize() + @start)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @action\n      if typeof @action is "function"\n        @action.call @target, @value\n      else # assume it\'s a String\n        @target[@action] @value\n  \n  \n  # SliderMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c.button = (dict[@button])  if c.button and dict[@button]\n    c\n  \n  \n  # SliderMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"\n    menu.addItem "floor...", (->\n      @prompt menu.title + "\nfloor:",\n        @setStart,\n        @,\n        @start.toString(),\n        null,\n        0,\n        @stop - @size,\n        true\n    ), "set the minimum value\nwhich can be selected"\n    menu.addItem "ceiling...", (->\n      @prompt menu.title + "\nceiling:",\n        @setStop,\n        @,\n        @stop.toString(),\n        null,\n        @start + @size,\n        @size * 100,\n        true\n    ), "set the maximum value\nwhich can be selected"\n    menu.addItem "button size...", (->\n      @prompt menu.title + "\nbutton size:",\n        @setSize,\n        @,\n        @size.toString(),\n        null,\n        1,\n        @stop - @start,\n        true\n    ), "set the range\ncovered by\nthe slider button"\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"\n    menu\n  \n  showValue: ->\n    @inform @value\n  \n  userSetStart: (num) ->\n    # for context menu demo purposes\n    @start = Math.max(num, @stop)\n  \n  setStart: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @start = Math.min(Math.max(num, 0), @stop - @size)\n    else\n      newStart = parseFloat(num)\n      @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)\n    @value = Math.max(@value, @start)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setStop: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @stop = Math.max(num, @start + @size)\n    else\n      newStop = parseFloat(num)\n      @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)\n    @value = Math.min(@value, @stop)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setSize: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @size = Math.min(Math.max(num, 1), @stop - @start)\n    else\n      newSize = parseFloat(num)\n      @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)\n    @value = Math.min(@value, @stop - @size)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    #\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.numericalSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @action = each\n    #\n    if choices.length is 1\n      @action = choices[0]\n    else menu.popUpAtHand @world()  if choices.length\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    list = super()\n    list.push "setStart", "setStop", "setSize"\n    list\n  \n  \n  # SliderMorph stepping:\n  mouseDownLeft: (pos) ->\n    unless @button.bounds.containsPoint(pos)\n      @offset = new Point() # return null;\n    else\n      @offset = pos.subtract(@button.bounds.origin)\n    world = @root()\n    # this is to create the "drag the slider" effect\n    # basically if the mouse is pressing within the boundaries\n    # then in the next step you remember to check again where the mouse\n    # is and update the scrollbar. As soon as the mouse is unpressed\n    # then the step function is set to null to save cycles.\n    @step = =>\n      if world.hand.mouseButton\n        mousePos = world.hand.bounds.origin\n        if @orientation is "vertical"\n          newX = @button.bounds.origin.x\n          newY = Math.max(\n            Math.min(mousePos.y - @offset.y,\n            @bottom() - @button.height()), @top())\n        else\n          newY = @button.bounds.origin.y\n          newX = Math.max(\n            Math.min(mousePos.x - @offset.x,\n            @right() - @button.width()), @left())\n        @button.setPosition new Point(newX, newY)\n        @updateValue()\n      else\n        @step = null';
+
+  return SliderMorph;
+
+})(CircleBoxMorph);
+
+modules = {};
+
+useBlurredShadows = getBlurredShadowSupport();
+
+standardSettings = {
+  minimumFontHeight: getMinimumFontHeight(),
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 12,
+  bubbleHelpFontSize: 10,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 12,
+  prompterSliderSize: 10,
+  handleSize: 15,
+  scrollBarSize: 12,
+  mouseScrollAmount: 40,
+  useSliderForInput: false,
+  useVirtualKeyboard: true,
+  isTouchDevice: false,
+  rasterizeSVGs: false
+};
+
+touchScreenSettings = {
+  minimumFontHeight: standardSettings.minimumFontHeight,
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 24,
+  bubbleHelpFontSize: 18,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 24,
+  prompterSliderSize: 20,
+  handleSize: 26,
+  scrollBarSize: 24,
+  mouseScrollAmount: 40,
+  useSliderForInput: true,
+  useVirtualKeyboard: true,
+  isTouchDevice: false,
+  rasterizeSVGs: false
+};
 
 BoxMorph = (function(_super) {
   __extends(BoxMorph, _super);
@@ -2713,439 +2449,930 @@ GrayPaletteMorph = (function(_super) {
 
 })(ColorPaletteMorph);
 
-HandleMorph = (function(_super) {
-  var step;
+SpeechBubbleMorph = (function(_super) {
+  __extends(SpeechBubbleMorph, _super);
 
-  __extends(HandleMorph, _super);
+  SpeechBubbleMorph.prototype.isPointingRight = true;
 
-  HandleMorph.prototype.target = null;
+  SpeechBubbleMorph.prototype.contents = null;
 
-  HandleMorph.prototype.minExtent = null;
+  SpeechBubbleMorph.prototype.padding = null;
 
-  HandleMorph.prototype.inset = null;
+  SpeechBubbleMorph.prototype.isThought = null;
 
-  HandleMorph.prototype.type = null;
+  SpeechBubbleMorph.prototype.isClickable = false;
 
-  function HandleMorph(target, minX, minY, insetX, insetY, type) {
-    var size;
-
-    this.target = target != null ? target : null;
-    if (minX == null) {
-      minX = 0;
-    }
-    if (minY == null) {
-      minY = 0;
-    }
-    this.type = type != null ? type : "resize";
-    this.minExtent = new Point(minX, minY);
-    this.inset = new Point(insetX || 0, insetY || insetX || 0);
-    HandleMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.noticesTransparentClick = true;
-    size = WorldMorph.MorphicPreferences.handleSize;
-    this.setExtent(new Point(size, size));
+  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
+    this.contents = contents != null ? contents : "";
+    this.padding = padding != null ? padding : 0;
+    this.isThought = isThought != null ? isThought : false;
+    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
+    this.color = color || new Color(230, 230, 230);
+    this.updateRendering();
   }
 
-  HandleMorph.prototype.updateRendering = function() {
-    this.normalImage = newCanvas(this.extent());
-    this.highlightImage = newCanvas(this.extent());
-    this.handleMorphRenderingHelper(this.normalImage, this.color, new Color(100, 100, 100));
-    this.handleMorphRenderingHelper(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
-    this.image = this.normalImage;
-    if (this.target) {
-      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
-      this.target.add(this);
-      return this.target.changed();
+  SpeechBubbleMorph.prototype.popUp = function(world, pos, isClickable) {
+    this.updateRendering();
+    this.setPosition(pos.subtract(new Point(0, this.height())));
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    world.add(this);
+    this.changed();
+    world.hand.destroyTemporaries();
+    world.hand.temporaries.push(this);
+    if (isClickable) {
+      return this.mouseEnter = function() {
+        return this.destroy();
+      };
+    } else {
+      return this.isClickable = false;
     }
   };
 
-  HandleMorph.prototype.handleMorphRenderingHelper = function(aCanvas, color, shadowColor) {
-    var context, i, p1, p11, p2, p22, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _results;
-
-    context = aCanvas.getContext("2d");
-    context.lineWidth = 1;
-    context.lineCap = "round";
-    context.strokeStyle = color.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      for (i = _i = 0, _ref = this.height(); _i <= _ref; i = _i += 6) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-      }
+  SpeechBubbleMorph.prototype.updateRendering = function() {
+    if (this.contentsMorph) {
+      this.contentsMorph.destroy();
     }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    for (i = _j = 0, _ref1 = this.width(); _j <= _ref1; i = _j += 6) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      context.stroke();
+    if (this.contents instanceof Morph) {
+      this.contentsMorph = this.contents;
+    } else if (isString(this.contents)) {
+      this.contentsMorph = new TextMorph(this.contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
+    } else if (this.contents instanceof HTMLCanvasElement) {
+      this.contentsMorph = new Morph();
+      this.contentsMorph.silentSetWidth(this.contents.width);
+      this.contentsMorph.silentSetHeight(this.contents.height);
+      this.contentsMorph.image = this.contents;
+    } else {
+      this.contentsMorph = new TextMorph(this.contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
     }
-    context.strokeStyle = shadowColor.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      for (i = _k = -1, _ref2 = this.height(); _k <= _ref2; i = _k += 6) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-      }
-    }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    _results = [];
-    for (i = _l = 2, _ref3 = this.width(); _l <= _ref3; i = _l += 6) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      _results.push(context.stroke());
-    }
-    return _results;
+    this.add(this.contentsMorph);
+    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
+    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
+    SpeechBubbleMorph.__super__.updateRendering.call(this);
+    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
   };
 
-  step = null;
+  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
+    var circle, h, offset, rad, w;
 
-  HandleMorph.prototype.mouseDownLeft = function(pos) {
-    var offset, world,
-      _this = this;
-
-    world = this.root();
-    offset = pos.subtract(this.bounds.origin);
-    if (!this.target) {
-      return null;
-    }
-    this.step = function() {
-      var newExt, newPos;
-
-      if (world.hand.mouseButton) {
-        newPos = world.hand.bounds.origin.copy().subtract(offset);
-        if (_this.type === "resize") {
-          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
-          newExt = newExt.max(_this.minExtent);
-          _this.target.setExtent(newExt);
-          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
-        } else {
-          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
-        }
+    circle = function(x, y, r) {
+      context.moveTo(x + r, y);
+      return context.arc(x, y, r, radians(0), radians(360));
+    };
+    offset = radius + inset;
+    w = this.width();
+    h = this.height();
+    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
+    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
+    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
+    if (!this.isThought) {
+      if (this.isPointingRight) {
+        context.lineTo(offset + radius, h - offset);
+        context.lineTo(radius / 2 + inset, h - inset);
       } else {
-        return _this.step = null;
+        context.lineTo(w - (radius / 2 + inset), h - inset);
+        context.lineTo(w - (offset + radius), h - offset);
+      }
+    }
+    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
+    if (this.isThought) {
+      context.lineTo(inset, offset);
+      if (this.isPointingRight) {
+        rad = radius / 4;
+        circle(rad + inset, h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(rad * 2 + inset, h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
+      } else {
+        rad = radius / 4;
+        circle(w - (rad + inset), h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
+      }
+    }
+  };
+
+  SpeechBubbleMorph.prototype.shadowImage = function(off_, color) {
+    var clr, ctx, fb, img, offset, outline, sha;
+
+    fb = void 0;
+    img = void 0;
+    outline = void 0;
+    sha = void 0;
+    ctx = void 0;
+    offset = off_ || new Point(7, 7);
+    clr = color || new Color(0, 0, 0);
+    fb = this.extent();
+    img = this.image;
+    outline = newCanvas(fb);
+    ctx = outline.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.drawImage(img, -offset.x, -offset.y);
+    sha = newCanvas(fb);
+    ctx = sha.getContext("2d");
+    ctx.drawImage(outline, 0, 0);
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = clr.toString();
+    ctx.fillRect(0, 0, fb.x, fb.y);
+    return sha;
+  };
+
+  SpeechBubbleMorph.prototype.shadowImageBlurred = function(off_, color) {
+    var blur, clr, ctx, fb, img, offset, sha;
+
+    fb = void 0;
+    img = void 0;
+    sha = void 0;
+    ctx = void 0;
+    offset = off_ || new Point(7, 7);
+    blur = this.shadowBlur;
+    clr = color || new Color(0, 0, 0);
+    fb = this.extent().add(blur * 2);
+    img = this.image;
+    sha = newCanvas(fb);
+    ctx = sha.getContext("2d");
+    ctx.shadowOffsetX = offset.x;
+    ctx.shadowOffsetY = offset.y;
+    ctx.shadowBlur = blur;
+    ctx.shadowColor = clr.toString();
+    ctx.drawImage(img, blur - offset.x, blur - offset.y);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.drawImage(img, blur - offset.x, blur - offset.y);
+    return sha;
+  };
+
+  SpeechBubbleMorph.prototype.fixLayout = function() {
+    this.removeShadow();
+    this.updateRendering();
+    return this.addShadow(new Point(2, 2), 80);
+  };
+
+  SpeechBubbleMorph.coffeeScriptSourceOfThisClass = '# SpeechBubbleMorph ///////////////////////////////////////////////////\n\n#\n#	I am a comic-style speech bubble that can display either a string,\n#	a Morph, a Canvas or a toString() representation of anything else.\n#	If I am invoked using popUp() I behave like a tool tip.\n#\n\nclass SpeechBubbleMorph extends BoxMorph\n\n  isPointingRight: true # orientation of text\n  contents: null\n  padding: null # additional vertical pixels\n  isThought: null # draw "think" bubble\n  isClickable: false\n\n  constructor: (\n    @contents="",\n    color,\n    edge,\n    border,\n    borderColor,\n    @padding = 0,\n    @isThought = false) ->\n      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)\n      @color = color or new Color(230, 230, 230)\n      @updateRendering()\n  \n  \n  # SpeechBubbleMorph invoking:\n  popUp: (world, pos, isClickable) ->\n    @updateRendering()\n    @setPosition pos.subtract(new Point(0, @height()))\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.add @\n    @changed()\n    world.hand.destroyTemporaries()\n    world.hand.temporaries.push @\n    if isClickable\n      @mouseEnter = ->\n        @destroy()\n    else\n      @isClickable = false\n    \n  \n  \n  # SpeechBubbleMorph drawing:\n  updateRendering: ->\n    # re-build my contents\n    @contentsMorph.destroy()  if @contentsMorph\n    if @contents instanceof Morph\n      @contentsMorph = @contents\n    else if isString(@contents)\n      @contentsMorph = new TextMorph(\n        @contents,\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    else if @contents instanceof HTMLCanvasElement\n      @contentsMorph = new Morph()\n      @contentsMorph.silentSetWidth @contents.width\n      @contentsMorph.silentSetHeight @contents.height\n      @contentsMorph.image = @contents\n    else\n      @contentsMorph = new TextMorph(\n        @contents.toString(),\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    @add @contentsMorph\n    #\n    # adjust my layout\n    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))\n    @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2\n    #\n    # draw my outline\n    super()\n    #\n    # position my contents\n    @contentsMorph.setPosition @position().add(\n      new Point(@padding or @edge, @border + @padding + 1))\n  \n  outlinePath: (context, radius, inset) ->\n    circle = (x, y, r) ->\n      context.moveTo x + r, y\n      context.arc x, y, r, radians(0), radians(360)\n    offset = radius + inset\n    w = @width()\n    h = @height()\n    #\n    # top left:\n    context.arc offset, offset, radius, radians(-180), radians(-90), false\n    #\n    # top right:\n    context.arc w - offset, offset, radius, radians(-90), radians(-0), false\n    #\n    # bottom right:\n    context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false\n    unless @isThought # draw speech bubble hook\n      if @isPointingRight\n        context.lineTo offset + radius, h - offset\n        context.lineTo radius / 2 + inset, h - inset\n      else # pointing left\n        context.lineTo w - (radius / 2 + inset), h - inset\n        context.lineTo w - (offset + radius), h - offset\n    #\n    # bottom left:\n    context.arc offset, h - offset - radius, radius, radians(90), radians(180), false\n    if @isThought\n      #\n      # close large bubble:\n      context.lineTo inset, offset\n      #\n      # draw thought bubbles:\n      if @isPointingRight\n        #\n        # tip bubble:\n        rad = radius / 4\n        circle rad + inset, h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle rad * 2 + inset, h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle rad * 3 + inset * 2, h - rad - inset * 4, rad\n      else # pointing left\n        # tip bubble:\n        rad = radius / 4\n        circle w - (rad + inset), h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle w - (rad * 2 + inset), h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad\n\n  # SpeechBubbleMorph shadow\n  #\n  #    only take the \'plain\' image, so the box rounding and the\n  #    shadow doesn\'t become conflicted by embedded scrolling panes\n  #\n  shadowImage: (off_, color) ->\n    \n    # fallback for Windows Chrome-Shadow bug\n    fb = undefined\n    img = undefined\n    outline = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    clr = color or new Color(0, 0, 0)\n    fb = @extent()\n    img = @image\n    outline = newCanvas(fb)\n    ctx = outline.getContext("2d")\n    ctx.drawImage img, 0, 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, -offset.x, -offset.y\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.drawImage outline, 0, 0\n    ctx.globalCompositeOperation = "source-atop"\n    ctx.fillStyle = clr.toString()\n    ctx.fillRect 0, 0, fb.x, fb.y\n    sha\n\n  shadowImageBlurred: (off_, color) ->\n    fb = undefined\n    img = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    blur = @shadowBlur\n    clr = color or new Color(0, 0, 0)\n    fb = @extent().add(blur * 2)\n    img = @image\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.shadowOffsetX = offset.x\n    ctx.shadowOffsetY = offset.y\n    ctx.shadowBlur = blur\n    ctx.shadowColor = clr.toString()\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    ctx.shadowOffsetX = 0\n    ctx.shadowOffsetY = 0\n    ctx.shadowBlur = 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    sha\n\n  # SpeechBubbleMorph resizing\n  fixLayout: ->\n    @removeShadow()\n    @updateRendering()\n    @addShadow new Point(2, 2), 80';
+
+  return SpeechBubbleMorph;
+
+})(BoxMorph);
+
+Color = (function() {
+  Color.prototype.a = null;
+
+  Color.prototype.r = null;
+
+  Color.prototype.g = null;
+
+  Color.prototype.b = null;
+
+  function Color(r, g, b, a) {
+    this.r = r != null ? r : 0;
+    this.g = g != null ? g : 0;
+    this.b = b != null ? b : 0;
+    this.a = a || (a === 0 ? 0 : 1);
+  }
+
+  Color.prototype.toString = function() {
+    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
+  };
+
+  Color.prototype.copy = function() {
+    return new Color(this.r, this.g, this.b, this.a);
+  };
+
+  Color.prototype.eq = function(aColor) {
+    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
+  };
+
+  Color.prototype.hsv = function() {
+    var bb, d, gg, h, max, min, rr, s, v;
+
+    rr = this.r / 255;
+    gg = this.g / 255;
+    bb = this.b / 255;
+    max = Math.max(rr, gg, bb);
+    min = Math.min(rr, gg, bb);
+    h = max;
+    s = max;
+    v = max;
+    d = max - min;
+    s = (max === 0 ? 0 : d / max);
+    if (max === min) {
+      h = 0;
+    } else {
+      switch (max) {
+        case rr:
+          h = (gg - bb) / d + (gg < bb ? 6 : 0);
+          break;
+        case gg:
+          h = (bb - rr) / d + 2;
+          break;
+        case bb:
+          h = (rr - gg) / d + 4;
+      }
+      h /= 6;
+    }
+    return [h, s, v];
+  };
+
+  Color.prototype.set_hsv = function(h, s, v) {
+    var f, i, p, q, t;
+
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+      case 0:
+        this.r = v;
+        this.g = t;
+        this.b = p;
+        break;
+      case 1:
+        this.r = q;
+        this.g = v;
+        this.b = p;
+        break;
+      case 2:
+        this.r = p;
+        this.g = v;
+        this.b = t;
+        break;
+      case 3:
+        this.r = p;
+        this.g = q;
+        this.b = v;
+        break;
+      case 4:
+        this.r = t;
+        this.g = p;
+        this.b = v;
+        break;
+      case 5:
+        this.r = v;
+        this.g = p;
+        this.b = q;
+    }
+    this.r *= 255;
+    this.g *= 255;
+    return this.b *= 255;
+  };
+
+  Color.prototype.mixed = function(proportion, otherColor) {
+    var frac1, frac2;
+
+    frac1 = Math.min(Math.max(proportion, 0), 1);
+    frac2 = 1 - frac1;
+    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
+  };
+
+  Color.prototype.darker = function(percent) {
+    var fract;
+
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(0, 0, 0));
+  };
+
+  Color.prototype.lighter = function(percent) {
+    var fract;
+
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(255, 255, 255));
+  };
+
+  Color.prototype.dansDarker = function() {
+    var hsv, result, vv;
+
+    hsv = this.hsv();
+    result = new Color();
+    vv = Math.max(hsv[2] - 0.16, 0);
+    result.set_hsv(hsv[0], hsv[1], vv);
+    return result;
+  };
+
+  Color.coffeeScriptSourceOfThisClass = '# Colors //////////////////////////////////////////////////////////////\n\nclass Color\n\n  a: null\n  r: null\n  g: null\n  b: null\n\n  constructor: (@r = 0, @g = 0, @b = 0, a) ->\n    # all values are optional, just (r, g, b) is fine\n    @a = a or ((if (a is 0) then 0 else 1))\n  \n  # Color string representation: e.g. \'rgba(255,165,0,1)\'\n  toString: ->\n    "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"\n  \n  # Color copying:\n  copy: ->\n    new Color(@r, @g, @b, @a)\n  \n  # Color comparison:\n  eq: (aColor) ->\n    # ==\n    aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b\n  \n  \n  # Color conversion (hsv):\n  hsv: ->\n    # ignore alpha\n    rr = @r / 255\n    gg = @g / 255\n    bb = @b / 255\n    max = Math.max(rr, gg, bb)\n    min = Math.min(rr, gg, bb)\n    h = max\n    s = max\n    v = max\n    d = max - min\n    s = (if max is 0 then 0 else d / max)\n    if max is min\n      h = 0\n    else\n      switch max\n        when rr\n          h = (gg - bb) / d + ((if gg < bb then 6 else 0))\n        when gg\n          h = (bb - rr) / d + 2\n        when bb\n          h = (rr - gg) / d + 4\n      h /= 6\n    [h, s, v]\n  \n  set_hsv: (h, s, v) ->\n    # ignore alpha, h, s and v are to be within [0, 1]\n    i = Math.floor(h * 6)\n    f = h * 6 - i\n    p = v * (1 - s)\n    q = v * (1 - f * s)\n    t = v * (1 - (1 - f) * s)\n    switch i % 6\n      when 0\n        @r = v\n        @g = t\n        @b = p\n      when 1\n        @r = q\n        @g = v\n        @b = p\n      when 2\n        @r = p\n        @g = v\n        @b = t\n      when 3\n        @r = p\n        @g = q\n        @b = v\n      when 4\n        @r = t\n        @g = p\n        @b = v\n      when 5\n        @r = v\n        @g = p\n        @b = q\n    @r *= 255\n    @g *= 255\n    @b *= 255\n  \n  \n  # Color mixing:\n  mixed: (proportion, otherColor) ->\n    # answer a copy of this color mixed with another color, ignore alpha\n    frac1 = Math.min(Math.max(proportion, 0), 1)\n    frac2 = 1 - frac1\n    new Color(\n      @r * frac1 + otherColor.r * frac2,\n      @g * frac1 + otherColor.g * frac2,\n      @b * frac1 + otherColor.b * frac2)\n  \n  darker: (percent) ->\n    # return an rgb-interpolated darker copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(0, 0, 0)\n  \n  lighter: (percent) ->\n    # return an rgb-interpolated lighter copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(255, 255, 255)\n  \n  dansDarker: ->\n    # return an hsv-interpolated darker copy of me, ignore alpha\n    hsv = @hsv()\n    result = new Color()\n    vv = Math.max(hsv[2] - 0.16, 0)\n    result.set_hsv hsv[0], hsv[1], vv\n    result';
+
+  return Color;
+
+})();
+
+StringMorph = (function(_super) {
+  __extends(StringMorph, _super);
+
+  StringMorph.prototype.text = null;
+
+  StringMorph.prototype.fontSize = null;
+
+  StringMorph.prototype.fontName = null;
+
+  StringMorph.prototype.fontStyle = null;
+
+  StringMorph.prototype.isBold = null;
+
+  StringMorph.prototype.isItalic = null;
+
+  StringMorph.prototype.isEditable = false;
+
+  StringMorph.prototype.isNumeric = null;
+
+  StringMorph.prototype.isPassword = false;
+
+  StringMorph.prototype.shadowOffset = null;
+
+  StringMorph.prototype.shadowColor = null;
+
+  StringMorph.prototype.isShowingBlanks = false;
+
+  StringMorph.prototype.blanksColor = new Color(180, 140, 140);
+
+  StringMorph.prototype.isScrollable = true;
+
+  StringMorph.prototype.currentlySelecting = false;
+
+  StringMorph.prototype.startMark = 0;
+
+  StringMorph.prototype.endMark = 0;
+
+  StringMorph.prototype.markedTextColor = new Color(255, 255, 255);
+
+  StringMorph.prototype.markedBackgoundColor = new Color(60, 60, 120);
+
+  function StringMorph(text, fontSize, fontStyle, isBold, isItalic, isNumeric, shadowOffset, shadowColor, color, fontName) {
+    this.fontSize = fontSize != null ? fontSize : 12;
+    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
+    this.isBold = isBold != null ? isBold : false;
+    this.isItalic = isItalic != null ? isItalic : false;
+    this.isNumeric = isNumeric != null ? isNumeric : false;
+    this.shadowColor = shadowColor;
+    this.text = text || (text === "" ? "" : "StringMorph");
+    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
+    this.shadowOffset = shadowOffset || new Point(0, 0);
+    StringMorph.__super__.constructor.call(this);
+    this.color = color || new Color(0, 0, 0);
+    this.noticesTransparentClick = true;
+    this.updateRendering();
+  }
+
+  StringMorph.prototype.toString = function() {
+    return "a " + (this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + this.text.slice(0, 30) + "...\")";
+  };
+
+  StringMorph.prototype.password = function(letter, length) {
+    var ans, i, _i;
+
+    ans = "";
+    for (i = _i = 0; 0 <= length ? _i < length : _i > length; i = 0 <= length ? ++_i : --_i) {
+      ans += letter;
+    }
+    return ans;
+  };
+
+  StringMorph.prototype.font = function() {
+    var font;
+
+    font = "";
+    if (this.isBold) {
+      font = font + "bold ";
+    }
+    if (this.isItalic) {
+      font = font + "italic ";
+    }
+    return font + this.fontSize + "px " + (this.fontName ? this.fontName + ", " : "") + this.fontStyle;
+  };
+
+  StringMorph.prototype.updateRendering = function() {
+    var c, context, i, p, start, stop, text, width, x, y, _i;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    this.image = newCanvas();
+    context = this.image.getContext("2d");
+    context.font = this.font();
+    width = Math.max(context.measureText(text).width + Math.abs(this.shadowOffset.x), 1);
+    this.bounds.corner = this.bounds.origin.add(new Point(width, fontHeight(this.fontSize) + Math.abs(this.shadowOffset.y)));
+    this.image.width = width;
+    this.image.height = this.height();
+    context.font = this.font();
+    context.textAlign = "left";
+    context.textBaseline = "bottom";
+    if (this.shadowColor) {
+      x = Math.max(this.shadowOffset.x, 0);
+      y = Math.max(this.shadowOffset.y, 0);
+      context.fillStyle = this.shadowColor.toString();
+      context.fillText(text, x, fontHeight(this.fontSize) + y);
+    }
+    x = Math.abs(Math.min(this.shadowOffset.x, 0));
+    y = Math.abs(Math.min(this.shadowOffset.y, 0));
+    context.fillStyle = this.color.toString();
+    if (this.isShowingBlanks) {
+      this.renderWithBlanks(context, x, fontHeight(this.fontSize) + y);
+    } else {
+      context.fillText(text, x, fontHeight(this.fontSize) + y);
+    }
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    for (i = _i = start; start <= stop ? _i < stop : _i > stop; i = start <= stop ? ++_i : --_i) {
+      p = this.slotPosition(i).subtract(this.position());
+      c = text.charAt(i);
+      context.fillStyle = this.markedBackgoundColor.toString();
+      context.fillRect(p.x, p.y, context.measureText(c).width + 1 + x, fontHeight(this.fontSize) + y);
+      context.fillStyle = this.markedTextColor.toString();
+      context.fillText(c, p.x + x, fontHeight(this.fontSize) + y);
+    }
+    if (this.parent ? this.parent.fixLayout : void 0) {
+      return this.parent.fixLayout();
+    }
+  };
+
+  StringMorph.prototype.renderWithBlanks = function(context, startX, y) {
+    var blank, ctx, drawBlank, isFirst, space, words, x;
+
+    drawBlank = function() {
+      context.drawImage(blank, Math.round(x), 0);
+      return x += space;
+    };
+    space = context.measureText(" ").width;
+    blank = newCanvas(new Point(space, this.height()));
+    ctx = blank.getContext("2d");
+    words = this.text.split(" ");
+    x = startX || 0;
+    isFirst = true;
+    ctx.fillStyle = this.blanksColor.toString();
+    ctx.arc(space / 2, blank.height / 2, space / 2, radians(0), radians(360));
+    ctx.fill();
+    return words.forEach(function(word) {
+      if (!isFirst) {
+        drawBlank();
+      }
+      isFirst = false;
+      if (word !== "") {
+        context.fillText(word, x, y);
+        return x += context.measureText(word).width;
+      }
+    });
+  };
+
+  StringMorph.prototype.slotPosition = function(slot) {
+    var context, dest, idx, text, x, xOffset, y, _i;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    dest = Math.min(Math.max(slot, 0), text.length);
+    context = this.image.getContext("2d");
+    xOffset = 0;
+    for (idx = _i = 0; 0 <= dest ? _i < dest : _i > dest; idx = 0 <= dest ? ++_i : --_i) {
+      xOffset += context.measureText(text[idx]).width;
+    }
+    this.pos = dest;
+    x = this.left() + xOffset;
+    y = this.top();
+    return new Point(x, y);
+  };
+
+  StringMorph.prototype.slotAt = function(aPoint) {
+    var charX, context, idx, text;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    idx = 0;
+    charX = 0;
+    context = this.image.getContext("2d");
+    while (aPoint.x - this.left() > charX) {
+      charX += context.measureText(text[idx]).width;
+      idx += 1;
+      if (idx === text.length) {
+        if ((context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - this.left())) {
+          return idx;
+        }
+      }
+    }
+    return idx - 1;
+  };
+
+  StringMorph.prototype.upFrom = function(slot) {
+    return slot;
+  };
+
+  StringMorph.prototype.downFrom = function(slot) {
+    return slot;
+  };
+
+  StringMorph.prototype.startOfLine = function() {
+    return 0;
+  };
+
+  StringMorph.prototype.endOfLine = function() {
+    return this.text.length;
+  };
+
+  StringMorph.prototype.rawHeight = function() {
+    return this.height() / 1.2;
+  };
+
+  StringMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = StringMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("edit", "edit");
+    menu.addItem("font size...", (function() {
+      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 500, true);
+    }), "set this String's\nfont point size");
+    if (this.fontStyle !== "serif") {
+      menu.addItem("serif", "setSerif");
+    }
+    if (this.fontStyle !== "sans-serif") {
+      menu.addItem("sans-serif", "setSansSerif");
+    }
+    if (this.isBold) {
+      menu.addItem("normal weight", "toggleWeight");
+    } else {
+      menu.addItem("bold", "toggleWeight");
+    }
+    if (this.isItalic) {
+      menu.addItem("normal style", "toggleItalic");
+    } else {
+      menu.addItem("italic", "toggleItalic");
+    }
+    if (this.isShowingBlanks) {
+      menu.addItem("hide blanks", "toggleShowBlanks");
+    } else {
+      menu.addItem("show blanks", "toggleShowBlanks");
+    }
+    if (this.isPassword) {
+      menu.addItem("show characters", "toggleIsPassword");
+    } else {
+      menu.addItem("hide characters", "toggleIsPassword");
+    }
+    return menu;
+  };
+
+  StringMorph.prototype.toggleIsDraggable = function() {
+    this.isDraggable = !this.isDraggable;
+    if (this.isDraggable) {
+      return this.disableSelecting();
+    } else {
+      return this.enableSelecting();
+    }
+  };
+
+  StringMorph.prototype.toggleShowBlanks = function() {
+    this.isShowingBlanks = !this.isShowingBlanks;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleWeight = function() {
+    this.isBold = !this.isBold;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleItalic = function() {
+    this.isItalic = !this.isItalic;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleIsPassword = function() {
+    this.isPassword = !this.isPassword;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setSerif = function() {
+    this.fontStyle = "serif";
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setSansSerif = function() {
+    this.fontStyle = "sans-serif";
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setFontSize = function(size) {
+    var newSize;
+
+    if (typeof size === "number") {
+      this.fontSize = Math.round(Math.min(Math.max(size, 4), 500));
+    } else {
+      newSize = parseFloat(size);
+      if (!isNaN(newSize)) {
+        this.fontSize = Math.round(Math.min(Math.max(newSize, 4), 500));
+      }
+    }
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setText = function(size) {
+    this.text = Math.round(size).toString();
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.numericalSetters = function() {
+    return ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"];
+  };
+
+  StringMorph.prototype.edit = function() {
+    return this.root().edit(this);
+  };
+
+  StringMorph.prototype.selection = function() {
+    var start, stop;
+
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    return this.text.slice(start, stop);
+  };
+
+  StringMorph.prototype.selectionStartSlot = function() {
+    return Math.min(this.startMark, this.endMark);
+  };
+
+  StringMorph.prototype.clearSelection = function() {
+    this.currentlySelecting = false;
+    this.startMark = 0;
+    this.endMark = 0;
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.deleteSelection = function() {
+    var start, stop, text;
+
+    text = this.text;
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    this.text = text.slice(0, start) + text.slice(stop);
+    this.changed();
+    return this.clearSelection();
+  };
+
+  StringMorph.prototype.selectAll = function() {
+    this.startMark = 0;
+    this.endMark = this.text.length;
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.mouseDownLeft = function(pos) {
+    if (this.isEditable) {
+      return this.clearSelection();
+    } else {
+      return this.escalateEvent("mouseDownLeft", pos);
+    }
+  };
+
+  StringMorph.prototype.mouseClickLeft = function(pos) {
+    var caret;
+
+    caret = this.root().caret;
+    if (this.isEditable) {
+      if (!this.currentlySelecting) {
+        this.edit();
+      }
+      if (caret) {
+        caret.gotoPos(pos);
+      }
+      this.root().caret.gotoPos(pos);
+      return this.currentlySelecting = true;
+    } else {
+      return this.escalateEvent("mouseClickLeft", pos);
+    }
+  };
+
+  StringMorph.prototype.enableSelecting = function() {
+    this.mouseDownLeft = function(pos) {
+      this.clearSelection();
+      if (this.isEditable && (!this.isDraggable)) {
+        this.edit();
+        this.root().caret.gotoPos(pos);
+        this.startMark = this.slotAt(pos);
+        this.endMark = this.startMark;
+        return this.currentlySelecting = true;
       }
     };
-    if (!this.target.step) {
-      return this.target.step = noOperation;
+    return this.mouseMove = function(pos) {
+      var newMark;
+
+      if (this.isEditable && this.currentlySelecting && (!this.isDraggable)) {
+        newMark = this.slotAt(pos);
+        if (newMark !== this.endMark) {
+          this.endMark = newMark;
+          this.updateRendering();
+          return this.changed();
+        }
+      }
+    };
+  };
+
+  StringMorph.prototype.disableSelecting = function() {
+    this.mouseDownLeft = StringMorph.prototype.mouseDownLeft;
+    return delete this.mouseMove;
+  };
+
+  StringMorph.coffeeScriptSourceOfThisClass = '# StringMorph /////////////////////////////////////////////////////////\n\n# I am a single line of text\n\nclass StringMorph extends Morph\n\n  text: null\n  fontSize: null\n  fontName: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isEditable: false\n  isNumeric: null\n  isPassword: false\n  shadowOffset: null\n  shadowColor: null\n  isShowingBlanks: false\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  blanksColor: new Color(180, 140, 140)\n  #\n  # Properties for text-editing\n  isScrollable: true\n  currentlySelecting: false\n  startMark: 0\n  endMark: 0\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedTextColor: new Color(255, 255, 255)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedBackgoundColor: new Color(60, 60, 120)\n\n  constructor: (\n      text,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false,\n      shadowOffset,\n      @shadowColor,\n      color,\n      fontName\n      ) ->\n    # additional properties:\n    @text = text or ((if (text is "") then "" else "StringMorph"))\n    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n    @shadowOffset = shadowOffset or new Point(0, 0)\n    #\n    super()\n    #\n    # override inherited properites:\n    @color = color or new Color(0, 0, 0)\n    @noticesTransparentClick = true\n    @updateRendering()\n  \n  toString: ->\n    # e.g. \'a StringMorph("Hello World")\'\n    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  password: (letter, length) ->\n    ans = ""\n    for i in [0...length]\n      ans += letter\n    ans\n\n  font: ->\n    # answer a font string, e.g. \'bold italic 12px sans-serif\'\n    font = ""\n    font = font + "bold "  if @isBold\n    font = font + "italic "  if @isItalic\n    font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle\n  \n  updateRendering: ->\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    # initialize my surface property\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    #\n    # set my extent\n    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)\n    @bounds.corner = @bounds.origin.add(new Point(\n      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))\n    @image.width = width\n    @image.height = @height()\n    #\n    # prepare context for drawing text\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n    #\n    # first draw the shadow, if any\n    if @shadowColor\n      x = Math.max(@shadowOffset.x, 0)\n      y = Math.max(@shadowOffset.y, 0)\n      context.fillStyle = @shadowColor.toString()\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # now draw the actual text\n    x = Math.abs(Math.min(@shadowOffset.x, 0))\n    y = Math.abs(Math.min(@shadowOffset.y, 0))\n    context.fillStyle = @color.toString()\n    if @isShowingBlanks\n      @renderWithBlanks context, x, fontHeight(@fontSize) + y\n    else\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotPosition(i).subtract(@position())\n      c = text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,\n        fontHeight(@fontSize) + y\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x + x, fontHeight(@fontSize) + y\n    #\n    # notify my parent of layout change\n    @parent.fixLayout()  if @parent.fixLayout  if @parent\n  \n  renderWithBlanks: (context, startX, y) ->\n    # create the blank form\n    drawBlank = ->\n      context.drawImage blank, Math.round(x), 0\n      x += space\n    space = context.measureText(" ").width\n    blank = newCanvas(new Point(space, @height()))\n    ctx = blank.getContext("2d")\n    words = @text.split(" ")\n    x = startX or 0\n    isFirst = true\n    ctx.fillStyle = @blanksColor.toString()\n    ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)\n    ctx.fill()\n    #\n    # render my text inserting blanks\n    words.forEach (word) ->\n      drawBlank()  unless isFirst\n      isFirst = false\n      if word isnt ""\n        context.fillText word, x, y\n        x += context.measureText(word).width\n  \n  \n  # StringMorph mesuring:\n  slotPosition: (slot) ->\n    # answer the position point of the given index ("slot")\n    # where the caret should be placed\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    dest = Math.min(Math.max(slot, 0), text.length)\n    context = @image.getContext("2d")\n    xOffset = 0\n    for idx in [0...dest]\n      xOffset += context.measureText(text[idx]).width\n    @pos = dest\n    x = @left() + xOffset\n    y = @top()\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    idx = 0\n    charX = 0\n    context = @image.getContext("2d")\n    while aPoint.x - @left() > charX\n      charX += context.measureText(text[idx]).width\n      idx += 1\n      if idx is text.length\n        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  \n          return idx\n    idx - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    slot\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    slot\n  \n  startOfLine: ->\n    # answer the first slot (index) of the line for the given slot\n    0\n  \n  endOfLine: ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @text.length\n\n  rawHeight: ->\n    # answer my corrected fontSize\n    @height() / 1.2\n    \n  # StringMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 500, true\n    ), "set this String\'s\nfont point size"\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n\n    if @isShowingBlanks\n      menu.addItem "hide blanks", "toggleShowBlanks"\n    else\n      menu.addItem "show blanks", "toggleShowBlanks"\n\n    if @isPassword\n      menu.addItem "show characters", "toggleIsPassword"\n    else\n      menu.addItem "hide characters", "toggleIsPassword"\n\n    menu\n  \n  toggleIsDraggable: ->\n    # for context menu demo purposes\n    @isDraggable = not @isDraggable\n    if @isDraggable\n      @disableSelecting()\n    else\n      @enableSelecting()\n  \n  toggleShowBlanks: ->\n    @isShowingBlanks = not @isShowingBlanks\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleWeight: ->\n    @isBold = not @isBold\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleItalic: ->\n    @isItalic = not @isItalic\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleIsPassword: ->\n    @isPassword = not @isPassword\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSerif: ->\n    @fontStyle = "serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSansSerif: ->\n    @fontStyle = "sans-serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setFontSize: (size) ->\n    # for context menu demo purposes\n    if typeof size is "number"\n      @fontSize = Math.round(Math.min(Math.max(size, 4), 500))\n    else\n      newSize = parseFloat(size)\n      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setText: (size) ->\n    # for context menu demo purposes\n    @text = Math.round(size).toString()\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]\n  \n  \n  # StringMorph editing:\n  edit: ->\n    @root().edit @\n  \n  selection: ->\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text.slice start, stop\n  \n  selectionStartSlot: ->\n    Math.min @startMark, @endMark\n  \n  clearSelection: ->\n    @currentlySelecting = false\n    @startMark = 0\n    @endMark = 0\n    @updateRendering()\n    @changed()\n  \n  deleteSelection: ->\n    text = @text\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text = text.slice(0, start) + text.slice(stop)\n    @changed()\n    @clearSelection()\n  \n  selectAll: ->\n    @startMark = 0\n    @endMark = @text.length\n    @updateRendering()\n    @changed()\n\n  mouseDownLeft: (pos) ->\n    if @isEditable\n      @clearSelection()\n    else\n      @escalateEvent "mouseDownLeft", pos\n\n  mouseClickLeft: (pos) ->\n    caret = @root().caret;\n    if @isEditable\n      @edit()  unless @currentlySelecting\n      if caret then caret.gotoPos pos\n      @root().caret.gotoPos pos\n      @currentlySelecting = true\n    else\n      @escalateEvent "mouseClickLeft", pos\n  \n  enableSelecting: ->\n    @mouseDownLeft = (pos) ->\n      @clearSelection()\n      if @isEditable and (not @isDraggable)\n        @edit()\n        @root().caret.gotoPos pos\n        @startMark = @slotAt(pos)\n        @endMark = @startMark\n        @currentlySelecting = true\n    \n    @mouseMove = (pos) ->\n      if @isEditable and @currentlySelecting and (not @isDraggable)\n        newMark = @slotAt(pos)\n        if newMark isnt @endMark\n          @endMark = newMark\n          @updateRendering()\n          @changed()\n  \n  disableSelecting: ->\n    # re-establish the original definition of the method\n    @mouseDownLeft = StringMorph::mouseDownLeft\n    delete @mouseMove';
+
+  return StringMorph;
+
+})(Morph);
+
+FrameMorph = (function(_super) {
+  __extends(FrameMorph, _super);
+
+  FrameMorph.scrollFrame = null;
+
+  function FrameMorph(scrollFrame) {
+    this.scrollFrame = scrollFrame != null ? scrollFrame : null;
+    FrameMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 250, 245);
+    this.acceptsDrops = true;
+    if (this.scrollFrame) {
+      this.isDraggable = false;
+      this.noticesTransparentClick = false;
+    }
+    this.updateRendering();
+  }
+
+  FrameMorph.prototype.setColor = function(aColor) {
+    if (this.scrollFrame) {
+      this.scrollFrame.color = aColor;
+    }
+    return FrameMorph.__super__.setColor.call(this, aColor);
+  };
+
+  FrameMorph.prototype.setAlphaScaled = function(alpha) {
+    if (this.scrollFrame) {
+      this.scrollFrame.alpha = this.calculateAlphaScaled(alpha);
+    }
+    return FrameMorph.__super__.setAlphaScaled.call(this, alpha);
+  };
+
+  FrameMorph.prototype.boundsIncludingChildren = function() {
+    var shadow;
+
+    shadow = this.getShadow();
+    if (shadow !== null) {
+      return this.bounds.merge(shadow.bounds);
+    }
+    return this.bounds;
+  };
+
+  FrameMorph.prototype.recursivelyBlit = function(aCanvas, clippingRectangle) {
+    var dirtyPartOfFrame,
+      _this = this;
+
+    if (clippingRectangle == null) {
+      clippingRectangle = this.bounds;
+    }
+    if (!this.isVisible) {
+      return null;
+    }
+    dirtyPartOfFrame = this.bounds.intersect(clippingRectangle);
+    if (dirtyPartOfFrame.isEmpty()) {
+      return null;
+    }
+    this.blit(aCanvas, dirtyPartOfFrame);
+    return this.children.forEach(function(child) {
+      if (child instanceof ShadowMorph) {
+        return child.recursivelyBlit(aCanvas, clippingRectangle);
+      } else {
+        return child.recursivelyBlit(aCanvas, dirtyPartOfFrame);
+      }
+    });
+  };
+
+  FrameMorph.prototype.moveBy = function(delta) {
+    this.changed();
+    this.bounds = this.bounds.translateBy(delta);
+    this.children.forEach(function(child) {
+      return child.silentMoveBy(delta);
+    });
+    return this.changed();
+  };
+
+  FrameMorph.prototype.submorphBounds = function() {
+    var result;
+
+    result = null;
+    if (this.children.length) {
+      result = this.children[0].bounds;
+      this.children.forEach(function(child) {
+        return result = result.merge(child.boundsIncludingChildren());
+      });
+    }
+    return result;
+  };
+
+  FrameMorph.prototype.keepInScrollFrame = function() {
+    if (this.scrollFrame === null) {
+      return null;
+    }
+    if (this.left() > this.scrollFrame.left()) {
+      this.moveBy(new Point(this.scrollFrame.left() - this.left(), 0));
+    }
+    if (this.right() < this.scrollFrame.right()) {
+      this.moveBy(new Point(this.scrollFrame.right() - this.right(), 0));
+    }
+    if (this.top() > this.scrollFrame.top()) {
+      this.moveBy(new Point(0, this.scrollFrame.top() - this.top()));
+    }
+    if (this.bottom() < this.scrollFrame.bottom()) {
+      return this.moveBy(0, new Point(this.scrollFrame.bottom() - this.bottom(), 0));
     }
   };
 
-  HandleMorph.prototype.rootForGrab = function() {
-    return this;
+  FrameMorph.prototype.adjustBounds = function() {
+    var newBounds, subBounds,
+      _this = this;
+
+    if (this.scrollFrame === null) {
+      return null;
+    }
+    subBounds = this.submorphBounds();
+    if (subBounds && (!this.scrollFrame.isTextLineWrapping)) {
+      newBounds = subBounds.expandBy(this.scrollFrame.padding).growBy(this.scrollFrame.growth).merge(this.scrollFrame.bounds);
+    } else {
+      newBounds = this.scrollFrame.bounds.copy();
+    }
+    if (!this.bounds.eq(newBounds)) {
+      this.bounds = newBounds;
+      this.updateRendering();
+      this.keepInScrollFrame();
+    }
+    if (this.scrollFrame.isTextLineWrapping) {
+      this.children.forEach(function(morph) {
+        if (morph instanceof TextMorph) {
+          morph.setWidth(_this.width());
+          return _this.setHeight(Math.max(morph.height(), _this.scrollFrame.height()));
+        }
+      });
+    }
+    return this.scrollFrame.adjustScrollBars();
   };
 
-  HandleMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    return this.changed();
+  FrameMorph.prototype.reactToDropOf = function() {
+    return this.adjustBounds();
   };
 
-  HandleMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    return this.changed();
+  FrameMorph.prototype.reactToGrabOf = function() {
+    return this.adjustBounds();
   };
 
-  HandleMorph.prototype.copyRecordingReferences = function(dict) {
+  FrameMorph.prototype.copyRecordingReferences = function(dict) {
     var c;
 
-    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
+    c = FrameMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.frame && dict[this.scrollFrame]) {
+      c.frame = dict[this.scrollFrame];
     }
     return c;
   };
 
-  HandleMorph.prototype.attach = function() {
-    var choices, menu,
-      _this = this;
+  FrameMorph.prototype.developersMenu = function() {
+    var menu;
 
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        this.isDraggable = false;
-        this.target = each;
-        this.updateRendering();
-        return this.noticesTransparentClick = true;
-      });
-    });
-    if (choices.length) {
-      return menu.popUpAtHand(this.world());
+    menu = FrameMorph.__super__.developersMenu.call(this);
+    if (this.children.length) {
+      menu.addLine();
+      menu.addItem("move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible");
     }
+    return menu;
   };
 
-  HandleMorph.coffeeScriptSourceOfThisClass = '# HandleMorph ////////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\n# I am a resize / move handle that can be attached to any Morph\n\nclass HandleMorph extends Morph\n\n  target: null\n  minExtent: null\n  inset: null\n  type: null # "resize" or "move"\n\n  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->\n    # if insetY is missing, it will be the same as insetX\n    @minExtent = new Point(minX, minY)\n    @inset = new Point(insetX or 0, insetY or insetX or 0)\n    super()\n    @color = new Color(255, 255, 255)\n    @noticesTransparentClick = true\n    size = WorldMorph.MorphicPreferences.handleSize\n    @setExtent new Point(size, size)  \n  \n  # HandleMorph drawing:\n  updateRendering: ->\n    @normalImage = newCanvas(@extent())\n    @highlightImage = newCanvas(@extent())\n    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)\n    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)\n    @image = @normalImage\n    if @target\n      @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n      @target.add @\n      @target.changed()\n  \n  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->\n    context = aCanvas.getContext("2d")\n    context.lineWidth = 1\n    context.lineCap = "round"\n    context.strokeStyle = color.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [0..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [0..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n\n    context.strokeStyle = shadowColor.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [-1..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [2..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n  \n  \n  # HandleMorph stepping:\n  step = null\n  mouseDownLeft: (pos) ->\n    world = @root()\n    offset = pos.subtract(@bounds.origin)\n    return null  unless @target\n    @step = =>\n      if world.hand.mouseButton\n        newPos = world.hand.bounds.origin.copy().subtract(offset)\n        if @type is "resize"\n          newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)\n          newExt = newExt.max(@minExtent)\n          @target.setExtent newExt\n          @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n        else # type === \'move\'\n          @target.setPosition newPos.subtract(@target.extent()).add(@extent())\n      else\n        @step = null\n    \n    unless @target.step\n      @target.step = noOperation\n  \n  \n  # HandleMorph dragging and dropping:\n  rootForGrab: ->\n    @\n  \n  \n  # HandleMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  \n  # HandleMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  \n  # HandleMorph menu:\n  attach: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), ->\n        @isDraggable = false\n        @target = each\n        @updateRendering()\n        @noticesTransparentClick = true\n    menu.popUpAtHand @world()  if choices.length';
+  FrameMorph.prototype.keepAllSubmorphsWithin = function() {
+    var _this = this;
 
-  return HandleMorph;
+    return this.children.forEach(function(m) {
+      return m.keepWithin(_this);
+    });
+  };
+
+  FrameMorph.coffeeScriptSourceOfThisClass = '#| FrameMorph //////////////////////////////////////////////////////////\n#| \n#| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing\n#| \n#| and event handling.\n\nclass FrameMorph extends Morph\n\n  @scrollFrame: null\n\n  # if this frame belongs to a scrollFrame, then\n  # the @scrollFrame points to it\n  constructor: (@scrollFrame = null) ->\n    super()\n    @color = new Color(255, 250, 245)\n    @acceptsDrops = true\n    if @scrollFrame\n      @isDraggable = false\n      @noticesTransparentClick = false\n    @updateRendering()\n\n  setColor: (aColor) ->\n    # keep in synch the value of the container scrollFrame\n    # if there is one. Note that the container srollFrame\n    # is actually not painted.\n    if @scrollFrame\n      @scrollFrame.color = aColor\n    super(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # keep in synch the value of the container scrollFrame\n    # if there is one. Note that the container srollFrame\n    # is actually not painted.\n    if @scrollFrame\n      @scrollFrame.alpha = @calculateAlphaScaled(alpha)\n    super(alpha)\n  \n  boundsIncludingChildren: ->\n    shadow = @getShadow()\n    return @bounds.merge(shadow.bounds)  if shadow isnt null\n    @bounds\n  \n  # This was in the original Morphic.js, but\n  # it would cause the frame (or scrollframe) not to paint its\n  # contents when "pic..." command is invoked.\n  #fullImage: ->\n  #  # use only for shadows\n  #  @image\n  \n  recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->\n    return null  unless @isVisible\n    \n    # the part to be redrawn could be outside the frame entirely,\n    # in which case we can stop going down the morphs inside the frame\n    # since the whole point of the frame is to clip everything to a specific\n    # rectangle.\n    # So, check which part of the Frame should be redrawn:\n    dirtyPartOfFrame = @bounds.intersect(clippingRectangle)\n    \n    # if there is no dirty part in the frame then do nothing\n    return null if dirtyPartOfFrame.isEmpty()\n    \n    # this draws the background of the frame itself, which could\n    # contain an image or a pentrail\n    @blit aCanvas, dirtyPartOfFrame\n    \n    @children.forEach (child) =>\n      if child instanceof ShadowMorph\n        child.recursivelyBlit aCanvas, clippingRectangle\n      else\n        child.recursivelyBlit aCanvas, dirtyPartOfFrame\n  \n  \n  # FrameMorph scrolling optimization:\n  moveBy: (delta) ->\n    @changed()\n    @bounds = @bounds.translateBy(delta)\n    @children.forEach (child) ->\n      child.silentMoveBy delta\n    @changed()\n  \n  \n  # FrameMorph scrolling support:\n  submorphBounds: ->\n    result = null\n    if @children.length\n      result = @children[0].bounds\n      @children.forEach (child) ->\n        result = result.merge(child.boundsIncludingChildren())\n    result\n  \n  keepInScrollFrame: ->\n    return null  if @scrollFrame is null\n    if @left() > @scrollFrame.left()\n      @moveBy new Point(@scrollFrame.left() - @left(), 0)\n    if @right() < @scrollFrame.right()\n      @moveBy new Point(@scrollFrame.right() - @right(), 0)  \n    if @top() > @scrollFrame.top()\n      @moveBy new Point(0, @scrollFrame.top() - @top())  \n    if @bottom() < @scrollFrame.bottom()\n      @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)\n  \n  adjustBounds: ->\n    return null  if @scrollFrame is null\n    subBounds = @submorphBounds()\n    if subBounds and (not @scrollFrame.isTextLineWrapping)\n      newBounds = subBounds.expandBy(@scrollFrame.padding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)\n    else\n      newBounds = @scrollFrame.bounds.copy()\n    unless @bounds.eq(newBounds)\n      @bounds = newBounds\n      @updateRendering()\n      @keepInScrollFrame()\n    if @scrollFrame.isTextLineWrapping\n      @children.forEach (morph) =>\n        if morph instanceof TextMorph\n          morph.setWidth @width()\n          @setHeight Math.max(morph.height(), @scrollFrame.height())\n    @scrollFrame.adjustScrollBars()\n  \n  \n  # FrameMorph dragging & dropping of contents:\n  reactToDropOf: ->\n    @adjustBounds()\n  \n  reactToGrabOf: ->\n    @adjustBounds()\n  \n  \n  # FrameMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]\n    c\n  \n  \n  # FrameMorph menus:\n  developersMenu: ->\n    menu = super()\n    if @children.length\n      menu.addLine()\n      menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"\n    menu\n  \n  keepAllSubmorphsWithin: ->\n    @children.forEach (m) =>\n      m.keepWithin @';
+
+  return FrameMorph;
 
 })(Morph);
-
-SystemTestsRecorderAndPlayer = (function() {
-  SystemTestsRecorderAndPlayer.prototype.eventQueue = [];
-
-  SystemTestsRecorderAndPlayer.prototype.recordingASystemTest = false;
-
-  SystemTestsRecorderAndPlayer.prototype.replayingASystemTest = false;
-
-  SystemTestsRecorderAndPlayer.prototype.lastRecordedEventTime = null;
-
-  SystemTestsRecorderAndPlayer.prototype.handMorph = null;
-
-  SystemTestsRecorderAndPlayer.prototype.systemInfo = null;
-
-  function SystemTestsRecorderAndPlayer(worldMorph, handMorph) {
-    this.worldMorph = worldMorph;
-    this.handMorph = handMorph;
-  }
-
-  SystemTestsRecorderAndPlayer.prototype.initialiseSystemInfo = function() {
-    this.systemInfo = {};
-    this.systemInfo.zombieKernelTestHarnessVersionMajor = 0;
-    this.systemInfo.zombieKernelTestHarnessVersionMinor = 1;
-    this.systemInfo.zombieKernelTestHarnessVersionRelease = 0;
-    this.systemInfo.userAgent = navigator.userAgent;
-    this.systemInfo.screenWidth = window.screen.width;
-    this.systemInfo.screenHeight = window.screen.height;
-    this.systemInfo.screenColorDepth = window.screen.colorDepth;
-    if (window.devicePixelRatio != null) {
-      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
-    } else {
-      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
-    }
-    this.systemInfo.appCodeName = navigator.appCodeName;
-    this.systemInfo.appName = navigator.appName;
-    this.systemInfo.appVersion = navigator.appVersion;
-    this.systemInfo.cookieEnabled = navigator.cookieEnabled;
-    this.systemInfo.platform = navigator.platform;
-    return this.systemInfo.systemLanguage = navigator.systemLanguage;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.startRecording = function() {
-    var systemTestEvent;
-
-    this.worldMorph.destroyAll();
-    this.eventQueue = [];
-    this.lastRecordedEventTime = new Date().getTime();
-    this.recordingASystemTest = true;
-    this.replayingASystemTest = false;
-    this.initialiseSystemInfo();
-    systemTestEvent = {};
-    systemTestEvent.type = "systemInfo";
-    systemTestEvent.time = 0;
-    systemTestEvent.systemInfo = this.systemInfo;
-    return this.eventQueue.push(systemTestEvent);
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.stopRecording = function() {
-    return this.recordingASystemTest = false;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.startPlaying = function() {
-    this.recordingASystemTest = false;
-    this.replayingASystemTest = true;
-    return this.replayEvents();
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.stopPlaying = function() {
-    return this.replayingASystemTest = false;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseMoveEvent = function(pageX, pageY) {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseMove";
-    systemTestEvent.mouseX = pageX;
-    systemTestEvent.mouseY = pageY;
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseDownEvent = function(button, ctrlKey) {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseDown";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    systemTestEvent.button = button;
-    systemTestEvent.ctrlKey = ctrlKey;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseUpEvent = function() {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseUp";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.takeScreenshot = function() {
-    var currentTime, systemTestEvent;
-
-    console.log("taking screenshot");
-    if (this.systemInfo === null) {
-      this.initialiseSystemInfo();
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "takeScreenshot";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    systemTestEvent.screenShotImageData = [];
-    systemTestEvent.screenShotImageData.push([this.systemInfo, this.worldMorph.fullImageData()]);
-    this.eventQueue.push(systemTestEvent);
-    this.lastRecordedEventTime = currentTime;
-    if (!this.recordingASystemTest) {
-      return systemTestEvent;
-    }
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.compareScreenshots = function(expected) {
-    var a, i, _i, _len;
-
-    i = 0;
-    console.log("expected length " + expected.length);
-    for (_i = 0, _len = expected.length; _i < _len; _i++) {
-      a = expected[_i];
-      console.log("trying to match screenshot: " + i);
-      i++;
-      if (a[1] === this.worldMorph.fullImageData()) {
-        console.log("PASS - screenshot (" + i + ") matched");
-        return;
-      }
-    }
-    return console.log("FAIL - no screenshots like this one");
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.replayEvents = function() {
-    var lastPlayedEventTime, queuedEvent, _i, _len, _ref, _results;
-
-    lastPlayedEventTime = 0;
-    console.log("events: " + this.eventQueue);
-    _ref = this.eventQueue;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      queuedEvent = _ref[_i];
-      lastPlayedEventTime += queuedEvent.time;
-      _results.push(this.scheduleEvent(queuedEvent, lastPlayedEventTime));
-    }
-    return _results;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.scheduleEvent = function(queuedEvent, lastPlayedEventTime) {
-    var callback,
-      _this = this;
-
-    if (queuedEvent.type === 'mouseMove') {
-      callback = function() {
-        return _this.handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY);
-      };
-    } else if (queuedEvent.type === 'mouseDown') {
-      callback = function() {
-        return _this.handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey);
-      };
-    } else if (queuedEvent.type === 'mouseUp') {
-      callback = function() {
-        return _this.handMorph.processMouseUp();
-      };
-    } else if (queuedEvent.type === 'takeScreenshot') {
-      callback = function() {
-        return _this.compareScreenshots(queuedEvent.screenShotImageData);
-      };
-    } else {
-      return;
-    }
-    return setTimeout(callback, lastPlayedEventTime);
-  };
-
-  SystemTestsRecorderAndPlayer.coffeeScriptSourceOfThisClass = 'class SystemTestsRecorderAndPlayer\n  eventQueue: []\n  recordingASystemTest: false\n  replayingASystemTest: false\n  lastRecordedEventTime: null\n  handMorph: null\n  systemInfo: null\n\n  constructor: (@worldMorph, @handMorph) ->\n\n  initialiseSystemInfo: ->\n    @systemInfo = {}\n    @systemInfo.zombieKernelTestHarnessVersionMajor = 0\n    @systemInfo.zombieKernelTestHarnessVersionMinor = 1\n    @systemInfo.zombieKernelTestHarnessVersionRelease = 0\n    @systemInfo.userAgent = navigator.userAgent\n    @systemInfo.screenWidth = window.screen.width\n    @systemInfo.screenHeight = window.screen.height\n    @systemInfo.screenColorDepth = window.screen.colorDepth\n    if window.devicePixelRatio?\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    else\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    @systemInfo.appCodeName = navigator.appCodeName\n    @systemInfo.appName = navigator.appName\n    @systemInfo.appVersion = navigator.appVersion\n    @systemInfo.cookieEnabled = navigator.cookieEnabled\n    @systemInfo.platform = navigator.platform\n    @systemInfo.systemLanguage = navigator.systemLanguage\n\n  startRecording: ->\n    # clean up the world so we start from clean slate\n    @worldMorph.destroyAll()\n    @eventQueue = []\n    @lastRecordedEventTime = new Date().getTime()\n    @recordingASystemTest = true\n    @replayingASystemTest = false\n\n    @initialiseSystemInfo()\n    systemTestEvent = {}\n    systemTestEvent.type = "systemInfo"\n    systemTestEvent.time = 0\n    systemTestEvent.systemInfo = @systemInfo\n    @eventQueue.push systemTestEvent\n\n  stopRecording: ->\n    @recordingASystemTest = false\n\n  startPlaying: ->\n    @recordingASystemTest = false\n    @replayingASystemTest = true\n    @replayEvents()\n\n  stopPlaying: ->\n    @replayingASystemTest = false\n\n  addMouseMoveEvent: (pageX, pageY) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseMove"\n    systemTestEvent.mouseX = pageX\n    systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseDownEvent: (button, ctrlKey) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseDown"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    systemTestEvent.button = button\n    systemTestEvent.ctrlKey = ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseUpEvent: () ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseUp"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  takeScreenshot: () ->\n    console.log "taking screenshot"\n    if @systemInfo is null\n      @initialiseSystemInfo()\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "takeScreenshot"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    systemTestEvent.screenShotImageData = []\n    systemTestEvent.screenShotImageData.push [@systemInfo, @worldMorph.fullImageData()]\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n    if not @recordingASystemTest\n      return systemTestEvent\n\n  compareScreenshots: (expected) ->\n   i = 0\n   console.log "expected length " + expected.length\n   for a in expected\n     console.log "trying to match screenshot: " + i\n     i++\n     if a[1] == @worldMorph.fullImageData()\n      console.log "PASS - screenshot (" + i + ") matched"\n      return\n   console.log "FAIL - no screenshots like this one"\n\n  replayEvents: () ->\n   lastPlayedEventTime = 0\n   console.log "events: " + @eventQueue\n   for queuedEvent in @eventQueue\n      lastPlayedEventTime += queuedEvent.time\n      @scheduleEvent(queuedEvent, lastPlayedEventTime)\n\n  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->\n    if queuedEvent.type == \'mouseMove\'\n      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)\n    else if queuedEvent.type == \'mouseDown\'\n      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)\n    else if queuedEvent.type == \'mouseUp\'\n      callback = => @handMorph.processMouseUp()\n    else if queuedEvent.type == \'takeScreenshot\'\n      callback = => @compareScreenshots(queuedEvent.screenShotImageData)\n    else return\n\n    setTimeout callback, lastPlayedEventTime\n    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime';
-
-  return SystemTestsRecorderAndPlayer;
-
-})();
-
-modules = {};
-
-useBlurredShadows = getBlurredShadowSupport();
-
-standardSettings = {
-  minimumFontHeight: getMinimumFontHeight(),
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 12,
-  bubbleHelpFontSize: 10,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 12,
-  prompterSliderSize: 10,
-  handleSize: 15,
-  scrollBarSize: 12,
-  mouseScrollAmount: 40,
-  useSliderForInput: false,
-  useVirtualKeyboard: true,
-  rasterizeSVGs: false
-};
-
-touchScreenSettings = {
-  minimumFontHeight: standardSettings.minimumFontHeight,
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 24,
-  bubbleHelpFontSize: 18,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 24,
-  prompterSliderSize: 20,
-  handleSize: 26,
-  scrollBarSize: 24,
-  mouseScrollAmount: 40,
-  useSliderForInput: true,
-  useVirtualKeyboard: true,
-  rasterizeSVGs: false
-};
 
 WorldMorph = (function(_super) {
   __extends(WorldMorph, _super);
@@ -3268,7 +3495,7 @@ WorldMorph = (function(_super) {
       document.body.removeChild(this.virtualKeyboard);
       this.virtualKeyboard = null;
     }
-    if (!WorldMorph.MorphicPreferences.useVirtualKeyboard) {
+    if (!(WorldMorph.MorphicPreferences.isTouchDevice && WorldMorph.MorphicPreferences.useVirtualKeyboard)) {
       return;
     }
     this.virtualKeyboard = document.createElement("input");
@@ -3282,6 +3509,7 @@ WorldMorph = (function(_super) {
     this.virtualKeyboard.style.left = "0px";
     this.virtualKeyboard.style.width = "0px";
     this.virtualKeyboard.style.height = "0px";
+    this.virtualKeyboard.autocapitalize = "none";
     document.body.appendChild(this.virtualKeyboard);
     this.virtualKeyboard.addEventListener("keydown", (function(event) {
       _this.currentKey = event.keyCode;
@@ -3765,7 +3993,7 @@ WorldMorph = (function(_super) {
     aStringOrTextMorph.parent.add(this.caret);
     this.keyboardReceiver = this.caret;
     this.initVirtualKeyboard();
-    if (WorldMorph.MorphicPreferences.useVirtualKeyboard) {
+    if (WorldMorph.MorphicPreferences.isTouchDevice && WorldMorph.MorphicPreferences.useVirtualKeyboard) {
       this.virtualKeyboard.style.top = this.caret.top() + pos.y + "px";
       this.virtualKeyboard.style.left = this.caret.left() + pos.x + "px";
       this.virtualKeyboard.focus();
@@ -3835,11 +4063,4418 @@ WorldMorph = (function(_super) {
     }
   };
 
-  WorldMorph.coffeeScriptSourceOfThisClass = '# WorldMorph //////////////////////////////////////////////////////////\n\n# these comments below needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n# REQUIRES globalSettings\n\n# I represent the <canvas> element\nclass WorldMorph extends FrameMorph\n\n  # these variables shouldn\'t be static to the WorldMorph, because\n  # in pure theory you could have multiple worlds in the same\n  # page with different settings\n  # (but anyways, it was global before, so it\'s not any worse than before)\n  @MorphicPreferences: standardSettings\n  @currentTime: null\n  @showRedraws: false\n  systemTestsRecorderAndPlayer: null\n\n  constructor: (aCanvas, fillPage) ->\n    super()\n    @color = new Color(205, 205, 205) # (130, 130, 130)\n    @alpha = 1\n    @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)\n    @updateRendering()\n    @isVisible = true\n    @isDraggable = false\n    @currentKey = null # currently pressed key code\n    @worldCanvas = aCanvas\n    #\n    # additional properties:\n    @useFillPage = fillPage\n    @useFillPage = true  if @useFillPage is `undefined`\n    @isDevMode = false\n    @broken = []\n    @hand = new HandMorph(@)\n    @keyboardReceiver = null\n    @lastEditedText = null\n    @caret = null\n    @activeMenu = null\n    @activeHandle = null\n    @virtualKeyboard = null\n    @initEventListeners()\n    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)\n  \n  # World Morph display:\n  brokenFor: (aMorph) ->\n    # private\n    fb = aMorph.boundsIncludingChildren()\n    @broken.filter (rect) ->\n      rect.intersects fb\n  \n  \n  # all fullDraws result into actual blittings of images done\n  # by the blit function.\n  # The blit function is defined in Morph and is not overriden by\n  # any morph.\n  recursivelyBlit: (aCanvas, aRect) ->\n    # invokes the Morph\'s recursivelyBlit, which has only two implementations:\n    # the default one by Morph which just invokes the blit of all children\n    # and the interesting one in FrameMorph which \n    super aCanvas, aRect\n    # the mouse cursor is always drawn on top of everything\n    # and it\'d not attached to the WorldMorph.\n    @hand.recursivelyBlit aCanvas, aRect\n  \n  updateBroken: ->\n    #console.log "number of broken rectangles: " + @broken.length\n    @broken.forEach (rect) =>\n      @recursivelyBlit @worldCanvas, rect  if rect.isNotEmpty()\n    @broken = []\n  \n  doOneCycle: ->\n    WorldMorph.currentTime = Date.now();\n    @runChildrensStepFunction()\n    @updateBroken()\n  \n  fillPage: ->\n    pos = getDocumentPositionOf(@worldCanvas)\n    clientHeight = window.innerHeight\n    clientWidth = window.innerWidth\n    if pos.x > 0\n      @worldCanvas.style.position = "absolute"\n      @worldCanvas.style.left = "0px"\n      pos.x = 0\n    if pos.y > 0\n      @worldCanvas.style.position = "absolute"\n      @worldCanvas.style.top = "0px"\n      pos.y = 0\n    # scrolled down b/c of viewport scaling\n    clientHeight = document.documentElement.clientHeight  if document.body.scrollTop\n    # scrolled left b/c of viewport scaling\n    clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft\n    if @worldCanvas.width isnt clientWidth\n      @worldCanvas.width = clientWidth\n      @setWidth clientWidth\n    if @worldCanvas.height isnt clientHeight\n      @worldCanvas.height = clientHeight\n      @setHeight clientHeight\n    @children.forEach (child) =>\n      child.reactToWorldResize @bounds.copy()  if child.reactToWorldResize\n  \n  \n  \n  # WorldMorph global pixel access:\n  getGlobalPixelColor: (point) ->\n    \n    #\n    #	answer the color at the given point.\n    #\n    #	Note: for some strange reason this method works fine if the page is\n    #	opened via HTTP, but *not*, if it is opened from a local uri\n    #	(e.g. from a directory), in which case it\'s always null.\n    #\n    #	This behavior is consistent throughout several browsers. I have no\n    #	clue what\'s behind this, apparently the imageData attribute of\n    #	canvas context only gets filled with meaningful data if transferred\n    #	via HTTP ???\n    #\n    #	This is somewhat of a showstopper for color detection in a planned\n    #	offline version of Snap.\n    #\n    #	The issue has also been discussed at: (join lines before pasting)\n    #	http://stackoverflow.com/questions/4069400/\n    #	canvas-getimagedata-doesnt-work-when-running-locally-on-windows-\n    #	security-excep\n    #\n    #	The suggestion solution appears to work, since the settings are\n    #	applied globally.\n    #\n    dta = @worldCanvas.getContext("2d").getImageData(point.x, point.y, 1, 1).data\n    new Color(dta[0], dta[1], dta[2])\n  \n  \n  # WorldMorph events:\n  initVirtualKeyboard: ->\n    if @virtualKeyboard\n      document.body.removeChild @virtualKeyboard\n      @virtualKeyboard = null\n    return  unless WorldMorph.MorphicPreferences.useVirtualKeyboard\n    @virtualKeyboard = document.createElement("input")\n    @virtualKeyboard.type = "text"\n    @virtualKeyboard.style.color = "transparent"\n    @virtualKeyboard.style.backgroundColor = "transparent"\n    @virtualKeyboard.style.border = "none"\n    @virtualKeyboard.style.outline = "none"\n    @virtualKeyboard.style.position = "absolute"\n    @virtualKeyboard.style.top = "0px"\n    @virtualKeyboard.style.left = "0px"\n    @virtualKeyboard.style.width = "0px"\n    @virtualKeyboard.style.height = "0px"\n    document.body.appendChild @virtualKeyboard\n\n    @virtualKeyboard.addEventListener "keydown", ((event) =>\n      # remember the keyCode in the world\'s currentKey property\n      @currentKey = event.keyCode\n\n      @keyboardReceiver.processKeyDown event  if @keyboardReceiver\n      #\n      # supress backspace override\n      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"\n        event.preventDefault()  \n      #\n      # supress tab override and make sure tab gets\n      # received by all browsers\n      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"\n        @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n        event.preventDefault()\n    ), false\n    @virtualKeyboard.addEventListener "keyup", ((event) =>\n      # flush the world\'s currentKey property\n      @currentKey = null\n      #\n      # dispatch to keyboard receiver\n      if @keyboardReceiver\n        if @keyboardReceiver.processKeyUp\n          @keyboardReceiver.processKeyUp event  \n      event.preventDefault()\n    ), false\n    @virtualKeyboard.addEventListener "keypress", ((event) =>\n      @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n      event.preventDefault()\n    ), false\n  \n  initEventListeners: ->\n    canvas = @worldCanvas\n    if @useFillPage\n      @fillPage()\n    else\n      @changed()\n    canvas.addEventListener "mousedown", ((event) =>\n      @hand.processMouseDown event.button, event.ctrlKey\n    ), false\n    canvas.addEventListener "touchstart", ((event) =>\n      @hand.processTouchStart event\n    ), false\n    canvas.addEventListener "mouseup", ((event) =>\n      event.preventDefault()\n      @hand.processMouseUp event\n    ), false\n    canvas.addEventListener "touchend", ((event) =>\n      @hand.processTouchEnd event\n    ), false\n    canvas.addEventListener "mousemove", ((event) =>\n      @hand.processMouseMove  event.pageX, event.pageY\n    ), false\n    canvas.addEventListener "touchmove", ((event) =>\n      @hand.processTouchMove event\n    ), false\n    canvas.addEventListener "contextmenu", ((event) ->\n      # suppress context menu for Mac-Firefox\n      event.preventDefault()\n    ), false\n    canvas.addEventListener "keydown", ((event) =>\n      # remember the keyCode in the world\'s currentKey property\n      @currentKey = event.keyCode\n      @keyboardReceiver.processKeyDown event  if @keyboardReceiver\n      #\n      # supress backspace override\n      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"\n        event.preventDefault()\n      #\n      # supress tab override and make sure tab gets\n      # received by all browsers\n      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"\n        @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n        event.preventDefault()\n    ), false\n    #\n    canvas.addEventListener "keyup", ((event) =>  \n      # flush the world\'s currentKey property\n      @currentKey = null\n      #\n      # dispatch to keyboard receiver\n      if @keyboardReceiver\n        if @keyboardReceiver.processKeyUp\n          @keyboardReceiver.processKeyUp event    \n      event.preventDefault()\n    ), false\n    canvas.addEventListener "keypress", ((event) =>\n      @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n      event.preventDefault()\n    ), false\n    # Safari, Chrome\n    canvas.addEventListener "mousewheel", ((event) =>\n      @hand.processMouseScroll event\n      event.preventDefault()\n    ), false\n    # Firefox\n    canvas.addEventListener "DOMMouseScroll", ((event) =>\n      @hand.processMouseScroll event\n      event.preventDefault()\n    ), false\n\n    # snippets of clipboard-handling code taken from\n    # http://codebits.glennjones.net/editing/setclipboarddata.htm\n    # Note that this works only in Chrome. Firefox and Safari need a piece of\n    # text to be selected in order to even trigger the copy event. Chrome does\n    # enable clipboard access instead even if nothing is selected.\n    # There are a couple of solutions to this - one is to keep a hidden textfield that\n    # handles all copy/paste operations.\n    # Another one is to not use a clipboard, but rather an internal string as\n    # local memory. So the OS clipboard wouldn\'t be used, but at least there would\n    # be some copy/paste working. Also one would need to intercept the copy/paste\n    # key combinations manually instead of from the copy/paste events.\n    document.body.addEventListener "copy", ((event) =>\n      if @caret\n        selectedText = @caret.target.selection()\n        if event.clipboardData\n          event.preventDefault()\n          setStatus = event.clipboardData.setData("text/plain", selectedText)\n\n        if window.clipboardData\n          event.returnValue = false\n          setStatus = window.clipboardData.setData "Text", selectedText\n\n    ), false\n\n    document.body.addEventListener "paste", ((event) =>\n      if @caret\n        if event.clipboardData\n          # Look for access to data if types array is missing\n          text = event.clipboardData.getData("text/plain")\n          #url = event.clipboardData.getData("text/uri-list")\n          #html = event.clipboardData.getData("text/html")\n          #custom = event.clipboardData.getData("text/xcustom")\n        # IE event is attached to the window object\n        if window.clipboardData\n          # The schema is fixed\n          text = window.clipboardData.getData("Text")\n          #url = window.clipboardData.getData("URL")\n        \n        # Needs a few msec to excute paste\n        window.setTimeout ( => (@caret.insert text)), 50, true\n    ), false\n\n    console.log "binding wit mousetrap"\n    Mousetrap.bind ["command+k", "ctrl+k"], (e) =>\n      @systemTestsRecorderAndPlayer.takeScreenshot()\n      false\n\n    window.addEventListener "dragover", ((event) ->\n      event.preventDefault()\n    ), false\n    window.addEventListener "drop", ((event) =>\n      @hand.processDrop event\n      event.preventDefault()\n    ), false\n    window.addEventListener "resize", (=>\n      @fillPage()  if @useFillPage\n    ), false\n    window.onbeforeunload = (evt) ->\n      e = evt or window.event\n      msg = "Are you sure you want to leave?"\n      #\n      # For IE and Firefox\n      e.returnValue = msg  if e\n      #\n      # For Safari / chrome\n      msg\n  \n  mouseDownLeft: ->\n    noOperation\n  \n  mouseClickLeft: ->\n    noOperation\n  \n  mouseDownRight: ->\n    noOperation\n  \n  mouseClickRight: ->\n    noOperation\n  \n  wantsDropOf: ->\n    # allow handle drops if any drops are allowed\n    @acceptsDrops\n  \n  droppedImage: ->\n    null\n\n  droppedSVG: ->\n    null  \n\n  # WorldMorph text field tabbing:\n  nextTab: (editField) ->\n    next = @nextEntryField(editField)\n    if next\n      editField.clearSelection()\n      next.selectAll()\n      next.edit()\n  \n  previousTab: (editField) ->\n    prev = @previousEntryField(editField)\n    if prev\n      editField.clearSelection()\n      prev.selectAll()\n      prev.edit()\n  \n  testsList: () ->\n    # Check which objects have the right name start\n    console.log Object.keys(window)\n    (Object.keys(window)).filter (i) ->\n      console.log i.indexOf("SystemTest_")\n      i.indexOf("SystemTest_") == 0\n\n  runSystemTests: () ->\n    console.log @testsList()\n    for i in @testsList()\n      console.log window[i]\n      @systemTestsRecorderAndPlayer.eventQueue = (window[i]).testData\n      # the Zombie kernel safari pop-up is painted weird, needs a refresh\n      # for some unknown reason\n      @changed()\n      # start from clean slate\n      @destroyAll()\n      @systemTestsRecorderAndPlayer.startPlaying()\n\n  # WorldMorph menu:\n  contextMenu: ->\n    if @isDevMode\n      menu = new MenuMorph(\n        @, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])\n    else\n      menu = new MenuMorph(@, "Morphic")\n    if @isDevMode\n      menu.addItem "demo...", "userCreateMorph", "sample morphs"\n      menu.addLine()\n      menu.addItem "hide all...", "hideAll"\n      menu.addItem "delete all...", "destroyAll"\n      menu.addItem "show all...", "showAllHiddens"\n      menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"\n      menu.addItem "inspect...", "inspect", "open a window on\nall properties"\n      menu.addLine()\n      menu.addItem "restore display", "changed", "redraw the\nscreen once"\n      menu.addItem "fill page...", "fillPage", "let the World automatically\nadjust to browser resizings"\n      if useBlurredShadows\n        menu.addItem "sharp shadows...", "toggleBlurredShadows", "sharp drop shadows\nuse for old browsers"\n      else\n        menu.addItem "blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers"\n      menu.addItem "color...", (->\n        @pickColor menu.title + "\ncolor:", @setColor, @, @color\n      ), "choose the World\'s\nbackground color"\n      if WorldMorph.MorphicPreferences is standardSettings\n        menu.addItem "touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders"\n      else\n        menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"\n      menu.addLine()\n    menu.addItem "run system tests",  "runSystemTests", "runs all the system tests"\n    menu.addLine()\n    if @isDevMode\n      menu.addItem "user mode...", "toggleDevMode", "disable developers\'\ncontext menus"\n    else\n      menu.addItem "development mode...", "toggleDevMode"\n    menu.addItem "about morphic.js...", "about"\n    menu\n  \n  userCreateMorph: ->\n    create = (aMorph) =>\n      aMorph.isDraggable = true\n      aMorph.pickUp @\n    menu = new MenuMorph(@, "make a morph")\n    menu.addItem "rectangle", ->\n      create new Morph()\n    \n    menu.addItem "box", ->\n      create new BoxMorph()\n    \n    menu.addItem "circle box", ->\n      create new CircleBoxMorph()\n    \n    menu.addLine()\n    menu.addItem "slider", ->\n      create new SliderMorph()\n    \n    menu.addItem "frame", ->\n      newMorph = new FrameMorph()\n      newMorph.setExtent new Point(350, 250)\n      create newMorph\n    \n    menu.addItem "scroll frame", ->\n      newMorph = new ScrollFrameMorph()\n      newMorph.contents.acceptsDrops = true\n      newMorph.contents.adjustBounds()\n      newMorph.setExtent new Point(350, 250)\n      create newMorph\n    \n    menu.addItem "handle", ->\n      create new HandleMorph()\n    \n    menu.addLine()\n    menu.addItem "string", ->\n      newMorph = new StringMorph("Hello, World!")\n      newMorph.isEditable = true\n      create newMorph\n    \n    menu.addItem "text", ->\n      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +\n        "traurig bin, ein Märchen aus uralten Zeiten, das " +\n        "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +\n        "und es dunkelt, und ruhig fließt der Rhein; der " +\n        "Gipfel des Berges funkelt im Abendsonnenschein. " +\n        "Die schönste Jungfrau sitzet dort oben wunderbar, " +\n        "ihr gold\'nes Geschmeide blitzet, sie kämmt ihr " +\n        "goldenes Haar, sie kämmt es mit goldenem Kamme, " +\n        "und singt ein Lied dabei; das hat eine wundersame, " +\n        "gewalt\'ge Melodei. Den Schiffer im kleinen " +\n        "Schiffe, ergreift es mit wildem Weh; er schaut " +\n        "nicht die Felsenriffe, er schaut nur hinauf in " +\n        "die Höh\'. Ich glaube, die Wellen verschlingen " +\n        "am Ende Schiffer und Kahn, und das hat mit ihrem " +\n        "Singen, die Loreley getan.")\n      newMorph.isEditable = true\n      newMorph.maxWidth = 300\n      newMorph.updateRendering()\n      create newMorph\n    \n    menu.addItem "speech bubble", ->\n      newMorph = new SpeechBubbleMorph("Hello, World!")\n      create newMorph\n    \n    menu.addLine()\n    menu.addItem "gray scale palette", ->\n      create new GrayPaletteMorph()\n    \n    menu.addItem "color palette", ->\n      create new ColorPaletteMorph()\n    \n    menu.addItem "color picker", ->\n      create new ColorPickerMorph()\n    \n    menu.addLine()\n    menu.addItem "sensor demo", ->\n      newMorph = new MouseSensorMorph()\n      newMorph.setColor new Color(230, 200, 100)\n      newMorph.edge = 35\n      newMorph.border = 15\n      newMorph.borderColor = new Color(200, 100, 50)\n      newMorph.alpha = 0.2\n      newMorph.setExtent new Point(100, 100)\n      create newMorph\n    \n    menu.addItem "animation demo", ->\n      foo = new BouncerMorph()\n      foo.setPosition new Point(50, 20)\n      foo.setExtent new Point(300, 200)\n      foo.alpha = 0.9\n      foo.speed = 3\n      bar = new BouncerMorph()\n      bar.setColor new Color(50, 50, 50)\n      bar.setPosition new Point(80, 80)\n      bar.setExtent new Point(80, 250)\n      bar.type = "horizontal"\n      bar.direction = "right"\n      bar.alpha = 0.9\n      bar.speed = 5\n      baz = new BouncerMorph()\n      baz.setColor new Color(20, 20, 20)\n      baz.setPosition new Point(90, 140)\n      baz.setExtent new Point(40, 30)\n      baz.type = "horizontal"\n      baz.direction = "right"\n      baz.speed = 3\n      garply = new BouncerMorph()\n      garply.setColor new Color(200, 20, 20)\n      garply.setPosition new Point(90, 140)\n      garply.setExtent new Point(20, 20)\n      garply.type = "vertical"\n      garply.direction = "up"\n      garply.speed = 8\n      fred = new BouncerMorph()\n      fred.setColor new Color(20, 200, 20)\n      fred.setPosition new Point(120, 140)\n      fred.setExtent new Point(20, 20)\n      fred.type = "vertical"\n      fred.direction = "down"\n      fred.speed = 4\n      bar.add garply\n      bar.add baz\n      foo.add fred\n      foo.add bar\n      create foo\n    \n    menu.addItem "pen", ->\n      create new PenMorph()\n    \n    menu.addLine()\n    menu.addItem "view all...", ->\n      newMorph = new MorphsListMorph()\n      create newMorph\n    \n    if @customMorphs\n      menu.addLine()\n      @customMorphs().forEach (morph) ->\n        menu.addItem morph.toString(), ->\n          create morph\n    \n    menu.popUpAtHand @\n  \n  toggleDevMode: ->\n    @isDevMode = not @isDevMode\n  \n  hideAll: ->\n    @children.forEach (child) ->\n      child.hide()\n  \n  showAllHiddens: ->\n    @forAllChildren (child) ->\n      child.show()  unless child.isVisible\n  \n  about: ->\n    versions = ""\n    for module of modules\n      if modules.hasOwnProperty(module)\n        versions += ("\n" + module + " (" + modules[module] + ")")  \n    if versions isnt ""\n      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  \n    @inform "morphic.js\n\n" +\n      "a lively Web GUI\ninspired by Squeak\n" +\n      morphicVersion +\n      "\n\original from Jens Mönig\'s (jens@moenig.org) morphic.js\n" +\n      "\n\nported and extended by Davide Della Casa\n" +\n      versions\n  \n  edit: (aStringOrTextMorph) ->\n    pos = getDocumentPositionOf(@worldCanvas)\n    return null  unless aStringOrTextMorph.isEditable\n    @caret.destroy()  if @caret\n    @lastEditedText.clearSelection()  if @lastEditedText\n    @caret = new CaretMorph(aStringOrTextMorph)\n    aStringOrTextMorph.parent.add @caret\n    @keyboardReceiver = @caret\n    @initVirtualKeyboard()\n    if WorldMorph.MorphicPreferences.useVirtualKeyboard\n      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"\n      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"\n      @virtualKeyboard.focus()\n    if WorldMorph.MorphicPreferences.useSliderForInput\n      if !aStringOrTextMorph.parentThatIsA(MenuMorph)\n        @slide aStringOrTextMorph\n  \n  slide: (aStringOrTextMorph) ->\n    # display a slider for numeric text entries\n    val = parseFloat(aStringOrTextMorph.text)\n    val = 0  if isNaN(val)\n    menu = new MenuMorph()\n    slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")\n    slider.alpha = 1\n    slider.color = new Color(225, 225, 225)\n    slider.button.color = menu.borderColor\n    slider.button.highlightColor = slider.button.color.copy()\n    slider.button.highlightColor.b += 100\n    slider.button.pressColor = slider.button.color.copy()\n    slider.button.pressColor.b += 150\n    slider.silentSetHeight WorldMorph.MorphicPreferences.scrollBarSize\n    slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10\n    slider.updateRendering()\n    slider.action = (num) ->\n      aStringOrTextMorph.changed()\n      aStringOrTextMorph.text = Math.round(num).toString()\n      aStringOrTextMorph.updateRendering()\n      aStringOrTextMorph.changed()\n      aStringOrTextMorph.escalateEvent(\n          \'reactToSliderEdit\',\n          aStringOrTextMorph\n      )\n    #\n    menu.items.push slider\n    menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))\n  \n  stopEditing: ->\n    if @caret\n      @lastEditedText = @caret.target\n      @caret.destroy()\n      @caret = null\n      @lastEditedText.escalateEvent "reactToEdit", @lastEditedText\n    @keyboardReceiver = null\n    if @virtualKeyboard\n      @virtualKeyboard.blur()\n      document.body.removeChild @virtualKeyboard\n      @virtualKeyboard = null\n    @worldCanvas.focus()\n  \n  toggleBlurredShadows: ->\n    useBlurredShadows = not useBlurredShadows\n  \n  togglePreferences: ->\n    if WorldMorph.MorphicPreferences is standardSettings\n      WorldMorph.MorphicPreferences = touchScreenSettings\n    else\n      WorldMorph.MorphicPreferences = standardSettings';
+  WorldMorph.coffeeScriptSourceOfThisClass = '# WorldMorph //////////////////////////////////////////////////////////\n\n# these comments below needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n# REQUIRES globalSettings\n\n# I represent the <canvas> element\nclass WorldMorph extends FrameMorph\n\n  # these variables shouldn\'t be static to the WorldMorph, because\n  # in pure theory you could have multiple worlds in the same\n  # page with different settings\n  # (but anyways, it was global before, so it\'s not any worse than before)\n  @MorphicPreferences: standardSettings\n  @currentTime: null\n  @showRedraws: false\n  systemTestsRecorderAndPlayer: null\n\n  constructor: (aCanvas, fillPage) ->\n    super()\n    @color = new Color(205, 205, 205) # (130, 130, 130)\n    @alpha = 1\n    @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)\n    @updateRendering()\n    @isVisible = true\n    @isDraggable = false\n    @currentKey = null # currently pressed key code\n    @worldCanvas = aCanvas\n    #\n    # additional properties:\n    @useFillPage = fillPage\n    @useFillPage = true  if @useFillPage is `undefined`\n    @isDevMode = false\n    @broken = []\n    @hand = new HandMorph(@)\n    @keyboardReceiver = null\n    @lastEditedText = null\n    @caret = null\n    @activeMenu = null\n    @activeHandle = null\n    @virtualKeyboard = null\n    @initEventListeners()\n    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)\n  \n  # World Morph display:\n  brokenFor: (aMorph) ->\n    # private\n    fb = aMorph.boundsIncludingChildren()\n    @broken.filter (rect) ->\n      rect.intersects fb\n  \n  \n  # all fullDraws result into actual blittings of images done\n  # by the blit function.\n  # The blit function is defined in Morph and is not overriden by\n  # any morph.\n  recursivelyBlit: (aCanvas, aRect) ->\n    # invokes the Morph\'s recursivelyBlit, which has only two implementations:\n    # the default one by Morph which just invokes the blit of all children\n    # and the interesting one in FrameMorph which \n    super aCanvas, aRect\n    # the mouse cursor is always drawn on top of everything\n    # and it\'d not attached to the WorldMorph.\n    @hand.recursivelyBlit aCanvas, aRect\n  \n  updateBroken: ->\n    #console.log "number of broken rectangles: " + @broken.length\n    @broken.forEach (rect) =>\n      @recursivelyBlit @worldCanvas, rect  if rect.isNotEmpty()\n    @broken = []\n  \n  doOneCycle: ->\n    WorldMorph.currentTime = Date.now();\n    @runChildrensStepFunction()\n    @updateBroken()\n  \n  fillPage: ->\n    pos = getDocumentPositionOf(@worldCanvas)\n    clientHeight = window.innerHeight\n    clientWidth = window.innerWidth\n    if pos.x > 0\n      @worldCanvas.style.position = "absolute"\n      @worldCanvas.style.left = "0px"\n      pos.x = 0\n    if pos.y > 0\n      @worldCanvas.style.position = "absolute"\n      @worldCanvas.style.top = "0px"\n      pos.y = 0\n    # scrolled down b/c of viewport scaling\n    clientHeight = document.documentElement.clientHeight  if document.body.scrollTop\n    # scrolled left b/c of viewport scaling\n    clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft\n    if @worldCanvas.width isnt clientWidth\n      @worldCanvas.width = clientWidth\n      @setWidth clientWidth\n    if @worldCanvas.height isnt clientHeight\n      @worldCanvas.height = clientHeight\n      @setHeight clientHeight\n    @children.forEach (child) =>\n      child.reactToWorldResize @bounds.copy()  if child.reactToWorldResize\n  \n  \n  \n  # WorldMorph global pixel access:\n  getGlobalPixelColor: (point) ->\n    \n    #\n    #	answer the color at the given point.\n    #\n    #	Note: for some strange reason this method works fine if the page is\n    #	opened via HTTP, but *not*, if it is opened from a local uri\n    #	(e.g. from a directory), in which case it\'s always null.\n    #\n    #	This behavior is consistent throughout several browsers. I have no\n    #	clue what\'s behind this, apparently the imageData attribute of\n    #	canvas context only gets filled with meaningful data if transferred\n    #	via HTTP ???\n    #\n    #	This is somewhat of a showstopper for color detection in a planned\n    #	offline version of Snap.\n    #\n    #	The issue has also been discussed at: (join lines before pasting)\n    #	http://stackoverflow.com/questions/4069400/\n    #	canvas-getimagedata-doesnt-work-when-running-locally-on-windows-\n    #	security-excep\n    #\n    #	The suggestion solution appears to work, since the settings are\n    #	applied globally.\n    #\n    dta = @worldCanvas.getContext("2d").getImageData(point.x, point.y, 1, 1).data\n    new Color(dta[0], dta[1], dta[2])\n  \n  \n  # WorldMorph events:\n  initVirtualKeyboard: ->\n    if @virtualKeyboard\n      document.body.removeChild @virtualKeyboard\n      @virtualKeyboard = null\n    unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)\n      return\n    @virtualKeyboard = document.createElement("input")\n    @virtualKeyboard.type = "text"\n    @virtualKeyboard.style.color = "transparent"\n    @virtualKeyboard.style.backgroundColor = "transparent"\n    @virtualKeyboard.style.border = "none"\n    @virtualKeyboard.style.outline = "none"\n    @virtualKeyboard.style.position = "absolute"\n    @virtualKeyboard.style.top = "0px"\n    @virtualKeyboard.style.left = "0px"\n    @virtualKeyboard.style.width = "0px"\n    @virtualKeyboard.style.height = "0px"\n    @virtualKeyboard.autocapitalize = "none" # iOS specific\n    document.body.appendChild @virtualKeyboard\n\n    @virtualKeyboard.addEventListener "keydown", ((event) =>\n      # remember the keyCode in the world\'s currentKey property\n      @currentKey = event.keyCode\n\n      @keyboardReceiver.processKeyDown event  if @keyboardReceiver\n      #\n      # supress backspace override\n      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"\n        event.preventDefault()  \n      #\n      # supress tab override and make sure tab gets\n      # received by all browsers\n      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"\n        @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n        event.preventDefault()\n    ), false\n    @virtualKeyboard.addEventListener "keyup", ((event) =>\n      # flush the world\'s currentKey property\n      @currentKey = null\n      #\n      # dispatch to keyboard receiver\n      if @keyboardReceiver\n        if @keyboardReceiver.processKeyUp\n          @keyboardReceiver.processKeyUp event  \n      event.preventDefault()\n    ), false\n    @virtualKeyboard.addEventListener "keypress", ((event) =>\n      @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n      event.preventDefault()\n    ), false\n  \n  initEventListeners: ->\n    canvas = @worldCanvas\n    if @useFillPage\n      @fillPage()\n    else\n      @changed()\n    canvas.addEventListener "mousedown", ((event) =>\n      @hand.processMouseDown event.button, event.ctrlKey\n    ), false\n    canvas.addEventListener "touchstart", ((event) =>\n      @hand.processTouchStart event\n    ), false\n    canvas.addEventListener "mouseup", ((event) =>\n      event.preventDefault()\n      @hand.processMouseUp event\n    ), false\n    canvas.addEventListener "touchend", ((event) =>\n      @hand.processTouchEnd event\n    ), false\n    canvas.addEventListener "mousemove", ((event) =>\n      @hand.processMouseMove  event.pageX, event.pageY\n    ), false\n    canvas.addEventListener "touchmove", ((event) =>\n      @hand.processTouchMove event\n    ), false\n    canvas.addEventListener "contextmenu", ((event) ->\n      # suppress context menu for Mac-Firefox\n      event.preventDefault()\n    ), false\n    canvas.addEventListener "keydown", ((event) =>\n      # remember the keyCode in the world\'s currentKey property\n      @currentKey = event.keyCode\n      @keyboardReceiver.processKeyDown event  if @keyboardReceiver\n      #\n      # supress backspace override\n      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"\n        event.preventDefault()\n      #\n      # supress tab override and make sure tab gets\n      # received by all browsers\n      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"\n        @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n        event.preventDefault()\n    ), false\n    #\n    canvas.addEventListener "keyup", ((event) =>  \n      # flush the world\'s currentKey property\n      @currentKey = null\n      #\n      # dispatch to keyboard receiver\n      if @keyboardReceiver\n        if @keyboardReceiver.processKeyUp\n          @keyboardReceiver.processKeyUp event    \n      event.preventDefault()\n    ), false\n    canvas.addEventListener "keypress", ((event) =>\n      @keyboardReceiver.processKeyPress event  if @keyboardReceiver\n      event.preventDefault()\n    ), false\n    # Safari, Chrome\n    canvas.addEventListener "mousewheel", ((event) =>\n      @hand.processMouseScroll event\n      event.preventDefault()\n    ), false\n    # Firefox\n    canvas.addEventListener "DOMMouseScroll", ((event) =>\n      @hand.processMouseScroll event\n      event.preventDefault()\n    ), false\n\n    # snippets of clipboard-handling code taken from\n    # http://codebits.glennjones.net/editing/setclipboarddata.htm\n    # Note that this works only in Chrome. Firefox and Safari need a piece of\n    # text to be selected in order to even trigger the copy event. Chrome does\n    # enable clipboard access instead even if nothing is selected.\n    # There are a couple of solutions to this - one is to keep a hidden textfield that\n    # handles all copy/paste operations.\n    # Another one is to not use a clipboard, but rather an internal string as\n    # local memory. So the OS clipboard wouldn\'t be used, but at least there would\n    # be some copy/paste working. Also one would need to intercept the copy/paste\n    # key combinations manually instead of from the copy/paste events.\n    document.body.addEventListener "copy", ((event) =>\n      if @caret\n        selectedText = @caret.target.selection()\n        if event.clipboardData\n          event.preventDefault()\n          setStatus = event.clipboardData.setData("text/plain", selectedText)\n\n        if window.clipboardData\n          event.returnValue = false\n          setStatus = window.clipboardData.setData "Text", selectedText\n\n    ), false\n\n    document.body.addEventListener "paste", ((event) =>\n      if @caret\n        if event.clipboardData\n          # Look for access to data if types array is missing\n          text = event.clipboardData.getData("text/plain")\n          #url = event.clipboardData.getData("text/uri-list")\n          #html = event.clipboardData.getData("text/html")\n          #custom = event.clipboardData.getData("text/xcustom")\n        # IE event is attached to the window object\n        if window.clipboardData\n          # The schema is fixed\n          text = window.clipboardData.getData("Text")\n          #url = window.clipboardData.getData("URL")\n        \n        # Needs a few msec to excute paste\n        window.setTimeout ( => (@caret.insert text)), 50, true\n    ), false\n\n    console.log "binding wit mousetrap"\n    Mousetrap.bind ["command+k", "ctrl+k"], (e) =>\n      @systemTestsRecorderAndPlayer.takeScreenshot()\n      false\n\n    window.addEventListener "dragover", ((event) ->\n      event.preventDefault()\n    ), false\n    window.addEventListener "drop", ((event) =>\n      @hand.processDrop event\n      event.preventDefault()\n    ), false\n    window.addEventListener "resize", (=>\n      @fillPage()  if @useFillPage\n    ), false\n    window.onbeforeunload = (evt) ->\n      e = evt or window.event\n      msg = "Are you sure you want to leave?"\n      #\n      # For IE and Firefox\n      e.returnValue = msg  if e\n      #\n      # For Safari / chrome\n      msg\n  \n  mouseDownLeft: ->\n    noOperation\n  \n  mouseClickLeft: ->\n    noOperation\n  \n  mouseDownRight: ->\n    noOperation\n  \n  mouseClickRight: ->\n    noOperation\n  \n  wantsDropOf: ->\n    # allow handle drops if any drops are allowed\n    @acceptsDrops\n  \n  droppedImage: ->\n    null\n\n  droppedSVG: ->\n    null  \n\n  # WorldMorph text field tabbing:\n  nextTab: (editField) ->\n    next = @nextEntryField(editField)\n    if next\n      editField.clearSelection()\n      next.selectAll()\n      next.edit()\n  \n  previousTab: (editField) ->\n    prev = @previousEntryField(editField)\n    if prev\n      editField.clearSelection()\n      prev.selectAll()\n      prev.edit()\n  \n  testsList: () ->\n    # Check which objects have the right name start\n    console.log Object.keys(window)\n    (Object.keys(window)).filter (i) ->\n      console.log i.indexOf("SystemTest_")\n      i.indexOf("SystemTest_") == 0\n\n  runSystemTests: () ->\n    console.log @testsList()\n    for i in @testsList()\n      console.log window[i]\n      @systemTestsRecorderAndPlayer.eventQueue = (window[i]).testData\n      # the Zombie kernel safari pop-up is painted weird, needs a refresh\n      # for some unknown reason\n      @changed()\n      # start from clean slate\n      @destroyAll()\n      @systemTestsRecorderAndPlayer.startPlaying()\n\n  # WorldMorph menu:\n  contextMenu: ->\n    if @isDevMode\n      menu = new MenuMorph(\n        @, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])\n    else\n      menu = new MenuMorph(@, "Morphic")\n    if @isDevMode\n      menu.addItem "demo...", "userCreateMorph", "sample morphs"\n      menu.addLine()\n      menu.addItem "hide all...", "hideAll"\n      menu.addItem "delete all...", "destroyAll"\n      menu.addItem "show all...", "showAllHiddens"\n      menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"\n      menu.addItem "inspect...", "inspect", "open a window on\nall properties"\n      menu.addLine()\n      menu.addItem "restore display", "changed", "redraw the\nscreen once"\n      menu.addItem "fill page...", "fillPage", "let the World automatically\nadjust to browser resizings"\n      if useBlurredShadows\n        menu.addItem "sharp shadows...", "toggleBlurredShadows", "sharp drop shadows\nuse for old browsers"\n      else\n        menu.addItem "blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers"\n      menu.addItem "color...", (->\n        @pickColor menu.title + "\ncolor:", @setColor, @, @color\n      ), "choose the World\'s\nbackground color"\n      if WorldMorph.MorphicPreferences is standardSettings\n        menu.addItem "touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders"\n      else\n        menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"\n      menu.addLine()\n    menu.addItem "run system tests",  "runSystemTests", "runs all the system tests"\n    menu.addLine()\n    if @isDevMode\n      menu.addItem "user mode...", "toggleDevMode", "disable developers\'\ncontext menus"\n    else\n      menu.addItem "development mode...", "toggleDevMode"\n    menu.addItem "about morphic.js...", "about"\n    menu\n  \n  userCreateMorph: ->\n    create = (aMorph) =>\n      aMorph.isDraggable = true\n      aMorph.pickUp @\n    menu = new MenuMorph(@, "make a morph")\n    menu.addItem "rectangle", ->\n      create new Morph()\n    \n    menu.addItem "box", ->\n      create new BoxMorph()\n    \n    menu.addItem "circle box", ->\n      create new CircleBoxMorph()\n    \n    menu.addLine()\n    menu.addItem "slider", ->\n      create new SliderMorph()\n    \n    menu.addItem "frame", ->\n      newMorph = new FrameMorph()\n      newMorph.setExtent new Point(350, 250)\n      create newMorph\n    \n    menu.addItem "scroll frame", ->\n      newMorph = new ScrollFrameMorph()\n      newMorph.contents.acceptsDrops = true\n      newMorph.contents.adjustBounds()\n      newMorph.setExtent new Point(350, 250)\n      create newMorph\n    \n    menu.addItem "handle", ->\n      create new HandleMorph()\n    \n    menu.addLine()\n    menu.addItem "string", ->\n      newMorph = new StringMorph("Hello, World!")\n      newMorph.isEditable = true\n      create newMorph\n    \n    menu.addItem "text", ->\n      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +\n        "traurig bin, ein Märchen aus uralten Zeiten, das " +\n        "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +\n        "und es dunkelt, und ruhig fließt der Rhein; der " +\n        "Gipfel des Berges funkelt im Abendsonnenschein. " +\n        "Die schönste Jungfrau sitzet dort oben wunderbar, " +\n        "ihr gold\'nes Geschmeide blitzet, sie kämmt ihr " +\n        "goldenes Haar, sie kämmt es mit goldenem Kamme, " +\n        "und singt ein Lied dabei; das hat eine wundersame, " +\n        "gewalt\'ge Melodei. Den Schiffer im kleinen " +\n        "Schiffe, ergreift es mit wildem Weh; er schaut " +\n        "nicht die Felsenriffe, er schaut nur hinauf in " +\n        "die Höh\'. Ich glaube, die Wellen verschlingen " +\n        "am Ende Schiffer und Kahn, und das hat mit ihrem " +\n        "Singen, die Loreley getan.")\n      newMorph.isEditable = true\n      newMorph.maxWidth = 300\n      newMorph.updateRendering()\n      create newMorph\n    \n    menu.addItem "speech bubble", ->\n      newMorph = new SpeechBubbleMorph("Hello, World!")\n      create newMorph\n    \n    menu.addLine()\n    menu.addItem "gray scale palette", ->\n      create new GrayPaletteMorph()\n    \n    menu.addItem "color palette", ->\n      create new ColorPaletteMorph()\n    \n    menu.addItem "color picker", ->\n      create new ColorPickerMorph()\n    \n    menu.addLine()\n    menu.addItem "sensor demo", ->\n      newMorph = new MouseSensorMorph()\n      newMorph.setColor new Color(230, 200, 100)\n      newMorph.edge = 35\n      newMorph.border = 15\n      newMorph.borderColor = new Color(200, 100, 50)\n      newMorph.alpha = 0.2\n      newMorph.setExtent new Point(100, 100)\n      create newMorph\n    \n    menu.addItem "animation demo", ->\n      foo = new BouncerMorph()\n      foo.setPosition new Point(50, 20)\n      foo.setExtent new Point(300, 200)\n      foo.alpha = 0.9\n      foo.speed = 3\n      bar = new BouncerMorph()\n      bar.setColor new Color(50, 50, 50)\n      bar.setPosition new Point(80, 80)\n      bar.setExtent new Point(80, 250)\n      bar.type = "horizontal"\n      bar.direction = "right"\n      bar.alpha = 0.9\n      bar.speed = 5\n      baz = new BouncerMorph()\n      baz.setColor new Color(20, 20, 20)\n      baz.setPosition new Point(90, 140)\n      baz.setExtent new Point(40, 30)\n      baz.type = "horizontal"\n      baz.direction = "right"\n      baz.speed = 3\n      garply = new BouncerMorph()\n      garply.setColor new Color(200, 20, 20)\n      garply.setPosition new Point(90, 140)\n      garply.setExtent new Point(20, 20)\n      garply.type = "vertical"\n      garply.direction = "up"\n      garply.speed = 8\n      fred = new BouncerMorph()\n      fred.setColor new Color(20, 200, 20)\n      fred.setPosition new Point(120, 140)\n      fred.setExtent new Point(20, 20)\n      fred.type = "vertical"\n      fred.direction = "down"\n      fred.speed = 4\n      bar.add garply\n      bar.add baz\n      foo.add fred\n      foo.add bar\n      create foo\n    \n    menu.addItem "pen", ->\n      create new PenMorph()\n    \n    menu.addLine()\n    menu.addItem "view all...", ->\n      newMorph = new MorphsListMorph()\n      create newMorph\n    \n    if @customMorphs\n      menu.addLine()\n      @customMorphs().forEach (morph) ->\n        menu.addItem morph.toString(), ->\n          create morph\n    \n    menu.popUpAtHand @\n  \n  toggleDevMode: ->\n    @isDevMode = not @isDevMode\n  \n  hideAll: ->\n    @children.forEach (child) ->\n      child.hide()\n  \n  showAllHiddens: ->\n    @forAllChildren (child) ->\n      child.show()  unless child.isVisible\n  \n  about: ->\n    versions = ""\n    for module of modules\n      if modules.hasOwnProperty(module)\n        versions += ("\n" + module + " (" + modules[module] + ")")  \n    if versions isnt ""\n      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  \n    @inform "morphic.js\n\n" +\n      "a lively Web GUI\ninspired by Squeak\n" +\n      morphicVersion +\n      "\n\original from Jens Mönig\'s (jens@moenig.org) morphic.js\n" +\n      "\n\nported and extended by Davide Della Casa\n" +\n      versions\n  \n  edit: (aStringOrTextMorph) ->\n    pos = getDocumentPositionOf(@worldCanvas)\n    return null  unless aStringOrTextMorph.isEditable\n    @caret.destroy()  if @caret\n    @lastEditedText.clearSelection()  if @lastEditedText\n    @caret = new CaretMorph(aStringOrTextMorph)\n    aStringOrTextMorph.parent.add @caret\n    @keyboardReceiver = @caret\n    @initVirtualKeyboard()\n    if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard\n      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"\n      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"\n      @virtualKeyboard.focus()\n    if WorldMorph.MorphicPreferences.useSliderForInput\n      if !aStringOrTextMorph.parentThatIsA(MenuMorph)\n        @slide aStringOrTextMorph\n  \n  slide: (aStringOrTextMorph) ->\n    # display a slider for numeric text entries\n    val = parseFloat(aStringOrTextMorph.text)\n    val = 0  if isNaN(val)\n    menu = new MenuMorph()\n    slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")\n    slider.alpha = 1\n    slider.color = new Color(225, 225, 225)\n    slider.button.color = menu.borderColor\n    slider.button.highlightColor = slider.button.color.copy()\n    slider.button.highlightColor.b += 100\n    slider.button.pressColor = slider.button.color.copy()\n    slider.button.pressColor.b += 150\n    slider.silentSetHeight WorldMorph.MorphicPreferences.scrollBarSize\n    slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10\n    slider.updateRendering()\n    slider.action = (num) ->\n      aStringOrTextMorph.changed()\n      aStringOrTextMorph.text = Math.round(num).toString()\n      aStringOrTextMorph.updateRendering()\n      aStringOrTextMorph.changed()\n      aStringOrTextMorph.escalateEvent(\n          \'reactToSliderEdit\',\n          aStringOrTextMorph\n      )\n    #\n    menu.items.push slider\n    menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))\n  \n  stopEditing: ->\n    if @caret\n      @lastEditedText = @caret.target\n      @caret.destroy()\n      @caret = null\n      @lastEditedText.escalateEvent "reactToEdit", @lastEditedText\n    @keyboardReceiver = null\n    if @virtualKeyboard\n      @virtualKeyboard.blur()\n      document.body.removeChild @virtualKeyboard\n      @virtualKeyboard = null\n    @worldCanvas.focus()\n  \n  toggleBlurredShadows: ->\n    useBlurredShadows = not useBlurredShadows\n  \n  togglePreferences: ->\n    if WorldMorph.MorphicPreferences is standardSettings\n      WorldMorph.MorphicPreferences = touchScreenSettings\n    else\n      WorldMorph.MorphicPreferences = standardSettings';
 
   return WorldMorph;
 
 })(FrameMorph);
+
+BlinkerMorph = (function(_super) {
+  __extends(BlinkerMorph, _super);
+
+  function BlinkerMorph(fps) {
+    this.fps = fps != null ? fps : 2;
+    BlinkerMorph.__super__.constructor.call(this);
+    this.color = new Color(0, 0, 0);
+    this.updateRendering();
+  }
+
+  BlinkerMorph.prototype.step = function() {
+    return this.toggleVisibility();
+  };
+
+  BlinkerMorph.coffeeScriptSourceOfThisClass = '# BlinkerMorph ////////////////////////////////////////////////////////\n\n# can be used for text caret\n\nclass BlinkerMorph extends Morph\n  constructor: (@fps = 2) ->\n    super()\n    @color = new Color(0, 0, 0)\n    @updateRendering()\n  \n  # BlinkerMorph stepping:\n  step: ->\n    @toggleVisibility()';
+
+  return BlinkerMorph;
+
+})(Morph);
+
+CaretMorph = (function(_super) {
+  __extends(CaretMorph, _super);
+
+  CaretMorph.prototype.keyDownEventUsed = false;
+
+  CaretMorph.prototype.target = null;
+
+  CaretMorph.prototype.originalContents = null;
+
+  CaretMorph.prototype.slot = null;
+
+  CaretMorph.prototype.viewPadding = 1;
+
+  function CaretMorph(target) {
+    var ls;
+
+    this.target = target;
+    this.originalContents = this.target.text;
+    this.originalAlignment = this.target.alignment;
+    this.slot = this.target.text.length;
+    CaretMorph.__super__.constructor.call(this);
+    ls = fontHeight(this.target.fontSize);
+    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
+    this.updateRendering();
+    this.image.getContext("2d").font = this.target.font();
+    if (this.target instanceof TextMorph && (this.target.alignment !== 'left')) {
+      this.target.setAlignmentToLeft();
+    }
+    this.gotoSlot(this.slot);
+  }
+
+  CaretMorph.prototype.processKeyPress = function(event) {
+    if (this.keyDownEventUsed) {
+      this.keyDownEventUsed = false;
+      return null;
+    }
+    if ((event.keyCode === 40) || event.charCode === 40) {
+      this.insert("(");
+      return null;
+    }
+    if ((event.keyCode === 37) || event.charCode === 37) {
+      this.insert("%");
+      return null;
+    }
+    if (event.keyCode) {
+      if (event.ctrlKey) {
+        this.ctrl(event.keyCode);
+      } else if (event.metaKey) {
+        this.cmd(event.keyCode);
+      } else {
+        this.insert(String.fromCharCode(event.keyCode), event.shiftKey);
+      }
+    } else if (event.charCode) {
+      if (event.ctrlKey) {
+        this.ctrl(event.charCode);
+      } else if (event.metaKey) {
+        this.cmd(event.keyCode);
+      } else {
+        this.insert(String.fromCharCode(event.charCode), event.shiftKey);
+      }
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CaretMorph.prototype.processKeyDown = function(event) {
+    var shift;
+
+    shift = event.shiftKey;
+    this.keyDownEventUsed = false;
+    if (event.ctrlKey) {
+      this.ctrl(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    } else if (event.metaKey) {
+      this.cmd(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    }
+    switch (event.keyCode) {
+      case 37:
+        this.goLeft(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 39:
+        this.goRight(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 38:
+        this.goUp(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 40:
+        this.goDown(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 36:
+        this.goHome(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 35:
+        this.goEnd(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 46:
+        this.deleteRight();
+        this.keyDownEventUsed = true;
+        break;
+      case 8:
+        this.deleteLeft();
+        this.keyDownEventUsed = true;
+        break;
+      case 13:
+        if (this.target.constructor.name === "StringMorph") {
+          this.accept();
+        } else {
+          this.insert("\n");
+        }
+        this.keyDownEventUsed = true;
+        break;
+      case 27:
+        this.cancel();
+        this.keyDownEventUsed = true;
+        break;
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CaretMorph.prototype.gotoSlot = function(slot) {
+    var left, length, pos, right;
+
+    length = this.target.text.length;
+    pos = this.target.slotPosition(slot);
+    this.slot = (slot < 0 ? 0 : (slot > length ? length : slot));
+    if (this.parent && this.target.isScrollable) {
+      right = this.parent.right() - this.viewPadding;
+      left = this.parent.left() + this.viewPadding;
+      if (pos.x > right) {
+        this.target.setLeft(this.target.left() + right - pos.x);
+        pos.x = right;
+      }
+      if (pos.x < left) {
+        left = Math.min(this.parent.left(), left);
+        this.target.setLeft(this.target.left() + left - pos.x);
+        pos.x = left;
+      }
+      if (this.target.right() < right && right - this.target.width() < left) {
+        pos.x += right - this.target.right();
+        this.target.setRight(right);
+      }
+    }
+    this.show();
+    this.setPosition(pos);
+    if (this.parent && this.parent.parent instanceof ScrollFrameMorph && this.target.isScrollable) {
+      return this.parent.parent.scrollCaretIntoView(this);
+    }
+  };
+
+  CaretMorph.prototype.goLeft = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.slot - 1);
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goRight = function(shift, howMany) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.slot + (howMany || 1));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goUp = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.upFrom(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goDown = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.downFrom(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goHome = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.startOfLine(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goEnd = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.endOfLine(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.gotoPos = function(aPoint) {
+    this.gotoSlot(this.target.slotAt(aPoint));
+    return this.show();
+  };
+
+  CaretMorph.prototype.updateSelection = function(shift) {
+    if (shift) {
+      if (!this.target.endMark && !this.target.startMark) {
+        this.target.startMark = this.slot;
+        return this.target.endMark = this.slot;
+      } else if (this.target.endMark !== this.slot) {
+        this.target.endMark = this.slot;
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } else {
+      return this.target.clearSelection();
+    }
+  };
+
+  CaretMorph.prototype.accept = function() {
+    var world;
+
+    world = this.root();
+    if (world) {
+      world.stopEditing();
+    }
+    return this.escalateEvent("accept", null);
+  };
+
+  CaretMorph.prototype.cancel = function() {
+    var world;
+
+    world = this.root();
+    this.undo();
+    if (world) {
+      world.stopEditing();
+    }
+    return this.escalateEvent('cancel', null);
+  };
+
+  CaretMorph.prototype.undo = function() {
+    this.target.text = this.originalContents;
+    this.target.changed();
+    this.target.updateRendering();
+    this.target.changed();
+    return this.gotoSlot(0);
+  };
+
+  CaretMorph.prototype.insert = function(aChar, shiftKey) {
+    var text;
+
+    if (aChar === "\t") {
+      this.target.escalateEvent('reactToEdit', this.target);
+      if (shiftKey) {
+        return this.target.backTab(this.target);
+      }
+      return this.target.tab(this.target);
+    }
+    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
+      if (this.target.selection() !== "") {
+        this.gotoSlot(this.target.selectionStartSlot());
+        this.target.deleteSelection();
+      }
+      text = this.target.text;
+      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
+      this.target.text = text;
+      this.target.updateRendering();
+      this.target.changed();
+      return this.goRight(false, aChar.length);
+    }
+  };
+
+  CaretMorph.prototype.ctrl = function(aChar) {
+    if ((aChar === 97) || (aChar === 65)) {
+      return this.target.selectAll();
+    } else if (aChar === 90) {
+      return this.undo();
+    } else if (aChar === 123) {
+      return this.insert("{");
+    } else if (aChar === 125) {
+      return this.insert("}");
+    } else if (aChar === 91) {
+      return this.insert("[");
+    } else if (aChar === 93) {
+      return this.insert("]");
+    } else if (aChar === 64) {
+      return this.insert("@");
+    }
+  };
+
+  CaretMorph.prototype.cmd = function(aChar) {
+    if (aChar === 65) {
+      return this.target.selectAll();
+    } else if (aChar === 90) {
+      return this.undo();
+    }
+  };
+
+  CaretMorph.prototype.deleteRight = function() {
+    var text;
+
+    if (this.target.selection() !== "") {
+      this.gotoSlot(this.target.selectionStartSlot());
+      return this.target.deleteSelection();
+    } else {
+      text = this.target.text;
+      this.target.changed();
+      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
+      this.target.text = text;
+      return this.target.updateRendering();
+    }
+  };
+
+  CaretMorph.prototype.deleteLeft = function() {
+    var text;
+
+    if (this.target.selection()) {
+      this.gotoSlot(this.target.selectionStartSlot());
+      return this.target.deleteSelection();
+    }
+    text = this.target.text;
+    this.target.changed();
+    this.target.text = text.substring(0, this.slot - 1) + text.substr(this.slot);
+    this.target.updateRendering();
+    return this.goLeft();
+  };
+
+  CaretMorph.prototype.destroy = function() {
+    if (this.target.alignment !== this.originalAlignment) {
+      this.target.alignment = this.originalAlignment;
+      this.target.updateRendering();
+      this.target.changed();
+    }
+    return CaretMorph.__super__.destroy.apply(this, arguments);
+  };
+
+  CaretMorph.prototype.inspectKeyEvent = function(event) {
+    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
+  };
+
+  CaretMorph.coffeeScriptSourceOfThisClass = '# CaretMorph /////////////////////////////////////////////////////////\n\n# I am a String/Text editing widget\n\nclass CaretMorph extends BlinkerMorph\n\n  keyDownEventUsed: false\n  target: null\n  originalContents: null\n  slot: null\n  viewPadding: 1\n\n  constructor: (@target) ->\n    # additional properties:\n    @originalContents = @target.text\n    @originalAlignment = @target.alignment\n    @slot = @target.text.length\n    super()\n    ls = fontHeight(@target.fontSize)\n    @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)\n    @updateRendering()\n    @image.getContext("2d").font = @target.font()\n    if (@target instanceof TextMorph && (@target.alignment != \'left\'))\n      @target.setAlignmentToLeft()\n    @gotoSlot @slot\n  \n  # CaretMorph event processing:\n  processKeyPress: (event) ->\n    # @inspectKeyEvent event\n    if @keyDownEventUsed\n      @keyDownEventUsed = false\n      return null\n    if (event.keyCode is 40) or event.charCode is 40\n      @insert "("\n      return null\n    if (event.keyCode is 37) or event.charCode is 37\n      @insert "%"\n      return null\n    if event.keyCode # Opera doesn\'t support charCode\n      if event.ctrlKey\n        @ctrl event.keyCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.keyCode), event.shiftKey\n    else if event.charCode # all other browsers\n      if event.ctrlKey\n        @ctrl event.charCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.charCode), event.shiftKey\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  processKeyDown: (event) ->\n    # this.inspectKeyEvent(event);\n    shift = event.shiftKey\n    @keyDownEventUsed = false\n    if event.ctrlKey\n      @ctrl event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    else if event.metaKey\n      @cmd event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    switch event.keyCode\n      when 37\n        @goLeft(shift)\n        @keyDownEventUsed = true\n      when 39\n        @goRight(shift)\n        @keyDownEventUsed = true\n      when 38\n        @goUp(shift)\n        @keyDownEventUsed = true\n      when 40\n        @goDown(shift)\n        @keyDownEventUsed = true\n      when 36\n        @goHome(shift)\n        @keyDownEventUsed = true\n      when 35\n        @goEnd(shift)\n        @keyDownEventUsed = true\n      when 46\n        @deleteRight()\n        @keyDownEventUsed = true\n      when 8\n        @deleteLeft()\n        @keyDownEventUsed = true\n      when 13\n        # we can\'t check the class using instanceOf\n        # because TextMorphs are instances of StringMorphs\n        # but they want the enter to insert a carriage return.\n        if @target.constructor.name == "StringMorph"\n          @accept()\n        else\n          @insert "\n"\n        @keyDownEventUsed = true\n      when 27\n        @cancel()\n        @keyDownEventUsed = true\n      else\n    # this.inspectKeyEvent(event);\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  \n  # CaretMorph navigation - simple version\n  #gotoSlot: (newSlot) ->\n  #  @setPosition @target.slotPosition(newSlot)\n  #  @slot = Math.max(newSlot, 0)\n\n  gotoSlot: (slot) ->\n    length = @target.text.length\n    pos = @target.slotPosition(slot)\n    @slot = (if slot < 0 then 0 else (if slot > length then length else slot))\n    if @parent and @target.isScrollable\n      right = @parent.right() - @viewPadding\n      left = @parent.left() + @viewPadding\n      if pos.x > right\n        @target.setLeft @target.left() + right - pos.x\n        pos.x = right\n      if pos.x < left\n        left = Math.min(@parent.left(), left)\n        @target.setLeft @target.left() + left - pos.x\n        pos.x = left\n      if @target.right() < right and right - @target.width() < left\n        pos.x += right - @target.right()\n        @target.setRight right\n    @show()\n    @setPosition pos\n\n    if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable\n      @parent.parent.scrollCaretIntoView @\n  \n  goLeft: (shift) ->\n    @updateSelection shift\n    @gotoSlot @slot - 1\n    @updateSelection shift\n  \n  goRight: (shift, howMany) ->\n    @updateSelection shift\n    @gotoSlot @slot + (howMany || 1)\n    @updateSelection shift\n  \n  goUp: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.upFrom(@slot)\n    @updateSelection shift\n  \n  goDown: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.downFrom(@slot)\n    @updateSelection shift\n  \n  goHome: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.startOfLine(@slot)\n    @updateSelection shift\n  \n  goEnd: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.endOfLine(@slot)\n    @updateSelection shift\n  \n  gotoPos: (aPoint) ->\n    @gotoSlot @target.slotAt(aPoint)\n    @show()\n\n  updateSelection: (shift) ->\n    if shift\n      if not @target.endMark and not @target.startMark\n        @target.startMark = @slot\n        @target.endMark = @slot\n      else if @target.endMark isnt @slot\n        @target.endMark = @slot\n        @target.updateRendering()\n        @target.changed()\n    else\n      @target.clearSelection()  \n  \n  # CaretMorph editing:\n  accept: ->\n    world = @root()\n    world.stopEditing()  if world\n    @escalateEvent "accept", null\n  \n  cancel: ->\n    world = @root()\n    @undo()\n    world.stopEditing()  if world\n    @escalateEvent \'cancel\', null\n    \n  undo: ->\n    @target.text = @originalContents\n    @target.changed()\n    @target.updateRendering()\n    @target.changed()\n    @gotoSlot 0\n  \n  insert: (aChar, shiftKey) ->\n    if aChar is "\t"\n      @target.escalateEvent \'reactToEdit\', @target\n      if shiftKey\n        return @target.backTab(@target);\n      return @target.tab(@target)\n    if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)\n      if @target.selection() isnt ""\n        @gotoSlot @target.selectionStartSlot()\n        @target.deleteSelection()\n      text = @target.text\n      text = text.slice(0, @slot) + aChar + text.slice(@slot)\n      @target.text = text\n      @target.updateRendering()\n      @target.changed()\n      @goRight false, aChar.length\n  \n  ctrl: (aChar) ->\n    if (aChar is 97) or (aChar is 65)\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n    else if aChar is 123\n      @insert "{"\n    else if aChar is 125\n      @insert "}"\n    else if aChar is 91\n      @insert "["\n    else if aChar is 93\n      @insert "]"\n    else if aChar is 64\n      @insert "@"\n  \n  cmd: (aChar) ->\n    if aChar is 65\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n  \n  deleteRight: ->\n    if @target.selection() isnt ""\n      @gotoSlot @target.selectionStartSlot()\n      @target.deleteSelection()\n    else\n      text = @target.text\n      @target.changed()\n      text = text.slice(0, @slot) + text.slice(@slot + 1)\n      @target.text = text\n      @target.updateRendering()\n  \n  deleteLeft: ->\n    if @target.selection()\n      @gotoSlot @target.selectionStartSlot()\n      return @target.deleteSelection()\n    text = @target.text\n    @target.changed()\n    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)\n    @target.updateRendering()\n    @goLeft()\n\n  # CaretMorph destroying:\n  destroy: ->\n    if @target.alignment isnt @originalAlignment\n      @target.alignment = @originalAlignment\n      @target.updateRendering()\n      @target.changed()\n    super  \n  \n  # CaretMorph utilities:\n  inspectKeyEvent: (event) ->\n    # private\n    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()';
+
+  return CaretMorph;
+
+})(BlinkerMorph);
+
+ColorPickerMorph = (function(_super) {
+  __extends(ColorPickerMorph, _super);
+
+  ColorPickerMorph.prototype.choice = null;
+
+  function ColorPickerMorph(defaultColor) {
+    this.choice = defaultColor || new Color(255, 255, 255);
+    ColorPickerMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.silentSetExtent(new Point(80, 80));
+    this.updateRendering();
+  }
+
+  ColorPickerMorph.prototype.updateRendering = function() {
+    ColorPickerMorph.__super__.updateRendering.call(this);
+    return this.buildSubmorphs();
+  };
+
+  ColorPickerMorph.prototype.buildSubmorphs = function() {
+    var cpal, gpal, x, y;
+
+    this.children.forEach(function(child) {
+      return child.destroy();
+    });
+    this.children = [];
+    this.feedback = new Morph();
+    this.feedback.color = this.choice;
+    this.feedback.setExtent(new Point(20, 20));
+    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
+    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
+    cpal.setPosition(this.bounds.origin);
+    this.add(cpal);
+    gpal.setPosition(cpal.bottomLeft());
+    this.add(gpal);
+    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
+    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
+    this.feedback.setPosition(new Point(x, y));
+    return this.add(this.feedback);
+  };
+
+  ColorPickerMorph.prototype.getChoice = function() {
+    return this.feedback.color;
+  };
+
+  ColorPickerMorph.prototype.rootForGrab = function() {
+    return this;
+  };
+
+  ColorPickerMorph.coffeeScriptSourceOfThisClass = '# ColorPickerMorph ///////////////////////////////////////////////////\n\nclass ColorPickerMorph extends Morph\n\n  choice: null\n\n  constructor: (defaultColor) ->\n    @choice = defaultColor or new Color(255, 255, 255)\n    super()\n    @color = new Color(255, 255, 255)\n    @silentSetExtent new Point(80, 80)\n    @updateRendering()\n  \n  updateRendering: ->\n    super()\n    @buildSubmorphs()\n  \n  buildSubmorphs: ->\n    @children.forEach (child) ->\n      child.destroy()\n    @children = []\n    @feedback = new Morph()\n    @feedback.color = @choice\n    @feedback.setExtent new Point(20, 20)\n    cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))\n    gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))\n    cpal.setPosition @bounds.origin\n    @add cpal\n    gpal.setPosition cpal.bottomLeft()\n    @add gpal\n    x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))\n    y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)\n    @feedback.setPosition new Point(x, y)\n    @add @feedback\n  \n  getChoice: ->\n    @feedback.color\n  \n  rootForGrab: ->\n    @';
+
+  return ColorPickerMorph;
+
+})(Morph);
+
+ScrollFrameMorph = (function(_super) {
+  __extends(ScrollFrameMorph, _super);
+
+  ScrollFrameMorph.prototype.autoScrollTrigger = null;
+
+  ScrollFrameMorph.prototype.hasVelocity = true;
+
+  ScrollFrameMorph.prototype.padding = 0;
+
+  ScrollFrameMorph.prototype.growth = 0;
+
+  ScrollFrameMorph.prototype.isTextLineWrapping = false;
+
+  ScrollFrameMorph.prototype.isScrollingByDragging = true;
+
+  ScrollFrameMorph.prototype.scrollBarSize = null;
+
+  ScrollFrameMorph.prototype.contents = null;
+
+  ScrollFrameMorph.prototype.vBar = null;
+
+  ScrollFrameMorph.prototype.hBar = null;
+
+  function ScrollFrameMorph(contents, scrollBarSize, sliderColor) {
+    var _this = this;
+
+    this.alpha = 0;
+    ScrollFrameMorph.__super__.constructor.call(this);
+    this.scrollBarSize = scrollBarSize || WorldMorph.MorphicPreferences.scrollBarSize;
+    this.contents = contents || new FrameMorph(this);
+    this.add(this.contents);
+    this.color = this.contents.color;
+    this.alpha = this.contents.alpha;
+    this.updateRendering = this.contents.updateRendering;
+    this.hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor);
+    this.hBar.setHeight(this.scrollBarSize);
+    this.hBar.action = function(num) {
+      return _this.contents.setPosition(new Point(_this.left() - num, _this.contents.position().y));
+    };
+    this.hBar.isDraggable = false;
+    this.add(this.hBar);
+    this.vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor);
+    this.vBar.setWidth(this.scrollBarSize);
+    this.vBar.action = function(num) {
+      return _this.contents.setPosition(new Point(_this.contents.position().x, _this.top() - num));
+    };
+    this.vBar.isDraggable = false;
+    this.add(this.vBar);
+  }
+
+  ScrollFrameMorph.prototype.setColor = function(aColor) {
+    this.color = aColor;
+    return this.contents.setColor(aColor);
+  };
+
+  ScrollFrameMorph.prototype.setAlphaScaled = function(alpha) {
+    this.alpha = this.calculateAlphaScaled(alpha);
+    return this.contents.setAlphaScaled(alpha);
+  };
+
+  ScrollFrameMorph.prototype.adjustScrollBars = function() {
+    var hWidth, vHeight;
+
+    hWidth = this.width() - this.scrollBarSize;
+    vHeight = this.height() - this.scrollBarSize;
+    this.changed();
+    if (this.contents.width() > this.width() + WorldMorph.MorphicPreferences.scrollBarSize) {
+      this.hBar.show();
+      if (this.hBar.width() !== hWidth) {
+        this.hBar.setWidth(hWidth);
+      }
+      this.hBar.setPosition(new Point(this.left(), this.bottom() - this.hBar.height()));
+      this.hBar.start = 0;
+      this.hBar.stop = this.contents.width() - this.width();
+      this.hBar.size = this.width() / this.contents.width() * this.hBar.stop;
+      this.hBar.value = this.left() - this.contents.left();
+      this.hBar.updateRendering();
+    } else {
+      this.hBar.hide();
+    }
+    if (this.contents.height() > this.height() + this.scrollBarSize) {
+      this.vBar.show();
+      if (this.vBar.height() !== vHeight) {
+        this.vBar.setHeight(vHeight);
+      }
+      this.vBar.setPosition(new Point(this.right() - this.vBar.width(), this.top()));
+      this.vBar.start = 0;
+      this.vBar.stop = this.contents.height() - this.height();
+      this.vBar.size = this.height() / this.contents.height() * this.vBar.stop;
+      this.vBar.value = this.top() - this.contents.top();
+      return this.vBar.updateRendering();
+    } else {
+      return this.vBar.hide();
+    }
+  };
+
+  ScrollFrameMorph.prototype.addContents = function(aMorph) {
+    this.contents.add(aMorph);
+    return this.contents.adjustBounds();
+  };
+
+  ScrollFrameMorph.prototype.setContents = function(aMorph) {
+    this.contents.children.forEach(function(m) {
+      return m.destroy();
+    });
+    this.contents.children = [];
+    aMorph.setPosition(this.position().add(this.padding + 2));
+    return this.addContents(aMorph);
+  };
+
+  ScrollFrameMorph.prototype.setExtent = function(aPoint) {
+    if (this.isTextLineWrapping) {
+      this.contents.setPosition(this.position().copy());
+    }
+    ScrollFrameMorph.__super__.setExtent.call(this, aPoint);
+    return this.contents.adjustBounds();
+  };
+
+  ScrollFrameMorph.prototype.scrollX = function(steps) {
+    var cl, cw, l, newX, r;
+
+    cl = this.contents.left();
+    l = this.left();
+    cw = this.contents.width();
+    r = this.right();
+    newX = cl + steps;
+    if (newX > l) {
+      newX = l;
+    }
+    if (newX + cw < r) {
+      newX = r - cw;
+    }
+    if (newX !== cl) {
+      return this.contents.setLeft(newX);
+    }
+  };
+
+  ScrollFrameMorph.prototype.scrollY = function(steps) {
+    var b, ch, ct, newY, t;
+
+    ct = this.contents.top();
+    t = this.top();
+    ch = this.contents.height();
+    b = this.bottom();
+    newY = ct + steps;
+    if (newY > t) {
+      newY = t;
+    }
+    if (newY + ch < b) {
+      newY = b - ch;
+    }
+    if (newY !== ct) {
+      return this.contents.setTop(newY);
+    }
+  };
+
+  ScrollFrameMorph.prototype.mouseDownLeft = function(pos) {
+    var deltaX, deltaY, friction, oldPos, world,
+      _this = this;
+
+    if (!this.isScrollingByDragging) {
+      return null;
+    }
+    world = this.root();
+    oldPos = pos;
+    deltaX = 0;
+    deltaY = 0;
+    friction = 0.8;
+    return this.step = function() {
+      var newPos;
+
+      if (world.hand.mouseButton && (!world.hand.children.length) && (_this.bounds.containsPoint(world.hand.position()))) {
+        newPos = world.hand.bounds.origin;
+        deltaX = newPos.x - oldPos.x;
+        if (deltaX !== 0) {
+          _this.scrollX(deltaX);
+        }
+        deltaY = newPos.y - oldPos.y;
+        if (deltaY !== 0) {
+          _this.scrollY(deltaY);
+        }
+        oldPos = newPos;
+      } else {
+        if (!_this.hasVelocity) {
+          _this.step = noOperation;
+        } else {
+          if ((Math.abs(deltaX) < 0.5) && (Math.abs(deltaY) < 0.5)) {
+            _this.step = noOperation;
+          } else {
+            deltaX = deltaX * friction;
+            _this.scrollX(Math.round(deltaX));
+            deltaY = deltaY * friction;
+            _this.scrollY(Math.round(deltaY));
+          }
+        }
+      }
+      return _this.adjustScrollBars();
+    };
+  };
+
+  ScrollFrameMorph.prototype.startAutoScrolling = function() {
+    var hand, inset, world,
+      _this = this;
+
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
+    world = this.world();
+    if (!world) {
+      return null;
+    }
+    hand = world.hand;
+    if (!this.autoScrollTrigger) {
+      this.autoScrollTrigger = Date.now();
+    }
+    return this.step = function() {
+      var inner, pos;
+
+      pos = hand.bounds.origin;
+      inner = _this.bounds.insetBy(inset);
+      if ((_this.bounds.containsPoint(pos)) && (!(inner.containsPoint(pos))) && hand.children.length) {
+        return _this.autoScroll(pos);
+      } else {
+        _this.step = noOperation;
+        return _this.autoScrollTrigger = null;
+      }
+    };
+  };
+
+  ScrollFrameMorph.prototype.autoScroll = function(pos) {
+    var area, inset;
+
+    if (Date.now() - this.autoScrollTrigger < 500) {
+      return null;
+    }
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
+    area = this.topLeft().extent(new Point(this.width(), inset));
+    if (area.containsPoint(pos)) {
+      this.scrollY(inset - (pos.y - this.top()));
+    }
+    area = this.topLeft().extent(new Point(inset, this.height()));
+    if (area.containsPoint(pos)) {
+      this.scrollX(inset - (pos.x - this.left()));
+    }
+    area = (new Point(this.right() - inset, this.top())).extent(new Point(inset, this.height()));
+    if (area.containsPoint(pos)) {
+      this.scrollX(-(inset - (this.right() - pos.x)));
+    }
+    area = (new Point(this.left(), this.bottom() - inset)).extent(new Point(this.width(), inset));
+    if (area.containsPoint(pos)) {
+      this.scrollY(-(inset - (this.bottom() - pos.y)));
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.scrollCaretIntoView = function(morph) {
+    var fb, ft, offset, txt;
+
+    txt = morph.target;
+    offset = txt.position().subtract(this.contents.position());
+    ft = this.top() + this.padding;
+    fb = this.bottom() - this.padding;
+    this.contents.setExtent(txt.extent().add(offset).add(this.padding));
+    if (morph.top() < ft) {
+      this.contents.setTop(this.contents.top() + ft - morph.top());
+      morph.setTop(ft);
+    } else if (morph.bottom() > fb) {
+      this.contents.setBottom(this.contents.bottom() + fb - morph.bottom());
+      morph.setBottom(fb);
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.mouseScroll = function(y, x) {
+    if (y) {
+      this.scrollY(y * WorldMorph.MorphicPreferences.mouseScrollAmount);
+    }
+    if (x) {
+      this.scrollX(x * WorldMorph.MorphicPreferences.mouseScrollAmount);
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = ScrollFrameMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.contents && dict[this.contents]) {
+      c.contents = dict[this.contents];
+    }
+    if (c.hBar && dict[this.hBar]) {
+      c.hBar = dict[this.hBar];
+      c.hBar.action = function(num) {
+        return c.contents.setPosition(new Point(c.left() - num, c.contents.position().y));
+      };
+    }
+    if (c.vBar && dict[this.vBar]) {
+      c.vBar = dict[this.vBar];
+      c.vBar.action = function(num) {
+        return c.contents.setPosition(new Point(c.contents.position().x, c.top() - num));
+      };
+    }
+    return c;
+  };
+
+  ScrollFrameMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = ScrollFrameMorph.__super__.developersMenu.call(this);
+    if (this.isTextLineWrapping) {
+      menu.addItem("auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff");
+    } else {
+      menu.addItem("auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping");
+    }
+    return menu;
+  };
+
+  ScrollFrameMorph.prototype.toggleTextLineWrapping = function() {
+    return this.isTextLineWrapping = !this.isTextLineWrapping;
+  };
+
+  ScrollFrameMorph.coffeeScriptSourceOfThisClass = '# ScrollFrameMorph ////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass ScrollFrameMorph extends FrameMorph\n\n  autoScrollTrigger: null\n  hasVelocity: true # dto.\n  padding: 0 # around the scrollable area\n  growth: 0 # pixels or Point to grow right/left when near edge\n  isTextLineWrapping: false\n  isScrollingByDragging: true\n  scrollBarSize: null\n  contents: null\n  vBar: null\n  hBar: null\n\n  constructor: (contents, scrollBarSize, sliderColor) ->\n    # super() paints the scrollframe, which we don\'t want,\n    # so we set 0 opacity here.\n    @alpha = 0\n    super()\n    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize\n    @contents = contents or new FrameMorph(@)\n    @add @contents\n\n    # the scrollFrame is never going to paint itself,\n    # but its values are going to mimick the values of the\n    # contained frame\n    @color = @contents.color\n    @alpha = @contents.alpha\n    # the scrollFrame is a container, it redirects most\n    # commands to the "contained" frame\n    @updateRendering = @contents.updateRendering\n    #@setColor = @contents.setColor\n    #@setAlphaScaled = @contents.setAlphaScaled\n\n    @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)\n    @hBar.setHeight @scrollBarSize\n    @hBar.action = (num) =>\n      @contents.setPosition new Point(@left() - num, @contents.position().y)\n    @hBar.isDraggable = false\n    @add @hBar\n\n    @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)\n    @vBar.setWidth @scrollBarSize\n    @vBar.action = (num) =>\n      @contents.setPosition new Point(@contents.position().x, @top() - num)\n    @vBar.isDraggable = false\n    @add @vBar\n\n\n  setColor: (aColor) ->\n    # update the color of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the color so that its value is the same as the\n    # contained frame\n    @color = aColor\n    @contents.setColor(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # update the alpha of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the alpha so that its value is the same as the\n    # contained frame\n    @alpha = @calculateAlphaScaled(alpha)\n    @contents.setAlphaScaled(alpha)\n\n  adjustScrollBars: ->\n    hWidth = @width() - @scrollBarSize\n    vHeight = @height() - @scrollBarSize\n    @changed()\n    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize\n      @hBar.show()\n      @hBar.setWidth hWidth  if @hBar.width() isnt hWidth\n      @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())\n      @hBar.start = 0\n      @hBar.stop = @contents.width() - @width()\n      @hBar.size = @width() / @contents.width() * @hBar.stop\n      @hBar.value = @left() - @contents.left()\n      @hBar.updateRendering()\n    else\n      @hBar.hide()\n    if @contents.height() > @height() + @scrollBarSize\n      @vBar.show()\n      @vBar.setHeight vHeight  if @vBar.height() isnt vHeight\n      @vBar.setPosition new Point(@right() - @vBar.width(), @top())\n      @vBar.start = 0\n      @vBar.stop = @contents.height() - @height()\n      @vBar.size = @height() / @contents.height() * @vBar.stop\n      @vBar.value = @top() - @contents.top()\n      @vBar.updateRendering()\n    else\n      @vBar.hide()\n  \n  addContents: (aMorph) ->\n    @contents.add aMorph\n    @contents.adjustBounds()\n  \n  setContents: (aMorph) ->\n    @contents.children.forEach (m) ->\n      m.destroy()\n    #\n    @contents.children = []\n    aMorph.setPosition @position().add(@padding + 2)\n    @addContents aMorph\n  \n  setExtent: (aPoint) ->\n    @contents.setPosition @position().copy()  if @isTextLineWrapping\n    super aPoint\n    @contents.adjustBounds()\n  \n  \n  # ScrollFrameMorph scrolling by dragging:\n  scrollX: (steps) ->\n    cl = @contents.left()\n    l = @left()\n    cw = @contents.width()\n    r = @right()\n    newX = cl + steps\n    newX = l  if newX > l\n    newX = r - cw  if newX + cw < r\n    @contents.setLeft newX  if newX isnt cl\n  \n  scrollY: (steps) ->\n    ct = @contents.top()\n    t = @top()\n    ch = @contents.height()\n    b = @bottom()\n    newY = ct + steps\n    newY = t  if newY > t\n    newY = b - ch  if newY + ch < b\n    @contents.setTop newY  if newY isnt ct\n  \n  mouseDownLeft: (pos) ->\n    return null  unless @isScrollingByDragging\n    world = @root()\n    oldPos = pos\n    deltaX = 0\n    deltaY = 0\n    friction = 0.8\n    @step = =>\n      if world.hand.mouseButton and\n        (!world.hand.children.length) and\n        (@bounds.containsPoint(world.hand.position()))\n          newPos = world.hand.bounds.origin\n          deltaX = newPos.x - oldPos.x\n          @scrollX deltaX  if deltaX isnt 0\n          deltaY = newPos.y - oldPos.y\n          @scrollY deltaY  if deltaY isnt 0\n          oldPos = newPos\n      else\n        unless @hasVelocity\n          @step = noOperation\n        else\n          if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)\n            @step = noOperation\n          else\n            deltaX = deltaX * friction\n            @scrollX Math.round(deltaX)\n            deltaY = deltaY * friction\n            @scrollY Math.round(deltaY)\n      @adjustScrollBars()\n  \n  startAutoScrolling: ->\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    world = @world()\n    return null  unless world\n    hand = world.hand\n    @autoScrollTrigger = Date.now()  unless @autoScrollTrigger\n    @step = =>\n      pos = hand.bounds.origin\n      inner = @bounds.insetBy(inset)\n      if (@bounds.containsPoint(pos)) and\n        (not (inner.containsPoint(pos))) and\n        (hand.children.length)\n          @autoScroll pos\n      else\n        @step = noOperation\n        @autoScrollTrigger = null\n  \n  autoScroll: (pos) ->\n    return null  if Date.now() - @autoScrollTrigger < 500\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    area = @topLeft().extent(new Point(@width(), inset))\n    @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)\n    area = @topLeft().extent(new Point(inset, @height()))\n    @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)\n    area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))\n    @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)\n    area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))\n    @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)\n    @adjustScrollBars()  \n  \n  # ScrollFrameMorph scrolling by editing text:\n  scrollCaretIntoView: (morph) ->\n    txt = morph.target\n    offset = txt.position().subtract(@contents.position())\n    ft = @top() + @padding\n    fb = @bottom() - @padding\n    @contents.setExtent txt.extent().add(offset).add(@padding)\n    if morph.top() < ft\n      @contents.setTop @contents.top() + ft - morph.top()\n      morph.setTop ft\n    else if morph.bottom() > fb\n      @contents.setBottom @contents.bottom() + fb - morph.bottom()\n      morph.setBottom fb\n    @adjustScrollBars()\n\n  # ScrollFrameMorph events:\n  mouseScroll: (y, x) ->\n    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y\n    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x\n    @adjustScrollBars()\n  \n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.contents = (dict[@contents])  if c.contents and dict[@contents]\n    if c.hBar and dict[@hBar]\n      c.hBar = (dict[@hBar])\n      c.hBar.action = (num) ->\n        c.contents.setPosition new Point(c.left() - num, c.contents.position().y)\n    if c.vBar and dict[@vBar]\n      c.vBar = (dict[@vBar])\n      c.vBar.action = (num) ->\n        c.contents.setPosition new Point(c.contents.position().x, c.top() - num)\n    c\n  \n  developersMenu: ->\n    menu = super()\n    if @isTextLineWrapping\n      menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"\n    else\n      menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"\n    menu\n  \n  toggleTextLineWrapping: ->\n    @isTextLineWrapping = not @isTextLineWrapping';
+
+  return ScrollFrameMorph;
+
+})(FrameMorph);
+
+ListMorph = (function(_super) {
+  __extends(ListMorph, _super);
+
+  ListMorph.prototype.elements = null;
+
+  ListMorph.prototype.labelGetter = null;
+
+  ListMorph.prototype.format = null;
+
+  ListMorph.prototype.listContents = null;
+
+  ListMorph.prototype.selected = null;
+
+  ListMorph.prototype.active = null;
+
+  ListMorph.prototype.action = null;
+
+  function ListMorph(elements, labelGetter, format) {
+    this.elements = elements != null ? elements : [];
+    this.format = format != null ? format : [];
+    ListMorph.__super__.constructor.call(this);
+    this.contents.acceptsDrops = false;
+    this.color = new Color(255, 255, 255);
+    this.hBar.alpha = 0.6;
+    this.vBar.alpha = 0.6;
+    this.labelGetter = labelGetter || function(element) {
+      if (isString(element)) {
+        return element;
+      }
+      if (element.toSource) {
+        return element.toSource();
+      }
+      return element.toString();
+    };
+    this.buildListContents();
+  }
+
+  ListMorph.prototype.buildListContents = function() {
+    var _this = this;
+
+    if (this.listContents) {
+      this.listContents.destroy();
+    }
+    this.listContents = new MenuMorph(this.select, null, this);
+    if (!this.elements.length) {
+      this.elements = ["(empty)"];
+    }
+    this.elements.forEach(function(element) {
+      var bold, color, italic;
+
+      color = null;
+      bold = false;
+      italic = false;
+      _this.format.forEach(function(pair) {
+        if (pair[1].call(null, element)) {
+          if (pair[0] === 'bold') {
+            return bold = true;
+          } else if (pair[0] === 'italic') {
+            return italic = true;
+          } else {
+            return color = pair[0];
+          }
+        }
+      });
+      return _this.listContents.addItem(_this.labelGetter(element), element, null, color, bold, italic);
+    });
+    this.listContents.setPosition(this.contents.position());
+    this.listContents.isListContents = true;
+    this.listContents.updateRendering();
+    return this.addContents(this.listContents);
+  };
+
+  ListMorph.prototype.select = function(item, trigger) {
+    this.selected = item;
+    this.active = trigger;
+    if (this.action) {
+      return this.action.call(null, item);
+    }
+  };
+
+  ListMorph.prototype.setExtent = function(aPoint) {
+    var lb, nb;
+
+    lb = this.listContents.bounds;
+    nb = this.bounds.origin.copy().corner(this.bounds.origin.add(aPoint));
+    if (nb.right() > lb.right() && nb.width() <= lb.width()) {
+      this.listContents.setRight(nb.right());
+    }
+    if (nb.bottom() > lb.bottom() && nb.height() <= lb.height()) {
+      this.listContents.setBottom(nb.bottom());
+    }
+    return ListMorph.__super__.setExtent.call(this, aPoint);
+  };
+
+  ListMorph.coffeeScriptSourceOfThisClass = '# ListMorph ///////////////////////////////////////////////////////////\n\nclass ListMorph extends ScrollFrameMorph\n  \n  elements: null\n  labelGetter: null\n  format: null\n  listContents: null\n  selected: null # actual element currently selected\n  active: null # menu item representing the selected element\n  action: null\n\n  constructor: (@elements = [], labelGetter, @format = []) ->\n    #\n    #    passing a format is optional. If the format parameter is specified\n    #    it has to be of the following pattern:\n    #\n    #        [\n    #            [<color>, <single-argument predicate>],\n    #            [\'bold\', <single-argument predicate>],\n    #            [\'italic\', <single-argument predicate>],\n    #            ...\n    #        ]\n    #\n    #    multiple conditions can be passed in such a format list, the\n    #    last predicate to evaluate true when given the list element sets\n    #    the given format category (color, bold, italic).\n    #    If no condition is met, the default format (color black, non-bold,\n    #    non-italic) will be assigned.\n    #    \n    #    An example of how to use fomats can be found in the InspectorMorph\'s\n    #    "markOwnProperties" mechanism.\n    #\n    super()\n    @contents.acceptsDrops = false\n    @color = new Color(255, 255, 255)\n    @hBar.alpha = 0.6\n    @vBar.alpha = 0.6\n    @labelGetter = labelGetter or (element) ->\n        return element  if isString(element)\n        return element.toSource()  if element.toSource\n        element.toString()\n    @buildListContents()\n    # it\'s important to leave the step as the default noOperation\n    # instead of null because the scrollbars (inherited from scrollframe)\n    # need the step function to react to mouse drag.\n  \n  buildListContents: ->\n    @listContents.destroy()  if @listContents\n    @listContents = new MenuMorph(@select, null, @)\n    @elements = ["(empty)"]  if !@elements.length\n    @elements.forEach (element) =>\n      color = null\n      bold = false\n      italic = false\n      @format.forEach (pair) ->\n        if pair[1].call(null, element)\n          if pair[0] == \'bold\'\n            bold = true\n          else if pair[0] == \'italic\'\n            italic = true\n          else # assume it\'s a color\n            color = pair[0]\n      #\n      # label string\n      # action\n      # hint\n      @listContents.addItem @labelGetter(element), element, null, color, bold, italic\n    #\n    @listContents.setPosition @contents.position()\n    @listContents.isListContents = true\n    @listContents.updateRendering()\n    @addContents @listContents\n  \n  select: (item, trigger) ->\n    @selected = item\n    @active = trigger\n    @action.call null, item  if @action\n  \n  setExtent: (aPoint) ->\n    lb = @listContents.bounds\n    nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))\n    if nb.right() > lb.right() and nb.width() <= lb.width()\n      @listContents.setRight nb.right()\n    if nb.bottom() > lb.bottom() and nb.height() <= lb.height()\n      @listContents.setBottom nb.bottom()\n    super aPoint';
+
+  return ListMorph;
+
+})(ScrollFrameMorph);
+
+TriggerMorph = (function(_super) {
+  __extends(TriggerMorph, _super);
+
+  TriggerMorph.prototype.target = null;
+
+  TriggerMorph.prototype.action = null;
+
+  TriggerMorph.prototype.environment = null;
+
+  TriggerMorph.prototype.label = null;
+
+  TriggerMorph.prototype.labelString = null;
+
+  TriggerMorph.prototype.labelColor = null;
+
+  TriggerMorph.prototype.labelBold = null;
+
+  TriggerMorph.prototype.labelItalic = null;
+
+  TriggerMorph.prototype.hint = null;
+
+  TriggerMorph.prototype.fontSize = null;
+
+  TriggerMorph.prototype.fontStyle = null;
+
+  TriggerMorph.prototype.highlightColor = new Color(192, 192, 192);
+
+  TriggerMorph.prototype.highlightImage = null;
+
+  TriggerMorph.prototype.pressColor = new Color(128, 128, 128);
+
+  TriggerMorph.prototype.normalImage = null;
+
+  TriggerMorph.prototype.pressImage = null;
+
+  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor, labelBold, labelItalic) {
+    this.target = target != null ? target : null;
+    this.action = action != null ? action : null;
+    this.labelString = labelString != null ? labelString : null;
+    this.environment = environment != null ? environment : null;
+    this.hint = hint != null ? hint : null;
+    this.labelBold = labelBold != null ? labelBold : false;
+    this.labelItalic = labelItalic != null ? labelItalic : false;
+    this.fontSize = fontSize || WorldMorph.MorphicPreferences.menuFontSize;
+    this.fontStyle = fontStyle || "sans-serif";
+    this.labelColor = labelColor || new Color(0, 0, 0);
+    TriggerMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.updateRendering();
+  }
+
+  TriggerMorph.prototype.updateRendering = function() {
+    this.createBackgrounds();
+    if (this.labelString !== null) {
+      return this.createLabel();
+    }
+  };
+
+  TriggerMorph.prototype.createBackgrounds = function() {
+    var context, ext;
+
+    ext = this.extent();
+    this.normalImage = newCanvas(ext);
+    context = this.normalImage.getContext("2d");
+    context.fillStyle = this.color.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.highlightImage = newCanvas(ext);
+    context = this.highlightImage.getContext("2d");
+    context.fillStyle = this.highlightColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.pressImage = newCanvas(ext);
+    context = this.pressImage.getContext("2d");
+    context.fillStyle = this.pressColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    return this.image = this.normalImage;
+  };
+
+  TriggerMorph.prototype.createLabel = function() {
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor, this.labelBold, this.labelItalic);
+    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
+    return this.add(this.label);
+  };
+
+  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.label && dict[this.label]) {
+      c.label = dict[this.label];
+    }
+    return c;
+  };
+
+  TriggerMorph.prototype.trigger = function() {
+    if (typeof this.target === "function") {
+      if (typeof this.action === "function") {
+        return this.target.call(this.environment, this.action.call(), this);
+      } else {
+        return this.target.call(this.environment, this.action, this);
+      }
+    } else {
+      if (typeof this.action === "function") {
+        return this.action.call(this.target);
+      } else {
+        return this.target[this.action]();
+      }
+    }
+  };
+
+  TriggerMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  TriggerMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    this.changed();
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  TriggerMorph.prototype.mouseDownLeft = function() {
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  TriggerMorph.prototype.mouseClickLeft = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    return this.trigger();
+  };
+
+  TriggerMorph.prototype.rootForGrab = function() {
+    return null;
+  };
+
+  TriggerMorph.prototype.bubbleHelp = function(contents) {
+    var _this = this;
+
+    this.fps = 2;
+    return this.step = function() {
+      if (_this.bounds.containsPoint(_this.world().hand.position())) {
+        _this.popUpbubbleHelp(contents);
+      }
+      _this.fps = 0;
+      return delete _this.step;
+    };
+  };
+
+  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
+    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
+  };
+
+  TriggerMorph.coffeeScriptSourceOfThisClass = '# TriggerMorph ////////////////////////////////////////////////////////\n\n# I provide basic button functionality\n\nclass TriggerMorph extends Morph\n\n  target: null\n  action: null\n  environment: null\n  label: null\n  labelString: null\n  labelColor: null\n  labelBold: null\n  labelItalic: null\n  hint: null\n  fontSize: null\n  fontStyle: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(192, 192, 192)\n  highlightImage: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(128, 128, 128)\n  normalImage: null\n  pressImage: null\n\n  constructor: (\n      @target = null,\n      @action = null,\n      @labelString = null,\n      fontSize,\n      fontStyle,\n      @environment = null,\n      @hint = null,\n      labelColor,\n      @labelBold = false,\n      @labelItalic = false) ->\n\n    # additional properties:\n    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize\n    @fontStyle = fontStyle or "sans-serif"\n    @labelColor = labelColor or new Color(0, 0, 0)\n    #\n    super()\n    #\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  \n  # TriggerMorph drawing:\n  updateRendering: ->\n    @createBackgrounds()\n    @createLabel()  if @labelString isnt null\n  \n  createBackgrounds: ->\n    ext = @extent()\n    @normalImage = newCanvas(ext)\n    context = @normalImage.getContext("2d")\n    context.fillStyle = @color.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @highlightImage = newCanvas(ext)\n    context = @highlightImage.getContext("2d")\n    context.fillStyle = @highlightColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @pressImage = newCanvas(ext)\n    context = @pressImage.getContext("2d")\n    context.fillStyle = @pressColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @image = @normalImage\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    # bold\n    # italic\n    # numeric\n    # shadow offset\n    # shadow color\n    @label = new StringMorph(\n      @labelString,\n      @fontSize,\n      @fontStyle,\n      false,\n      false,\n      false,\n      null,\n      null,\n      @labelColor,\n      @labelBold,\n      @labelItalic\n    )\n    @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))\n    @add @label\n  \n  \n  # TriggerMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.label = (dict[@label])  if c.label and dict[@label]\n    c\n  \n  \n  # TriggerMorph action:\n  trigger: ->\n    #\n    #	if target is a function, use it as callback:\n    #	execute target as callback function with action as argument\n    #	in the environment as optionally specified.\n    #	Note: if action is also a function, instead of becoming\n    #	the argument itself it will be called to answer the argument.\n    #	for selections, Yes/No Choices etc. As second argument pass\n    # myself, so I can be modified to reflect status changes, e.g.\n    # inside a list box:\n    #\n    #	else (if target is not a function):\n    #\n    #		if action is a function:\n    #		execute the action with target as environment (can be null)\n    #		for lambdafied (inline) actions\n    #\n    #		else if action is a String:\n    #		treat it as function property of target and execute it\n    #		for selector-like actions\n    #	\n    if typeof @target is "function"\n      if typeof @action is "function"\n        @target.call @environment, @action.call(), @\n      else\n        @target.call @environment, @action, @\n    else\n      if typeof @action is "function"\n        @action.call @target\n      else # assume it\'s a String\n        @target[@action]()\n  \n  \n  # TriggerMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: ->\n    @image = @pressImage\n    @changed()\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n    @trigger()\n  \n  # Disable dragging compound Morphs by Triggers\n  rootForGrab: ->\n    null\n  \n  # TriggerMorph bubble help:\n  bubbleHelp: (contents) ->\n    @fps = 2\n    @step = =>\n      @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())\n      @fps = 0\n      delete @step\n  \n  popUpbubbleHelp: (contents) ->\n    new SpeechBubbleMorph(\n      localize(contents), null, null, 1).popUp @world(),\n      @rightCenter().add(new Point(-8, 0))';
+
+  return TriggerMorph;
+
+})(Morph);
+
+MenuItemMorph = (function(_super) {
+  __extends(MenuItemMorph, _super);
+
+  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic) {
+    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic);
+  }
+
+  MenuItemMorph.prototype.createLabel = function() {
+    var icon, lbl, np;
+
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    if (isString(this.labelString)) {
+      this.label = this.createLabelString(this.labelString);
+    } else if (this.labelString instanceof Array) {
+      this.label = new Morph();
+      this.label.alpha = 0;
+      this.label.add(icon = this.createIcon(this.labelString[0]));
+      this.label.add(lbl = this.createLabelString(this.labelString[1]));
+      lbl.setCenter(icon.center());
+      lbl.setLeft(icon.right() + 4);
+      this.label.bounds = icon.bounds.merge(lbl.bounds);
+      this.label.updateRendering();
+    } else {
+      this.label = this.createIcon(this.labelString);
+    }
+    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
+    np = this.position().add(new Point(4, 0));
+    this.label.bounds = np.extent(this.label.extent());
+    return this.add(this.label);
+  };
+
+  MenuItemMorph.prototype.createIcon = function(source) {
+    var icon, src;
+
+    icon = new Morph();
+    icon.image = (source instanceof Morph ? source.fullImage() : source);
+    if (source instanceof Morph && source.getShadow()) {
+      src = icon.image;
+      icon.image = newCanvas(source.fullBounds().extent().subtract(this.shadowBlur * (useBlurredShadows ? 1 : 2)));
+      icon.image.getContext("2d").drawImage(src, 0, 0);
+    }
+    icon.silentSetWidth(icon.image.width);
+    icon.silentSetHeight(icon.image.height);
+    return icon;
+  };
+
+  MenuItemMorph.prototype.createLabelString = function(string) {
+    var lbl;
+
+    lbl = new TextMorph(string, this.fontSize, this.fontStyle);
+    lbl.setColor(this.labelColor);
+    return lbl;
+  };
+
+  MenuItemMorph.prototype.mouseEnter = function() {
+    if (!this.isListItem()) {
+      this.image = this.highlightImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  MenuItemMorph.prototype.mouseLeave = function() {
+    if (!this.isListItem()) {
+      this.image = this.normalImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
+    if (this.isListItem()) {
+      this.parent.unselectAllItems();
+      this.escalateEvent("mouseDownLeft", pos);
+    }
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  MenuItemMorph.prototype.mouseMove = function() {
+    if (this.isListItem()) {
+      return this.escalateEvent("mouseMove");
+    }
+  };
+
+  MenuItemMorph.prototype.mouseClickLeft = function() {
+    if (!this.isListItem()) {
+      this.parent.destroy();
+      this.root().activeMenu = null;
+    }
+    return this.trigger();
+  };
+
+  MenuItemMorph.prototype.isListItem = function() {
+    if (this.parent) {
+      return this.parent.isListContents;
+    }
+    return false;
+  };
+
+  MenuItemMorph.prototype.isSelectedListItem = function() {
+    if (this.isListItem()) {
+      return this.image === this.pressImage;
+    }
+    return false;
+  };
+
+  MenuItemMorph.coffeeScriptSourceOfThisClass = '# MenuItemMorph ///////////////////////////////////////////////////////\n\n# I automatically determine my bounds\n\nclass MenuItemMorph extends TriggerMorph\n\n  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]\n  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic) ->\n    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n\n    if isString(@labelString)\n      @label = @createLabelString(@labelString)\n    else if @labelString instanceof Array      \n      # assume its pattern is: [icon, string] \n      @label = new Morph()\n      @label.alpha = 0 # transparent\n      @label.add icon = @createIcon(@labelString[0])\n      @label.add lbl = @createLabelString(@labelString[1])\n      lbl.setCenter icon.center()\n      lbl.setLeft icon.right() + 4\n      @label.bounds = (icon.bounds.merge(lbl.bounds))\n      @label.updateRendering()\n    else # assume it\'s either a Morph or a Canvas\n      @label = @createIcon(@labelString)\n  \n    @silentSetExtent @label.extent().add(new Point(8, 0))\n    np = @position().add(new Point(4, 0))\n    @label.bounds = np.extent(@label.extent())\n    @add @label\n  \n  createIcon: (source) ->\n    # source can be either a Morph or an HTMLCanvasElement\n    icon = new Morph()\n    icon.image = (if source instanceof Morph then source.fullImage() else source)\n\n    # adjust shadow dimensions\n    if source instanceof Morph and source.getShadow()\n      src = icon.image\n      icon.image = newCanvas(\n        source.fullBounds().extent().subtract(\n          @shadowBlur * ((if useBlurredShadows then 1 else 2))))\n      icon.image.getContext("2d").drawImage src, 0, 0\n\n    icon.silentSetWidth icon.image.width\n    icon.silentSetHeight icon.image.height\n    icon\n\n  createLabelString: (string) ->\n    lbl = new TextMorph(string, @fontSize, @fontStyle)\n    lbl.setColor @labelColor\n    lbl  \n\n  # MenuItemMorph events:\n  mouseEnter: ->\n    unless @isListItem()\n      @image = @highlightImage\n      @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    unless @isListItem()\n      @image = @normalImage\n      @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: (pos) ->\n    if @isListItem()\n      @parent.unselectAllItems()\n      @escalateEvent "mouseDownLeft", pos\n    @image = @pressImage\n    @changed()\n  \n  mouseMove: ->\n    @escalateEvent "mouseMove"  if @isListItem()\n  \n  mouseClickLeft: ->\n    unless @isListItem()\n      @parent.destroy()\n      @root().activeMenu = null\n    @trigger()\n  \n  isListItem: ->\n    return @parent.isListContents  if @parent\n    false\n  \n  isSelectedListItem: ->\n    return @image is @pressImage  if @isListItem()\n    false';
+
+  return MenuItemMorph;
+
+})(TriggerMorph);
+
+Point = (function() {
+  Point.prototype.x = null;
+
+  Point.prototype.y = null;
+
+  function Point(x, y) {
+    this.x = x != null ? x : 0;
+    this.y = y != null ? y : 0;
+  }
+
+  Point.prototype.toString = function() {
+    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
+  };
+
+  Point.prototype.copy = function() {
+    return new Point(this.x, this.y);
+  };
+
+  Point.prototype.eq = function(aPoint) {
+    return this.x === aPoint.x && this.y === aPoint.y;
+  };
+
+  Point.prototype.lt = function(aPoint) {
+    return this.x < aPoint.x && this.y < aPoint.y;
+  };
+
+  Point.prototype.gt = function(aPoint) {
+    return this.x > aPoint.x && this.y > aPoint.y;
+  };
+
+  Point.prototype.ge = function(aPoint) {
+    return this.x >= aPoint.x && this.y >= aPoint.y;
+  };
+
+  Point.prototype.le = function(aPoint) {
+    return this.x <= aPoint.x && this.y <= aPoint.y;
+  };
+
+  Point.prototype.max = function(aPoint) {
+    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
+  };
+
+  Point.prototype.min = function(aPoint) {
+    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
+  };
+
+  Point.prototype.round = function() {
+    return new Point(Math.round(this.x), Math.round(this.y));
+  };
+
+  Point.prototype.abs = function() {
+    return new Point(Math.abs(this.x), Math.abs(this.y));
+  };
+
+  Point.prototype.neg = function() {
+    return new Point(-this.x, -this.y);
+  };
+
+  Point.prototype.mirror = function() {
+    return new Point(this.y, this.x);
+  };
+
+  Point.prototype.floor = function() {
+    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
+  };
+
+  Point.prototype.ceil = function() {
+    return new Point(Math.ceil(this.x), Math.ceil(this.y));
+  };
+
+  Point.prototype.add = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x + other.x, this.y + other.y);
+    }
+    return new Point(this.x + other, this.y + other);
+  };
+
+  Point.prototype.subtract = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x - other.x, this.y - other.y);
+    }
+    return new Point(this.x - other, this.y - other);
+  };
+
+  Point.prototype.multiplyBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x * other.x, this.y * other.y);
+    }
+    return new Point(this.x * other, this.y * other);
+  };
+
+  Point.prototype.divideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x / other.x, this.y / other.y);
+    }
+    return new Point(this.x / other, this.y / other);
+  };
+
+  Point.prototype.floorDivideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
+    }
+    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
+  };
+
+  Point.prototype.r = function() {
+    var t;
+
+    t = this.multiplyBy(this);
+    return Math.sqrt(t.x + t.y);
+  };
+
+  Point.prototype.degrees = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return 90;
+      }
+      return 270;
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return degrees(theta);
+      }
+      return 360 + (degrees(theta));
+    }
+    return 180 + degrees(theta);
+  };
+
+  Point.prototype.theta = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return radians(90);
+      }
+      return radians(270);
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return theta;
+      }
+      return radians(360) + theta;
+    }
+    return radians(180) + theta;
+  };
+
+  Point.prototype.crossProduct = function(aPoint) {
+    return this.multiplyBy(aPoint.mirror());
+  };
+
+  Point.prototype.distanceTo = function(aPoint) {
+    return (aPoint.subtract(this)).r();
+  };
+
+  Point.prototype.rotate = function(direction, center) {
+    var offset;
+
+    offset = this.subtract(center);
+    if (direction === "right") {
+      return new Point(-offset.y, offset.y).add(center);
+    }
+    if (direction === "left") {
+      return new Point(offset.y, -offset.y).add(center);
+    }
+    return center.subtract(offset);
+  };
+
+  Point.prototype.flip = function(direction, center) {
+    if (direction === "vertical") {
+      return new Point(this.x, center.y * 2 - this.y);
+    }
+    return new Point(center.x * 2 - this.x, this.y);
+  };
+
+  Point.prototype.distanceAngle = function(dist, angle) {
+    var deg, x, y;
+
+    deg = angle;
+    if (deg > 270) {
+      deg = deg - 360;
+    } else {
+      if (deg < -270) {
+        deg = deg + 360;
+      }
+    }
+    if (-90 <= deg && deg <= 90) {
+      x = Math.sin(radians(deg)) * dist;
+      y = Math.sqrt((dist * dist) - (x * x));
+      return new Point(x + this.x, this.y - y);
+    }
+    x = Math.sin(radians(180 - deg)) * dist;
+    y = Math.sqrt((dist * dist) - (x * x));
+    return new Point(x + this.x, this.y + y);
+  };
+
+  Point.prototype.scaleBy = function(scalePoint) {
+    return this.multiplyBy(scalePoint);
+  };
+
+  Point.prototype.translateBy = function(deltaPoint) {
+    return this.add(deltaPoint);
+  };
+
+  Point.prototype.rotateBy = function(angle, centerPoint) {
+    var center, p, r, theta;
+
+    center = centerPoint || new Point(0, 0);
+    p = this.subtract(center);
+    r = p.r();
+    theta = angle - p.theta();
+    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
+  };
+
+  Point.prototype.asArray = function() {
+    return [this.x, this.y];
+  };
+
+  Point.prototype.corner = function(cornerPoint) {
+    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
+  };
+
+  Point.prototype.rectangle = function(aPoint) {
+    var crn, org;
+
+    org = this.min(aPoint);
+    crn = this.max(aPoint);
+    return new Rectangle(org.x, org.y, crn.x, crn.y);
+  };
+
+  Point.prototype.extent = function(aPoint) {
+    var crn;
+
+    crn = this.add(aPoint);
+    return new Rectangle(this.x, this.y, crn.x, crn.y);
+  };
+
+  Point.coffeeScriptSourceOfThisClass = '# Points //////////////////////////////////////////////////////////////\n\nclass Point\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point copying:\n  copy: ->\n    new Point(@x, @y)\n  \n  # Point comparison:\n  eq: (aPoint) ->\n    # ==\n    @x is aPoint.x and @y is aPoint.y\n  \n  lt: (aPoint) ->\n    # <\n    @x < aPoint.x and @y < aPoint.y\n  \n  gt: (aPoint) ->\n    # >\n    @x > aPoint.x and @y > aPoint.y\n  \n  ge: (aPoint) ->\n    # >=\n    @x >= aPoint.x and @y >= aPoint.y\n  \n  le: (aPoint) ->\n    # <=\n    @x <= aPoint.x and @y <= aPoint.y\n  \n  max: (aPoint) ->\n    new Point(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))\n  \n  min: (aPoint) ->\n    new Point(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))\n  \n  \n  # Point conversion:\n  round: ->\n    new Point(Math.round(@x), Math.round(@y))\n  \n  abs: ->\n    new Point(Math.abs(@x), Math.abs(@y))\n  \n  neg: ->\n    new Point(-@x, -@y)\n  \n  mirror: ->\n    new Point(@y, @x)\n  \n  floor: ->\n    new Point(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n  \n  ceil: ->\n    new Point(Math.ceil(@x), Math.ceil(@y))\n  \n  \n  # Point arithmetic:\n  add: (other) ->\n    return new Point(@x + other.x, @y + other.y)  if other instanceof Point\n    new Point(@x + other, @y + other)\n  \n  subtract: (other) ->\n    return new Point(@x - other.x, @y - other.y)  if other instanceof Point\n    new Point(@x - other, @y - other)\n  \n  multiplyBy: (other) ->\n    return new Point(@x * other.x, @y * other.y)  if other instanceof Point\n    new Point(@x * other, @y * other)\n  \n  divideBy: (other) ->\n    return new Point(@x / other.x, @y / other.y)  if other instanceof Point\n    new Point(@x / other, @y / other)\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point\n      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))\n    new Point(Math.floor(@x / other), Math.floor(@y / other))\n  \n  \n  # Point polar coordinates:\n  r: ->\n    t = (@multiplyBy(@))\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point functions:\n  crossProduct: (aPoint) ->\n    @multiplyBy aPoint.mirror()\n  \n  distanceTo: (aPoint) ->\n    (aPoint.subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @subtract(center)\n    return new Point(-offset.y, offset.y).add(center)  if direction is "right"\n    return new Point(offset.y, -offset.y).add(center)  if direction is "left"\n    #\n    # direction === \'pi\'\n    center.subtract offset\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    return new Point(@x, center.y * 2 - @y)  if direction is "vertical"\n    #\n    # direction === \'horizontal\'\n    new Point(center.x * 2 - @x, @y)\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      return new Point(x + @x, @y - y)\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    new Point(x + @x, @y + y)\n  \n  \n  # Point transforming:\n  scaleBy: (scalePoint) ->\n    @multiplyBy scalePoint\n  \n  translateBy: (deltaPoint) ->\n    @add deltaPoint\n  \n  rotateBy: (angle, centerPoint) ->\n    center = centerPoint or new Point(0, 0)\n    p = @subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))\n  \n  \n  # Point conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Points:\n  corner: (cornerPoint) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)\n  \n  rectangle: (aPoint) ->\n    # answer a new Rectangle\n    org = @min(aPoint)\n    crn = @max(aPoint)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint) ->\n    #answer a new Rectangle\n    crn = @add(aPoint)\n    new Rectangle(@x, @y, crn.x, crn.y)';
+
+  return Point;
+
+})();
+
+StringFieldMorph = (function(_super) {
+  __extends(StringFieldMorph, _super);
+
+  StringFieldMorph.prototype.defaultContents = null;
+
+  StringFieldMorph.prototype.minWidth = null;
+
+  StringFieldMorph.prototype.fontSize = null;
+
+  StringFieldMorph.prototype.fontStyle = null;
+
+  StringFieldMorph.prototype.isBold = null;
+
+  StringFieldMorph.prototype.isItalic = null;
+
+  StringFieldMorph.prototype.isNumeric = null;
+
+  StringFieldMorph.prototype.text = null;
+
+  StringFieldMorph.prototype.isEditable = true;
+
+  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, isBold, isItalic, isNumeric) {
+    this.defaultContents = defaultContents != null ? defaultContents : "";
+    this.minWidth = minWidth != null ? minWidth : 100;
+    this.fontSize = fontSize != null ? fontSize : 12;
+    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
+    this.isBold = isBold != null ? isBold : false;
+    this.isItalic = isItalic != null ? isItalic : false;
+    this.isNumeric = isNumeric != null ? isNumeric : false;
+    StringFieldMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.updateRendering();
+  }
+
+  StringFieldMorph.prototype.updateRendering = function() {
+    var txt;
+
+    txt = (this.text ? this.string() : this.defaultContents);
+    this.text = null;
+    this.children.forEach(function(child) {
+      return child.destroy();
+    });
+    this.children = [];
+    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
+    this.text.isNumeric = this.isNumeric;
+    this.text.setPosition(this.bounds.origin.copy());
+    this.text.isEditable = this.isEditable;
+    this.text.isDraggable = false;
+    this.text.enableSelecting();
+    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
+    StringFieldMorph.__super__.updateRendering.call(this);
+    return this.add(this.text);
+  };
+
+  StringFieldMorph.prototype.string = function() {
+    return this.text.text;
+  };
+
+  StringFieldMorph.prototype.mouseClickLeft = function(pos) {
+    if (this.isEditable) {
+      return this.text.edit();
+    } else {
+      return this.escalateEvent('mouseClickLeft', pos);
+    }
+  };
+
+  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.text && dict[this.text]) {
+      c.text = dict[this.text];
+    }
+    return c;
+  };
+
+  StringFieldMorph.coffeeScriptSourceOfThisClass = '# StringFieldMorph ////////////////////////////////////////////////////\n\nclass StringFieldMorph extends FrameMorph\n\n  defaultContents: null\n  minWidth: null\n  fontSize: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isNumeric: null\n  text: null\n  isEditable: true\n\n  constructor: (\n      @defaultContents = "",\n      @minWidth = 100,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false\n      ) ->\n    super()\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  updateRendering: ->\n    txt = (if @text then @string() else @defaultContents)\n    @text = null\n    @children.forEach (child) ->\n      child.destroy()\n    #\n    @children = []\n    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)\n    @text.isNumeric = @isNumeric # for whichever reason...\n    @text.setPosition @bounds.origin.copy()\n    @text.isEditable = @isEditable\n    @text.isDraggable = false\n    @text.enableSelecting()\n    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())\n    super()\n    @add @text\n  \n  string: ->\n    @text.text\n  \n  mouseClickLeft: (pos)->\n    if @isEditable\n      @text.edit()\n    else\n      @escalateEvent \'mouseClickLeft\', pos\n  \n  \n  # StringFieldMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.text = (dict[@text])  if c.text and dict[@text]\n    c';
+
+  return StringFieldMorph;
+
+})(FrameMorph);
+
+SystemTestsRecorderAndPlayer = (function() {
+  SystemTestsRecorderAndPlayer.prototype.eventQueue = [];
+
+  SystemTestsRecorderAndPlayer.prototype.recordingASystemTest = false;
+
+  SystemTestsRecorderAndPlayer.prototype.replayingASystemTest = false;
+
+  SystemTestsRecorderAndPlayer.prototype.lastRecordedEventTime = null;
+
+  SystemTestsRecorderAndPlayer.prototype.handMorph = null;
+
+  SystemTestsRecorderAndPlayer.prototype.systemInfo = null;
+
+  function SystemTestsRecorderAndPlayer(worldMorph, handMorph) {
+    this.worldMorph = worldMorph;
+    this.handMorph = handMorph;
+  }
+
+  SystemTestsRecorderAndPlayer.prototype.initialiseSystemInfo = function() {
+    this.systemInfo = {};
+    this.systemInfo.zombieKernelTestHarnessVersionMajor = 0;
+    this.systemInfo.zombieKernelTestHarnessVersionMinor = 1;
+    this.systemInfo.zombieKernelTestHarnessVersionRelease = 0;
+    this.systemInfo.userAgent = navigator.userAgent;
+    this.systemInfo.screenWidth = window.screen.width;
+    this.systemInfo.screenHeight = window.screen.height;
+    this.systemInfo.screenColorDepth = window.screen.colorDepth;
+    if (window.devicePixelRatio != null) {
+      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
+    } else {
+      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
+    }
+    this.systemInfo.appCodeName = navigator.appCodeName;
+    this.systemInfo.appName = navigator.appName;
+    this.systemInfo.appVersion = navigator.appVersion;
+    this.systemInfo.cookieEnabled = navigator.cookieEnabled;
+    this.systemInfo.platform = navigator.platform;
+    return this.systemInfo.systemLanguage = navigator.systemLanguage;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.startRecording = function() {
+    var systemTestEvent;
+
+    this.worldMorph.destroyAll();
+    this.eventQueue = [];
+    this.lastRecordedEventTime = new Date().getTime();
+    this.recordingASystemTest = true;
+    this.replayingASystemTest = false;
+    this.initialiseSystemInfo();
+    systemTestEvent = {};
+    systemTestEvent.type = "systemInfo";
+    systemTestEvent.time = 0;
+    systemTestEvent.systemInfo = this.systemInfo;
+    return this.eventQueue.push(systemTestEvent);
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.stopRecording = function() {
+    return this.recordingASystemTest = false;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.startPlaying = function() {
+    this.recordingASystemTest = false;
+    this.replayingASystemTest = true;
+    return this.replayEvents();
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.stopPlaying = function() {
+    return this.replayingASystemTest = false;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseMoveEvent = function(pageX, pageY) {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseMove";
+    systemTestEvent.mouseX = pageX;
+    systemTestEvent.mouseY = pageY;
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseDownEvent = function(button, ctrlKey) {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseDown";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    systemTestEvent.button = button;
+    systemTestEvent.ctrlKey = ctrlKey;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseUpEvent = function() {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseUp";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.takeScreenshot = function() {
+    var currentTime, systemTestEvent;
+
+    console.log("taking screenshot");
+    if (this.systemInfo === null) {
+      this.initialiseSystemInfo();
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "takeScreenshot";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    systemTestEvent.screenShotImageData = [];
+    systemTestEvent.screenShotImageData.push([this.systemInfo, this.worldMorph.fullImageData()]);
+    this.eventQueue.push(systemTestEvent);
+    this.lastRecordedEventTime = currentTime;
+    if (!this.recordingASystemTest) {
+      return systemTestEvent;
+    }
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.compareScreenshots = function(expected) {
+    var a, i, _i, _len;
+
+    i = 0;
+    console.log("expected length " + expected.length);
+    for (_i = 0, _len = expected.length; _i < _len; _i++) {
+      a = expected[_i];
+      console.log("trying to match screenshot: " + i);
+      i++;
+      if (a[1] === this.worldMorph.fullImageData()) {
+        console.log("PASS - screenshot (" + i + ") matched");
+        return;
+      }
+    }
+    return console.log("FAIL - no screenshots like this one");
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.replayEvents = function() {
+    var lastPlayedEventTime, queuedEvent, _i, _len, _ref, _results;
+
+    lastPlayedEventTime = 0;
+    console.log("events: " + this.eventQueue);
+    _ref = this.eventQueue;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      queuedEvent = _ref[_i];
+      lastPlayedEventTime += queuedEvent.time;
+      _results.push(this.scheduleEvent(queuedEvent, lastPlayedEventTime));
+    }
+    return _results;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.scheduleEvent = function(queuedEvent, lastPlayedEventTime) {
+    var callback,
+      _this = this;
+
+    if (queuedEvent.type === 'mouseMove') {
+      callback = function() {
+        return _this.handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY);
+      };
+    } else if (queuedEvent.type === 'mouseDown') {
+      callback = function() {
+        return _this.handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey);
+      };
+    } else if (queuedEvent.type === 'mouseUp') {
+      callback = function() {
+        return _this.handMorph.processMouseUp();
+      };
+    } else if (queuedEvent.type === 'takeScreenshot') {
+      callback = function() {
+        return _this.compareScreenshots(queuedEvent.screenShotImageData);
+      };
+    } else {
+      return;
+    }
+    return setTimeout(callback, lastPlayedEventTime);
+  };
+
+  SystemTestsRecorderAndPlayer.coffeeScriptSourceOfThisClass = 'class SystemTestsRecorderAndPlayer\n  eventQueue: []\n  recordingASystemTest: false\n  replayingASystemTest: false\n  lastRecordedEventTime: null\n  handMorph: null\n  systemInfo: null\n\n  constructor: (@worldMorph, @handMorph) ->\n\n  initialiseSystemInfo: ->\n    @systemInfo = {}\n    @systemInfo.zombieKernelTestHarnessVersionMajor = 0\n    @systemInfo.zombieKernelTestHarnessVersionMinor = 1\n    @systemInfo.zombieKernelTestHarnessVersionRelease = 0\n    @systemInfo.userAgent = navigator.userAgent\n    @systemInfo.screenWidth = window.screen.width\n    @systemInfo.screenHeight = window.screen.height\n    @systemInfo.screenColorDepth = window.screen.colorDepth\n    if window.devicePixelRatio?\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    else\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    @systemInfo.appCodeName = navigator.appCodeName\n    @systemInfo.appName = navigator.appName\n    @systemInfo.appVersion = navigator.appVersion\n    @systemInfo.cookieEnabled = navigator.cookieEnabled\n    @systemInfo.platform = navigator.platform\n    @systemInfo.systemLanguage = navigator.systemLanguage\n\n  startRecording: ->\n    # clean up the world so we start from clean slate\n    @worldMorph.destroyAll()\n    @eventQueue = []\n    @lastRecordedEventTime = new Date().getTime()\n    @recordingASystemTest = true\n    @replayingASystemTest = false\n\n    @initialiseSystemInfo()\n    systemTestEvent = {}\n    systemTestEvent.type = "systemInfo"\n    systemTestEvent.time = 0\n    systemTestEvent.systemInfo = @systemInfo\n    @eventQueue.push systemTestEvent\n\n  stopRecording: ->\n    @recordingASystemTest = false\n\n  startPlaying: ->\n    @recordingASystemTest = false\n    @replayingASystemTest = true\n    @replayEvents()\n\n  stopPlaying: ->\n    @replayingASystemTest = false\n\n  addMouseMoveEvent: (pageX, pageY) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseMove"\n    systemTestEvent.mouseX = pageX\n    systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseDownEvent: (button, ctrlKey) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseDown"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    systemTestEvent.button = button\n    systemTestEvent.ctrlKey = ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseUpEvent: () ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseUp"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  takeScreenshot: () ->\n    console.log "taking screenshot"\n    if @systemInfo is null\n      @initialiseSystemInfo()\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "takeScreenshot"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    systemTestEvent.screenShotImageData = []\n    systemTestEvent.screenShotImageData.push [@systemInfo, @worldMorph.fullImageData()]\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n    if not @recordingASystemTest\n      return systemTestEvent\n\n  compareScreenshots: (expected) ->\n   i = 0\n   console.log "expected length " + expected.length\n   for a in expected\n     console.log "trying to match screenshot: " + i\n     i++\n     if a[1] == @worldMorph.fullImageData()\n      console.log "PASS - screenshot (" + i + ") matched"\n      return\n   console.log "FAIL - no screenshots like this one"\n\n  replayEvents: () ->\n   lastPlayedEventTime = 0\n   console.log "events: " + @eventQueue\n   for queuedEvent in @eventQueue\n      lastPlayedEventTime += queuedEvent.time\n      @scheduleEvent(queuedEvent, lastPlayedEventTime)\n\n  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->\n    if queuedEvent.type == \'mouseMove\'\n      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)\n    else if queuedEvent.type == \'mouseDown\'\n      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)\n    else if queuedEvent.type == \'mouseUp\'\n      callback = => @handMorph.processMouseUp()\n    else if queuedEvent.type == \'takeScreenshot\'\n      callback = => @compareScreenshots(queuedEvent.screenShotImageData)\n    else return\n\n    setTimeout callback, lastPlayedEventTime\n    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime';
+
+  return SystemTestsRecorderAndPlayer;
+
+})();
+
+PenMorph = (function(_super) {
+  __extends(PenMorph, _super);
+
+  PenMorph.prototype.heading = 0;
+
+  PenMorph.prototype.penSize = null;
+
+  PenMorph.prototype.isWarped = false;
+
+  PenMorph.prototype.isDown = true;
+
+  PenMorph.prototype.wantsRedraw = false;
+
+  PenMorph.prototype.penPoint = 'tip';
+
+  function PenMorph() {
+    this.penSize = WorldMorph.MorphicPreferences.handleSize * 4;
+    PenMorph.__super__.constructor.call(this);
+    this.setExtent(new Point(this.penSize, this.penSize));
+    this.penSize = 1;
+  }
+
+  PenMorph.staticVariable = 1;
+
+  PenMorph.staticFunction = function() {
+    return 3.14;
+  };
+
+  PenMorph.prototype.changed = function() {
+    var w;
+
+    if (this.isWarped === false) {
+      w = this.root();
+      if (w instanceof WorldMorph) {
+        w.broken.push(this.visibleBounds().spread());
+      }
+      if (this.parent) {
+        return this.parent.childChanged(this);
+      }
+    }
+  };
+
+  PenMorph.prototype.updateRendering = function(facing) {
+    var context, dest, direction, left, len, right, start;
+
+    direction = facing || this.heading;
+    if (this.isWarped) {
+      this.wantsRedraw = true;
+      return;
+    }
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    len = this.width() / 2;
+    start = this.center().subtract(this.bounds.origin);
+    if (this.penPoint === "tip") {
+      dest = start.distanceAngle(len * 0.75, direction - 180);
+      left = start.distanceAngle(len, direction + 195);
+      right = start.distanceAngle(len, direction - 195);
+    } else {
+      dest = start.distanceAngle(len * 0.75, direction);
+      left = start.distanceAngle(len * 0.33, direction + 230);
+      right = start.distanceAngle(len * 0.33, direction - 230);
+    }
+    context.fillStyle = this.color.toString();
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.lineTo(left.x, left.y);
+    context.lineTo(dest.x, dest.y);
+    context.lineTo(right.x, right.y);
+    context.closePath();
+    context.strokeStyle = "white";
+    context.lineWidth = 3;
+    context.stroke();
+    context.strokeStyle = "black";
+    context.lineWidth = 1;
+    context.stroke();
+    context.fill();
+    return this.wantsRedraw = false;
+  };
+
+  PenMorph.prototype.setHeading = function(degrees) {
+    this.heading = parseFloat(degrees) % 360;
+    this.updateRendering();
+    return this.changed();
+  };
+
+  PenMorph.prototype.drawLine = function(start, dest) {
+    var context, from, to;
+
+    context = this.parent.penTrails().getContext("2d");
+    from = start.subtract(this.parent.bounds.origin);
+    to = dest.subtract(this.parent.bounds.origin);
+    if (this.isDown) {
+      context.lineWidth = this.penSize;
+      context.strokeStyle = this.color.toString();
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      context.lineTo(to.x, to.y);
+      context.stroke();
+      if (this.isWarped === false) {
+        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.penSize / 2, 1)).intersect(this.parent.visibleBounds()).spread());
+      }
+    }
+  };
+
+  PenMorph.prototype.turn = function(degrees) {
+    return this.setHeading(this.heading + parseFloat(degrees));
+  };
+
+  PenMorph.prototype.forward = function(steps) {
+    var dest, dist, start;
+
+    start = this.center();
+    dist = parseFloat(steps);
+    if (dist >= 0) {
+      dest = this.position().distanceAngle(dist, this.heading);
+    } else {
+      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
+    }
+    this.setPosition(dest);
+    return this.drawLine(start, this.center());
+  };
+
+  PenMorph.prototype.down = function() {
+    return this.isDown = true;
+  };
+
+  PenMorph.prototype.up = function() {
+    return this.isDown = false;
+  };
+
+  PenMorph.prototype.clear = function() {
+    this.parent.updateRendering();
+    return this.parent.changed();
+  };
+
+  PenMorph.prototype.startWarp = function() {
+    this.wantsRedraw = false;
+    return this.isWarped = true;
+  };
+
+  PenMorph.prototype.endWarp = function() {
+    this.isWarped = false;
+    if (this.wantsRedraw) {
+      this.updateRendering();
+      this.wantsRedraw = false;
+    }
+    return this.parent.changed();
+  };
+
+  PenMorph.prototype.warp = function(fun) {
+    this.startWarp();
+    fun.call(this);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpOp = function(selector, argsArray) {
+    this.startWarp();
+    this[selector].apply(this, argsArray);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpSierpinski = function(length, min) {
+    return this.warpOp("sierpinski", [length, min]);
+  };
+
+  PenMorph.prototype.sierpinski = function(length, min) {
+    var i, _i, _results;
+
+    if (length > min) {
+      _results = [];
+      for (i = _i = 0; _i < 3; i = ++_i) {
+        this.sierpinski(length * 0.5, min);
+        this.turn(120);
+        _results.push(this.forward(length));
+      }
+      return _results;
+    }
+  };
+
+  PenMorph.prototype.warpTree = function(level, length, angle) {
+    return this.warpOp("tree", [level, length, angle]);
+  };
+
+  PenMorph.prototype.tree = function(level, length, angle) {
+    if (level > 0) {
+      this.penSize = level;
+      this.forward(length);
+      this.turn(angle);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle * -2);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle);
+      return this.forward(-length);
+    }
+  };
+
+  PenMorph.coffeeScriptSourceOfThisClass = '# PenMorph ////////////////////////////////////////////////////////////\n\n# I am a simple LOGO-wise turtle.\n\nclass PenMorph extends Morph\n  \n  heading: 0\n  penSize: null\n  isWarped: false # internal optimization\n  isDown: true\n  wantsRedraw: false # internal optimization\n  penPoint: \'tip\' # or \'center\'\n  \n  constructor: () ->\n    @penSize = WorldMorph.MorphicPreferences.handleSize * 4\n    super()\n    @setExtent new Point(@penSize, @penSize)\n    # todo we need to change the size two times, for getting the right size\n    # of the arrow and of the line. Probably should make the two distinct\n    @penSize = 1\n    #alert @morphMethod() # works\n    # doesn\'t work cause coffeescript doesn\'t support static inheritance\n    #alert @morphStaticMethod()\n\n  @staticVariable: 1\n  @staticFunction: -> 3.14\n    \n  # PenMorph updating - optimized for warping, i.e atomic recursion\n  changed: ->\n    if @isWarped is false\n      w = @root()\n      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph\n      @parent.childChanged @  if @parent\n  \n  \n  # PenMorph display:\n  updateRendering: (facing) ->\n    #\n    #    my orientation can be overridden with the "facing" parameter to\n    #    implement Scratch-style rotation styles\n    #    \n    #\n    direction = facing or @heading\n    if @isWarped\n      @wantsRedraw = true\n      return\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    len = @width() / 2\n    start = @center().subtract(@bounds.origin)\n\n    if @penPoint is "tip"\n      dest = start.distanceAngle(len * 0.75, direction - 180)\n      left = start.distanceAngle(len, direction + 195)\n      right = start.distanceAngle(len, direction - 195)\n    else # \'middle\'\n      dest = start.distanceAngle(len * 0.75, direction)\n      left = start.distanceAngle(len * 0.33, direction + 230)\n      right = start.distanceAngle(len * 0.33, direction - 230)\n\n    context.fillStyle = @color.toString()\n    context.beginPath()\n\n    context.moveTo start.x, start.y\n    context.lineTo left.x, left.y\n    context.lineTo dest.x, dest.y\n    context.lineTo right.x, right.y\n\n    context.closePath()\n    context.strokeStyle = "white"\n    context.lineWidth = 3\n    context.stroke()\n    context.strokeStyle = "black"\n    context.lineWidth = 1\n    context.stroke()\n    context.fill()\n    @wantsRedraw = false\n  \n  \n  # PenMorph access:\n  setHeading: (degrees) ->\n    @heading = parseFloat(degrees) % 360\n    @updateRendering()\n    @changed()\n  \n  \n  # PenMorph drawing:\n  drawLine: (start, dest) ->\n    context = @parent.penTrails().getContext("2d")\n    from = start.subtract(@parent.bounds.origin)\n    to = dest.subtract(@parent.bounds.origin)\n    if @isDown\n      context.lineWidth = @penSize\n      context.strokeStyle = @color.toString()\n      context.lineCap = "round"\n      context.lineJoin = "round"\n      context.beginPath()\n      context.moveTo from.x, from.y\n      context.lineTo to.x, to.y\n      context.stroke()\n      if @isWarped is false\n        @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()\n  \n  \n  # PenMorph turtle ops:\n  turn: (degrees) ->\n    @setHeading @heading + parseFloat(degrees)\n  \n  forward: (steps) ->\n    start = @center()\n    dist = parseFloat(steps)\n    if dist >= 0\n      dest = @position().distanceAngle(dist, @heading)\n    else\n      dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))\n    @setPosition dest\n    @drawLine start, @center()\n  \n  down: ->\n    @isDown = true\n  \n  up: ->\n    @isDown = false\n  \n  clear: ->\n    @parent.updateRendering()\n    @parent.changed()\n  \n  \n  # PenMorph optimization for atomic recursion:\n  startWarp: ->\n    @wantsRedraw = false\n    @isWarped = true\n  \n  endWarp: ->\n    @isWarped = false\n    if @wantsRedraw\n      @updateRendering()\n      @wantsRedraw = false\n    @parent.changed()\n  \n  warp: (fun) ->\n    @startWarp()\n    fun.call @\n    @endWarp()\n  \n  warpOp: (selector, argsArray) ->\n    @startWarp()\n    @[selector].apply @, argsArray\n    @endWarp()\n  \n  \n  # PenMorph demo ops:\n  # try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})\n  warpSierpinski: (length, min) ->\n    @warpOp "sierpinski", [length, min]\n  \n  sierpinski: (length, min) ->\n    if length > min\n      for i in [0...3]\n        @sierpinski length * 0.5, min\n        @turn 120\n        @forward length\n  \n  warpTree: (level, length, angle) ->\n    @warpOp "tree", [level, length, angle]\n  \n  tree: (level, length, angle) ->\n    if level > 0\n      @penSize = level\n      @forward length\n      @turn angle\n      @tree level - 1, length * 0.75, angle\n      @turn angle * -2\n      @tree level - 1, length * 0.75, angle\n      @turn angle\n      @forward -length';
+
+  return PenMorph;
+
+})(Morph);
+
+Point2 = (function() {
+  Point2.prototype.x = null;
+
+  Point2.prototype.y = null;
+
+  function Point2(x, y) {
+    this.x = x != null ? x : 0;
+    this.y = y != null ? y : 0;
+  }
+
+  Point2.prototype.toString = function() {
+    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
+  };
+
+  Point2.prototype.copy = function() {
+    return new Point2(this.x, this.y);
+  };
+
+  Point2.prototype.eq = function(aPoint2) {
+    return this.x === aPoint2.x && this.y === aPoint2.y;
+  };
+
+  Point2.prototype.lt = function(aPoint2) {
+    return this.x < aPoint2.x && this.y < aPoint2.y;
+  };
+
+  Point2.prototype.gt = function(aPoint2) {
+    return this.x > aPoint2.x && this.y > aPoint2.y;
+  };
+
+  Point2.prototype.ge = function(aPoint2) {
+    return this.x >= aPoint2.x && this.y >= aPoint2.y;
+  };
+
+  Point2.prototype.le = function(aPoint2) {
+    return this.x <= aPoint2.x && this.y <= aPoint2.y;
+  };
+
+  Point2.prototype.max = function(aPoint2) {
+    this.x = Math.max(this.x, aPoint2.x);
+    return this.y = Math.max(this.y, aPoint2.y);
+  };
+
+  Point2.prototype.min = function(aPoint2) {
+    this.x = Math.min(this.x, aPoint2.x);
+    return this.y = Math.min(this.y, aPoint2.y);
+  };
+
+  Point2.prototype.round = function() {
+    this.x = Math.round(this.x);
+    return this.y = Math.round(this.y);
+  };
+
+  Point2.prototype.abs = function() {
+    this.x = Math.abs(this.x);
+    return this.y = Math.abs(this.y);
+  };
+
+  Point2.prototype.neg = function() {
+    this.x = -this.x;
+    return this.y = -this.y;
+  };
+
+  Point2.prototype.mirror = function() {
+    var tmpValueForSwappingXAndY;
+
+    tmpValueForSwappingXAndY = this.x;
+    this.x = this.y;
+    return this.y = tmpValueForSwappingXAndY;
+  };
+
+  Point2.prototype.floor = function() {
+    this.x = Math.max(Math.floor(this.x), 0);
+    return this.y = Math.max(Math.floor(this.y), 0);
+  };
+
+  Point2.prototype.ceil = function() {
+    this.x = Math.ceil(this.x);
+    return this.y = Math.ceil(this.y);
+  };
+
+  Point2.prototype.add = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x + other.x;
+      this.y = this.y + other.y;
+      return;
+    }
+    this.x = this.x + other;
+    return this.y = this.y + other;
+  };
+
+  Point2.prototype.subtract = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x - other.x;
+      this.y = this.y - other.y;
+      return;
+    }
+    this.x = this.x - other;
+    return this.y = this.y - other;
+  };
+
+  Point2.prototype.multiplyBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x * other.x;
+      this.y = this.y * other.y;
+      return;
+    }
+    this.x = this.x * other;
+    return this.y = this.y * other;
+  };
+
+  Point2.prototype.divideBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x / other.x;
+      this.y = this.y / other.y;
+      return;
+    }
+    this.x = this.x / other;
+    return this.y = this.y / other;
+  };
+
+  Point2.prototype.floorDivideBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = Math.floor(this.x / other.x);
+      this.y = Math.floor(this.y / other.y);
+      return;
+    }
+    this.x = Math.floor(this.x / other);
+    return this.y = Math.floor(this.y / other);
+  };
+
+  Point2.prototype.r = function() {
+    var t;
+
+    t = this.copy();
+    t.multiplyBy(t);
+    return Math.sqrt(t.x + t.y);
+  };
+
+  Point2.prototype.degrees = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return 90;
+      }
+      return 270;
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return degrees(theta);
+      }
+      return 360 + (degrees(theta));
+    }
+    return 180 + degrees(theta);
+  };
+
+  Point2.prototype.theta = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return radians(90);
+      }
+      return radians(270);
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return theta;
+      }
+      return radians(360) + theta;
+    }
+    return radians(180) + theta;
+  };
+
+  Point2.prototype.crossProduct = function(aPoint2) {
+    return this.multiplyBy(aPoint2.copy().mirror());
+  };
+
+  Point2.prototype.distanceTo = function(aPoint2) {
+    return (aPoint2.copy().subtract(this)).r();
+  };
+
+  Point2.prototype.rotate = function(direction, center) {
+    var offset, tmpPointForRotate;
+
+    offset = this.copy().subtract(center);
+    if (direction === "right") {
+      this.x = -offset.y + center.x;
+      this.y = offset.y + center.y;
+      return;
+    }
+    if (direction === "left") {
+      this.x = offset.y + center.x;
+      this.y = -offset.y + center.y;
+      return;
+    }
+    tmpPointForRotate = center.copy().subtract(offset);
+    this.x = tmpPointForRotate.x;
+    return this.y = tmpPointForRotate.y;
+  };
+
+  Point2.prototype.flip = function(direction, center) {
+    if (direction === "vertical") {
+      this.y = center.y * 2 - this.y;
+      return;
+    }
+    return this.x = center.x * 2 - this.x;
+  };
+
+  Point2.prototype.distanceAngle = function(dist, angle) {
+    var deg, x, y;
+
+    deg = angle;
+    if (deg > 270) {
+      deg = deg - 360;
+    } else {
+      if (deg < -270) {
+        deg = deg + 360;
+      }
+    }
+    if (-90 <= deg && deg <= 90) {
+      x = Math.sin(radians(deg)) * dist;
+      y = Math.sqrt((dist * dist) - (x * x));
+      this.x = x + this.x;
+      this.y = this.y - y;
+      return;
+    }
+    x = Math.sin(radians(180 - deg)) * dist;
+    y = Math.sqrt((dist * dist) - (x * x));
+    this.x = x + this.x;
+    return this.y = this.y + y;
+  };
+
+  Point2.prototype.scaleBy = function(scalePoint2) {
+    return this.multiplyBy(scalePoint2);
+  };
+
+  Point2.prototype.translateBy = function(deltaPoint2) {
+    return this.add(deltaPoint2);
+  };
+
+  Point2.prototype.rotateBy = function(angle, centerPoint2) {
+    var center, p, r, theta;
+
+    center = centerPoint2 || new Point2(0, 0);
+    p = this.copy().subtract(center);
+    r = p.r();
+    theta = angle - p.theta();
+    this.x = center.x + (r * Math.cos(theta));
+    return this.y = center.y - (r * Math.sin(theta));
+  };
+
+  Point2.prototype.asArray = function() {
+    return [this.x, this.y];
+  };
+
+  Point2.prototype.corner = function(cornerPoint2) {
+    return new Rectangle(this.x, this.y, cornerPoint2.x, cornerPoint2.y);
+  };
+
+  Point2.prototype.rectangle = function(aPoint2) {
+    var crn, org;
+
+    org = this.copy().min(aPoint2);
+    crn = this.copy().max(aPoint2);
+    return new Rectangle(org.x, org.y, crn.x, crn.y);
+  };
+
+  Point2.prototype.extent = function(aPoint2) {
+    var crn;
+
+    crn = this.copy().add(aPoint2);
+    return new Rectangle(this.x, this.y, crn.x, crn.y);
+  };
+
+  Point2.coffeeScriptSourceOfThisClass = '# Point2 //////////////////////////////////////////////////////////////\n# like Point, but it tries not to create new objects like there is\n# no tomorrow. Any operation that returned a new point now directly\n# modifies the current point.\n# Note that the arguments passed to any of these functions are never\n# modified.\n\nclass Point2\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point2 string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point2 copying:\n  copy: ->\n    new Point2(@x, @y)\n  \n  # Point2 comparison:\n  eq: (aPoint2) ->\n    # ==\n    @x is aPoint2.x and @y is aPoint2.y\n  \n  lt: (aPoint2) ->\n    # <\n    @x < aPoint2.x and @y < aPoint2.y\n  \n  gt: (aPoint2) ->\n    # >\n    @x > aPoint2.x and @y > aPoint2.y\n  \n  ge: (aPoint2) ->\n    # >=\n    @x >= aPoint2.x and @y >= aPoint2.y\n  \n  le: (aPoint2) ->\n    # <=\n    @x <= aPoint2.x and @y <= aPoint2.y\n  \n  max: (aPoint2) ->\n    #new Point2(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))\n    @x = Math.max(@x, aPoint2.x)\n    @y = Math.max(@y, aPoint2.y)\n  \n  min: (aPoint2) ->\n    #new Point2(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))\n    @x = Math.min(@x, aPoint2.x)\n    @y = Math.min(@y, aPoint2.y)\n  \n  \n  # Point2 conversion:\n  round: ->\n    #new Point2(Math.round(@x), Math.round(@y))\n    @x = Math.round(@x)\n    @y = Math.round(@y)\n  \n  abs: ->\n    #new Point2(Math.abs(@x), Math.abs(@y))\n    @x = Math.abs(@x)\n    @y = Math.abs(@y)\n  \n  neg: ->\n    #new Point2(-@x, -@y)\n    @x = -@x\n    @y = -@y\n  \n  mirror: ->\n    #new Point2(@y, @x)\n    # note that coffeescript would allow [@x,@y] = [@y,@x]\n    # but we want to be faster here\n    tmpValueForSwappingXAndY = @x\n    @x = @y\n    @y = tmpValueForSwappingXAndY \n  \n  floor: ->\n    #new Point2(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n    @x = Math.max(Math.floor(@x), 0)\n    @y = Math.max(Math.floor(@y), 0)\n  \n  ceil: ->\n    #new Point2(Math.ceil(@x), Math.ceil(@y))\n    @x = Math.ceil(@x)\n    @y = Math.ceil(@y)\n  \n  \n  # Point2 arithmetic:\n  add: (other) ->\n    if other instanceof Point2\n      @x = @x + other.x\n      @y = @y + other.y\n      return\n    @x = @x + other\n    @y = @y + other\n  \n  subtract: (other) ->\n    if other instanceof Point2\n      @x = @x - other.x\n      @y = @y - other.y\n      return\n    @x = @x - other\n    @y = @y - other\n  \n  multiplyBy: (other) ->\n    if other instanceof Point2\n      @x = @x * other.x\n      @y = @y * other.y\n      return\n    @x = @x * other\n    @y = @y * other\n  \n  divideBy: (other) ->\n    if other instanceof Point2\n      @x = @x / other.x\n      @y = @y / other.y\n      return\n    @x = @x / other\n    @y = @y / other\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point2\n      @x = Math.floor(@x / other.x)\n      @y = Math.floor(@y / other.y)\n      return\n    @x = Math.floor(@x / other)\n    @y = Math.floor(@y / other)\n  \n  \n  # Point2 polar coordinates:\n  # distance from the origin\n  r: ->\n    t = @copy()\n    t.multiplyBy(t)\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point2 functions:\n  \n  # this function is a bit fishy.\n  # a cross product in 2d is probably not a vector\n  # see https://github.com/jmoenig/morphic.js/issues/6\n  # this function is not used\n  crossProduct: (aPoint2) ->\n    @multiplyBy aPoint2.copy().mirror()\n  \n  distanceTo: (aPoint2) ->\n    (aPoint2.copy().subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @copy().subtract(center)\n    if direction is "right"\n      @x = -offset.y + center.x\n      @y = offset.y + center.y\n      return\n    if direction is "left"\n      @x = offset.y + center.x\n      @y = -offset.y + center.y\n      return\n    #\n    # direction === \'pi\'\n    tmpPointForRotate = center.copy().subtract offset\n    @x = tmpPointForRotate.x\n    @y = tmpPointForRotate.y\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    if direction is "vertical"\n      @y = center.y * 2 - @y\n      return\n    #\n    # direction === \'horizontal\'\n    @x = center.x * 2 - @x\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      @x = x + @x\n      @y = @y - y\n      return\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    @x = x + @x\n    @y = @y + y\n  \n  \n  # Point2 transforming:\n  scaleBy: (scalePoint2) ->\n    @multiplyBy scalePoint2\n  \n  translateBy: (deltaPoint2) ->\n    @add deltaPoint2\n  \n  rotateBy: (angle, centerPoint2) ->\n    center = centerPoint2 or new Point2(0, 0)\n    p = @copy().subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    @x = center.x + (r * Math.cos(theta))\n    @y = center.y - (r * Math.sin(theta))\n  \n  \n  # Point2 conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Point2:\n  corner: (cornerPoint2) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint2.x, cornerPoint2.y)\n  \n  rectangle: (aPoint2) ->\n    # answer a new Rectangle\n    org = @copy().min(aPoint2)\n    crn = @copy().max(aPoint2)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint2) ->\n    #answer a new Rectangle\n    crn = @copy().add(aPoint2)\n    new Rectangle(@x, @y, crn.x, crn.y)';
+
+  return Point2;
+
+})();
+
+Rectangle = (function() {
+  Rectangle.prototype.origin = null;
+
+  Rectangle.prototype.corner = null;
+
+  function Rectangle(left, top, right, bottom) {
+    this.origin = new Point(left || 0, top || 0);
+    this.corner = new Point(right || 0, bottom || 0);
+  }
+
+  Rectangle.prototype.toString = function() {
+    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
+  };
+
+  Rectangle.prototype.copy = function() {
+    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
+  };
+
+  Rectangle.prototype.setTo = function(left, top, right, bottom) {
+    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
+    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
+  };
+
+  Rectangle.prototype.area = function() {
+    var w;
+
+    w = this.width();
+    if (w < 0) {
+      return 0;
+    }
+    return Math.max(w * this.height(), 0);
+  };
+
+  Rectangle.prototype.bottom = function() {
+    return this.corner.y;
+  };
+
+  Rectangle.prototype.bottomCenter = function() {
+    return new Point(this.center().x, this.bottom());
+  };
+
+  Rectangle.prototype.bottomLeft = function() {
+    return new Point(this.origin.x, this.corner.y);
+  };
+
+  Rectangle.prototype.bottomRight = function() {
+    return this.corner.copy();
+  };
+
+  Rectangle.prototype.boundingBox = function() {
+    return this;
+  };
+
+  Rectangle.prototype.center = function() {
+    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
+  };
+
+  Rectangle.prototype.corners = function() {
+    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
+  };
+
+  Rectangle.prototype.extent = function() {
+    return this.corner.subtract(this.origin);
+  };
+
+  Rectangle.prototype.isEmpty = function() {
+    var theExtent;
+
+    theExtent = this.corner.subtract(this.origin);
+    return theExtent.x = 0 || (theExtent.y = 0);
+  };
+
+  Rectangle.prototype.isNotEmpty = function() {
+    var theExtent;
+
+    theExtent = this.corner.subtract(this.origin);
+    return theExtent.x > 0 && theExtent.y > 0;
+  };
+
+  Rectangle.prototype.height = function() {
+    return this.corner.y - this.origin.y;
+  };
+
+  Rectangle.prototype.left = function() {
+    return this.origin.x;
+  };
+
+  Rectangle.prototype.leftCenter = function() {
+    return new Point(this.left(), this.center().y);
+  };
+
+  Rectangle.prototype.right = function() {
+    return this.corner.x;
+  };
+
+  Rectangle.prototype.rightCenter = function() {
+    return new Point(this.right(), this.center().y);
+  };
+
+  Rectangle.prototype.top = function() {
+    return this.origin.y;
+  };
+
+  Rectangle.prototype.topCenter = function() {
+    return new Point(this.center().x, this.top());
+  };
+
+  Rectangle.prototype.topLeft = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.topRight = function() {
+    return new Point(this.corner.x, this.origin.y);
+  };
+
+  Rectangle.prototype.width = function() {
+    return this.corner.x - this.origin.x;
+  };
+
+  Rectangle.prototype.position = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.eq = function(aRect) {
+    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
+  };
+
+  Rectangle.prototype.abs = function() {
+    var newCorner, newOrigin;
+
+    newOrigin = this.origin.abs();
+    newCorner = this.corner.max(newOrigin);
+    return newOrigin.corner(newCorner);
+  };
+
+  Rectangle.prototype.insetBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.add(delta);
+    result.corner = this.corner.subtract(delta);
+    return result;
+  };
+
+  Rectangle.prototype.expandBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.subtract(delta);
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.growBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.copy();
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.intersect = function(aRect) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.max(aRect.origin);
+    result.corner = this.corner.min(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.merge = function(aRect) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.min(aRect.origin);
+    result.corner = this.corner.max(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.round = function() {
+    return this.origin.round().corner(this.corner.round());
+  };
+
+  Rectangle.prototype.spread = function() {
+    return this.origin.floor().corner(this.corner.ceil());
+  };
+
+  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
+    var dx, dy;
+
+    if (this.right() > aRect.right()) {
+      dx = aRect.right() - this.right();
+    }
+    if (this.bottom() > aRect.bottom()) {
+      dy = aRect.bottom() - this.bottom();
+    }
+    if ((this.left() + dx) < aRect.left()) {
+      dx = aRect.left() - this.right();
+    }
+    if ((this.top() + dy) < aRect.top()) {
+      dy = aRect.top() - this.top();
+    }
+    return new Point(dx, dy);
+  };
+
+  Rectangle.prototype.containsPoint = function(aPoint) {
+    return this.origin.le(aPoint) && aPoint.lt(this.corner);
+  };
+
+  Rectangle.prototype.containsRectangle = function(aRect) {
+    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
+  };
+
+  Rectangle.prototype.intersects = function(aRect) {
+    var rc, ro;
+
+    ro = aRect.origin;
+    rc = aRect.corner;
+    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
+  };
+
+  Rectangle.prototype.scaleBy = function(scale) {
+    var c, o;
+
+    o = this.origin.multiplyBy(scale);
+    c = this.corner.multiplyBy(scale);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.translateBy = function(factor) {
+    var c, o;
+
+    o = this.origin.add(factor);
+    c = this.corner.add(factor);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.asArray = function() {
+    return [this.left(), this.top(), this.right(), this.bottom()];
+  };
+
+  Rectangle.prototype.asArray_xywh = function() {
+    return [this.left(), this.top(), this.width(), this.height()];
+  };
+
+  Rectangle.coffeeScriptSourceOfThisClass = '# Rectangles //////////////////////////////////////////////////////////\n\nclass Rectangle\n\n  origin: null\n  corner: null\n  \n  constructor: (left, top, right, bottom) ->\n    \n    @origin = new Point((left or 0), (top or 0))\n    @corner = new Point((right or 0), (bottom or 0))\n  \n  \n  # Rectangle string representation: e.g. \'[0@0 | 160@80]\'\n  toString: ->\n    "[" + @origin.toString() + " | " + @extent().toString() + "]"\n  \n  # Rectangle copying:\n  copy: ->\n    new Rectangle(@left(), @top(), @right(), @bottom())\n  \n  # Rectangle accessing - setting:\n  setTo: (left, top, right, bottom) ->\n    # note: all inputs are optional and can be omitted\n    @origin = new Point(\n      left or ((if (left is 0) then 0 else @left())),\n      top or ((if (top is 0) then 0 else @top())))\n    @corner = new Point(\n      right or ((if (right is 0) then 0 else @right())),\n      bottom or ((if (bottom is 0) then 0 else @bottom())))\n  \n  # Rectangle accessing - getting:\n  area: ->\n    #requires width() and height() to be defined\n    w = @width()\n    return 0  if w < 0\n    Math.max w * @height(), 0\n  \n  bottom: ->\n    @corner.y\n  \n  bottomCenter: ->\n    new Point(@center().x, @bottom())\n  \n  bottomLeft: ->\n    new Point(@origin.x, @corner.y)\n  \n  bottomRight: ->\n    @corner.copy()\n  \n  boundingBox: ->\n    @\n  \n  center: ->\n    @origin.add @corner.subtract(@origin).floorDivideBy(2)\n  \n  corners: ->\n    [@origin, @bottomLeft(), @corner, @topRight()]\n  \n  extent: ->\n    @corner.subtract @origin\n  \n  isEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x = 0 or theExtent.y = 0\n\n  isNotEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x > 0 and theExtent.y > 0\n  \n  height: ->\n    @corner.y - @origin.y\n  \n  left: ->\n    @origin.x\n  \n  leftCenter: ->\n    new Point(@left(), @center().y)\n  \n  right: ->\n    @corner.x\n  \n  rightCenter: ->\n    new Point(@right(), @center().y)\n  \n  top: ->\n    @origin.y\n  \n  topCenter: ->\n    new Point(@center().x, @top())\n  \n  topLeft: ->\n    @origin\n  \n  topRight: ->\n    new Point(@corner.x, @origin.y)\n  \n  width: ->\n    @corner.x - @origin.x\n  \n  position: ->\n    @origin\n  \n  # Rectangle comparison:\n  eq: (aRect) ->\n    @origin.eq(aRect.origin) and @corner.eq(aRect.corner)\n  \n  abs: ->\n    newOrigin = @origin.abs()\n    newCorner = @corner.max(newOrigin)\n    newOrigin.corner newCorner\n  \n  # Rectangle functions:\n  insetBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.add(delta)\n    result.corner = @corner.subtract(delta)\n    result\n  \n  expandBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.subtract(delta)\n    result.corner = @corner.add(delta)\n    result\n  \n  growBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.copy()\n    result.corner = @corner.add(delta)\n    result\n  \n  intersect: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.max(aRect.origin)\n    result.corner = @corner.min(aRect.corner)\n    result\n  \n  merge: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.min(aRect.origin)\n    result.corner = @corner.max(aRect.corner)\n    result\n  \n  round: ->\n    @origin.round().corner @corner.round()\n  \n  spread: ->\n    # round me by applying floor() to my origin and ceil() to my corner\n    @origin.floor().corner @corner.ceil()\n  \n  amountToTranslateWithin: (aRect) ->\n    #\n    #    Answer a Point, delta, such that self + delta is forced within\n    #    aRectangle. when all of me cannot be made to fit, prefer to keep\n    #    my topLeft inside. Taken from Squeak.\n    #\n    dx = aRect.right() - @right()  if @right() > aRect.right()\n    dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()\n    dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()\n    dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()\n    new Point(dx, dy)\n  \n  \n  # Rectangle testing:\n  containsPoint: (aPoint) ->\n    @origin.le(aPoint) and aPoint.lt(@corner)\n  \n  containsRectangle: (aRect) ->\n    aRect.origin.gt(@origin) and aRect.corner.lt(@corner)\n  \n  intersects: (aRect) ->\n    ro = aRect.origin\n    rc = aRect.corner\n    (rc.x >= @origin.x) and\n      (rc.y >= @origin.y) and\n      (ro.x <= @corner.x) and\n      (ro.y <= @corner.y)\n  \n  \n  # Rectangle transforming:\n  scaleBy: (scale) ->\n    # scale can be either a Point or a scalar\n    o = @origin.multiplyBy(scale)\n    c = @corner.multiplyBy(scale)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  translateBy: (factor) ->\n    # factor can be either a Point or a scalar\n    o = @origin.add(factor)\n    c = @corner.add(factor)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  \n  # Rectangle converting:\n  asArray: ->\n    [@left(), @top(), @right(), @bottom()]\n  \n  asArray_xywh: ->\n    [@left(), @top(), @width(), @height()]';
+
+  return Rectangle;
+
+})();
+
+HandleMorph = (function(_super) {
+  var step;
+
+  __extends(HandleMorph, _super);
+
+  HandleMorph.prototype.target = null;
+
+  HandleMorph.prototype.minExtent = null;
+
+  HandleMorph.prototype.inset = null;
+
+  HandleMorph.prototype.type = null;
+
+  function HandleMorph(target, minX, minY, insetX, insetY, type) {
+    var size;
+
+    this.target = target != null ? target : null;
+    if (minX == null) {
+      minX = 0;
+    }
+    if (minY == null) {
+      minY = 0;
+    }
+    this.type = type != null ? type : "resize";
+    this.minExtent = new Point(minX, minY);
+    this.inset = new Point(insetX || 0, insetY || insetX || 0);
+    HandleMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.noticesTransparentClick = true;
+    size = WorldMorph.MorphicPreferences.handleSize;
+    this.setExtent(new Point(size, size));
+  }
+
+  HandleMorph.prototype.updateRendering = function() {
+    this.normalImage = newCanvas(this.extent());
+    this.highlightImage = newCanvas(this.extent());
+    this.handleMorphRenderingHelper(this.normalImage, this.color, new Color(100, 100, 100));
+    this.handleMorphRenderingHelper(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
+    this.image = this.normalImage;
+    if (this.target) {
+      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
+      this.target.add(this);
+      return this.target.changed();
+    }
+  };
+
+  HandleMorph.prototype.handleMorphRenderingHelper = function(aCanvas, color, shadowColor) {
+    var context, i, p1, p11, p2, p22, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _results;
+
+    context = aCanvas.getContext("2d");
+    context.lineWidth = 1;
+    context.lineCap = "round";
+    context.strokeStyle = color.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      for (i = _i = 0, _ref = this.height(); _i <= _ref; i = _i += 6) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    for (i = _j = 0, _ref1 = this.width(); _j <= _ref1; i = _j += 6) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      context.stroke();
+    }
+    context.strokeStyle = shadowColor.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      for (i = _k = -1, _ref2 = this.height(); _k <= _ref2; i = _k += 6) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    _results = [];
+    for (i = _l = 2, _ref3 = this.width(); _l <= _ref3; i = _l += 6) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      _results.push(context.stroke());
+    }
+    return _results;
+  };
+
+  step = null;
+
+  HandleMorph.prototype.mouseDownLeft = function(pos) {
+    var offset, world,
+      _this = this;
+
+    world = this.root();
+    offset = pos.subtract(this.bounds.origin);
+    if (!this.target) {
+      return null;
+    }
+    this.step = function() {
+      var newExt, newPos;
+
+      if (world.hand.mouseButton) {
+        newPos = world.hand.bounds.origin.copy().subtract(offset);
+        if (_this.type === "resize") {
+          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
+          newExt = newExt.max(_this.minExtent);
+          _this.target.setExtent(newExt);
+          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
+        } else {
+          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
+        }
+      } else {
+        return _this.step = null;
+      }
+    };
+    if (!this.target.step) {
+      return this.target.step = noOperation;
+    }
+  };
+
+  HandleMorph.prototype.rootForGrab = function() {
+    return this;
+  };
+
+  HandleMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
+    }
+    return c;
+  };
+
+  HandleMorph.prototype.attach = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        this.isDraggable = false;
+        this.target = each;
+        this.updateRendering();
+        return this.noticesTransparentClick = true;
+      });
+    });
+    if (choices.length) {
+      return menu.popUpAtHand(this.world());
+    }
+  };
+
+  HandleMorph.coffeeScriptSourceOfThisClass = '# HandleMorph ////////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\n# I am a resize / move handle that can be attached to any Morph\n\nclass HandleMorph extends Morph\n\n  target: null\n  minExtent: null\n  inset: null\n  type: null # "resize" or "move"\n\n  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->\n    # if insetY is missing, it will be the same as insetX\n    @minExtent = new Point(minX, minY)\n    @inset = new Point(insetX or 0, insetY or insetX or 0)\n    super()\n    @color = new Color(255, 255, 255)\n    @noticesTransparentClick = true\n    size = WorldMorph.MorphicPreferences.handleSize\n    @setExtent new Point(size, size)  \n  \n  # HandleMorph drawing:\n  updateRendering: ->\n    @normalImage = newCanvas(@extent())\n    @highlightImage = newCanvas(@extent())\n    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)\n    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)\n    @image = @normalImage\n    if @target\n      @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n      @target.add @\n      @target.changed()\n  \n  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->\n    context = aCanvas.getContext("2d")\n    context.lineWidth = 1\n    context.lineCap = "round"\n    context.strokeStyle = color.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [0..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [0..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n\n    context.strokeStyle = shadowColor.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [-1..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [2..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n  \n  \n  # HandleMorph stepping:\n  step = null\n  mouseDownLeft: (pos) ->\n    world = @root()\n    offset = pos.subtract(@bounds.origin)\n    return null  unless @target\n    @step = =>\n      if world.hand.mouseButton\n        newPos = world.hand.bounds.origin.copy().subtract(offset)\n        if @type is "resize"\n          newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)\n          newExt = newExt.max(@minExtent)\n          @target.setExtent newExt\n          @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n        else # type === \'move\'\n          @target.setPosition newPos.subtract(@target.extent()).add(@extent())\n      else\n        @step = null\n    \n    unless @target.step\n      @target.step = noOperation\n  \n  \n  # HandleMorph dragging and dropping:\n  rootForGrab: ->\n    @\n  \n  \n  # HandleMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  \n  # HandleMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  \n  # HandleMorph menu:\n  attach: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), ->\n        @isDraggable = false\n        @target = each\n        @updateRendering()\n        @noticesTransparentClick = true\n    menu.popUpAtHand @world()  if choices.length';
+
+  return HandleMorph;
+
+})(Morph);
+
+HandMorph = (function(_super) {
+  __extends(HandMorph, _super);
+
+  HandMorph.prototype.world = null;
+
+  HandMorph.prototype.mouseButton = null;
+
+  HandMorph.prototype.mouseDownMorph = null;
+
+  HandMorph.prototype.morphToGrab = null;
+
+  HandMorph.prototype.grabOrigin = null;
+
+  HandMorph.prototype.mouseOverList = null;
+
+  HandMorph.prototype.temporaries = null;
+
+  HandMorph.prototype.touchHoldTimeout = null;
+
+  function HandMorph(world) {
+    this.world = world;
+    this.mouseOverList = [];
+    this.temporaries = [];
+    HandMorph.__super__.constructor.call(this);
+    this.bounds = new Rectangle();
+  }
+
+  HandMorph.prototype.changed = function() {
+    var b;
+
+    if (this.world !== null) {
+      b = this.boundsIncludingChildren();
+      if (!b.extent().eq(new Point())) {
+        return this.world.broken.push(this.boundsIncludingChildren().spread());
+      }
+    }
+  };
+
+  HandMorph.prototype.morphAtPointer = function() {
+    var morphs, result,
+      _this = this;
+
+    morphs = this.world.allChildren().slice(0).reverse();
+    result = null;
+    morphs.forEach(function(m) {
+      if (m.visibleBounds().containsPoint(_this.bounds.origin) && result === null && m.isVisible && (m.noticesTransparentClick || (!m.isTransparentAt(_this.bounds.origin))) && (!(m instanceof ShadowMorph))) {
+        return result = m;
+      }
+    });
+    if (result !== null) {
+      return result;
+    }
+    return this.world;
+  };
+
+  HandMorph.prototype.allMorphsAtPointer = function() {
+    var morphs,
+      _this = this;
+
+    morphs = this.world.allChildren();
+    return morphs.filter(function(m) {
+      return m.isVisible && m.visibleBounds().containsPoint(_this.bounds.origin);
+    });
+  };
+
+  HandMorph.prototype.dropTargetFor = function(aMorph) {
+    var target;
+
+    target = this.morphAtPointer();
+    while (!target.wantsDropOf(aMorph)) {
+      target = target.parent;
+    }
+    return target;
+  };
+
+  HandMorph.prototype.grab = function(aMorph) {
+    var oldParent;
+
+    oldParent = aMorph.parent;
+    if (aMorph instanceof WorldMorph) {
+      return null;
+    }
+    if (!this.children.length) {
+      this.world.stopEditing();
+      this.grabOrigin = aMorph.situation();
+      aMorph.addShadow();
+      if (aMorph.prepareToBeGrabbed) {
+        aMorph.prepareToBeGrabbed(this);
+      }
+      this.add(aMorph);
+      this.changed();
+      if (oldParent && oldParent.reactToGrabOf) {
+        return oldParent.reactToGrabOf(aMorph);
+      }
+    }
+  };
+
+  HandMorph.prototype.drop = function() {
+    var morphToDrop, target;
+
+    if (this.children.length) {
+      morphToDrop = this.children[0];
+      target = this.dropTargetFor(morphToDrop);
+      this.changed();
+      target.add(morphToDrop);
+      morphToDrop.changed();
+      morphToDrop.removeShadow();
+      this.children = [];
+      this.setExtent(new Point());
+      if (morphToDrop.justDropped) {
+        morphToDrop.justDropped(this);
+      }
+      if (target.reactToDropOf) {
+        target.reactToDropOf(morphToDrop, this);
+      }
+      return this.dragOrigin = null;
+    }
+  };
+
+  HandMorph.prototype.processMouseDown = function(button, ctrlKey) {
+    var actualClick, expectedClick, morph;
+
+    this.world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey);
+    this.destroyTemporaries();
+    this.morphToGrab = null;
+    if (this.children.length) {
+      this.drop();
+      return this.mouseButton = null;
+    } else {
+      morph = this.morphAtPointer();
+      if (this.world.activeMenu) {
+        if (!contains(morph.allParents(), this.world.activeMenu)) {
+          this.world.activeMenu.destroy();
+        } else {
+          clearInterval(this.touchHoldTimeout);
+        }
+      }
+      if (this.world.activeHandle) {
+        if (morph !== this.world.activeHandle) {
+          this.world.activeHandle.destroy();
+        }
+      }
+      if (this.world.cursor) {
+        if (morph !== this.world.cursor.target) {
+          this.world.stopEditing();
+        }
+      }
+      if (!morph.mouseMove) {
+        this.morphToGrab = morph.rootForGrab();
+      }
+      if (button === 2 || ctrlKey) {
+        this.mouseButton = "right";
+        actualClick = "mouseDownRight";
+        expectedClick = "mouseClickRight";
+      } else {
+        this.mouseButton = "left";
+        actualClick = "mouseDownLeft";
+        expectedClick = "mouseClickLeft";
+      }
+      this.mouseDownMorph = morph;
+      while (!this.mouseDownMorph[expectedClick]) {
+        this.mouseDownMorph = this.mouseDownMorph.parent;
+      }
+      while (!morph[actualClick]) {
+        morph = morph.parent;
+      }
+      return morph[actualClick](this.bounds.origin);
+    }
+  };
+
+  HandMorph.prototype.processTouchStart = function(event) {
+    var _this = this;
+
+    WorldMorph.MorphicPreferences.isTouchDevice = true;
+    clearInterval(this.touchHoldTimeout);
+    if (event.touches.length === 1) {
+      this.touchHoldTimeout = setInterval(function() {
+        _this.processMouseDown({
+          button: 2
+        });
+        _this.processMouseUp({
+          button: 2
+        });
+        event.preventDefault();
+        return clearInterval(_this.touchHoldTimeout);
+      }, 400);
+      this.processMouseMove(event.touches[0]);
+      this.processMouseDown({
+        button: 0
+      });
+      return event.preventDefault();
+    }
+  };
+
+  HandMorph.prototype.processTouchMove = function(event) {
+    var touch;
+
+    if (event.touches.length === 1) {
+      touch = event.touches[0];
+      this.processMouseMove(touch);
+      return clearInterval(this.touchHoldTimeout);
+    }
+  };
+
+  HandMorph.prototype.processTouchEnd = function(event) {
+    WorldMorph.MorphicPreferences.isTouchDevice = true;
+    clearInterval(this.touchHoldTimeout);
+    return this.processMouseUp({
+      button: 0
+    });
+  };
+
+  HandMorph.prototype.processMouseUp = function() {
+    var context, contextMenu, expectedClick, morph;
+
+    this.world.systemTestsRecorderAndPlayer.addMouseUpEvent();
+    morph = this.morphAtPointer();
+    this.destroyTemporaries();
+    if (this.children.length) {
+      this.drop();
+    } else {
+      if (this.mouseButton === "left") {
+        expectedClick = "mouseClickLeft";
+      } else {
+        expectedClick = "mouseClickRight";
+        if (this.mouseButton) {
+          context = morph;
+          contextMenu = context.contextMenu();
+          while ((!contextMenu) && context.parent) {
+            context = context.parent;
+            contextMenu = context.contextMenu();
+          }
+          if (contextMenu) {
+            contextMenu.popUpAtHand(this.world);
+          }
+        }
+      }
+      while (!morph[expectedClick]) {
+        morph = morph.parent;
+      }
+      morph[expectedClick](this.bounds.origin);
+    }
+    return this.mouseButton = null;
+  };
+
+  HandMorph.prototype.processMouseScroll = function(event) {
+    var morph;
+
+    morph = this.morphAtPointer();
+    while (morph && !morph.mouseScroll) {
+      morph = morph.parent;
+    }
+    if (morph) {
+      return morph.mouseScroll((event.detail / -3) || (event.hasOwnProperty("wheelDeltaY") ? event.wheelDeltaY / 120 : event.wheelDelta / 120), event.wheelDeltaX / 120 || 0);
+    }
+  };
+
+  HandMorph.prototype.processDrop = function(event) {
+    var file, files, img, parseImgURL, readAudio, readBinary, readImage, readSVG, readText, src, targetDrop, txt, _i, _len, _results;
+
+    files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
+    txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
+    targetDrop = this.morphAtPointer();
+    img = new Image();
+    readSVG = function(aFile) {
+      var frd, pic, target;
+
+      pic = new Image();
+      frd = new FileReader();
+      while (!target.droppedSVG) {
+        target = target.parent;
+      }
+      pic.onload = function() {
+        return target.droppedSVG(pic, aFile.name);
+      };
+      frd = new FileReader();
+      frd.onloadend = function(e) {
+        return pic.src = e.target.result;
+      };
+      return frd.readAsDataURL(aFile);
+    };
+    readImage = function(aFile) {
+      var frd, pic;
+
+      pic = new Image();
+      frd = new FileReader();
+      while (!targetDrop.droppedImage) {
+        targetDrop = targetDrop.parent;
+      }
+      pic.onload = function() {
+        var canvas;
+
+        canvas = newCanvas(new Point(pic.width, pic.height));
+        canvas.getContext("2d").drawImage(pic, 0, 0);
+        return targetDrop.droppedImage(canvas, aFile.name);
+      };
+      frd = new FileReader();
+      frd.onloadend = function(e) {
+        return pic.src = e.target.result;
+      };
+      return frd.readAsDataURL(aFile);
+    };
+    readAudio = function(aFile) {
+      var frd, snd;
+
+      snd = new Audio();
+      frd = new FileReader();
+      while (!targetDrop.droppedAudio) {
+        targetDrop = targetDrop.parent;
+      }
+      frd.onloadend = function(e) {
+        snd.src = e.target.result;
+        return targetDrop.droppedAudio(snd, aFile.name);
+      };
+      return frd.readAsDataURL(aFile);
+    };
+    readText = function(aFile) {
+      var frd;
+
+      frd = new FileReader();
+      while (!targetDrop.droppedText) {
+        targetDrop = targetDrop.parent;
+      }
+      frd.onloadend = function(e) {
+        return targetDrop.droppedText(e.target.result, aFile.name);
+      };
+      return frd.readAsText(aFile);
+    };
+    readBinary = function(aFile) {
+      var frd;
+
+      frd = new FileReader();
+      while (!targetDrop.droppedBinary) {
+        targetDrop = targetDrop.parent;
+      }
+      frd.onloadend = function(e) {
+        return targetDrop.droppedBinary(e.target.result, aFile.name);
+      };
+      return frd.readAsArrayBuffer(aFile);
+    };
+    parseImgURL = function(html) {
+      var c, i, start, url, _i, _ref;
+
+      url = "";
+      start = html.indexOf("<img src=\"");
+      if (start === -1) {
+        return null;
+      }
+      start += 10;
+      for (i = _i = start, _ref = html.length; start <= _ref ? _i < _ref : _i > _ref; i = start <= _ref ? ++_i : --_i) {
+        c = html[i];
+        if (c === "\"") {
+          return url;
+        }
+        url = url.concat(c);
+      }
+      return null;
+    };
+    if (files.length) {
+      _results = [];
+      for (_i = 0, _len = files.length; _i < _len; _i++) {
+        file = files[_i];
+        if (file.type.indexOf("svg") !== -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs) {
+          _results.push(readSVG(file));
+        } else if (file.type.indexOf("image") === 0) {
+          _results.push(readImage(file));
+        } else if (file.type.indexOf("audio") === 0) {
+          _results.push(readAudio(file));
+        } else if (file.type.indexOf("text") === 0) {
+          _results.push(readText(file));
+        } else {
+          _results.push(readBinary(file));
+        }
+      }
+      return _results;
+    } else if (txt) {
+      while (!targetDrop.droppedImage) {
+        targetDrop = targetDrop.parent;
+      }
+      img = new Image();
+      img.onload = function() {
+        var canvas;
+
+        canvas = newCanvas(new Point(img.width, img.height));
+        canvas.getContext("2d").drawImage(img, 0, 0);
+        return targetDrop.droppedImage(canvas);
+      };
+      src = parseImgURL(txt);
+      if (src) {
+        return img.src = src;
+      }
+    }
+  };
+
+  HandMorph.prototype.destroyTemporaries = function() {
+    var _this = this;
+
+    return this.temporaries.forEach(function(morph) {
+      if (!(morph.isClickable && morph.bounds.containsPoint(_this.position()))) {
+        morph.destroy();
+        return _this.temporaries.splice(_this.temporaries.indexOf(morph), 1);
+      }
+    });
+  };
+
+  HandMorph.prototype.moveBy = function(delta) {
+    Morph.prototype.trackChanges = false;
+    HandMorph.__super__.moveBy.call(this, delta);
+    Morph.prototype.trackChanges = true;
+    return this.fullChanged();
+  };
+
+  HandMorph.prototype.processMouseMove = function(pageX, pageY) {
+    var fb, morph, mouseOverNew, pos, posInDocument, topMorph,
+      _this = this;
+
+    this.world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY);
+    posInDocument = getDocumentPositionOf(this.world.worldCanvas);
+    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y);
+    this.setPosition(pos);
+    mouseOverNew = this.morphAtPointer().allParents();
+    if ((!this.children.length) && (this.mouseButton === "left")) {
+      topMorph = this.morphAtPointer();
+      morph = topMorph.rootForGrab();
+      if (topMorph.mouseMove) {
+        topMorph.mouseMove(pos);
+      }
+      if (this.morphToGrab) {
+        if (this.morphToGrab.isDraggable) {
+          morph = this.morphToGrab;
+          this.grab(morph);
+        } else if (this.morphToGrab.isTemplate) {
+          morph = this.morphToGrab.fullCopy();
+          morph.isTemplate = false;
+          morph.isDraggable = true;
+          this.grab(morph);
+          this.grabOrigin = this.morphToGrab.situation();
+        }
+        fb = morph.boundsIncludingChildren();
+        if (!fb.containsPoint(pos)) {
+          this.bounds.origin = fb.center();
+          this.grab(morph);
+          this.setPosition(pos);
+        }
+      }
+    }
+    this.mouseOverList.forEach(function(old) {
+      if (!contains(mouseOverNew, old)) {
+        if (old.mouseLeave) {
+          old.mouseLeave();
+        }
+        if (old.mouseLeaveDragging && this.mouseButton) {
+          return old.mouseLeaveDragging();
+        }
+      }
+    });
+    mouseOverNew.forEach(function(newMorph) {
+      if (!contains(_this.mouseOverList, newMorph)) {
+        if (newMorph.mouseEnter) {
+          newMorph.mouseEnter();
+        }
+        if (newMorph.mouseEnterDragging && _this.mouseButton) {
+          newMorph.mouseEnterDragging();
+        }
+      }
+      if (_this.children.length) {
+        if (newMorph instanceof ScrollFrameMorph) {
+          if (!newMorph.bounds.insetBy(WorldMorph.MorphicPreferences.scrollBarSize * 3).containsPoint(_this.bounds.origin)) {
+            return newMorph.startAutoScrolling();
+          }
+        }
+      }
+    });
+    return this.mouseOverList = mouseOverNew;
+  };
+
+  HandMorph.coffeeScriptSourceOfThisClass = '# HandMorph ///////////////////////////////////////////////////////////\n\n# The mouse cursor. Note that it\'s not a child of the WorldMorph, this Morph\n# is never added to any other morph. [TODO] Find out why and write explanation.\n\nclass HandMorph extends Morph\n\n  world: null\n  mouseButton: null\n  mouseDownMorph: null\n  morphToGrab: null\n  grabOrigin: null\n  mouseOverList: null\n  temporaries: null\n  touchHoldTimeout: null\n\n  constructor: (@world) ->\n    @mouseOverList = []\n    @temporaries = []\n    super()\n    @bounds = new Rectangle()\n  \n  changed: ->\n    if @world isnt null\n      b = @boundsIncludingChildren()\n      @world.broken.push @boundsIncludingChildren().spread()  unless b.extent().eq(new Point())\n  \n  \n  # HandMorph navigation:\n  morphAtPointer: ->\n    morphs = @world.allChildren().slice(0).reverse()\n    result = null\n    morphs.forEach (m) =>\n      result = m  if m.visibleBounds().containsPoint(@bounds.origin) and\n        result is null and m.isVisible and (m.noticesTransparentClick or\n        (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)\n    #\n    return result  if result isnt null\n    @world\n  \n  #\n  #    alternative -  more elegant and possibly more\n  #	performant - solution for morphAtPointer.\n  #	Has some issues, commented out for now\n  #\n  #HandMorph.prototype.morphAtPointer = function () {\n  #	var myself = this;\n  #	return this.world.topMorphSuchThat(function (m) {\n  #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&\n  #			m.isVisible &&\n  #			(m.noticesTransparentClick ||\n  #				(! m.isTransparentAt(myself.bounds.origin))) &&\n  #			(! (m instanceof ShadowMorph));\n  #	});\n  #};\n  #\n  allMorphsAtPointer: ->\n    morphs = @world.allChildren()\n    morphs.filter (m) =>\n      m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)\n  \n  \n  \n  # HandMorph dragging and dropping:\n  #\n  #	drag \'n\' drop events, method(arg) -> receiver:\n  #\n  #		prepareToBeGrabbed(handMorph) -> grabTarget\n  #		reactToGrabOf(grabbedMorph) -> oldParent\n  #		wantsDropOf(morphToDrop) ->  newParent\n  #		justDropped(handMorph) -> droppedMorph\n  #		reactToDropOf(droppedMorph, handMorph) -> newParent\n  #\n  dropTargetFor: (aMorph) ->\n    target = @morphAtPointer()\n    target = target.parent  until target.wantsDropOf(aMorph)\n    target\n  \n  grab: (aMorph) ->\n    oldParent = aMorph.parent\n    return null  if aMorph instanceof WorldMorph\n    if !@children.length\n      @world.stopEditing()\n      @grabOrigin = aMorph.situation()\n      aMorph.addShadow()\n      aMorph.prepareToBeGrabbed @  if aMorph.prepareToBeGrabbed\n      @add aMorph\n      @changed()\n      oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf\n  \n  drop: ->\n    if @children.length\n      morphToDrop = @children[0]\n      target = @dropTargetFor(morphToDrop)\n      @changed()\n      target.add morphToDrop\n      morphToDrop.changed()\n      morphToDrop.removeShadow()\n      @children = []\n      @setExtent new Point()\n      morphToDrop.justDropped @  if morphToDrop.justDropped\n      target.reactToDropOf morphToDrop, @  if target.reactToDropOf\n      @dragOrigin = null\n  \n  # HandMorph event dispatching:\n  #\n  #    mouse events:\n  #\n  #		mouseDownLeft\n  #		mouseDownRight\n  #		mouseClickLeft\n  #		mouseClickRight\n  #		mouseEnter\n  #		mouseLeave\n  #		mouseEnterDragging\n  #		mouseLeaveDragging\n  #		mouseMove\n  #		mouseScroll\n  #\n  processMouseDown: (button, ctrlKey) ->\n    @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)\n\n    @destroyTemporaries()\n    @morphToGrab = null\n    if @children.length\n      @drop()\n      @mouseButton = null\n    else\n      morph = @morphAtPointer()\n      if @world.activeMenu\n        unless contains(morph.allParents(), @world.activeMenu)\n          @world.activeMenu.destroy()\n        else\n          clearInterval @touchHoldTimeout\n      if @world.activeHandle\n        if morph isnt @world.activeHandle\n          @world.activeHandle.destroy()    \n      if @world.cursor\n        if morph isnt @world.cursor.target  \n          @world.stopEditing()  \n      @morphToGrab = morph.rootForGrab()  unless morph.mouseMove\n      if button is 2 or ctrlKey\n        @mouseButton = "right"\n        actualClick = "mouseDownRight"\n        expectedClick = "mouseClickRight"\n      else\n        @mouseButton = "left"\n        actualClick = "mouseDownLeft"\n        expectedClick = "mouseClickLeft"\n      @mouseDownMorph = morph\n      @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]\n      morph = morph.parent  until morph[actualClick]\n      morph[actualClick] @bounds.origin\n  \n  processTouchStart: (event) ->\n    WorldMorph.MorphicPreferences.isTouchDevice = true\n    clearInterval @touchHoldTimeout\n    if event.touches.length is 1\n      # simulate mouseRightClick\n      @touchHoldTimeout = setInterval(=>\n        @processMouseDown button: 2\n        @processMouseUp button: 2\n        event.preventDefault()\n        clearInterval @touchHoldTimeout\n      , 400)\n      @processMouseMove event.touches[0] # update my position\n      @processMouseDown button: 0\n      event.preventDefault()\n  \n  processTouchMove: (event) ->\n    if event.touches.length is 1\n      touch = event.touches[0]\n      @processMouseMove touch\n      clearInterval @touchHoldTimeout\n  \n  processTouchEnd: (event) ->\n    WorldMorph.MorphicPreferences.isTouchDevice = true\n    clearInterval @touchHoldTimeout\n    @processMouseUp button: 0\n  \n  processMouseUp: ->\n    @world.systemTestsRecorderAndPlayer.addMouseUpEvent()\n\n    morph = @morphAtPointer()\n    @destroyTemporaries()\n    if @children.length\n      @drop()\n    else\n      if @mouseButton is "left"\n        expectedClick = "mouseClickLeft"\n      else\n        expectedClick = "mouseClickRight"\n        if @mouseButton\n          context = morph\n          contextMenu = context.contextMenu()\n          while (not contextMenu) and context.parent\n            context = context.parent\n            contextMenu = context.contextMenu()\n          contextMenu.popUpAtHand @world  if contextMenu\n      morph = morph.parent  until morph[expectedClick]\n      morph[expectedClick] @bounds.origin\n    @mouseButton = null\n  \n  processMouseScroll: (event) ->\n    morph = @morphAtPointer()\n    morph = morph.parent  while morph and not morph.mouseScroll\n    morph.mouseScroll (event.detail / -3) or ((if event.hasOwnProperty("wheelDeltaY") then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph\n  \n  \n  #\n  #	drop event:\n  #\n  #        droppedImage\n  #        droppedSVG\n  #        droppedAudio\n  #        droppedText\n  #\n  processDrop: (event) ->\n    #\n    #    find out whether an external image or audio file was dropped\n    #    onto the world canvas, turn it into an offscreen canvas or audio\n    #    element and dispatch the\n    #    \n    #        droppedImage(canvas, name)\n    #        droppedSVG(image, name)\n    #        droppedAudio(audio, name)\n    #    \n    #    events to interested Morphs at the mouse pointer\n    #    if none of the above content types can be determined, the file contents\n    #    is dispatched as an ArrayBuffer to interested Morphs:\n    #\n    #    ```droppedBinary(anArrayBuffer, name)```\n\n    files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))\n    txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)\n    targetDrop = @morphAtPointer()\n    img = new Image()\n\n    readSVG = (aFile) ->\n      pic = new Image()\n      frd = new FileReader()\n      target = target.parent  until target.droppedSVG\n      pic.onload = ->\n        target.droppedSVG pic, aFile.name\n      frd = new FileReader()\n      frd.onloadend = (e) ->\n        pic.src = e.target.result\n      frd.readAsDataURL aFile\n\n    readImage = (aFile) ->\n      pic = new Image()\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedImage\n      pic.onload = ->\n        canvas = newCanvas(new Point(pic.width, pic.height))\n        canvas.getContext("2d").drawImage pic, 0, 0\n        targetDrop.droppedImage canvas, aFile.name\n      #\n      frd = new FileReader()\n      frd.onloadend = (e) ->\n        pic.src = e.target.result\n      #\n      frd.readAsDataURL aFile\n    #\n    readAudio = (aFile) ->\n      snd = new Audio()\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedAudio\n      frd.onloadend = (e) ->\n        snd.src = e.target.result\n        targetDrop.droppedAudio snd, aFile.name\n      frd.readAsDataURL aFile\n    \n    readText = (aFile) ->\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedText\n      frd.onloadend = (e) ->\n        targetDrop.droppedText e.target.result, aFile.name\n      frd.readAsText aFile\n\n\n    readBinary = (aFile) ->\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedBinary\n      frd.onloadend = (e) ->\n        targetDrop.droppedBinary e.target.result, aFile.name\n      frd.readAsArrayBuffer aFile\n\n    parseImgURL = (html) ->\n      url = ""\n      start = html.indexOf("<img src=\"")\n      return null  if start is -1\n      start += 10\n      for i in [start...html.length]\n        c = html[i]\n        return url  if c is "\""\n        url = url.concat(c)\n      null\n    \n    if files.length\n      for file in files\n        if file.type.indexOf("svg") != -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs\n          readSVG file\n        else if file.type.indexOf("image") is 0\n          readImage file\n        else if file.type.indexOf("audio") is 0\n          readAudio file\n        else if file.type.indexOf("text") is 0\n          readText file\n        else\n          readBinary file\n    else if txt\n      targetDrop = targetDrop.parent  until targetDrop.droppedImage\n      img = new Image()\n      img.onload = ->\n        canvas = newCanvas(new Point(img.width, img.height))\n        canvas.getContext("2d").drawImage img, 0, 0\n        targetDrop.droppedImage canvas\n      src = parseImgURL(txt)\n      img.src = src  if src\n  \n  \n  # HandMorph tools\n  destroyTemporaries: ->\n    #\n    #	temporaries are just an array of morphs which will be deleted upon\n    #	the next mouse click, or whenever another temporary Morph decides\n    #	that it needs to remove them. The primary purpose of temporaries is\n    #	to display tools tips of speech bubble help.\n    #\n    @temporaries.forEach (morph) =>\n      unless morph.isClickable and morph.bounds.containsPoint(@position())\n        morph.destroy()\n        @temporaries.splice @temporaries.indexOf(morph), 1\n  \n  \n  # HandMorph dragging optimization\n  moveBy: (delta) ->\n    Morph::trackChanges = false\n    super delta\n    Morph::trackChanges = true\n    @fullChanged()\n\n  processMouseMove: (pageX, pageY) ->\n    @world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)\n    \n    #startProcessMouseMove = new Date().getTime()\n    posInDocument = getDocumentPositionOf(@world.worldCanvas)\n    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)\n    @setPosition pos\n    #\n    # determine the new mouse-over-list:\n    # mouseOverNew = this.allMorphsAtPointer();\n    mouseOverNew = @morphAtPointer().allParents()\n    if (!@children.length) and (@mouseButton is "left")\n      topMorph = @morphAtPointer()\n      morph = topMorph.rootForGrab()\n      topMorph.mouseMove pos  if topMorph.mouseMove\n      #\n      # if a morph is marked for grabbing, just grab it\n      if @morphToGrab\n        if @morphToGrab.isDraggable\n          morph = @morphToGrab\n          @grab morph\n        else if @morphToGrab.isTemplate\n          morph = @morphToGrab.fullCopy()\n          morph.isTemplate = false\n          morph.isDraggable = true\n          @grab morph\n          @grabOrigin = @morphToGrab.situation()\n        #\n        # if the mouse has left its boundsIncludingChildren, center it\n        fb = morph.boundsIncludingChildren()\n        unless fb.containsPoint(pos)\n          @bounds.origin = fb.center()\n          @grab morph\n          @setPosition pos\n    #endProcessMouseMove = new Date().getTime()\n    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;\n    #console.log(\'Execution time ProcessMouseMove: \' + timeProcessMouseMove);\n    \n    #\n    #	original, more cautious code for grabbing Morphs,\n    #	retained in case of needing	to fall back:\n    #\n    #		if (morph === this.morphToGrab) {\n    #			if (morph.isDraggable) {\n    #				this.grab(morph);\n    #			} else if (morph.isTemplate) {\n    #				morph = morph.fullCopy();\n    #				morph.isTemplate = false;\n    #				morph.isDraggable = true;\n    #				this.grab(morph);\n    #			}\n    #		}\n    #\n    @mouseOverList.forEach (old) ->\n      unless contains(mouseOverNew, old)\n        old.mouseLeave()  if old.mouseLeave\n        old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton\n    #\n    mouseOverNew.forEach (newMorph) =>\n      unless contains(@mouseOverList, newMorph)\n        newMorph.mouseEnter()  if newMorph.mouseEnter\n        newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton\n      #\n      # autoScrolling support:\n      if @children.length\n          if newMorph instanceof ScrollFrameMorph\n              if !newMorph.bounds.insetBy(\n                WorldMorph.MorphicPreferences.scrollBarSize * 3\n                ).containsPoint(@bounds.origin)\n                  newMorph.startAutoScrolling();\n    #\n    @mouseOverList = mouseOverNew';
+
+  return HandMorph;
+
+})(Morph);
+
+MenuMorph = (function(_super) {
+  __extends(MenuMorph, _super);
+
+  MenuMorph.prototype.target = null;
+
+  MenuMorph.prototype.title = null;
+
+  MenuMorph.prototype.environment = null;
+
+  MenuMorph.prototype.fontSize = null;
+
+  MenuMorph.prototype.items = null;
+
+  MenuMorph.prototype.label = null;
+
+  MenuMorph.prototype.world = null;
+
+  MenuMorph.prototype.isListContents = false;
+
+  function MenuMorph(target, title, environment, fontSize) {
+    this.target = target;
+    this.title = title != null ? title : null;
+    this.environment = environment != null ? environment : null;
+    this.fontSize = fontSize != null ? fontSize : null;
+    this.items = [];
+    MenuMorph.__super__.constructor.call(this);
+    this.border = null;
+  }
+
+  MenuMorph.prototype.addItem = function(labelString, action, hint, color, bold, italic) {
+    if (bold == null) {
+      bold = false;
+    }
+    if (italic == null) {
+      italic = false;
+    }
+    return this.items.push([localize(labelString || "close"), action || nop, hint, color, bold, italic]);
+  };
+
+  MenuMorph.prototype.addLine = function(width) {
+    return this.items.push([0, width || 1]);
+  };
+
+  MenuMorph.prototype.createLabel = function() {
+    var text;
+
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    text = new TextMorph(localize(this.title), this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center");
+    text.alignment = "center";
+    text.color = new Color(255, 255, 255);
+    text.backgroundColor = this.borderColor;
+    text.updateRendering();
+    this.label = new BoxMorph(3, 0);
+    this.label.color = this.borderColor;
+    this.label.borderColor = this.borderColor;
+    this.label.setExtent(text.extent().add(4));
+    this.label.updateRendering();
+    this.label.add(text);
+    return this.label.text = text;
+  };
+
+  MenuMorph.prototype.updateRendering = function() {
+    var fb, isLine, x, y,
+      _this = this;
+
+    isLine = false;
+    this.children.forEach(function(m) {
+      return m.destroy();
+    });
+    this.children = [];
+    if (!this.isListContents) {
+      this.edge = 5;
+      this.border = 2;
+    }
+    this.color = new Color(255, 255, 255);
+    this.borderColor = new Color(60, 60, 60);
+    this.silentSetExtent(new Point(0, 0));
+    y = 2;
+    x = this.left() + 4;
+    if (!this.isListContents) {
+      if (this.title) {
+        this.createLabel();
+        this.label.setPosition(this.bounds.origin.add(4));
+        this.add(this.label);
+        y = this.label.bottom();
+      } else {
+        y = this.top() + 4;
+      }
+    }
+    y += 1;
+    this.items.forEach(function(tuple) {
+      var item;
+
+      isLine = false;
+      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
+        item = tuple;
+      } else if (tuple[0] === 0) {
+        isLine = true;
+        item = new Morph();
+        item.color = _this.borderColor;
+        item.setHeight(tuple[1]);
+      } else {
+        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3], tuple[4], tuple[5]);
+      }
+      if (isLine) {
+        y += 1;
+      }
+      item.setPosition(new Point(x, y));
+      _this.add(item);
+      y = y + item.height();
+      if (isLine) {
+        return y += 1;
+      }
+    });
+    fb = this.boundsIncludingChildren();
+    this.silentSetExtent(fb.extent().add(4));
+    this.adjustWidths();
+    return MenuMorph.__super__.updateRendering.call(this);
+  };
+
+  MenuMorph.prototype.maxWidth = function() {
+    var w;
+
+    w = 0;
+    if (this.parent instanceof FrameMorph) {
+      if (this.parent.scrollFrame instanceof ScrollFrameMorph) {
+        w = this.parent.scrollFrame.width();
+      }
+    }
+    this.children.forEach(function(item) {
+      if (item instanceof MenuItemMorph) {
+        return w = Math.max(w, item.children[0].width() + 8);
+      } else if ((item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
+        return w = Math.max(w, item.width());
+      }
+    });
+    if (this.label) {
+      w = Math.max(w, this.label.width());
+    }
+    return w;
+  };
+
+  MenuMorph.prototype.adjustWidths = function() {
+    var w,
+      _this = this;
+
+    w = this.maxWidth();
+    return this.children.forEach(function(item) {
+      var isSelected;
+
+      item.silentSetWidth(w);
+      if (item instanceof MenuItemMorph) {
+        isSelected = item.image === item.pressImage;
+        item.createBackgrounds();
+        if (isSelected) {
+          return item.image = item.pressImage;
+        }
+      } else {
+        item.updateRendering();
+        if (item === _this.label) {
+          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
+        }
+      }
+    });
+  };
+
+  MenuMorph.prototype.unselectAllItems = function() {
+    this.children.forEach(function(item) {
+      if (item instanceof MenuItemMorph) {
+        return item.image = item.normalImage;
+      }
+    });
+    return this.changed();
+  };
+
+  MenuMorph.prototype.popup = function(world, pos) {
+    this.updateRendering();
+    this.setPosition(pos);
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    if (world.activeMenu) {
+      world.activeMenu.destroy();
+    }
+    world.add(this);
+    world.activeMenu = this;
+    return this.fullChanged();
+  };
+
+  MenuMorph.prototype.popUpAtHand = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    return this.popup(wrrld, wrrld.hand.position());
+  };
+
+  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    this.updateRendering();
+    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    this.updateRendering();
+    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  MenuMorph.coffeeScriptSourceOfThisClass = '# MenuMorph ///////////////////////////////////////////////////////////\n\nclass MenuMorph extends BoxMorph\n\n  target: null\n  title: null\n  environment: null\n  fontSize: null\n  items: null\n  label: null\n  world: null\n  isListContents: false\n\n  constructor: (@target, @title = null, @environment = null, @fontSize = null) ->\n    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need\n    # to initialise the items before calling super. We can\'t initialise it\n    # outside the constructor because the array would be shared across instantiated\n    # objects.\n    @items = []\n    super()\n    @border = null # the Box Morph constructor puts this to 2\n    # important not to traverse all the children for stepping through, because\n    # there could be a lot of entries for example in the inspector the number\n    # of properties of an object - there could be a 100 of those and we don\'t\n    # want to traverse them all. Setting step to null (as opposed to nop) means\n    # that\n  \n  addItem: (labelString, action, hint, color, bold = false, italic = false) ->\n    # labelString is normally a single-line string. But it can also be one\n    # of the following:\n    #     * a multi-line string (containing line breaks)\n    #     * an icon (either a Morph or a Canvas)\n    #     * a tuple of format: [icon, string]\n    @items.push [\n      localize(labelString or "close"),\n      action or nop,\n      hint,\n      color,\n      bold,\n      italic\n    ]\n  \n  addLine: (width) ->\n    @items.push [0, width or 1]\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    text = new TextMorph(localize(@title),\n      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")\n    text.alignment = "center"\n    text.color = new Color(255, 255, 255)\n    text.backgroundColor = @borderColor\n    text.updateRendering()\n    @label = new BoxMorph(3, 0)\n    @label.color = @borderColor\n    @label.borderColor = @borderColor\n    @label.setExtent text.extent().add(4)\n    @label.updateRendering()\n    @label.add text\n    @label.text = text\n  \n  updateRendering: ->\n    isLine = false\n    @children.forEach (m) ->\n      m.destroy()\n    #\n    @children = []\n    unless @isListContents\n      @edge = 5\n      @border = 2\n    @color = new Color(255, 255, 255)\n    @borderColor = new Color(60, 60, 60)\n    @silentSetExtent new Point(0, 0)\n    y = 2\n    x = @left() + 4\n    unless @isListContents\n      if @title\n        @createLabel()\n        @label.setPosition @bounds.origin.add(4)\n        @add @label\n        y = @label.bottom()\n      else\n        y = @top() + 4\n    y += 1\n    @items.forEach (tuple) =>\n      isLine = false\n      if tuple instanceof StringFieldMorph or\n        tuple instanceof ColorPickerMorph or\n        tuple instanceof SliderMorph\n          item = tuple\n      else if tuple[0] is 0\n        isLine = true\n        item = new Morph()\n        item.color = @borderColor\n        item.setHeight tuple[1]\n      else\n        # bubble help hint\n        item = new MenuItemMorph(\n          @target,\n          tuple[1],\n          tuple[0],\n          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n          WorldMorph.MorphicPreferences.menuFontName, @environment,\n          tuple[2],\n          tuple[3], # color\n          tuple[4], # bold\n          tuple[5]  # italic\n          )\n      y += 1  if isLine\n      item.setPosition new Point(x, y)\n      @add item\n      y = y + item.height()\n      y += 1  if isLine\n    #\n    fb = @boundsIncludingChildren()\n    @silentSetExtent fb.extent().add(4)\n    @adjustWidths()\n    super()\n  \n  maxWidth: ->\n    w = 0\n    if @parent instanceof FrameMorph\n      if @parent.scrollFrame instanceof ScrollFrameMorph\n        w = @parent.scrollFrame.width()    \n    @children.forEach (item) ->\n      if (item instanceof MenuItemMorph)\n        w = Math.max(w, item.children[0].width() + 8)\n      else if (item instanceof StringFieldMorph) or\n        (item instanceof ColorPickerMorph) or\n        (item instanceof SliderMorph)\n          w = Math.max(w, item.width())  \n    #\n    w = Math.max(w, @label.width())  if @label\n    w\n  \n  adjustWidths: ->\n    w = @maxWidth()\n    @children.forEach (item) =>\n      item.silentSetWidth w\n      if item instanceof MenuItemMorph\n        isSelected = (item.image == item.pressImage)\n        item.createBackgrounds()\n        if isSelected then item.image = item.pressImage          \n      else\n        item.updateRendering()\n        if item is @label\n          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))\n  \n  \n  unselectAllItems: ->\n    @children.forEach (item) ->\n      item.image = item.normalImage  if item instanceof MenuItemMorph\n    #\n    @changed()\n  \n  popup: (world, pos) ->\n    @updateRendering()\n    @setPosition pos\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.activeMenu.destroy()  if world.activeMenu\n    world.add @\n    world.activeMenu = @\n    @fullChanged()\n  \n  popUpAtHand: (world) ->\n    wrrld = world or @world\n    @popup wrrld, wrrld.hand.position()\n  \n  popUpCenteredAtHand: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))\n  \n  popUpCenteredInWorld: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))';
+
+  return MenuMorph;
+
+})(BoxMorph);
+
+ShadowMorph = (function(_super) {
+  __extends(ShadowMorph, _super);
+
+  function ShadowMorph() {
+    ShadowMorph.__super__.constructor.call(this);
+  }
+
+  ShadowMorph.coffeeScriptSourceOfThisClass = '# ShadowMorph /////////////////////////////////////////////////////////\n\nclass ShadowMorph extends Morph\n  constructor: () ->\n    super()';
+
+  return ShadowMorph;
+
+})(Morph);
+
+TextMorph = (function(_super) {
+  __extends(TextMorph, _super);
+
+  TextMorph.prototype.words = [];
+
+  TextMorph.prototype.lines = [];
+
+  TextMorph.prototype.lineSlots = [];
+
+  TextMorph.prototype.alignment = null;
+
+  TextMorph.prototype.maxWidth = null;
+
+  TextMorph.prototype.maxLineWidth = 0;
+
+  TextMorph.prototype.backgroundColor = null;
+
+  TextMorph.prototype.receiver = null;
+
+  function TextMorph(text, fontSize, fontStyle, isBold, isItalic, alignment, maxWidth, fontName, shadowOffset, shadowColor) {
+    this.fontSize = fontSize != null ? fontSize : 12;
+    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
+    this.isBold = isBold != null ? isBold : false;
+    this.isItalic = isItalic != null ? isItalic : false;
+    this.alignment = alignment != null ? alignment : "left";
+    this.maxWidth = maxWidth != null ? maxWidth : 0;
+    this.shadowColor = shadowColor != null ? shadowColor : null;
+    TextMorph.__super__.constructor.call(this);
+    this.markedTextColor = new Color(255, 255, 255);
+    this.markedBackgoundColor = new Color(60, 60, 120);
+    this.text = text || (text === "" ? text : "TextMorph");
+    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
+    this.shadowOffset = shadowOffset || new Point(0, 0);
+    this.color = new Color(0, 0, 0);
+    this.noticesTransparentClick = true;
+    this.updateRendering();
+  }
+
+  TextMorph.prototype.toString = function() {
+    return "a TextMorph" + "(\"" + this.text.slice(0, 30) + "...\")";
+  };
+
+  TextMorph.prototype.parse = function() {
+    var canvas, context, oldline, paragraphs, slot,
+      _this = this;
+
+    paragraphs = this.text.split("\n");
+    canvas = newCanvas();
+    context = canvas.getContext("2d");
+    oldline = "";
+    slot = 0;
+    context.font = this.font();
+    this.maxLineWidth = 0;
+    this.lines = [];
+    this.lineSlots = [0];
+    this.words = [];
+    paragraphs.forEach(function(p) {
+      _this.words = _this.words.concat(p.split(" "));
+      return _this.words.push("\n");
+    });
+    return this.words.forEach(function(word) {
+      var newline, w;
+
+      if (word === "\n") {
+        _this.lines.push(oldline);
+        _this.lineSlots.push(slot);
+        _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(oldline).width);
+        return oldline = "";
+      } else {
+        if (_this.maxWidth > 0) {
+          newline = oldline + word + " ";
+          w = context.measureText(newline).width;
+          if (w > _this.maxWidth) {
+            _this.lines.push(oldline);
+            _this.lineSlots.push(slot);
+            _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(oldline).width);
+            oldline = word + " ";
+          } else {
+            oldline = newline;
+          }
+        } else {
+          oldline = oldline + word + " ";
+        }
+        return slot += word.length + 1;
+      }
+    });
+  };
+
+  TextMorph.prototype.updateRendering = function() {
+    var c, context, height, i, line, offx, offy, p, shadowHeight, shadowWidth, start, stop, width, x, y, _i, _j, _k, _len, _len1, _ref, _ref1;
+
+    this.image = newCanvas();
+    context = this.image.getContext("2d");
+    context.font = this.font();
+    this.parse();
+    shadowWidth = Math.abs(this.shadowOffset.x);
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    height = this.lines.length * (fontHeight(this.fontSize) + shadowHeight);
+    if (this.maxWidth === 0) {
+      this.bounds = this.bounds.origin.extent(new Point(this.maxLineWidth + shadowWidth, height));
+    } else {
+      this.bounds = this.bounds.origin.extent(new Point(this.maxWidth + shadowWidth, height));
+    }
+    this.image.width = this.width();
+    this.image.height = this.height();
+    context = this.image.getContext("2d");
+    context.font = this.font();
+    context.textAlign = "left";
+    context.textBaseline = "bottom";
+    if (this.backgroundColor) {
+      context.fillStyle = this.backgroundColor.toString();
+      context.fillRect(0, 0, this.width(), this.height());
+    }
+    if (this.shadowColor) {
+      offx = Math.max(this.shadowOffset.x, 0);
+      offy = Math.max(this.shadowOffset.y, 0);
+      context.fillStyle = this.shadowColor.toString();
+      i = 0;
+      _ref = this.lines;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        line = _ref[_i];
+        width = context.measureText(line).width + shadowWidth;
+        if (this.alignment === "right") {
+          x = this.width() - width;
+        } else if (this.alignment === "center") {
+          x = (this.width() - width) / 2;
+        } else {
+          x = 0;
+        }
+        y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
+        i++;
+        context.fillText(line, x + offx, y + offy);
+      }
+    }
+    offx = Math.abs(Math.min(this.shadowOffset.x, 0));
+    offy = Math.abs(Math.min(this.shadowOffset.y, 0));
+    context.fillStyle = this.color.toString();
+    i = 0;
+    _ref1 = this.lines;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      line = _ref1[_j];
+      width = context.measureText(line).width + shadowWidth;
+      if (this.alignment === "right") {
+        x = this.width() - width;
+      } else if (this.alignment === "center") {
+        x = (this.width() - width) / 2;
+      } else {
+        x = 0;
+      }
+      y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
+      i++;
+      context.fillText(line, x + offx, y + offy);
+    }
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    for (i = _k = start; start <= stop ? _k < stop : _k > stop; i = start <= stop ? ++_k : --_k) {
+      p = this.slotPosition(i).subtract(this.position());
+      c = this.text.charAt(i);
+      context.fillStyle = this.markedBackgoundColor.toString();
+      context.fillRect(p.x, p.y, context.measureText(c).width + 1, fontHeight(this.fontSize));
+      context.fillStyle = this.markedTextColor.toString();
+      context.fillText(c, p.x, p.y + fontHeight(this.fontSize));
+    }
+    if (this.parent ? this.parent.layoutChanged : void 0) {
+      return this.parent.layoutChanged();
+    }
+  };
+
+  TextMorph.prototype.setExtent = function(aPoint) {
+    this.maxWidth = Math.max(aPoint.x, 0);
+    this.changed();
+    return this.updateRendering();
+  };
+
+  TextMorph.prototype.columnRow = function(slot) {
+    var col, idx, row, _i, _j, _ref, _ref1;
+
+    idx = 0;
+    for (row = _i = 0, _ref = this.lines.length; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
+      idx = this.lineSlots[row];
+      for (col = _j = 0, _ref1 = this.lines[row].length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
+        if (idx === slot) {
+          return new Point(col, row);
+        }
+        idx += 1;
+      }
+    }
+    return new Point(this.lines[this.lines.length - 1].length - 1, this.lines.length - 1);
+  };
+
+  TextMorph.prototype.slotPosition = function(slot) {
+    var colRow, context, idx, shadowHeight, x, xOffset, y, yOffset, _i, _ref;
+
+    colRow = this.columnRow(slot);
+    context = this.image.getContext("2d");
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    xOffset = 0;
+    yOffset = colRow.y * (fontHeight(this.fontSize) + shadowHeight);
+    for (idx = _i = 0, _ref = colRow.x; 0 <= _ref ? _i < _ref : _i > _ref; idx = 0 <= _ref ? ++_i : --_i) {
+      xOffset += context.measureText(this.lines[colRow.y][idx]).width;
+    }
+    x = this.left() + xOffset;
+    y = this.top() + yOffset;
+    return new Point(x, y);
+  };
+
+  TextMorph.prototype.slotAt = function(aPoint) {
+    var charX, col, context, row, shadowHeight;
+
+    charX = 0;
+    row = 0;
+    col = 0;
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    context = this.image.getContext("2d");
+    while (aPoint.y - this.top() > ((fontHeight(this.fontSize) + shadowHeight) * row)) {
+      row += 1;
+    }
+    row = Math.max(row, 1);
+    while (aPoint.x - this.left() > charX) {
+      charX += context.measureText(this.lines[row - 1][col]).width;
+      col += 1;
+    }
+    return this.lineSlots[Math.max(row - 1, 0)] + col - 1;
+  };
+
+  TextMorph.prototype.upFrom = function(slot) {
+    var above, colRow;
+
+    colRow = this.columnRow(slot);
+    if (colRow.y < 1) {
+      return slot;
+    }
+    above = this.lines[colRow.y - 1];
+    if (above.length < colRow.x - 1) {
+      return this.lineSlots[colRow.y - 1] + above.length;
+    }
+    return this.lineSlots[colRow.y - 1] + colRow.x;
+  };
+
+  TextMorph.prototype.downFrom = function(slot) {
+    var below, colRow;
+
+    colRow = this.columnRow(slot);
+    if (colRow.y > this.lines.length - 2) {
+      return slot;
+    }
+    below = this.lines[colRow.y + 1];
+    if (below.length < colRow.x - 1) {
+      return this.lineSlots[colRow.y + 1] + below.length;
+    }
+    return this.lineSlots[colRow.y + 1] + colRow.x;
+  };
+
+  TextMorph.prototype.startOfLine = function(slot) {
+    return this.lineSlots[this.columnRow(slot).y];
+  };
+
+  TextMorph.prototype.endOfLine = function(slot) {
+    return this.startOfLine(slot) + this.lines[this.columnRow(slot).y].length - 1;
+  };
+
+  TextMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = TextMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("edit", "edit");
+    menu.addItem("font size...", (function() {
+      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 100, true);
+    }), "set this Text's\nfont point size");
+    if (this.alignment !== "left") {
+      menu.addItem("align left", "setAlignmentToLeft");
+    }
+    if (this.alignment !== "right") {
+      menu.addItem("align right", "setAlignmentToRight");
+    }
+    if (this.alignment !== "center") {
+      menu.addItem("align center", "setAlignmentToCenter");
+    }
+    menu.addLine();
+    if (this.fontStyle !== "serif") {
+      menu.addItem("serif", "setSerif");
+    }
+    if (this.fontStyle !== "sans-serif") {
+      menu.addItem("sans-serif", "setSansSerif");
+    }
+    if (this.isBold) {
+      menu.addItem("normal weight", "toggleWeight");
+    } else {
+      menu.addItem("bold", "toggleWeight");
+    }
+    if (this.isItalic) {
+      menu.addItem("normal style", "toggleItalic");
+    } else {
+      menu.addItem("italic", "toggleItalic");
+    }
+    return menu;
+  };
+
+  TextMorph.prototype.setAlignmentToLeft = function() {
+    this.alignment = "left";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.setAlignmentToRight = function() {
+    this.alignment = "right";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.setAlignmentToCenter = function() {
+    this.alignment = "center";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.evaluationMenu = function() {
+    var menu;
+
+    menu = new MenuMorph(this, null);
+    menu.addItem("do it", "doIt", "evaluate the\nselected expression");
+    menu.addItem("show it", "showIt", "evaluate the\nselected expression\nand show the result");
+    menu.addItem("inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result");
+    menu.addLine();
+    menu.addItem("select all", "selectAllAndEdit");
+    return menu;
+  };
+
+  TextMorph.prototype.selectAllAndEdit = function() {
+    this.edit();
+    return this.selectAll();
+  };
+
+  TextMorph.prototype.setReceiver = function(obj) {
+    this.receiver = obj;
+    return this.customContextMenu = this.evaluationMenu();
+  };
+
+  TextMorph.prototype.doIt = function() {
+    this.receiver.evaluateString(this.selection());
+    return this.edit();
+  };
+
+  TextMorph.prototype.showIt = function() {
+    var result;
+
+    result = this.receiver.evaluateString(this.selection());
+    if (result != null) {
+      return this.inform(result);
+    }
+  };
+
+  TextMorph.prototype.inspectIt = function() {
+    var inspector, result, world;
+
+    result = this.receiver.evaluateString(this.selection());
+    world = this.world();
+    if (result != null) {
+      inspector = new InspectorMorph(result);
+      inspector.setPosition(world.hand.position());
+      inspector.keepWithin(world);
+      world.add(inspector);
+      return inspector.changed();
+    }
+  };
+
+  TextMorph.coffeeScriptSourceOfThisClass = '# TextMorph ///////////////////////////////////////////////////////////\n\n# I am a multi-line, word-wrapping String\n\n# Jens has made this quasi-inheriting from StringMorph i.e. he is copying\n# over manually the following methods like so:\n#\n#  TextMorph::font = StringMorph::font\n#  TextMorph::edit = StringMorph::edit\n#  TextMorph::selection = StringMorph::selection\n#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot\n#  TextMorph::clearSelection = StringMorph::clearSelection\n#  TextMorph::deleteSelection = StringMorph::deleteSelection\n#  TextMorph::selectAll = StringMorph::selectAll\n#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft\n#  TextMorph::enableSelecting = StringMorph::enableSelecting \n#  TextMorph::disableSelecting = StringMorph::disableSelecting\n#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable\n#  TextMorph::toggleWeight = StringMorph::toggleWeight\n#  TextMorph::toggleItalic = StringMorph::toggleItalic\n#  TextMorph::setSerif = StringMorph::setSerif\n#  TextMorph::setSansSerif = StringMorph::setSansSerif\n#  TextMorph::setText = StringMorph::setText\n#  TextMorph::setFontSize = StringMorph::setFontSize\n#  TextMorph::numericalSetters = StringMorph::numericalSetters\n\n\nclass TextMorph extends StringMorph\n\n  words: []\n  lines: []\n  lineSlots: []\n  alignment: null\n  maxWidth: null\n  maxLineWidth: 0\n  backgroundColor: null\n\n  #additional properties for ad-hoc evaluation:\n  receiver: null\n\n  constructor: (\n    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,\n    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,\n    @shadowColor = null\n    ) ->\n      super()\n      # override inherited properites:\n      @markedTextColor = new Color(255, 255, 255)\n      @markedBackgoundColor = new Color(60, 60, 120)\n      @text = text or ((if text is "" then text else "TextMorph"))\n      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n      @shadowOffset = shadowOffset or new Point(0, 0)\n      @color = new Color(0, 0, 0)\n      @noticesTransparentClick = true\n      @updateRendering()\n\n  toString: ->\n    # e.g. \'a TextMorph("Hello World")\'\n    "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  \n  parse: ->\n    paragraphs = @text.split("\n")\n    canvas = newCanvas()\n    context = canvas.getContext("2d")\n    oldline = ""\n    slot = 0\n    context.font = @font()\n    @maxLineWidth = 0\n    @lines = []\n    @lineSlots = [0]\n    @words = []\n    paragraphs.forEach (p) =>\n      @words = @words.concat(p.split(" "))\n      @words.push "\n"\n    #\n    @words.forEach (word) =>\n      if word is "\n"\n        @lines.push oldline\n        @lineSlots.push slot\n        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)\n        oldline = ""\n      else\n        if @maxWidth > 0\n          newline = oldline + word + " "\n          w = context.measureText(newline).width\n          if w > @maxWidth\n            @lines.push oldline\n            @lineSlots.push slot\n            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)\n            oldline = word + " "\n          else\n            oldline = newline\n        else\n          oldline = oldline + word + " "\n        slot += word.length + 1\n  \n  \n  updateRendering: ->\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    @parse()\n    #\n    # set my extent\n    shadowWidth = Math.abs(@shadowOffset.x)\n    shadowHeight = Math.abs(@shadowOffset.y)\n    height = @lines.length * (fontHeight(@fontSize) + shadowHeight)\n    if @maxWidth is 0\n      @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))\n    else\n      @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))\n    @image.width = @width()\n    @image.height = @height()\n    #\n    # prepare context for drawing text\n    context = @image.getContext("2d")\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n    #\n    # fill the background, if desired\n    if @backgroundColor\n      context.fillStyle = @backgroundColor.toString()\n      context.fillRect 0, 0, @width(), @height()\n    #\n    # draw the shadow, if any\n    if @shadowColor\n      offx = Math.max(@shadowOffset.x, 0)\n      offy = Math.max(@shadowOffset.y, 0)\n      #console.log \'shadow x: \' + offx + " y: " + offy\n      context.fillStyle = @shadowColor.toString()\n      i = 0\n      for line in @lines\n        width = context.measureText(line).width + shadowWidth\n        if @alignment is "right"\n          x = @width() - width\n        else if @alignment is "center"\n          x = (@width() - width) / 2\n        else # \'left\'\n          x = 0\n        y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n        i++\n        context.fillText line, x + offx, y + offy\n    #\n    # now draw the actual text\n    offx = Math.abs(Math.min(@shadowOffset.x, 0))\n    offy = Math.abs(Math.min(@shadowOffset.y, 0))\n    #console.log \'maintext x: \' + offx + " y: " + offy\n    context.fillStyle = @color.toString()\n    i = 0\n    for line in @lines\n      width = context.measureText(line).width + shadowWidth\n      if @alignment is "right"\n        x = @width() - width\n      else if @alignment is "center"\n        x = (@width() - width) / 2\n      else # \'left\'\n        x = 0\n      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n      i++\n      context.fillText line, x + offx, y + offy\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotPosition(i).subtract(@position())\n      c = @text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x, p.y + fontHeight(@fontSize)\n    #\n    # notify my parent of layout change\n    @parent.layoutChanged()  if @parent.layoutChanged  if @parent\n  \n  setExtent: (aPoint) ->\n    @maxWidth = Math.max(aPoint.x, 0)\n    @changed()\n    @updateRendering()\n  \n  # TextMorph mesuring:\n  columnRow: (slot) ->\n    # answer the logical position point of the given index ("slot")\n    idx = 0\n    for row in [0...@lines.length]\n      idx = @lineSlots[row]\n      for col in [0...@lines[row].length]\n        return new Point(col, row)  if idx is slot\n        idx += 1\n    #\n    # return new Point(0, 0);\n    new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)\n  \n  slotPosition: (slot) ->\n    # answer the physical position point of the given index ("slot")\n    # where the caret should be placed\n    colRow = @columnRow(slot)\n    context = @image.getContext("2d")\n    shadowHeight = Math.abs(@shadowOffset.y)\n    xOffset = 0\n    yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)\n    for idx in [0...colRow.x]\n      xOffset += context.measureText(@lines[colRow.y][idx]).width\n    x = @left() + xOffset\n    y = @top() + yOffset\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    charX = 0\n    row = 0\n    col = 0\n    shadowHeight = Math.abs(@shadowOffset.y)\n    context = @image.getContext("2d")\n    row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)\n    row = Math.max(row, 1)\n    while aPoint.x - @left() > charX\n      charX += context.measureText(@lines[row - 1][col]).width\n      col += 1\n    @lineSlots[Math.max(row - 1, 0)] + col - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    colRow = @columnRow(slot)\n    return slot  if colRow.y < 1\n    above = @lines[colRow.y - 1]\n    return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1\n    @lineSlots[colRow.y - 1] + colRow.x\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    colRow = @columnRow(slot)\n    return slot  if colRow.y > @lines.length - 2\n    below = @lines[colRow.y + 1]\n    return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1\n    @lineSlots[colRow.y + 1] + colRow.x\n  \n  startOfLine: (slot) ->\n    # answer the first slot (index) of the line for the given slot\n    @lineSlots[@columnRow(slot).y]\n  \n  endOfLine: (slot) ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1\n  \n  # TextMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 100, true\n    ), "set this Text\'s\nfont point size"\n    menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"\n    menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"\n    menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"\n    menu.addLine()\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n    menu\n  \n  setAlignmentToLeft: ->\n    @alignment = "left"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToRight: ->\n    @alignment = "right"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToCenter: ->\n    @alignment = "center"\n    @updateRendering()\n    @changed()  \n  \n  # TextMorph evaluation:\n  evaluationMenu: ->\n    menu = new MenuMorph(@, null)\n    menu.addItem "do it", "doIt", "evaluate the\nselected expression"\n    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"\n    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"\n    menu.addLine()\n    menu.addItem "select all", "selectAllAndEdit"\n    menu\n\n  selectAllAndEdit: ->\n    @edit()\n    @selectAll()\n   \n  setReceiver: (obj) ->\n    @receiver = obj\n    @customContextMenu = @evaluationMenu()\n  \n  doIt: ->\n    @receiver.evaluateString @selection()\n    @edit()\n  \n  showIt: ->\n    result = @receiver.evaluateString(@selection())\n    if result? then @inform result\n  \n  inspectIt: ->\n    result = @receiver.evaluateString(@selection())\n    world = @world()\n    if result?\n      inspector = new InspectorMorph(result)\n      inspector.setPosition world.hand.position()\n      inspector.keepWithin world\n      world.add inspector\n      inspector.changed()';
+
+  return TextMorph;
+
+})(StringMorph);
+
+InspectorMorph = (function(_super) {
+  __extends(InspectorMorph, _super);
+
+  InspectorMorph.prototype.target = null;
+
+  InspectorMorph.prototype.currentProperty = null;
+
+  InspectorMorph.prototype.showing = "attributes";
+
+  InspectorMorph.prototype.markOwnershipOfProperties = false;
+
+  InspectorMorph.prototype.label = null;
+
+  InspectorMorph.prototype.list = null;
+
+  InspectorMorph.prototype.detail = null;
+
+  InspectorMorph.prototype.work = null;
+
+  InspectorMorph.prototype.buttonInspect = null;
+
+  InspectorMorph.prototype.buttonClose = null;
+
+  InspectorMorph.prototype.buttonSubset = null;
+
+  InspectorMorph.prototype.buttonEdit = null;
+
+  InspectorMorph.prototype.resizer = null;
+
+  function InspectorMorph(target) {
+    this.target = target;
+    InspectorMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
+    this.updateRendering();
+    if (this.target) {
+      this.buildPanes();
+    }
+  }
+
+  InspectorMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
+  };
+
+  InspectorMorph.prototype.buildPanes = function() {
+    var attribs, ctrl, ev, property, staticAttributes, staticFunctions, staticProperties, targetOwnMethods,
+      _this = this;
+
+    attribs = [];
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
+      }
+    });
+    this.children = [];
+    this.label = new TextMorph(this.target.toString());
+    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.updateRendering();
+    this.add(this.label);
+    for (property in this.target) {
+      if (property) {
+        attribs.push(property);
+      }
+    }
+    if (this.showing === "attributes") {
+      attribs = attribs.filter(function(prop) {
+        return !isFunction(_this.target[prop]);
+      });
+    } else if (this.showing === "methods") {
+      attribs = attribs.filter(function(prop) {
+        return isFunction(_this.target[prop]);
+      });
+    }
+    staticProperties = Object.getOwnPropertyNames(this.target.constructor);
+    staticProperties = staticProperties.filter(function(prop) {
+      return prop !== "name" && prop !== "length" && prop !== "prototype" && prop !== "caller" && prop !== "__super__" && prop !== "arguments";
+    });
+    if (this.showing === "attributes") {
+      staticFunctions = [];
+      staticAttributes = staticProperties.filter(function(prop) {
+        return !isFunction(_this.target.constructor[prop]);
+      });
+    } else if (this.showing === "methods") {
+      staticFunctions = staticProperties.filter(function(prop) {
+        return isFunction(_this.target.constructor[prop]);
+      });
+      staticAttributes = [];
+    } else {
+      staticFunctions = staticProperties.filter(function(prop) {
+        return isFunction(_this.target.constructor[prop]);
+      });
+      staticAttributes = staticProperties.filter(function(prop) {
+        return __indexOf.call(staticFunctions, prop) < 0;
+      });
+    }
+    attribs = (attribs.concat(staticFunctions)).concat(staticAttributes);
+    if (this.markOwnershipOfProperties) {
+      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
+    }
+    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnershipOfProperties ? [
+      [
+        new Color(0, 0, 180), function(element) {
+          return true;
+        }
+      ], [
+        new Color(255, 165, 0), function(element) {
+          return __indexOf.call(staticProperties, element) >= 0;
+        }
+      ], [
+        new Color(0, 180, 0), function(element) {
+          return _this.target.hasOwnProperty(element);
+        }
+      ], [
+        new Color(180, 0, 0), function(element) {
+          return __indexOf.call(targetOwnMethods, element) >= 0;
+        }
+      ]
+    ] : null));
+    this.list.action = function(selected) {
+      var cnts, txt, val;
+
+      val = _this.target[selected];
+      if (val === void 0) {
+        val = _this.target.constructor[selected];
+      }
+      _this.currentProperty = val;
+      if (val === null) {
+        txt = "NULL";
+      } else if (isString(val)) {
+        txt = val;
+      } else {
+        txt = val.toString();
+      }
+      cnts = new TextMorph(txt);
+      cnts.isEditable = true;
+      cnts.enableSelecting();
+      cnts.setReceiver(_this.target);
+      return _this.detail.setContents(cnts);
+    };
+    this.list.hBar.alpha = 0.6;
+    this.list.vBar.alpha = 0.6;
+    this.list.listContents.step = null;
+    this.add(this.list);
+    this.detail = new ScrollFrameMorph();
+    this.detail.acceptsDrops = false;
+    this.detail.contents.acceptsDrops = false;
+    this.detail.isTextLineWrapping = true;
+    this.detail.color = new Color(255, 255, 255);
+    this.detail.hBar.alpha = 0.6;
+    this.detail.vBar.alpha = 0.6;
+    ctrl = new TextMorph("");
+    ctrl.isEditable = true;
+    ctrl.enableSelecting();
+    ctrl.setReceiver(this.target);
+    this.detail.setContents(ctrl);
+    this.add(this.detail);
+    if (this.work === null) {
+      this.work = new ScrollFrameMorph();
+      this.work.acceptsDrops = false;
+      this.work.contents.acceptsDrops = false;
+      this.work.isTextLineWrapping = true;
+      this.work.color = new Color(255, 255, 255);
+      this.work.hBar.alpha = 0.6;
+      this.work.vBar.alpha = 0.6;
+      ev = new TextMorph("");
+      ev.isEditable = true;
+      ev.enableSelecting();
+      ev.setReceiver(this.target);
+      this.work.setContents(ev);
+    }
+    this.add(this.work);
+    this.buttonSubset = new TriggerMorph();
+    this.buttonSubset.labelString = "show...";
+    this.buttonSubset.action = function() {
+      var menu;
+
+      menu = new MenuMorph();
+      menu.addItem("attributes", function() {
+        _this.showing = "attributes";
+        return _this.buildPanes();
+      });
+      menu.addItem("methods", function() {
+        _this.showing = "methods";
+        return _this.buildPanes();
+      });
+      menu.addItem("all", function() {
+        _this.showing = "all";
+        return _this.buildPanes();
+      });
+      menu.addLine();
+      menu.addItem((_this.markOwnershipOfProperties ? "un-mark ownership" : "mark ownership"), (function() {
+        _this.markOwnershipOfProperties = !_this.markOwnershipOfProperties;
+        return _this.buildPanes();
+      }), "highlight\nownership of properties");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonSubset);
+    this.buttonInspect = new TriggerMorph();
+    this.buttonInspect.labelString = "inspect...";
+    this.buttonInspect.action = function() {
+      var menu;
+
+      if (isObject(_this.currentProperty)) {
+        menu = new MenuMorph();
+        menu.addItem("in new inspector...", function() {
+          var inspector, world;
+
+          world = _this.world();
+          inspector = new InspectorMorph(_this.currentProperty);
+          inspector.setPosition(world.hand.position());
+          inspector.keepWithin(world);
+          world.add(inspector);
+          return inspector.changed();
+        });
+        menu.addItem("here...", function() {
+          return _this.setTarget(_this.currentProperty);
+        });
+        return menu.popUpAtHand(_this.world());
+      } else {
+        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
+      }
+    };
+    this.add(this.buttonInspect);
+    this.buttonEdit = new TriggerMorph();
+    this.buttonEdit.labelString = "edit...";
+    this.buttonEdit.action = function() {
+      var menu;
+
+      menu = new MenuMorph(_this);
+      menu.addItem("save", "save", "accept changes");
+      menu.addLine();
+      menu.addItem("add property...", "addProperty");
+      menu.addItem("rename...", "renameProperty");
+      menu.addItem("remove...", "removeProperty");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonEdit);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
+    };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
+  };
+
+  InspectorMorph.prototype.fixLayout = function() {
+    var b, h, r, w, x, y;
+
+    Morph.prototype.trackChanges = false;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.label.setPosition(new Point(x, y));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.updateRendering();
+      this.changed();
+      this.resizer.updateRendering();
+    }
+    y = this.label.bottom() + 2;
+    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
+    h = b - y;
+    this.list.setPosition(new Point(x, y));
+    this.list.setExtent(new Point(w, h));
+    x = this.list.right() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.detail.setPosition(new Point(x, y));
+    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
+    y = this.detail.bottom() + this.edge;
+    this.work.setPosition(new Point(x, y));
+    this.work.setExtent(new Point(w, h / 3));
+    x = this.list.left();
+    y = this.list.bottom() + this.edge;
+    w = this.list.width();
+    h = WorldMorph.MorphicPreferences.handleSize;
+    this.buttonSubset.setPosition(new Point(x, y));
+    this.buttonSubset.setExtent(new Point(w, h));
+    x = this.detail.left();
+    w = this.detail.width() - this.edge - WorldMorph.MorphicPreferences.handleSize;
+    w = w / 3 - this.edge / 3;
+    this.buttonInspect.setPosition(new Point(x, y));
+    this.buttonInspect.setExtent(new Point(w, h));
+    x = this.buttonInspect.right() + this.edge;
+    this.buttonEdit.setPosition(new Point(x, y));
+    this.buttonEdit.setExtent(new Point(w, h));
+    x = this.buttonEdit.right() + this.edge;
+    r = this.detail.right() - this.edge - WorldMorph.MorphicPreferences.handleSize;
+    w = r - x;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
+    return this.changed();
+  };
+
+  InspectorMorph.prototype.setExtent = function(aPoint) {
+    InspectorMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
+  };
+
+  InspectorMorph.prototype.save = function() {
+    var err, prop, txt;
+
+    txt = this.detail.contents.children[0].text.toString();
+    prop = this.list.selected;
+    try {
+      this.target.evaluateString("this." + prop + " = " + txt);
+      if (this.target.updateRendering) {
+        this.target.changed();
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } catch (_error) {
+      err = _error;
+      return this.inform(err);
+    }
+  };
+
+  InspectorMorph.prototype.addProperty = function() {
+    var _this = this;
+
+    return this.prompt("new property name:", (function(prop) {
+      if (prop) {
+        _this.target[prop] = null;
+        _this.buildPanes();
+        if (_this.target.updateRendering) {
+          _this.target.changed();
+          _this.target.updateRendering();
+          return _this.target.changed();
+        }
+      }
+    }), this, "property");
+  };
+
+  InspectorMorph.prototype.renameProperty = function() {
+    var propertyName,
+      _this = this;
+
+    propertyName = this.list.selected;
+    return this.prompt("property name:", (function(prop) {
+      var err;
+
+      try {
+        delete _this.target[propertyName];
+        _this.target[prop] = _this.currentProperty;
+      } catch (_error) {
+        err = _error;
+        _this.inform(err);
+      }
+      _this.buildPanes();
+      if (_this.target.updateRendering) {
+        _this.target.changed();
+        _this.target.updateRendering();
+        return _this.target.changed();
+      }
+    }), this, propertyName);
+  };
+
+  InspectorMorph.prototype.removeProperty = function() {
+    var err, prop;
+
+    prop = this.list.selected;
+    try {
+      delete this.target[prop];
+      this.currentProperty = null;
+      this.buildPanes();
+      if (this.target.updateRendering) {
+        this.target.changed();
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } catch (_error) {
+      err = _error;
+      return this.inform(err);
+    }
+  };
+
+  InspectorMorph.coffeeScriptSourceOfThisClass = '# InspectorMorph //////////////////////////////////////////////////////\n\nclass InspectorMorph extends BoxMorph\n\n  target: null\n  currentProperty: null\n  showing: "attributes"\n  markOwnershipOfProperties: false\n  # panes:\n  label: null\n  list: null\n  detail: null\n  work: null\n  buttonInspect: null\n  buttonClose: null\n  buttonSubset: null\n  buttonEdit: null\n  resizer: null\n\n  constructor: (@target) ->\n    super()\n    # override inherited properties:\n    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()  if @target\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n    #\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n    #\n    @children = []\n    #\n    # label\n    @label = new TextMorph(@target.toString())\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n    \n    # properties list. Note that this picks up ALL properties\n    # (enumerable such as strings and un-enumerable such as functions)\n    # of the whole prototype chain.\n    #\n    #   a) some of these are DECLARED as part of the class that defines the object\n    #   and are proprietary to the object. These are shown RED\n    # \n    #   b) some of these are proprietary to the object but are initialised by\n    #   code higher in the prototype chain. These are shown GREEN\n    #\n    #   c) some of these are not proprietary, i.e. they belong to an object up\n    #   the chain of prototypes. These are shown BLUE\n    #\n    # todo: show the static methods and variables in yet another color.\n    \n    for property of @target\n      # dummy condition, to be refined\n      attribs.push property  if property\n    if @showing is "attributes"\n      attribs = attribs.filter((prop) =>\n        not isFunction @target[prop]\n      )\n    else if @showing is "methods"\n      attribs = attribs.filter((prop) =>\n        isFunction @target[prop]\n      )\n    # otherwise show all properties\n    # label getter\n    # format list\n    # format element: [color, predicate(element]\n    \n    staticProperties = Object.getOwnPropertyNames(@target.constructor)\n    # get rid of all the standar fuff properties that are in classes\n    staticProperties = staticProperties.filter((prop) =>\n        prop not in ["name","length","prototype","caller","__super__","arguments"]\n    )\n    if @showing is "attributes"\n      staticFunctions = []\n      staticAttributes = staticProperties.filter((prop) =>\n        not isFunction(@target.constructor[prop])\n      )\n    else if @showing is "methods"\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = []\n    else\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = staticProperties.filter((prop) =>\n        prop not in staticFunctions\n      )\n    #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes\n    attribs = (attribs.concat staticFunctions).concat staticAttributes\n    #alert " all attribs " + attribs\n    \n    # caches the own methods of the object\n    if @markOwnershipOfProperties\n      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)\n      #alert targetOwnMethods\n    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(\n      if @markOwnershipOfProperties\n        [\n          # give color criteria from the most general to the most specific\n          [new Color(0, 0, 180),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              true\n          ],\n          [new Color(255, 165, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              element in staticProperties\n          ],\n          [new Color(0, 180, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (@target.hasOwnProperty element)\n          ],\n          [new Color(180, 0, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (element in targetOwnMethods)\n          ]\n        ]\n      else null\n    ))\n    @list.action = (selected) =>\n      val = @target[selected]\n      # this is for finding the static variables\n      if val is undefined\n        val = @target.constructor[selected]\n      @currentProperty = val\n      if val is null\n        txt = "NULL"\n      else if isString(val)\n        txt = val\n      else\n        txt = val.toString()\n      cnts = new TextMorph(txt)\n      cnts.isEditable = true\n      cnts.enableSelecting()\n      cnts.setReceiver @target\n      @detail.setContents cnts\n    #\n    @list.hBar.alpha = 0.6\n    @list.vBar.alpha = 0.6\n    # we know that the content of this list in this pane is not going to need the\n    # step function, so we disable that from here by setting it to null, which\n    # prevents the recursion to children. We could have disabled that from the\n    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph\n    # with some animated content? We know that in this specific case it won\'t need animation so\n    # we set that here. Note that the ListMorph itself does require animation because of the\n    # scrollbars, but the MenuMorph (which contains the actual list contents)\n    # in this context doesn\'t.\n    @list.listContents.step = null\n    @add @list\n    #\n    # details pane\n    @detail = new ScrollFrameMorph()\n    @detail.acceptsDrops = false\n    @detail.contents.acceptsDrops = false\n    @detail.isTextLineWrapping = true\n    @detail.color = new Color(255, 255, 255)\n    @detail.hBar.alpha = 0.6\n    @detail.vBar.alpha = 0.6\n    ctrl = new TextMorph("")\n    ctrl.isEditable = true\n    ctrl.enableSelecting()\n    ctrl.setReceiver @target\n    @detail.setContents ctrl\n    @add @detail\n    #\n    # work (\'evaluation\') pane\n    # don\'t refresh the work pane if it already exists\n    if @work is null\n      @work = new ScrollFrameMorph()\n      @work.acceptsDrops = false\n      @work.contents.acceptsDrops = false\n      @work.isTextLineWrapping = true\n      @work.color = new Color(255, 255, 255)\n      @work.hBar.alpha = 0.6\n      @work.vBar.alpha = 0.6\n      ev = new TextMorph("")\n      ev.isEditable = true\n      ev.enableSelecting()\n      ev.setReceiver @target\n      @work.setContents ev\n    @add @work\n    #\n    # properties button\n    @buttonSubset = new TriggerMorph()\n    @buttonSubset.labelString = "show..."\n    @buttonSubset.action = =>\n      menu = new MenuMorph()\n      menu.addItem "attributes", =>\n        @showing = "attributes"\n        @buildPanes()\n      #\n      menu.addItem "methods", =>\n        @showing = "methods"\n        @buildPanes()\n      #\n      menu.addItem "all", =>\n        @showing = "all"\n        @buildPanes()\n      #\n      menu.addLine()\n      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>\n        @markOwnershipOfProperties = not @markOwnershipOfProperties\n        @buildPanes()\n      ), "highlight\nownership of properties"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonSubset\n    #\n    # inspect button\n    @buttonInspect = new TriggerMorph()\n    @buttonInspect.labelString = "inspect..."\n    @buttonInspect.action = =>\n      if isObject(@currentProperty)\n        menu = new MenuMorph()\n        menu.addItem "in new inspector...", =>\n          world = @world()\n          inspector = new InspectorMorph(@currentProperty)\n          inspector.setPosition world.hand.position()\n          inspector.keepWithin world\n          world.add inspector\n          inspector.changed()\n        #\n        menu.addItem "here...", =>\n          @setTarget @currentProperty\n        #\n        menu.popUpAtHand @world()\n      else\n        @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"\n    #\n    @add @buttonInspect\n    #\n    # edit button\n    @buttonEdit = new TriggerMorph()\n    @buttonEdit.labelString = "edit..."\n    @buttonEdit.action = =>\n      menu = new MenuMorph(@)\n      menu.addItem "save", "save", "accept changes"\n      menu.addLine()\n      menu.addItem "add property...", "addProperty"\n      menu.addItem "rename...", "renameProperty"\n      menu.addItem "remove...", "removeProperty"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonEdit\n    #\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n    #\n    @add @buttonClose\n    #\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n    #\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n    #\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n    #\n    # list\n    y = @label.bottom() + 2\n    w = Math.min(Math.floor(@width() / 3), @list.listContents.width())\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @list.setPosition new Point(x, y)\n    @list.setExtent new Point(w, h)\n    #\n    # detail\n    x = @list.right() + @edge\n    r = @right() - @edge\n    w = r - x\n    @detail.setPosition new Point(x, y)\n    @detail.setExtent new Point(w, (h * 2 / 3) - @edge)\n    #\n    # work\n    y = @detail.bottom() + @edge\n    @work.setPosition new Point(x, y)\n    @work.setExtent new Point(w, h / 3)\n    #\n    # properties button\n    x = @list.left()\n    y = @list.bottom() + @edge\n    w = @list.width()\n    h = WorldMorph.MorphicPreferences.handleSize\n    @buttonSubset.setPosition new Point(x, y)\n    @buttonSubset.setExtent new Point(w, h)\n    #\n    # inspect button\n    x = @detail.left()\n    w = @detail.width() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = w / 3 - @edge / 3\n    @buttonInspect.setPosition new Point(x, y)\n    @buttonInspect.setExtent new Point(w, h)\n    #\n    # edit button\n    x = @buttonInspect.right() + @edge\n    @buttonEdit.setPosition new Point(x, y)\n    @buttonEdit.setExtent new Point(w, h)\n    #\n    # close button\n    x = @buttonEdit.right() + @edge\n    r = @detail.right() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = r - x\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()\n  \n  \n  #InspectorMorph editing ops:\n  save: ->\n    txt = @detail.contents.children[0].text.toString()\n    prop = @list.selected\n    try\n      #\n      # this.target[prop] = evaluate(txt);\n      @target.evaluateString "this." + prop + " = " + txt\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err\n  \n  addProperty: ->\n    @prompt "new property name:", ((prop) =>\n      if prop\n        @target[prop] = null\n        @buildPanes()\n        if @target.updateRendering\n          @target.changed()\n          @target.updateRendering()\n          @target.changed()\n    ), @, "property" # Chrome cannot handle empty strings (others do)\n  \n  renameProperty: ->\n    propertyName = @list.selected\n    @prompt "property name:", ((prop) =>\n      try\n        delete (@target[propertyName])\n        @target[prop] = @currentProperty\n      catch err\n        @inform err\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    ), @, propertyName\n  \n  removeProperty: ->\n    prop = @list.selected\n    try\n      delete (@target[prop])\n      #\n      @currentProperty = null\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err';
+
+  return InspectorMorph;
+
+})(BoxMorph);
+
+SliderButtonMorph = (function(_super) {
+  __extends(SliderButtonMorph, _super);
+
+  SliderButtonMorph.prototype.highlightColor = new Color(90, 90, 140);
+
+  SliderButtonMorph.prototype.pressColor = new Color(80, 80, 160);
+
+  SliderButtonMorph.prototype.is3D = true;
+
+  SliderButtonMorph.prototype.hasMiddleDip = true;
+
+  function SliderButtonMorph(orientation) {
+    this.color = new Color(80, 80, 80);
+    SliderButtonMorph.__super__.constructor.call(this, orientation);
+  }
+
+  SliderButtonMorph.prototype.autoOrientation = function() {
+    return noOperation;
+  };
+
+  SliderButtonMorph.prototype.updateRendering = function() {
+    var colorBak;
+
+    colorBak = this.color.copy();
+    SliderButtonMorph.__super__.updateRendering.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.normalImage = this.image;
+    this.color = this.highlightColor.copy();
+    SliderButtonMorph.__super__.updateRendering.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.highlightImage = this.image;
+    this.color = this.pressColor.copy();
+    SliderButtonMorph.__super__.updateRendering.call(this);
+    if (this.is3D) {
+      this.drawEdges();
+    }
+    this.pressImage = this.image;
+    this.color = colorBak;
+    return this.image = this.normalImage;
+  };
+
+  SliderButtonMorph.prototype.drawEdges = function() {
+    var context, gradient, h, radius, w;
+
+    context = this.image.getContext("2d");
+    w = this.width();
+    h = this.height();
+    context.lineJoin = "round";
+    context.lineCap = "round";
+    if (this.orientation === "vertical") {
+      context.lineWidth = w / 3;
+      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0);
+      gradient.addColorStop(0, "white");
+      gradient.addColorStop(1, this.color.toString());
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(context.lineWidth * 0.5, w / 2);
+      context.lineTo(context.lineWidth * 0.5, h - w / 2);
+      context.stroke();
+      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0);
+      gradient.addColorStop(0, this.color.toString());
+      gradient.addColorStop(1, "black");
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(w - context.lineWidth * 0.5, w / 2);
+      context.lineTo(w - context.lineWidth * 0.5, h - w / 2);
+      context.stroke();
+      if (this.hasMiddleDip) {
+        gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0);
+        radius = w / 4;
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(0.35, this.color.toString());
+        gradient.addColorStop(0.65, this.color.toString());
+        gradient.addColorStop(1, "white");
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(w / 2, h / 2, radius, radians(0), radians(360), false);
+        context.closePath();
+        return context.fill();
+      }
+    } else if (this.orientation === "horizontal") {
+      context.lineWidth = h / 3;
+      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth);
+      gradient.addColorStop(0, "white");
+      gradient.addColorStop(1, this.color.toString());
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(h / 2, context.lineWidth * 0.5);
+      context.lineTo(w - h / 2, context.lineWidth * 0.5);
+      context.stroke();
+      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h);
+      gradient.addColorStop(0, this.color.toString());
+      gradient.addColorStop(1, "black");
+      context.strokeStyle = gradient;
+      context.beginPath();
+      context.moveTo(h / 2, h - context.lineWidth * 0.5);
+      context.lineTo(w - h / 2, h - context.lineWidth * 0.5);
+      context.stroke();
+      if (this.hasMiddleDip) {
+        gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth);
+        radius = h / 4;
+        gradient.addColorStop(0, "black");
+        gradient.addColorStop(0.35, this.color.toString());
+        gradient.addColorStop(0.65, this.color.toString());
+        gradient.addColorStop(1, "white");
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(this.width() / 2, this.height() / 2, radius, radians(0), radians(360), false);
+        context.closePath();
+        return context.fill();
+      }
+    }
+  };
+
+  SliderButtonMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseDownLeft = function(pos) {
+    this.image = this.pressImage;
+    this.changed();
+    return this.escalateEvent("mouseDownLeft", pos);
+  };
+
+  SliderButtonMorph.prototype.mouseClickLeft = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  SliderButtonMorph.prototype.mouseMove = function() {
+    return noOperation;
+  };
+
+  SliderButtonMorph.coffeeScriptSourceOfThisClass = '# SliderButtonMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderButtonMorph extends CircleBoxMorph\n\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(90, 90, 140)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(80, 80, 160)\n  is3D: true\n  hasMiddleDip: true\n\n  constructor: (orientation) ->\n    @color = new Color(80, 80, 80)\n    super orientation\n  \n  autoOrientation: ->\n      noOperation\n  \n  updateRendering: ->\n    colorBak = @color.copy()\n    super()\n    @drawEdges()  if @is3D\n    @normalImage = @image\n    @color = @highlightColor.copy()\n    super()\n    @drawEdges()  if @is3D\n    @highlightImage = @image\n    @color = @pressColor.copy()\n    super()\n    @drawEdges()  if @is3D\n    @pressImage = @image\n    @color = colorBak\n    @image = @normalImage\n  \n  drawEdges: ->\n    context = @image.getContext("2d")\n    w = @width()\n    h = @height()\n    context.lineJoin = "round"\n    context.lineCap = "round"\n    if @orientation is "vertical"\n      context.lineWidth = w / 3\n      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)\n      gradient.addColorStop 0, "white"\n      gradient.addColorStop 1, @color.toString()\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo context.lineWidth * 0.5, w / 2\n      context.lineTo context.lineWidth * 0.5, h - w / 2\n      context.stroke()\n      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)\n      gradient.addColorStop 0, @color.toString()\n      gradient.addColorStop 1, "black"\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo w - context.lineWidth * 0.5, w / 2\n      context.lineTo w - context.lineWidth * 0.5, h - w / 2\n      context.stroke()\n      if @hasMiddleDip\n        gradient = context.createLinearGradient(\n          context.lineWidth, 0, w - context.lineWidth, 0)\n        radius = w / 4\n        gradient.addColorStop 0, "black"\n        gradient.addColorStop 0.35, @color.toString()\n        gradient.addColorStop 0.65, @color.toString()\n        gradient.addColorStop 1, "white"\n        context.fillStyle = gradient\n        context.beginPath()\n        context.arc w / 2, h / 2, radius, radians(0), radians(360), false\n        context.closePath()\n        context.fill()\n    else if @orientation is "horizontal"\n      context.lineWidth = h / 3\n      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)\n      gradient.addColorStop 0, "white"\n      gradient.addColorStop 1, @color.toString()\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo h / 2, context.lineWidth * 0.5\n      context.lineTo w - h / 2, context.lineWidth * 0.5\n      context.stroke()\n      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)\n      gradient.addColorStop 0, @color.toString()\n      gradient.addColorStop 1, "black"\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo h / 2, h - context.lineWidth * 0.5\n      context.lineTo w - h / 2, h - context.lineWidth * 0.5\n      context.stroke()\n      if @hasMiddleDip\n        gradient = context.createLinearGradient(\n          0, context.lineWidth, 0, h - context.lineWidth)\n        radius = h / 4\n        gradient.addColorStop 0, "black"\n        gradient.addColorStop 0.35, @color.toString()\n        gradient.addColorStop 0.65, @color.toString()\n        gradient.addColorStop 1, "white"\n        context.fillStyle = gradient\n        context.beginPath()\n        context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false\n        context.closePath()\n        context.fill()\n  \n  \n  #SliderButtonMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  mouseDownLeft: (pos) ->\n    @image = @pressImage\n    @changed()\n    @escalateEvent "mouseDownLeft", pos\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n  \n  # prevent my parent from getting picked up\n  mouseMove: ->\n      noOperation';
+
+  return SliderButtonMorph;
+
+})(CircleBoxMorph);
+
+BouncerMorph = (function(_super) {
+  __extends(BouncerMorph, _super);
+
+  BouncerMorph.prototype.isStopped = false;
+
+  BouncerMorph.prototype.type = null;
+
+  BouncerMorph.prototype.direction = null;
+
+  BouncerMorph.prototype.speed = null;
+
+  function BouncerMorph(type, speed) {
+    this.type = type != null ? type : "vertical";
+    this.speed = speed != null ? speed : 1;
+    BouncerMorph.__super__.constructor.call(this);
+    this.fps = 50;
+    if (this.type === "vertical") {
+      this.direction = "down";
+    } else {
+      this.direction = "right";
+    }
+  }
+
+  BouncerMorph.prototype.moveUp = function() {
+    return this.moveBy(new Point(0, -this.speed));
+  };
+
+  BouncerMorph.prototype.moveDown = function() {
+    return this.moveBy(new Point(0, this.speed));
+  };
+
+  BouncerMorph.prototype.moveRight = function() {
+    return this.moveBy(new Point(this.speed, 0));
+  };
+
+  BouncerMorph.prototype.moveLeft = function() {
+    return this.moveBy(new Point(-this.speed, 0));
+  };
+
+  BouncerMorph.prototype.step = function() {
+    if (!this.isStopped) {
+      if (this.type === "vertical") {
+        if (this.direction === "down") {
+          this.moveDown();
+        } else {
+          this.moveUp();
+        }
+        if (this.boundsIncludingChildren().top() < this.parent.top() && this.direction === "up") {
+          this.direction = "down";
+        }
+        if (this.boundsIncludingChildren().bottom() > this.parent.bottom() && this.direction === "down") {
+          return this.direction = "up";
+        }
+      } else if (this.type === "horizontal") {
+        if (this.direction === "right") {
+          this.moveRight();
+        } else {
+          this.moveLeft();
+        }
+        if (this.boundsIncludingChildren().left() < this.parent.left() && this.direction === "left") {
+          this.direction = "right";
+        }
+        if (this.boundsIncludingChildren().right() > this.parent.right() && this.direction === "right") {
+          return this.direction = "left";
+        }
+      }
+    }
+  };
+
+  BouncerMorph.coffeeScriptSourceOfThisClass = '# BouncerMorph ////////////////////////////////////////////////////////\n# fishy constructor\n# I am a Demo of a stepping custom Morph\n# Bounces vertically or horizontally within the parent\n\nclass BouncerMorph extends Morph\n\n  isStopped: false\n  type: null\n  direction: null\n  speed: null\n\n  constructor: (@type = "vertical", @speed = 1) ->\n    super()\n    @fps = 50\n    # additional properties:\n    if @type is "vertical"\n      @direction = "down"\n    else\n      @direction = "right"\n  \n  \n  # BouncerMorph moving:\n  moveUp: ->\n    @moveBy new Point(0, -@speed)\n  \n  moveDown: ->\n    @moveBy new Point(0, @speed)\n  \n  moveRight: ->\n    @moveBy new Point(@speed, 0)\n  \n  moveLeft: ->\n    @moveBy new Point(-@speed, 0)\n  \n  \n  # BouncerMorph stepping:\n  step: ->\n    unless @isStopped\n      if @type is "vertical"\n        if @direction is "down"\n          @moveDown()\n        else\n          @moveUp()\n        @direction = "down"  if @boundsIncludingChildren().top() < @parent.top() and @direction is "up"\n        @direction = "up"  if @boundsIncludingChildren().bottom() > @parent.bottom() and @direction is "down"\n      else if @type is "horizontal"\n        if @direction is "right"\n          @moveRight()\n        else\n          @moveLeft()\n        @direction = "right"  if @boundsIncludingChildren().left() < @parent.left() and @direction is "left"\n        @direction = "left"  if @boundsIncludingChildren().right() > @parent.right() and @direction is "right"';
+
+  return BouncerMorph;
+
+})(Morph);
+
+MorphsListMorph = (function(_super) {
+  __extends(MorphsListMorph, _super);
+
+  MorphsListMorph.prototype.morphsList = null;
+
+  MorphsListMorph.prototype.buttonClose = null;
+
+  MorphsListMorph.prototype.resizer = null;
+
+  function MorphsListMorph(target) {
+    MorphsListMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
+    this.updateRendering();
+    this.buildPanes();
+  }
+
+  MorphsListMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
+  };
+
+  MorphsListMorph.prototype.buildPanes = function() {
+    var ListOfMorphs, attribs, theWordMorph,
+      _this = this;
+
+    attribs = [];
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
+      }
+    });
+    this.children = [];
+    this.label = new TextMorph("Morphs List");
+    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.updateRendering();
+    this.add(this.label);
+    theWordMorph = "Morph";
+    ListOfMorphs = (Object.keys(window)).filter(function(i) {
+      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
+    });
+    this.morphsList = new ListMorph(ListOfMorphs, null);
+    this.morphsList.hBar.alpha = 0.6;
+    this.morphsList.vBar.alpha = 0.6;
+    this.add(this.morphsList);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
+    };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
+  };
+
+  MorphsListMorph.prototype.fixLayout = function() {
+    var b, h, r, w, x, y;
+
+    Morph.prototype.trackChanges = false;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.label.setPosition(new Point(x, y));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.updateRendering();
+      this.changed();
+      this.resizer.updateRendering();
+    }
+    y = this.label.bottom() + 2;
+    w = this.width() - this.edge;
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
+    h = b - y;
+    this.morphsList.setPosition(new Point(x, y));
+    this.morphsList.setExtent(new Point(w, h));
+    x = this.morphsList.left();
+    y = this.morphsList.bottom() + this.edge;
+    h = WorldMorph.MorphicPreferences.handleSize;
+    w = this.morphsList.width() - h - this.edge;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
+    return this.changed();
+  };
+
+  MorphsListMorph.prototype.setExtent = function(aPoint) {
+    MorphsListMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
+  };
+
+  MorphsListMorph.coffeeScriptSourceOfThisClass = '# MorphsListMorph //////////////////////////////////////////////////////\n\nclass MorphsListMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + 2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = WorldMorph.MorphicPreferences.handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
+
+  return MorphsListMorph;
+
+})(BoxMorph);
 
 /*
 Copyright 2013 Craig Campbell
@@ -4610,4637 +9245,7 @@ Mousetrap = {
 
 window.Mousetrap = Mousetrap;
 
-ShadowMorph = (function(_super) {
-  __extends(ShadowMorph, _super);
-
-  function ShadowMorph() {
-    ShadowMorph.__super__.constructor.call(this);
-  }
-
-  ShadowMorph.coffeeScriptSourceOfThisClass = '# ShadowMorph /////////////////////////////////////////////////////////\n\nclass ShadowMorph extends Morph\n  constructor: () ->\n    super()';
-
-  return ShadowMorph;
-
-})(Morph);
-
-CircleBoxMorph = (function(_super) {
-  __extends(CircleBoxMorph, _super);
-
-  CircleBoxMorph.prototype.orientation = null;
-
-  CircleBoxMorph.prototype.autoOrient = true;
-
-  function CircleBoxMorph(orientation) {
-    this.orientation = orientation != null ? orientation : "vertical";
-    CircleBoxMorph.__super__.constructor.call(this);
-    this.setExtent(new Point(20, 100));
-  }
-
-  CircleBoxMorph.prototype.autoOrientation = function() {
-    if (this.height() > this.width()) {
-      return this.orientation = "vertical";
-    } else {
-      return this.orientation = "horizontal";
-    }
-  };
-
-  CircleBoxMorph.prototype.updateRendering = function() {
-    var center1, center2, context, ext, points, radius, rect, x, y,
-      _this = this;
-
-    if (this.autoOrient) {
-      this.autoOrientation();
-    }
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    if (this.orientation === "vertical") {
-      radius = this.width() / 2;
-      x = this.center().x;
-      center1 = new Point(x, this.top() + radius);
-      center2 = new Point(x, this.bottom() - radius);
-      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
-    } else {
-      radius = this.height() / 2;
-      y = this.center().y;
-      center1 = new Point(this.left() + radius, y);
-      center2 = new Point(this.right() - radius, y);
-      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
-    }
-    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
-    points.forEach(function(center) {
-      context.fillStyle = _this.color.toString();
-      context.beginPath();
-      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-      context.closePath();
-      return context.fill();
-    });
-    rect = rect.translateBy(this.bounds.origin.neg());
-    ext = rect.extent();
-    if (ext.x > 0 && ext.y > 0) {
-      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
-    }
-  };
-
-  CircleBoxMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = CircleBoxMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    if (this.orientation === "vertical") {
-      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
-    } else {
-      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
-    }
-    return menu;
-  };
-
-  CircleBoxMorph.prototype.toggleOrientation = function() {
-    var center;
-
-    center = this.center();
-    this.changed();
-    if (this.orientation === "vertical") {
-      this.orientation = "horizontal";
-    } else {
-      this.orientation = "vertical";
-    }
-    this.silentSetExtent(new Point(this.height(), this.width()));
-    this.setCenter(center);
-    this.updateRendering();
-    return this.changed();
-  };
-
-  CircleBoxMorph.coffeeScriptSourceOfThisClass = '# CircleBoxMorph //////////////////////////////////////////////////////\n\n# I can be used for sliders\n\nclass CircleBoxMorph extends Morph\n\n  orientation: null\n  autoOrient: true\n\n  constructor: (@orientation = "vertical") ->\n    super()\n    @setExtent new Point(20, 100)\n  \n  autoOrientation: ->\n    if @height() > @width()\n      @orientation = "vertical"\n    else\n      @orientation = "horizontal"\n  \n  updateRendering: ->\n    @autoOrientation()  if @autoOrient\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    if @orientation is "vertical"\n      radius = @width() / 2\n      x = @center().x\n      center1 = new Point(x, @top() + radius)\n      center2 = new Point(x, @bottom() - radius)\n      rect = @bounds.origin.add(\n        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))\n    else\n      radius = @height() / 2\n      y = @center().y\n      center1 = new Point(@left() + radius, y)\n      center2 = new Point(@right() - radius, y)\n      rect = @bounds.origin.add(\n        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))\n    points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]\n    points.forEach (center) =>\n      context.fillStyle = @color.toString()\n      context.beginPath()\n      context.arc center.x, center.y, radius, 0, 2 * Math.PI, false\n      context.closePath()\n      context.fill()\n    rect = rect.translateBy(@bounds.origin.neg())\n    ext = rect.extent()\n    if ext.x > 0 and ext.y > 0\n      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()\n  \n  \n  # CircleBoxMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    if @orientation is "vertical"\n      menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"\n    else\n      menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"\n    menu\n  \n  toggleOrientation: ->\n    center = @center()\n    @changed()\n    if @orientation is "vertical"\n      @orientation = "horizontal"\n    else\n      @orientation = "vertical"\n    @silentSetExtent new Point(@height(), @width())\n    @setCenter center\n    @updateRendering()\n    @changed()';
-
-  return CircleBoxMorph;
-
-})(Morph);
-
-MenuMorph = (function(_super) {
-  __extends(MenuMorph, _super);
-
-  MenuMorph.prototype.target = null;
-
-  MenuMorph.prototype.title = null;
-
-  MenuMorph.prototype.environment = null;
-
-  MenuMorph.prototype.fontSize = null;
-
-  MenuMorph.prototype.items = null;
-
-  MenuMorph.prototype.label = null;
-
-  MenuMorph.prototype.world = null;
-
-  MenuMorph.prototype.isListContents = false;
-
-  function MenuMorph(target, title, environment, fontSize) {
-    this.target = target;
-    this.title = title != null ? title : null;
-    this.environment = environment != null ? environment : null;
-    this.fontSize = fontSize != null ? fontSize : null;
-    this.items = [];
-    MenuMorph.__super__.constructor.call(this);
-    this.border = null;
-  }
-
-  MenuMorph.prototype.addItem = function(labelString, action, hint, color, bold, italic) {
-    if (bold == null) {
-      bold = false;
-    }
-    if (italic == null) {
-      italic = false;
-    }
-    return this.items.push([localize(labelString || "close"), action || nop, hint, color, bold, italic]);
-  };
-
-  MenuMorph.prototype.addLine = function(width) {
-    return this.items.push([0, width || 1]);
-  };
-
-  MenuMorph.prototype.createLabel = function() {
-    var text;
-
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    text = new TextMorph(localize(this.title), this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center");
-    text.alignment = "center";
-    text.color = new Color(255, 255, 255);
-    text.backgroundColor = this.borderColor;
-    text.updateRendering();
-    this.label = new BoxMorph(3, 0);
-    this.label.color = this.borderColor;
-    this.label.borderColor = this.borderColor;
-    this.label.setExtent(text.extent().add(4));
-    this.label.updateRendering();
-    this.label.add(text);
-    return this.label.text = text;
-  };
-
-  MenuMorph.prototype.updateRendering = function() {
-    var fb, isLine, x, y,
-      _this = this;
-
-    isLine = false;
-    this.children.forEach(function(m) {
-      return m.destroy();
-    });
-    this.children = [];
-    if (!this.isListContents) {
-      this.edge = 5;
-      this.border = 2;
-    }
-    this.color = new Color(255, 255, 255);
-    this.borderColor = new Color(60, 60, 60);
-    this.silentSetExtent(new Point(0, 0));
-    y = 2;
-    x = this.left() + 4;
-    if (!this.isListContents) {
-      if (this.title) {
-        this.createLabel();
-        this.label.setPosition(this.bounds.origin.add(4));
-        this.add(this.label);
-        y = this.label.bottom();
-      } else {
-        y = this.top() + 4;
-      }
-    }
-    y += 1;
-    this.items.forEach(function(tuple) {
-      var item;
-
-      isLine = false;
-      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
-        item = tuple;
-      } else if (tuple[0] === 0) {
-        isLine = true;
-        item = new Morph();
-        item.color = _this.borderColor;
-        item.setHeight(tuple[1]);
-      } else {
-        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3], tuple[4], tuple[5]);
-      }
-      if (isLine) {
-        y += 1;
-      }
-      item.setPosition(new Point(x, y));
-      _this.add(item);
-      y = y + item.height();
-      if (isLine) {
-        return y += 1;
-      }
-    });
-    fb = this.boundsIncludingChildren();
-    this.silentSetExtent(fb.extent().add(4));
-    this.adjustWidths();
-    return MenuMorph.__super__.updateRendering.call(this);
-  };
-
-  MenuMorph.prototype.maxWidth = function() {
-    var w;
-
-    w = 0;
-    if (this.parent instanceof FrameMorph) {
-      if (this.parent.scrollFrame instanceof ScrollFrameMorph) {
-        w = this.parent.scrollFrame.width();
-      }
-    }
-    this.children.forEach(function(item) {
-      if (item instanceof MenuItemMorph) {
-        return w = Math.max(w, item.children[0].width() + 8);
-      } else if ((item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
-        return w = Math.max(w, item.width());
-      }
-    });
-    if (this.label) {
-      w = Math.max(w, this.label.width());
-    }
-    return w;
-  };
-
-  MenuMorph.prototype.adjustWidths = function() {
-    var w,
-      _this = this;
-
-    w = this.maxWidth();
-    return this.children.forEach(function(item) {
-      var isSelected;
-
-      item.silentSetWidth(w);
-      if (item instanceof MenuItemMorph) {
-        isSelected = item.image === item.pressImage;
-        item.createBackgrounds();
-        if (isSelected) {
-          return item.image = item.pressImage;
-        }
-      } else {
-        item.updateRendering();
-        if (item === _this.label) {
-          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
-        }
-      }
-    });
-  };
-
-  MenuMorph.prototype.unselectAllItems = function() {
-    this.children.forEach(function(item) {
-      if (item instanceof MenuItemMorph) {
-        return item.image = item.normalImage;
-      }
-    });
-    return this.changed();
-  };
-
-  MenuMorph.prototype.popup = function(world, pos) {
-    this.updateRendering();
-    this.setPosition(pos);
-    this.addShadow(new Point(2, 2), 80);
-    this.keepWithin(world);
-    if (world.activeMenu) {
-      world.activeMenu.destroy();
-    }
-    world.add(this);
-    world.activeMenu = this;
-    return this.fullChanged();
-  };
-
-  MenuMorph.prototype.popUpAtHand = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    return this.popup(wrrld, wrrld.hand.position());
-  };
-
-  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    this.updateRendering();
-    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    this.updateRendering();
-    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  MenuMorph.coffeeScriptSourceOfThisClass = '# MenuMorph ///////////////////////////////////////////////////////////\n\nclass MenuMorph extends BoxMorph\n\n  target: null\n  title: null\n  environment: null\n  fontSize: null\n  items: null\n  label: null\n  world: null\n  isListContents: false\n\n  constructor: (@target, @title = null, @environment = null, @fontSize = null) ->\n    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need\n    # to initialise the items before calling super. We can\'t initialise it\n    # outside the constructor because the array would be shared across instantiated\n    # objects.\n    @items = []\n    super()\n    @border = null # the Box Morph constructor puts this to 2\n    # important not to traverse all the children for stepping through, because\n    # there could be a lot of entries for example in the inspector the number\n    # of properties of an object - there could be a 100 of those and we don\'t\n    # want to traverse them all. Setting step to null (as opposed to nop) means\n    # that\n  \n  addItem: (labelString, action, hint, color, bold = false, italic = false) ->\n    # labelString is normally a single-line string. But it can also be one\n    # of the following:\n    #     * a multi-line string (containing line breaks)\n    #     * an icon (either a Morph or a Canvas)\n    #     * a tuple of format: [icon, string]\n    @items.push [\n      localize(labelString or "close"),\n      action or nop,\n      hint,\n      color,\n      bold,\n      italic\n    ]\n  \n  addLine: (width) ->\n    @items.push [0, width or 1]\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    text = new TextMorph(localize(@title),\n      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")\n    text.alignment = "center"\n    text.color = new Color(255, 255, 255)\n    text.backgroundColor = @borderColor\n    text.updateRendering()\n    @label = new BoxMorph(3, 0)\n    @label.color = @borderColor\n    @label.borderColor = @borderColor\n    @label.setExtent text.extent().add(4)\n    @label.updateRendering()\n    @label.add text\n    @label.text = text\n  \n  updateRendering: ->\n    isLine = false\n    @children.forEach (m) ->\n      m.destroy()\n    #\n    @children = []\n    unless @isListContents\n      @edge = 5\n      @border = 2\n    @color = new Color(255, 255, 255)\n    @borderColor = new Color(60, 60, 60)\n    @silentSetExtent new Point(0, 0)\n    y = 2\n    x = @left() + 4\n    unless @isListContents\n      if @title\n        @createLabel()\n        @label.setPosition @bounds.origin.add(4)\n        @add @label\n        y = @label.bottom()\n      else\n        y = @top() + 4\n    y += 1\n    @items.forEach (tuple) =>\n      isLine = false\n      if tuple instanceof StringFieldMorph or\n        tuple instanceof ColorPickerMorph or\n        tuple instanceof SliderMorph\n          item = tuple\n      else if tuple[0] is 0\n        isLine = true\n        item = new Morph()\n        item.color = @borderColor\n        item.setHeight tuple[1]\n      else\n        # bubble help hint\n        item = new MenuItemMorph(\n          @target,\n          tuple[1],\n          tuple[0],\n          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n          WorldMorph.MorphicPreferences.menuFontName, @environment,\n          tuple[2],\n          tuple[3], # color\n          tuple[4], # bold\n          tuple[5]  # italic\n          )\n      y += 1  if isLine\n      item.setPosition new Point(x, y)\n      @add item\n      y = y + item.height()\n      y += 1  if isLine\n    #\n    fb = @boundsIncludingChildren()\n    @silentSetExtent fb.extent().add(4)\n    @adjustWidths()\n    super()\n  \n  maxWidth: ->\n    w = 0\n    if @parent instanceof FrameMorph\n      if @parent.scrollFrame instanceof ScrollFrameMorph\n        w = @parent.scrollFrame.width()    \n    @children.forEach (item) ->\n      if (item instanceof MenuItemMorph)\n        w = Math.max(w, item.children[0].width() + 8)\n      else if (item instanceof StringFieldMorph) or\n        (item instanceof ColorPickerMorph) or\n        (item instanceof SliderMorph)\n          w = Math.max(w, item.width())  \n    #\n    w = Math.max(w, @label.width())  if @label\n    w\n  \n  adjustWidths: ->\n    w = @maxWidth()\n    @children.forEach (item) =>\n      item.silentSetWidth w\n      if item instanceof MenuItemMorph\n        isSelected = (item.image == item.pressImage)\n        item.createBackgrounds()\n        if isSelected then item.image = item.pressImage          \n      else\n        item.updateRendering()\n        if item is @label\n          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))\n  \n  \n  unselectAllItems: ->\n    @children.forEach (item) ->\n      item.image = item.normalImage  if item instanceof MenuItemMorph\n    #\n    @changed()\n  \n  popup: (world, pos) ->\n    @updateRendering()\n    @setPosition pos\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.activeMenu.destroy()  if world.activeMenu\n    world.add @\n    world.activeMenu = @\n    @fullChanged()\n  \n  popUpAtHand: (world) ->\n    wrrld = world or @world\n    @popup wrrld, wrrld.hand.position()\n  \n  popUpCenteredAtHand: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))\n  \n  popUpCenteredInWorld: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))';
-
-  return MenuMorph;
-
-})(BoxMorph);
-
 morphicVersion = "2012-October-22";
-
-PenMorph = (function(_super) {
-  __extends(PenMorph, _super);
-
-  PenMorph.prototype.heading = 0;
-
-  PenMorph.prototype.penSize = null;
-
-  PenMorph.prototype.isWarped = false;
-
-  PenMorph.prototype.isDown = true;
-
-  PenMorph.prototype.wantsRedraw = false;
-
-  PenMorph.prototype.penPoint = 'tip';
-
-  function PenMorph() {
-    this.penSize = WorldMorph.MorphicPreferences.handleSize * 4;
-    PenMorph.__super__.constructor.call(this);
-    this.setExtent(new Point(this.penSize, this.penSize));
-    this.penSize = 1;
-  }
-
-  PenMorph.staticVariable = 1;
-
-  PenMorph.staticFunction = function() {
-    return 3.14;
-  };
-
-  PenMorph.prototype.changed = function() {
-    var w;
-
-    if (this.isWarped === false) {
-      w = this.root();
-      if (w instanceof WorldMorph) {
-        w.broken.push(this.visibleBounds().spread());
-      }
-      if (this.parent) {
-        return this.parent.childChanged(this);
-      }
-    }
-  };
-
-  PenMorph.prototype.updateRendering = function(facing) {
-    var context, dest, direction, left, len, right, start;
-
-    direction = facing || this.heading;
-    if (this.isWarped) {
-      this.wantsRedraw = true;
-      return;
-    }
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    len = this.width() / 2;
-    start = this.center().subtract(this.bounds.origin);
-    if (this.penPoint === "tip") {
-      dest = start.distanceAngle(len * 0.75, direction - 180);
-      left = start.distanceAngle(len, direction + 195);
-      right = start.distanceAngle(len, direction - 195);
-    } else {
-      dest = start.distanceAngle(len * 0.75, direction);
-      left = start.distanceAngle(len * 0.33, direction + 230);
-      right = start.distanceAngle(len * 0.33, direction - 230);
-    }
-    context.fillStyle = this.color.toString();
-    context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.lineTo(left.x, left.y);
-    context.lineTo(dest.x, dest.y);
-    context.lineTo(right.x, right.y);
-    context.closePath();
-    context.strokeStyle = "white";
-    context.lineWidth = 3;
-    context.stroke();
-    context.strokeStyle = "black";
-    context.lineWidth = 1;
-    context.stroke();
-    context.fill();
-    return this.wantsRedraw = false;
-  };
-
-  PenMorph.prototype.setHeading = function(degrees) {
-    this.heading = parseFloat(degrees) % 360;
-    this.updateRendering();
-    return this.changed();
-  };
-
-  PenMorph.prototype.drawLine = function(start, dest) {
-    var context, from, to;
-
-    context = this.parent.penTrails().getContext("2d");
-    from = start.subtract(this.parent.bounds.origin);
-    to = dest.subtract(this.parent.bounds.origin);
-    if (this.isDown) {
-      context.lineWidth = this.penSize;
-      context.strokeStyle = this.color.toString();
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.beginPath();
-      context.moveTo(from.x, from.y);
-      context.lineTo(to.x, to.y);
-      context.stroke();
-      if (this.isWarped === false) {
-        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.penSize / 2, 1)).intersect(this.parent.visibleBounds()).spread());
-      }
-    }
-  };
-
-  PenMorph.prototype.turn = function(degrees) {
-    return this.setHeading(this.heading + parseFloat(degrees));
-  };
-
-  PenMorph.prototype.forward = function(steps) {
-    var dest, dist, start;
-
-    start = this.center();
-    dist = parseFloat(steps);
-    if (dist >= 0) {
-      dest = this.position().distanceAngle(dist, this.heading);
-    } else {
-      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
-    }
-    this.setPosition(dest);
-    return this.drawLine(start, this.center());
-  };
-
-  PenMorph.prototype.down = function() {
-    return this.isDown = true;
-  };
-
-  PenMorph.prototype.up = function() {
-    return this.isDown = false;
-  };
-
-  PenMorph.prototype.clear = function() {
-    this.parent.updateRendering();
-    return this.parent.changed();
-  };
-
-  PenMorph.prototype.startWarp = function() {
-    this.wantsRedraw = false;
-    return this.isWarped = true;
-  };
-
-  PenMorph.prototype.endWarp = function() {
-    this.isWarped = false;
-    if (this.wantsRedraw) {
-      this.updateRendering();
-      this.wantsRedraw = false;
-    }
-    return this.parent.changed();
-  };
-
-  PenMorph.prototype.warp = function(fun) {
-    this.startWarp();
-    fun.call(this);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpOp = function(selector, argsArray) {
-    this.startWarp();
-    this[selector].apply(this, argsArray);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpSierpinski = function(length, min) {
-    return this.warpOp("sierpinski", [length, min]);
-  };
-
-  PenMorph.prototype.sierpinski = function(length, min) {
-    var _i, _results;
-
-    if (length > min) {
-      _results = [];
-      for (i = _i = 0; _i < 3; i = ++_i) {
-        this.sierpinski(length * 0.5, min);
-        this.turn(120);
-        _results.push(this.forward(length));
-      }
-      return _results;
-    }
-  };
-
-  PenMorph.prototype.warpTree = function(level, length, angle) {
-    return this.warpOp("tree", [level, length, angle]);
-  };
-
-  PenMorph.prototype.tree = function(level, length, angle) {
-    if (level > 0) {
-      this.penSize = level;
-      this.forward(length);
-      this.turn(angle);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle * -2);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle);
-      return this.forward(-length);
-    }
-  };
-
-  PenMorph.coffeeScriptSourceOfThisClass = '# PenMorph ////////////////////////////////////////////////////////////\n\n# I am a simple LOGO-wise turtle.\n\nclass PenMorph extends Morph\n  \n  heading: 0\n  penSize: null\n  isWarped: false # internal optimization\n  isDown: true\n  wantsRedraw: false # internal optimization\n  penPoint: \'tip\' # or \'center\'\n  \n  constructor: () ->\n    @penSize = WorldMorph.MorphicPreferences.handleSize * 4\n    super()\n    @setExtent new Point(@penSize, @penSize)\n    # todo we need to change the size two times, for getting the right size\n    # of the arrow and of the line. Probably should make the two distinct\n    @penSize = 1\n    #alert @morphMethod() # works\n    # doesn\'t work cause coffeescript doesn\'t support static inheritance\n    #alert @morphStaticMethod()\n\n  @staticVariable: 1\n  @staticFunction: -> 3.14\n    \n  # PenMorph updating - optimized for warping, i.e atomic recursion\n  changed: ->\n    if @isWarped is false\n      w = @root()\n      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph\n      @parent.childChanged @  if @parent\n  \n  \n  # PenMorph display:\n  updateRendering: (facing) ->\n    #\n    #    my orientation can be overridden with the "facing" parameter to\n    #    implement Scratch-style rotation styles\n    #    \n    #\n    direction = facing or @heading\n    if @isWarped\n      @wantsRedraw = true\n      return\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    len = @width() / 2\n    start = @center().subtract(@bounds.origin)\n\n    if @penPoint is "tip"\n      dest = start.distanceAngle(len * 0.75, direction - 180)\n      left = start.distanceAngle(len, direction + 195)\n      right = start.distanceAngle(len, direction - 195)\n    else # \'middle\'\n      dest = start.distanceAngle(len * 0.75, direction)\n      left = start.distanceAngle(len * 0.33, direction + 230)\n      right = start.distanceAngle(len * 0.33, direction - 230)\n\n    context.fillStyle = @color.toString()\n    context.beginPath()\n\n    context.moveTo start.x, start.y\n    context.lineTo left.x, left.y\n    context.lineTo dest.x, dest.y\n    context.lineTo right.x, right.y\n\n    context.closePath()\n    context.strokeStyle = "white"\n    context.lineWidth = 3\n    context.stroke()\n    context.strokeStyle = "black"\n    context.lineWidth = 1\n    context.stroke()\n    context.fill()\n    @wantsRedraw = false\n  \n  \n  # PenMorph access:\n  setHeading: (degrees) ->\n    @heading = parseFloat(degrees) % 360\n    @updateRendering()\n    @changed()\n  \n  \n  # PenMorph drawing:\n  drawLine: (start, dest) ->\n    context = @parent.penTrails().getContext("2d")\n    from = start.subtract(@parent.bounds.origin)\n    to = dest.subtract(@parent.bounds.origin)\n    if @isDown\n      context.lineWidth = @penSize\n      context.strokeStyle = @color.toString()\n      context.lineCap = "round"\n      context.lineJoin = "round"\n      context.beginPath()\n      context.moveTo from.x, from.y\n      context.lineTo to.x, to.y\n      context.stroke()\n      if @isWarped is false\n        @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()\n  \n  \n  # PenMorph turtle ops:\n  turn: (degrees) ->\n    @setHeading @heading + parseFloat(degrees)\n  \n  forward: (steps) ->\n    start = @center()\n    dist = parseFloat(steps)\n    if dist >= 0\n      dest = @position().distanceAngle(dist, @heading)\n    else\n      dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))\n    @setPosition dest\n    @drawLine start, @center()\n  \n  down: ->\n    @isDown = true\n  \n  up: ->\n    @isDown = false\n  \n  clear: ->\n    @parent.updateRendering()\n    @parent.changed()\n  \n  \n  # PenMorph optimization for atomic recursion:\n  startWarp: ->\n    @wantsRedraw = false\n    @isWarped = true\n  \n  endWarp: ->\n    @isWarped = false\n    if @wantsRedraw\n      @updateRendering()\n      @wantsRedraw = false\n    @parent.changed()\n  \n  warp: (fun) ->\n    @startWarp()\n    fun.call @\n    @endWarp()\n  \n  warpOp: (selector, argsArray) ->\n    @startWarp()\n    @[selector].apply @, argsArray\n    @endWarp()\n  \n  \n  # PenMorph demo ops:\n  # try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})\n  warpSierpinski: (length, min) ->\n    @warpOp "sierpinski", [length, min]\n  \n  sierpinski: (length, min) ->\n    if length > min\n      for i in [0...3]\n        @sierpinski length * 0.5, min\n        @turn 120\n        @forward length\n  \n  warpTree: (level, length, angle) ->\n    @warpOp "tree", [level, length, angle]\n  \n  tree: (level, length, angle) ->\n    if level > 0\n      @penSize = level\n      @forward length\n      @turn angle\n      @tree level - 1, length * 0.75, angle\n      @turn angle * -2\n      @tree level - 1, length * 0.75, angle\n      @turn angle\n      @forward -length';
-
-  return PenMorph;
-
-})(Morph);
-
-Color = (function() {
-  Color.prototype.a = null;
-
-  Color.prototype.r = null;
-
-  Color.prototype.g = null;
-
-  Color.prototype.b = null;
-
-  function Color(r, g, b, a) {
-    this.r = r != null ? r : 0;
-    this.g = g != null ? g : 0;
-    this.b = b != null ? b : 0;
-    this.a = a || (a === 0 ? 0 : 1);
-  }
-
-  Color.prototype.toString = function() {
-    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
-  };
-
-  Color.prototype.copy = function() {
-    return new Color(this.r, this.g, this.b, this.a);
-  };
-
-  Color.prototype.eq = function(aColor) {
-    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
-  };
-
-  Color.prototype.hsv = function() {
-    var bb, d, gg, h, max, min, rr, s, v;
-
-    rr = this.r / 255;
-    gg = this.g / 255;
-    bb = this.b / 255;
-    max = Math.max(rr, gg, bb);
-    min = Math.min(rr, gg, bb);
-    h = max;
-    s = max;
-    v = max;
-    d = max - min;
-    s = (max === 0 ? 0 : d / max);
-    if (max === min) {
-      h = 0;
-    } else {
-      switch (max) {
-        case rr:
-          h = (gg - bb) / d + (gg < bb ? 6 : 0);
-          break;
-        case gg:
-          h = (bb - rr) / d + 2;
-          break;
-        case bb:
-          h = (rr - gg) / d + 4;
-      }
-      h /= 6;
-    }
-    return [h, s, v];
-  };
-
-  Color.prototype.set_hsv = function(h, s, v) {
-    var f, p, q, t;
-
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-      case 0:
-        this.r = v;
-        this.g = t;
-        this.b = p;
-        break;
-      case 1:
-        this.r = q;
-        this.g = v;
-        this.b = p;
-        break;
-      case 2:
-        this.r = p;
-        this.g = v;
-        this.b = t;
-        break;
-      case 3:
-        this.r = p;
-        this.g = q;
-        this.b = v;
-        break;
-      case 4:
-        this.r = t;
-        this.g = p;
-        this.b = v;
-        break;
-      case 5:
-        this.r = v;
-        this.g = p;
-        this.b = q;
-    }
-    this.r *= 255;
-    this.g *= 255;
-    return this.b *= 255;
-  };
-
-  Color.prototype.mixed = function(proportion, otherColor) {
-    var frac1, frac2;
-
-    frac1 = Math.min(Math.max(proportion, 0), 1);
-    frac2 = 1 - frac1;
-    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
-  };
-
-  Color.prototype.darker = function(percent) {
-    var fract;
-
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(0, 0, 0));
-  };
-
-  Color.prototype.lighter = function(percent) {
-    var fract;
-
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(255, 255, 255));
-  };
-
-  Color.prototype.dansDarker = function() {
-    var hsv, result, vv;
-
-    hsv = this.hsv();
-    result = new Color();
-    vv = Math.max(hsv[2] - 0.16, 0);
-    result.set_hsv(hsv[0], hsv[1], vv);
-    return result;
-  };
-
-  Color.coffeeScriptSourceOfThisClass = '# Colors //////////////////////////////////////////////////////////////\n\nclass Color\n\n  a: null\n  r: null\n  g: null\n  b: null\n\n  constructor: (@r = 0, @g = 0, @b = 0, a) ->\n    # all values are optional, just (r, g, b) is fine\n    @a = a or ((if (a is 0) then 0 else 1))\n  \n  # Color string representation: e.g. \'rgba(255,165,0,1)\'\n  toString: ->\n    "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"\n  \n  # Color copying:\n  copy: ->\n    new Color(@r, @g, @b, @a)\n  \n  # Color comparison:\n  eq: (aColor) ->\n    # ==\n    aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b\n  \n  \n  # Color conversion (hsv):\n  hsv: ->\n    # ignore alpha\n    rr = @r / 255\n    gg = @g / 255\n    bb = @b / 255\n    max = Math.max(rr, gg, bb)\n    min = Math.min(rr, gg, bb)\n    h = max\n    s = max\n    v = max\n    d = max - min\n    s = (if max is 0 then 0 else d / max)\n    if max is min\n      h = 0\n    else\n      switch max\n        when rr\n          h = (gg - bb) / d + ((if gg < bb then 6 else 0))\n        when gg\n          h = (bb - rr) / d + 2\n        when bb\n          h = (rr - gg) / d + 4\n      h /= 6\n    [h, s, v]\n  \n  set_hsv: (h, s, v) ->\n    # ignore alpha, h, s and v are to be within [0, 1]\n    i = Math.floor(h * 6)\n    f = h * 6 - i\n    p = v * (1 - s)\n    q = v * (1 - f * s)\n    t = v * (1 - (1 - f) * s)\n    switch i % 6\n      when 0\n        @r = v\n        @g = t\n        @b = p\n      when 1\n        @r = q\n        @g = v\n        @b = p\n      when 2\n        @r = p\n        @g = v\n        @b = t\n      when 3\n        @r = p\n        @g = q\n        @b = v\n      when 4\n        @r = t\n        @g = p\n        @b = v\n      when 5\n        @r = v\n        @g = p\n        @b = q\n    @r *= 255\n    @g *= 255\n    @b *= 255\n  \n  \n  # Color mixing:\n  mixed: (proportion, otherColor) ->\n    # answer a copy of this color mixed with another color, ignore alpha\n    frac1 = Math.min(Math.max(proportion, 0), 1)\n    frac2 = 1 - frac1\n    new Color(\n      @r * frac1 + otherColor.r * frac2,\n      @g * frac1 + otherColor.g * frac2,\n      @b * frac1 + otherColor.b * frac2)\n  \n  darker: (percent) ->\n    # return an rgb-interpolated darker copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(0, 0, 0)\n  \n  lighter: (percent) ->\n    # return an rgb-interpolated lighter copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(255, 255, 255)\n  \n  dansDarker: ->\n    # return an hsv-interpolated darker copy of me, ignore alpha\n    hsv = @hsv()\n    result = new Color()\n    vv = Math.max(hsv[2] - 0.16, 0)\n    result.set_hsv hsv[0], hsv[1], vv\n    result';
-
-  return Color;
-
-})();
-
-SliderButtonMorph = (function(_super) {
-  __extends(SliderButtonMorph, _super);
-
-  SliderButtonMorph.prototype.highlightColor = new Color(90, 90, 140);
-
-  SliderButtonMorph.prototype.pressColor = new Color(80, 80, 160);
-
-  SliderButtonMorph.prototype.is3D = true;
-
-  SliderButtonMorph.prototype.hasMiddleDip = true;
-
-  function SliderButtonMorph(orientation) {
-    this.color = new Color(80, 80, 80);
-    SliderButtonMorph.__super__.constructor.call(this, orientation);
-  }
-
-  SliderButtonMorph.prototype.autoOrientation = function() {
-    return noOperation;
-  };
-
-  SliderButtonMorph.prototype.updateRendering = function() {
-    var colorBak;
-
-    colorBak = this.color.copy();
-    SliderButtonMorph.__super__.updateRendering.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.normalImage = this.image;
-    this.color = this.highlightColor.copy();
-    SliderButtonMorph.__super__.updateRendering.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.highlightImage = this.image;
-    this.color = this.pressColor.copy();
-    SliderButtonMorph.__super__.updateRendering.call(this);
-    if (this.is3D) {
-      this.drawEdges();
-    }
-    this.pressImage = this.image;
-    this.color = colorBak;
-    return this.image = this.normalImage;
-  };
-
-  SliderButtonMorph.prototype.drawEdges = function() {
-    var context, gradient, h, radius, w;
-
-    context = this.image.getContext("2d");
-    w = this.width();
-    h = this.height();
-    context.lineJoin = "round";
-    context.lineCap = "round";
-    if (this.orientation === "vertical") {
-      context.lineWidth = w / 3;
-      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0);
-      gradient.addColorStop(0, "white");
-      gradient.addColorStop(1, this.color.toString());
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(context.lineWidth * 0.5, w / 2);
-      context.lineTo(context.lineWidth * 0.5, h - w / 2);
-      context.stroke();
-      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0);
-      gradient.addColorStop(0, this.color.toString());
-      gradient.addColorStop(1, "black");
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(w - context.lineWidth * 0.5, w / 2);
-      context.lineTo(w - context.lineWidth * 0.5, h - w / 2);
-      context.stroke();
-      if (this.hasMiddleDip) {
-        gradient = context.createLinearGradient(context.lineWidth, 0, w - context.lineWidth, 0);
-        radius = w / 4;
-        gradient.addColorStop(0, "black");
-        gradient.addColorStop(0.35, this.color.toString());
-        gradient.addColorStop(0.65, this.color.toString());
-        gradient.addColorStop(1, "white");
-        context.fillStyle = gradient;
-        context.beginPath();
-        context.arc(w / 2, h / 2, radius, radians(0), radians(360), false);
-        context.closePath();
-        return context.fill();
-      }
-    } else if (this.orientation === "horizontal") {
-      context.lineWidth = h / 3;
-      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth);
-      gradient.addColorStop(0, "white");
-      gradient.addColorStop(1, this.color.toString());
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(h / 2, context.lineWidth * 0.5);
-      context.lineTo(w - h / 2, context.lineWidth * 0.5);
-      context.stroke();
-      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h);
-      gradient.addColorStop(0, this.color.toString());
-      gradient.addColorStop(1, "black");
-      context.strokeStyle = gradient;
-      context.beginPath();
-      context.moveTo(h / 2, h - context.lineWidth * 0.5);
-      context.lineTo(w - h / 2, h - context.lineWidth * 0.5);
-      context.stroke();
-      if (this.hasMiddleDip) {
-        gradient = context.createLinearGradient(0, context.lineWidth, 0, h - context.lineWidth);
-        radius = h / 4;
-        gradient.addColorStop(0, "black");
-        gradient.addColorStop(0.35, this.color.toString());
-        gradient.addColorStop(0.65, this.color.toString());
-        gradient.addColorStop(1, "white");
-        context.fillStyle = gradient;
-        context.beginPath();
-        context.arc(this.width() / 2, this.height() / 2, radius, radians(0), radians(360), false);
-        context.closePath();
-        return context.fill();
-      }
-    }
-  };
-
-  SliderButtonMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    return this.changed();
-  };
-
-  SliderButtonMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    return this.changed();
-  };
-
-  SliderButtonMorph.prototype.mouseDownLeft = function(pos) {
-    this.image = this.pressImage;
-    this.changed();
-    return this.escalateEvent("mouseDownLeft", pos);
-  };
-
-  SliderButtonMorph.prototype.mouseClickLeft = function() {
-    this.image = this.highlightImage;
-    return this.changed();
-  };
-
-  SliderButtonMorph.prototype.mouseMove = function() {
-    return noOperation;
-  };
-
-  SliderButtonMorph.coffeeScriptSourceOfThisClass = '# SliderButtonMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderButtonMorph extends CircleBoxMorph\n\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(90, 90, 140)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(80, 80, 160)\n  is3D: true\n  hasMiddleDip: true\n\n  constructor: (orientation) ->\n    @color = new Color(80, 80, 80)\n    super orientation\n  \n  autoOrientation: ->\n      noOperation\n  \n  updateRendering: ->\n    colorBak = @color.copy()\n    super()\n    @drawEdges()  if @is3D\n    @normalImage = @image\n    @color = @highlightColor.copy()\n    super()\n    @drawEdges()  if @is3D\n    @highlightImage = @image\n    @color = @pressColor.copy()\n    super()\n    @drawEdges()  if @is3D\n    @pressImage = @image\n    @color = colorBak\n    @image = @normalImage\n  \n  drawEdges: ->\n    context = @image.getContext("2d")\n    w = @width()\n    h = @height()\n    context.lineJoin = "round"\n    context.lineCap = "round"\n    if @orientation is "vertical"\n      context.lineWidth = w / 3\n      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)\n      gradient.addColorStop 0, "white"\n      gradient.addColorStop 1, @color.toString()\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo context.lineWidth * 0.5, w / 2\n      context.lineTo context.lineWidth * 0.5, h - w / 2\n      context.stroke()\n      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)\n      gradient.addColorStop 0, @color.toString()\n      gradient.addColorStop 1, "black"\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo w - context.lineWidth * 0.5, w / 2\n      context.lineTo w - context.lineWidth * 0.5, h - w / 2\n      context.stroke()\n      if @hasMiddleDip\n        gradient = context.createLinearGradient(\n          context.lineWidth, 0, w - context.lineWidth, 0)\n        radius = w / 4\n        gradient.addColorStop 0, "black"\n        gradient.addColorStop 0.35, @color.toString()\n        gradient.addColorStop 0.65, @color.toString()\n        gradient.addColorStop 1, "white"\n        context.fillStyle = gradient\n        context.beginPath()\n        context.arc w / 2, h / 2, radius, radians(0), radians(360), false\n        context.closePath()\n        context.fill()\n    else if @orientation is "horizontal"\n      context.lineWidth = h / 3\n      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)\n      gradient.addColorStop 0, "white"\n      gradient.addColorStop 1, @color.toString()\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo h / 2, context.lineWidth * 0.5\n      context.lineTo w - h / 2, context.lineWidth * 0.5\n      context.stroke()\n      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)\n      gradient.addColorStop 0, @color.toString()\n      gradient.addColorStop 1, "black"\n      context.strokeStyle = gradient\n      context.beginPath()\n      context.moveTo h / 2, h - context.lineWidth * 0.5\n      context.lineTo w - h / 2, h - context.lineWidth * 0.5\n      context.stroke()\n      if @hasMiddleDip\n        gradient = context.createLinearGradient(\n          0, context.lineWidth, 0, h - context.lineWidth)\n        radius = h / 4\n        gradient.addColorStop 0, "black"\n        gradient.addColorStop 0.35, @color.toString()\n        gradient.addColorStop 0.65, @color.toString()\n        gradient.addColorStop 1, "white"\n        context.fillStyle = gradient\n        context.beginPath()\n        context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false\n        context.closePath()\n        context.fill()\n  \n  \n  #SliderButtonMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  mouseDownLeft: (pos) ->\n    @image = @pressImage\n    @changed()\n    @escalateEvent "mouseDownLeft", pos\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n  \n  # prevent my parent from getting picked up\n  mouseMove: ->\n      noOperation';
-
-  return SliderButtonMorph;
-
-})(CircleBoxMorph);
-
-StringMorph = (function(_super) {
-  __extends(StringMorph, _super);
-
-  StringMorph.prototype.text = null;
-
-  StringMorph.prototype.fontSize = null;
-
-  StringMorph.prototype.fontName = null;
-
-  StringMorph.prototype.fontStyle = null;
-
-  StringMorph.prototype.isBold = null;
-
-  StringMorph.prototype.isItalic = null;
-
-  StringMorph.prototype.isEditable = false;
-
-  StringMorph.prototype.isNumeric = null;
-
-  StringMorph.prototype.isPassword = false;
-
-  StringMorph.prototype.shadowOffset = null;
-
-  StringMorph.prototype.shadowColor = null;
-
-  StringMorph.prototype.isShowingBlanks = false;
-
-  StringMorph.prototype.blanksColor = new Color(180, 140, 140);
-
-  StringMorph.prototype.isScrollable = true;
-
-  StringMorph.prototype.currentlySelecting = false;
-
-  StringMorph.prototype.startMark = 0;
-
-  StringMorph.prototype.endMark = 0;
-
-  StringMorph.prototype.markedTextColor = new Color(255, 255, 255);
-
-  StringMorph.prototype.markedBackgoundColor = new Color(60, 60, 120);
-
-  function StringMorph(text, fontSize, fontStyle, isBold, isItalic, isNumeric, shadowOffset, shadowColor, color, fontName) {
-    this.fontSize = fontSize != null ? fontSize : 12;
-    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
-    this.isBold = isBold != null ? isBold : false;
-    this.isItalic = isItalic != null ? isItalic : false;
-    this.isNumeric = isNumeric != null ? isNumeric : false;
-    this.shadowColor = shadowColor;
-    this.text = text || (text === "" ? "" : "StringMorph");
-    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
-    this.shadowOffset = shadowOffset || new Point(0, 0);
-    StringMorph.__super__.constructor.call(this);
-    this.color = color || new Color(0, 0, 0);
-    this.noticesTransparentClick = true;
-    this.updateRendering();
-  }
-
-  StringMorph.prototype.toString = function() {
-    return "a " + (this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + this.text.slice(0, 30) + "...\")";
-  };
-
-  StringMorph.prototype.password = function(letter, length) {
-    var ans, _i;
-
-    ans = "";
-    for (i = _i = 0; 0 <= length ? _i < length : _i > length; i = 0 <= length ? ++_i : --_i) {
-      ans += letter;
-    }
-    return ans;
-  };
-
-  StringMorph.prototype.font = function() {
-    var font;
-
-    font = "";
-    if (this.isBold) {
-      font = font + "bold ";
-    }
-    if (this.isItalic) {
-      font = font + "italic ";
-    }
-    return font + this.fontSize + "px " + (this.fontName ? this.fontName + ", " : "") + this.fontStyle;
-  };
-
-  StringMorph.prototype.updateRendering = function() {
-    var c, context, p, start, stop, text, width, x, y, _i;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    this.image = newCanvas();
-    context = this.image.getContext("2d");
-    context.font = this.font();
-    width = Math.max(context.measureText(text).width + Math.abs(this.shadowOffset.x), 1);
-    this.bounds.corner = this.bounds.origin.add(new Point(width, fontHeight(this.fontSize) + Math.abs(this.shadowOffset.y)));
-    this.image.width = width;
-    this.image.height = this.height();
-    context.font = this.font();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    if (this.shadowColor) {
-      x = Math.max(this.shadowOffset.x, 0);
-      y = Math.max(this.shadowOffset.y, 0);
-      context.fillStyle = this.shadowColor.toString();
-      context.fillText(text, x, fontHeight(this.fontSize) + y);
-    }
-    x = Math.abs(Math.min(this.shadowOffset.x, 0));
-    y = Math.abs(Math.min(this.shadowOffset.y, 0));
-    context.fillStyle = this.color.toString();
-    if (this.isShowingBlanks) {
-      this.renderWithBlanks(context, x, fontHeight(this.fontSize) + y);
-    } else {
-      context.fillText(text, x, fontHeight(this.fontSize) + y);
-    }
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    for (i = _i = start; start <= stop ? _i < stop : _i > stop; i = start <= stop ? ++_i : --_i) {
-      p = this.slotPosition(i).subtract(this.position());
-      c = text.charAt(i);
-      context.fillStyle = this.markedBackgoundColor.toString();
-      context.fillRect(p.x, p.y, context.measureText(c).width + 1 + x, fontHeight(this.fontSize) + y);
-      context.fillStyle = this.markedTextColor.toString();
-      context.fillText(c, p.x + x, fontHeight(this.fontSize) + y);
-    }
-    if (this.parent ? this.parent.fixLayout : void 0) {
-      return this.parent.fixLayout();
-    }
-  };
-
-  StringMorph.prototype.renderWithBlanks = function(context, startX, y) {
-    var blank, ctx, drawBlank, isFirst, space, words, x;
-
-    drawBlank = function() {
-      context.drawImage(blank, Math.round(x), 0);
-      return x += space;
-    };
-    space = context.measureText(" ").width;
-    blank = newCanvas(new Point(space, this.height()));
-    ctx = blank.getContext("2d");
-    words = this.text.split(" ");
-    x = startX || 0;
-    isFirst = true;
-    ctx.fillStyle = this.blanksColor.toString();
-    ctx.arc(space / 2, blank.height / 2, space / 2, radians(0), radians(360));
-    ctx.fill();
-    return words.forEach(function(word) {
-      if (!isFirst) {
-        drawBlank();
-      }
-      isFirst = false;
-      if (word !== "") {
-        context.fillText(word, x, y);
-        return x += context.measureText(word).width;
-      }
-    });
-  };
-
-  StringMorph.prototype.slotPosition = function(slot) {
-    var context, dest, idx, text, x, xOffset, y, _i;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    dest = Math.min(Math.max(slot, 0), text.length);
-    context = this.image.getContext("2d");
-    xOffset = 0;
-    for (idx = _i = 0; 0 <= dest ? _i < dest : _i > dest; idx = 0 <= dest ? ++_i : --_i) {
-      xOffset += context.measureText(text[idx]).width;
-    }
-    this.pos = dest;
-    x = this.left() + xOffset;
-    y = this.top();
-    return new Point(x, y);
-  };
-
-  StringMorph.prototype.slotAt = function(aPoint) {
-    var charX, context, idx, text;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    idx = 0;
-    charX = 0;
-    context = this.image.getContext("2d");
-    while (aPoint.x - this.left() > charX) {
-      charX += context.measureText(text[idx]).width;
-      idx += 1;
-      if (idx === text.length) {
-        if ((context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - this.left())) {
-          return idx;
-        }
-      }
-    }
-    return idx - 1;
-  };
-
-  StringMorph.prototype.upFrom = function(slot) {
-    return slot;
-  };
-
-  StringMorph.prototype.downFrom = function(slot) {
-    return slot;
-  };
-
-  StringMorph.prototype.startOfLine = function() {
-    return 0;
-  };
-
-  StringMorph.prototype.endOfLine = function() {
-    return this.text.length;
-  };
-
-  StringMorph.prototype.rawHeight = function() {
-    return this.height() / 1.2;
-  };
-
-  StringMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = StringMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("edit", "edit");
-    menu.addItem("font size...", (function() {
-      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 500, true);
-    }), "set this String's\nfont point size");
-    if (this.fontStyle !== "serif") {
-      menu.addItem("serif", "setSerif");
-    }
-    if (this.fontStyle !== "sans-serif") {
-      menu.addItem("sans-serif", "setSansSerif");
-    }
-    if (this.isBold) {
-      menu.addItem("normal weight", "toggleWeight");
-    } else {
-      menu.addItem("bold", "toggleWeight");
-    }
-    if (this.isItalic) {
-      menu.addItem("normal style", "toggleItalic");
-    } else {
-      menu.addItem("italic", "toggleItalic");
-    }
-    if (this.isShowingBlanks) {
-      menu.addItem("hide blanks", "toggleShowBlanks");
-    } else {
-      menu.addItem("show blanks", "toggleShowBlanks");
-    }
-    if (this.isPassword) {
-      menu.addItem("show characters", "toggleIsPassword");
-    } else {
-      menu.addItem("hide characters", "toggleIsPassword");
-    }
-    return menu;
-  };
-
-  StringMorph.prototype.toggleIsDraggable = function() {
-    this.isDraggable = !this.isDraggable;
-    if (this.isDraggable) {
-      return this.disableSelecting();
-    } else {
-      return this.enableSelecting();
-    }
-  };
-
-  StringMorph.prototype.toggleShowBlanks = function() {
-    this.isShowingBlanks = !this.isShowingBlanks;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleWeight = function() {
-    this.isBold = !this.isBold;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleItalic = function() {
-    this.isItalic = !this.isItalic;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleIsPassword = function() {
-    this.isPassword = !this.isPassword;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setSerif = function() {
-    this.fontStyle = "serif";
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setSansSerif = function() {
-    this.fontStyle = "sans-serif";
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setFontSize = function(size) {
-    var newSize;
-
-    if (typeof size === "number") {
-      this.fontSize = Math.round(Math.min(Math.max(size, 4), 500));
-    } else {
-      newSize = parseFloat(size);
-      if (!isNaN(newSize)) {
-        this.fontSize = Math.round(Math.min(Math.max(newSize, 4), 500));
-      }
-    }
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setText = function(size) {
-    this.text = Math.round(size).toString();
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.numericalSetters = function() {
-    return ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"];
-  };
-
-  StringMorph.prototype.edit = function() {
-    return this.root().edit(this);
-  };
-
-  StringMorph.prototype.selection = function() {
-    var start, stop;
-
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    return this.text.slice(start, stop);
-  };
-
-  StringMorph.prototype.selectionStartSlot = function() {
-    return Math.min(this.startMark, this.endMark);
-  };
-
-  StringMorph.prototype.clearSelection = function() {
-    this.currentlySelecting = false;
-    this.startMark = 0;
-    this.endMark = 0;
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.deleteSelection = function() {
-    var start, stop, text;
-
-    text = this.text;
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    this.text = text.slice(0, start) + text.slice(stop);
-    this.changed();
-    return this.clearSelection();
-  };
-
-  StringMorph.prototype.selectAll = function() {
-    this.startMark = 0;
-    this.endMark = this.text.length;
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.mouseDownLeft = function(pos) {
-    if (this.isEditable) {
-      return this.clearSelection();
-    } else {
-      return this.escalateEvent("mouseDownLeft", pos);
-    }
-  };
-
-  StringMorph.prototype.mouseClickLeft = function(pos) {
-    var caret;
-
-    caret = this.root().caret;
-    if (this.isEditable) {
-      if (!this.currentlySelecting) {
-        this.edit();
-      }
-      if (caret) {
-        caret.gotoPos(pos);
-      }
-      this.root().caret.gotoPos(pos);
-      return this.currentlySelecting = true;
-    } else {
-      return this.escalateEvent("mouseClickLeft", pos);
-    }
-  };
-
-  StringMorph.prototype.enableSelecting = function() {
-    this.mouseDownLeft = function(pos) {
-      this.clearSelection();
-      if (this.isEditable && (!this.isDraggable)) {
-        this.edit();
-        this.root().caret.gotoPos(pos);
-        this.startMark = this.slotAt(pos);
-        this.endMark = this.startMark;
-        return this.currentlySelecting = true;
-      }
-    };
-    return this.mouseMove = function(pos) {
-      var newMark;
-
-      if (this.isEditable && this.currentlySelecting && (!this.isDraggable)) {
-        newMark = this.slotAt(pos);
-        if (newMark !== this.endMark) {
-          this.endMark = newMark;
-          this.updateRendering();
-          return this.changed();
-        }
-      }
-    };
-  };
-
-  StringMorph.prototype.disableSelecting = function() {
-    this.mouseDownLeft = StringMorph.prototype.mouseDownLeft;
-    return delete this.mouseMove;
-  };
-
-  StringMorph.coffeeScriptSourceOfThisClass = '# StringMorph /////////////////////////////////////////////////////////\n\n# I am a single line of text\n\nclass StringMorph extends Morph\n\n  text: null\n  fontSize: null\n  fontName: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isEditable: false\n  isNumeric: null\n  isPassword: false\n  shadowOffset: null\n  shadowColor: null\n  isShowingBlanks: false\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  blanksColor: new Color(180, 140, 140)\n  #\n  # Properties for text-editing\n  isScrollable: true\n  currentlySelecting: false\n  startMark: 0\n  endMark: 0\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedTextColor: new Color(255, 255, 255)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedBackgoundColor: new Color(60, 60, 120)\n\n  constructor: (\n      text,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false,\n      shadowOffset,\n      @shadowColor,\n      color,\n      fontName\n      ) ->\n    # additional properties:\n    @text = text or ((if (text is "") then "" else "StringMorph"))\n    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n    @shadowOffset = shadowOffset or new Point(0, 0)\n    #\n    super()\n    #\n    # override inherited properites:\n    @color = color or new Color(0, 0, 0)\n    @noticesTransparentClick = true\n    @updateRendering()\n  \n  toString: ->\n    # e.g. \'a StringMorph("Hello World")\'\n    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  password: (letter, length) ->\n    ans = ""\n    for i in [0...length]\n      ans += letter\n    ans\n\n  font: ->\n    # answer a font string, e.g. \'bold italic 12px sans-serif\'\n    font = ""\n    font = font + "bold "  if @isBold\n    font = font + "italic "  if @isItalic\n    font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle\n  \n  updateRendering: ->\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    # initialize my surface property\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    #\n    # set my extent\n    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)\n    @bounds.corner = @bounds.origin.add(new Point(\n      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))\n    @image.width = width\n    @image.height = @height()\n    #\n    # prepare context for drawing text\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n    #\n    # first draw the shadow, if any\n    if @shadowColor\n      x = Math.max(@shadowOffset.x, 0)\n      y = Math.max(@shadowOffset.y, 0)\n      context.fillStyle = @shadowColor.toString()\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # now draw the actual text\n    x = Math.abs(Math.min(@shadowOffset.x, 0))\n    y = Math.abs(Math.min(@shadowOffset.y, 0))\n    context.fillStyle = @color.toString()\n    if @isShowingBlanks\n      @renderWithBlanks context, x, fontHeight(@fontSize) + y\n    else\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotPosition(i).subtract(@position())\n      c = text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,\n        fontHeight(@fontSize) + y\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x + x, fontHeight(@fontSize) + y\n    #\n    # notify my parent of layout change\n    @parent.fixLayout()  if @parent.fixLayout  if @parent\n  \n  renderWithBlanks: (context, startX, y) ->\n    # create the blank form\n    drawBlank = ->\n      context.drawImage blank, Math.round(x), 0\n      x += space\n    space = context.measureText(" ").width\n    blank = newCanvas(new Point(space, @height()))\n    ctx = blank.getContext("2d")\n    words = @text.split(" ")\n    x = startX or 0\n    isFirst = true\n    ctx.fillStyle = @blanksColor.toString()\n    ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)\n    ctx.fill()\n    #\n    # render my text inserting blanks\n    words.forEach (word) ->\n      drawBlank()  unless isFirst\n      isFirst = false\n      if word isnt ""\n        context.fillText word, x, y\n        x += context.measureText(word).width\n  \n  \n  # StringMorph mesuring:\n  slotPosition: (slot) ->\n    # answer the position point of the given index ("slot")\n    # where the caret should be placed\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    dest = Math.min(Math.max(slot, 0), text.length)\n    context = @image.getContext("2d")\n    xOffset = 0\n    for idx in [0...dest]\n      xOffset += context.measureText(text[idx]).width\n    @pos = dest\n    x = @left() + xOffset\n    y = @top()\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    idx = 0\n    charX = 0\n    context = @image.getContext("2d")\n    while aPoint.x - @left() > charX\n      charX += context.measureText(text[idx]).width\n      idx += 1\n      if idx is text.length\n        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  \n          return idx\n    idx - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    slot\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    slot\n  \n  startOfLine: ->\n    # answer the first slot (index) of the line for the given slot\n    0\n  \n  endOfLine: ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @text.length\n\n  rawHeight: ->\n    # answer my corrected fontSize\n    @height() / 1.2\n    \n  # StringMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 500, true\n    ), "set this String\'s\nfont point size"\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n\n    if @isShowingBlanks\n      menu.addItem "hide blanks", "toggleShowBlanks"\n    else\n      menu.addItem "show blanks", "toggleShowBlanks"\n\n    if @isPassword\n      menu.addItem "show characters", "toggleIsPassword"\n    else\n      menu.addItem "hide characters", "toggleIsPassword"\n\n    menu\n  \n  toggleIsDraggable: ->\n    # for context menu demo purposes\n    @isDraggable = not @isDraggable\n    if @isDraggable\n      @disableSelecting()\n    else\n      @enableSelecting()\n  \n  toggleShowBlanks: ->\n    @isShowingBlanks = not @isShowingBlanks\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleWeight: ->\n    @isBold = not @isBold\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleItalic: ->\n    @isItalic = not @isItalic\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleIsPassword: ->\n    @isPassword = not @isPassword\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSerif: ->\n    @fontStyle = "serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSansSerif: ->\n    @fontStyle = "sans-serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setFontSize: (size) ->\n    # for context menu demo purposes\n    if typeof size is "number"\n      @fontSize = Math.round(Math.min(Math.max(size, 4), 500))\n    else\n      newSize = parseFloat(size)\n      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setText: (size) ->\n    # for context menu demo purposes\n    @text = Math.round(size).toString()\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]\n  \n  \n  # StringMorph editing:\n  edit: ->\n    @root().edit @\n  \n  selection: ->\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text.slice start, stop\n  \n  selectionStartSlot: ->\n    Math.min @startMark, @endMark\n  \n  clearSelection: ->\n    @currentlySelecting = false\n    @startMark = 0\n    @endMark = 0\n    @updateRendering()\n    @changed()\n  \n  deleteSelection: ->\n    text = @text\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text = text.slice(0, start) + text.slice(stop)\n    @changed()\n    @clearSelection()\n  \n  selectAll: ->\n    @startMark = 0\n    @endMark = @text.length\n    @updateRendering()\n    @changed()\n\n  mouseDownLeft: (pos) ->\n    if @isEditable\n      @clearSelection()\n    else\n      @escalateEvent "mouseDownLeft", pos\n\n  mouseClickLeft: (pos) ->\n    caret = @root().caret;\n    if @isEditable\n      @edit()  unless @currentlySelecting\n      if caret then caret.gotoPos pos\n      @root().caret.gotoPos pos\n      @currentlySelecting = true\n    else\n      @escalateEvent "mouseClickLeft", pos\n  \n  enableSelecting: ->\n    @mouseDownLeft = (pos) ->\n      @clearSelection()\n      if @isEditable and (not @isDraggable)\n        @edit()\n        @root().caret.gotoPos pos\n        @startMark = @slotAt(pos)\n        @endMark = @startMark\n        @currentlySelecting = true\n    \n    @mouseMove = (pos) ->\n      if @isEditable and @currentlySelecting and (not @isDraggable)\n        newMark = @slotAt(pos)\n        if newMark isnt @endMark\n          @endMark = newMark\n          @updateRendering()\n          @changed()\n  \n  disableSelecting: ->\n    # re-establish the original definition of the method\n    @mouseDownLeft = StringMorph::mouseDownLeft\n    delete @mouseMove';
-
-  return StringMorph;
-
-})(Morph);
-
-TextMorph = (function(_super) {
-  __extends(TextMorph, _super);
-
-  TextMorph.prototype.words = [];
-
-  TextMorph.prototype.lines = [];
-
-  TextMorph.prototype.lineSlots = [];
-
-  TextMorph.prototype.alignment = null;
-
-  TextMorph.prototype.maxWidth = null;
-
-  TextMorph.prototype.maxLineWidth = 0;
-
-  TextMorph.prototype.backgroundColor = null;
-
-  TextMorph.prototype.receiver = null;
-
-  function TextMorph(text, fontSize, fontStyle, isBold, isItalic, alignment, maxWidth, fontName, shadowOffset, shadowColor) {
-    this.fontSize = fontSize != null ? fontSize : 12;
-    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
-    this.isBold = isBold != null ? isBold : false;
-    this.isItalic = isItalic != null ? isItalic : false;
-    this.alignment = alignment != null ? alignment : "left";
-    this.maxWidth = maxWidth != null ? maxWidth : 0;
-    this.shadowColor = shadowColor != null ? shadowColor : null;
-    TextMorph.__super__.constructor.call(this);
-    this.markedTextColor = new Color(255, 255, 255);
-    this.markedBackgoundColor = new Color(60, 60, 120);
-    this.text = text || (text === "" ? text : "TextMorph");
-    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
-    this.shadowOffset = shadowOffset || new Point(0, 0);
-    this.color = new Color(0, 0, 0);
-    this.noticesTransparentClick = true;
-    this.updateRendering();
-  }
-
-  TextMorph.prototype.toString = function() {
-    return "a TextMorph" + "(\"" + this.text.slice(0, 30) + "...\")";
-  };
-
-  TextMorph.prototype.parse = function() {
-    var canvas, context, oldline, paragraphs, slot,
-      _this = this;
-
-    paragraphs = this.text.split("\n");
-    canvas = newCanvas();
-    context = canvas.getContext("2d");
-    oldline = "";
-    slot = 0;
-    context.font = this.font();
-    this.maxLineWidth = 0;
-    this.lines = [];
-    this.lineSlots = [0];
-    this.words = [];
-    paragraphs.forEach(function(p) {
-      _this.words = _this.words.concat(p.split(" "));
-      return _this.words.push("\n");
-    });
-    return this.words.forEach(function(word) {
-      var newline, w;
-
-      if (word === "\n") {
-        _this.lines.push(oldline);
-        _this.lineSlots.push(slot);
-        _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(oldline).width);
-        return oldline = "";
-      } else {
-        if (_this.maxWidth > 0) {
-          newline = oldline + word + " ";
-          w = context.measureText(newline).width;
-          if (w > _this.maxWidth) {
-            _this.lines.push(oldline);
-            _this.lineSlots.push(slot);
-            _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(oldline).width);
-            oldline = word + " ";
-          } else {
-            oldline = newline;
-          }
-        } else {
-          oldline = oldline + word + " ";
-        }
-        return slot += word.length + 1;
-      }
-    });
-  };
-
-  TextMorph.prototype.updateRendering = function() {
-    var c, context, height, line, offx, offy, p, shadowHeight, shadowWidth, start, stop, width, x, y, _i, _j, _k, _len, _len1, _ref, _ref1;
-
-    this.image = newCanvas();
-    context = this.image.getContext("2d");
-    context.font = this.font();
-    this.parse();
-    shadowWidth = Math.abs(this.shadowOffset.x);
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    height = this.lines.length * (fontHeight(this.fontSize) + shadowHeight);
-    if (this.maxWidth === 0) {
-      this.bounds = this.bounds.origin.extent(new Point(this.maxLineWidth + shadowWidth, height));
-    } else {
-      this.bounds = this.bounds.origin.extent(new Point(this.maxWidth + shadowWidth, height));
-    }
-    this.image.width = this.width();
-    this.image.height = this.height();
-    context = this.image.getContext("2d");
-    context.font = this.font();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    if (this.backgroundColor) {
-      context.fillStyle = this.backgroundColor.toString();
-      context.fillRect(0, 0, this.width(), this.height());
-    }
-    if (this.shadowColor) {
-      offx = Math.max(this.shadowOffset.x, 0);
-      offy = Math.max(this.shadowOffset.y, 0);
-      context.fillStyle = this.shadowColor.toString();
-      i = 0;
-      _ref = this.lines;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        line = _ref[_i];
-        width = context.measureText(line).width + shadowWidth;
-        if (this.alignment === "right") {
-          x = this.width() - width;
-        } else if (this.alignment === "center") {
-          x = (this.width() - width) / 2;
-        } else {
-          x = 0;
-        }
-        y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
-        i++;
-        context.fillText(line, x + offx, y + offy);
-      }
-    }
-    offx = Math.abs(Math.min(this.shadowOffset.x, 0));
-    offy = Math.abs(Math.min(this.shadowOffset.y, 0));
-    context.fillStyle = this.color.toString();
-    i = 0;
-    _ref1 = this.lines;
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      line = _ref1[_j];
-      width = context.measureText(line).width + shadowWidth;
-      if (this.alignment === "right") {
-        x = this.width() - width;
-      } else if (this.alignment === "center") {
-        x = (this.width() - width) / 2;
-      } else {
-        x = 0;
-      }
-      y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
-      i++;
-      context.fillText(line, x + offx, y + offy);
-    }
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    for (i = _k = start; start <= stop ? _k < stop : _k > stop; i = start <= stop ? ++_k : --_k) {
-      p = this.slotPosition(i).subtract(this.position());
-      c = this.text.charAt(i);
-      context.fillStyle = this.markedBackgoundColor.toString();
-      context.fillRect(p.x, p.y, context.measureText(c).width + 1, fontHeight(this.fontSize));
-      context.fillStyle = this.markedTextColor.toString();
-      context.fillText(c, p.x, p.y + fontHeight(this.fontSize));
-    }
-    if (this.parent ? this.parent.layoutChanged : void 0) {
-      return this.parent.layoutChanged();
-    }
-  };
-
-  TextMorph.prototype.setExtent = function(aPoint) {
-    this.maxWidth = Math.max(aPoint.x, 0);
-    this.changed();
-    return this.updateRendering();
-  };
-
-  TextMorph.prototype.columnRow = function(slot) {
-    var col, idx, row, _i, _j, _ref, _ref1;
-
-    idx = 0;
-    for (row = _i = 0, _ref = this.lines.length; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
-      idx = this.lineSlots[row];
-      for (col = _j = 0, _ref1 = this.lines[row].length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
-        if (idx === slot) {
-          return new Point(col, row);
-        }
-        idx += 1;
-      }
-    }
-    return new Point(this.lines[this.lines.length - 1].length - 1, this.lines.length - 1);
-  };
-
-  TextMorph.prototype.slotPosition = function(slot) {
-    var colRow, context, idx, shadowHeight, x, xOffset, y, yOffset, _i, _ref;
-
-    colRow = this.columnRow(slot);
-    context = this.image.getContext("2d");
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    xOffset = 0;
-    yOffset = colRow.y * (fontHeight(this.fontSize) + shadowHeight);
-    for (idx = _i = 0, _ref = colRow.x; 0 <= _ref ? _i < _ref : _i > _ref; idx = 0 <= _ref ? ++_i : --_i) {
-      xOffset += context.measureText(this.lines[colRow.y][idx]).width;
-    }
-    x = this.left() + xOffset;
-    y = this.top() + yOffset;
-    return new Point(x, y);
-  };
-
-  TextMorph.prototype.slotAt = function(aPoint) {
-    var charX, col, context, row, shadowHeight;
-
-    charX = 0;
-    row = 0;
-    col = 0;
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    context = this.image.getContext("2d");
-    while (aPoint.y - this.top() > ((fontHeight(this.fontSize) + shadowHeight) * row)) {
-      row += 1;
-    }
-    row = Math.max(row, 1);
-    while (aPoint.x - this.left() > charX) {
-      charX += context.measureText(this.lines[row - 1][col]).width;
-      col += 1;
-    }
-    return this.lineSlots[Math.max(row - 1, 0)] + col - 1;
-  };
-
-  TextMorph.prototype.upFrom = function(slot) {
-    var above, colRow;
-
-    colRow = this.columnRow(slot);
-    if (colRow.y < 1) {
-      return slot;
-    }
-    above = this.lines[colRow.y - 1];
-    if (above.length < colRow.x - 1) {
-      return this.lineSlots[colRow.y - 1] + above.length;
-    }
-    return this.lineSlots[colRow.y - 1] + colRow.x;
-  };
-
-  TextMorph.prototype.downFrom = function(slot) {
-    var below, colRow;
-
-    colRow = this.columnRow(slot);
-    if (colRow.y > this.lines.length - 2) {
-      return slot;
-    }
-    below = this.lines[colRow.y + 1];
-    if (below.length < colRow.x - 1) {
-      return this.lineSlots[colRow.y + 1] + below.length;
-    }
-    return this.lineSlots[colRow.y + 1] + colRow.x;
-  };
-
-  TextMorph.prototype.startOfLine = function(slot) {
-    return this.lineSlots[this.columnRow(slot).y];
-  };
-
-  TextMorph.prototype.endOfLine = function(slot) {
-    return this.startOfLine(slot) + this.lines[this.columnRow(slot).y].length - 1;
-  };
-
-  TextMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = TextMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("edit", "edit");
-    menu.addItem("font size...", (function() {
-      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 100, true);
-    }), "set this Text's\nfont point size");
-    if (this.alignment !== "left") {
-      menu.addItem("align left", "setAlignmentToLeft");
-    }
-    if (this.alignment !== "right") {
-      menu.addItem("align right", "setAlignmentToRight");
-    }
-    if (this.alignment !== "center") {
-      menu.addItem("align center", "setAlignmentToCenter");
-    }
-    menu.addLine();
-    if (this.fontStyle !== "serif") {
-      menu.addItem("serif", "setSerif");
-    }
-    if (this.fontStyle !== "sans-serif") {
-      menu.addItem("sans-serif", "setSansSerif");
-    }
-    if (this.isBold) {
-      menu.addItem("normal weight", "toggleWeight");
-    } else {
-      menu.addItem("bold", "toggleWeight");
-    }
-    if (this.isItalic) {
-      menu.addItem("normal style", "toggleItalic");
-    } else {
-      menu.addItem("italic", "toggleItalic");
-    }
-    return menu;
-  };
-
-  TextMorph.prototype.setAlignmentToLeft = function() {
-    this.alignment = "left";
-    this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.setAlignmentToRight = function() {
-    this.alignment = "right";
-    this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.setAlignmentToCenter = function() {
-    this.alignment = "center";
-    this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.evaluationMenu = function() {
-    var menu;
-
-    menu = new MenuMorph(this, null);
-    menu.addItem("do it", "doIt", "evaluate the\nselected expression");
-    menu.addItem("show it", "showIt", "evaluate the\nselected expression\nand show the result");
-    menu.addItem("inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result");
-    menu.addLine();
-    menu.addItem("select all", "selectAllAndEdit");
-    return menu;
-  };
-
-  TextMorph.prototype.selectAllAndEdit = function() {
-    this.edit();
-    return this.selectAll();
-  };
-
-  TextMorph.prototype.setReceiver = function(obj) {
-    this.receiver = obj;
-    return this.customContextMenu = this.evaluationMenu();
-  };
-
-  TextMorph.prototype.doIt = function() {
-    this.receiver.evaluateString(this.selection());
-    return this.edit();
-  };
-
-  TextMorph.prototype.showIt = function() {
-    var result;
-
-    result = this.receiver.evaluateString(this.selection());
-    if (result != null) {
-      return this.inform(result);
-    }
-  };
-
-  TextMorph.prototype.inspectIt = function() {
-    var inspector, result, world;
-
-    result = this.receiver.evaluateString(this.selection());
-    world = this.world();
-    if (result != null) {
-      inspector = new InspectorMorph(result);
-      inspector.setPosition(world.hand.position());
-      inspector.keepWithin(world);
-      world.add(inspector);
-      return inspector.changed();
-    }
-  };
-
-  TextMorph.coffeeScriptSourceOfThisClass = '# TextMorph ///////////////////////////////////////////////////////////\n\n# I am a multi-line, word-wrapping String\n\n# Jens has made this quasi-inheriting from StringMorph i.e. he is copying\n# over manually the following methods like so:\n#\n#  TextMorph::font = StringMorph::font\n#  TextMorph::edit = StringMorph::edit\n#  TextMorph::selection = StringMorph::selection\n#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot\n#  TextMorph::clearSelection = StringMorph::clearSelection\n#  TextMorph::deleteSelection = StringMorph::deleteSelection\n#  TextMorph::selectAll = StringMorph::selectAll\n#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft\n#  TextMorph::enableSelecting = StringMorph::enableSelecting \n#  TextMorph::disableSelecting = StringMorph::disableSelecting\n#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable\n#  TextMorph::toggleWeight = StringMorph::toggleWeight\n#  TextMorph::toggleItalic = StringMorph::toggleItalic\n#  TextMorph::setSerif = StringMorph::setSerif\n#  TextMorph::setSansSerif = StringMorph::setSansSerif\n#  TextMorph::setText = StringMorph::setText\n#  TextMorph::setFontSize = StringMorph::setFontSize\n#  TextMorph::numericalSetters = StringMorph::numericalSetters\n\n\nclass TextMorph extends StringMorph\n\n  words: []\n  lines: []\n  lineSlots: []\n  alignment: null\n  maxWidth: null\n  maxLineWidth: 0\n  backgroundColor: null\n\n  #additional properties for ad-hoc evaluation:\n  receiver: null\n\n  constructor: (\n    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,\n    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,\n    @shadowColor = null\n    ) ->\n      super()\n      # override inherited properites:\n      @markedTextColor = new Color(255, 255, 255)\n      @markedBackgoundColor = new Color(60, 60, 120)\n      @text = text or ((if text is "" then text else "TextMorph"))\n      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n      @shadowOffset = shadowOffset or new Point(0, 0)\n      @color = new Color(0, 0, 0)\n      @noticesTransparentClick = true\n      @updateRendering()\n\n  toString: ->\n    # e.g. \'a TextMorph("Hello World")\'\n    "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  \n  parse: ->\n    paragraphs = @text.split("\n")\n    canvas = newCanvas()\n    context = canvas.getContext("2d")\n    oldline = ""\n    slot = 0\n    context.font = @font()\n    @maxLineWidth = 0\n    @lines = []\n    @lineSlots = [0]\n    @words = []\n    paragraphs.forEach (p) =>\n      @words = @words.concat(p.split(" "))\n      @words.push "\n"\n    #\n    @words.forEach (word) =>\n      if word is "\n"\n        @lines.push oldline\n        @lineSlots.push slot\n        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)\n        oldline = ""\n      else\n        if @maxWidth > 0\n          newline = oldline + word + " "\n          w = context.measureText(newline).width\n          if w > @maxWidth\n            @lines.push oldline\n            @lineSlots.push slot\n            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)\n            oldline = word + " "\n          else\n            oldline = newline\n        else\n          oldline = oldline + word + " "\n        slot += word.length + 1\n  \n  \n  updateRendering: ->\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    @parse()\n    #\n    # set my extent\n    shadowWidth = Math.abs(@shadowOffset.x)\n    shadowHeight = Math.abs(@shadowOffset.y)\n    height = @lines.length * (fontHeight(@fontSize) + shadowHeight)\n    if @maxWidth is 0\n      @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))\n    else\n      @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))\n    @image.width = @width()\n    @image.height = @height()\n    #\n    # prepare context for drawing text\n    context = @image.getContext("2d")\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n    #\n    # fill the background, if desired\n    if @backgroundColor\n      context.fillStyle = @backgroundColor.toString()\n      context.fillRect 0, 0, @width(), @height()\n    #\n    # draw the shadow, if any\n    if @shadowColor\n      offx = Math.max(@shadowOffset.x, 0)\n      offy = Math.max(@shadowOffset.y, 0)\n      #console.log \'shadow x: \' + offx + " y: " + offy\n      context.fillStyle = @shadowColor.toString()\n      i = 0\n      for line in @lines\n        width = context.measureText(line).width + shadowWidth\n        if @alignment is "right"\n          x = @width() - width\n        else if @alignment is "center"\n          x = (@width() - width) / 2\n        else # \'left\'\n          x = 0\n        y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n        i++\n        context.fillText line, x + offx, y + offy\n    #\n    # now draw the actual text\n    offx = Math.abs(Math.min(@shadowOffset.x, 0))\n    offy = Math.abs(Math.min(@shadowOffset.y, 0))\n    #console.log \'maintext x: \' + offx + " y: " + offy\n    context.fillStyle = @color.toString()\n    i = 0\n    for line in @lines\n      width = context.measureText(line).width + shadowWidth\n      if @alignment is "right"\n        x = @width() - width\n      else if @alignment is "center"\n        x = (@width() - width) / 2\n      else # \'left\'\n        x = 0\n      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n      i++\n      context.fillText line, x + offx, y + offy\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotPosition(i).subtract(@position())\n      c = @text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x, p.y + fontHeight(@fontSize)\n    #\n    # notify my parent of layout change\n    @parent.layoutChanged()  if @parent.layoutChanged  if @parent\n  \n  setExtent: (aPoint) ->\n    @maxWidth = Math.max(aPoint.x, 0)\n    @changed()\n    @updateRendering()\n  \n  # TextMorph mesuring:\n  columnRow: (slot) ->\n    # answer the logical position point of the given index ("slot")\n    idx = 0\n    for row in [0...@lines.length]\n      idx = @lineSlots[row]\n      for col in [0...@lines[row].length]\n        return new Point(col, row)  if idx is slot\n        idx += 1\n    #\n    # return new Point(0, 0);\n    new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)\n  \n  slotPosition: (slot) ->\n    # answer the physical position point of the given index ("slot")\n    # where the caret should be placed\n    colRow = @columnRow(slot)\n    context = @image.getContext("2d")\n    shadowHeight = Math.abs(@shadowOffset.y)\n    xOffset = 0\n    yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)\n    for idx in [0...colRow.x]\n      xOffset += context.measureText(@lines[colRow.y][idx]).width\n    x = @left() + xOffset\n    y = @top() + yOffset\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    charX = 0\n    row = 0\n    col = 0\n    shadowHeight = Math.abs(@shadowOffset.y)\n    context = @image.getContext("2d")\n    row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)\n    row = Math.max(row, 1)\n    while aPoint.x - @left() > charX\n      charX += context.measureText(@lines[row - 1][col]).width\n      col += 1\n    @lineSlots[Math.max(row - 1, 0)] + col - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    colRow = @columnRow(slot)\n    return slot  if colRow.y < 1\n    above = @lines[colRow.y - 1]\n    return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1\n    @lineSlots[colRow.y - 1] + colRow.x\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    colRow = @columnRow(slot)\n    return slot  if colRow.y > @lines.length - 2\n    below = @lines[colRow.y + 1]\n    return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1\n    @lineSlots[colRow.y + 1] + colRow.x\n  \n  startOfLine: (slot) ->\n    # answer the first slot (index) of the line for the given slot\n    @lineSlots[@columnRow(slot).y]\n  \n  endOfLine: (slot) ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1\n  \n  # TextMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 100, true\n    ), "set this Text\'s\nfont point size"\n    menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"\n    menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"\n    menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"\n    menu.addLine()\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n    menu\n  \n  setAlignmentToLeft: ->\n    @alignment = "left"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToRight: ->\n    @alignment = "right"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToCenter: ->\n    @alignment = "center"\n    @updateRendering()\n    @changed()  \n  \n  # TextMorph evaluation:\n  evaluationMenu: ->\n    menu = new MenuMorph(@, null)\n    menu.addItem "do it", "doIt", "evaluate the\nselected expression"\n    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"\n    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"\n    menu.addLine()\n    menu.addItem "select all", "selectAllAndEdit"\n    menu\n\n  selectAllAndEdit: ->\n    @edit()\n    @selectAll()\n   \n  setReceiver: (obj) ->\n    @receiver = obj\n    @customContextMenu = @evaluationMenu()\n  \n  doIt: ->\n    @receiver.evaluateString @selection()\n    @edit()\n  \n  showIt: ->\n    result = @receiver.evaluateString(@selection())\n    if result? then @inform result\n  \n  inspectIt: ->\n    result = @receiver.evaluateString(@selection())\n    world = @world()\n    if result?\n      inspector = new InspectorMorph(result)\n      inspector.setPosition world.hand.position()\n      inspector.keepWithin world\n      world.add inspector\n      inspector.changed()';
-
-  return TextMorph;
-
-})(StringMorph);
-
-InspectorMorph = (function(_super) {
-  __extends(InspectorMorph, _super);
-
-  InspectorMorph.prototype.target = null;
-
-  InspectorMorph.prototype.currentProperty = null;
-
-  InspectorMorph.prototype.showing = "attributes";
-
-  InspectorMorph.prototype.markOwnershipOfProperties = false;
-
-  InspectorMorph.prototype.label = null;
-
-  InspectorMorph.prototype.list = null;
-
-  InspectorMorph.prototype.detail = null;
-
-  InspectorMorph.prototype.work = null;
-
-  InspectorMorph.prototype.buttonInspect = null;
-
-  InspectorMorph.prototype.buttonClose = null;
-
-  InspectorMorph.prototype.buttonSubset = null;
-
-  InspectorMorph.prototype.buttonEdit = null;
-
-  InspectorMorph.prototype.resizer = null;
-
-  function InspectorMorph(target) {
-    this.target = target;
-    InspectorMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.updateRendering();
-    if (this.target) {
-      this.buildPanes();
-    }
-  }
-
-  InspectorMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  InspectorMorph.prototype.buildPanes = function() {
-    var attribs, ctrl, ev, property, staticAttributes, staticFunctions, staticProperties, targetOwnMethods,
-      _this = this;
-
-    attribs = [];
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph(this.target.toString());
-    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.updateRendering();
-    this.add(this.label);
-    for (property in this.target) {
-      if (property) {
-        attribs.push(property);
-      }
-    }
-    if (this.showing === "attributes") {
-      attribs = attribs.filter(function(prop) {
-        return !isFunction(_this.target[prop]);
-      });
-    } else if (this.showing === "methods") {
-      attribs = attribs.filter(function(prop) {
-        return isFunction(_this.target[prop]);
-      });
-    }
-    staticProperties = Object.getOwnPropertyNames(this.target.constructor);
-    staticProperties = staticProperties.filter(function(prop) {
-      return prop !== "name" && prop !== "length" && prop !== "prototype" && prop !== "caller" && prop !== "__super__" && prop !== "arguments";
-    });
-    if (this.showing === "attributes") {
-      staticFunctions = [];
-      staticAttributes = staticProperties.filter(function(prop) {
-        return !isFunction(_this.target.constructor[prop]);
-      });
-    } else if (this.showing === "methods") {
-      staticFunctions = staticProperties.filter(function(prop) {
-        return isFunction(_this.target.constructor[prop]);
-      });
-      staticAttributes = [];
-    } else {
-      staticFunctions = staticProperties.filter(function(prop) {
-        return isFunction(_this.target.constructor[prop]);
-      });
-      staticAttributes = staticProperties.filter(function(prop) {
-        return __indexOf.call(staticFunctions, prop) < 0;
-      });
-    }
-    attribs = (attribs.concat(staticFunctions)).concat(staticAttributes);
-    if (this.markOwnershipOfProperties) {
-      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
-    }
-    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnershipOfProperties ? [
-      [
-        new Color(0, 0, 180), function(element) {
-          return true;
-        }
-      ], [
-        new Color(255, 165, 0), function(element) {
-          return __indexOf.call(staticProperties, element) >= 0;
-        }
-      ], [
-        new Color(0, 180, 0), function(element) {
-          return _this.target.hasOwnProperty(element);
-        }
-      ], [
-        new Color(180, 0, 0), function(element) {
-          return __indexOf.call(targetOwnMethods, element) >= 0;
-        }
-      ]
-    ] : null));
-    this.list.action = function(selected) {
-      var cnts, txt, val;
-
-      val = _this.target[selected];
-      if (val === void 0) {
-        val = _this.target.constructor[selected];
-      }
-      _this.currentProperty = val;
-      if (val === null) {
-        txt = "NULL";
-      } else if (isString(val)) {
-        txt = val;
-      } else {
-        txt = val.toString();
-      }
-      cnts = new TextMorph(txt);
-      cnts.isEditable = true;
-      cnts.enableSelecting();
-      cnts.setReceiver(_this.target);
-      return _this.detail.setContents(cnts);
-    };
-    this.list.hBar.alpha = 0.6;
-    this.list.vBar.alpha = 0.6;
-    this.list.listContents.step = null;
-    this.add(this.list);
-    this.detail = new ScrollFrameMorph();
-    this.detail.acceptsDrops = false;
-    this.detail.contents.acceptsDrops = false;
-    this.detail.isTextLineWrapping = true;
-    this.detail.color = new Color(255, 255, 255);
-    this.detail.hBar.alpha = 0.6;
-    this.detail.vBar.alpha = 0.6;
-    ctrl = new TextMorph("");
-    ctrl.isEditable = true;
-    ctrl.enableSelecting();
-    ctrl.setReceiver(this.target);
-    this.detail.setContents(ctrl);
-    this.add(this.detail);
-    if (this.work === null) {
-      this.work = new ScrollFrameMorph();
-      this.work.acceptsDrops = false;
-      this.work.contents.acceptsDrops = false;
-      this.work.isTextLineWrapping = true;
-      this.work.color = new Color(255, 255, 255);
-      this.work.hBar.alpha = 0.6;
-      this.work.vBar.alpha = 0.6;
-      ev = new TextMorph("");
-      ev.isEditable = true;
-      ev.enableSelecting();
-      ev.setReceiver(this.target);
-      this.work.setContents(ev);
-    }
-    this.add(this.work);
-    this.buttonSubset = new TriggerMorph();
-    this.buttonSubset.labelString = "show...";
-    this.buttonSubset.action = function() {
-      var menu;
-
-      menu = new MenuMorph();
-      menu.addItem("attributes", function() {
-        _this.showing = "attributes";
-        return _this.buildPanes();
-      });
-      menu.addItem("methods", function() {
-        _this.showing = "methods";
-        return _this.buildPanes();
-      });
-      menu.addItem("all", function() {
-        _this.showing = "all";
-        return _this.buildPanes();
-      });
-      menu.addLine();
-      menu.addItem((_this.markOwnershipOfProperties ? "un-mark ownership" : "mark ownership"), (function() {
-        _this.markOwnershipOfProperties = !_this.markOwnershipOfProperties;
-        return _this.buildPanes();
-      }), "highlight\nownership of properties");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonSubset);
-    this.buttonInspect = new TriggerMorph();
-    this.buttonInspect.labelString = "inspect...";
-    this.buttonInspect.action = function() {
-      var menu;
-
-      if (isObject(_this.currentProperty)) {
-        menu = new MenuMorph();
-        menu.addItem("in new inspector...", function() {
-          var inspector, world;
-
-          world = _this.world();
-          inspector = new InspectorMorph(_this.currentProperty);
-          inspector.setPosition(world.hand.position());
-          inspector.keepWithin(world);
-          world.add(inspector);
-          return inspector.changed();
-        });
-        menu.addItem("here...", function() {
-          return _this.setTarget(_this.currentProperty);
-        });
-        return menu.popUpAtHand(_this.world());
-      } else {
-        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
-      }
-    };
-    this.add(this.buttonInspect);
-    this.buttonEdit = new TriggerMorph();
-    this.buttonEdit.labelString = "edit...";
-    this.buttonEdit.action = function() {
-      var menu;
-
-      menu = new MenuMorph(_this);
-      menu.addItem("save", "save", "accept changes");
-      menu.addLine();
-      menu.addItem("add property...", "addProperty");
-      menu.addItem("rename...", "renameProperty");
-      menu.addItem("remove...", "removeProperty");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonEdit);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  InspectorMorph.prototype.fixLayout = function() {
-    var b, h, r, w, x, y;
-
-    Morph.prototype.trackChanges = false;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.label.setPosition(new Point(x, y));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.updateRendering();
-      this.changed();
-      this.resizer.updateRendering();
-    }
-    y = this.label.bottom() + 2;
-    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
-    h = b - y;
-    this.list.setPosition(new Point(x, y));
-    this.list.setExtent(new Point(w, h));
-    x = this.list.right() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.detail.setPosition(new Point(x, y));
-    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
-    y = this.detail.bottom() + this.edge;
-    this.work.setPosition(new Point(x, y));
-    this.work.setExtent(new Point(w, h / 3));
-    x = this.list.left();
-    y = this.list.bottom() + this.edge;
-    w = this.list.width();
-    h = WorldMorph.MorphicPreferences.handleSize;
-    this.buttonSubset.setPosition(new Point(x, y));
-    this.buttonSubset.setExtent(new Point(w, h));
-    x = this.detail.left();
-    w = this.detail.width() - this.edge - WorldMorph.MorphicPreferences.handleSize;
-    w = w / 3 - this.edge / 3;
-    this.buttonInspect.setPosition(new Point(x, y));
-    this.buttonInspect.setExtent(new Point(w, h));
-    x = this.buttonInspect.right() + this.edge;
-    this.buttonEdit.setPosition(new Point(x, y));
-    this.buttonEdit.setExtent(new Point(w, h));
-    x = this.buttonEdit.right() + this.edge;
-    r = this.detail.right() - this.edge - WorldMorph.MorphicPreferences.handleSize;
-    w = r - x;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
-  };
-
-  InspectorMorph.prototype.setExtent = function(aPoint) {
-    InspectorMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
-  };
-
-  InspectorMorph.prototype.save = function() {
-    var err, prop, txt;
-
-    txt = this.detail.contents.children[0].text.toString();
-    prop = this.list.selected;
-    try {
-      this.target.evaluateString("this." + prop + " = " + txt);
-      if (this.target.updateRendering) {
-        this.target.changed();
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } catch (_error) {
-      err = _error;
-      return this.inform(err);
-    }
-  };
-
-  InspectorMorph.prototype.addProperty = function() {
-    var _this = this;
-
-    return this.prompt("new property name:", (function(prop) {
-      if (prop) {
-        _this.target[prop] = null;
-        _this.buildPanes();
-        if (_this.target.updateRendering) {
-          _this.target.changed();
-          _this.target.updateRendering();
-          return _this.target.changed();
-        }
-      }
-    }), this, "property");
-  };
-
-  InspectorMorph.prototype.renameProperty = function() {
-    var propertyName,
-      _this = this;
-
-    propertyName = this.list.selected;
-    return this.prompt("property name:", (function(prop) {
-      var err;
-
-      try {
-        delete _this.target[propertyName];
-        _this.target[prop] = _this.currentProperty;
-      } catch (_error) {
-        err = _error;
-        _this.inform(err);
-      }
-      _this.buildPanes();
-      if (_this.target.updateRendering) {
-        _this.target.changed();
-        _this.target.updateRendering();
-        return _this.target.changed();
-      }
-    }), this, propertyName);
-  };
-
-  InspectorMorph.prototype.removeProperty = function() {
-    var err, prop;
-
-    prop = this.list.selected;
-    try {
-      delete this.target[prop];
-      this.currentProperty = null;
-      this.buildPanes();
-      if (this.target.updateRendering) {
-        this.target.changed();
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } catch (_error) {
-      err = _error;
-      return this.inform(err);
-    }
-  };
-
-  InspectorMorph.coffeeScriptSourceOfThisClass = '# InspectorMorph //////////////////////////////////////////////////////\n\nclass InspectorMorph extends BoxMorph\n\n  target: null\n  currentProperty: null\n  showing: "attributes"\n  markOwnershipOfProperties: false\n  # panes:\n  label: null\n  list: null\n  detail: null\n  work: null\n  buttonInspect: null\n  buttonClose: null\n  buttonSubset: null\n  buttonEdit: null\n  resizer: null\n\n  constructor: (@target) ->\n    super()\n    # override inherited properties:\n    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()  if @target\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n    #\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n    #\n    @children = []\n    #\n    # label\n    @label = new TextMorph(@target.toString())\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n    \n    # properties list. Note that this picks up ALL properties\n    # (enumerable such as strings and un-enumerable such as functions)\n    # of the whole prototype chain.\n    #\n    #   a) some of these are DECLARED as part of the class that defines the object\n    #   and are proprietary to the object. These are shown RED\n    # \n    #   b) some of these are proprietary to the object but are initialised by\n    #   code higher in the prototype chain. These are shown GREEN\n    #\n    #   c) some of these are not proprietary, i.e. they belong to an object up\n    #   the chain of prototypes. These are shown BLUE\n    #\n    # todo: show the static methods and variables in yet another color.\n    \n    for property of @target\n      # dummy condition, to be refined\n      attribs.push property  if property\n    if @showing is "attributes"\n      attribs = attribs.filter((prop) =>\n        not isFunction @target[prop]\n      )\n    else if @showing is "methods"\n      attribs = attribs.filter((prop) =>\n        isFunction @target[prop]\n      )\n    # otherwise show all properties\n    # label getter\n    # format list\n    # format element: [color, predicate(element]\n    \n    staticProperties = Object.getOwnPropertyNames(@target.constructor)\n    # get rid of all the standar fuff properties that are in classes\n    staticProperties = staticProperties.filter((prop) =>\n        prop not in ["name","length","prototype","caller","__super__","arguments"]\n    )\n    if @showing is "attributes"\n      staticFunctions = []\n      staticAttributes = staticProperties.filter((prop) =>\n        not isFunction(@target.constructor[prop])\n      )\n    else if @showing is "methods"\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = []\n    else\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = staticProperties.filter((prop) =>\n        prop not in staticFunctions\n      )\n    #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes\n    attribs = (attribs.concat staticFunctions).concat staticAttributes\n    #alert " all attribs " + attribs\n    \n    # caches the own methods of the object\n    if @markOwnershipOfProperties\n      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)\n      #alert targetOwnMethods\n    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(\n      if @markOwnershipOfProperties\n        [\n          # give color criteria from the most general to the most specific\n          [new Color(0, 0, 180),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              true\n          ],\n          [new Color(255, 165, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              element in staticProperties\n          ],\n          [new Color(0, 180, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (@target.hasOwnProperty element)\n          ],\n          [new Color(180, 0, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (element in targetOwnMethods)\n          ]\n        ]\n      else null\n    ))\n    @list.action = (selected) =>\n      val = @target[selected]\n      # this is for finding the static variables\n      if val is undefined\n        val = @target.constructor[selected]\n      @currentProperty = val\n      if val is null\n        txt = "NULL"\n      else if isString(val)\n        txt = val\n      else\n        txt = val.toString()\n      cnts = new TextMorph(txt)\n      cnts.isEditable = true\n      cnts.enableSelecting()\n      cnts.setReceiver @target\n      @detail.setContents cnts\n    #\n    @list.hBar.alpha = 0.6\n    @list.vBar.alpha = 0.6\n    # we know that the content of this list in this pane is not going to need the\n    # step function, so we disable that from here by setting it to null, which\n    # prevents the recursion to children. We could have disabled that from the\n    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph\n    # with some animated content? We know that in this specific case it won\'t need animation so\n    # we set that here. Note that the ListMorph itself does require animation because of the\n    # scrollbars, but the MenuMorph (which contains the actual list contents)\n    # in this context doesn\'t.\n    @list.listContents.step = null\n    @add @list\n    #\n    # details pane\n    @detail = new ScrollFrameMorph()\n    @detail.acceptsDrops = false\n    @detail.contents.acceptsDrops = false\n    @detail.isTextLineWrapping = true\n    @detail.color = new Color(255, 255, 255)\n    @detail.hBar.alpha = 0.6\n    @detail.vBar.alpha = 0.6\n    ctrl = new TextMorph("")\n    ctrl.isEditable = true\n    ctrl.enableSelecting()\n    ctrl.setReceiver @target\n    @detail.setContents ctrl\n    @add @detail\n    #\n    # work (\'evaluation\') pane\n    # don\'t refresh the work pane if it already exists\n    if @work is null\n      @work = new ScrollFrameMorph()\n      @work.acceptsDrops = false\n      @work.contents.acceptsDrops = false\n      @work.isTextLineWrapping = true\n      @work.color = new Color(255, 255, 255)\n      @work.hBar.alpha = 0.6\n      @work.vBar.alpha = 0.6\n      ev = new TextMorph("")\n      ev.isEditable = true\n      ev.enableSelecting()\n      ev.setReceiver @target\n      @work.setContents ev\n    @add @work\n    #\n    # properties button\n    @buttonSubset = new TriggerMorph()\n    @buttonSubset.labelString = "show..."\n    @buttonSubset.action = =>\n      menu = new MenuMorph()\n      menu.addItem "attributes", =>\n        @showing = "attributes"\n        @buildPanes()\n      #\n      menu.addItem "methods", =>\n        @showing = "methods"\n        @buildPanes()\n      #\n      menu.addItem "all", =>\n        @showing = "all"\n        @buildPanes()\n      #\n      menu.addLine()\n      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>\n        @markOwnershipOfProperties = not @markOwnershipOfProperties\n        @buildPanes()\n      ), "highlight\nownership of properties"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonSubset\n    #\n    # inspect button\n    @buttonInspect = new TriggerMorph()\n    @buttonInspect.labelString = "inspect..."\n    @buttonInspect.action = =>\n      if isObject(@currentProperty)\n        menu = new MenuMorph()\n        menu.addItem "in new inspector...", =>\n          world = @world()\n          inspector = new InspectorMorph(@currentProperty)\n          inspector.setPosition world.hand.position()\n          inspector.keepWithin world\n          world.add inspector\n          inspector.changed()\n        #\n        menu.addItem "here...", =>\n          @setTarget @currentProperty\n        #\n        menu.popUpAtHand @world()\n      else\n        @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"\n    #\n    @add @buttonInspect\n    #\n    # edit button\n    @buttonEdit = new TriggerMorph()\n    @buttonEdit.labelString = "edit..."\n    @buttonEdit.action = =>\n      menu = new MenuMorph(@)\n      menu.addItem "save", "save", "accept changes"\n      menu.addLine()\n      menu.addItem "add property...", "addProperty"\n      menu.addItem "rename...", "renameProperty"\n      menu.addItem "remove...", "removeProperty"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonEdit\n    #\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n    #\n    @add @buttonClose\n    #\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n    #\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n    #\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n    #\n    # list\n    y = @label.bottom() + 2\n    w = Math.min(Math.floor(@width() / 3), @list.listContents.width())\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @list.setPosition new Point(x, y)\n    @list.setExtent new Point(w, h)\n    #\n    # detail\n    x = @list.right() + @edge\n    r = @right() - @edge\n    w = r - x\n    @detail.setPosition new Point(x, y)\n    @detail.setExtent new Point(w, (h * 2 / 3) - @edge)\n    #\n    # work\n    y = @detail.bottom() + @edge\n    @work.setPosition new Point(x, y)\n    @work.setExtent new Point(w, h / 3)\n    #\n    # properties button\n    x = @list.left()\n    y = @list.bottom() + @edge\n    w = @list.width()\n    h = WorldMorph.MorphicPreferences.handleSize\n    @buttonSubset.setPosition new Point(x, y)\n    @buttonSubset.setExtent new Point(w, h)\n    #\n    # inspect button\n    x = @detail.left()\n    w = @detail.width() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = w / 3 - @edge / 3\n    @buttonInspect.setPosition new Point(x, y)\n    @buttonInspect.setExtent new Point(w, h)\n    #\n    # edit button\n    x = @buttonInspect.right() + @edge\n    @buttonEdit.setPosition new Point(x, y)\n    @buttonEdit.setExtent new Point(w, h)\n    #\n    # close button\n    x = @buttonEdit.right() + @edge\n    r = @detail.right() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = r - x\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()\n  \n  \n  #InspectorMorph editing ops:\n  save: ->\n    txt = @detail.contents.children[0].text.toString()\n    prop = @list.selected\n    try\n      #\n      # this.target[prop] = evaluate(txt);\n      @target.evaluateString "this." + prop + " = " + txt\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err\n  \n  addProperty: ->\n    @prompt "new property name:", ((prop) =>\n      if prop\n        @target[prop] = null\n        @buildPanes()\n        if @target.updateRendering\n          @target.changed()\n          @target.updateRendering()\n          @target.changed()\n    ), @, "property" # Chrome cannot handle empty strings (others do)\n  \n  renameProperty: ->\n    propertyName = @list.selected\n    @prompt "property name:", ((prop) =>\n      try\n        delete (@target[propertyName])\n        @target[prop] = @currentProperty\n      catch err\n        @inform err\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    ), @, propertyName\n  \n  removeProperty: ->\n    prop = @list.selected\n    try\n      delete (@target[prop])\n      #\n      @currentProperty = null\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err';
-
-  return InspectorMorph;
-
-})(BoxMorph);
-
-MorphsListMorph = (function(_super) {
-  __extends(MorphsListMorph, _super);
-
-  MorphsListMorph.prototype.morphsList = null;
-
-  MorphsListMorph.prototype.buttonClose = null;
-
-  MorphsListMorph.prototype.resizer = null;
-
-  function MorphsListMorph(target) {
-    MorphsListMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.updateRendering();
-    this.buildPanes();
-  }
-
-  MorphsListMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  MorphsListMorph.prototype.buildPanes = function() {
-    var ListOfMorphs, attribs, theWordMorph,
-      _this = this;
-
-    attribs = [];
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph("Morphs List");
-    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.updateRendering();
-    this.add(this.label);
-    theWordMorph = "Morph";
-    ListOfMorphs = (Object.keys(window)).filter(function(i) {
-      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
-    });
-    this.morphsList = new ListMorph(ListOfMorphs, null);
-    this.morphsList.hBar.alpha = 0.6;
-    this.morphsList.vBar.alpha = 0.6;
-    this.add(this.morphsList);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  MorphsListMorph.prototype.fixLayout = function() {
-    var b, h, r, w, x, y;
-
-    Morph.prototype.trackChanges = false;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.label.setPosition(new Point(x, y));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.updateRendering();
-      this.changed();
-      this.resizer.updateRendering();
-    }
-    y = this.label.bottom() + 2;
-    w = this.width() - this.edge;
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
-    h = b - y;
-    this.morphsList.setPosition(new Point(x, y));
-    this.morphsList.setExtent(new Point(w, h));
-    x = this.morphsList.left();
-    y = this.morphsList.bottom() + this.edge;
-    h = WorldMorph.MorphicPreferences.handleSize;
-    w = this.morphsList.width() - h - this.edge;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
-  };
-
-  MorphsListMorph.prototype.setExtent = function(aPoint) {
-    MorphsListMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
-  };
-
-  MorphsListMorph.coffeeScriptSourceOfThisClass = '# MorphsListMorph //////////////////////////////////////////////////////\n\nclass MorphsListMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + 2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = WorldMorph.MorphicPreferences.handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
-
-  return MorphsListMorph;
-
-})(BoxMorph);
-
-Point2 = (function() {
-  Point2.prototype.x = null;
-
-  Point2.prototype.y = null;
-
-  function Point2(x, y) {
-    this.x = x != null ? x : 0;
-    this.y = y != null ? y : 0;
-  }
-
-  Point2.prototype.toString = function() {
-    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
-  };
-
-  Point2.prototype.copy = function() {
-    return new Point2(this.x, this.y);
-  };
-
-  Point2.prototype.eq = function(aPoint2) {
-    return this.x === aPoint2.x && this.y === aPoint2.y;
-  };
-
-  Point2.prototype.lt = function(aPoint2) {
-    return this.x < aPoint2.x && this.y < aPoint2.y;
-  };
-
-  Point2.prototype.gt = function(aPoint2) {
-    return this.x > aPoint2.x && this.y > aPoint2.y;
-  };
-
-  Point2.prototype.ge = function(aPoint2) {
-    return this.x >= aPoint2.x && this.y >= aPoint2.y;
-  };
-
-  Point2.prototype.le = function(aPoint2) {
-    return this.x <= aPoint2.x && this.y <= aPoint2.y;
-  };
-
-  Point2.prototype.max = function(aPoint2) {
-    this.x = Math.max(this.x, aPoint2.x);
-    return this.y = Math.max(this.y, aPoint2.y);
-  };
-
-  Point2.prototype.min = function(aPoint2) {
-    this.x = Math.min(this.x, aPoint2.x);
-    return this.y = Math.min(this.y, aPoint2.y);
-  };
-
-  Point2.prototype.round = function() {
-    this.x = Math.round(this.x);
-    return this.y = Math.round(this.y);
-  };
-
-  Point2.prototype.abs = function() {
-    this.x = Math.abs(this.x);
-    return this.y = Math.abs(this.y);
-  };
-
-  Point2.prototype.neg = function() {
-    this.x = -this.x;
-    return this.y = -this.y;
-  };
-
-  Point2.prototype.mirror = function() {
-    var tmpValueForSwappingXAndY;
-
-    tmpValueForSwappingXAndY = this.x;
-    this.x = this.y;
-    return this.y = tmpValueForSwappingXAndY;
-  };
-
-  Point2.prototype.floor = function() {
-    this.x = Math.max(Math.floor(this.x), 0);
-    return this.y = Math.max(Math.floor(this.y), 0);
-  };
-
-  Point2.prototype.ceil = function() {
-    this.x = Math.ceil(this.x);
-    return this.y = Math.ceil(this.y);
-  };
-
-  Point2.prototype.add = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x + other.x;
-      this.y = this.y + other.y;
-      return;
-    }
-    this.x = this.x + other;
-    return this.y = this.y + other;
-  };
-
-  Point2.prototype.subtract = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x - other.x;
-      this.y = this.y - other.y;
-      return;
-    }
-    this.x = this.x - other;
-    return this.y = this.y - other;
-  };
-
-  Point2.prototype.multiplyBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x * other.x;
-      this.y = this.y * other.y;
-      return;
-    }
-    this.x = this.x * other;
-    return this.y = this.y * other;
-  };
-
-  Point2.prototype.divideBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x / other.x;
-      this.y = this.y / other.y;
-      return;
-    }
-    this.x = this.x / other;
-    return this.y = this.y / other;
-  };
-
-  Point2.prototype.floorDivideBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = Math.floor(this.x / other.x);
-      this.y = Math.floor(this.y / other.y);
-      return;
-    }
-    this.x = Math.floor(this.x / other);
-    return this.y = Math.floor(this.y / other);
-  };
-
-  Point2.prototype.r = function() {
-    var t;
-
-    t = this.copy();
-    t.multiplyBy(t);
-    return Math.sqrt(t.x + t.y);
-  };
-
-  Point2.prototype.degrees = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return 90;
-      }
-      return 270;
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return degrees(theta);
-      }
-      return 360 + (degrees(theta));
-    }
-    return 180 + degrees(theta);
-  };
-
-  Point2.prototype.theta = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return radians(90);
-      }
-      return radians(270);
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return theta;
-      }
-      return radians(360) + theta;
-    }
-    return radians(180) + theta;
-  };
-
-  Point2.prototype.crossProduct = function(aPoint2) {
-    return this.multiplyBy(aPoint2.copy().mirror());
-  };
-
-  Point2.prototype.distanceTo = function(aPoint2) {
-    return (aPoint2.copy().subtract(this)).r();
-  };
-
-  Point2.prototype.rotate = function(direction, center) {
-    var offset, tmpPointForRotate;
-
-    offset = this.copy().subtract(center);
-    if (direction === "right") {
-      this.x = -offset.y + center.x;
-      this.y = offset.y + center.y;
-      return;
-    }
-    if (direction === "left") {
-      this.x = offset.y + center.x;
-      this.y = -offset.y + center.y;
-      return;
-    }
-    tmpPointForRotate = center.copy().subtract(offset);
-    this.x = tmpPointForRotate.x;
-    return this.y = tmpPointForRotate.y;
-  };
-
-  Point2.prototype.flip = function(direction, center) {
-    if (direction === "vertical") {
-      this.y = center.y * 2 - this.y;
-      return;
-    }
-    return this.x = center.x * 2 - this.x;
-  };
-
-  Point2.prototype.distanceAngle = function(dist, angle) {
-    var deg, x, y;
-
-    deg = angle;
-    if (deg > 270) {
-      deg = deg - 360;
-    } else {
-      if (deg < -270) {
-        deg = deg + 360;
-      }
-    }
-    if (-90 <= deg && deg <= 90) {
-      x = Math.sin(radians(deg)) * dist;
-      y = Math.sqrt((dist * dist) - (x * x));
-      this.x = x + this.x;
-      this.y = this.y - y;
-      return;
-    }
-    x = Math.sin(radians(180 - deg)) * dist;
-    y = Math.sqrt((dist * dist) - (x * x));
-    this.x = x + this.x;
-    return this.y = this.y + y;
-  };
-
-  Point2.prototype.scaleBy = function(scalePoint2) {
-    return this.multiplyBy(scalePoint2);
-  };
-
-  Point2.prototype.translateBy = function(deltaPoint2) {
-    return this.add(deltaPoint2);
-  };
-
-  Point2.prototype.rotateBy = function(angle, centerPoint2) {
-    var center, p, r, theta;
-
-    center = centerPoint2 || new Point2(0, 0);
-    p = this.copy().subtract(center);
-    r = p.r();
-    theta = angle - p.theta();
-    this.x = center.x + (r * Math.cos(theta));
-    return this.y = center.y - (r * Math.sin(theta));
-  };
-
-  Point2.prototype.asArray = function() {
-    return [this.x, this.y];
-  };
-
-  Point2.prototype.corner = function(cornerPoint2) {
-    return new Rectangle(this.x, this.y, cornerPoint2.x, cornerPoint2.y);
-  };
-
-  Point2.prototype.rectangle = function(aPoint2) {
-    var crn, org;
-
-    org = this.copy().min(aPoint2);
-    crn = this.copy().max(aPoint2);
-    return new Rectangle(org.x, org.y, crn.x, crn.y);
-  };
-
-  Point2.prototype.extent = function(aPoint2) {
-    var crn;
-
-    crn = this.copy().add(aPoint2);
-    return new Rectangle(this.x, this.y, crn.x, crn.y);
-  };
-
-  Point2.coffeeScriptSourceOfThisClass = '# Point2 //////////////////////////////////////////////////////////////\n# like Point, but it tries not to create new objects like there is\n# no tomorrow. Any operation that returned a new point now directly\n# modifies the current point.\n# Note that the arguments passed to any of these functions are never\n# modified.\n\nclass Point2\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point2 string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point2 copying:\n  copy: ->\n    new Point2(@x, @y)\n  \n  # Point2 comparison:\n  eq: (aPoint2) ->\n    # ==\n    @x is aPoint2.x and @y is aPoint2.y\n  \n  lt: (aPoint2) ->\n    # <\n    @x < aPoint2.x and @y < aPoint2.y\n  \n  gt: (aPoint2) ->\n    # >\n    @x > aPoint2.x and @y > aPoint2.y\n  \n  ge: (aPoint2) ->\n    # >=\n    @x >= aPoint2.x and @y >= aPoint2.y\n  \n  le: (aPoint2) ->\n    # <=\n    @x <= aPoint2.x and @y <= aPoint2.y\n  \n  max: (aPoint2) ->\n    #new Point2(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))\n    @x = Math.max(@x, aPoint2.x)\n    @y = Math.max(@y, aPoint2.y)\n  \n  min: (aPoint2) ->\n    #new Point2(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))\n    @x = Math.min(@x, aPoint2.x)\n    @y = Math.min(@y, aPoint2.y)\n  \n  \n  # Point2 conversion:\n  round: ->\n    #new Point2(Math.round(@x), Math.round(@y))\n    @x = Math.round(@x)\n    @y = Math.round(@y)\n  \n  abs: ->\n    #new Point2(Math.abs(@x), Math.abs(@y))\n    @x = Math.abs(@x)\n    @y = Math.abs(@y)\n  \n  neg: ->\n    #new Point2(-@x, -@y)\n    @x = -@x\n    @y = -@y\n  \n  mirror: ->\n    #new Point2(@y, @x)\n    # note that coffeescript would allow [@x,@y] = [@y,@x]\n    # but we want to be faster here\n    tmpValueForSwappingXAndY = @x\n    @x = @y\n    @y = tmpValueForSwappingXAndY \n  \n  floor: ->\n    #new Point2(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n    @x = Math.max(Math.floor(@x), 0)\n    @y = Math.max(Math.floor(@y), 0)\n  \n  ceil: ->\n    #new Point2(Math.ceil(@x), Math.ceil(@y))\n    @x = Math.ceil(@x)\n    @y = Math.ceil(@y)\n  \n  \n  # Point2 arithmetic:\n  add: (other) ->\n    if other instanceof Point2\n      @x = @x + other.x\n      @y = @y + other.y\n      return\n    @x = @x + other\n    @y = @y + other\n  \n  subtract: (other) ->\n    if other instanceof Point2\n      @x = @x - other.x\n      @y = @y - other.y\n      return\n    @x = @x - other\n    @y = @y - other\n  \n  multiplyBy: (other) ->\n    if other instanceof Point2\n      @x = @x * other.x\n      @y = @y * other.y\n      return\n    @x = @x * other\n    @y = @y * other\n  \n  divideBy: (other) ->\n    if other instanceof Point2\n      @x = @x / other.x\n      @y = @y / other.y\n      return\n    @x = @x / other\n    @y = @y / other\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point2\n      @x = Math.floor(@x / other.x)\n      @y = Math.floor(@y / other.y)\n      return\n    @x = Math.floor(@x / other)\n    @y = Math.floor(@y / other)\n  \n  \n  # Point2 polar coordinates:\n  # distance from the origin\n  r: ->\n    t = @copy()\n    t.multiplyBy(t)\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point2 functions:\n  \n  # this function is a bit fishy.\n  # a cross product in 2d is probably not a vector\n  # see https://github.com/jmoenig/morphic.js/issues/6\n  # this function is not used\n  crossProduct: (aPoint2) ->\n    @multiplyBy aPoint2.copy().mirror()\n  \n  distanceTo: (aPoint2) ->\n    (aPoint2.copy().subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @copy().subtract(center)\n    if direction is "right"\n      @x = -offset.y + center.x\n      @y = offset.y + center.y\n      return\n    if direction is "left"\n      @x = offset.y + center.x\n      @y = -offset.y + center.y\n      return\n    #\n    # direction === \'pi\'\n    tmpPointForRotate = center.copy().subtract offset\n    @x = tmpPointForRotate.x\n    @y = tmpPointForRotate.y\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    if direction is "vertical"\n      @y = center.y * 2 - @y\n      return\n    #\n    # direction === \'horizontal\'\n    @x = center.x * 2 - @x\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      @x = x + @x\n      @y = @y - y\n      return\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    @x = x + @x\n    @y = @y + y\n  \n  \n  # Point2 transforming:\n  scaleBy: (scalePoint2) ->\n    @multiplyBy scalePoint2\n  \n  translateBy: (deltaPoint2) ->\n    @add deltaPoint2\n  \n  rotateBy: (angle, centerPoint2) ->\n    center = centerPoint2 or new Point2(0, 0)\n    p = @copy().subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    @x = center.x + (r * Math.cos(theta))\n    @y = center.y - (r * Math.sin(theta))\n  \n  \n  # Point2 conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Point2:\n  corner: (cornerPoint2) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint2.x, cornerPoint2.y)\n  \n  rectangle: (aPoint2) ->\n    # answer a new Rectangle\n    org = @copy().min(aPoint2)\n    crn = @copy().max(aPoint2)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint2) ->\n    #answer a new Rectangle\n    crn = @copy().add(aPoint2)\n    new Rectangle(@x, @y, crn.x, crn.y)';
-
-  return Point2;
-
-})();
-
-Rectangle = (function() {
-  Rectangle.prototype.origin = null;
-
-  Rectangle.prototype.corner = null;
-
-  function Rectangle(left, top, right, bottom) {
-    this.origin = new Point(left || 0, top || 0);
-    this.corner = new Point(right || 0, bottom || 0);
-  }
-
-  Rectangle.prototype.toString = function() {
-    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
-  };
-
-  Rectangle.prototype.copy = function() {
-    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
-  };
-
-  Rectangle.prototype.setTo = function(left, top, right, bottom) {
-    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
-    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
-  };
-
-  Rectangle.prototype.area = function() {
-    var w;
-
-    w = this.width();
-    if (w < 0) {
-      return 0;
-    }
-    return Math.max(w * this.height(), 0);
-  };
-
-  Rectangle.prototype.bottom = function() {
-    return this.corner.y;
-  };
-
-  Rectangle.prototype.bottomCenter = function() {
-    return new Point(this.center().x, this.bottom());
-  };
-
-  Rectangle.prototype.bottomLeft = function() {
-    return new Point(this.origin.x, this.corner.y);
-  };
-
-  Rectangle.prototype.bottomRight = function() {
-    return this.corner.copy();
-  };
-
-  Rectangle.prototype.boundingBox = function() {
-    return this;
-  };
-
-  Rectangle.prototype.center = function() {
-    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
-  };
-
-  Rectangle.prototype.corners = function() {
-    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
-  };
-
-  Rectangle.prototype.extent = function() {
-    return this.corner.subtract(this.origin);
-  };
-
-  Rectangle.prototype.isEmpty = function() {
-    var theExtent;
-
-    theExtent = this.corner.subtract(this.origin);
-    return theExtent.x = 0 || (theExtent.y = 0);
-  };
-
-  Rectangle.prototype.isNotEmpty = function() {
-    var theExtent;
-
-    theExtent = this.corner.subtract(this.origin);
-    return theExtent.x > 0 && theExtent.y > 0;
-  };
-
-  Rectangle.prototype.height = function() {
-    return this.corner.y - this.origin.y;
-  };
-
-  Rectangle.prototype.left = function() {
-    return this.origin.x;
-  };
-
-  Rectangle.prototype.leftCenter = function() {
-    return new Point(this.left(), this.center().y);
-  };
-
-  Rectangle.prototype.right = function() {
-    return this.corner.x;
-  };
-
-  Rectangle.prototype.rightCenter = function() {
-    return new Point(this.right(), this.center().y);
-  };
-
-  Rectangle.prototype.top = function() {
-    return this.origin.y;
-  };
-
-  Rectangle.prototype.topCenter = function() {
-    return new Point(this.center().x, this.top());
-  };
-
-  Rectangle.prototype.topLeft = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.topRight = function() {
-    return new Point(this.corner.x, this.origin.y);
-  };
-
-  Rectangle.prototype.width = function() {
-    return this.corner.x - this.origin.x;
-  };
-
-  Rectangle.prototype.position = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.eq = function(aRect) {
-    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
-  };
-
-  Rectangle.prototype.abs = function() {
-    var newCorner, newOrigin;
-
-    newOrigin = this.origin.abs();
-    newCorner = this.corner.max(newOrigin);
-    return newOrigin.corner(newCorner);
-  };
-
-  Rectangle.prototype.insetBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.add(delta);
-    result.corner = this.corner.subtract(delta);
-    return result;
-  };
-
-  Rectangle.prototype.expandBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.subtract(delta);
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.growBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.copy();
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.intersect = function(aRect) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.max(aRect.origin);
-    result.corner = this.corner.min(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.merge = function(aRect) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.min(aRect.origin);
-    result.corner = this.corner.max(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.round = function() {
-    return this.origin.round().corner(this.corner.round());
-  };
-
-  Rectangle.prototype.spread = function() {
-    return this.origin.floor().corner(this.corner.ceil());
-  };
-
-  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
-    var dx, dy;
-
-    if (this.right() > aRect.right()) {
-      dx = aRect.right() - this.right();
-    }
-    if (this.bottom() > aRect.bottom()) {
-      dy = aRect.bottom() - this.bottom();
-    }
-    if ((this.left() + dx) < aRect.left()) {
-      dx = aRect.left() - this.right();
-    }
-    if ((this.top() + dy) < aRect.top()) {
-      dy = aRect.top() - this.top();
-    }
-    return new Point(dx, dy);
-  };
-
-  Rectangle.prototype.containsPoint = function(aPoint) {
-    return this.origin.le(aPoint) && aPoint.lt(this.corner);
-  };
-
-  Rectangle.prototype.containsRectangle = function(aRect) {
-    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
-  };
-
-  Rectangle.prototype.intersects = function(aRect) {
-    var rc, ro;
-
-    ro = aRect.origin;
-    rc = aRect.corner;
-    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
-  };
-
-  Rectangle.prototype.scaleBy = function(scale) {
-    var c, o;
-
-    o = this.origin.multiplyBy(scale);
-    c = this.corner.multiplyBy(scale);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.translateBy = function(factor) {
-    var c, o;
-
-    o = this.origin.add(factor);
-    c = this.corner.add(factor);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.asArray = function() {
-    return [this.left(), this.top(), this.right(), this.bottom()];
-  };
-
-  Rectangle.prototype.asArray_xywh = function() {
-    return [this.left(), this.top(), this.width(), this.height()];
-  };
-
-  Rectangle.coffeeScriptSourceOfThisClass = '# Rectangles //////////////////////////////////////////////////////////\n\nclass Rectangle\n\n  origin: null\n  corner: null\n  \n  constructor: (left, top, right, bottom) ->\n    \n    @origin = new Point((left or 0), (top or 0))\n    @corner = new Point((right or 0), (bottom or 0))\n  \n  \n  # Rectangle string representation: e.g. \'[0@0 | 160@80]\'\n  toString: ->\n    "[" + @origin.toString() + " | " + @extent().toString() + "]"\n  \n  # Rectangle copying:\n  copy: ->\n    new Rectangle(@left(), @top(), @right(), @bottom())\n  \n  # Rectangle accessing - setting:\n  setTo: (left, top, right, bottom) ->\n    # note: all inputs are optional and can be omitted\n    @origin = new Point(\n      left or ((if (left is 0) then 0 else @left())),\n      top or ((if (top is 0) then 0 else @top())))\n    @corner = new Point(\n      right or ((if (right is 0) then 0 else @right())),\n      bottom or ((if (bottom is 0) then 0 else @bottom())))\n  \n  # Rectangle accessing - getting:\n  area: ->\n    #requires width() and height() to be defined\n    w = @width()\n    return 0  if w < 0\n    Math.max w * @height(), 0\n  \n  bottom: ->\n    @corner.y\n  \n  bottomCenter: ->\n    new Point(@center().x, @bottom())\n  \n  bottomLeft: ->\n    new Point(@origin.x, @corner.y)\n  \n  bottomRight: ->\n    @corner.copy()\n  \n  boundingBox: ->\n    @\n  \n  center: ->\n    @origin.add @corner.subtract(@origin).floorDivideBy(2)\n  \n  corners: ->\n    [@origin, @bottomLeft(), @corner, @topRight()]\n  \n  extent: ->\n    @corner.subtract @origin\n  \n  isEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x = 0 or theExtent.y = 0\n\n  isNotEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x > 0 and theExtent.y > 0\n  \n  height: ->\n    @corner.y - @origin.y\n  \n  left: ->\n    @origin.x\n  \n  leftCenter: ->\n    new Point(@left(), @center().y)\n  \n  right: ->\n    @corner.x\n  \n  rightCenter: ->\n    new Point(@right(), @center().y)\n  \n  top: ->\n    @origin.y\n  \n  topCenter: ->\n    new Point(@center().x, @top())\n  \n  topLeft: ->\n    @origin\n  \n  topRight: ->\n    new Point(@corner.x, @origin.y)\n  \n  width: ->\n    @corner.x - @origin.x\n  \n  position: ->\n    @origin\n  \n  # Rectangle comparison:\n  eq: (aRect) ->\n    @origin.eq(aRect.origin) and @corner.eq(aRect.corner)\n  \n  abs: ->\n    newOrigin = @origin.abs()\n    newCorner = @corner.max(newOrigin)\n    newOrigin.corner newCorner\n  \n  # Rectangle functions:\n  insetBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.add(delta)\n    result.corner = @corner.subtract(delta)\n    result\n  \n  expandBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.subtract(delta)\n    result.corner = @corner.add(delta)\n    result\n  \n  growBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.copy()\n    result.corner = @corner.add(delta)\n    result\n  \n  intersect: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.max(aRect.origin)\n    result.corner = @corner.min(aRect.corner)\n    result\n  \n  merge: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.min(aRect.origin)\n    result.corner = @corner.max(aRect.corner)\n    result\n  \n  round: ->\n    @origin.round().corner @corner.round()\n  \n  spread: ->\n    # round me by applying floor() to my origin and ceil() to my corner\n    @origin.floor().corner @corner.ceil()\n  \n  amountToTranslateWithin: (aRect) ->\n    #\n    #    Answer a Point, delta, such that self + delta is forced within\n    #    aRectangle. when all of me cannot be made to fit, prefer to keep\n    #    my topLeft inside. Taken from Squeak.\n    #\n    dx = aRect.right() - @right()  if @right() > aRect.right()\n    dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()\n    dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()\n    dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()\n    new Point(dx, dy)\n  \n  \n  # Rectangle testing:\n  containsPoint: (aPoint) ->\n    @origin.le(aPoint) and aPoint.lt(@corner)\n  \n  containsRectangle: (aRect) ->\n    aRect.origin.gt(@origin) and aRect.corner.lt(@corner)\n  \n  intersects: (aRect) ->\n    ro = aRect.origin\n    rc = aRect.corner\n    (rc.x >= @origin.x) and\n      (rc.y >= @origin.y) and\n      (ro.x <= @corner.x) and\n      (ro.y <= @corner.y)\n  \n  \n  # Rectangle transforming:\n  scaleBy: (scale) ->\n    # scale can be either a Point or a scalar\n    o = @origin.multiplyBy(scale)\n    c = @corner.multiplyBy(scale)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  translateBy: (factor) ->\n    # factor can be either a Point or a scalar\n    o = @origin.add(factor)\n    c = @corner.add(factor)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  \n  # Rectangle converting:\n  asArray: ->\n    [@left(), @top(), @right(), @bottom()]\n  \n  asArray_xywh: ->\n    [@left(), @top(), @width(), @height()]';
-
-  return Rectangle;
-
-})();
-
-TriggerMorph = (function(_super) {
-  __extends(TriggerMorph, _super);
-
-  TriggerMorph.prototype.target = null;
-
-  TriggerMorph.prototype.action = null;
-
-  TriggerMorph.prototype.environment = null;
-
-  TriggerMorph.prototype.label = null;
-
-  TriggerMorph.prototype.labelString = null;
-
-  TriggerMorph.prototype.labelColor = null;
-
-  TriggerMorph.prototype.labelBold = null;
-
-  TriggerMorph.prototype.labelItalic = null;
-
-  TriggerMorph.prototype.hint = null;
-
-  TriggerMorph.prototype.fontSize = null;
-
-  TriggerMorph.prototype.fontStyle = null;
-
-  TriggerMorph.prototype.highlightColor = new Color(192, 192, 192);
-
-  TriggerMorph.prototype.highlightImage = null;
-
-  TriggerMorph.prototype.pressColor = new Color(128, 128, 128);
-
-  TriggerMorph.prototype.normalImage = null;
-
-  TriggerMorph.prototype.pressImage = null;
-
-  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor, labelBold, labelItalic) {
-    this.target = target != null ? target : null;
-    this.action = action != null ? action : null;
-    this.labelString = labelString != null ? labelString : null;
-    this.environment = environment != null ? environment : null;
-    this.hint = hint != null ? hint : null;
-    this.labelBold = labelBold != null ? labelBold : false;
-    this.labelItalic = labelItalic != null ? labelItalic : false;
-    this.fontSize = fontSize || WorldMorph.MorphicPreferences.menuFontSize;
-    this.fontStyle = fontStyle || "sans-serif";
-    this.labelColor = labelColor || new Color(0, 0, 0);
-    TriggerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.updateRendering();
-  }
-
-  TriggerMorph.prototype.updateRendering = function() {
-    this.createBackgrounds();
-    if (this.labelString !== null) {
-      return this.createLabel();
-    }
-  };
-
-  TriggerMorph.prototype.createBackgrounds = function() {
-    var context, ext;
-
-    ext = this.extent();
-    this.normalImage = newCanvas(ext);
-    context = this.normalImage.getContext("2d");
-    context.fillStyle = this.color.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.highlightImage = newCanvas(ext);
-    context = this.highlightImage.getContext("2d");
-    context.fillStyle = this.highlightColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.pressImage = newCanvas(ext);
-    context = this.pressImage.getContext("2d");
-    context.fillStyle = this.pressColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    return this.image = this.normalImage;
-  };
-
-  TriggerMorph.prototype.createLabel = function() {
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor, this.labelBold, this.labelItalic);
-    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
-    return this.add(this.label);
-  };
-
-  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.label && dict[this.label]) {
-      c.label = dict[this.label];
-    }
-    return c;
-  };
-
-  TriggerMorph.prototype.trigger = function() {
-    if (typeof this.target === "function") {
-      if (typeof this.action === "function") {
-        return this.target.call(this.environment, this.action.call(), this);
-      } else {
-        return this.target.call(this.environment, this.action, this);
-      }
-    } else {
-      if (typeof this.action === "function") {
-        return this.action.call(this.target);
-      } else {
-        return this.target[this.action]();
-      }
-    }
-  };
-
-  TriggerMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  TriggerMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    this.changed();
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  TriggerMorph.prototype.mouseDownLeft = function() {
-    this.image = this.pressImage;
-    return this.changed();
-  };
-
-  TriggerMorph.prototype.mouseClickLeft = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    return this.trigger();
-  };
-
-  TriggerMorph.prototype.rootForGrab = function() {
-    return null;
-  };
-
-  TriggerMorph.prototype.bubbleHelp = function(contents) {
-    var _this = this;
-
-    this.fps = 2;
-    return this.step = function() {
-      if (_this.bounds.containsPoint(_this.world().hand.position())) {
-        _this.popUpbubbleHelp(contents);
-      }
-      _this.fps = 0;
-      return delete _this.step;
-    };
-  };
-
-  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
-    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
-  };
-
-  TriggerMorph.coffeeScriptSourceOfThisClass = '# TriggerMorph ////////////////////////////////////////////////////////\n\n# I provide basic button functionality\n\nclass TriggerMorph extends Morph\n\n  target: null\n  action: null\n  environment: null\n  label: null\n  labelString: null\n  labelColor: null\n  labelBold: null\n  labelItalic: null\n  hint: null\n  fontSize: null\n  fontStyle: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(192, 192, 192)\n  highlightImage: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(128, 128, 128)\n  normalImage: null\n  pressImage: null\n\n  constructor: (\n      @target = null,\n      @action = null,\n      @labelString = null,\n      fontSize,\n      fontStyle,\n      @environment = null,\n      @hint = null,\n      labelColor,\n      @labelBold = false,\n      @labelItalic = false) ->\n\n    # additional properties:\n    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize\n    @fontStyle = fontStyle or "sans-serif"\n    @labelColor = labelColor or new Color(0, 0, 0)\n    #\n    super()\n    #\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  \n  # TriggerMorph drawing:\n  updateRendering: ->\n    @createBackgrounds()\n    @createLabel()  if @labelString isnt null\n  \n  createBackgrounds: ->\n    ext = @extent()\n    @normalImage = newCanvas(ext)\n    context = @normalImage.getContext("2d")\n    context.fillStyle = @color.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @highlightImage = newCanvas(ext)\n    context = @highlightImage.getContext("2d")\n    context.fillStyle = @highlightColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @pressImage = newCanvas(ext)\n    context = @pressImage.getContext("2d")\n    context.fillStyle = @pressColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @image = @normalImage\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    # bold\n    # italic\n    # numeric\n    # shadow offset\n    # shadow color\n    @label = new StringMorph(\n      @labelString,\n      @fontSize,\n      @fontStyle,\n      false,\n      false,\n      false,\n      null,\n      null,\n      @labelColor,\n      @labelBold,\n      @labelItalic\n    )\n    @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))\n    @add @label\n  \n  \n  # TriggerMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.label = (dict[@label])  if c.label and dict[@label]\n    c\n  \n  \n  # TriggerMorph action:\n  trigger: ->\n    #\n    #	if target is a function, use it as callback:\n    #	execute target as callback function with action as argument\n    #	in the environment as optionally specified.\n    #	Note: if action is also a function, instead of becoming\n    #	the argument itself it will be called to answer the argument.\n    #	for selections, Yes/No Choices etc. As second argument pass\n    # myself, so I can be modified to reflect status changes, e.g.\n    # inside a list box:\n    #\n    #	else (if target is not a function):\n    #\n    #		if action is a function:\n    #		execute the action with target as environment (can be null)\n    #		for lambdafied (inline) actions\n    #\n    #		else if action is a String:\n    #		treat it as function property of target and execute it\n    #		for selector-like actions\n    #	\n    if typeof @target is "function"\n      if typeof @action is "function"\n        @target.call @environment, @action.call(), @\n      else\n        @target.call @environment, @action, @\n    else\n      if typeof @action is "function"\n        @action.call @target\n      else # assume it\'s a String\n        @target[@action]()\n  \n  \n  # TriggerMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: ->\n    @image = @pressImage\n    @changed()\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n    @trigger()\n  \n  # Disable dragging compound Morphs by Triggers\n  rootForGrab: ->\n    null\n  \n  # TriggerMorph bubble help:\n  bubbleHelp: (contents) ->\n    @fps = 2\n    @step = =>\n      @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())\n      @fps = 0\n      delete @step\n  \n  popUpbubbleHelp: (contents) ->\n    new SpeechBubbleMorph(\n      localize(contents), null, null, 1).popUp @world(),\n      @rightCenter().add(new Point(-8, 0))';
-
-  return TriggerMorph;
-
-})(Morph);
-
-BlinkerMorph = (function(_super) {
-  __extends(BlinkerMorph, _super);
-
-  function BlinkerMorph(fps) {
-    this.fps = fps != null ? fps : 2;
-    BlinkerMorph.__super__.constructor.call(this);
-    this.color = new Color(0, 0, 0);
-    this.updateRendering();
-  }
-
-  BlinkerMorph.prototype.step = function() {
-    return this.toggleVisibility();
-  };
-
-  BlinkerMorph.coffeeScriptSourceOfThisClass = '# BlinkerMorph ////////////////////////////////////////////////////////\n\n# can be used for text caret\n\nclass BlinkerMorph extends Morph\n  constructor: (@fps = 2) ->\n    super()\n    @color = new Color(0, 0, 0)\n    @updateRendering()\n  \n  # BlinkerMorph stepping:\n  step: ->\n    @toggleVisibility()';
-
-  return BlinkerMorph;
-
-})(Morph);
-
-CaretMorph = (function(_super) {
-  __extends(CaretMorph, _super);
-
-  CaretMorph.prototype.keyDownEventUsed = false;
-
-  CaretMorph.prototype.target = null;
-
-  CaretMorph.prototype.originalContents = null;
-
-  CaretMorph.prototype.slot = null;
-
-  CaretMorph.prototype.viewPadding = 1;
-
-  function CaretMorph(target) {
-    var ls;
-
-    this.target = target;
-    this.originalContents = this.target.text;
-    this.originalAlignment = this.target.alignment;
-    this.slot = this.target.text.length;
-    CaretMorph.__super__.constructor.call(this);
-    ls = fontHeight(this.target.fontSize);
-    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
-    this.updateRendering();
-    this.image.getContext("2d").font = this.target.font();
-    if (this.target instanceof TextMorph && (this.target.alignment !== 'left')) {
-      this.target.setAlignmentToLeft();
-    }
-    this.gotoSlot(this.slot);
-  }
-
-  CaretMorph.prototype.processKeyPress = function(event) {
-    if (this.keyDownEventUsed) {
-      this.keyDownEventUsed = false;
-      return null;
-    }
-    if ((event.keyCode === 40) || event.charCode === 40) {
-      this.insert("(");
-      return null;
-    }
-    if ((event.keyCode === 37) || event.charCode === 37) {
-      this.insert("%");
-      return null;
-    }
-    if (event.keyCode) {
-      if (event.ctrlKey) {
-        this.ctrl(event.keyCode);
-      } else if (event.metaKey) {
-        this.cmd(event.keyCode);
-      } else {
-        this.insert(String.fromCharCode(event.keyCode), event.shiftKey);
-      }
-    } else if (event.charCode) {
-      if (event.ctrlKey) {
-        this.ctrl(event.charCode);
-      } else if (event.metaKey) {
-        this.cmd(event.keyCode);
-      } else {
-        this.insert(String.fromCharCode(event.charCode), event.shiftKey);
-      }
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
-  };
-
-  CaretMorph.prototype.processKeyDown = function(event) {
-    var shift;
-
-    shift = event.shiftKey;
-    this.keyDownEventUsed = false;
-    if (event.ctrlKey) {
-      this.ctrl(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    } else if (event.metaKey) {
-      this.cmd(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    }
-    switch (event.keyCode) {
-      case 37:
-        this.goLeft(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 39:
-        this.goRight(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 38:
-        this.goUp(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 40:
-        this.goDown(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 36:
-        this.goHome(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 35:
-        this.goEnd(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 46:
-        this.deleteRight();
-        this.keyDownEventUsed = true;
-        break;
-      case 8:
-        this.deleteLeft();
-        this.keyDownEventUsed = true;
-        break;
-      case 13:
-        if (this.target.constructor.name === "StringMorph") {
-          this.accept();
-        } else {
-          this.insert("\n");
-        }
-        this.keyDownEventUsed = true;
-        break;
-      case 27:
-        this.cancel();
-        this.keyDownEventUsed = true;
-        break;
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
-  };
-
-  CaretMorph.prototype.gotoSlot = function(slot) {
-    var left, length, pos, right;
-
-    length = this.target.text.length;
-    pos = this.target.slotPosition(slot);
-    this.slot = (slot < 0 ? 0 : (slot > length ? length : slot));
-    if (this.parent && this.target.isScrollable) {
-      right = this.parent.right() - this.viewPadding;
-      left = this.parent.left() + this.viewPadding;
-      if (pos.x > right) {
-        this.target.setLeft(this.target.left() + right - pos.x);
-        pos.x = right;
-      }
-      if (pos.x < left) {
-        left = Math.min(this.parent.left(), left);
-        this.target.setLeft(this.target.left() + left - pos.x);
-        pos.x = left;
-      }
-      if (this.target.right() < right && right - this.target.width() < left) {
-        pos.x += right - this.target.right();
-        this.target.setRight(right);
-      }
-    }
-    this.show();
-    this.setPosition(pos);
-    if (this.parent && this.parent.parent instanceof ScrollFrameMorph && this.target.isScrollable) {
-      return this.parent.parent.scrollCaretIntoView(this);
-    }
-  };
-
-  CaretMorph.prototype.goLeft = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.slot - 1);
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goRight = function(shift, howMany) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.slot + (howMany || 1));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goUp = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.upFrom(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goDown = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.downFrom(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goHome = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.startOfLine(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goEnd = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.endOfLine(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.gotoPos = function(aPoint) {
-    this.gotoSlot(this.target.slotAt(aPoint));
-    return this.show();
-  };
-
-  CaretMorph.prototype.updateSelection = function(shift) {
-    if (shift) {
-      if (!this.target.endMark && !this.target.startMark) {
-        this.target.startMark = this.slot;
-        return this.target.endMark = this.slot;
-      } else if (this.target.endMark !== this.slot) {
-        this.target.endMark = this.slot;
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } else {
-      return this.target.clearSelection();
-    }
-  };
-
-  CaretMorph.prototype.accept = function() {
-    var world;
-
-    world = this.root();
-    if (world) {
-      world.stopEditing();
-    }
-    return this.escalateEvent("accept", null);
-  };
-
-  CaretMorph.prototype.cancel = function() {
-    var world;
-
-    world = this.root();
-    this.undo();
-    if (world) {
-      world.stopEditing();
-    }
-    return this.escalateEvent('cancel', null);
-  };
-
-  CaretMorph.prototype.undo = function() {
-    this.target.text = this.originalContents;
-    this.target.changed();
-    this.target.updateRendering();
-    this.target.changed();
-    return this.gotoSlot(0);
-  };
-
-  CaretMorph.prototype.insert = function(aChar, shiftKey) {
-    var text;
-
-    if (aChar === "\t") {
-      this.target.escalateEvent('reactToEdit', this.target);
-      if (shiftKey) {
-        return this.target.backTab(this.target);
-      }
-      return this.target.tab(this.target);
-    }
-    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
-      if (this.target.selection() !== "") {
-        this.gotoSlot(this.target.selectionStartSlot());
-        this.target.deleteSelection();
-      }
-      text = this.target.text;
-      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
-      this.target.text = text;
-      this.target.updateRendering();
-      this.target.changed();
-      return this.goRight(false, aChar.length);
-    }
-  };
-
-  CaretMorph.prototype.ctrl = function(aChar) {
-    if ((aChar === 97) || (aChar === 65)) {
-      return this.target.selectAll();
-    } else if (aChar === 90) {
-      return this.undo();
-    } else if (aChar === 123) {
-      return this.insert("{");
-    } else if (aChar === 125) {
-      return this.insert("}");
-    } else if (aChar === 91) {
-      return this.insert("[");
-    } else if (aChar === 93) {
-      return this.insert("]");
-    } else if (aChar === 64) {
-      return this.insert("@");
-    }
-  };
-
-  CaretMorph.prototype.cmd = function(aChar) {
-    if (aChar === 65) {
-      return this.target.selectAll();
-    } else if (aChar === 90) {
-      return this.undo();
-    }
-  };
-
-  CaretMorph.prototype.deleteRight = function() {
-    var text;
-
-    if (this.target.selection() !== "") {
-      this.gotoSlot(this.target.selectionStartSlot());
-      return this.target.deleteSelection();
-    } else {
-      text = this.target.text;
-      this.target.changed();
-      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
-      this.target.text = text;
-      return this.target.updateRendering();
-    }
-  };
-
-  CaretMorph.prototype.deleteLeft = function() {
-    var text;
-
-    if (this.target.selection()) {
-      this.gotoSlot(this.target.selectionStartSlot());
-      return this.target.deleteSelection();
-    }
-    text = this.target.text;
-    this.target.changed();
-    this.target.text = text.substring(0, this.slot - 1) + text.substr(this.slot);
-    this.target.updateRendering();
-    return this.goLeft();
-  };
-
-  CaretMorph.prototype.destroy = function() {
-    if (this.target.alignment !== this.originalAlignment) {
-      this.target.alignment = this.originalAlignment;
-      this.target.updateRendering();
-      this.target.changed();
-    }
-    return CaretMorph.__super__.destroy.apply(this, arguments);
-  };
-
-  CaretMorph.prototype.inspectKeyEvent = function(event) {
-    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
-  };
-
-  CaretMorph.coffeeScriptSourceOfThisClass = '# CaretMorph /////////////////////////////////////////////////////////\n\n# I am a String/Text editing widget\n\nclass CaretMorph extends BlinkerMorph\n\n  keyDownEventUsed: false\n  target: null\n  originalContents: null\n  slot: null\n  viewPadding: 1\n\n  constructor: (@target) ->\n    # additional properties:\n    @originalContents = @target.text\n    @originalAlignment = @target.alignment\n    @slot = @target.text.length\n    super()\n    ls = fontHeight(@target.fontSize)\n    @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)\n    @updateRendering()\n    @image.getContext("2d").font = @target.font()\n    if (@target instanceof TextMorph && (@target.alignment != \'left\'))\n      @target.setAlignmentToLeft()\n    @gotoSlot @slot\n  \n  # CaretMorph event processing:\n  processKeyPress: (event) ->\n    # @inspectKeyEvent event\n    if @keyDownEventUsed\n      @keyDownEventUsed = false\n      return null\n    if (event.keyCode is 40) or event.charCode is 40\n      @insert "("\n      return null\n    if (event.keyCode is 37) or event.charCode is 37\n      @insert "%"\n      return null\n    if event.keyCode # Opera doesn\'t support charCode\n      if event.ctrlKey\n        @ctrl event.keyCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.keyCode), event.shiftKey\n    else if event.charCode # all other browsers\n      if event.ctrlKey\n        @ctrl event.charCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.charCode), event.shiftKey\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  processKeyDown: (event) ->\n    # this.inspectKeyEvent(event);\n    shift = event.shiftKey\n    @keyDownEventUsed = false\n    if event.ctrlKey\n      @ctrl event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    else if event.metaKey\n      @cmd event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    switch event.keyCode\n      when 37\n        @goLeft(shift)\n        @keyDownEventUsed = true\n      when 39\n        @goRight(shift)\n        @keyDownEventUsed = true\n      when 38\n        @goUp(shift)\n        @keyDownEventUsed = true\n      when 40\n        @goDown(shift)\n        @keyDownEventUsed = true\n      when 36\n        @goHome(shift)\n        @keyDownEventUsed = true\n      when 35\n        @goEnd(shift)\n        @keyDownEventUsed = true\n      when 46\n        @deleteRight()\n        @keyDownEventUsed = true\n      when 8\n        @deleteLeft()\n        @keyDownEventUsed = true\n      when 13\n        # we can\'t check the class using instanceOf\n        # because TextMorphs are instances of StringMorphs\n        # but they want the enter to insert a carriage return.\n        if @target.constructor.name == "StringMorph"\n          @accept()\n        else\n          @insert "\n"\n        @keyDownEventUsed = true\n      when 27\n        @cancel()\n        @keyDownEventUsed = true\n      else\n    # this.inspectKeyEvent(event);\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  \n  # CaretMorph navigation - simple version\n  #gotoSlot: (newSlot) ->\n  #  @setPosition @target.slotPosition(newSlot)\n  #  @slot = Math.max(newSlot, 0)\n\n  gotoSlot: (slot) ->\n    length = @target.text.length\n    pos = @target.slotPosition(slot)\n    @slot = (if slot < 0 then 0 else (if slot > length then length else slot))\n    if @parent and @target.isScrollable\n      right = @parent.right() - @viewPadding\n      left = @parent.left() + @viewPadding\n      if pos.x > right\n        @target.setLeft @target.left() + right - pos.x\n        pos.x = right\n      if pos.x < left\n        left = Math.min(@parent.left(), left)\n        @target.setLeft @target.left() + left - pos.x\n        pos.x = left\n      if @target.right() < right and right - @target.width() < left\n        pos.x += right - @target.right()\n        @target.setRight right\n    @show()\n    @setPosition pos\n\n    if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable\n      @parent.parent.scrollCaretIntoView @\n  \n  goLeft: (shift) ->\n    @updateSelection shift\n    @gotoSlot @slot - 1\n    @updateSelection shift\n  \n  goRight: (shift, howMany) ->\n    @updateSelection shift\n    @gotoSlot @slot + (howMany || 1)\n    @updateSelection shift\n  \n  goUp: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.upFrom(@slot)\n    @updateSelection shift\n  \n  goDown: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.downFrom(@slot)\n    @updateSelection shift\n  \n  goHome: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.startOfLine(@slot)\n    @updateSelection shift\n  \n  goEnd: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.endOfLine(@slot)\n    @updateSelection shift\n  \n  gotoPos: (aPoint) ->\n    @gotoSlot @target.slotAt(aPoint)\n    @show()\n\n  updateSelection: (shift) ->\n    if shift\n      if not @target.endMark and not @target.startMark\n        @target.startMark = @slot\n        @target.endMark = @slot\n      else if @target.endMark isnt @slot\n        @target.endMark = @slot\n        @target.updateRendering()\n        @target.changed()\n    else\n      @target.clearSelection()  \n  \n  # CaretMorph editing:\n  accept: ->\n    world = @root()\n    world.stopEditing()  if world\n    @escalateEvent "accept", null\n  \n  cancel: ->\n    world = @root()\n    @undo()\n    world.stopEditing()  if world\n    @escalateEvent \'cancel\', null\n    \n  undo: ->\n    @target.text = @originalContents\n    @target.changed()\n    @target.updateRendering()\n    @target.changed()\n    @gotoSlot 0\n  \n  insert: (aChar, shiftKey) ->\n    if aChar is "\t"\n      @target.escalateEvent \'reactToEdit\', @target\n      if shiftKey\n        return @target.backTab(@target);\n      return @target.tab(@target)\n    if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)\n      if @target.selection() isnt ""\n        @gotoSlot @target.selectionStartSlot()\n        @target.deleteSelection()\n      text = @target.text\n      text = text.slice(0, @slot) + aChar + text.slice(@slot)\n      @target.text = text\n      @target.updateRendering()\n      @target.changed()\n      @goRight false, aChar.length\n  \n  ctrl: (aChar) ->\n    if (aChar is 97) or (aChar is 65)\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n    else if aChar is 123\n      @insert "{"\n    else if aChar is 125\n      @insert "}"\n    else if aChar is 91\n      @insert "["\n    else if aChar is 93\n      @insert "]"\n    else if aChar is 64\n      @insert "@"\n  \n  cmd: (aChar) ->\n    if aChar is 65\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n  \n  deleteRight: ->\n    if @target.selection() isnt ""\n      @gotoSlot @target.selectionStartSlot()\n      @target.deleteSelection()\n    else\n      text = @target.text\n      @target.changed()\n      text = text.slice(0, @slot) + text.slice(@slot + 1)\n      @target.text = text\n      @target.updateRendering()\n  \n  deleteLeft: ->\n    if @target.selection()\n      @gotoSlot @target.selectionStartSlot()\n      return @target.deleteSelection()\n    text = @target.text\n    @target.changed()\n    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)\n    @target.updateRendering()\n    @goLeft()\n\n  # CaretMorph destroying:\n  destroy: ->\n    if @target.alignment isnt @originalAlignment\n      @target.alignment = @originalAlignment\n      @target.updateRendering()\n      @target.changed()\n    super  \n  \n  # CaretMorph utilities:\n  inspectKeyEvent: (event) ->\n    # private\n    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()';
-
-  return CaretMorph;
-
-})(BlinkerMorph);
-
-Point = (function() {
-  Point.prototype.x = null;
-
-  Point.prototype.y = null;
-
-  function Point(x, y) {
-    this.x = x != null ? x : 0;
-    this.y = y != null ? y : 0;
-  }
-
-  Point.prototype.toString = function() {
-    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
-  };
-
-  Point.prototype.copy = function() {
-    return new Point(this.x, this.y);
-  };
-
-  Point.prototype.eq = function(aPoint) {
-    return this.x === aPoint.x && this.y === aPoint.y;
-  };
-
-  Point.prototype.lt = function(aPoint) {
-    return this.x < aPoint.x && this.y < aPoint.y;
-  };
-
-  Point.prototype.gt = function(aPoint) {
-    return this.x > aPoint.x && this.y > aPoint.y;
-  };
-
-  Point.prototype.ge = function(aPoint) {
-    return this.x >= aPoint.x && this.y >= aPoint.y;
-  };
-
-  Point.prototype.le = function(aPoint) {
-    return this.x <= aPoint.x && this.y <= aPoint.y;
-  };
-
-  Point.prototype.max = function(aPoint) {
-    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
-  };
-
-  Point.prototype.min = function(aPoint) {
-    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
-  };
-
-  Point.prototype.round = function() {
-    return new Point(Math.round(this.x), Math.round(this.y));
-  };
-
-  Point.prototype.abs = function() {
-    return new Point(Math.abs(this.x), Math.abs(this.y));
-  };
-
-  Point.prototype.neg = function() {
-    return new Point(-this.x, -this.y);
-  };
-
-  Point.prototype.mirror = function() {
-    return new Point(this.y, this.x);
-  };
-
-  Point.prototype.floor = function() {
-    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
-  };
-
-  Point.prototype.ceil = function() {
-    return new Point(Math.ceil(this.x), Math.ceil(this.y));
-  };
-
-  Point.prototype.add = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x + other.x, this.y + other.y);
-    }
-    return new Point(this.x + other, this.y + other);
-  };
-
-  Point.prototype.subtract = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x - other.x, this.y - other.y);
-    }
-    return new Point(this.x - other, this.y - other);
-  };
-
-  Point.prototype.multiplyBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x * other.x, this.y * other.y);
-    }
-    return new Point(this.x * other, this.y * other);
-  };
-
-  Point.prototype.divideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x / other.x, this.y / other.y);
-    }
-    return new Point(this.x / other, this.y / other);
-  };
-
-  Point.prototype.floorDivideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
-    }
-    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
-  };
-
-  Point.prototype.r = function() {
-    var t;
-
-    t = this.multiplyBy(this);
-    return Math.sqrt(t.x + t.y);
-  };
-
-  Point.prototype.degrees = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return 90;
-      }
-      return 270;
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return degrees(theta);
-      }
-      return 360 + (degrees(theta));
-    }
-    return 180 + degrees(theta);
-  };
-
-  Point.prototype.theta = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return radians(90);
-      }
-      return radians(270);
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return theta;
-      }
-      return radians(360) + theta;
-    }
-    return radians(180) + theta;
-  };
-
-  Point.prototype.crossProduct = function(aPoint) {
-    return this.multiplyBy(aPoint.mirror());
-  };
-
-  Point.prototype.distanceTo = function(aPoint) {
-    return (aPoint.subtract(this)).r();
-  };
-
-  Point.prototype.rotate = function(direction, center) {
-    var offset;
-
-    offset = this.subtract(center);
-    if (direction === "right") {
-      return new Point(-offset.y, offset.y).add(center);
-    }
-    if (direction === "left") {
-      return new Point(offset.y, -offset.y).add(center);
-    }
-    return center.subtract(offset);
-  };
-
-  Point.prototype.flip = function(direction, center) {
-    if (direction === "vertical") {
-      return new Point(this.x, center.y * 2 - this.y);
-    }
-    return new Point(center.x * 2 - this.x, this.y);
-  };
-
-  Point.prototype.distanceAngle = function(dist, angle) {
-    var deg, x, y;
-
-    deg = angle;
-    if (deg > 270) {
-      deg = deg - 360;
-    } else {
-      if (deg < -270) {
-        deg = deg + 360;
-      }
-    }
-    if (-90 <= deg && deg <= 90) {
-      x = Math.sin(radians(deg)) * dist;
-      y = Math.sqrt((dist * dist) - (x * x));
-      return new Point(x + this.x, this.y - y);
-    }
-    x = Math.sin(radians(180 - deg)) * dist;
-    y = Math.sqrt((dist * dist) - (x * x));
-    return new Point(x + this.x, this.y + y);
-  };
-
-  Point.prototype.scaleBy = function(scalePoint) {
-    return this.multiplyBy(scalePoint);
-  };
-
-  Point.prototype.translateBy = function(deltaPoint) {
-    return this.add(deltaPoint);
-  };
-
-  Point.prototype.rotateBy = function(angle, centerPoint) {
-    var center, p, r, theta;
-
-    center = centerPoint || new Point(0, 0);
-    p = this.subtract(center);
-    r = p.r();
-    theta = angle - p.theta();
-    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
-  };
-
-  Point.prototype.asArray = function() {
-    return [this.x, this.y];
-  };
-
-  Point.prototype.corner = function(cornerPoint) {
-    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
-  };
-
-  Point.prototype.rectangle = function(aPoint) {
-    var crn, org;
-
-    org = this.min(aPoint);
-    crn = this.max(aPoint);
-    return new Rectangle(org.x, org.y, crn.x, crn.y);
-  };
-
-  Point.prototype.extent = function(aPoint) {
-    var crn;
-
-    crn = this.add(aPoint);
-    return new Rectangle(this.x, this.y, crn.x, crn.y);
-  };
-
-  Point.coffeeScriptSourceOfThisClass = '# Points //////////////////////////////////////////////////////////////\n\nclass Point\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point copying:\n  copy: ->\n    new Point(@x, @y)\n  \n  # Point comparison:\n  eq: (aPoint) ->\n    # ==\n    @x is aPoint.x and @y is aPoint.y\n  \n  lt: (aPoint) ->\n    # <\n    @x < aPoint.x and @y < aPoint.y\n  \n  gt: (aPoint) ->\n    # >\n    @x > aPoint.x and @y > aPoint.y\n  \n  ge: (aPoint) ->\n    # >=\n    @x >= aPoint.x and @y >= aPoint.y\n  \n  le: (aPoint) ->\n    # <=\n    @x <= aPoint.x and @y <= aPoint.y\n  \n  max: (aPoint) ->\n    new Point(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))\n  \n  min: (aPoint) ->\n    new Point(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))\n  \n  \n  # Point conversion:\n  round: ->\n    new Point(Math.round(@x), Math.round(@y))\n  \n  abs: ->\n    new Point(Math.abs(@x), Math.abs(@y))\n  \n  neg: ->\n    new Point(-@x, -@y)\n  \n  mirror: ->\n    new Point(@y, @x)\n  \n  floor: ->\n    new Point(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n  \n  ceil: ->\n    new Point(Math.ceil(@x), Math.ceil(@y))\n  \n  \n  # Point arithmetic:\n  add: (other) ->\n    return new Point(@x + other.x, @y + other.y)  if other instanceof Point\n    new Point(@x + other, @y + other)\n  \n  subtract: (other) ->\n    return new Point(@x - other.x, @y - other.y)  if other instanceof Point\n    new Point(@x - other, @y - other)\n  \n  multiplyBy: (other) ->\n    return new Point(@x * other.x, @y * other.y)  if other instanceof Point\n    new Point(@x * other, @y * other)\n  \n  divideBy: (other) ->\n    return new Point(@x / other.x, @y / other.y)  if other instanceof Point\n    new Point(@x / other, @y / other)\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point\n      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))\n    new Point(Math.floor(@x / other), Math.floor(@y / other))\n  \n  \n  # Point polar coordinates:\n  r: ->\n    t = (@multiplyBy(@))\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point functions:\n  crossProduct: (aPoint) ->\n    @multiplyBy aPoint.mirror()\n  \n  distanceTo: (aPoint) ->\n    (aPoint.subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @subtract(center)\n    return new Point(-offset.y, offset.y).add(center)  if direction is "right"\n    return new Point(offset.y, -offset.y).add(center)  if direction is "left"\n    #\n    # direction === \'pi\'\n    center.subtract offset\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    return new Point(@x, center.y * 2 - @y)  if direction is "vertical"\n    #\n    # direction === \'horizontal\'\n    new Point(center.x * 2 - @x, @y)\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      return new Point(x + @x, @y - y)\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    new Point(x + @x, @y + y)\n  \n  \n  # Point transforming:\n  scaleBy: (scalePoint) ->\n    @multiplyBy scalePoint\n  \n  translateBy: (deltaPoint) ->\n    @add deltaPoint\n  \n  rotateBy: (angle, centerPoint) ->\n    center = centerPoint or new Point(0, 0)\n    p = @subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))\n  \n  \n  # Point conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Points:\n  corner: (cornerPoint) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)\n  \n  rectangle: (aPoint) ->\n    # answer a new Rectangle\n    org = @min(aPoint)\n    crn = @max(aPoint)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint) ->\n    #answer a new Rectangle\n    crn = @add(aPoint)\n    new Rectangle(@x, @y, crn.x, crn.y)';
-
-  return Point;
-
-})();
-
-SliderMorph = (function(_super) {
-  __extends(SliderMorph, _super);
-
-  SliderMorph.prototype.target = null;
-
-  SliderMorph.prototype.action = null;
-
-  SliderMorph.prototype.start = null;
-
-  SliderMorph.prototype.stop = null;
-
-  SliderMorph.prototype.value = null;
-
-  SliderMorph.prototype.size = null;
-
-  SliderMorph.prototype.offset = null;
-
-  SliderMorph.prototype.button = null;
-
-  SliderMorph.prototype.step = null;
-
-  function SliderMorph(start, stop, value, size, orientation, color) {
-    this.start = start != null ? start : 1;
-    this.stop = stop != null ? stop : 100;
-    this.value = value != null ? value : 50;
-    this.size = size != null ? size : 10;
-    this.button = new SliderButtonMorph();
-    this.button.isDraggable = false;
-    this.button.color = new Color(200, 200, 200);
-    this.button.highlightColor = new Color(210, 210, 255);
-    this.button.pressColor = new Color(180, 180, 255);
-    SliderMorph.__super__.constructor.call(this, orientation);
-    this.add(this.button);
-    this.alpha = 0.3;
-    this.color = color || new Color(0, 0, 0);
-    this.setExtent(new Point(20, 100));
-  }
-
-  SliderMorph.prototype.autoOrientation = function() {
-    return noOperation;
-  };
-
-  SliderMorph.prototype.rangeSize = function() {
-    return this.stop - this.start;
-  };
-
-  SliderMorph.prototype.ratio = function() {
-    return this.size / this.rangeSize();
-  };
-
-  SliderMorph.prototype.unitSize = function() {
-    if (this.orientation === "vertical") {
-      return (this.height() - this.button.height()) / this.rangeSize();
-    }
-    return (this.width() - this.button.width()) / this.rangeSize();
-  };
-
-  SliderMorph.prototype.updateRendering = function() {
-    var bh, bw, posX, posY;
-
-    SliderMorph.__super__.updateRendering.call(this);
-    this.button.orientation = this.orientation;
-    if (this.orientation === "vertical") {
-      bw = this.width() - 2;
-      bh = Math.max(bw, Math.round(this.height() * this.ratio()));
-      this.button.silentSetExtent(new Point(bw, bh));
-      posX = 1;
-      posY = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.height() - this.button.height());
-    } else {
-      bh = this.height() - 2;
-      bw = Math.max(bh, Math.round(this.width() * this.ratio()));
-      this.button.silentSetExtent(new Point(bw, bh));
-      posY = 1;
-      posX = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.width() - this.button.width());
-    }
-    this.button.setPosition(new Point(posX, posY).add(this.bounds.origin));
-    this.button.updateRendering();
-    return this.button.changed();
-  };
-
-  SliderMorph.prototype.updateValue = function() {
-    var relPos;
-
-    if (this.orientation === "vertical") {
-      relPos = this.button.top() - this.top();
-    } else {
-      relPos = this.button.left() - this.left();
-    }
-    this.value = Math.round(relPos / this.unitSize() + this.start);
-    return this.updateTarget();
-  };
-
-  SliderMorph.prototype.updateTarget = function() {
-    if (this.action) {
-      if (typeof this.action === "function") {
-        return this.action.call(this.target, this.value);
-      } else {
-        return this.target[this.action](this.value);
-      }
-    }
-  };
-
-  SliderMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = SliderMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
-    }
-    if (c.button && dict[this.button]) {
-      c.button = dict[this.button];
-    }
-    return c;
-  };
-
-  SliderMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = SliderMorph.__super__.developersMenu.call(this);
-    menu.addItem("show value...", "showValue", "display a dialog box\nshowing the selected number");
-    menu.addItem("floor...", (function() {
-      return this.prompt(menu.title + "\nfloor:", this.setStart, this, this.start.toString(), null, 0, this.stop - this.size, true);
-    }), "set the minimum value\nwhich can be selected");
-    menu.addItem("ceiling...", (function() {
-      return this.prompt(menu.title + "\nceiling:", this.setStop, this, this.stop.toString(), null, this.start + this.size, this.size * 100, true);
-    }), "set the maximum value\nwhich can be selected");
-    menu.addItem("button size...", (function() {
-      return this.prompt(menu.title + "\nbutton size:", this.setSize, this, this.size.toString(), null, 1, this.stop - this.start, true);
-    }), "set the range\ncovered by\nthe slider button");
-    menu.addLine();
-    menu.addItem("set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one");
-    return menu;
-  };
-
-  SliderMorph.prototype.showValue = function() {
-    return this.inform(this.value);
-  };
-
-  SliderMorph.prototype.userSetStart = function(num) {
-    return this.start = Math.max(num, this.stop);
-  };
-
-  SliderMorph.prototype.setStart = function(num) {
-    var newStart;
-
-    if (typeof num === "number") {
-      this.start = Math.min(Math.max(num, 0), this.stop - this.size);
-    } else {
-      newStart = parseFloat(num);
-      if (!isNaN(newStart)) {
-        this.start = Math.min(Math.max(newStart, 0), this.stop - this.size);
-      }
-    }
-    this.value = Math.max(this.value, this.start);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setStop = function(num) {
-    var newStop;
-
-    if (typeof num === "number") {
-      this.stop = Math.max(num, this.start + this.size);
-    } else {
-      newStop = parseFloat(num);
-      if (!isNaN(newStop)) {
-        this.stop = Math.max(newStop, this.start + this.size);
-      }
-    }
-    this.value = Math.min(this.value, this.stop);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setSize = function(num) {
-    var newSize;
-
-    if (typeof num === "number") {
-      this.size = Math.min(Math.max(num, 1), this.stop - this.start);
-    } else {
-      newSize = parseFloat(num);
-      if (!isNaN(newSize)) {
-        this.size = Math.min(Math.max(newSize, 1), this.stop - this.start);
-      }
-    }
-    this.value = Math.min(this.value, this.stop - this.size);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setTarget = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.push(this.world());
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        _this.target = each;
-        return _this.setTargetSetter();
-      });
-    });
-    if (choices.length === 1) {
-      this.target = choices[0];
-      return this.setTargetSetter();
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  SliderMorph.prototype.setTargetSetter = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.target.numericalSetters();
-    menu = new MenuMorph(this, "choose target property:");
-    choices.forEach(function(each) {
-      return menu.addItem(each, function() {
-        return _this.action = each;
-      });
-    });
-    if (choices.length === 1) {
-      return this.action = choices[0];
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  SliderMorph.prototype.numericalSetters = function() {
-    var list;
-
-    list = SliderMorph.__super__.numericalSetters.call(this);
-    list.push("setStart", "setStop", "setSize");
-    return list;
-  };
-
-  SliderMorph.prototype.mouseDownLeft = function(pos) {
-    var world,
-      _this = this;
-
-    if (!this.button.bounds.containsPoint(pos)) {
-      this.offset = new Point();
-    } else {
-      this.offset = pos.subtract(this.button.bounds.origin);
-    }
-    world = this.root();
-    return this.step = function() {
-      var mousePos, newX, newY;
-
-      if (world.hand.mouseButton) {
-        mousePos = world.hand.bounds.origin;
-        if (_this.orientation === "vertical") {
-          newX = _this.button.bounds.origin.x;
-          newY = Math.max(Math.min(mousePos.y - _this.offset.y, _this.bottom() - _this.button.height()), _this.top());
-        } else {
-          newY = _this.button.bounds.origin.y;
-          newX = Math.max(Math.min(mousePos.x - _this.offset.x, _this.right() - _this.button.width()), _this.left());
-        }
-        _this.button.setPosition(new Point(newX, newY));
-        return _this.updateValue();
-      } else {
-        return _this.step = null;
-      }
-    };
-  };
-
-  SliderMorph.coffeeScriptSourceOfThisClass = '# SliderMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderMorph extends CircleBoxMorph\n\n  target: null\n  action: null\n  start: null\n  stop: null\n  value: null\n  size: null\n  offset: null\n  button: null\n  step: null\n\n  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->\n    @button = new SliderButtonMorph()\n    @button.isDraggable = false\n    @button.color = new Color(200, 200, 200)\n    @button.highlightColor = new Color(210, 210, 255)\n    @button.pressColor = new Color(180, 180, 255)\n    super orientation # if null, then a vertical one will be created\n    @add @button\n    @alpha = 0.3\n    @color = color or new Color(0, 0, 0)\n    @setExtent new Point(20, 100)\n  \n  \n  # this.updateRendering();\n  autoOrientation: ->\n      noOperation\n  \n  rangeSize: ->\n    @stop - @start\n  \n  ratio: ->\n    @size / @rangeSize()\n  \n  unitSize: ->\n    return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"\n    (@width() - @button.width()) / @rangeSize()\n  \n  updateRendering: ->\n    super()\n    @button.orientation = @orientation\n    if @orientation is "vertical"\n      bw = @width() - 2\n      bh = Math.max(bw, Math.round(@height() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posX = 1\n      posY = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @height() - @button.height())\n    else\n      bh = @height() - 2\n      bw = Math.max(bh, Math.round(@width() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posY = 1\n      posX = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @width() - @button.width())\n    @button.setPosition new Point(posX, posY).add(@bounds.origin)\n    @button.updateRendering()\n    @button.changed()\n  \n  updateValue: ->\n    if @orientation is "vertical"\n      relPos = @button.top() - @top()\n    else\n      relPos = @button.left() - @left()\n    @value = Math.round(relPos / @unitSize() + @start)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @action\n      if typeof @action is "function"\n        @action.call @target, @value\n      else # assume it\'s a String\n        @target[@action] @value\n  \n  \n  # SliderMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c.button = (dict[@button])  if c.button and dict[@button]\n    c\n  \n  \n  # SliderMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"\n    menu.addItem "floor...", (->\n      @prompt menu.title + "\nfloor:",\n        @setStart,\n        @,\n        @start.toString(),\n        null,\n        0,\n        @stop - @size,\n        true\n    ), "set the minimum value\nwhich can be selected"\n    menu.addItem "ceiling...", (->\n      @prompt menu.title + "\nceiling:",\n        @setStop,\n        @,\n        @stop.toString(),\n        null,\n        @start + @size,\n        @size * 100,\n        true\n    ), "set the maximum value\nwhich can be selected"\n    menu.addItem "button size...", (->\n      @prompt menu.title + "\nbutton size:",\n        @setSize,\n        @,\n        @size.toString(),\n        null,\n        1,\n        @stop - @start,\n        true\n    ), "set the range\ncovered by\nthe slider button"\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"\n    menu\n  \n  showValue: ->\n    @inform @value\n  \n  userSetStart: (num) ->\n    # for context menu demo purposes\n    @start = Math.max(num, @stop)\n  \n  setStart: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @start = Math.min(Math.max(num, 0), @stop - @size)\n    else\n      newStart = parseFloat(num)\n      @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)\n    @value = Math.max(@value, @start)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setStop: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @stop = Math.max(num, @start + @size)\n    else\n      newStop = parseFloat(num)\n      @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)\n    @value = Math.min(@value, @stop)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setSize: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @size = Math.min(Math.max(num, 1), @stop - @start)\n    else\n      newSize = parseFloat(num)\n      @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)\n    @value = Math.min(@value, @stop - @size)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    #\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.numericalSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @action = each\n    #\n    if choices.length is 1\n      @action = choices[0]\n    else menu.popUpAtHand @world()  if choices.length\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    list = super()\n    list.push "setStart", "setStop", "setSize"\n    list\n  \n  \n  # SliderMorph stepping:\n  mouseDownLeft: (pos) ->\n    unless @button.bounds.containsPoint(pos)\n      @offset = new Point() # return null;\n    else\n      @offset = pos.subtract(@button.bounds.origin)\n    world = @root()\n    # this is to create the "drag the slider" effect\n    # basically if the mouse is pressing within the boundaries\n    # then in the next step you remember to check again where the mouse\n    # is and update the scrollbar. As soon as the mouse is unpressed\n    # then the step function is set to null to save cycles.\n    @step = =>\n      if world.hand.mouseButton\n        mousePos = world.hand.bounds.origin\n        if @orientation is "vertical"\n          newX = @button.bounds.origin.x\n          newY = Math.max(\n            Math.min(mousePos.y - @offset.y,\n            @bottom() - @button.height()), @top())\n        else\n          newY = @button.bounds.origin.y\n          newX = Math.max(\n            Math.min(mousePos.x - @offset.x,\n            @right() - @button.width()), @left())\n        @button.setPosition new Point(newX, newY)\n        @updateValue()\n      else\n        @step = null';
-
-  return SliderMorph;
-
-})(CircleBoxMorph);
-
-SpeechBubbleMorph = (function(_super) {
-  __extends(SpeechBubbleMorph, _super);
-
-  SpeechBubbleMorph.prototype.isPointingRight = true;
-
-  SpeechBubbleMorph.prototype.contents = null;
-
-  SpeechBubbleMorph.prototype.padding = null;
-
-  SpeechBubbleMorph.prototype.isThought = null;
-
-  SpeechBubbleMorph.prototype.isClickable = false;
-
-  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
-    this.contents = contents != null ? contents : "";
-    this.padding = padding != null ? padding : 0;
-    this.isThought = isThought != null ? isThought : false;
-    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
-    this.color = color || new Color(230, 230, 230);
-    this.updateRendering();
-  }
-
-  SpeechBubbleMorph.prototype.popUp = function(world, pos, isClickable) {
-    this.updateRendering();
-    this.setPosition(pos.subtract(new Point(0, this.height())));
-    this.addShadow(new Point(2, 2), 80);
-    this.keepWithin(world);
-    world.add(this);
-    this.changed();
-    world.hand.destroyTemporaries();
-    world.hand.temporaries.push(this);
-    if (isClickable) {
-      return this.mouseEnter = function() {
-        return this.destroy();
-      };
-    } else {
-      return this.isClickable = false;
-    }
-  };
-
-  SpeechBubbleMorph.prototype.updateRendering = function() {
-    if (this.contentsMorph) {
-      this.contentsMorph.destroy();
-    }
-    if (this.contents instanceof Morph) {
-      this.contentsMorph = this.contents;
-    } else if (isString(this.contents)) {
-      this.contentsMorph = new TextMorph(this.contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    } else if (this.contents instanceof HTMLCanvasElement) {
-      this.contentsMorph = new Morph();
-      this.contentsMorph.silentSetWidth(this.contents.width);
-      this.contentsMorph.silentSetHeight(this.contents.height);
-      this.contentsMorph.image = this.contents;
-    } else {
-      this.contentsMorph = new TextMorph(this.contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    }
-    this.add(this.contentsMorph);
-    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
-    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
-    SpeechBubbleMorph.__super__.updateRendering.call(this);
-    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
-  };
-
-  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
-    var circle, h, offset, rad, w;
-
-    circle = function(x, y, r) {
-      context.moveTo(x + r, y);
-      return context.arc(x, y, r, radians(0), radians(360));
-    };
-    offset = radius + inset;
-    w = this.width();
-    h = this.height();
-    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
-    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
-    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
-    if (!this.isThought) {
-      if (this.isPointingRight) {
-        context.lineTo(offset + radius, h - offset);
-        context.lineTo(radius / 2 + inset, h - inset);
-      } else {
-        context.lineTo(w - (radius / 2 + inset), h - inset);
-        context.lineTo(w - (offset + radius), h - offset);
-      }
-    }
-    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
-    if (this.isThought) {
-      context.lineTo(inset, offset);
-      if (this.isPointingRight) {
-        rad = radius / 4;
-        circle(rad + inset, h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(rad * 2 + inset, h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
-      } else {
-        rad = radius / 4;
-        circle(w - (rad + inset), h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
-      }
-    }
-  };
-
-  SpeechBubbleMorph.prototype.shadowImage = function(off_, color) {
-    var clr, ctx, fb, img, offset, outline, sha;
-
-    fb = void 0;
-    img = void 0;
-    outline = void 0;
-    sha = void 0;
-    ctx = void 0;
-    offset = off_ || new Point(7, 7);
-    clr = color || new Color(0, 0, 0);
-    fb = this.extent();
-    img = this.image;
-    outline = newCanvas(fb);
-    ctx = outline.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.drawImage(img, -offset.x, -offset.y);
-    sha = newCanvas(fb);
-    ctx = sha.getContext("2d");
-    ctx.drawImage(outline, 0, 0);
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = clr.toString();
-    ctx.fillRect(0, 0, fb.x, fb.y);
-    return sha;
-  };
-
-  SpeechBubbleMorph.prototype.shadowImageBlurred = function(off_, color) {
-    var blur, clr, ctx, fb, img, offset, sha;
-
-    fb = void 0;
-    img = void 0;
-    sha = void 0;
-    ctx = void 0;
-    offset = off_ || new Point(7, 7);
-    blur = this.shadowBlur;
-    clr = color || new Color(0, 0, 0);
-    fb = this.extent().add(blur * 2);
-    img = this.image;
-    sha = newCanvas(fb);
-    ctx = sha.getContext("2d");
-    ctx.shadowOffsetX = offset.x;
-    ctx.shadowOffsetY = offset.y;
-    ctx.shadowBlur = blur;
-    ctx.shadowColor = clr.toString();
-    ctx.drawImage(img, blur - offset.x, blur - offset.y);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.shadowBlur = 0;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.drawImage(img, blur - offset.x, blur - offset.y);
-    return sha;
-  };
-
-  SpeechBubbleMorph.prototype.fixLayout = function() {
-    this.removeShadow();
-    this.updateRendering();
-    return this.addShadow(new Point(2, 2), 80);
-  };
-
-  SpeechBubbleMorph.coffeeScriptSourceOfThisClass = '# SpeechBubbleMorph ///////////////////////////////////////////////////\n\n#\n#	I am a comic-style speech bubble that can display either a string,\n#	a Morph, a Canvas or a toString() representation of anything else.\n#	If I am invoked using popUp() I behave like a tool tip.\n#\n\nclass SpeechBubbleMorph extends BoxMorph\n\n  isPointingRight: true # orientation of text\n  contents: null\n  padding: null # additional vertical pixels\n  isThought: null # draw "think" bubble\n  isClickable: false\n\n  constructor: (\n    @contents="",\n    color,\n    edge,\n    border,\n    borderColor,\n    @padding = 0,\n    @isThought = false) ->\n      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)\n      @color = color or new Color(230, 230, 230)\n      @updateRendering()\n  \n  \n  # SpeechBubbleMorph invoking:\n  popUp: (world, pos, isClickable) ->\n    @updateRendering()\n    @setPosition pos.subtract(new Point(0, @height()))\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.add @\n    @changed()\n    world.hand.destroyTemporaries()\n    world.hand.temporaries.push @\n    if isClickable\n      @mouseEnter = ->\n        @destroy()\n    else\n      @isClickable = false\n    \n  \n  \n  # SpeechBubbleMorph drawing:\n  updateRendering: ->\n    # re-build my contents\n    @contentsMorph.destroy()  if @contentsMorph\n    if @contents instanceof Morph\n      @contentsMorph = @contents\n    else if isString(@contents)\n      @contentsMorph = new TextMorph(\n        @contents,\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    else if @contents instanceof HTMLCanvasElement\n      @contentsMorph = new Morph()\n      @contentsMorph.silentSetWidth @contents.width\n      @contentsMorph.silentSetHeight @contents.height\n      @contentsMorph.image = @contents\n    else\n      @contentsMorph = new TextMorph(\n        @contents.toString(),\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    @add @contentsMorph\n    #\n    # adjust my layout\n    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))\n    @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2\n    #\n    # draw my outline\n    super()\n    #\n    # position my contents\n    @contentsMorph.setPosition @position().add(\n      new Point(@padding or @edge, @border + @padding + 1))\n  \n  outlinePath: (context, radius, inset) ->\n    circle = (x, y, r) ->\n      context.moveTo x + r, y\n      context.arc x, y, r, radians(0), radians(360)\n    offset = radius + inset\n    w = @width()\n    h = @height()\n    #\n    # top left:\n    context.arc offset, offset, radius, radians(-180), radians(-90), false\n    #\n    # top right:\n    context.arc w - offset, offset, radius, radians(-90), radians(-0), false\n    #\n    # bottom right:\n    context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false\n    unless @isThought # draw speech bubble hook\n      if @isPointingRight\n        context.lineTo offset + radius, h - offset\n        context.lineTo radius / 2 + inset, h - inset\n      else # pointing left\n        context.lineTo w - (radius / 2 + inset), h - inset\n        context.lineTo w - (offset + radius), h - offset\n    #\n    # bottom left:\n    context.arc offset, h - offset - radius, radius, radians(90), radians(180), false\n    if @isThought\n      #\n      # close large bubble:\n      context.lineTo inset, offset\n      #\n      # draw thought bubbles:\n      if @isPointingRight\n        #\n        # tip bubble:\n        rad = radius / 4\n        circle rad + inset, h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle rad * 2 + inset, h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle rad * 3 + inset * 2, h - rad - inset * 4, rad\n      else # pointing left\n        # tip bubble:\n        rad = radius / 4\n        circle w - (rad + inset), h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle w - (rad * 2 + inset), h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad\n\n  # SpeechBubbleMorph shadow\n  #\n  #    only take the \'plain\' image, so the box rounding and the\n  #    shadow doesn\'t become conflicted by embedded scrolling panes\n  #\n  shadowImage: (off_, color) ->\n    \n    # fallback for Windows Chrome-Shadow bug\n    fb = undefined\n    img = undefined\n    outline = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    clr = color or new Color(0, 0, 0)\n    fb = @extent()\n    img = @image\n    outline = newCanvas(fb)\n    ctx = outline.getContext("2d")\n    ctx.drawImage img, 0, 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, -offset.x, -offset.y\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.drawImage outline, 0, 0\n    ctx.globalCompositeOperation = "source-atop"\n    ctx.fillStyle = clr.toString()\n    ctx.fillRect 0, 0, fb.x, fb.y\n    sha\n\n  shadowImageBlurred: (off_, color) ->\n    fb = undefined\n    img = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    blur = @shadowBlur\n    clr = color or new Color(0, 0, 0)\n    fb = @extent().add(blur * 2)\n    img = @image\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.shadowOffsetX = offset.x\n    ctx.shadowOffsetY = offset.y\n    ctx.shadowBlur = blur\n    ctx.shadowColor = clr.toString()\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    ctx.shadowOffsetX = 0\n    ctx.shadowOffsetY = 0\n    ctx.shadowBlur = 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    sha\n\n  # SpeechBubbleMorph resizing\n  fixLayout: ->\n    @removeShadow()\n    @updateRendering()\n    @addShadow new Point(2, 2), 80';
-
-  return SpeechBubbleMorph;
-
-})(BoxMorph);
-
-ColorPickerMorph = (function(_super) {
-  __extends(ColorPickerMorph, _super);
-
-  ColorPickerMorph.prototype.choice = null;
-
-  function ColorPickerMorph(defaultColor) {
-    this.choice = defaultColor || new Color(255, 255, 255);
-    ColorPickerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.silentSetExtent(new Point(80, 80));
-    this.updateRendering();
-  }
-
-  ColorPickerMorph.prototype.updateRendering = function() {
-    ColorPickerMorph.__super__.updateRendering.call(this);
-    return this.buildSubmorphs();
-  };
-
-  ColorPickerMorph.prototype.buildSubmorphs = function() {
-    var cpal, gpal, x, y;
-
-    this.children.forEach(function(child) {
-      return child.destroy();
-    });
-    this.children = [];
-    this.feedback = new Morph();
-    this.feedback.color = this.choice;
-    this.feedback.setExtent(new Point(20, 20));
-    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
-    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
-    cpal.setPosition(this.bounds.origin);
-    this.add(cpal);
-    gpal.setPosition(cpal.bottomLeft());
-    this.add(gpal);
-    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
-    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
-    this.feedback.setPosition(new Point(x, y));
-    return this.add(this.feedback);
-  };
-
-  ColorPickerMorph.prototype.getChoice = function() {
-    return this.feedback.color;
-  };
-
-  ColorPickerMorph.prototype.rootForGrab = function() {
-    return this;
-  };
-
-  ColorPickerMorph.coffeeScriptSourceOfThisClass = '# ColorPickerMorph ///////////////////////////////////////////////////\n\nclass ColorPickerMorph extends Morph\n\n  choice: null\n\n  constructor: (defaultColor) ->\n    @choice = defaultColor or new Color(255, 255, 255)\n    super()\n    @color = new Color(255, 255, 255)\n    @silentSetExtent new Point(80, 80)\n    @updateRendering()\n  \n  updateRendering: ->\n    super()\n    @buildSubmorphs()\n  \n  buildSubmorphs: ->\n    @children.forEach (child) ->\n      child.destroy()\n    @children = []\n    @feedback = new Morph()\n    @feedback.color = @choice\n    @feedback.setExtent new Point(20, 20)\n    cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))\n    gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))\n    cpal.setPosition @bounds.origin\n    @add cpal\n    gpal.setPosition cpal.bottomLeft()\n    @add gpal\n    x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))\n    y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)\n    @feedback.setPosition new Point(x, y)\n    @add @feedback\n  \n  getChoice: ->\n    @feedback.color\n  \n  rootForGrab: ->\n    @';
-
-  return ColorPickerMorph;
-
-})(Morph);
-
-MenuItemMorph = (function(_super) {
-  __extends(MenuItemMorph, _super);
-
-  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic) {
-    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic);
-  }
-
-  MenuItemMorph.prototype.createLabel = function() {
-    var icon, lbl, np;
-
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    if (isString(this.labelString)) {
-      this.label = this.createLabelString(this.labelString);
-    } else if (this.labelString instanceof Array) {
-      this.label = new Morph();
-      this.label.alpha = 0;
-      this.label.add(icon = this.createIcon(this.labelString[0]));
-      this.label.add(lbl = this.createLabelString(this.labelString[1]));
-      lbl.setCenter(icon.center());
-      lbl.setLeft(icon.right() + 4);
-      this.label.bounds = icon.bounds.merge(lbl.bounds);
-      this.label.updateRendering();
-    } else {
-      this.label = this.createIcon(this.labelString);
-    }
-    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
-    np = this.position().add(new Point(4, 0));
-    this.label.bounds = np.extent(this.label.extent());
-    return this.add(this.label);
-  };
-
-  MenuItemMorph.prototype.createIcon = function(source) {
-    var icon, src;
-
-    icon = new Morph();
-    icon.image = (source instanceof Morph ? source.fullImage() : source);
-    if (source instanceof Morph && source.getShadow()) {
-      src = icon.image;
-      icon.image = newCanvas(source.fullBounds().extent().subtract(this.shadowBlur * (useBlurredShadows ? 1 : 2)));
-      icon.image.getContext("2d").drawImage(src, 0, 0);
-    }
-    icon.silentSetWidth(icon.image.width);
-    icon.silentSetHeight(icon.image.height);
-    return icon;
-  };
-
-  MenuItemMorph.prototype.createLabelString = function(string) {
-    var lbl;
-
-    lbl = new TextMorph(string, this.fontSize, this.fontStyle);
-    lbl.setColor(this.labelColor);
-    return lbl;
-  };
-
-  MenuItemMorph.prototype.mouseEnter = function() {
-    if (!this.isListItem()) {
-      this.image = this.highlightImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  MenuItemMorph.prototype.mouseLeave = function() {
-    if (!this.isListItem()) {
-      this.image = this.normalImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
-    if (this.isListItem()) {
-      this.parent.unselectAllItems();
-      this.escalateEvent("mouseDownLeft", pos);
-    }
-    this.image = this.pressImage;
-    return this.changed();
-  };
-
-  MenuItemMorph.prototype.mouseMove = function() {
-    if (this.isListItem()) {
-      return this.escalateEvent("mouseMove");
-    }
-  };
-
-  MenuItemMorph.prototype.mouseClickLeft = function() {
-    if (!this.isListItem()) {
-      this.parent.destroy();
-      this.root().activeMenu = null;
-    }
-    return this.trigger();
-  };
-
-  MenuItemMorph.prototype.isListItem = function() {
-    if (this.parent) {
-      return this.parent.isListContents;
-    }
-    return false;
-  };
-
-  MenuItemMorph.prototype.isSelectedListItem = function() {
-    if (this.isListItem()) {
-      return this.image === this.pressImage;
-    }
-    return false;
-  };
-
-  MenuItemMorph.coffeeScriptSourceOfThisClass = '# MenuItemMorph ///////////////////////////////////////////////////////\n\n# I automatically determine my bounds\n\nclass MenuItemMorph extends TriggerMorph\n\n  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]\n  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic) ->\n    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n\n    if isString(@labelString)\n      @label = @createLabelString(@labelString)\n    else if @labelString instanceof Array      \n      # assume its pattern is: [icon, string] \n      @label = new Morph()\n      @label.alpha = 0 # transparent\n      @label.add icon = @createIcon(@labelString[0])\n      @label.add lbl = @createLabelString(@labelString[1])\n      lbl.setCenter icon.center()\n      lbl.setLeft icon.right() + 4\n      @label.bounds = (icon.bounds.merge(lbl.bounds))\n      @label.updateRendering()\n    else # assume it\'s either a Morph or a Canvas\n      @label = @createIcon(@labelString)\n  \n    @silentSetExtent @label.extent().add(new Point(8, 0))\n    np = @position().add(new Point(4, 0))\n    @label.bounds = np.extent(@label.extent())\n    @add @label\n  \n  createIcon: (source) ->\n    # source can be either a Morph or an HTMLCanvasElement\n    icon = new Morph()\n    icon.image = (if source instanceof Morph then source.fullImage() else source)\n\n    # adjust shadow dimensions\n    if source instanceof Morph and source.getShadow()\n      src = icon.image\n      icon.image = newCanvas(\n        source.fullBounds().extent().subtract(\n          @shadowBlur * ((if useBlurredShadows then 1 else 2))))\n      icon.image.getContext("2d").drawImage src, 0, 0\n\n    icon.silentSetWidth icon.image.width\n    icon.silentSetHeight icon.image.height\n    icon\n\n  createLabelString: (string) ->\n    lbl = new TextMorph(string, @fontSize, @fontStyle)\n    lbl.setColor @labelColor\n    lbl  \n\n  # MenuItemMorph events:\n  mouseEnter: ->\n    unless @isListItem()\n      @image = @highlightImage\n      @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    unless @isListItem()\n      @image = @normalImage\n      @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: (pos) ->\n    if @isListItem()\n      @parent.unselectAllItems()\n      @escalateEvent "mouseDownLeft", pos\n    @image = @pressImage\n    @changed()\n  \n  mouseMove: ->\n    @escalateEvent "mouseMove"  if @isListItem()\n  \n  mouseClickLeft: ->\n    unless @isListItem()\n      @parent.destroy()\n      @root().activeMenu = null\n    @trigger()\n  \n  isListItem: ->\n    return @parent.isListContents  if @parent\n    false\n  \n  isSelectedListItem: ->\n    return @image is @pressImage  if @isListItem()\n    false';
-
-  return MenuItemMorph;
-
-})(TriggerMorph);
-
-StringFieldMorph = (function(_super) {
-  __extends(StringFieldMorph, _super);
-
-  StringFieldMorph.prototype.defaultContents = null;
-
-  StringFieldMorph.prototype.minWidth = null;
-
-  StringFieldMorph.prototype.fontSize = null;
-
-  StringFieldMorph.prototype.fontStyle = null;
-
-  StringFieldMorph.prototype.isBold = null;
-
-  StringFieldMorph.prototype.isItalic = null;
-
-  StringFieldMorph.prototype.isNumeric = null;
-
-  StringFieldMorph.prototype.text = null;
-
-  StringFieldMorph.prototype.isEditable = true;
-
-  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, isBold, isItalic, isNumeric) {
-    this.defaultContents = defaultContents != null ? defaultContents : "";
-    this.minWidth = minWidth != null ? minWidth : 100;
-    this.fontSize = fontSize != null ? fontSize : 12;
-    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
-    this.isBold = isBold != null ? isBold : false;
-    this.isItalic = isItalic != null ? isItalic : false;
-    this.isNumeric = isNumeric != null ? isNumeric : false;
-    StringFieldMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.updateRendering();
-  }
-
-  StringFieldMorph.prototype.updateRendering = function() {
-    var txt;
-
-    txt = (this.text ? this.string() : this.defaultContents);
-    this.text = null;
-    this.children.forEach(function(child) {
-      return child.destroy();
-    });
-    this.children = [];
-    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
-    this.text.isNumeric = this.isNumeric;
-    this.text.setPosition(this.bounds.origin.copy());
-    this.text.isEditable = this.isEditable;
-    this.text.isDraggable = false;
-    this.text.enableSelecting();
-    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
-    StringFieldMorph.__super__.updateRendering.call(this);
-    return this.add(this.text);
-  };
-
-  StringFieldMorph.prototype.string = function() {
-    return this.text.text;
-  };
-
-  StringFieldMorph.prototype.mouseClickLeft = function(pos) {
-    if (this.isEditable) {
-      return this.text.edit();
-    } else {
-      return this.escalateEvent('mouseClickLeft', pos);
-    }
-  };
-
-  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.text && dict[this.text]) {
-      c.text = dict[this.text];
-    }
-    return c;
-  };
-
-  StringFieldMorph.coffeeScriptSourceOfThisClass = '# StringFieldMorph ////////////////////////////////////////////////////\n\nclass StringFieldMorph extends FrameMorph\n\n  defaultContents: null\n  minWidth: null\n  fontSize: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isNumeric: null\n  text: null\n  isEditable: true\n\n  constructor: (\n      @defaultContents = "",\n      @minWidth = 100,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false\n      ) ->\n    super()\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  updateRendering: ->\n    txt = (if @text then @string() else @defaultContents)\n    @text = null\n    @children.forEach (child) ->\n      child.destroy()\n    #\n    @children = []\n    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)\n    @text.isNumeric = @isNumeric # for whichever reason...\n    @text.setPosition @bounds.origin.copy()\n    @text.isEditable = @isEditable\n    @text.isDraggable = false\n    @text.enableSelecting()\n    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())\n    super()\n    @add @text\n  \n  string: ->\n    @text.text\n  \n  mouseClickLeft: (pos)->\n    if @isEditable\n      @text.edit()\n    else\n      @escalateEvent \'mouseClickLeft\', pos\n  \n  \n  # StringFieldMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.text = (dict[@text])  if c.text and dict[@text]\n    c';
-
-  return StringFieldMorph;
-
-})(FrameMorph);
-
-HandMorph = (function(_super) {
-  __extends(HandMorph, _super);
-
-  HandMorph.prototype.world = null;
-
-  HandMorph.prototype.mouseButton = null;
-
-  HandMorph.prototype.mouseDownMorph = null;
-
-  HandMorph.prototype.morphToGrab = null;
-
-  HandMorph.prototype.grabOrigin = null;
-
-  HandMorph.prototype.mouseOverList = null;
-
-  HandMorph.prototype.temporaries = null;
-
-  HandMorph.prototype.touchHoldTimeout = null;
-
-  function HandMorph(world) {
-    this.world = world;
-    this.mouseOverList = [];
-    this.temporaries = [];
-    HandMorph.__super__.constructor.call(this);
-    this.bounds = new Rectangle();
-  }
-
-  HandMorph.prototype.changed = function() {
-    var b;
-
-    if (this.world !== null) {
-      b = this.boundsIncludingChildren();
-      if (!b.extent().eq(new Point())) {
-        return this.world.broken.push(this.boundsIncludingChildren().spread());
-      }
-    }
-  };
-
-  HandMorph.prototype.morphAtPointer = function() {
-    var morphs, result,
-      _this = this;
-
-    morphs = this.world.allChildren().slice(0).reverse();
-    result = null;
-    morphs.forEach(function(m) {
-      if (m.visibleBounds().containsPoint(_this.bounds.origin) && result === null && m.isVisible && (m.noticesTransparentClick || (!m.isTransparentAt(_this.bounds.origin))) && (!(m instanceof ShadowMorph))) {
-        return result = m;
-      }
-    });
-    if (result !== null) {
-      return result;
-    }
-    return this.world;
-  };
-
-  HandMorph.prototype.allMorphsAtPointer = function() {
-    var morphs,
-      _this = this;
-
-    morphs = this.world.allChildren();
-    return morphs.filter(function(m) {
-      return m.isVisible && m.visibleBounds().containsPoint(_this.bounds.origin);
-    });
-  };
-
-  HandMorph.prototype.dropTargetFor = function(aMorph) {
-    var target;
-
-    target = this.morphAtPointer();
-    while (!target.wantsDropOf(aMorph)) {
-      target = target.parent;
-    }
-    return target;
-  };
-
-  HandMorph.prototype.grab = function(aMorph) {
-    var oldParent;
-
-    oldParent = aMorph.parent;
-    if (aMorph instanceof WorldMorph) {
-      return null;
-    }
-    if (!this.children.length) {
-      this.world.stopEditing();
-      this.grabOrigin = aMorph.situation();
-      aMorph.addShadow();
-      if (aMorph.prepareToBeGrabbed) {
-        aMorph.prepareToBeGrabbed(this);
-      }
-      this.add(aMorph);
-      this.changed();
-      if (oldParent && oldParent.reactToGrabOf) {
-        return oldParent.reactToGrabOf(aMorph);
-      }
-    }
-  };
-
-  HandMorph.prototype.drop = function() {
-    var morphToDrop, target;
-
-    if (this.children.length) {
-      morphToDrop = this.children[0];
-      target = this.dropTargetFor(morphToDrop);
-      this.changed();
-      target.add(morphToDrop);
-      morphToDrop.changed();
-      morphToDrop.removeShadow();
-      this.children = [];
-      this.setExtent(new Point());
-      if (morphToDrop.justDropped) {
-        morphToDrop.justDropped(this);
-      }
-      if (target.reactToDropOf) {
-        target.reactToDropOf(morphToDrop, this);
-      }
-      return this.dragOrigin = null;
-    }
-  };
-
-  HandMorph.prototype.processMouseDown = function(button, ctrlKey) {
-    var actualClick, expectedClick, morph;
-
-    this.world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey);
-    this.destroyTemporaries();
-    this.morphToGrab = null;
-    if (this.children.length) {
-      this.drop();
-      return this.mouseButton = null;
-    } else {
-      morph = this.morphAtPointer();
-      if (this.world.activeMenu) {
-        if (!contains(morph.allParents(), this.world.activeMenu)) {
-          this.world.activeMenu.destroy();
-        } else {
-          clearInterval(this.touchHoldTimeout);
-        }
-      }
-      if (this.world.activeHandle) {
-        if (morph !== this.world.activeHandle) {
-          this.world.activeHandle.destroy();
-        }
-      }
-      if (this.world.cursor) {
-        if (morph !== this.world.cursor.target) {
-          this.world.stopEditing();
-        }
-      }
-      if (!morph.mouseMove) {
-        this.morphToGrab = morph.rootForGrab();
-      }
-      if (button === 2 || ctrlKey) {
-        this.mouseButton = "right";
-        actualClick = "mouseDownRight";
-        expectedClick = "mouseClickRight";
-      } else {
-        this.mouseButton = "left";
-        actualClick = "mouseDownLeft";
-        expectedClick = "mouseClickLeft";
-      }
-      this.mouseDownMorph = morph;
-      while (!this.mouseDownMorph[expectedClick]) {
-        this.mouseDownMorph = this.mouseDownMorph.parent;
-      }
-      while (!morph[actualClick]) {
-        morph = morph.parent;
-      }
-      return morph[actualClick](this.bounds.origin);
-    }
-  };
-
-  HandMorph.prototype.processTouchStart = function(event) {
-    var _this = this;
-
-    clearInterval(this.touchHoldTimeout);
-    if (event.touches.length === 1) {
-      this.touchHoldTimeout = setInterval(function() {
-        _this.processMouseDown({
-          button: 2
-        });
-        _this.processMouseUp({
-          button: 2
-        });
-        event.preventDefault();
-        return clearInterval(_this.touchHoldTimeout);
-      }, 400);
-      this.processMouseMove(event.touches[0]);
-      this.processMouseDown({
-        button: 0
-      });
-      return event.preventDefault();
-    }
-  };
-
-  HandMorph.prototype.processTouchMove = function(event) {
-    var touch;
-
-    if (event.touches.length === 1) {
-      touch = event.touches[0];
-      this.processMouseMove(touch);
-      return clearInterval(this.touchHoldTimeout);
-    }
-  };
-
-  HandMorph.prototype.processTouchEnd = function(event) {
-    clearInterval(this.touchHoldTimeout);
-    return this.processMouseUp({
-      button: 0
-    });
-  };
-
-  HandMorph.prototype.processMouseUp = function() {
-    var context, contextMenu, expectedClick, morph;
-
-    this.world.systemTestsRecorderAndPlayer.addMouseUpEvent();
-    morph = this.morphAtPointer();
-    this.destroyTemporaries();
-    if (this.children.length) {
-      this.drop();
-    } else {
-      if (this.mouseButton === "left") {
-        expectedClick = "mouseClickLeft";
-      } else {
-        expectedClick = "mouseClickRight";
-        if (this.mouseButton) {
-          context = morph;
-          contextMenu = context.contextMenu();
-          while ((!contextMenu) && context.parent) {
-            context = context.parent;
-            contextMenu = context.contextMenu();
-          }
-          if (contextMenu) {
-            contextMenu.popUpAtHand(this.world);
-          }
-        }
-      }
-      while (!morph[expectedClick]) {
-        morph = morph.parent;
-      }
-      morph[expectedClick](this.bounds.origin);
-    }
-    return this.mouseButton = null;
-  };
-
-  HandMorph.prototype.processMouseScroll = function(event) {
-    var morph;
-
-    morph = this.morphAtPointer();
-    while (morph && !morph.mouseScroll) {
-      morph = morph.parent;
-    }
-    if (morph) {
-      return morph.mouseScroll((event.detail / -3) || (event.hasOwnProperty("wheelDeltaY") ? event.wheelDeltaY / 120 : event.wheelDelta / 120), event.wheelDeltaX / 120 || 0);
-    }
-  };
-
-  HandMorph.prototype.processDrop = function(event) {
-    var file, files, img, parseImgURL, readAudio, readBinary, readImage, readSVG, readText, src, targetDrop, txt, _i, _len, _results;
-
-    files = (event instanceof FileList ? event : event.target.files || event.dataTransfer.files);
-    txt = (event.dataTransfer ? event.dataTransfer.getData("Text/HTML") : null);
-    targetDrop = this.morphAtPointer();
-    img = new Image();
-    readSVG = function(aFile) {
-      var frd, pic, target;
-
-      pic = new Image();
-      frd = new FileReader();
-      while (!target.droppedSVG) {
-        target = target.parent;
-      }
-      pic.onload = function() {
-        return target.droppedSVG(pic, aFile.name);
-      };
-      frd = new FileReader();
-      frd.onloadend = function(e) {
-        return pic.src = e.target.result;
-      };
-      return frd.readAsDataURL(aFile);
-    };
-    readImage = function(aFile) {
-      var frd, pic;
-
-      pic = new Image();
-      frd = new FileReader();
-      while (!targetDrop.droppedImage) {
-        targetDrop = targetDrop.parent;
-      }
-      pic.onload = function() {
-        var canvas;
-
-        canvas = newCanvas(new Point(pic.width, pic.height));
-        canvas.getContext("2d").drawImage(pic, 0, 0);
-        return targetDrop.droppedImage(canvas, aFile.name);
-      };
-      frd = new FileReader();
-      frd.onloadend = function(e) {
-        return pic.src = e.target.result;
-      };
-      return frd.readAsDataURL(aFile);
-    };
-    readAudio = function(aFile) {
-      var frd, snd;
-
-      snd = new Audio();
-      frd = new FileReader();
-      while (!targetDrop.droppedAudio) {
-        targetDrop = targetDrop.parent;
-      }
-      frd.onloadend = function(e) {
-        snd.src = e.target.result;
-        return targetDrop.droppedAudio(snd, aFile.name);
-      };
-      return frd.readAsDataURL(aFile);
-    };
-    readText = function(aFile) {
-      var frd;
-
-      frd = new FileReader();
-      while (!targetDrop.droppedText) {
-        targetDrop = targetDrop.parent;
-      }
-      frd.onloadend = function(e) {
-        return targetDrop.droppedText(e.target.result, aFile.name);
-      };
-      return frd.readAsText(aFile);
-    };
-    readBinary = function(aFile) {
-      var frd;
-
-      frd = new FileReader();
-      while (!targetDrop.droppedBinary) {
-        targetDrop = targetDrop.parent;
-      }
-      frd.onloadend = function(e) {
-        return targetDrop.droppedBinary(e.target.result, aFile.name);
-      };
-      return frd.readAsArrayBuffer(aFile);
-    };
-    parseImgURL = function(html) {
-      var c, start, url, _i, _ref;
-
-      url = "";
-      start = html.indexOf("<img src=\"");
-      if (start === -1) {
-        return null;
-      }
-      start += 10;
-      for (i = _i = start, _ref = html.length; start <= _ref ? _i < _ref : _i > _ref; i = start <= _ref ? ++_i : --_i) {
-        c = html[i];
-        if (c === "\"") {
-          return url;
-        }
-        url = url.concat(c);
-      }
-      return null;
-    };
-    if (files.length) {
-      _results = [];
-      for (_i = 0, _len = files.length; _i < _len; _i++) {
-        file = files[_i];
-        if (file.type.indexOf("svg") !== -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs) {
-          _results.push(readSVG(file));
-        } else if (file.type.indexOf("image") === 0) {
-          _results.push(readImage(file));
-        } else if (file.type.indexOf("audio") === 0) {
-          _results.push(readAudio(file));
-        } else if (file.type.indexOf("text") === 0) {
-          _results.push(readText(file));
-        } else {
-          _results.push(readBinary(file));
-        }
-      }
-      return _results;
-    } else if (txt) {
-      while (!targetDrop.droppedImage) {
-        targetDrop = targetDrop.parent;
-      }
-      img = new Image();
-      img.onload = function() {
-        var canvas;
-
-        canvas = newCanvas(new Point(img.width, img.height));
-        canvas.getContext("2d").drawImage(img, 0, 0);
-        return targetDrop.droppedImage(canvas);
-      };
-      src = parseImgURL(txt);
-      if (src) {
-        return img.src = src;
-      }
-    }
-  };
-
-  HandMorph.prototype.destroyTemporaries = function() {
-    var _this = this;
-
-    return this.temporaries.forEach(function(morph) {
-      if (!(morph.isClickable && morph.bounds.containsPoint(_this.position()))) {
-        morph.destroy();
-        return _this.temporaries.splice(_this.temporaries.indexOf(morph), 1);
-      }
-    });
-  };
-
-  HandMorph.prototype.moveBy = function(delta) {
-    Morph.prototype.trackChanges = false;
-    HandMorph.__super__.moveBy.call(this, delta);
-    Morph.prototype.trackChanges = true;
-    return this.fullChanged();
-  };
-
-  HandMorph.prototype.processMouseMove = function(pageX, pageY) {
-    var fb, morph, mouseOverNew, pos, posInDocument, topMorph,
-      _this = this;
-
-    this.world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY);
-    posInDocument = getDocumentPositionOf(this.world.worldCanvas);
-    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y);
-    this.setPosition(pos);
-    mouseOverNew = this.morphAtPointer().allParents();
-    if ((!this.children.length) && (this.mouseButton === "left")) {
-      topMorph = this.morphAtPointer();
-      morph = topMorph.rootForGrab();
-      if (topMorph.mouseMove) {
-        topMorph.mouseMove(pos);
-      }
-      if (this.morphToGrab) {
-        if (this.morphToGrab.isDraggable) {
-          morph = this.morphToGrab;
-          this.grab(morph);
-        } else if (this.morphToGrab.isTemplate) {
-          morph = this.morphToGrab.fullCopy();
-          morph.isTemplate = false;
-          morph.isDraggable = true;
-          this.grab(morph);
-          this.grabOrigin = this.morphToGrab.situation();
-        }
-        fb = morph.boundsIncludingChildren();
-        if (!fb.containsPoint(pos)) {
-          this.bounds.origin = fb.center();
-          this.grab(morph);
-          this.setPosition(pos);
-        }
-      }
-    }
-    this.mouseOverList.forEach(function(old) {
-      if (!contains(mouseOverNew, old)) {
-        if (old.mouseLeave) {
-          old.mouseLeave();
-        }
-        if (old.mouseLeaveDragging && this.mouseButton) {
-          return old.mouseLeaveDragging();
-        }
-      }
-    });
-    mouseOverNew.forEach(function(newMorph) {
-      if (!contains(_this.mouseOverList, newMorph)) {
-        if (newMorph.mouseEnter) {
-          newMorph.mouseEnter();
-        }
-        if (newMorph.mouseEnterDragging && _this.mouseButton) {
-          newMorph.mouseEnterDragging();
-        }
-      }
-      if (_this.children.length) {
-        if (newMorph instanceof ScrollFrameMorph) {
-          if (!newMorph.bounds.insetBy(WorldMorph.MorphicPreferences.scrollBarSize * 3).containsPoint(_this.bounds.origin)) {
-            return newMorph.startAutoScrolling();
-          }
-        }
-      }
-    });
-    return this.mouseOverList = mouseOverNew;
-  };
-
-  HandMorph.coffeeScriptSourceOfThisClass = '# HandMorph ///////////////////////////////////////////////////////////\n\n# The mouse cursor. Note that it\'s not a child of the WorldMorph, this Morph\n# is never added to any other morph. [TODO] Find out why and write explanation.\n\nclass HandMorph extends Morph\n\n  world: null\n  mouseButton: null\n  mouseDownMorph: null\n  morphToGrab: null\n  grabOrigin: null\n  mouseOverList: null\n  temporaries: null\n  touchHoldTimeout: null\n\n  constructor: (@world) ->\n    @mouseOverList = []\n    @temporaries = []\n    super()\n    @bounds = new Rectangle()\n  \n  changed: ->\n    if @world isnt null\n      b = @boundsIncludingChildren()\n      @world.broken.push @boundsIncludingChildren().spread()  unless b.extent().eq(new Point())\n  \n  \n  # HandMorph navigation:\n  morphAtPointer: ->\n    morphs = @world.allChildren().slice(0).reverse()\n    result = null\n    morphs.forEach (m) =>\n      result = m  if m.visibleBounds().containsPoint(@bounds.origin) and\n        result is null and m.isVisible and (m.noticesTransparentClick or\n        (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)\n    #\n    return result  if result isnt null\n    @world\n  \n  #\n  #    alternative -  more elegant and possibly more\n  #	performant - solution for morphAtPointer.\n  #	Has some issues, commented out for now\n  #\n  #HandMorph.prototype.morphAtPointer = function () {\n  #	var myself = this;\n  #	return this.world.topMorphSuchThat(function (m) {\n  #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&\n  #			m.isVisible &&\n  #			(m.noticesTransparentClick ||\n  #				(! m.isTransparentAt(myself.bounds.origin))) &&\n  #			(! (m instanceof ShadowMorph));\n  #	});\n  #};\n  #\n  allMorphsAtPointer: ->\n    morphs = @world.allChildren()\n    morphs.filter (m) =>\n      m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)\n  \n  \n  \n  # HandMorph dragging and dropping:\n  #\n  #	drag \'n\' drop events, method(arg) -> receiver:\n  #\n  #		prepareToBeGrabbed(handMorph) -> grabTarget\n  #		reactToGrabOf(grabbedMorph) -> oldParent\n  #		wantsDropOf(morphToDrop) ->  newParent\n  #		justDropped(handMorph) -> droppedMorph\n  #		reactToDropOf(droppedMorph, handMorph) -> newParent\n  #\n  dropTargetFor: (aMorph) ->\n    target = @morphAtPointer()\n    target = target.parent  until target.wantsDropOf(aMorph)\n    target\n  \n  grab: (aMorph) ->\n    oldParent = aMorph.parent\n    return null  if aMorph instanceof WorldMorph\n    if !@children.length\n      @world.stopEditing()\n      @grabOrigin = aMorph.situation()\n      aMorph.addShadow()\n      aMorph.prepareToBeGrabbed @  if aMorph.prepareToBeGrabbed\n      @add aMorph\n      @changed()\n      oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf\n  \n  drop: ->\n    if @children.length\n      morphToDrop = @children[0]\n      target = @dropTargetFor(morphToDrop)\n      @changed()\n      target.add morphToDrop\n      morphToDrop.changed()\n      morphToDrop.removeShadow()\n      @children = []\n      @setExtent new Point()\n      morphToDrop.justDropped @  if morphToDrop.justDropped\n      target.reactToDropOf morphToDrop, @  if target.reactToDropOf\n      @dragOrigin = null\n  \n  # HandMorph event dispatching:\n  #\n  #    mouse events:\n  #\n  #		mouseDownLeft\n  #		mouseDownRight\n  #		mouseClickLeft\n  #		mouseClickRight\n  #		mouseEnter\n  #		mouseLeave\n  #		mouseEnterDragging\n  #		mouseLeaveDragging\n  #		mouseMove\n  #		mouseScroll\n  #\n  processMouseDown: (button, ctrlKey) ->\n    @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)\n\n    @destroyTemporaries()\n    @morphToGrab = null\n    if @children.length\n      @drop()\n      @mouseButton = null\n    else\n      morph = @morphAtPointer()\n      if @world.activeMenu\n        unless contains(morph.allParents(), @world.activeMenu)\n          @world.activeMenu.destroy()\n        else\n          clearInterval @touchHoldTimeout\n      if @world.activeHandle\n        if morph isnt @world.activeHandle\n          @world.activeHandle.destroy()    \n      if @world.cursor\n        if morph isnt @world.cursor.target  \n          @world.stopEditing()  \n      @morphToGrab = morph.rootForGrab()  unless morph.mouseMove\n      if button is 2 or ctrlKey\n        @mouseButton = "right"\n        actualClick = "mouseDownRight"\n        expectedClick = "mouseClickRight"\n      else\n        @mouseButton = "left"\n        actualClick = "mouseDownLeft"\n        expectedClick = "mouseClickLeft"\n      @mouseDownMorph = morph\n      @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]\n      morph = morph.parent  until morph[actualClick]\n      morph[actualClick] @bounds.origin\n  \n  processTouchStart: (event) ->\n    clearInterval @touchHoldTimeout\n    if event.touches.length is 1\n      # simulate mouseRightClick\n      @touchHoldTimeout = setInterval(=>\n        @processMouseDown button: 2\n        @processMouseUp button: 2\n        event.preventDefault()\n        clearInterval @touchHoldTimeout\n      , 400)\n      @processMouseMove event.touches[0] # update my position\n      @processMouseDown button: 0\n      event.preventDefault()\n  \n  processTouchMove: (event) ->\n    if event.touches.length is 1\n      touch = event.touches[0]\n      @processMouseMove touch\n      clearInterval @touchHoldTimeout\n  \n  processTouchEnd: (event) ->\n    clearInterval @touchHoldTimeout\n    @processMouseUp button: 0\n  \n  processMouseUp: ->\n    @world.systemTestsRecorderAndPlayer.addMouseUpEvent()\n\n    morph = @morphAtPointer()\n    @destroyTemporaries()\n    if @children.length\n      @drop()\n    else\n      if @mouseButton is "left"\n        expectedClick = "mouseClickLeft"\n      else\n        expectedClick = "mouseClickRight"\n        if @mouseButton\n          context = morph\n          contextMenu = context.contextMenu()\n          while (not contextMenu) and context.parent\n            context = context.parent\n            contextMenu = context.contextMenu()\n          contextMenu.popUpAtHand @world  if contextMenu\n      morph = morph.parent  until morph[expectedClick]\n      morph[expectedClick] @bounds.origin\n    @mouseButton = null\n  \n  processMouseScroll: (event) ->\n    morph = @morphAtPointer()\n    morph = morph.parent  while morph and not morph.mouseScroll\n    morph.mouseScroll (event.detail / -3) or ((if event.hasOwnProperty("wheelDeltaY") then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph\n  \n  \n  #\n  #	drop event:\n  #\n  #        droppedImage\n  #        droppedSVG\n  #        droppedAudio\n  #        droppedText\n  #\n  processDrop: (event) ->\n    #\n    #    find out whether an external image or audio file was dropped\n    #    onto the world canvas, turn it into an offscreen canvas or audio\n    #    element and dispatch the\n    #    \n    #        droppedImage(canvas, name)\n    #        droppedSVG(image, name)\n    #        droppedAudio(audio, name)\n    #    \n    #    events to interested Morphs at the mouse pointer\n    #    if none of the above content types can be determined, the file contents\n    #    is dispatched as an ArrayBuffer to interested Morphs:\n    #\n    #    ```droppedBinary(anArrayBuffer, name)```\n\n    files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))\n    txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)\n    targetDrop = @morphAtPointer()\n    img = new Image()\n\n    readSVG = (aFile) ->\n      pic = new Image()\n      frd = new FileReader()\n      target = target.parent  until target.droppedSVG\n      pic.onload = ->\n        target.droppedSVG pic, aFile.name\n      frd = new FileReader()\n      frd.onloadend = (e) ->\n        pic.src = e.target.result\n      frd.readAsDataURL aFile\n\n    readImage = (aFile) ->\n      pic = new Image()\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedImage\n      pic.onload = ->\n        canvas = newCanvas(new Point(pic.width, pic.height))\n        canvas.getContext("2d").drawImage pic, 0, 0\n        targetDrop.droppedImage canvas, aFile.name\n      #\n      frd = new FileReader()\n      frd.onloadend = (e) ->\n        pic.src = e.target.result\n      #\n      frd.readAsDataURL aFile\n    #\n    readAudio = (aFile) ->\n      snd = new Audio()\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedAudio\n      frd.onloadend = (e) ->\n        snd.src = e.target.result\n        targetDrop.droppedAudio snd, aFile.name\n      frd.readAsDataURL aFile\n    \n    readText = (aFile) ->\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedText\n      frd.onloadend = (e) ->\n        targetDrop.droppedText e.target.result, aFile.name\n      frd.readAsText aFile\n\n\n    readBinary = (aFile) ->\n      frd = new FileReader()\n      targetDrop = targetDrop.parent  until targetDrop.droppedBinary\n      frd.onloadend = (e) ->\n        targetDrop.droppedBinary e.target.result, aFile.name\n      frd.readAsArrayBuffer aFile\n\n    parseImgURL = (html) ->\n      url = ""\n      start = html.indexOf("<img src=\"")\n      return null  if start is -1\n      start += 10\n      for i in [start...html.length]\n        c = html[i]\n        return url  if c is "\""\n        url = url.concat(c)\n      null\n    \n    if files.length\n      for file in files\n        if file.type.indexOf("svg") != -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs\n          readSVG file\n        else if file.type.indexOf("image") is 0\n          readImage file\n        else if file.type.indexOf("audio") is 0\n          readAudio file\n        else if file.type.indexOf("text") is 0\n          readText file\n        else\n          readBinary file\n    else if txt\n      targetDrop = targetDrop.parent  until targetDrop.droppedImage\n      img = new Image()\n      img.onload = ->\n        canvas = newCanvas(new Point(img.width, img.height))\n        canvas.getContext("2d").drawImage img, 0, 0\n        targetDrop.droppedImage canvas\n      src = parseImgURL(txt)\n      img.src = src  if src\n  \n  \n  # HandMorph tools\n  destroyTemporaries: ->\n    #\n    #	temporaries are just an array of morphs which will be deleted upon\n    #	the next mouse click, or whenever another temporary Morph decides\n    #	that it needs to remove them. The primary purpose of temporaries is\n    #	to display tools tips of speech bubble help.\n    #\n    @temporaries.forEach (morph) =>\n      unless morph.isClickable and morph.bounds.containsPoint(@position())\n        morph.destroy()\n        @temporaries.splice @temporaries.indexOf(morph), 1\n  \n  \n  # HandMorph dragging optimization\n  moveBy: (delta) ->\n    Morph::trackChanges = false\n    super delta\n    Morph::trackChanges = true\n    @fullChanged()\n\n  processMouseMove: (pageX, pageY) ->\n    @world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)\n    \n    #startProcessMouseMove = new Date().getTime()\n    posInDocument = getDocumentPositionOf(@world.worldCanvas)\n    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)\n    @setPosition pos\n    #\n    # determine the new mouse-over-list:\n    # mouseOverNew = this.allMorphsAtPointer();\n    mouseOverNew = @morphAtPointer().allParents()\n    if (!@children.length) and (@mouseButton is "left")\n      topMorph = @morphAtPointer()\n      morph = topMorph.rootForGrab()\n      topMorph.mouseMove pos  if topMorph.mouseMove\n      #\n      # if a morph is marked for grabbing, just grab it\n      if @morphToGrab\n        if @morphToGrab.isDraggable\n          morph = @morphToGrab\n          @grab morph\n        else if @morphToGrab.isTemplate\n          morph = @morphToGrab.fullCopy()\n          morph.isTemplate = false\n          morph.isDraggable = true\n          @grab morph\n          @grabOrigin = @morphToGrab.situation()\n        #\n        # if the mouse has left its boundsIncludingChildren, center it\n        fb = morph.boundsIncludingChildren()\n        unless fb.containsPoint(pos)\n          @bounds.origin = fb.center()\n          @grab morph\n          @setPosition pos\n    #endProcessMouseMove = new Date().getTime()\n    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;\n    #console.log(\'Execution time ProcessMouseMove: \' + timeProcessMouseMove);\n    \n    #\n    #	original, more cautious code for grabbing Morphs,\n    #	retained in case of needing	to fall back:\n    #\n    #		if (morph === this.morphToGrab) {\n    #			if (morph.isDraggable) {\n    #				this.grab(morph);\n    #			} else if (morph.isTemplate) {\n    #				morph = morph.fullCopy();\n    #				morph.isTemplate = false;\n    #				morph.isDraggable = true;\n    #				this.grab(morph);\n    #			}\n    #		}\n    #\n    @mouseOverList.forEach (old) ->\n      unless contains(mouseOverNew, old)\n        old.mouseLeave()  if old.mouseLeave\n        old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton\n    #\n    mouseOverNew.forEach (newMorph) =>\n      unless contains(@mouseOverList, newMorph)\n        newMorph.mouseEnter()  if newMorph.mouseEnter\n        newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton\n      #\n      # autoScrolling support:\n      if @children.length\n          if newMorph instanceof ScrollFrameMorph\n              if !newMorph.bounds.insetBy(\n                WorldMorph.MorphicPreferences.scrollBarSize * 3\n                ).containsPoint(@bounds.origin)\n                  newMorph.startAutoScrolling();\n    #\n    @mouseOverList = mouseOverNew';
-
-  return HandMorph;
-
-})(Morph);
 
 SystemTest_SimpleMenuTest = (function() {
   function SystemTest_SimpleMenuTest() {}

@@ -137,6 +137,7 @@ mouseScroll
       <span class="nx">morph</span><span class="p">[</span><span class="nx">actualClick</span><span class="p">]</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
   
   <span class="nv">processTouchStart: </span><span class="nf">(event) -&gt;</span>
+    <span class="nv">WorldMorph.MorphicPreferences.isTouchDevice = </span><span class="kc">true</span>
     <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
     <span class="k">if</span> <span class="nx">event</span><span class="p">.</span><span class="nx">touches</span><span class="p">.</span><span class="nx">length</span> <span class="o">is</span> <span class="mi">1</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>simulate mouseRightClick</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="vi">@touchHoldTimeout = </span><span class="nx">setInterval</span><span class="p">(</span><span class="o">=&gt;</span>
         <span class="nx">@processMouseDown</span> <span class="nv">button: </span><span class="mi">2</span>
@@ -155,6 +156,7 @@ mouseScroll
       <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
   
   <span class="nv">processTouchEnd: </span><span class="nf">(event) -&gt;</span>
+    <span class="nv">WorldMorph.MorphicPreferences.isTouchDevice = </span><span class="kc">true</span>
     <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>
     <span class="nx">@processMouseUp</span> <span class="nv">button: </span><span class="mi">0</span>
   
