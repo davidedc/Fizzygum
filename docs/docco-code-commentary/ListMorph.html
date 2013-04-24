@@ -4,7 +4,8 @@
   <span class="nv">labelGetter: </span><span class="kc">null</span>
   <span class="nv">format: </span><span class="kc">null</span>
   <span class="nv">listContents: </span><span class="kc">null</span>
-  <span class="nv">selected: </span><span class="kc">null</span>
+  <span class="nv">selected: </span><span class="kc">null</span> <span class="c1"># actual element currently selected</span>
+  <span class="nv">active: </span><span class="kc">null</span> <span class="c1"># menu item representing the selected element</span>
   <span class="nv">action: </span><span class="kc">null</span>
 
   <span class="nv">constructor: </span><span class="nf">(@elements = [], labelGetter, @format = []) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>passing a format is optional. If the format parameter is specified
@@ -12,14 +13,17 @@
 
 <pre><code>   [
        [&lt;color&gt;, &lt;single-argument predicate&gt;],
+       ['bold', &lt;single-argument predicate&gt;],
+       ['italic', &lt;single-argument predicate&gt;],
        ...
    ]
 </code></pre>
 
-<p>multiple color conditions can be passed in such a format list, the
+<p>multiple conditions can be passed in such a format list, the
    last predicate to evaluate true when given the list element sets
-   the given color. If no condition is met, the default color (black)
-   will be assigned.</p>
+   the given format category (color, bold, italic).
+   If no condition is met, the default format (color black, non-bold,
+   non-italic) will be assigned.</p>
 
 <p>An example of how to use fomats can be found in the InspectorMorph's
    "markOwnProperties" mechanism.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">super</span><span class="p">()</span>
@@ -40,16 +44,25 @@ need the step function to react to mouse drag.</p>             </td>            
     <span class="vi">@elements = </span><span class="p">[</span><span class="s">&quot;(empty)&quot;</span><span class="p">]</span>  <span class="k">if</span> <span class="o">!</span><span class="nx">@elements</span><span class="p">.</span><span class="nx">length</span>
     <span class="nx">@elements</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(element) =&gt;</span>
       <span class="nv">color = </span><span class="kc">null</span>
+      <span class="nv">bold = </span><span class="kc">false</span>
+      <span class="nv">italic = </span><span class="kc">false</span>
       <span class="nx">@format</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(pair) -&gt;</span>
-        <span class="nv">color = </span><span class="nx">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">call</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">element</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>label string
+        <span class="k">if</span> <span class="nx">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">call</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">element</span><span class="p">)</span>
+          <span class="k">if</span> <span class="nx">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;bold&#39;</span>
+            <span class="nv">bold = </span><span class="kc">true</span>
+          <span class="k">else</span> <span class="k">if</span> <span class="nx">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;italic&#39;</span>
+            <span class="nv">italic = </span><span class="kc">true</span>
+          <span class="k">else</span> <span class="c1"># assume it&#39;s a color</span>
+            <span class="nv">color = </span><span class="nx">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>label string
 action
-hint</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">@listContents</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">@labelGetter</span><span class="p">(</span><span class="nx">element</span><span class="p">),</span> <span class="nx">element</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">color</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@listContents</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@contents</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>
+hint</p>             </td>             <td class="code">               <div class="highlight"><pre>      <span class="nx">@listContents</span><span class="p">.</span><span class="nx">addItem</span> <span class="nx">@labelGetter</span><span class="p">(</span><span class="nx">element</span><span class="p">),</span> <span class="nx">element</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">color</span><span class="p">,</span> <span class="nx">bold</span><span class="p">,</span> <span class="nx">italic</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@listContents</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@contents</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>
     <span class="vi">@listContents.isListContents = </span><span class="kc">true</span>
     <span class="nx">@listContents</span><span class="p">.</span><span class="nx">updateRendering</span><span class="p">()</span>
     <span class="nx">@addContents</span> <span class="nx">@listContents</span>
   
-  <span class="nv">select: </span><span class="nf">(item) -&gt;</span>
+  <span class="nv">select: </span><span class="nf">(item, trigger) -&gt;</span>
     <span class="vi">@selected = </span><span class="nx">item</span>
+    <span class="vi">@active = </span><span class="nx">trigger</span>
     <span class="nx">@action</span><span class="p">.</span><span class="nx">call</span> <span class="kc">null</span><span class="p">,</span> <span class="nx">item</span>  <span class="k">if</span> <span class="nx">@action</span>
   
   <span class="nv">setExtent: </span><span class="nf">(aPoint) -&gt;</span>
