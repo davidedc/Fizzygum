@@ -12,6 +12,7 @@ class TriggerMorph extends Morph
   labelColor: null
   labelBold: null
   labelItalic: null
+  doubleClickAction: null
   hint: null
   fontSize: null
   fontStyle: null
@@ -41,7 +42,8 @@ class TriggerMorph extends Morph
       @hint = null,
       labelColor,
       @labelBold = false,
-      @labelItalic = false) ->
+      @labelItalic = false
+      @doubleClickAction = null) ->
 
     # additional properties:
     @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
@@ -139,7 +141,21 @@ class TriggerMorph extends Morph
         @action.call @target
       else # assume it's a String
         @target[@action]()
-  
+
+  triggerDoubleClick: ->
+    # same as trigger() but use doubleClickAction instead of action property
+    # note that specifying a doubleClickAction is optional
+    return  unless @doubleClickAction
+    if typeof @target is "function"
+      if typeof @doubleClickAction is "function"
+        @target.call @environment, @doubleClickAction.call(), this
+      else
+        @target.call @environment, @doubleClickAction, this
+    else
+      if typeof @doubleClickAction is "function"
+        @doubleClickAction.call @target
+      else # assume it's a String
+        @target[@doubleClickAction]()  
   
   # TriggerMorph events:
   mouseEnter: ->
@@ -160,7 +176,10 @@ class TriggerMorph extends Morph
     @image = @highlightImage
     @changed()
     @trigger()
-  
+
+  mouseDoubleClick: ->
+    @triggerDoubleClick()
+
   # Disable dragging compound Morphs by Triggers
   rootForGrab: ->
     null

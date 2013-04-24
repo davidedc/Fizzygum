@@ -189,6 +189,10 @@ class WorldMorph extends FrameMorph
       @fillPage()
     else
       @changed()
+    canvas.addEventListener "dblclick", ((event) =>
+      event.preventDefault()
+      @hand.processDoubleClick event
+    ), false
     canvas.addEventListener "mousedown", ((event) =>
       @hand.processMouseDown event.button, event.ctrlKey
     ), false

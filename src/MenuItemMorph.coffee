@@ -5,8 +5,8 @@
 class MenuItemMorph extends TriggerMorph
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic) ->
-    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic
+  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) ->
+    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction 
   
   createLabel: ->
     @label.destroy()  if @label isnt null

@@ -114,6 +114,17 @@ class InspectorMorph extends BoxMorph
     if @markOwnershipOfProperties
       targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)
       #alert targetOwnMethods
+
+    doubleClickAction = =>
+      if (!isObject(@currentProperty))
+        return
+      world = @world()
+      inspector = new InspectorMorph @currentProperty
+      inspector.setPosition world.hand.position()
+      inspector.keepWithin world
+      world.add inspector
+      inspector.changed()
+
     @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(
       if @markOwnershipOfProperties
         [
@@ -146,7 +157,7 @@ class InspectorMorph extends BoxMorph
               # functions.
               # In theory, getOwnPropertyNames should give ALL the properties but the methods
               # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-              (@target.hasOwnProperty element)
+              (Object.prototype.hasOwnProperty.call(@target, element))
           ],
           [new Color(180, 0, 0),
             (element) =>
@@ -160,8 +171,10 @@ class InspectorMorph extends BoxMorph
           ]
         ]
       else null
-    ))
+    ),doubleClickAction)
+
     @list.action = (selected) =>
+      if (selected == undefined) then return
       val = @target[selected]
       # this is for finding the static variables
       if val is undefined

@@ -110,6 +110,7 @@ class HandMorph extends Morph
   #		mouseDownRight
   #		mouseClickLeft
   #		mouseClickRight
+  #   mouseDoubleClick
   #		mouseEnter
   #		mouseLeave
   #		mouseEnterDragging
@@ -200,11 +201,21 @@ class HandMorph extends Morph
       morph = morph.parent  until morph[expectedClick]
       morph[expectedClick] @bounds.origin
     @mouseButton = null
+
+  processDoubleClick: ->
+    morph = @morphAtPointer()
+    @destroyTemporaries()
+    if @children.length isnt 0
+      @drop()
+    else
+      morph = morph.parent  while morph and not morph.mouseDoubleClick
+      morph.mouseDoubleClick @bounds.origin  if morph
+    @mouseButton = null
   
   processMouseScroll: (event) ->
     morph = @morphAtPointer()
     morph = morph.parent  while morph and not morph.mouseScroll
-    
+
     morph.mouseScroll (event.detail / -3) or ((if Object.prototype.hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
   
   
@@ -383,7 +394,7 @@ class HandMorph extends Morph
     
     #
     #	original, more cautious code for grabbing Morphs,
-    #	retained in case of needing	to fall back:
+    #	retained in case of needing to fall back:
     #
     #		if (morph === this.morphToGrab) {
     #			if (morph.isDraggable) {

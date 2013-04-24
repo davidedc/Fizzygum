@@ -25,7 +25,15 @@ class MenuMorph extends BoxMorph
     # want to traverse them all. Setting step to null (as opposed to nop) means
     # that
   
-  addItem: (labelString, action, hint, color, bold = false, italic = false) ->
+  addItem: (
+      labelString,
+      action,
+      hint,
+      color,
+      bold = false,
+      italic = false,
+      doubleClickAction # optional, when used as list contents
+      ) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
     #     * a multi-line string (containing line breaks)
@@ -37,7 +45,8 @@ class MenuMorph extends BoxMorph
       hint,
       color,
       bold,
-      italic
+      italic,
+      doubleClickAction
     ]
   
   addLine: (width) ->
@@ -105,7 +114,8 @@ class MenuMorph extends BoxMorph
           tuple[2],
           tuple[3], # color
           tuple[4], # bold
-          tuple[5]  # italic
+          tuple[5], # italic
+          tuple[6]  # doubleclick action
           )
       y += 1  if isLine
       item.setPosition new Point(x, y)

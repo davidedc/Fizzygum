@@ -9,8 +9,9 @@ class ListMorph extends ScrollFrameMorph
   selected: null # actual element currently selected
   active: null # menu item representing the selected element
   action: null
+  doubleClickAction: null
 
-  constructor: (@elements = [], labelGetter, @format = []) ->
+  constructor: (@elements = [], labelGetter, @format = [], @doubleClickAction = null) ->
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -65,7 +66,7 @@ class ListMorph extends ScrollFrameMorph
       # label string
       # action
       # hint
-      @listContents.addItem @labelGetter(element), element, null, color, bold, italic
+      @listContents.addItem @labelGetter(element), element, null, color, bold, italic, @doubleClickAction
     #
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
