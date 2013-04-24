@@ -34,7 +34,7 @@ true, otherwise answer null</p>             </td>             <td class="code"> 
 <span class="nv">sizeOf = </span><span class="nf">(object) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>answer the number of own properties</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">size = </span><span class="mi">0</span>
   <span class="nv">key = </span><span class="kc">undefined</span>
   <span class="k">for</span> <span class="nx">key</span> <span class="k">of</span> <span class="nx">object</span>
-    <span class="nx">size</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">object</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+    <span class="nx">size</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span>
   <span class="nx">size</span>
 
 <span class="nv">isString = </span><span class="nf">(target) -&gt;</span>
@@ -128,7 +128,8 @@ http://code.google.com/p/chromium/issues/detail?id=90001</p>             </td>  
   <span class="k">if</span> <span class="nx">target</span> <span class="k">instanceof</span> <span class="nx">target</span><span class="p">.</span><span class="nx">constructor</span> <span class="o">and</span> <span class="nx">target</span><span class="p">.</span><span class="nx">constructor</span> <span class="o">isnt</span> <span class="nb">Object</span>
     <span class="nv">c = </span><span class="nx">clone</span><span class="p">(</span><span class="nx">target</span><span class="p">.</span><span class="nx">constructor</span><span class="o">::</span><span class="p">)</span>
     <span class="k">for</span> <span class="nx">property</span> <span class="k">of</span> <span class="nx">target</span>
-      <span class="nx">c</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span> <span class="o">=</span> <span class="nx">target</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span>  <span class="k">if</span> <span class="nx">target</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">property</span><span class="p">)</span>
+      <span class="k">if</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">target</span><span class="p">,</span> <span class="nx">property</span><span class="p">)</span>
+        <span class="nx">c</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span> <span class="o">=</span> <span class="nx">target</span><span class="p">[</span><span class="nx">property</span><span class="p">]</span>
   <span class="k">else</span>
     <span class="nv">c = </span><span class="p">{}</span>
     <span class="k">for</span> <span class="nx">property</span> <span class="k">of</span> <span class="nx">target</span>
