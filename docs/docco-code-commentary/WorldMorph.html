@@ -141,6 +141,10 @@ received by all browsers</p>             </td>             <td class="code">    
       <span class="nx">@fillPage</span><span class="p">()</span>
     <span class="k">else</span>
       <span class="nx">@changed</span><span class="p">()</span>
+    <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="s">&quot;dblclick&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">(event) =&gt;</span>
+      <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
+      <span class="nx">@hand</span><span class="p">.</span><span class="nx">processDoubleClick</span> <span class="nx">event</span>
+    <span class="p">),</span> <span class="kc">false</span>
     <span class="nx">canvas</span><span class="p">.</span><span class="nx">addEventListener</span> <span class="s">&quot;mousedown&quot;</span><span class="p">,</span> <span class="p">(</span><span class="nf">(event) =&gt;</span>
       <span class="nx">@hand</span><span class="p">.</span><span class="nx">processMouseDown</span> <span class="nx">event</span><span class="p">.</span><span class="nx">button</span><span class="p">,</span> <span class="nx">event</span><span class="p">.</span><span class="nx">ctrlKey</span>
     <span class="p">),</span> <span class="kc">false</span>

@@ -95,13 +95,15 @@ reactToDropOf(droppedMorph, handMorph) -&gt; newParent
 mouseDownRight
 mouseClickLeft
 mouseClickRight
-mouseEnter
-mouseLeave
-mouseEnterDragging
-mouseLeaveDragging
-mouseMove
-mouseScroll
-</code></pre>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">processMouseDown: </span><span class="nf">(button, ctrlKey) -&gt;</span>
+</code></pre>
+
+<p>mouseDoubleClick
+    mouseEnter
+    mouseLeave
+    mouseEnterDragging
+    mouseLeaveDragging
+    mouseMove
+    mouseScroll</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">processMouseDown: </span><span class="nf">(button, ctrlKey) -&gt;</span>
     <span class="nx">@world</span><span class="p">.</span><span class="nx">systemTestsRecorderAndPlayer</span><span class="p">.</span><span class="nx">addMouseDownEvent</span><span class="p">(</span><span class="nx">button</span><span class="p">,</span> <span class="nx">ctrlKey</span><span class="p">)</span>
 
     <span class="nx">@destroyTemporaries</span><span class="p">()</span>
@@ -182,11 +184,21 @@ mouseScroll
       <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">until</span> <span class="nx">morph</span><span class="p">[</span><span class="nx">expectedClick</span><span class="p">]</span>
       <span class="nx">morph</span><span class="p">[</span><span class="nx">expectedClick</span><span class="p">]</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
     <span class="vi">@mouseButton = </span><span class="kc">null</span>
+
+  <span class="nv">processDoubleClick: </span><span class="nf">-&gt;</span>
+    <span class="nv">morph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
+    <span class="nx">@destroyTemporaries</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nx">@children</span><span class="p">.</span><span class="nx">length</span> <span class="o">isnt</span> <span class="mi">0</span>
+      <span class="nx">@drop</span><span class="p">()</span>
+    <span class="k">else</span>
+      <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">while</span> <span class="nx">morph</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseDoubleClick</span>
+      <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseDoubleClick</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>  <span class="k">if</span> <span class="nx">morph</span>
+    <span class="vi">@mouseButton = </span><span class="kc">null</span>
   
   <span class="nv">processMouseScroll: </span><span class="nf">(event) -&gt;</span>
     <span class="nv">morph = </span><span class="nx">@morphAtPointer</span><span class="p">()</span>
     <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">while</span> <span class="nx">morph</span> <span class="o">and</span> <span class="o">not</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseScroll</span>
-    
+
     <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseScroll</span> <span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">detail</span> <span class="o">/</span> <span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">or</span> <span class="p">((</span><span class="k">if</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">event</span><span class="p">,</span><span class="s">&#39;wheelDeltaY&#39;</span><span class="p">)</span> <span class="k">then</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDeltaY</span> <span class="o">/</span> <span class="mi">120</span> <span class="k">else</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDelta</span> <span class="o">/</span> <span class="mi">120</span><span class="p">)),</span> <span class="nx">event</span><span class="p">.</span><span class="nx">wheelDeltaX</span> <span class="o">/</span> <span class="mi">120</span> <span class="o">or</span> <span class="mi">0</span>  <span class="k">if</span> <span class="nx">morph</span>
   
   </pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>drop event:</p>
@@ -330,7 +342,7 @@ mouseOverNew = this.allMorphsAtPointer();</p>             </td>             <td 
             <span class="nx">@setPosition</span> <span class="nx">pos</span></pre></div>             </td>           </tr>                               <tr id="section-21">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-21">&#182;</a>               </div>               <p>endProcessMouseMove = new Date().getTime()
 timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
 console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);</p>             </td>             <td class="code">               <div class="highlight"><pre>    </pre></div>             </td>           </tr>                               <tr id="section-22">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-22">&#182;</a>               </div>               <p>original, more cautious code for grabbing Morphs,
-retained in case of needing    to fall back:</p>
+retained in case of needing to fall back:</p>
 
 <pre><code>if (morph === this.morphToGrab) {
     if (morph.isDraggable) {

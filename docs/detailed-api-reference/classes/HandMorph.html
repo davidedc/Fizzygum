@@ -198,7 +198,7 @@
       </a>
     </span>
     <span class='desc'>
-      HandMorph event dispatching: mouse events: mouseDownLeft mouseDownRight mouseClickLeft mouseClickRight mouseEnter mouseLeave mouseEnterDragging mouseLeaveDragging mouseMove mouseScroll
+      HandMorph event dispatching: mouse events: mouseDownLeft mouseDownRight mouseClickLeft mouseClickRight mouseDoubleClick mouseEnter mouseLeave mouseEnterDragging mouseLeaveDragging mouseMove mouseScroll
     </span>
   </li>
   <li>
@@ -235,6 +235,16 @@
     <span class='signature'>
       <a href='#processMouseUp-instance'>
         - (void) <strong>processMouseUp</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#processDoubleClick-instance'>
+        - (void) <strong>processDoubleClick</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -519,7 +529,7 @@ reactToDropOf(droppedMorph, handMorph) -&gt; newParent</code></pre>
   <p>HandMorph event dispatching:</p><p>   mouse events:</p><pre><code>mouseDownLeft
 mouseDownRight
 mouseClickLeft
-mouseClickRight
+mouseClickRight mouseDoubleClick
 mouseEnter
 mouseLeave
 mouseEnterDragging
@@ -555,6 +565,13 @@ mouseScroll</code></pre>
   <div class='method_details'>
     <p class='signature' id='processMouseUp-instance'>
       - (void) <strong>processMouseUp</strong>()
+    </p>
+    <div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='processDoubleClick-instance'>
+      - (void) <strong>processDoubleClick</strong>()
     </p>
     <div class='tags'>
 </div>
@@ -611,7 +628,7 @@ mouseScroll</code></pre>
     </div>
     <div id='footer'>
   Generated on
-  Wed Apr 24 2013 18:09:47 GMT+0100 (BST)
+  Wed Apr 24 2013 18:32:46 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0

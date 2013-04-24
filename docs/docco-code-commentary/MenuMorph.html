@@ -19,7 +19,15 @@ there could be a lot of entries for example in the inspector the number
 of properties of an object - there could be a 100 of those and we don't
 want to traverse them all. Setting step to null (as opposed to nop) means
 that</p>             </td>             <td class="code">               <div class="highlight"><pre>  
-  <span class="nv">addItem: </span><span class="nf">(labelString, action, hint, color, bold = false, italic = false) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>labelString is normally a single-line string. But it can also be one
+  <span class="nv">addItem: </span><span class="nf">(</span>
+<span class="nf">      labelString,</span>
+<span class="nf">      action,</span>
+<span class="nf">      hint,</span>
+<span class="nf">      color,</span>
+<span class="nf">      bold = false,</span>
+<span class="nf">      italic = false,</span>
+<span class="nf">      doubleClickAction # optional, when used as list contents</span>
+<span class="nf">      ) -&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>labelString is normally a single-line string. But it can also be one
 of the following:
     * a multi-line string (containing line breaks)
     * an icon (either a Morph or a Canvas)
@@ -29,7 +37,8 @@ of the following:
       <span class="nx">hint</span><span class="p">,</span>
       <span class="nx">color</span><span class="p">,</span>
       <span class="nx">bold</span><span class="p">,</span>
-      <span class="nx">italic</span>
+      <span class="nx">italic</span><span class="p">,</span>
+      <span class="nx">doubleClickAction</span>
     <span class="p">]</span>
   
   <span class="nv">addLine: </span><span class="nf">(width) -&gt;</span>
@@ -93,7 +102,8 @@ of the following:
           <span class="nx">tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
           <span class="nx">tuple</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="c1"># color</span>
           <span class="nx">tuple</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="c1"># bold</span>
-          <span class="nx">tuple</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># italic</span>
+          <span class="nx">tuple</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="c1"># italic</span>
+          <span class="nx">tuple</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>  <span class="c1"># doubleclick action</span>
           <span class="p">)</span>
       <span class="nx">y</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="k">if</span> <span class="nx">isLine</span>
       <span class="nx">item</span><span class="p">.</span><span class="nx">setPosition</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">)</span>

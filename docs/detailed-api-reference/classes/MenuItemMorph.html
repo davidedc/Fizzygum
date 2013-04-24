@@ -123,7 +123,7 @@
   <li>
     <span class='signature'>
       <a href='#constructor-instance'>
-        - (void) <strong>constructor</strong>(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic)
+        - (void) <strong>constructor</strong>(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction)
       </a>
     </span>
     <span class='constructor note title'>Constructor</span>
@@ -246,10 +246,12 @@
                 <a href='../classes/TriggerMorph.html#createLabel-instance'>#createLabel</a>,
                 <a href='../classes/TriggerMorph.html#copyRecordingReferences-instance'>#copyRecordingReferences</a>,
                 <a href='../classes/TriggerMorph.html#trigger-instance'>#trigger</a>,
+                <a href='../classes/TriggerMorph.html#triggerDoubleClick-instance'>#triggerDoubleClick</a>,
                 <a href='../classes/TriggerMorph.html#mouseEnter-instance'>#mouseEnter</a>,
                 <a href='../classes/TriggerMorph.html#mouseLeave-instance'>#mouseLeave</a>,
                 <a href='../classes/TriggerMorph.html#mouseDownLeft-instance'>#mouseDownLeft</a>,
                 <a href='../classes/TriggerMorph.html#mouseClickLeft-instance'>#mouseClickLeft</a>,
+                <a href='../classes/TriggerMorph.html#mouseDoubleClick-instance'>#mouseDoubleClick</a>,
                 <a href='../classes/TriggerMorph.html#rootForGrab-instance'>#rootForGrab</a>,
                 <a href='../classes/TriggerMorph.html#bubbleHelp-instance'>#bubbleHelp</a>,
         <a href='../classes/TriggerMorph.html#popUpbubbleHelp-instance'>#popUpbubbleHelp</a>
@@ -398,7 +400,7 @@
       <div class='methods'>
   <div class='method_details'>
     <p class='signature' id='constructor-instance'>
-      - (void) <strong>constructor</strong>(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic)
+      - (void) <strong>constructor</strong>(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction)
     </p>
     <div class='docstring'>
   <p>labelString can also be a Morph or a Canvas or a tuple: [icon, string]</p>
@@ -486,7 +488,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Wed Apr 24 2013 18:09:47 GMT+0100 (BST)
+  Wed Apr 24 2013 18:32:46 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0
