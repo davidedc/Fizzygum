@@ -571,7 +571,7 @@ class WorldMorph extends FrameMorph
   about: ->
     versions = ""
     for module of modules
-      if modules.hasOwnProperty(module)
+      if Object.prototype.hasOwnProperty.call(modules, module)
         versions += ("\n" + module + " (" + modules[module] + ")")  
     if versions isnt ""
       versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  

@@ -51,7 +51,7 @@ sizeOf = (object) ->
   size = 0
   key = undefined
   for key of object
-    size += 1  if object.hasOwnProperty(key)
+    size += 1  if Object.prototype.hasOwnProperty.call(object, key)
   size
 
 isString = (target) ->
@@ -157,7 +157,8 @@ copy = (target) ->
   if target instanceof target.constructor and target.constructor isnt Object
     c = clone(target.constructor::)
     for property of target
-      c[property] = target[property]  if target.hasOwnProperty(property)
+      if Object.prototype.hasOwnProperty.call(target, property)
+        c[property] = target[property]
   else
     c = {}
     for property of target

@@ -204,7 +204,8 @@ class HandMorph extends Morph
   processMouseScroll: (event) ->
     morph = @morphAtPointer()
     morph = morph.parent  while morph and not morph.mouseScroll
-    morph.mouseScroll (event.detail / -3) or ((if event.hasOwnProperty("wheelDeltaY") then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
+    
+    morph.mouseScroll (event.detail / -3) or ((if Object.prototype.hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
   
   
   #
@@ -370,11 +371,12 @@ class HandMorph extends Morph
           @grabOrigin = @morphToGrab.situation()
         #
         # if the mouse has left its boundsIncludingChildren, center it
-        fb = morph.boundsIncludingChildren()
-        unless fb.containsPoint(pos)
-          @bounds.origin = fb.center()
-          @grab morph
-          @setPosition pos
+        if morph
+          fb = morph.boundsIncludingChildren()
+          unless fb.containsPoint(pos)
+            @bounds.origin = fb.center()
+            @grab morph
+            @setPosition pos
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);
