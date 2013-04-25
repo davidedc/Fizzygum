@@ -143,8 +143,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#parse-instance'>
-        - (void) <strong>parse</strong>()
+      <a href='#breakTextIntoLines-instance'>
+        - (void) <strong>breakTextIntoLines</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -173,22 +173,22 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#columnRow-instance'>
-        - (void) <strong>columnRow</strong>(slot)
+      <a href='#slotRowAndColumn-instance'>
+        - (void) <strong>slotRowAndColumn</strong>(slot)
       </a>
     </span>
     <span class='desc'>
-      TextMorph mesuring:
+      answer the logical position point of the given index (&quot;slot&quot;) i.e.
     </span>
   </li>
   <li>
     <span class='signature'>
-      <a href='#slotPosition-instance'>
-        - (void) <strong>slotPosition</strong>(slot)
+      <a href='#slotCoordinates-instance'>
+        - (void) <strong>slotCoordinates</strong>(slot)
       </a>
     </span>
     <span class='desc'>
-      
+      Answer the position (in pixels) of the given index (&quot;slot&quot;) where the caret should be placed.
     </span>
   </li>
   <li>
@@ -198,7 +198,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      Returns the slot (index) closest to the given point so the caret can be moved accordingly
     </span>
   </li>
   <li>
@@ -356,7 +356,7 @@
                 <a href='../classes/StringMorph.html#font-instance'>#font</a>,
                 <a href='../classes/StringMorph.html#updateRendering-instance'>#updateRendering</a>,
                 <a href='../classes/StringMorph.html#renderWithBlanks-instance'>#renderWithBlanks</a>,
-                <a href='../classes/StringMorph.html#slotPosition-instance'>#slotPosition</a>,
+                <a href='../classes/StringMorph.html#slotCoordinates-instance'>#slotCoordinates</a>,
                 <a href='../classes/StringMorph.html#slotAt-instance'>#slotAt</a>,
                 <a href='../classes/StringMorph.html#upFrom-instance'>#upFrom</a>,
                 <a href='../classes/StringMorph.html#downFrom-instance'>#downFrom</a>,
@@ -545,8 +545,8 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='parse-instance'>
-      - (void) <strong>parse</strong>()
+    <p class='signature' id='breakTextIntoLines-instance'>
+      - (void) <strong>breakTextIntoLines</strong>()
     </p>
     <div class='tags'>
 </div>
@@ -566,27 +566,37 @@
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='columnRow-instance'>
-      - (void) <strong>columnRow</strong>(slot)
+    <p class='signature' id='slotRowAndColumn-instance'>
+      - (void) <strong>slotRowAndColumn</strong>(slot)
     </p>
     <div class='docstring'>
-  <p>TextMorph mesuring:</p>
+  <p>answer the logical position point of the given index (&quot;slot&quot;)
+i.e. the row and the column where a particular character is.</p>
 </div>
 <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='slotPosition-instance'>
-      - (void) <strong>slotPosition</strong>(slot)
+    <p class='signature' id='slotCoordinates-instance'>
+      - (void) <strong>slotCoordinates</strong>(slot)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>Answer the position (in pixels) of the given index (&quot;slot&quot;)
+where the caret should be placed.
+This is in absolute world coordinates.</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='slotAt-instance'>
       - (void) <strong>slotAt</strong>(aPoint)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>Returns the slot (index) closest to the given point
+so the caret can be moved accordingly</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -697,7 +707,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Wed Apr 24 2013 18:32:46 GMT+0100 (BST)
+  Fri Apr 26 2013 00:42:48 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0

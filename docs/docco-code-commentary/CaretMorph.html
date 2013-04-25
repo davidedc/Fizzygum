@@ -89,10 +89,10 @@ notify target's parent of key event</p>             </td>             <td class=
   
   </pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>CaretMorph navigation - simple version
 gotoSlot: (newSlot) ->
- @setPosition @target.slotPosition(newSlot)
+ @setPosition @target.slotCoordinates(newSlot)
  @slot = Math.max(newSlot, 0)</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">gotoSlot: </span><span class="nf">(slot) -&gt;</span>
     <span class="nv">length = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">length</span>
-    <span class="nv">pos = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">slotPosition</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
+    <span class="nv">pos = </span><span class="nx">@target</span><span class="p">.</span><span class="nx">slotCoordinates</span><span class="p">(</span><span class="nx">slot</span><span class="p">)</span>
     <span class="vi">@slot = </span><span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">(</span><span class="k">if</span> <span class="nx">slot</span> <span class="o">&gt;</span> <span class="nx">length</span> <span class="k">then</span> <span class="nx">length</span> <span class="k">else</span> <span class="nx">slot</span><span class="p">))</span>
     <span class="k">if</span> <span class="nx">@parent</span> <span class="o">and</span> <span class="nx">@target</span><span class="p">.</span><span class="nx">isScrollable</span>
       <span class="nv">right = </span><span class="nx">@parent</span><span class="p">.</span><span class="nx">right</span><span class="p">()</span> <span class="o">-</span> <span class="nx">@viewPadding</span>
