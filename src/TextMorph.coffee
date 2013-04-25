@@ -2,7 +2,8 @@
 
 # I am a multi-line, word-wrapping String
 
-# Jens has made this quasi-inheriting from StringMorph i.e. he is copying
+# Note that in the original Jens' Morphic.js version he
+# has made this quasi-inheriting from StringMorph i.e. he is copying
 # over manually the following methods like so:
 #
 #  TextMorph::font = StringMorph::font
@@ -59,40 +60,69 @@ class TextMorph extends StringMorph
     "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
   
   
-  parse: ->
+  breakTextIntoLines: ->
     paragraphs = @text.split("\n")
     canvas = newCanvas()
     context = canvas.getContext("2d")
-    oldline = ""
+    currentLine = ""
     slot = 0
     context.font = @font()
     @maxLineWidth = 0
     @lines = []
     @lineSlots = [0]
     @words = []
+    
+    # put all the text in an array, word by word
     paragraphs.forEach (p) =>
       @words = @words.concat(p.split(" "))
       @words.push "\n"
-    #
+
+    # takes the text, word by word, and re-flows
+    # it according to the available width for the
+    # text (if there is such limit).
+    # The end result is an array of lines
+    # called @lines, which contains the string for
+    # each line (excluding the end of lines).
+    # Also another array is created, called
+    # @lineSlots, which memorises how many characters
+    # of the text have been consumed up to each line
+    #  example: original text: "Hello\nWorld"
+    # then @lines[0] = "Hello" @lines[1] = "World"
+    # and @lineSlots[0] = 6, @lineSlots[1] = 11
+    # Note that this algorithm doesn't work in case
+    # of single non-spaced words that are longer than
+    # the allowed width.
     @words.forEach (word) =>
       if word is "\n"
-        @lines.push oldline
+        # we reached the end of the line in the
+        # original text, so push the line and the
+        # slots count in the arrays
+        @lines.push currentLine
         @lineSlots.push slot
-        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
-        oldline = ""
+        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)
+        currentLine = ""
       else
         if @maxWidth > 0
-          newline = oldline + word + " "
-          w = context.measureText(newline).width
+          # there is a width limit, so we need
+          # to check whether we overflowed it. So create
+          # a prospective line and then check its width.
+          lineForOverflowTest = currentLine + word + " "
+          w = context.measureText(lineForOverflowTest).width
           if w > @maxWidth
-            @lines.push oldline
+            # ok we just overflowed the available space,
+            # so we need to push the old line and its
+            # "slot" number to the respective arrays.
+            # the new line is going to only contain the
+            # word that has caused the overflow.
+            @lines.push currentLine
             @lineSlots.push slot
-            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(oldline).width)
-            oldline = word + " "
+            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)
+            currentLine = word + " "
           else
-            oldline = newline
+            # no overflow happened, so just proceed as normal
+            currentLine = lineForOverflowTest
         else
-          oldline = oldline + word + " "
+          currentLine = currentLine + word + " "
         slot += word.length + 1
   
   
@@ -100,7 +130,7 @@ class TextMorph extends StringMorph
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
-    @parse()
+    @breakTextIntoLines()
     #
     # set my extent
     shadowWidth = Math.abs(@shadowOffset.x)
@@ -160,12 +190,14 @@ class TextMorph extends StringMorph
       y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
       i++
       context.fillText line, x + offx, y + offy
-    #
-    # draw the selection
+
+    # Draw the selection. This is done by re-drawing the
+    # selected text, one character at the time, just with
+    # a background rectangle.
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     for i in [start...stop]
-      p = @slotPosition(i).subtract(@position())
+      p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
       context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
@@ -180,9 +212,11 @@ class TextMorph extends StringMorph
     @changed()
     @updateRendering()
   
-  # TextMorph mesuring:
-  columnRow: (slot) ->
-    # answer the logical position point of the given index ("slot")
+  # TextMorph measuring ////
+
+  # answer the logical position point of the given index ("slot")
+  # i.e. the row and the column where a particular character is.
+  slotRowAndColumn: (slot) ->
     idx = 0
     for row in [0...@lines.length]
       idx = @lineSlots[row]
@@ -193,23 +227,23 @@ class TextMorph extends StringMorph
     # return new Point(0, 0);
     new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
   
-  slotPosition: (slot) ->
-    # answer the physical position point of the given index ("slot")
-    # where the caret should be placed
-    colRow = @columnRow(slot)
+  # Answer the position (in pixels) of the given index ("slot")
+  # where the caret should be placed.
+  # This is in absolute world coordinates.
+  slotCoordinates: (slot) ->
+    colRow = @slotRowAndColumn(slot)
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
     xOffset = 0
     yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
-    for idx in [0...colRow.x]
-      xOffset += context.measureText(@lines[colRow.y][idx]).width
+    xOffset = context.measureText((@lines[colRow.y]).substring(0,colRow.x)).width
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
   
+  # Returns the slot (index) closest to the given point
+  # so the caret can be moved accordingly
   slotAt: (aPoint) ->
-    # answer the slot (index) closest to the given point
-    # so the caret can be moved accordingly
     charX = 0
     row = 0
     col = 0
@@ -224,7 +258,7 @@ class TextMorph extends StringMorph
   
   upFrom: (slot) ->
     # answer the slot above the given one
-    colRow = @columnRow(slot)
+    colRow = @slotRowAndColumn(slot)
     return slot  if colRow.y < 1
     above = @lines[colRow.y - 1]
     return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1
@@ -232,7 +266,7 @@ class TextMorph extends StringMorph
   
   downFrom: (slot) ->
     # answer the slot below the given one
-    colRow = @columnRow(slot)
+    colRow = @slotRowAndColumn(slot)
     return slot  if colRow.y > @lines.length - 2
     below = @lines[colRow.y + 1]
     return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1
@@ -240,11 +274,11 @@ class TextMorph extends StringMorph
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot
-    @lineSlots[@columnRow(slot).y]
+    @lineSlots[@slotRowAndColumn(slot).y]
   
   endOfLine: (slot) ->
     # answer the slot (index) indicating the EOL for the given slot
-    @startOfLine(slot) + @lines[@columnRow(slot).y].length - 1
+    @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1
   
   # TextMorph menus:
   developersMenu: ->

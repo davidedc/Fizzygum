@@ -121,7 +121,7 @@ class StringMorph extends Morph
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     for i in [start...stop]
-      p = @slotPosition(i).subtract(@position())
+      p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
       context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,
@@ -157,7 +157,7 @@ class StringMorph extends Morph
   
   
   # StringMorph mesuring:
-  slotPosition: (slot) ->
+  slotCoordinates: (slot) ->
     # answer the position point of the given index ("slot")
     # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)

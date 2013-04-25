@@ -112,12 +112,12 @@ class CaretMorph extends BlinkerMorph
   
   # CaretMorph navigation - simple version
   #gotoSlot: (newSlot) ->
-  #  @setPosition @target.slotPosition(newSlot)
+  #  @setPosition @target.slotCoordinates(newSlot)
   #  @slot = Math.max(newSlot, 0)
 
   gotoSlot: (slot) ->
     length = @target.text.length
-    pos = @target.slotPosition(slot)
+    pos = @target.slotCoordinates(slot)
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
     if @parent and @target.isScrollable
       right = @parent.right() - @viewPadding
