@@ -1,6 +1,6 @@
 # StringMorph /////////////////////////////////////////////////////////
 
-# I am a single line of text
+# A StringMorph is a single line of text. It can only be left-aligned.
 
 class StringMorph extends Morph
 
