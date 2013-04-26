@@ -234,7 +234,6 @@ class TextMorph extends StringMorph
     colRow = @slotRowAndColumn(slot)
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
-    xOffset = 0
     yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
     xOffset = context.measureText((@lines[colRow.y]).substring(0,colRow.x)).width
     x = @left() + xOffset
