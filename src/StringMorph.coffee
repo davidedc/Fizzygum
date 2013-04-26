@@ -163,9 +163,7 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
     context = @image.getContext("2d")
-    xOffset = 0
-    for idx in [0...dest]
-      xOffset += context.measureText(text[idx]).width
+    xOffset = context.measureText(text.substring(0,dest)).width
     @pos = dest
     x = @left() + xOffset
     y = @top()
