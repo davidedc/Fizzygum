@@ -217,21 +217,19 @@ class TextMorph extends StringMorph
     for row in [0...@lines.length]
       idx = @lineSlots[row]
       for col in [0...@lines[row].length]
-        return new Point(col, row)  if idx is slot
+        return [row, col]  if idx is slot
         idx += 1
-    #
-    # return new Point(0, 0);
-    new Point(@lines[@lines.length - 1].length - 1, @lines.length - 1)
+    [@lines.length - 1, @lines[@lines.length - 1].length - 1]
   
   # Answer the position (in pixels) of the given index ("slot")
   # where the caret should be placed.
   # This is in absolute world coordinates.
   slotCoordinates: (slot) ->
-    colRow = @slotRowAndColumn(slot)
+    [slotRow, slotColumn] = @slotRowAndColumn(slot)
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
-    yOffset = colRow.y * (fontHeight(@fontSize) + shadowHeight)
-    xOffset = context.measureText((@lines[colRow.y]).substring(0,colRow.x)).width
+    yOffset = slotRow * (fontHeight(@fontSize) + shadowHeight)
+    xOffset = context.measureText((@lines[slotRow]).substring(0,slotColumn)).width
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -253,19 +251,19 @@ class TextMorph extends StringMorph
   
   upFrom: (slot) ->
     # answer the slot above the given one
-    colRow = @slotRowAndColumn(slot)
-    return slot  if colRow.y < 1
-    above = @lines[colRow.y - 1]
-    return @lineSlots[colRow.y - 1] + above.length  if above.length < colRow.x - 1
-    @lineSlots[colRow.y - 1] + colRow.x
+    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    return slot  if slotRow < 1
+    above = @lines[slotRow - 1]
+    return @lineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1
+    @lineSlots[slotRow - 1] + slotColumn
   
   downFrom: (slot) ->
     # answer the slot below the given one
-    colRow = @slotRowAndColumn(slot)
-    return slot  if colRow.y > @lines.length - 2
-    below = @lines[colRow.y + 1]
-    return @lineSlots[colRow.y + 1] + below.length  if below.length < colRow.x - 1
-    @lineSlots[colRow.y + 1] + colRow.x
+    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    return slot  if slotRow > @lines.length - 2
+    below = @lines[slotRow + 1]
+    return @lineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1
+    @lineSlots[slotRow + 1] + slotColumn
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot
