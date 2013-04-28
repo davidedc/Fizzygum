@@ -88,19 +88,23 @@ class StringMorph extends Morph
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
-    #
-    # set my extent
+    context.textAlign = "left"
+    context.textBaseline = "bottom"
+
+    # set my extent based on the size of the text
     width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
     @image.width = width
     @image.height = @height()
-    #
-    # prepare context for drawing text
+
+    # changing the canvas size resets many of
+    # the properties of the canvas, so we need to
+    # re-initialise the font and alignments here
     context.font = @font()
     context.textAlign = "left"
     context.textBaseline = "bottom"
-    #
+
     # first draw the shadow, if any
     if @shadowColor
       x = Math.max(@shadowOffset.x, 0)
