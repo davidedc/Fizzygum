@@ -196,11 +196,23 @@ class CaretMorph extends BlinkerMorph
     world.stopEditing()  if world
     @escalateEvent 'cancel', null
     
+  # Note that this is not a real undo,
+  # what we are doing here is just reverting
+  # all the changes and sort-of-resetting the
+  # state of the target.
   undo: ->
     @target.text = @originalContents
+    @target.clearSelection()
+    
+    # in theory these three lines are not
+    # needed because clearSelection runs them
+    # already, but I'm leaving them here
+    # until I understand better this changed
+    # vs. updateRendering semantics.
     @target.changed()
     @target.updateRendering()
     @target.changed()
+
     @gotoSlot 0
   
   insert: (aChar, shiftKey) ->
