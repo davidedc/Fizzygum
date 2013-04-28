@@ -586,26 +586,55 @@ class WorldMorph extends FrameMorph
       "\n\nported and extended by Davide Della Casa\n" +
       versions
   
-  edit: (aStringOrTextMorph) ->
-    pos = getDocumentPositionOf(@worldCanvas)
-    return null  unless aStringOrTextMorph.isEditable
-    @caret.destroy()  if @caret
-    @lastEditedText.clearSelection()  if @lastEditedText
-    @caret = new CaretMorph(aStringOrTextMorph)
-    aStringOrTextMorph.parent.add @caret
+  edit: (aStringMorphOrTextMorph) ->
+    # first off, if the Morph is not editable
+    # then there is nothing to do
+    return null  unless aStringMorphOrTextMorph.isEditable
+
+    # there is only one caret in the World, so destroy
+    # the previous one if there was one.
+    if @caret
+      # empty the previously ongoing selection
+      # if there was one.
+      @lastEditedText = @caret.target
+      @lastEditedText.clearSelection()  if @lastEditedText
+      @caret.destroy()
+
+    # create the new Caret
+    @caret = new CaretMorph(aStringMorphOrTextMorph)
+    aStringMorphOrTextMorph.parent.add @caret
     @keyboardReceiver = @caret
     @initVirtualKeyboard()
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+      pos = getDocumentPositionOf(@worldCanvas)
       @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @virtualKeyboard.focus()
     if WorldMorph.MorphicPreferences.useSliderForInput
-      if !aStringOrTextMorph.parentThatIsA(MenuMorph)
-        @slide aStringOrTextMorph
+      if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
+        @slide aStringMorphOrTextMorph
   
-  slide: (aStringOrTextMorph) ->
+  # Editing can stop because of three reasons:
+  #   cancel (user hits ESC)
+  #   accept (on stringmorph, user hits enter)
+  #   user clicks/drags another morph
+  stopEditing: ->
+    if @caret
+      @lastEditedText = @caret.target
+      @lastEditedText.clearSelection()
+      @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
+      @caret.destroy()
+      @caret = null
+    @keyboardReceiver = null
+    if @virtualKeyboard
+      @virtualKeyboard.blur()
+      document.body.removeChild @virtualKeyboard
+      @virtualKeyboard = null
+    @worldCanvas.focus()
+  
+  slide: (aStringMorphOrTextMorph) ->
     # display a slider for numeric text entries
-    val = parseFloat(aStringOrTextMorph.text)
+    val = parseFloat(aStringMorphOrTextMorph.text)
     val = 0  if isNaN(val)
     menu = new MenuMorph()
     slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")
@@ -620,30 +649,17 @@ class WorldMorph extends FrameMorph
     slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10
     slider.updateRendering()
     slider.action = (num) ->
-      aStringOrTextMorph.changed()
-      aStringOrTextMorph.text = Math.round(num).toString()
-      aStringOrTextMorph.updateRendering()
-      aStringOrTextMorph.changed()
-      aStringOrTextMorph.escalateEvent(
+      aStringMorphOrTextMorph.changed()
+      aStringMorphOrTextMorph.text = Math.round(num).toString()
+      aStringMorphOrTextMorph.updateRendering()
+      aStringMorphOrTextMorph.changed()
+      aStringMorphOrTextMorph.escalateEvent(
           'reactToSliderEdit',
-          aStringOrTextMorph
+          aStringMorphOrTextMorph
       )
     #
     menu.items.push slider
-    menu.popup @, aStringOrTextMorph.bottomLeft().add(new Point(0, 5))
-  
-  stopEditing: ->
-    if @caret
-      @lastEditedText = @caret.target
-      @caret.destroy()
-      @caret = null
-      @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
-    @keyboardReceiver = null
-    if @virtualKeyboard
-      @virtualKeyboard.blur()
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
-    @worldCanvas.focus()
+    menu.popup @, aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   
   toggleBlurredShadows: ->
     useBlurredShadows = not useBlurredShadows
