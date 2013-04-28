@@ -137,8 +137,23 @@ class HandMorph extends Morph
         if morph isnt @world.activeHandle
           @world.activeHandle.destroy()    
       if @world.caret
-        if morph isnt @world.caret.target  
-          @world.stopEditing()  
+        # there is a caret on the screen
+        # depending on what the user is clicking on,
+        # we might need to close an ongoing edit
+        # operation, which means deleting the
+        # caret and un-selecting anything that was selected.
+        # Note that we don't want to interrupt an edit
+        # if the user is invoking/clicking on anything
+        # inside a menu, because the invoked function
+        # might do something with the selection
+        # (for example doIt takes the current selection).
+        if morph isnt @world.caret.target
+          # user clicked on something other than what the
+          # caret is attached to
+          unless contains(morph.allParents(), @world.activeMenu)
+            # only dismiss editing if the morph the user
+            # clicked on is not part of a menu.
+            @world.stopEditing()  
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
       if button is 2 or ctrlKey
         @mouseButton = "right"
