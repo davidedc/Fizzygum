@@ -321,6 +321,7 @@ class StringMorph extends Morph
     @currentlySelecting = false
     @startMark = 0
     @endMark = 0
+    @changed()
     @updateRendering()
     @changed()
   
