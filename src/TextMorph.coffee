@@ -54,11 +54,6 @@ class TextMorph extends StringMorph
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
       @updateRendering()
-
-  toString: ->
-    # e.g. 'a TextMorph("Hello World")'
-    "a TextMorph" + "(\"" + @text.slice(0, 30) + "...\")"
-  
   
   breakTextIntoLines: ->
     paragraphs = @text.split("\n")
