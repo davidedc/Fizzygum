@@ -893,17 +893,20 @@ class Morph extends MorphicNode
     #
     menu.isDraggable = true
     menu.popUpAtHand @world()
-  
+
   inspect: (anotherObject) ->
-    world = (if @world instanceof Function then @world() else (@root() or @world))
     inspectee = @
     inspectee = anotherObject  if anotherObject
+    @spawnInspector inspectee
+
+  spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
+    world = (if @world instanceof Function then @world() else (@root() or @world))
     inspector.setPosition world.hand.position()
     inspector.keepWithin world
     world.add inspector
     inspector.changed()
-  
+    
   
   # Morph menus ////////////////////////////////////////////////////////////////
   

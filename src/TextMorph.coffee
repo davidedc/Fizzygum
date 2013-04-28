@@ -341,10 +341,4 @@ class TextMorph extends StringMorph
   
   inspectIt: ->
     result = @receiver.evaluateString(@selection())
-    world = @world()
-    if result?
-      inspector = new InspectorMorph(result)
-      inspector.setPosition world.hand.position()
-      inspector.keepWithin world
-      world.add inspector
-      inspector.changed()
+    if result? then @spawnInspector result
