@@ -349,6 +349,8 @@ class StringMorph extends Morph
     else
       @escalateEvent "mouseDownLeft", pos
 
+  # Every time the user clicks on the text, a new edit()
+  # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
     caret = @root().caret;
     if @isEditable

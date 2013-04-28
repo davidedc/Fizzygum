@@ -184,18 +184,22 @@ class CaretMorph extends BlinkerMorph
     else
       @target.clearSelection()  
   
-  # CaretMorph editing:
+  # CaretMorph editing.
+
+  # User presses enter on a stringMorph
   accept: ->
     world = @root()
     world.stopEditing()  if world
     @escalateEvent "accept", null
   
+  # User presses ESC
   cancel: ->
     world = @root()
     @undo()
     world.stopEditing()  if world
     @escalateEvent 'cancel', null
     
+  # User presses CTRL-Z or CMD-Z
   # Note that this is not a real undo,
   # what we are doing here is just reverting
   # all the changes and sort-of-resetting the
