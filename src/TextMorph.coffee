@@ -214,6 +214,13 @@ class TextMorph extends StringMorph
   # i.e. the row and the column where a particular character is.
   slotRowAndColumn: (slot) ->
     idx = 0
+    # Note that this solution scans all the characters
+    # in all the rows up to the slot. This could be
+    # done a lot quicker by stopping at the first row
+    # such that @lineSlots[theRow] <= slot
+    # You could even do a binary search if one really
+    # wanted to, because the contents of @lineSlots are
+    # in order, as they contain a cumulative count...
     for row in [0...@lines.length]
       idx = @lineSlots[row]
       for col in [0...@lines[row].length]
@@ -224,6 +231,7 @@ class TextMorph extends StringMorph
   # Answer the position (in pixels) of the given index ("slot")
   # where the caret should be placed.
   # This is in absolute world coordinates.
+  # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     context = @image.getContext("2d")
@@ -236,6 +244,7 @@ class TextMorph extends StringMorph
   
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
+  # This function assumes that the text is left-justified.
   slotAt: (aPoint) ->
     charX = 0
     row = 0
@@ -340,5 +349,7 @@ class TextMorph extends StringMorph
     if result? then @inform result
   
   inspectIt: ->
+    # evaluateString is a pimped-up eval in
+    # the Morph class.
     result = @receiver.evaluateString(@selection())
     if result? then @spawnInspector result

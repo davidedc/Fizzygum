@@ -1092,7 +1092,7 @@ class Morph extends MorphicNode
     handler[functionName] arg  if handler[functionName]
   
   
-  # Morph eval:
+  # Morph eval. Used by the Inspector and the TextMorph.
   evaluateString: (code) ->
     try
       result = eval(code)
