@@ -121,8 +121,8 @@ mouseClickRight
       <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span>
         <span class="k">if</span> <span class="nx">morph</span> <span class="o">isnt</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span>
           <span class="nx">@world</span><span class="p">.</span><span class="nx">activeHandle</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span>    
-      <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">cursor</span>
-        <span class="k">if</span> <span class="nx">morph</span> <span class="o">isnt</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">cursor</span><span class="p">.</span><span class="nx">target</span>  
+      <span class="k">if</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">caret</span>
+        <span class="k">if</span> <span class="nx">morph</span> <span class="o">isnt</span> <span class="nx">@world</span><span class="p">.</span><span class="nx">caret</span><span class="p">.</span><span class="nx">target</span>  
           <span class="nx">@world</span><span class="p">.</span><span class="nx">stopEditing</span><span class="p">()</span>  
       <span class="vi">@morphToGrab = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">rootForGrab</span><span class="p">()</span>  <span class="k">unless</span> <span class="nx">morph</span><span class="p">.</span><span class="nx">mouseMove</span>
       <span class="k">if</span> <span class="nx">button</span> <span class="o">is</span> <span class="mi">2</span> <span class="o">or</span> <span class="nx">ctrlKey</span>

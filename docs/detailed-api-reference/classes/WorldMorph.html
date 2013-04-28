@@ -390,17 +390,7 @@
   <li>
     <span class='signature'>
       <a href='#edit-instance'>
-        - (void) <strong>edit</strong>(aStringOrTextMorph)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#slide-instance'>
-        - (void) <strong>slide</strong>(aStringOrTextMorph)
+        - (void) <strong>edit</strong>(aStringMorphOrTextMorph)
       </a>
     </span>
     <span class='desc'>
@@ -411,6 +401,16 @@
     <span class='signature'>
       <a href='#stopEditing-instance'>
         - (void) <strong>stopEditing</strong>()
+      </a>
+    </span>
+    <span class='desc'>
+      Editing can stop because of three reasons: cancel (user hits ESC) accept (on stringmorph, user hits enter) user clicks/drags another morph
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#slide-instance'>
+        - (void) <strong>slide</strong>(aStringMorphOrTextMorph)
       </a>
     </span>
     <span class='desc'>
@@ -811,14 +811,7 @@ any morph.</p>
   </div>
   <div class='method_details'>
     <p class='signature' id='edit-instance'>
-      - (void) <strong>edit</strong>(aStringOrTextMorph)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='slide-instance'>
-      - (void) <strong>slide</strong>(aStringOrTextMorph)
+      - (void) <strong>edit</strong>(aStringMorphOrTextMorph)
     </p>
     <div class='tags'>
 </div>
@@ -826,6 +819,16 @@ any morph.</p>
   <div class='method_details'>
     <p class='signature' id='stopEditing-instance'>
       - (void) <strong>stopEditing</strong>()
+    </p>
+    <div class='docstring'>
+  <p>Editing can stop because of three reasons: cancel (user hits ESC) accept (on stringmorph, user hits enter) user clicks/drags another morph</p>
+</div>
+<div class='tags'>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='slide-instance'>
+      - (void) <strong>slide</strong>(aStringMorphOrTextMorph)
     </p>
     <div class='tags'>
 </div>
@@ -848,7 +851,7 @@ any morph.</p>
     </div>
     <div id='footer'>
   Generated on
-  Fri Apr 26 2013 00:42:48 GMT+0100 (BST)
+  Sun Apr 28 2013 21:07:03 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0

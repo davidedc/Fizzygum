@@ -248,7 +248,7 @@
       </a>
     </span>
     <span class='desc'>
-      CaretMorph editing:
+      User presses enter on a stringMorph
     </span>
   </li>
   <li>
@@ -258,7 +258,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      User presses ESC
     </span>
   </li>
   <li>
@@ -268,7 +268,7 @@
       </a>
     </span>
     <span class='desc'>
-      
+      User presses CTRL-Z or CMD-Z Note that this is not a real undo, what we are doing here is just reverting all the changes and sort-of-resetting the state of the target.
     </span>
   </li>
   <li>
@@ -590,7 +590,7 @@
       - (void) <strong>accept</strong>()
     </p>
     <div class='docstring'>
-  <p>CaretMorph editing:</p>
+  <p>User presses enter on a stringMorph</p>
 </div>
 <div class='tags'>
 </div>
@@ -599,14 +599,24 @@
     <p class='signature' id='cancel-instance'>
       - (void) <strong>cancel</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>User presses ESC</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
     <p class='signature' id='undo-instance'>
       - (void) <strong>undo</strong>()
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>User presses CTRL-Z or CMD-Z
+Note that this is not a real undo,
+what we are doing here is just reverting
+all the changes and sort-of-resetting the
+state of the target.</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -668,7 +678,7 @@
     </div>
     <div id='footer'>
   Generated on
-  Fri Apr 26 2013 00:42:48 GMT+0100 (BST)
+  Sun Apr 28 2013 21:07:03 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0
