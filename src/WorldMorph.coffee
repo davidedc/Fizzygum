@@ -26,8 +26,9 @@ class WorldMorph extends FrameMorph
     @isDraggable = false
     @currentKey = null # currently pressed key code
     @worldCanvas = aCanvas
-    #
+
     # additional properties:
+    @stamp = Date.now() # reference in multi-world setups
     @useFillPage = fillPage
     @useFillPage = true  if @useFillPage is `undefined`
     @isDevMode = false
