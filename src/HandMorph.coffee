@@ -136,8 +136,8 @@ class HandMorph extends Morph
       if @world.activeHandle
         if morph isnt @world.activeHandle
           @world.activeHandle.destroy()    
-      if @world.cursor
-        if morph isnt @world.cursor.target  
+      if @world.caret
+        if morph isnt @world.caret.target  
           @world.stopEditing()  
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
       if button is 2 or ctrlKey
