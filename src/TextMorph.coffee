@@ -126,7 +126,7 @@ class TextMorph extends StringMorph
     context = @image.getContext("2d")
     context.font = @font()
     @breakTextIntoLines()
-    #
+
     # set my extent
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
@@ -137,13 +137,14 @@ class TextMorph extends StringMorph
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
     @image.width = @width()
     @image.height = @height()
-    #
-    # prepare context for drawing text
-    context = @image.getContext("2d")
+
+    # changing the canvas size resets many of
+    # the properties of the canvas, so we need to
+    # re-initialise the font and alignments here
     context.font = @font()
     context.textAlign = "left"
     context.textBaseline = "bottom"
-    #
+
     # fill the background, if desired
     if @backgroundColor
       context.fillStyle = @backgroundColor.toString()
