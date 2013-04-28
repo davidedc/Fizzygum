@@ -188,7 +188,7 @@
       </a>
     </span>
     <span class='desc'>
-      Returns the slot (index) closest to the given point so the caret can be moved accordingly
+      Returns the slot (index) closest to the given point so the caret can be moved accordingly This function assumes that the text is left-justified.
     </span>
   </li>
   <li>
@@ -475,6 +475,7 @@
                 <a href='../classes/Morph.html#prompt-instance'>#prompt</a>,
                 <a href='../classes/Morph.html#pickColor-instance'>#pickColor</a>,
                 <a href='../classes/Morph.html#inspect-instance'>#inspect</a>,
+                <a href='../classes/Morph.html#spawnInspector-instance'>#spawnInspector</a>,
                 <a href='../classes/Morph.html#contextMenu-instance'>#contextMenu</a>,
                 <a href='../classes/Morph.html#hierarchyMenu-instance'>#hierarchyMenu</a>,
                 <a href='../classes/Morph.html#developersMenu-instance'>#developersMenu</a>,
@@ -566,7 +567,8 @@ i.e. the row and the column where a particular character is.</p>
     <div class='docstring'>
   <p>Answer the position (in pixels) of the given index (&quot;slot&quot;)
 where the caret should be placed.
-This is in absolute world coordinates.</p>
+This is in absolute world coordinates.
+This function assumes that the text is left-justified.</p>
 </div>
 <div class='tags'>
 </div>
@@ -577,7 +579,8 @@ This is in absolute world coordinates.</p>
     </p>
     <div class='docstring'>
   <p>Returns the slot (index) closest to the given point
-so the caret can be moved accordingly</p>
+so the caret can be moved accordingly
+This function assumes that the text is left-justified.</p>
 </div>
 <div class='tags'>
 </div>
@@ -690,7 +693,7 @@ so the caret can be moved accordingly</p>
     </div>
     <div id='footer'>
   Generated on
-  Sun Apr 28 2013 21:15:10 GMT+0100 (BST)
+  Sun Apr 28 2013 22:44:51 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0

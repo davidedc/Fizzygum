@@ -741,17 +741,20 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
       <span class="nx">colorPicker</span><span class="p">.</span><span class="nx">getChoice</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-68">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-68">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;Cancel&quot;</span><span class="p">,</span> <span class="nf">-&gt;</span>
       <span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-69">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-69">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">menu.isDraggable = </span><span class="kc">true</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">popUpAtHand</span> <span class="nx">@world</span><span class="p">()</span>
-  
+
   <span class="nv">inspect: </span><span class="nf">(anotherObject) -&gt;</span>
-    <span class="nv">world = </span><span class="p">(</span><span class="k">if</span> <span class="nx">@world</span> <span class="k">instanceof</span> <span class="nb">Function</span> <span class="k">then</span> <span class="nx">@world</span><span class="p">()</span> <span class="k">else</span> <span class="p">(</span><span class="nx">@root</span><span class="p">()</span> <span class="o">or</span> <span class="nx">@world</span><span class="p">))</span>
     <span class="nv">inspectee = </span><span class="nx">@</span>
     <span class="nv">inspectee = </span><span class="nx">anotherObject</span>  <span class="k">if</span> <span class="nx">anotherObject</span>
+    <span class="nx">@spawnInspector</span> <span class="nx">inspectee</span>
+
+  <span class="nv">spawnInspector: </span><span class="nf">(inspectee) -&gt;</span>
     <span class="nv">inspector = </span><span class="k">new</span> <span class="nx">InspectorMorph</span><span class="p">(</span><span class="nx">inspectee</span><span class="p">)</span>
+    <span class="nv">world = </span><span class="p">(</span><span class="k">if</span> <span class="nx">@world</span> <span class="k">instanceof</span> <span class="nb">Function</span> <span class="k">then</span> <span class="nx">@world</span><span class="p">()</span> <span class="k">else</span> <span class="p">(</span><span class="nx">@root</span><span class="p">()</span> <span class="o">or</span> <span class="nx">@world</span><span class="p">))</span>
     <span class="nx">inspector</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">world</span><span class="p">.</span><span class="nx">hand</span><span class="p">.</span><span class="nx">position</span><span class="p">()</span>
     <span class="nx">inspector</span><span class="p">.</span><span class="nx">keepWithin</span> <span class="nx">world</span>
     <span class="nx">world</span><span class="p">.</span><span class="nx">add</span> <span class="nx">inspector</span>
     <span class="nx">inspector</span><span class="p">.</span><span class="nx">changed</span><span class="p">()</span>
-  
+    
   </pre></div>             </td>           </tr>                               <tr id="section-70">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-70">&#182;</a>               </div>               <p>Morph menus ////////////////////////////////////////////////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre>  
   <span class="nv">contextMenu: </span><span class="nf">-&gt;</span>
     <span class="k">return</span> <span class="nx">@customContextMenu</span>  <span class="k">if</span> <span class="nx">@customContextMenu</span>
@@ -901,7 +904,7 @@ prev.edit();
     <span class="nv">handler = </span><span class="nx">handler</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">while</span> <span class="o">not</span> <span class="nx">handler</span><span class="p">[</span><span class="nx">functionName</span><span class="p">]</span> <span class="o">and</span> <span class="nx">handler</span><span class="p">.</span><span class="nx">parent</span><span class="o">?</span>
     <span class="nx">handler</span><span class="p">[</span><span class="nx">functionName</span><span class="p">]</span> <span class="nx">arg</span>  <span class="k">if</span> <span class="nx">handler</span><span class="p">[</span><span class="nx">functionName</span><span class="p">]</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-84">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-84">&#182;</a>               </div>               <p>Morph eval:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">evaluateString: </span><span class="nf">(code) -&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-84">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-84">&#182;</a>               </div>               <p>Morph eval. Used by the Inspector and the TextMorph.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">evaluateString: </span><span class="nf">(code) -&gt;</span>
     <span class="k">try</span>
       <span class="nv">result = </span><span class="nb">eval</span><span class="p">(</span><span class="nx">code</span><span class="p">)</span>
       <span class="nx">@updateRendering</span><span class="p">()</span>
