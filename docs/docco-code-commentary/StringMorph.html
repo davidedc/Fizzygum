@@ -17,8 +17,8 @@ but if you replace it with a new Color, then that will only affect the
 specific object instance. Same behaviour as with arrays.
 see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">blanksColor: </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="mi">140</span><span class="p">,</span> <span class="mi">140</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Properties for text-editing</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">isScrollable: </span><span class="kc">true</span>
   <span class="nv">currentlySelecting: </span><span class="kc">false</span>
-  <span class="nv">startMark: </span><span class="mi">0</span>
-  <span class="nv">endMark: </span><span class="mi">0</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>careful: this Color object is shared with all the instances of this class.
+  <span class="nv">startMark: </span><span class="kc">null</span>
+  <span class="nv">endMark: </span><span class="kc">null</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>careful: this Color object is shared with all the instances of this class.
 if you modify it, then all the objects will get the change
 but if you replace it with a new Color, then that will only affect the
 specific object instance. Same behaviour as with arrays.
@@ -246,8 +246,8 @@ so the caret can be moved accordingly</p>             </td>             <td clas
   
   <span class="nv">clearSelection: </span><span class="nf">-&gt;</span>
     <span class="vi">@currentlySelecting = </span><span class="kc">false</span>
-    <span class="vi">@startMark = </span><span class="mi">0</span>
-    <span class="vi">@endMark = </span><span class="mi">0</span>
+    <span class="vi">@startMark = </span><span class="kc">null</span>
+    <span class="vi">@endMark = </span><span class="kc">null</span>
     <span class="nx">@changed</span><span class="p">()</span>
     <span class="nx">@updateRendering</span><span class="p">()</span>
     <span class="nx">@changed</span><span class="p">()</span>
@@ -280,8 +280,8 @@ is triggered, which creates a new caret.</p>             </td>             <td c
       <span class="vi">@currentlySelecting = </span><span class="kc">true</span>
     <span class="k">else</span>
       <span class="nx">@escalateEvent</span> <span class="s">&quot;mouseClickLeft&quot;</span><span class="p">,</span> <span class="nx">pos</span>
-  
-  <span class="nv">enableSelecting: </span><span class="nf">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>mouseDoubleClick: ->
+ alert "mouseDoubleClick!"</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">enableSelecting: </span><span class="nf">-&gt;</span>
     <span class="vi">@mouseDownLeft = </span><span class="nf">(pos) -&gt;</span>
       <span class="nx">@clearSelection</span><span class="p">()</span>
       <span class="k">if</span> <span class="nx">@isEditable</span> <span class="o">and</span> <span class="p">(</span><span class="o">not</span> <span class="nx">@isDraggable</span><span class="p">)</span>
@@ -299,7 +299,7 @@ is triggered, which creates a new caret.</p>             </td>             <td c
           <span class="nx">@updateRendering</span><span class="p">()</span>
           <span class="nx">@changed</span><span class="p">()</span>
   
-  <span class="nv">disableSelecting: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-36">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-36">&#182;</a>               </div>               <p>re-establish the original definition of the method</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@mouseDownLeft = </span><span class="nx">StringMorph</span><span class="o">::</span><span class="nx">mouseDownLeft</span>
+  <span class="nv">disableSelecting: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-37">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-37">&#182;</a>               </div>               <p>re-establish the original definition of the method</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@mouseDownLeft = </span><span class="nx">StringMorph</span><span class="o">::</span><span class="nx">mouseDownLeft</span>
     <span class="k">delete</span> <span class="nx">@mouseMove</span>
 
 </pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
