@@ -116,9 +116,12 @@ class CaretMorph extends BlinkerMorph
   #  @slot = Math.max(newSlot, 0)
 
   gotoSlot: (slot) ->
+    # check that slot is within the allowed boundaries of
+    # of zero and text length.
     length = @target.text.length
-    pos = @target.slotCoordinates(slot)
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
+
+    pos = @target.slotCoordinates(@slot)
     if @parent and @target.isScrollable
       right = @parent.right() - @viewPadding
       left = @parent.left() + @viewPadding
