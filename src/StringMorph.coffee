@@ -26,8 +26,8 @@ class StringMorph extends Morph
   # Properties for text-editing
   isScrollable: true
   currentlySelecting: false
-  startMark: 0
-  endMark: 0
+  startMark: null
+  endMark: null
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
@@ -323,8 +323,8 @@ class StringMorph extends Morph
   
   clearSelection: ->
     @currentlySelecting = false
-    @startMark = 0
-    @endMark = 0
+    @startMark = null
+    @endMark = null
     @changed()
     @updateRendering()
     @changed()

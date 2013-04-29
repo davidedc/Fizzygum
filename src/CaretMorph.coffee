@@ -174,7 +174,7 @@ class CaretMorph extends BlinkerMorph
 
   updateSelection: (shift) ->
     if shift
-      if not @target.endMark and not @target.startMark
+      if (@target.endMark is null) and (@target.startMark is null)
         @target.startMark = @slot
         @target.endMark = @slot
       else if @target.endMark isnt @slot
