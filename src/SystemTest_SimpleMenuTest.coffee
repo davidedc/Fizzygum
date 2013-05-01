@@ -17,7 +17,7 @@
 # Note for Chrome: You have to replace the data URL because
 # it contains an ellipsis for more comfortable viewing in the console.
 # Workaround: find that url and right-click: open in new tab and then copy the
-# full data URL from the location bar and subsitute it with the one
+# full data URL from the location bar and substitute it with the one
 # of the ellipses.
 # Then pass the JSON into http://js2coffee.org/
 # and save it in this file.

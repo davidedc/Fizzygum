@@ -429,6 +429,7 @@ class WorldMorph extends FrameMorph
 
   stopTestRecording: ->
     @systemTestsRecorderAndPlayer.stopTestRecording()
+
   startTestPlaying: ->
     @systemTestsRecorderAndPlayer.startTestPlaying()
 
