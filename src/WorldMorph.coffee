@@ -417,7 +417,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "user mode...", "toggleDevMode", "disable developers'\ncontext menus"
     else
       menu.addItem "development mode...", "toggleDevMode"
-    menu.addItem "about morphic.js...", "about"
+    menu.addItem "about Zombie Kernel...", "about"
     menu
   
   userCreateMorph: ->
