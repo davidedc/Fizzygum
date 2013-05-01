@@ -300,7 +300,7 @@ class WorldMorph extends FrameMorph
         window.setTimeout ( => (@caret.insert text)), 50, true
     ), false
 
-    console.log "binding wit mousetrap"
+    #console.log "binding with mousetrap"
     Mousetrap.bind ["command+k", "ctrl+k"], (e) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
       false
