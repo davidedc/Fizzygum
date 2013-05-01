@@ -595,12 +595,11 @@ class WorldMorph extends FrameMorph
         versions += ("\n" + module + " (" + modules[module] + ")")  
     if versions isnt ""
       versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
-    @inform "morphic.js\n\n" +
+    @inform "Zombie kernel\n\n" +
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
-      "\n\original from Jens Mönig's (jens@moenig.org) morphic.js\n" +
-      "\n\nported and extended by Davide Della Casa\n" +
-      versions
+      "\n\nby Davide Della Casa" +
+      "\n\nbased on Jens Mönig's (jens@moenig.org) morphic.js"
   
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable
