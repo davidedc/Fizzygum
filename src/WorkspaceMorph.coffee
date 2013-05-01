@@ -6,6 +6,7 @@ class WorkspaceMorph extends BoxMorph
   morphsList: null
   buttonClose: null
   resizer: null
+  closeIcon: null
 
   constructor: (target) ->
     super()
@@ -43,6 +44,12 @@ class WorkspaceMorph extends BoxMorph
     @label.color = new Color(255, 255, 255)
     @label.updateRendering()
     @add @label
+
+    @closeIcon = new CircleBoxMorph()
+    @closeIcon.color = new Color(255, 255, 255)
+    @add @closeIcon
+    @closeIcon.mouseClickLeft = =>
+        @destroy()
 
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
@@ -87,12 +94,20 @@ class WorkspaceMorph extends BoxMorph
   fixLayout: ->
     Morph::trackChanges = false
 
-    # label
+    handleSize = WorldMorph.MorphicPreferences.handleSize;
+
     x = @left() + @edge
     y = @top() + @edge
     r = @right() - @edge
     w = r - x
-    @label.setPosition new Point(x, y)
+
+    # close icon
+    @closeIcon.setPosition new Point(x, y)
+    closeIconScale = 2/3
+    @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)
+
+    # label
+    @label.setPosition new Point(x + handleSize * closeIconScale + @edge, y - @edge/2)
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @silentSetHeight @label.height() + 50
@@ -101,10 +116,10 @@ class WorkspaceMorph extends BoxMorph
       @resizer.updateRendering()
 
     # morphsList
-    y = @label.bottom() + 2
+    y = @label.bottom() + @edge/2
     w = @width() - @edge
     w -= @edge
-    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize
+    b = @bottom() - (2 * @edge) - handleSize
     h = b - y
     @morphsList.setPosition new Point(x, y)
     @morphsList.setExtent new Point(w, h)
@@ -112,7 +127,7 @@ class WorkspaceMorph extends BoxMorph
     # close button
     x = @morphsList.left()
     y = @morphsList.bottom() + @edge
-    h = WorldMorph.MorphicPreferences.handleSize
+    h = handleSize
     w = @morphsList.width() - h - @edge
     @buttonClose.setPosition new Point(x, y)
     @buttonClose.setExtent new Point(w, h)
