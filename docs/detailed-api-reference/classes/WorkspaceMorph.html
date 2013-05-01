@@ -13,7 +13,7 @@
   <div id='menu'>
     <a href='../class_index.html' title='Index'>Index</a>
     &raquo;
-    <span class='title'>ColorPickerMorph</span>
+    <span class='title'>WorkspaceMorph</span>
     <nav>
       <ul>
         <li class='noframes'>
@@ -104,17 +104,17 @@
     <div id='content'>
       <h1>
         Class:
-        ColorPickerMorph
+        WorkspaceMorph
       </h1>
       <table class='box'>
         <tr>
           <td>Defined in:</td>
-          <td>.&#47;src&#47;ColorPickerMorph.coffee</td>
+          <td>.&#47;src&#47;WorkspaceMorph.coffee</td>
         </tr>
         <tr>
           <td>Inherits:</td>
           <td>
-            <a href='../classes/Morph.html'>Morph</a>
+            <a href='../classes/BoxMorph.html'>BoxMorph</a>
           </td>
         </tr>
       </table>
@@ -123,7 +123,7 @@
   <li>
     <span class='signature'>
       <a href='#constructor-instance'>
-        - (void) <strong>constructor</strong>(defaultColor)
+        - (void) <strong>constructor</strong>(target)
       </a>
     </span>
     <span class='constructor note title'>Constructor</span>
@@ -133,8 +133,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#updateRendering-instance'>
-        - (void) <strong>updateRendering</strong>()
+      <a href='#setTarget-instance'>
+        - (void) <strong>setTarget</strong>(target)
       </a>
     </span>
     <span class='desc'>
@@ -143,8 +143,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#buildSubmorphs-instance'>
-        - (void) <strong>buildSubmorphs</strong>()
+      <a href='#buildPanes-instance'>
+        - (void) <strong>buildPanes</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -153,8 +153,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#getChoice-instance'>
-        - (void) <strong>getChoice</strong>()
+      <a href='#fixLayout-instance'>
+        - (void) <strong>fixLayout</strong>()
       </a>
     </span>
     <span class='desc'>
@@ -163,8 +163,8 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#rootForGrab-instance'>
-        - (void) <strong>rootForGrab</strong>()
+      <a href='#setExtent-instance'>
+        - (void) <strong>setExtent</strong>(aPoint)
       </a>
     </span>
     <span class='desc'>
@@ -175,6 +175,21 @@
       <h2>
         <small>Inherited Method Summary</small>
       </h2>
+      <h3 class='inherited'>
+        Methods inherited from
+        <a href='../classes/BoxMorph.html'>BoxMorph</a>
+      </h3>
+      <p class='inherited'>
+                <a href='../classes/BoxMorph.html#constructor-instance'>#constructor</a>,
+                <a href='../classes/BoxMorph.html#updateRendering-instance'>#updateRendering</a>,
+                <a href='../classes/BoxMorph.html#outlinePath-instance'>#outlinePath</a>,
+                <a href='../classes/BoxMorph.html#developersMenu-instance'>#developersMenu</a>,
+                <a href='../classes/BoxMorph.html#setBorderWidth-instance'>#setBorderWidth</a>,
+                <a href='../classes/BoxMorph.html#setBorderColor-instance'>#setBorderColor</a>,
+                <a href='../classes/BoxMorph.html#setCornerSize-instance'>#setCornerSize</a>,
+                <a href='../classes/BoxMorph.html#colorSetters-instance'>#colorSetters</a>,
+        <a href='../classes/BoxMorph.html#numericalSetters-instance'>#numericalSetters</a>
+      </p>
       <h3 class='inherited'>
         Methods inherited from
         <a href='../classes/Morph.html'>Morph</a>
@@ -320,7 +335,7 @@
       <div class='methods'>
   <div class='method_details'>
     <p class='signature' id='constructor-instance'>
-      - (void) <strong>constructor</strong>(defaultColor)
+      - (void) <strong>constructor</strong>(target)
     </p>
     <div class='tags'>
 </div>
@@ -329,29 +344,29 @@
       <h2>Instance Method Details</h2>
       <div class='methods'>
   <div class='method_details'>
-    <p class='signature' id='updateRendering-instance'>
-      - (void) <strong>updateRendering</strong>()
+    <p class='signature' id='setTarget-instance'>
+      - (void) <strong>setTarget</strong>(target)
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='buildSubmorphs-instance'>
-      - (void) <strong>buildSubmorphs</strong>()
+    <p class='signature' id='buildPanes-instance'>
+      - (void) <strong>buildPanes</strong>()
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='getChoice-instance'>
-      - (void) <strong>getChoice</strong>()
+    <p class='signature' id='fixLayout-instance'>
+      - (void) <strong>fixLayout</strong>()
     </p>
     <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='rootForGrab-instance'>
-      - (void) <strong>rootForGrab</strong>()
+    <p class='signature' id='setExtent-instance'>
+      - (void) <strong>setExtent</strong>(aPoint)
     </p>
     <div class='tags'>
 </div>
