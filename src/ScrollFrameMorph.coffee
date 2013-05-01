@@ -130,7 +130,12 @@ class ScrollFrameMorph extends FrameMorph
     b = @bottom()
     newY = ct + steps
     newY = t  if newY > t
-    newY = b - ch  if newY + ch < b
+    if newY + ch < b
+      newY = b - ch
+      # prevents content to be scrolled to the frame's
+      # bottom if the content is otherwise empty
+      if (newY > t)
+        newY = t;
     @contents.setTop newY  if newY isnt ct
   
   mouseDownLeft: (pos) ->
