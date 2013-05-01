@@ -1,14 +1,14 @@
 # How to play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
 # window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData
-# window.world.systemTestsRecorderAndPlayer.startPlaying()
+# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
 
 # How to save a test:
-# window.world.systemTestsRecorderAndPlayer.startRecording()
+# window.world.systemTestsRecorderAndPlayer.startTestRecording()
 # ...do the test...
-# window.world.systemTestsRecorderAndPlayer.stopRecording()
+# window.world.systemTestsRecorderAndPlayer.stopTestRecording()
 # if you want to verify the test on the spot:
-# window.world.systemTestsRecorderAndPlayer.startPlaying()
+# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
 # then to save the test:
 # console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))
 # copy that blurb

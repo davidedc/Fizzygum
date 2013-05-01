@@ -28,7 +28,7 @@ class SystemTestsRecorderAndPlayer
     @systemInfo.platform = navigator.platform
     @systemInfo.systemLanguage = navigator.systemLanguage
 
-  startRecording: ->
+  startTestRecording: ->
     # clean up the world so we start from clean slate
     @worldMorph.destroyAll()
     @eventQueue = []
@@ -43,10 +43,10 @@ class SystemTestsRecorderAndPlayer
     systemTestEvent.systemInfo = @systemInfo
     @eventQueue.push systemTestEvent
 
-  stopRecording: ->
+  stopTestRecording: ->
     @recordingASystemTest = false
 
-  startPlaying: ->
+  startTestPlaying: ->
     @recordingASystemTest = false
     @replayingASystemTest = true
     @replayEvents()
