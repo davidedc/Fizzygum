@@ -54,6 +54,9 @@ class SystemTestsRecorderAndPlayer
   stopPlaying: ->
     @replayingASystemTest = false
 
+  showTestSource: ->
+    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue )))
+
   addMouseMoveEvent: (pageX, pageY) ->
     return if not @recordingASystemTest
     currentTime = new Date().getTime()
