@@ -412,6 +412,10 @@ class WorldMorph extends FrameMorph
         menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"
       menu.addLine()
     menu.addItem "run system tests",  "runSystemTests", "runs all the system tests"
+    menu.addItem "start test rec",  "startTestRecording", "start recording a test"
+    menu.addItem "stop test rec",  "stopTestRecording", "stop recording the test"
+    menu.addItem "play test",  "startTestPlaying", "start playing the test"
+    menu.addItem "show test source",  "showTestSource", "opens a window with the source of the latest test"
     menu.addLine()
     if @isDevMode
       menu.addItem "user mode...", "toggleDevMode", "disable developers'\ncontext menus"
@@ -419,6 +423,17 @@ class WorldMorph extends FrameMorph
       menu.addItem "development mode...", "toggleDevMode"
     menu.addItem "about Zombie Kernel...", "about"
     menu
+
+  startTestRecording: ->
+    @systemTestsRecorderAndPlayer.startTestRecording()
+
+  stopTestRecording: ->
+    @systemTestsRecorderAndPlayer.stopTestRecording()
+  startTestPlaying: ->
+    @systemTestsRecorderAndPlayer.startTestPlaying()
+
+  showTestSource: ->
+    @systemTestsRecorderAndPlayer.showTestSource()
   
   userCreateMorph: ->
     create = (aMorph) =>
