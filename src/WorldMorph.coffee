@@ -568,7 +568,10 @@ class WorldMorph extends FrameMorph
     menu.addItem "view all...", ->
       newMorph = new MorphsListMorph()
       create newMorph
-    
+    menu.addItem "closing window", ->
+      newMorph = new WorkspaceMorph()
+      create newMorph
+
     if @customMorphs
       menu.addLine()
       @customMorphs().forEach (morph) ->
