@@ -181,7 +181,11 @@ class TriggerMorph extends Morph
     @triggerDoubleClick()
 
   # Disable dragging compound Morphs by Triggers
+  # User can still move the trigger itself though
+  # (it it's unlocked)
   rootForGrab: ->
+    if @isDraggable
+      return super()
     null
   
   # TriggerMorph bubble help:
