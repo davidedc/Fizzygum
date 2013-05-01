@@ -1,3 +1,3 @@
 var Audio;
 var console;
-var $;
+var JSON;
