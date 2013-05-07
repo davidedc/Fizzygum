@@ -119,8 +119,8 @@ class ScrollFrameMorph extends FrameMorph
     cw = @contents.width()
     r = @right()
     newX = cl + steps
-    newX = l  if newX > l
     newX = r - cw  if newX + cw < r
+    newX = l  if newX > l
     @contents.setLeft newX  if newX isnt cl
   
   scrollY: (steps) ->
@@ -129,13 +129,11 @@ class ScrollFrameMorph extends FrameMorph
     ch = @contents.height()
     b = @bottom()
     newY = ct + steps
-    newY = t  if newY > t
     if newY + ch < b
       newY = b - ch
-      # prevents content to be scrolled to the frame's
-      # bottom if the content is otherwise empty
-      if (newY > t)
-        newY = t;
+    # prevents content to be scrolled to the frame's
+    # bottom if the content is otherwise empty
+    newY = t  if newY > t
     @contents.setTop newY  if newY isnt ct
   
   mouseDownLeft: (pos) ->
