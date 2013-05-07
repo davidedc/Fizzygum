@@ -13,7 +13,7 @@
   <div id='menu'>
     <a href='../class_index.html' title='Index'>Index</a>
     &raquo;
-    <span class='title'>MenuMorph</span>
+    <span class='title'>CloseCircleButtonMorph</span>
     <nav>
       <ul>
         <li class='noframes'>
@@ -104,17 +104,17 @@
     <div id='content'>
       <h1>
         Class:
-        MenuMorph
+        CloseCircleButtonMorph
       </h1>
       <table class='box'>
         <tr>
           <td>Defined in:</td>
-          <td>.&#47;src&#47;MenuMorph.coffee</td>
+          <td>.&#47;src&#47;CloseCircleButtonMorph.coffee</td>
         </tr>
         <tr>
           <td>Inherits:</td>
           <td>
-            <a href='../classes/BoxMorph.html'>BoxMorph</a>
+            <a href='../classes/CircleBoxMorph.html'>CircleBoxMorph</a>
           </td>
         </tr>
       </table>
@@ -123,40 +123,10 @@
   <li>
     <span class='signature'>
       <a href='#constructor-instance'>
-        - (void) <strong>constructor</strong>(target, title = null, environment = null, fontSize = null)
+        - (void) <strong>constructor</strong>(orientation = "vertical")
       </a>
     </span>
     <span class='constructor note title'>Constructor</span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#addItem-instance'>
-        - (void) <strong>addItem</strong>(labelString, action, hint, color, bold = false, italic = false, doubleClickAction)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#addLine-instance'>
-        - (void) <strong>addLine</strong>(width)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#createLabel-instance'>
-        - (void) <strong>createLabel</strong>()
-      </a>
-    </span>
     <span class='desc'>
       
     </span>
@@ -171,94 +141,20 @@
       
     </span>
   </li>
-  <li>
-    <span class='signature'>
-      <a href='#maxWidth-instance'>
-        - (void) <strong>maxWidth</strong>()
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#adjustWidths-instance'>
-        - (void) <strong>adjustWidths</strong>()
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#unselectAllItems-instance'>
-        - (void) <strong>unselectAllItems</strong>()
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#popup-instance'>
-        - (void) <strong>popup</strong>(world, pos)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#popUpAtHand-instance'>
-        - (void) <strong>popUpAtHand</strong>(world)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#popUpCenteredAtHand-instance'>
-        - (void) <strong>popUpCenteredAtHand</strong>(world)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
-      <a href='#popUpCenteredInWorld-instance'>
-        - (void) <strong>popUpCenteredInWorld</strong>(world)
-      </a>
-    </span>
-    <span class='desc'>
-      
-    </span>
-  </li>
 </ul>
       <h2>
         <small>Inherited Method Summary</small>
       </h2>
       <h3 class='inherited'>
         Methods inherited from
-        <a href='../classes/BoxMorph.html'>BoxMorph</a>
+        <a href='../classes/CircleBoxMorph.html'>CircleBoxMorph</a>
       </h3>
       <p class='inherited'>
-                <a href='../classes/BoxMorph.html#constructor-instance'>#constructor</a>,
-                <a href='../classes/BoxMorph.html#updateRendering-instance'>#updateRendering</a>,
-                <a href='../classes/BoxMorph.html#outlinePath-instance'>#outlinePath</a>,
-                <a href='../classes/BoxMorph.html#developersMenu-instance'>#developersMenu</a>,
-                <a href='../classes/BoxMorph.html#setBorderWidth-instance'>#setBorderWidth</a>,
-                <a href='../classes/BoxMorph.html#setBorderColor-instance'>#setBorderColor</a>,
-                <a href='../classes/BoxMorph.html#setCornerSize-instance'>#setCornerSize</a>,
-                <a href='../classes/BoxMorph.html#colorSetters-instance'>#colorSetters</a>,
-        <a href='../classes/BoxMorph.html#numericalSetters-instance'>#numericalSetters</a>
+                <a href='../classes/CircleBoxMorph.html#constructor-instance'>#constructor</a>,
+                <a href='../classes/CircleBoxMorph.html#autoOrientation-instance'>#autoOrientation</a>,
+                <a href='../classes/CircleBoxMorph.html#updateRendering-instance'>#updateRendering</a>,
+                <a href='../classes/CircleBoxMorph.html#developersMenu-instance'>#developersMenu</a>,
+        <a href='../classes/CircleBoxMorph.html#toggleOrientation-instance'>#toggleOrientation</a>
       </p>
       <h3 class='inherited'>
         Methods inherited from
@@ -405,7 +301,7 @@
       <div class='methods'>
   <div class='method_details'>
     <p class='signature' id='constructor-instance'>
-      - (void) <strong>constructor</strong>(target, title = null, environment = null, fontSize = null)
+      - (void) <strong>constructor</strong>(orientation = "vertical")
     </p>
     <div class='tags'>
 </div>
@@ -414,78 +310,8 @@
       <h2>Instance Method Details</h2>
       <div class='methods'>
   <div class='method_details'>
-    <p class='signature' id='addItem-instance'>
-      - (void) <strong>addItem</strong>(labelString, action, hint, color, bold = false, italic = false, doubleClickAction)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='addLine-instance'>
-      - (void) <strong>addLine</strong>(width)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='createLabel-instance'>
-      - (void) <strong>createLabel</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
     <p class='signature' id='updateRendering-instance'>
       - (void) <strong>updateRendering</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='maxWidth-instance'>
-      - (void) <strong>maxWidth</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='adjustWidths-instance'>
-      - (void) <strong>adjustWidths</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='unselectAllItems-instance'>
-      - (void) <strong>unselectAllItems</strong>()
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='popup-instance'>
-      - (void) <strong>popup</strong>(world, pos)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='popUpAtHand-instance'>
-      - (void) <strong>popUpAtHand</strong>(world)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='popUpCenteredAtHand-instance'>
-      - (void) <strong>popUpCenteredAtHand</strong>(world)
-    </p>
-    <div class='tags'>
-</div>
-  </div>
-  <div class='method_details'>
-    <p class='signature' id='popUpCenteredInWorld-instance'>
-      - (void) <strong>popUpCenteredInWorld</strong>(world)
     </p>
     <div class='tags'>
 </div>
