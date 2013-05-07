@@ -132,8 +132,13 @@ task :default do
       puts i
     end
  
+    # now go through the files in the order
+    # we just decided and we create the
+    # giant final .coffee file.
     File.open(finalOutputFile, 'w') do |output|
       inclusion_order.each do |f|
+        # for each file, just write it out in
+        # the giant final .coffee file.
         output.write(File.read(f))
         lines = File.readlines(f)
 
@@ -142,12 +147,16 @@ task :default do
         # next could end up on the same line.
         output.write("\n")
 
-        # first check whether this file is a class
+        # now, if the file is a class file, then
+        # we also add a static variable containing
+        # the source code.
+        # So, first check whether this file is a class
         # we do that by scanning all the lines looking
         # for a class ... declaration
         fileIsAClass = false
         lines.each do |line|
-          # check if this is a class
+          # check if this is a class, (i.e. if any line
+          # contains a typical class declaration.)
           if fileIsAClass == false
             fileIsAClass = ((line =~ /class\s+(\w+)/)!=nil)
           end
