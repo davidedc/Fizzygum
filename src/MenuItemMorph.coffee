@@ -17,8 +17,12 @@ class MenuItemMorph extends TriggerMorph
       # assume its pattern is: [icon, string] 
       @label = new Morph()
       @label.alpha = 0 # transparent
-      @label.add icon = @createIcon(@labelString[0])
-      @label.add lbl = @createLabelString(@labelString[1])
+
+      icon = @createIcon(@labelString[0])
+      @label.add icon
+      lbl = @createLabelString(@labelString[1])
+      @label.add lbl
+
       lbl.setCenter icon.center()
       lbl.setLeft icon.right() + 4
       @label.bounds = (icon.bounds.merge(lbl.bounds))
