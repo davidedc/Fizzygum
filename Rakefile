@@ -165,7 +165,13 @@ task :default do
           end
           output.puts "  '''"
         end # end of if file is a class
-      end
-    end
+      end # end of scanning through all the files
+
+      # add the morphic version. This is used in the about
+      # box.
+      time = Time.new
+      output.puts "\nmorphicVersion = 'version of "+time.strftime("%Y-%m-%d %H:%M:%S")+"'"
+
+    end # end of writing the huge final .coffee file
 end # end of default task
  
