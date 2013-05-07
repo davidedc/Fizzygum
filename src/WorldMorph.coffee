@@ -603,7 +603,8 @@ class WorldMorph extends FrameMorph
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
       "\n\nby Davide Della Casa" +
-      "\n\nbased on Jens Mönig's (jens@moenig.org) morphic.js"
+      "\n\nbased on morphic.js by" +
+      "\nJens Mönig (jens@moenig.org)"
   
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable
