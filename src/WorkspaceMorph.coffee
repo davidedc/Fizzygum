@@ -45,7 +45,7 @@ class WorkspaceMorph extends BoxMorph
     @label.updateRendering()
     @add @label
 
-    @closeIcon = new CircleBoxMorph()
+    @closeIcon = new CloseCircleButtonMorph()
     @closeIcon.color = new Color(255, 255, 255)
     @add @closeIcon
     @closeIcon.mouseClickLeft = =>
