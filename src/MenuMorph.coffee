@@ -62,6 +62,8 @@ class MenuMorph extends BoxMorph
     text.backgroundColor = @borderColor
     text.updateRendering()
     @label = new BoxMorph(3, 0)
+    if WorldMorph.MorphicPreferences.isFlat
+      @label.edge = 0
     @label.color = @borderColor
     @label.borderColor = @borderColor
     @label.setExtent text.extent().add(4)
@@ -76,8 +78,8 @@ class MenuMorph extends BoxMorph
     #
     @children = []
     unless @isListContents
-      @edge = 5
-      @border = 2
+      @edge = if WorldMorph.MorphicPreferences.isFlat then 0 else 5
+      @border = if WorldMorph.MorphicPreferences.isFlat then 1 else 2
     @color = new Color(255, 255, 255)
     @borderColor = new Color(60, 60, 60)
     @silentSetExtent new Point(0, 0)

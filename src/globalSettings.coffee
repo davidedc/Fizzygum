@@ -26,6 +26,7 @@ standardSettings =
   useVirtualKeyboard: true
   isTouchDevice: false # turned on by touch events, don't set
   rasterizeSVGs: false
+  isFlat: false
 
 touchScreenSettings =
   minimumFontHeight: standardSettings.minimumFontHeight
@@ -43,4 +44,5 @@ touchScreenSettings =
   useVirtualKeyboard: true
   isTouchDevice: false
   rasterizeSVGs: false
+  isFlat: false
 

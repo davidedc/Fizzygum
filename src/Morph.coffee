@@ -544,7 +544,7 @@ class Morph extends MorphicNode
     alpha = a or ((if (a is 0) then 0 else 0.2))
     fb = @boundsIncludingChildren()
     shadow.setExtent fb.extent().add(@shadowBlur * 2)
-    if useBlurredShadows
+    if useBlurredShadows and  !WorldMorph.MorphicPreferences.isFlat
       shadow.image = @shadowImageBlurred(offset, color)
       shadow.alpha = alpha
       shadow.setPosition fb.origin.add(offset).subtract(@shadowBlur)

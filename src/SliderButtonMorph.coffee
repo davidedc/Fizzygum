@@ -17,7 +17,7 @@ class SliderButtonMorph extends CircleBoxMorph
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   pressColor: new Color(80, 80, 160)
-  is3D: true
+  is3D: false
   hasMiddleDip: true
 
   constructor: (orientation) ->
@@ -30,15 +30,18 @@ class SliderButtonMorph extends CircleBoxMorph
   updateRendering: ->
     colorBak = @color.copy()
     super()
-    @drawEdges()  if @is3D
+    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+      @drawEdges()
     @normalImage = @image
     @color = @highlightColor.copy()
     super()
-    @drawEdges()  if @is3D
+    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+      @drawEdges()
     @highlightImage = @image
     @color = @pressColor.copy()
     super()
-    @drawEdges()  if @is3D
+    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+      @drawEdges()
     @pressImage = @image
     @color = colorBak
     @image = @normalImage

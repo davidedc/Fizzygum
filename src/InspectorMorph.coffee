@@ -24,7 +24,7 @@ class InspectorMorph extends BoxMorph
       WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
-    @edge = 5
+    @edge = if WorldMorph.MorphicPreferences.isFlat then 1 else 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
     @updateRendering()
