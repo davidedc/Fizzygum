@@ -54,6 +54,8 @@ of the following:
     <span class="nv">text.backgroundColor = </span><span class="nx">@borderColor</span>
     <span class="nx">text</span><span class="p">.</span><span class="nx">updateRendering</span><span class="p">()</span>
     <span class="vi">@label = </span><span class="k">new</span> <span class="nx">BoxMorph</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span>
+      <span class="vi">@label.edge = </span><span class="mi">0</span>
     <span class="vi">@label.color = </span><span class="nx">@borderColor</span>
     <span class="vi">@label.borderColor = </span><span class="nx">@borderColor</span>
     <span class="nx">@label</span><span class="p">.</span><span class="nx">setExtent</span> <span class="nx">text</span><span class="p">.</span><span class="nx">extent</span><span class="p">().</span><span class="nx">add</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
@@ -66,8 +68,8 @@ of the following:
     <span class="nx">@children</span><span class="p">.</span><span class="nx">forEach</span> <span class="nf">(m) -&gt;</span>
       <span class="nx">m</span><span class="p">.</span><span class="nx">destroy</span><span class="p">()</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre>    <span class="vi">@children = </span><span class="p">[]</span>
     <span class="k">unless</span> <span class="nx">@isListContents</span>
-      <span class="vi">@edge = </span><span class="mi">5</span>
-      <span class="vi">@border = </span><span class="mi">2</span>
+      <span class="vi">@edge = </span><span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span> <span class="k">then</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">5</span>
+      <span class="vi">@border = </span><span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span> <span class="k">then</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">2</span>
     <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
     <span class="vi">@borderColor = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
     <span class="nx">@silentSetExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>

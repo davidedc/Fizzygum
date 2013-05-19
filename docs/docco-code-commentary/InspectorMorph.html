@@ -18,7 +18,7 @@
       <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
     <span class="vi">@isDraggable = </span><span class="kc">true</span>
     <span class="vi">@border = </span><span class="mi">1</span>
-    <span class="vi">@edge = </span><span class="mi">5</span>
+    <span class="vi">@edge = </span><span class="k">if</span> <span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span> <span class="k">then</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">5</span>
     <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
     <span class="vi">@borderColor = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">95</span><span class="p">,</span> <span class="mi">95</span><span class="p">,</span> <span class="mi">95</span><span class="p">)</span>
     <span class="nx">@updateRendering</span><span class="p">()</span>

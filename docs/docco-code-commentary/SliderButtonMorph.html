@@ -8,7 +8,7 @@ if you modify it, then all the objects will get the change
 but if you replace it with a new Color, then that will only affect the
 specific object instance. Same behaviour as with arrays.
 see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">pressColor: </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">160</span><span class="p">)</span>
-  <span class="nv">is3D: </span><span class="kc">true</span>
+  <span class="nv">is3D: </span><span class="kc">false</span>
   <span class="nv">hasMiddleDip: </span><span class="kc">true</span>
 
   <span class="nv">constructor: </span><span class="nf">(orientation) -&gt;</span>
@@ -21,15 +21,18 @@ see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   <span class="nv">updateRendering: </span><span class="nf">-&gt;</span>
     <span class="nv">colorBak = </span><span class="nx">@color</span><span class="p">.</span><span class="nx">copy</span><span class="p">()</span>
     <span class="k">super</span><span class="p">()</span>
-    <span class="nx">@drawEdges</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@is3D</span>
+    <span class="k">if</span> <span class="nx">@is3D</span> <span class="o">or</span> <span class="o">!</span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span>
+      <span class="nx">@drawEdges</span><span class="p">()</span>
     <span class="vi">@normalImage = </span><span class="nx">@image</span>
     <span class="vi">@color = </span><span class="nx">@highlightColor</span><span class="p">.</span><span class="nx">copy</span><span class="p">()</span>
     <span class="k">super</span><span class="p">()</span>
-    <span class="nx">@drawEdges</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@is3D</span>
+    <span class="k">if</span> <span class="nx">@is3D</span> <span class="o">or</span> <span class="o">!</span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span>
+      <span class="nx">@drawEdges</span><span class="p">()</span>
     <span class="vi">@highlightImage = </span><span class="nx">@image</span>
     <span class="vi">@color = </span><span class="nx">@pressColor</span><span class="p">.</span><span class="nx">copy</span><span class="p">()</span>
     <span class="k">super</span><span class="p">()</span>
-    <span class="nx">@drawEdges</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@is3D</span>
+    <span class="k">if</span> <span class="nx">@is3D</span> <span class="o">or</span> <span class="o">!</span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">isFlat</span>
+      <span class="nx">@drawEdges</span><span class="p">()</span>
     <span class="vi">@pressImage = </span><span class="nx">@image</span>
     <span class="vi">@color = </span><span class="nx">colorBak</span>
     <span class="vi">@image = </span><span class="nx">@normalImage</span>
