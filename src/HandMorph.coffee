@@ -259,6 +259,7 @@ class HandMorph extends Morph
     #    ```droppedBinary(anArrayBuffer, name)```
 
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
+    url = (if event.dataTransfer then event.dataTransfer.getData("URL") else null)
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
     targetDrop = @morphAtPointer()
     img = new Image()
@@ -336,6 +337,15 @@ class HandMorph extends Morph
           readText file
         else
           readBinary file
+    else if url
+      if contains(["gif", "png", "jpg", "jpeg", "bmp"], url.slice(url.lastIndexOf(".") + 1).toLowerCase())
+        target = target.parent  until target.droppedImage
+        img = new Image()
+        img.onload = ->
+          canvas = newCanvas(new Point(img.width, img.height))
+          canvas.getContext("2d").drawImage img, 0, 0
+          target.droppedImage canvas
+        img.src = url
     else if txt
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       img = new Image()
