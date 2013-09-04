@@ -432,7 +432,7 @@ class HandMorph extends Morph
     #			}
     #		}
     #
-    @mouseOverList.forEach (old) ->
+    @mouseOverList.forEach (old) =>
       unless contains(mouseOverNew, old)
         old.mouseLeave()  if old.mouseLeave
         old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
