@@ -379,7 +379,7 @@ class WorldMorph extends FrameMorph
       @changed()
       # start from clean slate
       @destroyAll()
-      @systemTestsRecorderAndPlayer.startPlaying()
+      @systemTestsRecorderAndPlayer.startTestPlaying()
 
   # WorldMorph menu:
   contextMenu: ->
