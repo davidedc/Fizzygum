@@ -266,8 +266,8 @@ class SystemTest_SimpleMenuTest
     time: 113
   ,
     type: "mouseMove"
-    mouseX: 364
-    mouseY: 156
+    mouseX: 374
+    mouseY: 165
     time: 1809
   ,
     type: "takeScreenshot"
@@ -306,42 +306,42 @@ class SystemTest_SimpleMenuTest
     ]
   ,
     type: "mouseMove"
-    mouseX: 335
-    mouseY: 134
+    mouseX: 374
+    mouseY: 175
     time: 915
   ,
     type: "mouseMove"
-    mouseX: 318
-    mouseY: 129
+    mouseX: 374
+    mouseY: 185
     time: 17
   ,
     type: "mouseMove"
-    mouseX: 302
-    mouseY: 128
+    mouseX: 374
+    mouseY: 195
     time: 17
   ,
     type: "mouseMove"
-    mouseX: 218
-    mouseY: 120
+    mouseX: 374
+    mouseY: 205
     time: 17
   ,
     type: "mouseMove"
-    mouseX: 156
-    mouseY: 121
+    mouseX: 374
+    mouseY: 215
     time: 16
   ,
     type: "mouseMove"
-    mouseX: 97
-    mouseY: 130
+    mouseX: 374
+    mouseY: 225
     time: 17
   ,
     type: "mouseMove"
-    mouseX: 42
-    mouseY: 134
+    mouseX: 374
+    mouseY: 235
     time: 17
   ,
     type: "mouseMove"
-    mouseX: 12
-    mouseY: 135
+    mouseX: 374
+    mouseY: 245
     time: 16
   ]
