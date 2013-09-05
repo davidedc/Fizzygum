@@ -14,7 +14,7 @@ Just drag "morphee-coffee.html" from the "build" directory into any browser and 
 
 Where are the docs?
 -------------------
-Please check the index.html file in the docs directory, which contains an overview of the system, and links to detailed docco files (and more).
+[Here](http://davidedc.github.io/Zombie-Kernel/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
 
 I made changes - how do I try them / re-build?
 ---------------------------------------------
