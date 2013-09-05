@@ -1,7 +1,8 @@
 Zombie Kernel
 ============
 
-Zombie Kernel is a minimal live desktop system similar in concept to Squeak and Lively Kernel.
+Zombie Kernel is a minimal live desktop system similar in concept to Squeak and Lively Kernel. Try it 
+[here](http://davidedc.github.io/Zombie-Kernel/build/morphee-coffee.html).
 
 ![alt tag](https://raw.github.com/davidedc/Zombie-Kernel/master/docs/other/imgs/ZombieKernelScreenshot5thSept2013.png)
 
