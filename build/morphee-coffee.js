@@ -4,6 +4,153 @@ var BlinkerMorph, BouncerMorph, BoxMorph, CaretMorph, CircleBoxMorph, CloseCircl
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
+Color = (function() {
+  Color.prototype.a = null;
+
+  Color.prototype.r = null;
+
+  Color.prototype.g = null;
+
+  Color.prototype.b = null;
+
+  function Color(r, g, b, a) {
+    this.r = r != null ? r : 0;
+    this.g = g != null ? g : 0;
+    this.b = b != null ? b : 0;
+    this.a = a || (a === 0 ? 0 : 1);
+  }
+
+  Color.prototype.toString = function() {
+    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
+  };
+
+  Color.prototype.copy = function() {
+    return new Color(this.r, this.g, this.b, this.a);
+  };
+
+  Color.prototype.eq = function(aColor) {
+    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
+  };
+
+  Color.prototype.hsv = function() {
+    var bb, d, gg, h, max, min, rr, s, v;
+
+    rr = this.r / 255;
+    gg = this.g / 255;
+    bb = this.b / 255;
+    max = Math.max(rr, gg, bb);
+    min = Math.min(rr, gg, bb);
+    h = max;
+    s = max;
+    v = max;
+    d = max - min;
+    s = (max === 0 ? 0 : d / max);
+    if (max === min) {
+      h = 0;
+    } else {
+      switch (max) {
+        case rr:
+          h = (gg - bb) / d + (gg < bb ? 6 : 0);
+          break;
+        case gg:
+          h = (bb - rr) / d + 2;
+          break;
+        case bb:
+          h = (rr - gg) / d + 4;
+      }
+      h /= 6;
+    }
+    return [h, s, v];
+  };
+
+  Color.prototype.set_hsv = function(h, s, v) {
+    var f, i, p, q, t;
+
+    i = Math.floor(h * 6);
+    f = h * 6 - i;
+    p = v * (1 - s);
+    q = v * (1 - f * s);
+    t = v * (1 - (1 - f) * s);
+    switch (i % 6) {
+      case 0:
+        this.r = v;
+        this.g = t;
+        this.b = p;
+        break;
+      case 1:
+        this.r = q;
+        this.g = v;
+        this.b = p;
+        break;
+      case 2:
+        this.r = p;
+        this.g = v;
+        this.b = t;
+        break;
+      case 3:
+        this.r = p;
+        this.g = q;
+        this.b = v;
+        break;
+      case 4:
+        this.r = t;
+        this.g = p;
+        this.b = v;
+        break;
+      case 5:
+        this.r = v;
+        this.g = p;
+        this.b = q;
+    }
+    this.r *= 255;
+    this.g *= 255;
+    return this.b *= 255;
+  };
+
+  Color.prototype.mixed = function(proportion, otherColor) {
+    var frac1, frac2;
+
+    frac1 = Math.min(Math.max(proportion, 0), 1);
+    frac2 = 1 - frac1;
+    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
+  };
+
+  Color.prototype.darker = function(percent) {
+    var fract;
+
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(0, 0, 0));
+  };
+
+  Color.prototype.lighter = function(percent) {
+    var fract;
+
+    fract = 0.8333;
+    if (percent) {
+      fract = (100 - percent) / 100;
+    }
+    return this.mixed(fract, new Color(255, 255, 255));
+  };
+
+  Color.prototype.dansDarker = function() {
+    var hsv, result, vv;
+
+    hsv = this.hsv();
+    result = new Color();
+    vv = Math.max(hsv[2] - 0.16, 0);
+    result.set_hsv(hsv[0], hsv[1], vv);
+    return result;
+  };
+
+  Color.coffeeScriptSourceOfThisClass = '# Colors //////////////////////////////////////////////////////////////\n\nclass Color\n\n  a: null\n  r: null\n  g: null\n  b: null\n\n  constructor: (@r = 0, @g = 0, @b = 0, a) ->\n    # all values are optional, just (r, g, b) is fine\n    @a = a or ((if (a is 0) then 0 else 1))\n  \n  # Color string representation: e.g. \'rgba(255,165,0,1)\'\n  toString: ->\n    "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"\n  \n  # Color copying:\n  copy: ->\n    new Color(@r, @g, @b, @a)\n  \n  # Color comparison:\n  eq: (aColor) ->\n    # ==\n    aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b\n  \n  \n  # Color conversion (hsv):\n  hsv: ->\n    # ignore alpha\n    rr = @r / 255\n    gg = @g / 255\n    bb = @b / 255\n    max = Math.max(rr, gg, bb)\n    min = Math.min(rr, gg, bb)\n    h = max\n    s = max\n    v = max\n    d = max - min\n    s = (if max is 0 then 0 else d / max)\n    if max is min\n      h = 0\n    else\n      switch max\n        when rr\n          h = (gg - bb) / d + ((if gg < bb then 6 else 0))\n        when gg\n          h = (bb - rr) / d + 2\n        when bb\n          h = (rr - gg) / d + 4\n      h /= 6\n    [h, s, v]\n  \n  set_hsv: (h, s, v) ->\n    # ignore alpha, h, s and v are to be within [0, 1]\n    i = Math.floor(h * 6)\n    f = h * 6 - i\n    p = v * (1 - s)\n    q = v * (1 - f * s)\n    t = v * (1 - (1 - f) * s)\n    switch i % 6\n      when 0\n        @r = v\n        @g = t\n        @b = p\n      when 1\n        @r = q\n        @g = v\n        @b = p\n      when 2\n        @r = p\n        @g = v\n        @b = t\n      when 3\n        @r = p\n        @g = q\n        @b = v\n      when 4\n        @r = t\n        @g = p\n        @b = v\n      when 5\n        @r = v\n        @g = p\n        @b = q\n    @r *= 255\n    @g *= 255\n    @b *= 255\n  \n  \n  # Color mixing:\n  mixed: (proportion, otherColor) ->\n    # answer a copy of this color mixed with another color, ignore alpha\n    frac1 = Math.min(Math.max(proportion, 0), 1)\n    frac2 = 1 - frac1\n    new Color(\n      @r * frac1 + otherColor.r * frac2,\n      @g * frac1 + otherColor.g * frac2,\n      @b * frac1 + otherColor.b * frac2)\n  \n  darker: (percent) ->\n    # return an rgb-interpolated darker copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(0, 0, 0)\n  \n  lighter: (percent) ->\n    # return an rgb-interpolated lighter copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(255, 255, 255)\n  \n  dansDarker: ->\n    # return an hsv-interpolated darker copy of me, ignore alpha\n    hsv = @hsv()\n    result = new Color()\n    vv = Math.max(hsv[2] - 0.16, 0)\n    result.set_hsv hsv[0], hsv[1], vv\n    result';
+
+  return Color;
+
+})();
+
 hashCode = function(stringToBeHashed) {
   var char, hash, i, _i, _ref;
 
@@ -1577,919 +1724,6 @@ Morph = (function(_super) {
 
 })(MorphicNode);
 
-ColorPaletteMorph = (function(_super) {
-  __extends(ColorPaletteMorph, _super);
-
-  ColorPaletteMorph.prototype.target = null;
-
-  ColorPaletteMorph.prototype.targetSetter = "color";
-
-  ColorPaletteMorph.prototype.choice = null;
-
-  function ColorPaletteMorph(target, sizePoint) {
-    this.target = target != null ? target : null;
-    ColorPaletteMorph.__super__.constructor.call(this);
-    this.silentSetExtent(sizePoint || new Point(80, 50));
-    this.updateRendering();
-  }
-
-  ColorPaletteMorph.prototype.updateRendering = function() {
-    var context, ext, h, l, x, y, _i, _ref, _results;
-
-    ext = this.extent();
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    this.choice = new Color();
-    _results = [];
-    for (x = _i = 0, _ref = ext.x; 0 <= _ref ? _i <= _ref : _i >= _ref; x = 0 <= _ref ? ++_i : --_i) {
-      h = 360 * x / ext.x;
-      y = 0;
-      _results.push((function() {
-        var _j, _ref1, _results1;
-
-        _results1 = [];
-        for (y = _j = 0, _ref1 = ext.y; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
-          l = 100 - (y / ext.y * 100);
-          context.fillStyle = "hsl(" + h + ",100%," + l + "%)";
-          _results1.push(context.fillRect(x, y, 1, 1));
-        }
-        return _results1;
-      })());
-    }
-    return _results;
-  };
-
-  ColorPaletteMorph.prototype.mouseMove = function(pos) {
-    this.choice = this.getPixelColor(pos);
-    return this.updateTarget();
-  };
-
-  ColorPaletteMorph.prototype.mouseDownLeft = function(pos) {
-    this.choice = this.getPixelColor(pos);
-    return this.updateTarget();
-  };
-
-  ColorPaletteMorph.prototype.updateTarget = function() {
-    if (this.target instanceof Morph && this.choice !== null) {
-      if (this.target[this.targetSetter] instanceof Function) {
-        return this.target[this.targetSetter](this.choice);
-      } else {
-        this.target[this.targetSetter] = this.choice;
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    }
-  };
-
-  ColorPaletteMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = ColorPaletteMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
-    }
-    return c;
-  };
-
-  ColorPaletteMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = ColorPaletteMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one");
-    return menu;
-  };
-
-  ColorPaletteMorph.prototype.setTarget = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.push(this.world());
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        _this.target = each;
-        return _this.setTargetSetter();
-      });
-    });
-    if (choices.length === 1) {
-      this.target = choices[0];
-      return this.setTargetSetter();
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  ColorPaletteMorph.prototype.setTargetSetter = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.target.colorSetters();
-    menu = new MenuMorph(this, "choose target property:");
-    choices.forEach(function(each) {
-      return menu.addItem(each, function() {
-        return _this.targetSetter = each;
-      });
-    });
-    if (choices.length === 1) {
-      return this.targetSetter = choices[0];
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  ColorPaletteMorph.coffeeScriptSourceOfThisClass = '# ColorPaletteMorph ///////////////////////////////////////////////////\n\nclass ColorPaletteMorph extends Morph\n\n  target: null\n  targetSetter: "color"\n  choice: null\n\n  constructor: (@target = null, sizePoint) ->\n    super()\n    @silentSetExtent sizePoint or new Point(80, 50)\n    @updateRendering()\n  \n  updateRendering: ->\n    ext = @extent()\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    @choice = new Color()\n    for x in [0..ext.x]\n      h = 360 * x / ext.x\n      y = 0\n      for y in [0..ext.y]\n        l = 100 - (y / ext.y * 100)\n        context.fillStyle = "hsl(" + h + ",100%," + l + "%)"\n        context.fillRect x, y, 1, 1\n  \n  mouseMove: (pos) ->\n    @choice = @getPixelColor(pos)\n    @updateTarget()\n  \n  mouseDownLeft: (pos) ->\n    @choice = @getPixelColor(pos)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @target instanceof Morph and @choice isnt null\n      if @target[@targetSetter] instanceof Function\n        @target[@targetSetter] @choice\n      else\n        @target[@targetSetter] = @choice\n        @target.updateRendering()\n        @target.changed()\n  \n  \n  # ColorPaletteMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  # ColorPaletteMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"\n    menu\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.colorSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @targetSetter = each\n    if choices.length is 1\n      @targetSetter = choices[0]\n    else menu.popUpAtHand @world()  if choices.length';
-
-  return ColorPaletteMorph;
-
-})(Morph);
-
-modules = {};
-
-useBlurredShadows = getBlurredShadowSupport();
-
-standardSettings = {
-  minimumFontHeight: getMinimumFontHeight(),
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 12,
-  bubbleHelpFontSize: 10,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 12,
-  prompterSliderSize: 10,
-  handleSize: 15,
-  scrollBarSize: 12,
-  mouseScrollAmount: 40,
-  useSliderForInput: false,
-  useVirtualKeyboard: true,
-  isTouchDevice: false,
-  rasterizeSVGs: false,
-  isFlat: false
-};
-
-touchScreenSettings = {
-  minimumFontHeight: standardSettings.minimumFontHeight,
-  globalFontFamily: "",
-  menuFontName: "sans-serif",
-  menuFontSize: 24,
-  bubbleHelpFontSize: 18,
-  prompterFontName: "sans-serif",
-  prompterFontSize: 24,
-  prompterSliderSize: 20,
-  handleSize: 26,
-  scrollBarSize: 24,
-  mouseScrollAmount: 40,
-  useSliderForInput: true,
-  useVirtualKeyboard: true,
-  isTouchDevice: false,
-  rasterizeSVGs: false,
-  isFlat: false
-};
-
-PenMorph = (function(_super) {
-  __extends(PenMorph, _super);
-
-  PenMorph.prototype.heading = 0;
-
-  PenMorph.prototype.penSize = null;
-
-  PenMorph.prototype.isWarped = false;
-
-  PenMorph.prototype.isDown = true;
-
-  PenMorph.prototype.wantsRedraw = false;
-
-  PenMorph.prototype.penPoint = 'tip';
-
-  function PenMorph() {
-    this.penSize = WorldMorph.MorphicPreferences.handleSize * 4;
-    PenMorph.__super__.constructor.call(this);
-    this.setExtent(new Point(this.penSize, this.penSize));
-    this.penSize = 1;
-  }
-
-  PenMorph.staticVariable = 1;
-
-  PenMorph.staticFunction = function() {
-    return 3.14;
-  };
-
-  PenMorph.prototype.changed = function() {
-    var w;
-
-    if (this.isWarped === false) {
-      w = this.root();
-      if (w instanceof WorldMorph) {
-        w.broken.push(this.visibleBounds().spread());
-      }
-      if (this.parent) {
-        return this.parent.childChanged(this);
-      }
-    }
-  };
-
-  PenMorph.prototype.updateRendering = function(facing) {
-    var context, dest, direction, left, len, right, start;
-
-    direction = facing || this.heading;
-    if (this.isWarped) {
-      this.wantsRedraw = true;
-      return;
-    }
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    len = this.width() / 2;
-    start = this.center().subtract(this.bounds.origin);
-    if (this.penPoint === "tip") {
-      dest = start.distanceAngle(len * 0.75, direction - 180);
-      left = start.distanceAngle(len, direction + 195);
-      right = start.distanceAngle(len, direction - 195);
-    } else {
-      dest = start.distanceAngle(len * 0.75, direction);
-      left = start.distanceAngle(len * 0.33, direction + 230);
-      right = start.distanceAngle(len * 0.33, direction - 230);
-    }
-    context.fillStyle = this.color.toString();
-    context.beginPath();
-    context.moveTo(start.x, start.y);
-    context.lineTo(left.x, left.y);
-    context.lineTo(dest.x, dest.y);
-    context.lineTo(right.x, right.y);
-    context.closePath();
-    context.strokeStyle = "white";
-    context.lineWidth = 3;
-    context.stroke();
-    context.strokeStyle = "black";
-    context.lineWidth = 1;
-    context.stroke();
-    context.fill();
-    return this.wantsRedraw = false;
-  };
-
-  PenMorph.prototype.setHeading = function(degrees) {
-    this.heading = parseFloat(degrees) % 360;
-    this.updateRendering();
-    return this.changed();
-  };
-
-  PenMorph.prototype.drawLine = function(start, dest) {
-    var context, from, to;
-
-    context = this.parent.penTrails().getContext("2d");
-    from = start.subtract(this.parent.bounds.origin);
-    to = dest.subtract(this.parent.bounds.origin);
-    if (this.isDown) {
-      context.lineWidth = this.penSize;
-      context.strokeStyle = this.color.toString();
-      context.lineCap = "round";
-      context.lineJoin = "round";
-      context.beginPath();
-      context.moveTo(from.x, from.y);
-      context.lineTo(to.x, to.y);
-      context.stroke();
-      if (this.isWarped === false) {
-        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.penSize / 2, 1)).intersect(this.parent.visibleBounds()).spread());
-      }
-    }
-  };
-
-  PenMorph.prototype.turn = function(degrees) {
-    return this.setHeading(this.heading + parseFloat(degrees));
-  };
-
-  PenMorph.prototype.forward = function(steps) {
-    var dest, dist, start;
-
-    start = this.center();
-    dist = parseFloat(steps);
-    if (dist >= 0) {
-      dest = this.position().distanceAngle(dist, this.heading);
-    } else {
-      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
-    }
-    this.setPosition(dest);
-    return this.drawLine(start, this.center());
-  };
-
-  PenMorph.prototype.down = function() {
-    return this.isDown = true;
-  };
-
-  PenMorph.prototype.up = function() {
-    return this.isDown = false;
-  };
-
-  PenMorph.prototype.clear = function() {
-    this.parent.updateRendering();
-    return this.parent.changed();
-  };
-
-  PenMorph.prototype.startWarp = function() {
-    this.wantsRedraw = false;
-    return this.isWarped = true;
-  };
-
-  PenMorph.prototype.endWarp = function() {
-    this.isWarped = false;
-    if (this.wantsRedraw) {
-      this.updateRendering();
-      this.wantsRedraw = false;
-    }
-    return this.parent.changed();
-  };
-
-  PenMorph.prototype.warp = function(fun) {
-    this.startWarp();
-    fun.call(this);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpOp = function(selector, argsArray) {
-    this.startWarp();
-    this[selector].apply(this, argsArray);
-    return this.endWarp();
-  };
-
-  PenMorph.prototype.warpSierpinski = function(length, min) {
-    return this.warpOp("sierpinski", [length, min]);
-  };
-
-  PenMorph.prototype.sierpinski = function(length, min) {
-    var i, _i, _results;
-
-    if (length > min) {
-      _results = [];
-      for (i = _i = 0; _i < 3; i = ++_i) {
-        this.sierpinski(length * 0.5, min);
-        this.turn(120);
-        _results.push(this.forward(length));
-      }
-      return _results;
-    }
-  };
-
-  PenMorph.prototype.warpTree = function(level, length, angle) {
-    return this.warpOp("tree", [level, length, angle]);
-  };
-
-  PenMorph.prototype.tree = function(level, length, angle) {
-    if (level > 0) {
-      this.penSize = level;
-      this.forward(length);
-      this.turn(angle);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle * -2);
-      this.tree(level - 1, length * 0.75, angle);
-      this.turn(angle);
-      return this.forward(-length);
-    }
-  };
-
-  PenMorph.coffeeScriptSourceOfThisClass = '# PenMorph ////////////////////////////////////////////////////////////\n\n# I am a simple LOGO-wise turtle.\n\nclass PenMorph extends Morph\n  \n  heading: 0\n  penSize: null\n  isWarped: false # internal optimization\n  isDown: true\n  wantsRedraw: false # internal optimization\n  penPoint: \'tip\' # or \'center\'\n  \n  constructor: () ->\n    @penSize = WorldMorph.MorphicPreferences.handleSize * 4\n    super()\n    @setExtent new Point(@penSize, @penSize)\n    # todo we need to change the size two times, for getting the right size\n    # of the arrow and of the line. Probably should make the two distinct\n    @penSize = 1\n    #alert @morphMethod() # works\n    # doesn\'t work cause coffeescript doesn\'t support static inheritance\n    #alert @morphStaticMethod()\n\n  @staticVariable: 1\n  @staticFunction: -> 3.14\n    \n  # PenMorph updating - optimized for warping, i.e atomic recursion\n  changed: ->\n    if @isWarped is false\n      w = @root()\n      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph\n      @parent.childChanged @  if @parent\n  \n  \n  # PenMorph display:\n  updateRendering: (facing) ->\n    #\n    #    my orientation can be overridden with the "facing" parameter to\n    #    implement Scratch-style rotation styles\n    #    \n    #\n    direction = facing or @heading\n    if @isWarped\n      @wantsRedraw = true\n      return\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    len = @width() / 2\n    start = @center().subtract(@bounds.origin)\n\n    if @penPoint is "tip"\n      dest = start.distanceAngle(len * 0.75, direction - 180)\n      left = start.distanceAngle(len, direction + 195)\n      right = start.distanceAngle(len, direction - 195)\n    else # \'middle\'\n      dest = start.distanceAngle(len * 0.75, direction)\n      left = start.distanceAngle(len * 0.33, direction + 230)\n      right = start.distanceAngle(len * 0.33, direction - 230)\n\n    context.fillStyle = @color.toString()\n    context.beginPath()\n\n    context.moveTo start.x, start.y\n    context.lineTo left.x, left.y\n    context.lineTo dest.x, dest.y\n    context.lineTo right.x, right.y\n\n    context.closePath()\n    context.strokeStyle = "white"\n    context.lineWidth = 3\n    context.stroke()\n    context.strokeStyle = "black"\n    context.lineWidth = 1\n    context.stroke()\n    context.fill()\n    @wantsRedraw = false\n  \n  \n  # PenMorph access:\n  setHeading: (degrees) ->\n    @heading = parseFloat(degrees) % 360\n    @updateRendering()\n    @changed()\n  \n  \n  # PenMorph drawing:\n  drawLine: (start, dest) ->\n    context = @parent.penTrails().getContext("2d")\n    from = start.subtract(@parent.bounds.origin)\n    to = dest.subtract(@parent.bounds.origin)\n    if @isDown\n      context.lineWidth = @penSize\n      context.strokeStyle = @color.toString()\n      context.lineCap = "round"\n      context.lineJoin = "round"\n      context.beginPath()\n      context.moveTo from.x, from.y\n      context.lineTo to.x, to.y\n      context.stroke()\n      if @isWarped is false\n        @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()\n  \n  \n  # PenMorph turtle ops:\n  turn: (degrees) ->\n    @setHeading @heading + parseFloat(degrees)\n  \n  forward: (steps) ->\n    start = @center()\n    dist = parseFloat(steps)\n    if dist >= 0\n      dest = @position().distanceAngle(dist, @heading)\n    else\n      dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))\n    @setPosition dest\n    @drawLine start, @center()\n  \n  down: ->\n    @isDown = true\n  \n  up: ->\n    @isDown = false\n  \n  clear: ->\n    @parent.updateRendering()\n    @parent.changed()\n  \n  \n  # PenMorph optimization for atomic recursion:\n  startWarp: ->\n    @wantsRedraw = false\n    @isWarped = true\n  \n  endWarp: ->\n    @isWarped = false\n    if @wantsRedraw\n      @updateRendering()\n      @wantsRedraw = false\n    @parent.changed()\n  \n  warp: (fun) ->\n    @startWarp()\n    fun.call @\n    @endWarp()\n  \n  warpOp: (selector, argsArray) ->\n    @startWarp()\n    @[selector].apply @, argsArray\n    @endWarp()\n  \n  \n  # PenMorph demo ops:\n  # try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})\n  warpSierpinski: (length, min) ->\n    @warpOp "sierpinski", [length, min]\n  \n  sierpinski: (length, min) ->\n    if length > min\n      for i in [0...3]\n        @sierpinski length * 0.5, min\n        @turn 120\n        @forward length\n  \n  warpTree: (level, length, angle) ->\n    @warpOp "tree", [level, length, angle]\n  \n  tree: (level, length, angle) ->\n    if level > 0\n      @penSize = level\n      @forward length\n      @turn angle\n      @tree level - 1, length * 0.75, angle\n      @turn angle * -2\n      @tree level - 1, length * 0.75, angle\n      @turn angle\n      @forward -length';
-
-  return PenMorph;
-
-})(Morph);
-
-Point = (function() {
-  Point.prototype.x = null;
-
-  Point.prototype.y = null;
-
-  function Point(x, y) {
-    this.x = x != null ? x : 0;
-    this.y = y != null ? y : 0;
-  }
-
-  Point.prototype.toString = function() {
-    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
-  };
-
-  Point.prototype.copy = function() {
-    return new Point(this.x, this.y);
-  };
-
-  Point.prototype.eq = function(aPoint) {
-    return this.x === aPoint.x && this.y === aPoint.y;
-  };
-
-  Point.prototype.lt = function(aPoint) {
-    return this.x < aPoint.x && this.y < aPoint.y;
-  };
-
-  Point.prototype.gt = function(aPoint) {
-    return this.x > aPoint.x && this.y > aPoint.y;
-  };
-
-  Point.prototype.ge = function(aPoint) {
-    return this.x >= aPoint.x && this.y >= aPoint.y;
-  };
-
-  Point.prototype.le = function(aPoint) {
-    return this.x <= aPoint.x && this.y <= aPoint.y;
-  };
-
-  Point.prototype.max = function(aPoint) {
-    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
-  };
-
-  Point.prototype.min = function(aPoint) {
-    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
-  };
-
-  Point.prototype.round = function() {
-    return new Point(Math.round(this.x), Math.round(this.y));
-  };
-
-  Point.prototype.abs = function() {
-    return new Point(Math.abs(this.x), Math.abs(this.y));
-  };
-
-  Point.prototype.neg = function() {
-    return new Point(-this.x, -this.y);
-  };
-
-  Point.prototype.mirror = function() {
-    return new Point(this.y, this.x);
-  };
-
-  Point.prototype.floor = function() {
-    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
-  };
-
-  Point.prototype.ceil = function() {
-    return new Point(Math.ceil(this.x), Math.ceil(this.y));
-  };
-
-  Point.prototype.add = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x + other.x, this.y + other.y);
-    }
-    return new Point(this.x + other, this.y + other);
-  };
-
-  Point.prototype.subtract = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x - other.x, this.y - other.y);
-    }
-    return new Point(this.x - other, this.y - other);
-  };
-
-  Point.prototype.multiplyBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x * other.x, this.y * other.y);
-    }
-    return new Point(this.x * other, this.y * other);
-  };
-
-  Point.prototype.divideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(this.x / other.x, this.y / other.y);
-    }
-    return new Point(this.x / other, this.y / other);
-  };
-
-  Point.prototype.floorDivideBy = function(other) {
-    if (other instanceof Point) {
-      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
-    }
-    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
-  };
-
-  Point.prototype.r = function() {
-    var t;
-
-    t = this.multiplyBy(this);
-    return Math.sqrt(t.x + t.y);
-  };
-
-  Point.prototype.degrees = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return 90;
-      }
-      return 270;
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return degrees(theta);
-      }
-      return 360 + (degrees(theta));
-    }
-    return 180 + degrees(theta);
-  };
-
-  Point.prototype.theta = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return radians(90);
-      }
-      return radians(270);
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return theta;
-      }
-      return radians(360) + theta;
-    }
-    return radians(180) + theta;
-  };
-
-  Point.prototype.crossProduct = function(aPoint) {
-    return this.multiplyBy(aPoint.mirror());
-  };
-
-  Point.prototype.distanceTo = function(aPoint) {
-    return (aPoint.subtract(this)).r();
-  };
-
-  Point.prototype.rotate = function(direction, center) {
-    var offset;
-
-    offset = this.subtract(center);
-    if (direction === "right") {
-      return new Point(-offset.y, offset.y).add(center);
-    }
-    if (direction === "left") {
-      return new Point(offset.y, -offset.y).add(center);
-    }
-    return center.subtract(offset);
-  };
-
-  Point.prototype.flip = function(direction, center) {
-    if (direction === "vertical") {
-      return new Point(this.x, center.y * 2 - this.y);
-    }
-    return new Point(center.x * 2 - this.x, this.y);
-  };
-
-  Point.prototype.distanceAngle = function(dist, angle) {
-    var deg, x, y;
-
-    deg = angle;
-    if (deg > 270) {
-      deg = deg - 360;
-    } else {
-      if (deg < -270) {
-        deg = deg + 360;
-      }
-    }
-    if (-90 <= deg && deg <= 90) {
-      x = Math.sin(radians(deg)) * dist;
-      y = Math.sqrt((dist * dist) - (x * x));
-      return new Point(x + this.x, this.y - y);
-    }
-    x = Math.sin(radians(180 - deg)) * dist;
-    y = Math.sqrt((dist * dist) - (x * x));
-    return new Point(x + this.x, this.y + y);
-  };
-
-  Point.prototype.scaleBy = function(scalePoint) {
-    return this.multiplyBy(scalePoint);
-  };
-
-  Point.prototype.translateBy = function(deltaPoint) {
-    return this.add(deltaPoint);
-  };
-
-  Point.prototype.rotateBy = function(angle, centerPoint) {
-    var center, p, r, theta;
-
-    center = centerPoint || new Point(0, 0);
-    p = this.subtract(center);
-    r = p.r();
-    theta = angle - p.theta();
-    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
-  };
-
-  Point.prototype.asArray = function() {
-    return [this.x, this.y];
-  };
-
-  Point.prototype.corner = function(cornerPoint) {
-    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
-  };
-
-  Point.prototype.rectangle = function(aPoint) {
-    var crn, org;
-
-    org = this.min(aPoint);
-    crn = this.max(aPoint);
-    return new Rectangle(org.x, org.y, crn.x, crn.y);
-  };
-
-  Point.prototype.extent = function(aPoint) {
-    var crn;
-
-    crn = this.add(aPoint);
-    return new Rectangle(this.x, this.y, crn.x, crn.y);
-  };
-
-  Point.coffeeScriptSourceOfThisClass = '# Points //////////////////////////////////////////////////////////////\n\nclass Point\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point copying:\n  copy: ->\n    new Point(@x, @y)\n  \n  # Point comparison:\n  eq: (aPoint) ->\n    # ==\n    @x is aPoint.x and @y is aPoint.y\n  \n  lt: (aPoint) ->\n    # <\n    @x < aPoint.x and @y < aPoint.y\n  \n  gt: (aPoint) ->\n    # >\n    @x > aPoint.x and @y > aPoint.y\n  \n  ge: (aPoint) ->\n    # >=\n    @x >= aPoint.x and @y >= aPoint.y\n  \n  le: (aPoint) ->\n    # <=\n    @x <= aPoint.x and @y <= aPoint.y\n  \n  max: (aPoint) ->\n    new Point(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))\n  \n  min: (aPoint) ->\n    new Point(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))\n  \n  \n  # Point conversion:\n  round: ->\n    new Point(Math.round(@x), Math.round(@y))\n  \n  abs: ->\n    new Point(Math.abs(@x), Math.abs(@y))\n  \n  neg: ->\n    new Point(-@x, -@y)\n  \n  mirror: ->\n    new Point(@y, @x)\n  \n  floor: ->\n    new Point(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n  \n  ceil: ->\n    new Point(Math.ceil(@x), Math.ceil(@y))\n  \n  \n  # Point arithmetic:\n  add: (other) ->\n    return new Point(@x + other.x, @y + other.y)  if other instanceof Point\n    new Point(@x + other, @y + other)\n  \n  subtract: (other) ->\n    return new Point(@x - other.x, @y - other.y)  if other instanceof Point\n    new Point(@x - other, @y - other)\n  \n  multiplyBy: (other) ->\n    return new Point(@x * other.x, @y * other.y)  if other instanceof Point\n    new Point(@x * other, @y * other)\n  \n  divideBy: (other) ->\n    return new Point(@x / other.x, @y / other.y)  if other instanceof Point\n    new Point(@x / other, @y / other)\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point\n      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))\n    new Point(Math.floor(@x / other), Math.floor(@y / other))\n  \n  \n  # Point polar coordinates:\n  r: ->\n    t = (@multiplyBy(@))\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point functions:\n  crossProduct: (aPoint) ->\n    @multiplyBy aPoint.mirror()\n  \n  distanceTo: (aPoint) ->\n    (aPoint.subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @subtract(center)\n    return new Point(-offset.y, offset.y).add(center)  if direction is "right"\n    return new Point(offset.y, -offset.y).add(center)  if direction is "left"\n    #\n    # direction === \'pi\'\n    center.subtract offset\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    return new Point(@x, center.y * 2 - @y)  if direction is "vertical"\n    #\n    # direction === \'horizontal\'\n    new Point(center.x * 2 - @x, @y)\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      return new Point(x + @x, @y - y)\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    new Point(x + @x, @y + y)\n  \n  \n  # Point transforming:\n  scaleBy: (scalePoint) ->\n    @multiplyBy scalePoint\n  \n  translateBy: (deltaPoint) ->\n    @add deltaPoint\n  \n  rotateBy: (angle, centerPoint) ->\n    center = centerPoint or new Point(0, 0)\n    p = @subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))\n  \n  \n  # Point conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Points:\n  corner: (cornerPoint) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)\n  \n  rectangle: (aPoint) ->\n    # answer a new Rectangle\n    org = @min(aPoint)\n    crn = @max(aPoint)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint) ->\n    #answer a new Rectangle\n    crn = @add(aPoint)\n    new Rectangle(@x, @y, crn.x, crn.y)';
-
-  return Point;
-
-})();
-
-Point2 = (function() {
-  Point2.prototype.x = null;
-
-  Point2.prototype.y = null;
-
-  function Point2(x, y) {
-    this.x = x != null ? x : 0;
-    this.y = y != null ? y : 0;
-  }
-
-  Point2.prototype.toString = function() {
-    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
-  };
-
-  Point2.prototype.copy = function() {
-    return new Point2(this.x, this.y);
-  };
-
-  Point2.prototype.eq = function(aPoint2) {
-    return this.x === aPoint2.x && this.y === aPoint2.y;
-  };
-
-  Point2.prototype.lt = function(aPoint2) {
-    return this.x < aPoint2.x && this.y < aPoint2.y;
-  };
-
-  Point2.prototype.gt = function(aPoint2) {
-    return this.x > aPoint2.x && this.y > aPoint2.y;
-  };
-
-  Point2.prototype.ge = function(aPoint2) {
-    return this.x >= aPoint2.x && this.y >= aPoint2.y;
-  };
-
-  Point2.prototype.le = function(aPoint2) {
-    return this.x <= aPoint2.x && this.y <= aPoint2.y;
-  };
-
-  Point2.prototype.max = function(aPoint2) {
-    this.x = Math.max(this.x, aPoint2.x);
-    return this.y = Math.max(this.y, aPoint2.y);
-  };
-
-  Point2.prototype.min = function(aPoint2) {
-    this.x = Math.min(this.x, aPoint2.x);
-    return this.y = Math.min(this.y, aPoint2.y);
-  };
-
-  Point2.prototype.round = function() {
-    this.x = Math.round(this.x);
-    return this.y = Math.round(this.y);
-  };
-
-  Point2.prototype.abs = function() {
-    this.x = Math.abs(this.x);
-    return this.y = Math.abs(this.y);
-  };
-
-  Point2.prototype.neg = function() {
-    this.x = -this.x;
-    return this.y = -this.y;
-  };
-
-  Point2.prototype.mirror = function() {
-    var tmpValueForSwappingXAndY;
-
-    tmpValueForSwappingXAndY = this.x;
-    this.x = this.y;
-    return this.y = tmpValueForSwappingXAndY;
-  };
-
-  Point2.prototype.floor = function() {
-    this.x = Math.max(Math.floor(this.x), 0);
-    return this.y = Math.max(Math.floor(this.y), 0);
-  };
-
-  Point2.prototype.ceil = function() {
-    this.x = Math.ceil(this.x);
-    return this.y = Math.ceil(this.y);
-  };
-
-  Point2.prototype.add = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x + other.x;
-      this.y = this.y + other.y;
-      return;
-    }
-    this.x = this.x + other;
-    return this.y = this.y + other;
-  };
-
-  Point2.prototype.subtract = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x - other.x;
-      this.y = this.y - other.y;
-      return;
-    }
-    this.x = this.x - other;
-    return this.y = this.y - other;
-  };
-
-  Point2.prototype.multiplyBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x * other.x;
-      this.y = this.y * other.y;
-      return;
-    }
-    this.x = this.x * other;
-    return this.y = this.y * other;
-  };
-
-  Point2.prototype.divideBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = this.x / other.x;
-      this.y = this.y / other.y;
-      return;
-    }
-    this.x = this.x / other;
-    return this.y = this.y / other;
-  };
-
-  Point2.prototype.floorDivideBy = function(other) {
-    if (other instanceof Point2) {
-      this.x = Math.floor(this.x / other.x);
-      this.y = Math.floor(this.y / other.y);
-      return;
-    }
-    this.x = Math.floor(this.x / other);
-    return this.y = Math.floor(this.y / other);
-  };
-
-  Point2.prototype.r = function() {
-    var t;
-
-    t = this.copy();
-    t.multiplyBy(t);
-    return Math.sqrt(t.x + t.y);
-  };
-
-  Point2.prototype.degrees = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return 90;
-      }
-      return 270;
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return degrees(theta);
-      }
-      return 360 + (degrees(theta));
-    }
-    return 180 + degrees(theta);
-  };
-
-  Point2.prototype.theta = function() {
-    var tan, theta;
-
-    if (this.x === 0) {
-      if (this.y >= 0) {
-        return radians(90);
-      }
-      return radians(270);
-    }
-    tan = this.y / this.x;
-    theta = Math.atan(tan);
-    if (this.x >= 0) {
-      if (this.y >= 0) {
-        return theta;
-      }
-      return radians(360) + theta;
-    }
-    return radians(180) + theta;
-  };
-
-  Point2.prototype.crossProduct = function(aPoint2) {
-    return this.multiplyBy(aPoint2.copy().mirror());
-  };
-
-  Point2.prototype.distanceTo = function(aPoint2) {
-    return (aPoint2.copy().subtract(this)).r();
-  };
-
-  Point2.prototype.rotate = function(direction, center) {
-    var offset, tmpPointForRotate;
-
-    offset = this.copy().subtract(center);
-    if (direction === "right") {
-      this.x = -offset.y + center.x;
-      this.y = offset.y + center.y;
-      return;
-    }
-    if (direction === "left") {
-      this.x = offset.y + center.x;
-      this.y = -offset.y + center.y;
-      return;
-    }
-    tmpPointForRotate = center.copy().subtract(offset);
-    this.x = tmpPointForRotate.x;
-    return this.y = tmpPointForRotate.y;
-  };
-
-  Point2.prototype.flip = function(direction, center) {
-    if (direction === "vertical") {
-      this.y = center.y * 2 - this.y;
-      return;
-    }
-    return this.x = center.x * 2 - this.x;
-  };
-
-  Point2.prototype.distanceAngle = function(dist, angle) {
-    var deg, x, y;
-
-    deg = angle;
-    if (deg > 270) {
-      deg = deg - 360;
-    } else {
-      if (deg < -270) {
-        deg = deg + 360;
-      }
-    }
-    if (-90 <= deg && deg <= 90) {
-      x = Math.sin(radians(deg)) * dist;
-      y = Math.sqrt((dist * dist) - (x * x));
-      this.x = x + this.x;
-      this.y = this.y - y;
-      return;
-    }
-    x = Math.sin(radians(180 - deg)) * dist;
-    y = Math.sqrt((dist * dist) - (x * x));
-    this.x = x + this.x;
-    return this.y = this.y + y;
-  };
-
-  Point2.prototype.scaleBy = function(scalePoint2) {
-    return this.multiplyBy(scalePoint2);
-  };
-
-  Point2.prototype.translateBy = function(deltaPoint2) {
-    return this.add(deltaPoint2);
-  };
-
-  Point2.prototype.rotateBy = function(angle, centerPoint2) {
-    var center, p, r, theta;
-
-    center = centerPoint2 || new Point2(0, 0);
-    p = this.copy().subtract(center);
-    r = p.r();
-    theta = angle - p.theta();
-    this.x = center.x + (r * Math.cos(theta));
-    return this.y = center.y - (r * Math.sin(theta));
-  };
-
-  Point2.prototype.asArray = function() {
-    return [this.x, this.y];
-  };
-
-  Point2.prototype.corner = function(cornerPoint2) {
-    return new Rectangle(this.x, this.y, cornerPoint2.x, cornerPoint2.y);
-  };
-
-  Point2.prototype.rectangle = function(aPoint2) {
-    var crn, org;
-
-    org = this.copy().min(aPoint2);
-    crn = this.copy().max(aPoint2);
-    return new Rectangle(org.x, org.y, crn.x, crn.y);
-  };
-
-  Point2.prototype.extent = function(aPoint2) {
-    var crn;
-
-    crn = this.copy().add(aPoint2);
-    return new Rectangle(this.x, this.y, crn.x, crn.y);
-  };
-
-  Point2.coffeeScriptSourceOfThisClass = '# Point2 //////////////////////////////////////////////////////////////\n# like Point, but it tries not to create new objects like there is\n# no tomorrow. Any operation that returned a new point now directly\n# modifies the current point.\n# Note that the arguments passed to any of these functions are never\n# modified.\n\nclass Point2\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point2 string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point2 copying:\n  copy: ->\n    new Point2(@x, @y)\n  \n  # Point2 comparison:\n  eq: (aPoint2) ->\n    # ==\n    @x is aPoint2.x and @y is aPoint2.y\n  \n  lt: (aPoint2) ->\n    # <\n    @x < aPoint2.x and @y < aPoint2.y\n  \n  gt: (aPoint2) ->\n    # >\n    @x > aPoint2.x and @y > aPoint2.y\n  \n  ge: (aPoint2) ->\n    # >=\n    @x >= aPoint2.x and @y >= aPoint2.y\n  \n  le: (aPoint2) ->\n    # <=\n    @x <= aPoint2.x and @y <= aPoint2.y\n  \n  max: (aPoint2) ->\n    #new Point2(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))\n    @x = Math.max(@x, aPoint2.x)\n    @y = Math.max(@y, aPoint2.y)\n  \n  min: (aPoint2) ->\n    #new Point2(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))\n    @x = Math.min(@x, aPoint2.x)\n    @y = Math.min(@y, aPoint2.y)\n  \n  \n  # Point2 conversion:\n  round: ->\n    #new Point2(Math.round(@x), Math.round(@y))\n    @x = Math.round(@x)\n    @y = Math.round(@y)\n  \n  abs: ->\n    #new Point2(Math.abs(@x), Math.abs(@y))\n    @x = Math.abs(@x)\n    @y = Math.abs(@y)\n  \n  neg: ->\n    #new Point2(-@x, -@y)\n    @x = -@x\n    @y = -@y\n  \n  mirror: ->\n    #new Point2(@y, @x)\n    # note that coffeescript would allow [@x,@y] = [@y,@x]\n    # but we want to be faster here\n    tmpValueForSwappingXAndY = @x\n    @x = @y\n    @y = tmpValueForSwappingXAndY \n  \n  floor: ->\n    #new Point2(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n    @x = Math.max(Math.floor(@x), 0)\n    @y = Math.max(Math.floor(@y), 0)\n  \n  ceil: ->\n    #new Point2(Math.ceil(@x), Math.ceil(@y))\n    @x = Math.ceil(@x)\n    @y = Math.ceil(@y)\n  \n  \n  # Point2 arithmetic:\n  add: (other) ->\n    if other instanceof Point2\n      @x = @x + other.x\n      @y = @y + other.y\n      return\n    @x = @x + other\n    @y = @y + other\n  \n  subtract: (other) ->\n    if other instanceof Point2\n      @x = @x - other.x\n      @y = @y - other.y\n      return\n    @x = @x - other\n    @y = @y - other\n  \n  multiplyBy: (other) ->\n    if other instanceof Point2\n      @x = @x * other.x\n      @y = @y * other.y\n      return\n    @x = @x * other\n    @y = @y * other\n  \n  divideBy: (other) ->\n    if other instanceof Point2\n      @x = @x / other.x\n      @y = @y / other.y\n      return\n    @x = @x / other\n    @y = @y / other\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point2\n      @x = Math.floor(@x / other.x)\n      @y = Math.floor(@y / other.y)\n      return\n    @x = Math.floor(@x / other)\n    @y = Math.floor(@y / other)\n  \n  \n  # Point2 polar coordinates:\n  # distance from the origin\n  r: ->\n    t = @copy()\n    t.multiplyBy(t)\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point2 functions:\n  \n  # this function is a bit fishy.\n  # a cross product in 2d is probably not a vector\n  # see https://github.com/jmoenig/morphic.js/issues/6\n  # this function is not used\n  crossProduct: (aPoint2) ->\n    @multiplyBy aPoint2.copy().mirror()\n  \n  distanceTo: (aPoint2) ->\n    (aPoint2.copy().subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @copy().subtract(center)\n    if direction is "right"\n      @x = -offset.y + center.x\n      @y = offset.y + center.y\n      return\n    if direction is "left"\n      @x = offset.y + center.x\n      @y = -offset.y + center.y\n      return\n    #\n    # direction === \'pi\'\n    tmpPointForRotate = center.copy().subtract offset\n    @x = tmpPointForRotate.x\n    @y = tmpPointForRotate.y\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    if direction is "vertical"\n      @y = center.y * 2 - @y\n      return\n    #\n    # direction === \'horizontal\'\n    @x = center.x * 2 - @x\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      @x = x + @x\n      @y = @y - y\n      return\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    @x = x + @x\n    @y = @y + y\n  \n  \n  # Point2 transforming:\n  scaleBy: (scalePoint2) ->\n    @multiplyBy scalePoint2\n  \n  translateBy: (deltaPoint2) ->\n    @add deltaPoint2\n  \n  rotateBy: (angle, centerPoint2) ->\n    center = centerPoint2 or new Point2(0, 0)\n    p = @copy().subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    @x = center.x + (r * Math.cos(theta))\n    @y = center.y - (r * Math.sin(theta))\n  \n  \n  # Point2 conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Point2:\n  corner: (cornerPoint2) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint2.x, cornerPoint2.y)\n  \n  rectangle: (aPoint2) ->\n    # answer a new Rectangle\n    org = @copy().min(aPoint2)\n    crn = @copy().max(aPoint2)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint2) ->\n    #answer a new Rectangle\n    crn = @copy().add(aPoint2)\n    new Rectangle(@x, @y, crn.x, crn.y)';
-
-  return Point2;
-
-})();
-
 BoxMorph = (function(_super) {
   __extends(BoxMorph, _super);
 
@@ -2615,770 +1849,482 @@ BoxMorph = (function(_super) {
 
 })(Morph);
 
-Rectangle = (function() {
-  Rectangle.prototype.origin = null;
+InspectorMorph = (function(_super) {
+  __extends(InspectorMorph, _super);
 
-  Rectangle.prototype.corner = null;
+  InspectorMorph.prototype.target = null;
 
-  function Rectangle(left, top, right, bottom) {
-    this.origin = new Point(left || 0, top || 0);
-    this.corner = new Point(right || 0, bottom || 0);
+  InspectorMorph.prototype.currentProperty = null;
+
+  InspectorMorph.prototype.showing = "attributes";
+
+  InspectorMorph.prototype.markOwnershipOfProperties = false;
+
+  InspectorMorph.prototype.label = null;
+
+  InspectorMorph.prototype.list = null;
+
+  InspectorMorph.prototype.detail = null;
+
+  InspectorMorph.prototype.work = null;
+
+  InspectorMorph.prototype.buttonInspect = null;
+
+  InspectorMorph.prototype.buttonClose = null;
+
+  InspectorMorph.prototype.buttonSubset = null;
+
+  InspectorMorph.prototype.buttonEdit = null;
+
+  InspectorMorph.prototype.resizer = null;
+
+  function InspectorMorph(target) {
+    this.target = target;
+    InspectorMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = WorldMorph.MorphicPreferences.isFlat ? 1 : 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
+    this.updateRendering();
+    if (this.target) {
+      this.buildPanes();
+    }
   }
 
-  Rectangle.prototype.toString = function() {
-    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
+  InspectorMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
   };
 
-  Rectangle.prototype.copy = function() {
-    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
-  };
+  InspectorMorph.prototype.buildPanes = function() {
+    var attribs, ctrl, doubleClickAction, ev, property, staticAttributes, staticFunctions, staticProperties, targetOwnMethods,
+      _this = this;
 
-  Rectangle.prototype.setTo = function(left, top, right, bottom) {
-    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
-    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
-  };
-
-  Rectangle.prototype.area = function() {
-    var w;
-
-    w = this.width();
-    if (w < 0) {
-      return 0;
+    attribs = [];
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
+      }
+    });
+    this.children = [];
+    this.label = new TextMorph(this.target.toString());
+    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.updateRendering();
+    this.add(this.label);
+    for (property in this.target) {
+      if (property) {
+        attribs.push(property);
+      }
     }
-    return Math.max(w * this.height(), 0);
-  };
-
-  Rectangle.prototype.bottom = function() {
-    return this.corner.y;
-  };
-
-  Rectangle.prototype.bottomCenter = function() {
-    return new Point(this.center().x, this.bottom());
-  };
-
-  Rectangle.prototype.bottomLeft = function() {
-    return new Point(this.origin.x, this.corner.y);
-  };
-
-  Rectangle.prototype.bottomRight = function() {
-    return this.corner.copy();
-  };
-
-  Rectangle.prototype.boundingBox = function() {
-    return this;
-  };
-
-  Rectangle.prototype.center = function() {
-    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
-  };
-
-  Rectangle.prototype.corners = function() {
-    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
-  };
-
-  Rectangle.prototype.extent = function() {
-    return this.corner.subtract(this.origin);
-  };
-
-  Rectangle.prototype.isEmpty = function() {
-    var theExtent;
-
-    theExtent = this.corner.subtract(this.origin);
-    return theExtent.x = 0 || (theExtent.y = 0);
-  };
-
-  Rectangle.prototype.isNotEmpty = function() {
-    var theExtent;
-
-    theExtent = this.corner.subtract(this.origin);
-    return theExtent.x > 0 && theExtent.y > 0;
-  };
-
-  Rectangle.prototype.height = function() {
-    return this.corner.y - this.origin.y;
-  };
-
-  Rectangle.prototype.left = function() {
-    return this.origin.x;
-  };
-
-  Rectangle.prototype.leftCenter = function() {
-    return new Point(this.left(), this.center().y);
-  };
-
-  Rectangle.prototype.right = function() {
-    return this.corner.x;
-  };
-
-  Rectangle.prototype.rightCenter = function() {
-    return new Point(this.right(), this.center().y);
-  };
-
-  Rectangle.prototype.top = function() {
-    return this.origin.y;
-  };
-
-  Rectangle.prototype.topCenter = function() {
-    return new Point(this.center().x, this.top());
-  };
-
-  Rectangle.prototype.topLeft = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.topRight = function() {
-    return new Point(this.corner.x, this.origin.y);
-  };
-
-  Rectangle.prototype.width = function() {
-    return this.corner.x - this.origin.x;
-  };
-
-  Rectangle.prototype.position = function() {
-    return this.origin;
-  };
-
-  Rectangle.prototype.eq = function(aRect) {
-    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
-  };
-
-  Rectangle.prototype.abs = function() {
-    var newCorner, newOrigin;
-
-    newOrigin = this.origin.abs();
-    newCorner = this.corner.max(newOrigin);
-    return newOrigin.corner(newCorner);
-  };
-
-  Rectangle.prototype.insetBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.add(delta);
-    result.corner = this.corner.subtract(delta);
-    return result;
-  };
-
-  Rectangle.prototype.expandBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.subtract(delta);
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.growBy = function(delta) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.copy();
-    result.corner = this.corner.add(delta);
-    return result;
-  };
-
-  Rectangle.prototype.intersect = function(aRect) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.max(aRect.origin);
-    result.corner = this.corner.min(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.merge = function(aRect) {
-    var result;
-
-    result = new Rectangle();
-    result.origin = this.origin.min(aRect.origin);
-    result.corner = this.corner.max(aRect.corner);
-    return result;
-  };
-
-  Rectangle.prototype.round = function() {
-    return this.origin.round().corner(this.corner.round());
-  };
-
-  Rectangle.prototype.spread = function() {
-    return this.origin.floor().corner(this.corner.ceil());
-  };
-
-  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
-    var dx, dy;
-
-    if (this.right() > aRect.right()) {
-      dx = aRect.right() - this.right();
+    if (this.showing === "attributes") {
+      attribs = attribs.filter(function(prop) {
+        return !isFunction(_this.target[prop]);
+      });
+    } else if (this.showing === "methods") {
+      attribs = attribs.filter(function(prop) {
+        return isFunction(_this.target[prop]);
+      });
     }
-    if (this.bottom() > aRect.bottom()) {
-      dy = aRect.bottom() - this.bottom();
-    }
-    if ((this.left() + dx) < aRect.left()) {
-      dx = aRect.left() - this.right();
-    }
-    if ((this.top() + dy) < aRect.top()) {
-      dy = aRect.top() - this.top();
-    }
-    return new Point(dx, dy);
-  };
-
-  Rectangle.prototype.containsPoint = function(aPoint) {
-    return this.origin.le(aPoint) && aPoint.lt(this.corner);
-  };
-
-  Rectangle.prototype.containsRectangle = function(aRect) {
-    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
-  };
-
-  Rectangle.prototype.intersects = function(aRect) {
-    var rc, ro;
-
-    ro = aRect.origin;
-    rc = aRect.corner;
-    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
-  };
-
-  Rectangle.prototype.scaleBy = function(scale) {
-    var c, o;
-
-    o = this.origin.multiplyBy(scale);
-    c = this.corner.multiplyBy(scale);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.translateBy = function(factor) {
-    var c, o;
-
-    o = this.origin.add(factor);
-    c = this.corner.add(factor);
-    return new Rectangle(o.x, o.y, c.x, c.y);
-  };
-
-  Rectangle.prototype.asArray = function() {
-    return [this.left(), this.top(), this.right(), this.bottom()];
-  };
-
-  Rectangle.prototype.asArray_xywh = function() {
-    return [this.left(), this.top(), this.width(), this.height()];
-  };
-
-  Rectangle.coffeeScriptSourceOfThisClass = '# Rectangles //////////////////////////////////////////////////////////\n\nclass Rectangle\n\n  origin: null\n  corner: null\n  \n  constructor: (left, top, right, bottom) ->\n    \n    @origin = new Point((left or 0), (top or 0))\n    @corner = new Point((right or 0), (bottom or 0))\n  \n  \n  # Rectangle string representation: e.g. \'[0@0 | 160@80]\'\n  toString: ->\n    "[" + @origin.toString() + " | " + @extent().toString() + "]"\n  \n  # Rectangle copying:\n  copy: ->\n    new Rectangle(@left(), @top(), @right(), @bottom())\n  \n  # Rectangle accessing - setting:\n  setTo: (left, top, right, bottom) ->\n    # note: all inputs are optional and can be omitted\n    @origin = new Point(\n      left or ((if (left is 0) then 0 else @left())),\n      top or ((if (top is 0) then 0 else @top())))\n    @corner = new Point(\n      right or ((if (right is 0) then 0 else @right())),\n      bottom or ((if (bottom is 0) then 0 else @bottom())))\n  \n  # Rectangle accessing - getting:\n  area: ->\n    #requires width() and height() to be defined\n    w = @width()\n    return 0  if w < 0\n    Math.max w * @height(), 0\n  \n  bottom: ->\n    @corner.y\n  \n  bottomCenter: ->\n    new Point(@center().x, @bottom())\n  \n  bottomLeft: ->\n    new Point(@origin.x, @corner.y)\n  \n  bottomRight: ->\n    @corner.copy()\n  \n  boundingBox: ->\n    @\n  \n  center: ->\n    @origin.add @corner.subtract(@origin).floorDivideBy(2)\n  \n  corners: ->\n    [@origin, @bottomLeft(), @corner, @topRight()]\n  \n  extent: ->\n    @corner.subtract @origin\n  \n  isEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x = 0 or theExtent.y = 0\n\n  isNotEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x > 0 and theExtent.y > 0\n  \n  height: ->\n    @corner.y - @origin.y\n  \n  left: ->\n    @origin.x\n  \n  leftCenter: ->\n    new Point(@left(), @center().y)\n  \n  right: ->\n    @corner.x\n  \n  rightCenter: ->\n    new Point(@right(), @center().y)\n  \n  top: ->\n    @origin.y\n  \n  topCenter: ->\n    new Point(@center().x, @top())\n  \n  topLeft: ->\n    @origin\n  \n  topRight: ->\n    new Point(@corner.x, @origin.y)\n  \n  width: ->\n    @corner.x - @origin.x\n  \n  position: ->\n    @origin\n  \n  # Rectangle comparison:\n  eq: (aRect) ->\n    @origin.eq(aRect.origin) and @corner.eq(aRect.corner)\n  \n  abs: ->\n    newOrigin = @origin.abs()\n    newCorner = @corner.max(newOrigin)\n    newOrigin.corner newCorner\n  \n  # Rectangle functions:\n  insetBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.add(delta)\n    result.corner = @corner.subtract(delta)\n    result\n  \n  expandBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.subtract(delta)\n    result.corner = @corner.add(delta)\n    result\n  \n  growBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.copy()\n    result.corner = @corner.add(delta)\n    result\n  \n  intersect: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.max(aRect.origin)\n    result.corner = @corner.min(aRect.corner)\n    result\n  \n  merge: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.min(aRect.origin)\n    result.corner = @corner.max(aRect.corner)\n    result\n  \n  round: ->\n    @origin.round().corner @corner.round()\n  \n  spread: ->\n    # round me by applying floor() to my origin and ceil() to my corner\n    @origin.floor().corner @corner.ceil()\n  \n  amountToTranslateWithin: (aRect) ->\n    #\n    #    Answer a Point, delta, such that self + delta is forced within\n    #    aRectangle. when all of me cannot be made to fit, prefer to keep\n    #    my topLeft inside. Taken from Squeak.\n    #\n    dx = aRect.right() - @right()  if @right() > aRect.right()\n    dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()\n    dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()\n    dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()\n    new Point(dx, dy)\n  \n  \n  # Rectangle testing:\n  containsPoint: (aPoint) ->\n    @origin.le(aPoint) and aPoint.lt(@corner)\n  \n  containsRectangle: (aRect) ->\n    aRect.origin.gt(@origin) and aRect.corner.lt(@corner)\n  \n  intersects: (aRect) ->\n    ro = aRect.origin\n    rc = aRect.corner\n    (rc.x >= @origin.x) and\n      (rc.y >= @origin.y) and\n      (ro.x <= @corner.x) and\n      (ro.y <= @corner.y)\n  \n  \n  # Rectangle transforming:\n  scaleBy: (scale) ->\n    # scale can be either a Point or a scalar\n    o = @origin.multiplyBy(scale)\n    c = @corner.multiplyBy(scale)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  translateBy: (factor) ->\n    # factor can be either a Point or a scalar\n    o = @origin.add(factor)\n    c = @corner.add(factor)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  \n  # Rectangle converting:\n  asArray: ->\n    [@left(), @top(), @right(), @bottom()]\n  \n  asArray_xywh: ->\n    [@left(), @top(), @width(), @height()]';
-
-  return Rectangle;
-
-})();
-
-SpeechBubbleMorph = (function(_super) {
-  __extends(SpeechBubbleMorph, _super);
-
-  SpeechBubbleMorph.prototype.isPointingRight = true;
-
-  SpeechBubbleMorph.prototype.contents = null;
-
-  SpeechBubbleMorph.prototype.padding = null;
-
-  SpeechBubbleMorph.prototype.isThought = null;
-
-  SpeechBubbleMorph.prototype.isClickable = false;
-
-  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
-    this.contents = contents != null ? contents : "";
-    this.padding = padding != null ? padding : 0;
-    this.isThought = isThought != null ? isThought : false;
-    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
-    this.color = color || new Color(230, 230, 230);
-    this.updateRendering();
-  }
-
-  SpeechBubbleMorph.prototype.popUp = function(world, pos, isClickable) {
-    this.updateRendering();
-    this.setPosition(pos.subtract(new Point(0, this.height())));
-    this.addShadow(new Point(2, 2), 80);
-    this.keepWithin(world);
-    world.add(this);
-    this.changed();
-    world.hand.destroyTemporaries();
-    world.hand.temporaries.push(this);
-    if (isClickable) {
-      return this.mouseEnter = function() {
-        return this.destroy();
-      };
+    staticProperties = Object.getOwnPropertyNames(this.target.constructor);
+    staticProperties = staticProperties.filter(function(prop) {
+      return prop !== "name" && prop !== "length" && prop !== "prototype" && prop !== "caller" && prop !== "__super__" && prop !== "arguments";
+    });
+    if (this.showing === "attributes") {
+      staticFunctions = [];
+      staticAttributes = staticProperties.filter(function(prop) {
+        return !isFunction(_this.target.constructor[prop]);
+      });
+    } else if (this.showing === "methods") {
+      staticFunctions = staticProperties.filter(function(prop) {
+        return isFunction(_this.target.constructor[prop]);
+      });
+      staticAttributes = [];
     } else {
-      return this.isClickable = false;
+      staticFunctions = staticProperties.filter(function(prop) {
+        return isFunction(_this.target.constructor[prop]);
+      });
+      staticAttributes = staticProperties.filter(function(prop) {
+        return __indexOf.call(staticFunctions, prop) < 0;
+      });
     }
-  };
-
-  SpeechBubbleMorph.prototype.updateRendering = function() {
-    if (this.contentsMorph) {
-      this.contentsMorph.destroy();
+    attribs = (attribs.concat(staticFunctions)).concat(staticAttributes);
+    if (this.markOwnershipOfProperties) {
+      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
     }
-    if (this.contents instanceof Morph) {
-      this.contentsMorph = this.contents;
-    } else if (isString(this.contents)) {
-      this.contentsMorph = new TextMorph(this.contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    } else if (this.contents instanceof HTMLCanvasElement) {
-      this.contentsMorph = new Morph();
-      this.contentsMorph.silentSetWidth(this.contents.width);
-      this.contentsMorph.silentSetHeight(this.contents.height);
-      this.contentsMorph.image = this.contents;
-    } else {
-      this.contentsMorph = new TextMorph(this.contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
-    }
-    this.add(this.contentsMorph);
-    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
-    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
-    SpeechBubbleMorph.__super__.updateRendering.call(this);
-    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
-  };
+    doubleClickAction = function() {
+      var inspector, world;
 
-  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
-    var circle, h, offset, rad, w;
-
-    circle = function(x, y, r) {
-      context.moveTo(x + r, y);
-      return context.arc(x, y, r, radians(0), radians(360));
+      if (!isObject(_this.currentProperty)) {
+        return;
+      }
+      world = _this.world();
+      inspector = new InspectorMorph(_this.currentProperty);
+      inspector.setPosition(world.hand.position());
+      inspector.keepWithin(world);
+      world.add(inspector);
+      return inspector.changed();
     };
-    offset = radius + inset;
-    w = this.width();
-    h = this.height();
-    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
-    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
-    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
-    if (!this.isThought) {
-      if (this.isPointingRight) {
-        context.lineTo(offset + radius, h - offset);
-        context.lineTo(radius / 2 + inset, h - inset);
+    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnershipOfProperties ? [
+      [
+        new Color(0, 0, 180), function(element) {
+          return true;
+        }
+      ], [
+        new Color(255, 165, 0), function(element) {
+          return __indexOf.call(staticProperties, element) >= 0;
+        }
+      ], [
+        new Color(0, 180, 0), function(element) {
+          return Object.prototype.hasOwnProperty.call(_this.target, element);
+        }
+      ], [
+        new Color(180, 0, 0), function(element) {
+          return __indexOf.call(targetOwnMethods, element) >= 0;
+        }
+      ]
+    ] : null), doubleClickAction);
+    this.list.action = function(selected) {
+      var cnts, txt, val;
+
+      if (selected === void 0) {
+        return;
+      }
+      val = _this.target[selected];
+      if (val === void 0) {
+        val = _this.target.constructor[selected];
+      }
+      _this.currentProperty = val;
+      if (val === null) {
+        txt = "NULL";
+      } else if (isString(val)) {
+        txt = val;
       } else {
-        context.lineTo(w - (radius / 2 + inset), h - inset);
-        context.lineTo(w - (offset + radius), h - offset);
+        txt = val.toString();
       }
+      cnts = new TextMorph(txt);
+      cnts.isEditable = true;
+      cnts.enableSelecting();
+      cnts.setReceiver(_this.target);
+      return _this.detail.setContents(cnts);
+    };
+    this.list.hBar.alpha = 0.6;
+    this.list.vBar.alpha = 0.6;
+    this.list.listContents.step = null;
+    this.add(this.list);
+    this.detail = new ScrollFrameMorph();
+    this.detail.acceptsDrops = false;
+    this.detail.contents.acceptsDrops = false;
+    this.detail.isTextLineWrapping = true;
+    this.detail.color = new Color(255, 255, 255);
+    this.detail.hBar.alpha = 0.6;
+    this.detail.vBar.alpha = 0.6;
+    ctrl = new TextMorph("");
+    ctrl.isEditable = true;
+    ctrl.enableSelecting();
+    ctrl.setReceiver(this.target);
+    this.detail.setContents(ctrl);
+    this.add(this.detail);
+    if (this.work === null) {
+      this.work = new ScrollFrameMorph();
+      this.work.acceptsDrops = false;
+      this.work.contents.acceptsDrops = false;
+      this.work.isTextLineWrapping = true;
+      this.work.color = new Color(255, 255, 255);
+      this.work.hBar.alpha = 0.6;
+      this.work.vBar.alpha = 0.6;
+      ev = new TextMorph("");
+      ev.isEditable = true;
+      ev.enableSelecting();
+      ev.setReceiver(this.target);
+      this.work.setContents(ev);
     }
-    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
-    if (this.isThought) {
-      context.lineTo(inset, offset);
-      if (this.isPointingRight) {
-        rad = radius / 4;
-        circle(rad + inset, h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(rad * 2 + inset, h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
+    this.add(this.work);
+    this.buttonSubset = new TriggerMorph();
+    this.buttonSubset.labelString = "show...";
+    this.buttonSubset.action = function() {
+      var menu;
+
+      menu = new MenuMorph();
+      menu.addItem("attributes", function() {
+        _this.showing = "attributes";
+        return _this.buildPanes();
+      });
+      menu.addItem("methods", function() {
+        _this.showing = "methods";
+        return _this.buildPanes();
+      });
+      menu.addItem("all", function() {
+        _this.showing = "all";
+        return _this.buildPanes();
+      });
+      menu.addLine();
+      menu.addItem((_this.markOwnershipOfProperties ? "un-mark ownership" : "mark ownership"), (function() {
+        _this.markOwnershipOfProperties = !_this.markOwnershipOfProperties;
+        return _this.buildPanes();
+      }), "highlight\nownership of properties");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonSubset);
+    this.buttonInspect = new TriggerMorph();
+    this.buttonInspect.labelString = "inspect...";
+    this.buttonInspect.action = function() {
+      var menu;
+
+      if (isObject(_this.currentProperty)) {
+        menu = new MenuMorph();
+        menu.addItem("in new inspector...", function() {
+          var inspector, world;
+
+          world = _this.world();
+          inspector = new InspectorMorph(_this.currentProperty);
+          inspector.setPosition(world.hand.position());
+          inspector.keepWithin(world);
+          world.add(inspector);
+          return inspector.changed();
+        });
+        menu.addItem("here...", function() {
+          return _this.setTarget(_this.currentProperty);
+        });
+        return menu.popUpAtHand(_this.world());
       } else {
-        rad = radius / 4;
-        circle(w - (rad + inset), h - rad - inset, rad);
-        rad = radius / 3.2;
-        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
-        rad = radius / 2.8;
-        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
+        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
       }
+    };
+    this.add(this.buttonInspect);
+    this.buttonEdit = new TriggerMorph();
+    this.buttonEdit.labelString = "edit...";
+    this.buttonEdit.action = function() {
+      var menu;
+
+      menu = new MenuMorph(_this);
+      menu.addItem("save", "save", "accept changes");
+      menu.addLine();
+      menu.addItem("add property...", "addProperty");
+      menu.addItem("rename...", "renameProperty");
+      menu.addItem("remove...", "removeProperty");
+      return menu.popUpAtHand(_this.world());
+    };
+    this.add(this.buttonEdit);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
+    };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
+  };
+
+  InspectorMorph.prototype.fixLayout = function() {
+    var b, h, r, w, x, y;
+
+    Morph.prototype.trackChanges = false;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.label.setPosition(new Point(x, y));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.updateRendering();
+      this.changed();
+      this.resizer.updateRendering();
     }
-  };
-
-  SpeechBubbleMorph.prototype.shadowImage = function(off_, color) {
-    var clr, ctx, fb, img, offset, outline, sha;
-
-    fb = void 0;
-    img = void 0;
-    outline = void 0;
-    sha = void 0;
-    ctx = void 0;
-    offset = off_ || new Point(7, 7);
-    clr = color || new Color(0, 0, 0);
-    fb = this.extent();
-    img = this.image;
-    outline = newCanvas(fb);
-    ctx = outline.getContext("2d");
-    ctx.drawImage(img, 0, 0);
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.drawImage(img, -offset.x, -offset.y);
-    sha = newCanvas(fb);
-    ctx = sha.getContext("2d");
-    ctx.drawImage(outline, 0, 0);
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = clr.toString();
-    ctx.fillRect(0, 0, fb.x, fb.y);
-    return sha;
-  };
-
-  SpeechBubbleMorph.prototype.shadowImageBlurred = function(off_, color) {
-    var blur, clr, ctx, fb, img, offset, sha;
-
-    fb = void 0;
-    img = void 0;
-    sha = void 0;
-    ctx = void 0;
-    offset = off_ || new Point(7, 7);
-    blur = this.shadowBlur;
-    clr = color || new Color(0, 0, 0);
-    fb = this.extent().add(blur * 2);
-    img = this.image;
-    sha = newCanvas(fb);
-    ctx = sha.getContext("2d");
-    ctx.shadowOffsetX = offset.x;
-    ctx.shadowOffsetY = offset.y;
-    ctx.shadowBlur = blur;
-    ctx.shadowColor = clr.toString();
-    ctx.drawImage(img, blur - offset.x, blur - offset.y);
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    ctx.shadowBlur = 0;
-    ctx.globalCompositeOperation = "destination-out";
-    ctx.drawImage(img, blur - offset.x, blur - offset.y);
-    return sha;
-  };
-
-  SpeechBubbleMorph.prototype.fixLayout = function() {
-    this.removeShadow();
-    this.updateRendering();
-    return this.addShadow(new Point(2, 2), 80);
-  };
-
-  SpeechBubbleMorph.coffeeScriptSourceOfThisClass = '# SpeechBubbleMorph ///////////////////////////////////////////////////\n\n#\n#	I am a comic-style speech bubble that can display either a string,\n#	a Morph, a Canvas or a toString() representation of anything else.\n#	If I am invoked using popUp() I behave like a tool tip.\n#\n\nclass SpeechBubbleMorph extends BoxMorph\n\n  isPointingRight: true # orientation of text\n  contents: null\n  padding: null # additional vertical pixels\n  isThought: null # draw "think" bubble\n  isClickable: false\n\n  constructor: (\n    @contents="",\n    color,\n    edge,\n    border,\n    borderColor,\n    @padding = 0,\n    @isThought = false) ->\n      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)\n      @color = color or new Color(230, 230, 230)\n      @updateRendering()\n  \n  \n  # SpeechBubbleMorph invoking:\n  popUp: (world, pos, isClickable) ->\n    @updateRendering()\n    @setPosition pos.subtract(new Point(0, @height()))\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.add @\n    @changed()\n    world.hand.destroyTemporaries()\n    world.hand.temporaries.push @\n    if isClickable\n      @mouseEnter = ->\n        @destroy()\n    else\n      @isClickable = false\n    \n  \n  \n  # SpeechBubbleMorph drawing:\n  updateRendering: ->\n    # re-build my contents\n    @contentsMorph.destroy()  if @contentsMorph\n    if @contents instanceof Morph\n      @contentsMorph = @contents\n    else if isString(@contents)\n      @contentsMorph = new TextMorph(\n        @contents,\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    else if @contents instanceof HTMLCanvasElement\n      @contentsMorph = new Morph()\n      @contentsMorph.silentSetWidth @contents.width\n      @contentsMorph.silentSetHeight @contents.height\n      @contentsMorph.image = @contents\n    else\n      @contentsMorph = new TextMorph(\n        @contents.toString(),\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    @add @contentsMorph\n    #\n    # adjust my layout\n    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))\n    @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2\n    #\n    # draw my outline\n    super()\n    #\n    # position my contents\n    @contentsMorph.setPosition @position().add(\n      new Point(@padding or @edge, @border + @padding + 1))\n  \n  outlinePath: (context, radius, inset) ->\n    circle = (x, y, r) ->\n      context.moveTo x + r, y\n      context.arc x, y, r, radians(0), radians(360)\n    offset = radius + inset\n    w = @width()\n    h = @height()\n    #\n    # top left:\n    context.arc offset, offset, radius, radians(-180), radians(-90), false\n    #\n    # top right:\n    context.arc w - offset, offset, radius, radians(-90), radians(-0), false\n    #\n    # bottom right:\n    context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false\n    unless @isThought # draw speech bubble hook\n      if @isPointingRight\n        context.lineTo offset + radius, h - offset\n        context.lineTo radius / 2 + inset, h - inset\n      else # pointing left\n        context.lineTo w - (radius / 2 + inset), h - inset\n        context.lineTo w - (offset + radius), h - offset\n    #\n    # bottom left:\n    context.arc offset, h - offset - radius, radius, radians(90), radians(180), false\n    if @isThought\n      #\n      # close large bubble:\n      context.lineTo inset, offset\n      #\n      # draw thought bubbles:\n      if @isPointingRight\n        #\n        # tip bubble:\n        rad = radius / 4\n        circle rad + inset, h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle rad * 2 + inset, h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle rad * 3 + inset * 2, h - rad - inset * 4, rad\n      else # pointing left\n        # tip bubble:\n        rad = radius / 4\n        circle w - (rad + inset), h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle w - (rad * 2 + inset), h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad\n\n  # SpeechBubbleMorph shadow\n  #\n  #    only take the \'plain\' image, so the box rounding and the\n  #    shadow doesn\'t become conflicted by embedded scrolling panes\n  #\n  shadowImage: (off_, color) ->\n    \n    # fallback for Windows Chrome-Shadow bug\n    fb = undefined\n    img = undefined\n    outline = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    clr = color or new Color(0, 0, 0)\n    fb = @extent()\n    img = @image\n    outline = newCanvas(fb)\n    ctx = outline.getContext("2d")\n    ctx.drawImage img, 0, 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, -offset.x, -offset.y\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.drawImage outline, 0, 0\n    ctx.globalCompositeOperation = "source-atop"\n    ctx.fillStyle = clr.toString()\n    ctx.fillRect 0, 0, fb.x, fb.y\n    sha\n\n  shadowImageBlurred: (off_, color) ->\n    fb = undefined\n    img = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    blur = @shadowBlur\n    clr = color or new Color(0, 0, 0)\n    fb = @extent().add(blur * 2)\n    img = @image\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.shadowOffsetX = offset.x\n    ctx.shadowOffsetY = offset.y\n    ctx.shadowBlur = blur\n    ctx.shadowColor = clr.toString()\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    ctx.shadowOffsetX = 0\n    ctx.shadowOffsetY = 0\n    ctx.shadowBlur = 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    sha\n\n  # SpeechBubbleMorph resizing\n  fixLayout: ->\n    @removeShadow()\n    @updateRendering()\n    @addShadow new Point(2, 2), 80';
-
-  return SpeechBubbleMorph;
-
-})(BoxMorph);
-
-Color = (function() {
-  Color.prototype.a = null;
-
-  Color.prototype.r = null;
-
-  Color.prototype.g = null;
-
-  Color.prototype.b = null;
-
-  function Color(r, g, b, a) {
-    this.r = r != null ? r : 0;
-    this.g = g != null ? g : 0;
-    this.b = b != null ? b : 0;
-    this.a = a || (a === 0 ? 0 : 1);
-  }
-
-  Color.prototype.toString = function() {
-    return "rgba(" + Math.round(this.r) + "," + Math.round(this.g) + "," + Math.round(this.b) + "," + this.a + ")";
-  };
-
-  Color.prototype.copy = function() {
-    return new Color(this.r, this.g, this.b, this.a);
-  };
-
-  Color.prototype.eq = function(aColor) {
-    return aColor && this.r === aColor.r && this.g === aColor.g && this.b === aColor.b;
-  };
-
-  Color.prototype.hsv = function() {
-    var bb, d, gg, h, max, min, rr, s, v;
-
-    rr = this.r / 255;
-    gg = this.g / 255;
-    bb = this.b / 255;
-    max = Math.max(rr, gg, bb);
-    min = Math.min(rr, gg, bb);
-    h = max;
-    s = max;
-    v = max;
-    d = max - min;
-    s = (max === 0 ? 0 : d / max);
-    if (max === min) {
-      h = 0;
-    } else {
-      switch (max) {
-        case rr:
-          h = (gg - bb) / d + (gg < bb ? 6 : 0);
-          break;
-        case gg:
-          h = (bb - rr) / d + 2;
-          break;
-        case bb:
-          h = (rr - gg) / d + 4;
-      }
-      h /= 6;
-    }
-    return [h, s, v];
-  };
-
-  Color.prototype.set_hsv = function(h, s, v) {
-    var f, i, p, q, t;
-
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-      case 0:
-        this.r = v;
-        this.g = t;
-        this.b = p;
-        break;
-      case 1:
-        this.r = q;
-        this.g = v;
-        this.b = p;
-        break;
-      case 2:
-        this.r = p;
-        this.g = v;
-        this.b = t;
-        break;
-      case 3:
-        this.r = p;
-        this.g = q;
-        this.b = v;
-        break;
-      case 4:
-        this.r = t;
-        this.g = p;
-        this.b = v;
-        break;
-      case 5:
-        this.r = v;
-        this.g = p;
-        this.b = q;
-    }
-    this.r *= 255;
-    this.g *= 255;
-    return this.b *= 255;
-  };
-
-  Color.prototype.mixed = function(proportion, otherColor) {
-    var frac1, frac2;
-
-    frac1 = Math.min(Math.max(proportion, 0), 1);
-    frac2 = 1 - frac1;
-    return new Color(this.r * frac1 + otherColor.r * frac2, this.g * frac1 + otherColor.g * frac2, this.b * frac1 + otherColor.b * frac2);
-  };
-
-  Color.prototype.darker = function(percent) {
-    var fract;
-
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(0, 0, 0));
-  };
-
-  Color.prototype.lighter = function(percent) {
-    var fract;
-
-    fract = 0.8333;
-    if (percent) {
-      fract = (100 - percent) / 100;
-    }
-    return this.mixed(fract, new Color(255, 255, 255));
-  };
-
-  Color.prototype.dansDarker = function() {
-    var hsv, result, vv;
-
-    hsv = this.hsv();
-    result = new Color();
-    vv = Math.max(hsv[2] - 0.16, 0);
-    result.set_hsv(hsv[0], hsv[1], vv);
-    return result;
-  };
-
-  Color.coffeeScriptSourceOfThisClass = '# Colors //////////////////////////////////////////////////////////////\n\nclass Color\n\n  a: null\n  r: null\n  g: null\n  b: null\n\n  constructor: (@r = 0, @g = 0, @b = 0, a) ->\n    # all values are optional, just (r, g, b) is fine\n    @a = a or ((if (a is 0) then 0 else 1))\n  \n  # Color string representation: e.g. \'rgba(255,165,0,1)\'\n  toString: ->\n    "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"\n  \n  # Color copying:\n  copy: ->\n    new Color(@r, @g, @b, @a)\n  \n  # Color comparison:\n  eq: (aColor) ->\n    # ==\n    aColor and @r is aColor.r and @g is aColor.g and @b is aColor.b\n  \n  \n  # Color conversion (hsv):\n  hsv: ->\n    # ignore alpha\n    rr = @r / 255\n    gg = @g / 255\n    bb = @b / 255\n    max = Math.max(rr, gg, bb)\n    min = Math.min(rr, gg, bb)\n    h = max\n    s = max\n    v = max\n    d = max - min\n    s = (if max is 0 then 0 else d / max)\n    if max is min\n      h = 0\n    else\n      switch max\n        when rr\n          h = (gg - bb) / d + ((if gg < bb then 6 else 0))\n        when gg\n          h = (bb - rr) / d + 2\n        when bb\n          h = (rr - gg) / d + 4\n      h /= 6\n    [h, s, v]\n  \n  set_hsv: (h, s, v) ->\n    # ignore alpha, h, s and v are to be within [0, 1]\n    i = Math.floor(h * 6)\n    f = h * 6 - i\n    p = v * (1 - s)\n    q = v * (1 - f * s)\n    t = v * (1 - (1 - f) * s)\n    switch i % 6\n      when 0\n        @r = v\n        @g = t\n        @b = p\n      when 1\n        @r = q\n        @g = v\n        @b = p\n      when 2\n        @r = p\n        @g = v\n        @b = t\n      when 3\n        @r = p\n        @g = q\n        @b = v\n      when 4\n        @r = t\n        @g = p\n        @b = v\n      when 5\n        @r = v\n        @g = p\n        @b = q\n    @r *= 255\n    @g *= 255\n    @b *= 255\n  \n  \n  # Color mixing:\n  mixed: (proportion, otherColor) ->\n    # answer a copy of this color mixed with another color, ignore alpha\n    frac1 = Math.min(Math.max(proportion, 0), 1)\n    frac2 = 1 - frac1\n    new Color(\n      @r * frac1 + otherColor.r * frac2,\n      @g * frac1 + otherColor.g * frac2,\n      @b * frac1 + otherColor.b * frac2)\n  \n  darker: (percent) ->\n    # return an rgb-interpolated darker copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(0, 0, 0)\n  \n  lighter: (percent) ->\n    # return an rgb-interpolated lighter copy of me, ignore alpha\n    fract = 0.8333\n    fract = (100 - percent) / 100  if percent\n    @mixed fract, new Color(255, 255, 255)\n  \n  dansDarker: ->\n    # return an hsv-interpolated darker copy of me, ignore alpha\n    hsv = @hsv()\n    result = new Color()\n    vv = Math.max(hsv[2] - 0.16, 0)\n    result.set_hsv hsv[0], hsv[1], vv\n    result';
-
-  return Color;
-
-})();
-
-TriggerMorph = (function(_super) {
-  __extends(TriggerMorph, _super);
-
-  TriggerMorph.prototype.target = null;
-
-  TriggerMorph.prototype.action = null;
-
-  TriggerMorph.prototype.environment = null;
-
-  TriggerMorph.prototype.label = null;
-
-  TriggerMorph.prototype.labelString = null;
-
-  TriggerMorph.prototype.labelColor = null;
-
-  TriggerMorph.prototype.labelBold = null;
-
-  TriggerMorph.prototype.labelItalic = null;
-
-  TriggerMorph.prototype.doubleClickAction = null;
-
-  TriggerMorph.prototype.hint = null;
-
-  TriggerMorph.prototype.fontSize = null;
-
-  TriggerMorph.prototype.fontStyle = null;
-
-  TriggerMorph.prototype.highlightColor = new Color(192, 192, 192);
-
-  TriggerMorph.prototype.highlightImage = null;
-
-  TriggerMorph.prototype.pressColor = new Color(128, 128, 128);
-
-  TriggerMorph.prototype.normalImage = null;
-
-  TriggerMorph.prototype.pressImage = null;
-
-  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor, labelBold, labelItalic, doubleClickAction) {
-    this.target = target != null ? target : null;
-    this.action = action != null ? action : null;
-    this.labelString = labelString != null ? labelString : null;
-    this.environment = environment != null ? environment : null;
-    this.hint = hint != null ? hint : null;
-    this.labelBold = labelBold != null ? labelBold : false;
-    this.labelItalic = labelItalic != null ? labelItalic : false;
-    this.doubleClickAction = doubleClickAction != null ? doubleClickAction : null;
-    this.fontSize = fontSize || WorldMorph.MorphicPreferences.menuFontSize;
-    this.fontStyle = fontStyle || "sans-serif";
-    this.labelColor = labelColor || new Color(0, 0, 0);
-    TriggerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.updateRendering();
-  }
-
-  TriggerMorph.prototype.updateRendering = function() {
-    this.createBackgrounds();
-    if (this.labelString !== null) {
-      return this.createLabel();
-    }
-  };
-
-  TriggerMorph.prototype.createBackgrounds = function() {
-    var context, ext;
-
-    ext = this.extent();
-    this.normalImage = newCanvas(ext);
-    context = this.normalImage.getContext("2d");
-    context.fillStyle = this.color.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.highlightImage = newCanvas(ext);
-    context = this.highlightImage.getContext("2d");
-    context.fillStyle = this.highlightColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    this.pressImage = newCanvas(ext);
-    context = this.pressImage.getContext("2d");
-    context.fillStyle = this.pressColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
-    return this.image = this.normalImage;
-  };
-
-  TriggerMorph.prototype.createLabel = function() {
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor, this.labelBold, this.labelItalic);
-    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
-    return this.add(this.label);
-  };
-
-  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.label && dict[this.label]) {
-      c.label = dict[this.label];
-    }
-    return c;
-  };
-
-  TriggerMorph.prototype.trigger = function() {
-    if (typeof this.target === "function") {
-      if (typeof this.action === "function") {
-        return this.target.call(this.environment, this.action.call(), this);
-      } else {
-        return this.target.call(this.environment, this.action, this);
-      }
-    } else {
-      if (typeof this.action === "function") {
-        return this.action.call(this.target);
-      } else {
-        return this.target[this.action]();
-      }
-    }
-  };
-
-  TriggerMorph.prototype.triggerDoubleClick = function() {
-    if (!this.doubleClickAction) {
-      return;
-    }
-    if (typeof this.target === "function") {
-      if (typeof this.doubleClickAction === "function") {
-        return this.target.call(this.environment, this.doubleClickAction.call(), this);
-      } else {
-        return this.target.call(this.environment, this.doubleClickAction, this);
-      }
-    } else {
-      if (typeof this.doubleClickAction === "function") {
-        return this.doubleClickAction.call(this.target);
-      } else {
-        return this.target[this.doubleClickAction]();
-      }
-    }
-  };
-
-  TriggerMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  TriggerMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    this.changed();
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  TriggerMorph.prototype.mouseDownLeft = function() {
-    this.image = this.pressImage;
+    y = this.label.bottom() + 2;
+    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
+    h = b - y;
+    this.list.setPosition(new Point(x, y));
+    this.list.setExtent(new Point(w, h));
+    x = this.list.right() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.detail.setPosition(new Point(x, y));
+    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
+    y = this.detail.bottom() + this.edge;
+    this.work.setPosition(new Point(x, y));
+    this.work.setExtent(new Point(w, h / 3));
+    x = this.list.left();
+    y = this.list.bottom() + this.edge;
+    w = this.list.width();
+    h = WorldMorph.MorphicPreferences.handleSize;
+    this.buttonSubset.setPosition(new Point(x, y));
+    this.buttonSubset.setExtent(new Point(w, h));
+    x = this.detail.left();
+    w = this.detail.width() - this.edge - WorldMorph.MorphicPreferences.handleSize;
+    w = w / 3 - this.edge / 3;
+    this.buttonInspect.setPosition(new Point(x, y));
+    this.buttonInspect.setExtent(new Point(w, h));
+    x = this.buttonInspect.right() + this.edge;
+    this.buttonEdit.setPosition(new Point(x, y));
+    this.buttonEdit.setExtent(new Point(w, h));
+    x = this.buttonEdit.right() + this.edge;
+    r = this.detail.right() - this.edge - WorldMorph.MorphicPreferences.handleSize;
+    w = r - x;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
     return this.changed();
   };
 
-  TriggerMorph.prototype.mouseClickLeft = function() {
-    this.image = this.highlightImage;
-    this.changed();
-    return this.trigger();
+  InspectorMorph.prototype.setExtent = function(aPoint) {
+    InspectorMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
   };
 
-  TriggerMorph.prototype.mouseDoubleClick = function() {
-    return this.triggerDoubleClick();
-  };
+  InspectorMorph.prototype.save = function() {
+    var err, prop, txt;
 
-  TriggerMorph.prototype.rootForGrab = function() {
-    if (this.isDraggable) {
-      return TriggerMorph.__super__.rootForGrab.call(this);
+    txt = this.detail.contents.children[0].text.toString();
+    prop = this.list.selected;
+    try {
+      this.target.evaluateString("this." + prop + " = " + txt);
+      if (this.target.updateRendering) {
+        this.target.changed();
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } catch (_error) {
+      err = _error;
+      return this.inform(err);
     }
-    return null;
   };
 
-  TriggerMorph.prototype.bubbleHelp = function(contents) {
+  InspectorMorph.prototype.addProperty = function() {
     var _this = this;
 
-    this.fps = 2;
-    return this.step = function() {
-      if (_this.bounds.containsPoint(_this.world().hand.position())) {
-        _this.popUpbubbleHelp(contents);
+    return this.prompt("new property name:", (function(prop) {
+      if (prop) {
+        _this.target[prop] = null;
+        _this.buildPanes();
+        if (_this.target.updateRendering) {
+          _this.target.changed();
+          _this.target.updateRendering();
+          return _this.target.changed();
+        }
       }
-      _this.fps = 0;
-      return delete _this.step;
-    };
+    }), this, "property");
   };
 
-  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
-    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
+  InspectorMorph.prototype.renameProperty = function() {
+    var propertyName,
+      _this = this;
+
+    propertyName = this.list.selected;
+    return this.prompt("property name:", (function(prop) {
+      var err;
+
+      try {
+        delete _this.target[propertyName];
+        _this.target[prop] = _this.currentProperty;
+      } catch (_error) {
+        err = _error;
+        _this.inform(err);
+      }
+      _this.buildPanes();
+      if (_this.target.updateRendering) {
+        _this.target.changed();
+        _this.target.updateRendering();
+        return _this.target.changed();
+      }
+    }), this, propertyName);
   };
 
-  TriggerMorph.coffeeScriptSourceOfThisClass = '# TriggerMorph ////////////////////////////////////////////////////////\n\n# I provide basic button functionality\n\nclass TriggerMorph extends Morph\n\n  target: null\n  action: null\n  environment: null\n  label: null\n  labelString: null\n  labelColor: null\n  labelBold: null\n  labelItalic: null\n  doubleClickAction: null\n  hint: null\n  fontSize: null\n  fontStyle: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(192, 192, 192)\n  highlightImage: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(128, 128, 128)\n  normalImage: null\n  pressImage: null\n\n  constructor: (\n      @target = null,\n      @action = null,\n      @labelString = null,\n      fontSize,\n      fontStyle,\n      @environment = null,\n      @hint = null,\n      labelColor,\n      @labelBold = false,\n      @labelItalic = false\n      @doubleClickAction = null) ->\n\n    # additional properties:\n    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize\n    @fontStyle = fontStyle or "sans-serif"\n    @labelColor = labelColor or new Color(0, 0, 0)\n    #\n    super()\n    #\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  \n  # TriggerMorph drawing:\n  updateRendering: ->\n    @createBackgrounds()\n    @createLabel()  if @labelString isnt null\n  \n  createBackgrounds: ->\n    ext = @extent()\n    @normalImage = newCanvas(ext)\n    context = @normalImage.getContext("2d")\n    context.fillStyle = @color.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @highlightImage = newCanvas(ext)\n    context = @highlightImage.getContext("2d")\n    context.fillStyle = @highlightColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @pressImage = newCanvas(ext)\n    context = @pressImage.getContext("2d")\n    context.fillStyle = @pressColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @image = @normalImage\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    # bold\n    # italic\n    # numeric\n    # shadow offset\n    # shadow color\n    @label = new StringMorph(\n      @labelString,\n      @fontSize,\n      @fontStyle,\n      false,\n      false,\n      false,\n      null,\n      null,\n      @labelColor,\n      @labelBold,\n      @labelItalic\n    )\n    @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))\n    @add @label\n  \n  \n  # TriggerMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.label = (dict[@label])  if c.label and dict[@label]\n    c\n  \n  \n  # TriggerMorph action:\n  trigger: ->\n    #\n    #	if target is a function, use it as callback:\n    #	execute target as callback function with action as argument\n    #	in the environment as optionally specified.\n    #	Note: if action is also a function, instead of becoming\n    #	the argument itself it will be called to answer the argument.\n    #	for selections, Yes/No Choices etc. As second argument pass\n    # myself, so I can be modified to reflect status changes, e.g.\n    # inside a list box:\n    #\n    #	else (if target is not a function):\n    #\n    #		if action is a function:\n    #		execute the action with target as environment (can be null)\n    #		for lambdafied (inline) actions\n    #\n    #		else if action is a String:\n    #		treat it as function property of target and execute it\n    #		for selector-like actions\n    #	\n    if typeof @target is "function"\n      if typeof @action is "function"\n        @target.call @environment, @action.call(), @\n      else\n        @target.call @environment, @action, @\n    else\n      if typeof @action is "function"\n        @action.call @target\n      else # assume it\'s a String\n        @target[@action]()\n\n  triggerDoubleClick: ->\n    # same as trigger() but use doubleClickAction instead of action property\n    # note that specifying a doubleClickAction is optional\n    return  unless @doubleClickAction\n    if typeof @target is "function"\n      if typeof @doubleClickAction is "function"\n        @target.call @environment, @doubleClickAction.call(), this\n      else\n        @target.call @environment, @doubleClickAction, this\n    else\n      if typeof @doubleClickAction is "function"\n        @doubleClickAction.call @target\n      else # assume it\'s a String\n        @target[@doubleClickAction]()  \n  \n  # TriggerMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: ->\n    @image = @pressImage\n    @changed()\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n    @trigger()\n\n  mouseDoubleClick: ->\n    @triggerDoubleClick()\n\n  # Disable dragging compound Morphs by Triggers\n  # User can still move the trigger itself though\n  # (it it\'s unlocked)\n  rootForGrab: ->\n    if @isDraggable\n      return super()\n    null\n  \n  # TriggerMorph bubble help:\n  bubbleHelp: (contents) ->\n    @fps = 2\n    @step = =>\n      @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())\n      @fps = 0\n      delete @step\n  \n  popUpbubbleHelp: (contents) ->\n    new SpeechBubbleMorph(\n      localize(contents), null, null, 1).popUp @world(),\n      @rightCenter().add(new Point(-8, 0))';
+  InspectorMorph.prototype.removeProperty = function() {
+    var err, prop;
 
-  return TriggerMorph;
+    prop = this.list.selected;
+    try {
+      delete this.target[prop];
+      this.currentProperty = null;
+      this.buildPanes();
+      if (this.target.updateRendering) {
+        this.target.changed();
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } catch (_error) {
+      err = _error;
+      return this.inform(err);
+    }
+  };
 
-})(Morph);
+  InspectorMorph.coffeeScriptSourceOfThisClass = '# InspectorMorph //////////////////////////////////////////////////////\n\nclass InspectorMorph extends BoxMorph\n\n  target: null\n  currentProperty: null\n  showing: "attributes"\n  markOwnershipOfProperties: false\n  # panes:\n  label: null\n  list: null\n  detail: null\n  work: null\n  buttonInspect: null\n  buttonClose: null\n  buttonSubset: null\n  buttonEdit: null\n  resizer: null\n\n  constructor: (@target) ->\n    super()\n    # override inherited properties:\n    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = if WorldMorph.MorphicPreferences.isFlat then 1 else 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()  if @target\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n    #\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n    #\n    @children = []\n    #\n    # label\n    @label = new TextMorph(@target.toString())\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n    \n    # properties list. Note that this picks up ALL properties\n    # (enumerable such as strings and un-enumerable such as functions)\n    # of the whole prototype chain.\n    #\n    #   a) some of these are DECLARED as part of the class that defines the object\n    #   and are proprietary to the object. These are shown RED\n    # \n    #   b) some of these are proprietary to the object but are initialised by\n    #   code higher in the prototype chain. These are shown GREEN\n    #\n    #   c) some of these are not proprietary, i.e. they belong to an object up\n    #   the chain of prototypes. These are shown BLUE\n    #\n    # todo: show the static methods and variables in yet another color.\n    \n    for property of @target\n      # dummy condition, to be refined\n      attribs.push property  if property\n    if @showing is "attributes"\n      attribs = attribs.filter((prop) =>\n        not isFunction @target[prop]\n      )\n    else if @showing is "methods"\n      attribs = attribs.filter((prop) =>\n        isFunction @target[prop]\n      )\n    # otherwise show all properties\n    # label getter\n    # format list\n    # format element: [color, predicate(element]\n    \n    staticProperties = Object.getOwnPropertyNames(@target.constructor)\n    # get rid of all the standar fuff properties that are in classes\n    staticProperties = staticProperties.filter((prop) =>\n        prop not in ["name","length","prototype","caller","__super__","arguments"]\n    )\n    if @showing is "attributes"\n      staticFunctions = []\n      staticAttributes = staticProperties.filter((prop) =>\n        not isFunction(@target.constructor[prop])\n      )\n    else if @showing is "methods"\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = []\n    else\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = staticProperties.filter((prop) =>\n        prop not in staticFunctions\n      )\n    #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes\n    attribs = (attribs.concat staticFunctions).concat staticAttributes\n    #alert " all attribs " + attribs\n    \n    # caches the own methods of the object\n    if @markOwnershipOfProperties\n      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)\n      #alert targetOwnMethods\n\n    doubleClickAction = =>\n      if (!isObject(@currentProperty))\n        return\n      world = @world()\n      inspector = new InspectorMorph @currentProperty\n      inspector.setPosition world.hand.position()\n      inspector.keepWithin world\n      world.add inspector\n      inspector.changed()\n\n    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(\n      if @markOwnershipOfProperties\n        [\n          # give color criteria from the most general to the most specific\n          [new Color(0, 0, 180),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              true\n          ],\n          [new Color(255, 165, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              element in staticProperties\n          ],\n          [new Color(0, 180, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (Object.prototype.hasOwnProperty.call(@target, element))\n          ],\n          [new Color(180, 0, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (element in targetOwnMethods)\n          ]\n        ]\n      else null\n    ),doubleClickAction)\n\n    @list.action = (selected) =>\n      if (selected == undefined) then return\n      val = @target[selected]\n      # this is for finding the static variables\n      if val is undefined\n        val = @target.constructor[selected]\n      @currentProperty = val\n      if val is null\n        txt = "NULL"\n      else if isString(val)\n        txt = val\n      else\n        txt = val.toString()\n      cnts = new TextMorph(txt)\n      cnts.isEditable = true\n      cnts.enableSelecting()\n      cnts.setReceiver @target\n      @detail.setContents cnts\n    #\n    @list.hBar.alpha = 0.6\n    @list.vBar.alpha = 0.6\n    # we know that the content of this list in this pane is not going to need the\n    # step function, so we disable that from here by setting it to null, which\n    # prevents the recursion to children. We could have disabled that from the\n    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph\n    # with some animated content? We know that in this specific case it won\'t need animation so\n    # we set that here. Note that the ListMorph itself does require animation because of the\n    # scrollbars, but the MenuMorph (which contains the actual list contents)\n    # in this context doesn\'t.\n    @list.listContents.step = null\n    @add @list\n    #\n    # details pane\n    @detail = new ScrollFrameMorph()\n    @detail.acceptsDrops = false\n    @detail.contents.acceptsDrops = false\n    @detail.isTextLineWrapping = true\n    @detail.color = new Color(255, 255, 255)\n    @detail.hBar.alpha = 0.6\n    @detail.vBar.alpha = 0.6\n    ctrl = new TextMorph("")\n    ctrl.isEditable = true\n    ctrl.enableSelecting()\n    ctrl.setReceiver @target\n    @detail.setContents ctrl\n    @add @detail\n    #\n    # work (\'evaluation\') pane\n    # don\'t refresh the work pane if it already exists\n    if @work is null\n      @work = new ScrollFrameMorph()\n      @work.acceptsDrops = false\n      @work.contents.acceptsDrops = false\n      @work.isTextLineWrapping = true\n      @work.color = new Color(255, 255, 255)\n      @work.hBar.alpha = 0.6\n      @work.vBar.alpha = 0.6\n      ev = new TextMorph("")\n      ev.isEditable = true\n      ev.enableSelecting()\n      ev.setReceiver @target\n      @work.setContents ev\n    @add @work\n    #\n    # properties button\n    @buttonSubset = new TriggerMorph()\n    @buttonSubset.labelString = "show..."\n    @buttonSubset.action = =>\n      menu = new MenuMorph()\n      menu.addItem "attributes", =>\n        @showing = "attributes"\n        @buildPanes()\n      #\n      menu.addItem "methods", =>\n        @showing = "methods"\n        @buildPanes()\n      #\n      menu.addItem "all", =>\n        @showing = "all"\n        @buildPanes()\n      #\n      menu.addLine()\n      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>\n        @markOwnershipOfProperties = not @markOwnershipOfProperties\n        @buildPanes()\n      ), "highlight\nownership of properties"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonSubset\n    #\n    # inspect button\n    @buttonInspect = new TriggerMorph()\n    @buttonInspect.labelString = "inspect..."\n    @buttonInspect.action = =>\n      if isObject(@currentProperty)\n        menu = new MenuMorph()\n        menu.addItem "in new inspector...", =>\n          world = @world()\n          inspector = new InspectorMorph(@currentProperty)\n          inspector.setPosition world.hand.position()\n          inspector.keepWithin world\n          world.add inspector\n          inspector.changed()\n        #\n        menu.addItem "here...", =>\n          @setTarget @currentProperty\n        #\n        menu.popUpAtHand @world()\n      else\n        @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"\n    #\n    @add @buttonInspect\n    #\n    # edit button\n    @buttonEdit = new TriggerMorph()\n    @buttonEdit.labelString = "edit..."\n    @buttonEdit.action = =>\n      menu = new MenuMorph(@)\n      menu.addItem "save", "save", "accept changes"\n      menu.addLine()\n      menu.addItem "add property...", "addProperty"\n      menu.addItem "rename...", "renameProperty"\n      menu.addItem "remove...", "removeProperty"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonEdit\n    #\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n    #\n    @add @buttonClose\n    #\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n    #\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n    #\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n    #\n    # list\n    y = @label.bottom() + 2\n    w = Math.min(Math.floor(@width() / 3), @list.listContents.width())\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @list.setPosition new Point(x, y)\n    @list.setExtent new Point(w, h)\n    #\n    # detail\n    x = @list.right() + @edge\n    r = @right() - @edge\n    w = r - x\n    @detail.setPosition new Point(x, y)\n    @detail.setExtent new Point(w, (h * 2 / 3) - @edge)\n    #\n    # work\n    y = @detail.bottom() + @edge\n    @work.setPosition new Point(x, y)\n    @work.setExtent new Point(w, h / 3)\n    #\n    # properties button\n    x = @list.left()\n    y = @list.bottom() + @edge\n    w = @list.width()\n    h = WorldMorph.MorphicPreferences.handleSize\n    @buttonSubset.setPosition new Point(x, y)\n    @buttonSubset.setExtent new Point(w, h)\n    #\n    # inspect button\n    x = @detail.left()\n    w = @detail.width() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = w / 3 - @edge / 3\n    @buttonInspect.setPosition new Point(x, y)\n    @buttonInspect.setExtent new Point(w, h)\n    #\n    # edit button\n    x = @buttonInspect.right() + @edge\n    @buttonEdit.setPosition new Point(x, y)\n    @buttonEdit.setExtent new Point(w, h)\n    #\n    # close button\n    x = @buttonEdit.right() + @edge\n    r = @detail.right() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = r - x\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()\n  \n  \n  #InspectorMorph editing ops:\n  save: ->\n    txt = @detail.contents.children[0].text.toString()\n    prop = @list.selected\n    try\n      #\n      # this.target[prop] = evaluate(txt);\n      @target.evaluateString "this." + prop + " = " + txt\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err\n  \n  addProperty: ->\n    @prompt "new property name:", ((prop) =>\n      if prop\n        @target[prop] = null\n        @buildPanes()\n        if @target.updateRendering\n          @target.changed()\n          @target.updateRendering()\n          @target.changed()\n    ), @, "property" # Chrome cannot handle empty strings (others do)\n  \n  renameProperty: ->\n    propertyName = @list.selected\n    @prompt "property name:", ((prop) =>\n      try\n        delete (@target[propertyName])\n        @target[prop] = @currentProperty\n      catch err\n        @inform err\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    ), @, propertyName\n  \n  removeProperty: ->\n    prop = @list.selected\n    try\n      delete (@target[prop])\n      #\n      @currentProperty = null\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err';
+
+  return InspectorMorph;
+
+})(BoxMorph);
+
+MouseSensorMorph = (function(_super) {
+  __extends(MouseSensorMorph, _super);
+
+  function MouseSensorMorph(edge, border, borderColor) {
+    MouseSensorMorph.__super__.constructor.apply(this, arguments);
+    this.edge = edge || 4;
+    this.border = border || 2;
+    this.color = new Color(255, 255, 255);
+    this.borderColor = borderColor || new Color();
+    this.isTouched = false;
+    this.upStep = 0.05;
+    this.downStep = 0.02;
+    this.noticesTransparentClick = false;
+    this.updateRendering();
+  }
+
+  MouseSensorMorph.prototype.touch = function() {
+    var _this = this;
+
+    if (!this.isTouched) {
+      this.isTouched = true;
+      this.alpha = 0.6;
+      return this.step = function() {
+        if (_this.isTouched) {
+          if (_this.alpha < 1) {
+            _this.alpha = _this.alpha + _this.upStep;
+          }
+        } else if (_this.alpha > _this.downStep) {
+          _this.alpha = _this.alpha - _this.downStep;
+        } else {
+          _this.alpha = 0;
+          _this.step = null;
+        }
+        return _this.changed();
+      };
+    }
+  };
+
+  MouseSensorMorph.prototype.unTouch = function() {
+    return this.isTouched = false;
+  };
+
+  MouseSensorMorph.prototype.mouseEnter = function() {
+    return this.touch();
+  };
+
+  MouseSensorMorph.prototype.mouseLeave = function() {
+    return this.unTouch();
+  };
+
+  MouseSensorMorph.prototype.mouseDownLeft = function() {
+    return this.touch();
+  };
+
+  MouseSensorMorph.prototype.mouseClickLeft = function() {
+    return this.unTouch();
+  };
+
+  MouseSensorMorph.coffeeScriptSourceOfThisClass = '# MouseSensorMorph ////////////////////////////////////////////////////\n\n# for demo and debuggin purposes only, to be removed later\nclass MouseSensorMorph extends BoxMorph\n  constructor: (edge, border, borderColor) ->\n    super\n    @edge = edge or 4\n    @border = border or 2\n    @color = new Color(255, 255, 255)\n    @borderColor = borderColor or new Color()\n    @isTouched = false\n    @upStep = 0.05\n    @downStep = 0.02\n    @noticesTransparentClick = false\n    @updateRendering()\n  \n  touch: ->\n    unless @isTouched\n      @isTouched = true\n      @alpha = 0.6\n      @step = =>\n        if @isTouched\n          @alpha = @alpha + @upStep  if @alpha < 1\n        else if @alpha > (@downStep)\n          @alpha = @alpha - @downStep\n        else\n          @alpha = 0\n          @step = null\n        @changed()\n  \n  unTouch: ->\n    @isTouched = false\n  \n  mouseEnter: ->\n    @touch()\n  \n  mouseLeave: ->\n    @unTouch()\n  \n  mouseDownLeft: ->\n    @touch()\n  \n  mouseClickLeft: ->\n    @unTouch()';
+
+  return MouseSensorMorph;
+
+})(BoxMorph);
 
 FrameMorph = (function(_super) {
   __extends(FrameMorph, _super);
@@ -3557,435 +2503,247 @@ FrameMorph = (function(_super) {
 
 })(Morph);
 
-StringMorph = (function(_super) {
-  __extends(StringMorph, _super);
+StringFieldMorph = (function(_super) {
+  __extends(StringFieldMorph, _super);
 
-  StringMorph.prototype.text = null;
+  StringFieldMorph.prototype.defaultContents = null;
 
-  StringMorph.prototype.fontSize = null;
+  StringFieldMorph.prototype.minWidth = null;
 
-  StringMorph.prototype.fontName = null;
+  StringFieldMorph.prototype.fontSize = null;
 
-  StringMorph.prototype.fontStyle = null;
+  StringFieldMorph.prototype.fontStyle = null;
 
-  StringMorph.prototype.isBold = null;
+  StringFieldMorph.prototype.isBold = null;
 
-  StringMorph.prototype.isItalic = null;
+  StringFieldMorph.prototype.isItalic = null;
 
-  StringMorph.prototype.isEditable = false;
+  StringFieldMorph.prototype.isNumeric = null;
 
-  StringMorph.prototype.isNumeric = null;
+  StringFieldMorph.prototype.text = null;
 
-  StringMorph.prototype.isPassword = false;
+  StringFieldMorph.prototype.isEditable = true;
 
-  StringMorph.prototype.shadowOffset = null;
-
-  StringMorph.prototype.shadowColor = null;
-
-  StringMorph.prototype.isShowingBlanks = false;
-
-  StringMorph.prototype.blanksColor = new Color(180, 140, 140);
-
-  StringMorph.prototype.isScrollable = true;
-
-  StringMorph.prototype.currentlySelecting = false;
-
-  StringMorph.prototype.startMark = null;
-
-  StringMorph.prototype.endMark = null;
-
-  StringMorph.prototype.markedTextColor = new Color(255, 255, 255);
-
-  StringMorph.prototype.markedBackgoundColor = new Color(60, 60, 120);
-
-  function StringMorph(text, fontSize, fontStyle, isBold, isItalic, isNumeric, shadowOffset, shadowColor, color, fontName) {
+  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, isBold, isItalic, isNumeric) {
+    this.defaultContents = defaultContents != null ? defaultContents : "";
+    this.minWidth = minWidth != null ? minWidth : 100;
     this.fontSize = fontSize != null ? fontSize : 12;
     this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
     this.isBold = isBold != null ? isBold : false;
     this.isItalic = isItalic != null ? isItalic : false;
     this.isNumeric = isNumeric != null ? isNumeric : false;
-    this.shadowColor = shadowColor;
-    this.text = text || (text === "" ? "" : "StringMorph");
-    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
-    this.shadowOffset = shadowOffset || new Point(0, 0);
-    StringMorph.__super__.constructor.call(this);
-    this.color = color || new Color(0, 0, 0);
-    this.noticesTransparentClick = true;
+    StringFieldMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
     this.updateRendering();
   }
 
-  StringMorph.prototype.toString = function() {
-    return "a " + (this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + this.text.slice(0, 30) + "...\")";
+  StringFieldMorph.prototype.updateRendering = function() {
+    var txt;
+
+    txt = (this.text ? this.string() : this.defaultContents);
+    this.text = null;
+    this.children.forEach(function(child) {
+      return child.destroy();
+    });
+    this.children = [];
+    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
+    this.text.isNumeric = this.isNumeric;
+    this.text.setPosition(this.bounds.origin.copy());
+    this.text.isEditable = this.isEditable;
+    this.text.isDraggable = false;
+    this.text.enableSelecting();
+    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
+    StringFieldMorph.__super__.updateRendering.call(this);
+    return this.add(this.text);
   };
 
-  StringMorph.prototype.password = function(letter, length) {
-    var ans, i, _i;
-
-    ans = "";
-    for (i = _i = 0; 0 <= length ? _i < length : _i > length; i = 0 <= length ? ++_i : --_i) {
-      ans += letter;
-    }
-    return ans;
+  StringFieldMorph.prototype.string = function() {
+    return this.text.text;
   };
 
-  StringMorph.prototype.font = function() {
-    var font;
-
-    font = "";
-    if (this.isBold) {
-      font = font + "bold ";
-    }
-    if (this.isItalic) {
-      font = font + "italic ";
-    }
-    return font + this.fontSize + "px " + (this.fontName ? this.fontName + ", " : "") + this.fontStyle;
-  };
-
-  StringMorph.prototype.updateRendering = function() {
-    var c, context, i, p, start, stop, text, width, x, y, _i;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    this.image = newCanvas();
-    context = this.image.getContext("2d");
-    context.font = this.font();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    width = Math.max(context.measureText(text).width + Math.abs(this.shadowOffset.x), 1);
-    this.bounds.corner = this.bounds.origin.add(new Point(width, fontHeight(this.fontSize) + Math.abs(this.shadowOffset.y)));
-    this.image.width = width;
-    this.image.height = this.height();
-    context.font = this.font();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    if (this.shadowColor) {
-      x = Math.max(this.shadowOffset.x, 0);
-      y = Math.max(this.shadowOffset.y, 0);
-      context.fillStyle = this.shadowColor.toString();
-      context.fillText(text, x, fontHeight(this.fontSize) + y);
-    }
-    x = Math.abs(Math.min(this.shadowOffset.x, 0));
-    y = Math.abs(Math.min(this.shadowOffset.y, 0));
-    context.fillStyle = this.color.toString();
-    if (this.isShowingBlanks) {
-      this.renderWithBlanks(context, x, fontHeight(this.fontSize) + y);
+  StringFieldMorph.prototype.mouseClickLeft = function(pos) {
+    if (this.isEditable) {
+      return this.text.edit();
     } else {
-      context.fillText(text, x, fontHeight(this.fontSize) + y);
-    }
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    for (i = _i = start; start <= stop ? _i < stop : _i > stop; i = start <= stop ? ++_i : --_i) {
-      p = this.slotCoordinates(i).subtract(this.position());
-      c = text.charAt(i);
-      context.fillStyle = this.markedBackgoundColor.toString();
-      context.fillRect(p.x, p.y, context.measureText(c).width + 1 + x, fontHeight(this.fontSize) + y);
-      context.fillStyle = this.markedTextColor.toString();
-      context.fillText(c, p.x + x, fontHeight(this.fontSize) + y);
-    }
-    if (this.parent ? this.parent.fixLayout : void 0) {
-      return this.parent.fixLayout();
+      return this.escalateEvent('mouseClickLeft', pos);
     }
   };
 
-  StringMorph.prototype.renderWithBlanks = function(context, startX, y) {
-    var blank, ctx, drawBlank, isFirst, space, words, x;
+  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
 
-    drawBlank = function() {
-      context.drawImage(blank, Math.round(x), 0);
-      return x += space;
-    };
-    space = context.measureText(" ").width;
-    blank = newCanvas(new Point(space, this.height()));
-    ctx = blank.getContext("2d");
-    words = this.text.split(" ");
-    x = startX || 0;
-    isFirst = true;
-    ctx.fillStyle = this.blanksColor.toString();
-    ctx.arc(space / 2, blank.height / 2, space / 2, radians(0), radians(360));
-    ctx.fill();
-    return words.forEach(function(word) {
-      if (!isFirst) {
-        drawBlank();
-      }
-      isFirst = false;
-      if (word !== "") {
-        context.fillText(word, x, y);
-        return x += context.measureText(word).width;
+    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.text && dict[this.text]) {
+      c.text = dict[this.text];
+    }
+    return c;
+  };
+
+  StringFieldMorph.coffeeScriptSourceOfThisClass = '# StringFieldMorph ////////////////////////////////////////////////////\n\nclass StringFieldMorph extends FrameMorph\n\n  defaultContents: null\n  minWidth: null\n  fontSize: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isNumeric: null\n  text: null\n  isEditable: true\n\n  constructor: (\n      @defaultContents = "",\n      @minWidth = 100,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false\n      ) ->\n    super()\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  updateRendering: ->\n    txt = (if @text then @string() else @defaultContents)\n    @text = null\n    @children.forEach (child) ->\n      child.destroy()\n    #\n    @children = []\n    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)\n    @text.isNumeric = @isNumeric # for whichever reason...\n    @text.setPosition @bounds.origin.copy()\n    @text.isEditable = @isEditable\n    @text.isDraggable = false\n    @text.enableSelecting()\n    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())\n    super()\n    @add @text\n  \n  string: ->\n    @text.text\n  \n  mouseClickLeft: (pos)->\n    if @isEditable\n      @text.edit()\n    else\n      @escalateEvent \'mouseClickLeft\', pos\n  \n  \n  # StringFieldMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.text = (dict[@text])  if c.text and dict[@text]\n    c';
+
+  return StringFieldMorph;
+
+})(FrameMorph);
+
+WorkspaceMorph = (function(_super) {
+  __extends(WorkspaceMorph, _super);
+
+  WorkspaceMorph.prototype.morphsList = null;
+
+  WorkspaceMorph.prototype.buttonClose = null;
+
+  WorkspaceMorph.prototype.resizer = null;
+
+  WorkspaceMorph.prototype.closeIcon = null;
+
+  function WorkspaceMorph(target) {
+    WorkspaceMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.isDraggable = true;
+    this.border = 1;
+    this.edge = 5;
+    this.color = new Color(60, 60, 60);
+    this.borderColor = new Color(95, 95, 95);
+    this.updateRendering();
+    this.buildPanes();
+  }
+
+  WorkspaceMorph.prototype.setTarget = function(target) {
+    this.target = target;
+    this.currentProperty = null;
+    return this.buildPanes();
+  };
+
+  WorkspaceMorph.prototype.buildPanes = function() {
+    var ListOfMorphs, attribs, theWordMorph,
+      _this = this;
+
+    attribs = [];
+    this.children.forEach(function(m) {
+      if (m !== this.work) {
+        return m.destroy();
       }
     });
-  };
-
-  StringMorph.prototype.slotCoordinates = function(slot) {
-    var context, dest, text, x, xOffset, y;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    dest = Math.min(Math.max(slot, 0), text.length);
-    context = this.image.getContext("2d");
-    xOffset = context.measureText(text.substring(0, dest)).width;
-    this.pos = dest;
-    x = this.left() + xOffset;
-    y = this.top();
-    return new Point(x, y);
-  };
-
-  StringMorph.prototype.slotAt = function(aPoint) {
-    var charX, context, idx, text;
-
-    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
-    idx = 0;
-    charX = 0;
-    context = this.image.getContext("2d");
-    while (aPoint.x - this.left() > charX) {
-      charX += context.measureText(text[idx]).width;
-      idx += 1;
-      if (idx === text.length) {
-        if ((context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - this.left())) {
-          return idx;
-        }
-      }
-    }
-    return idx - 1;
-  };
-
-  StringMorph.prototype.upFrom = function(slot) {
-    return slot;
-  };
-
-  StringMorph.prototype.downFrom = function(slot) {
-    return slot;
-  };
-
-  StringMorph.prototype.startOfLine = function() {
-    return 0;
-  };
-
-  StringMorph.prototype.endOfLine = function() {
-    return this.text.length;
-  };
-
-  StringMorph.prototype.rawHeight = function() {
-    return this.height() / 1.2;
-  };
-
-  StringMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = StringMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("edit", "edit");
-    menu.addItem("font size...", (function() {
-      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 500, true);
-    }), "set this String's\nfont point size");
-    if (this.fontStyle !== "serif") {
-      menu.addItem("serif", "setSerif");
-    }
-    if (this.fontStyle !== "sans-serif") {
-      menu.addItem("sans-serif", "setSansSerif");
-    }
-    if (this.isBold) {
-      menu.addItem("normal weight", "toggleWeight");
-    } else {
-      menu.addItem("bold", "toggleWeight");
-    }
-    if (this.isItalic) {
-      menu.addItem("normal style", "toggleItalic");
-    } else {
-      menu.addItem("italic", "toggleItalic");
-    }
-    if (this.isShowingBlanks) {
-      menu.addItem("hide blanks", "toggleShowBlanks");
-    } else {
-      menu.addItem("show blanks", "toggleShowBlanks");
-    }
-    if (this.isPassword) {
-      menu.addItem("show characters", "toggleIsPassword");
-    } else {
-      menu.addItem("hide characters", "toggleIsPassword");
-    }
-    return menu;
-  };
-
-  StringMorph.prototype.toggleIsDraggable = function() {
-    this.isDraggable = !this.isDraggable;
-    if (this.isDraggable) {
-      return this.disableSelecting();
-    } else {
-      return this.enableSelecting();
-    }
-  };
-
-  StringMorph.prototype.toggleShowBlanks = function() {
-    this.isShowingBlanks = !this.isShowingBlanks;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleWeight = function() {
-    this.isBold = !this.isBold;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleItalic = function() {
-    this.isItalic = !this.isItalic;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.toggleIsPassword = function() {
-    this.isPassword = !this.isPassword;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setSerif = function() {
-    this.fontStyle = "serif";
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setSansSerif = function() {
-    this.fontStyle = "sans-serif";
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setFontSize = function(size) {
-    var newSize;
-
-    if (typeof size === "number") {
-      this.fontSize = Math.round(Math.min(Math.max(size, 4), 500));
-    } else {
-      newSize = parseFloat(size);
-      if (!isNaN(newSize)) {
-        this.fontSize = Math.round(Math.min(Math.max(newSize, 4), 500));
-      }
-    }
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.setText = function(size) {
-    this.text = Math.round(size).toString();
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.numericalSetters = function() {
-    return ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"];
-  };
-
-  StringMorph.prototype.edit = function() {
-    return this.root().edit(this);
-  };
-
-  StringMorph.prototype.selection = function() {
-    var start, stop;
-
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    return this.text.slice(start, stop);
-  };
-
-  StringMorph.prototype.selectionStartSlot = function() {
-    return Math.min(this.startMark, this.endMark);
-  };
-
-  StringMorph.prototype.clearSelection = function() {
-    this.currentlySelecting = false;
-    this.startMark = null;
-    this.endMark = null;
-    this.changed();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.deleteSelection = function() {
-    var start, stop, text;
-
-    text = this.text;
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    this.text = text.slice(0, start) + text.slice(stop);
-    this.changed();
-    return this.clearSelection();
-  };
-
-  StringMorph.prototype.selectAll = function() {
-    this.startMark = 0;
-    this.endMark = this.text.length;
-    this.updateRendering();
-    return this.changed();
-  };
-
-  StringMorph.prototype.mouseDownLeft = function(pos) {
-    if (this.isEditable) {
-      return this.clearSelection();
-    } else {
-      return this.escalateEvent("mouseDownLeft", pos);
-    }
-  };
-
-  StringMorph.prototype.mouseClickLeft = function(pos) {
-    var caret;
-
-    caret = this.root().caret;
-    if (this.isEditable) {
-      if (!this.currentlySelecting) {
-        this.edit();
-      }
-      if (caret) {
-        caret.gotoPos(pos);
-      }
-      this.root().caret.gotoPos(pos);
-      return this.currentlySelecting = true;
-    } else {
-      return this.escalateEvent("mouseClickLeft", pos);
-    }
-  };
-
-  StringMorph.prototype.enableSelecting = function() {
-    this.mouseDownLeft = function(pos) {
-      this.clearSelection();
-      if (this.isEditable && (!this.isDraggable)) {
-        this.edit();
-        this.root().caret.gotoPos(pos);
-        this.startMark = this.slotAt(pos);
-        this.endMark = this.startMark;
-        return this.currentlySelecting = true;
-      }
+    this.children = [];
+    this.label = new TextMorph("Morphs List");
+    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
+    this.label.isBold = true;
+    this.label.color = new Color(255, 255, 255);
+    this.label.updateRendering();
+    this.add(this.label);
+    this.closeIcon = new CloseCircleButtonMorph();
+    this.closeIcon.color = new Color(255, 255, 255);
+    this.add(this.closeIcon);
+    this.closeIcon.mouseClickLeft = function() {
+      return _this.destroy();
     };
-    return this.mouseMove = function(pos) {
-      var newMark;
-
-      if (this.isEditable && this.currentlySelecting && (!this.isDraggable)) {
-        newMark = this.slotAt(pos);
-        if (newMark !== this.endMark) {
-          this.endMark = newMark;
-          this.updateRendering();
-          return this.changed();
-        }
-      }
+    theWordMorph = "Morph";
+    ListOfMorphs = (Object.keys(window)).filter(function(i) {
+      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
+    });
+    this.morphsList = new ListMorph(ListOfMorphs, null);
+    this.morphsList.hBar.alpha = 0.6;
+    this.morphsList.vBar.alpha = 0.6;
+    this.add(this.morphsList);
+    this.buttonClose = new TriggerMorph();
+    this.buttonClose.labelString = "close";
+    this.buttonClose.action = function() {
+      return _this.destroy();
     };
+    this.add(this.buttonClose);
+    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
+    return this.fixLayout();
   };
 
-  StringMorph.prototype.disableSelecting = function() {
-    this.mouseDownLeft = StringMorph.prototype.mouseDownLeft;
-    return delete this.mouseMove;
+  WorkspaceMorph.prototype.fixLayout = function() {
+    var b, closeIconScale, h, handleSize, r, w, x, y;
+
+    Morph.prototype.trackChanges = false;
+    handleSize = WorldMorph.MorphicPreferences.handleSize;
+    x = this.left() + this.edge;
+    y = this.top() + this.edge;
+    r = this.right() - this.edge;
+    w = r - x;
+    this.closeIcon.setPosition(new Point(x, y));
+    closeIconScale = 2 / 3;
+    this.closeIcon.setExtent(new Point(handleSize * closeIconScale, handleSize * closeIconScale));
+    this.label.setPosition(new Point(x + handleSize * closeIconScale + this.edge, y - this.edge / 2));
+    this.label.setWidth(w);
+    if (this.label.height() > (this.height() - 50)) {
+      this.silentSetHeight(this.label.height() + 50);
+      this.updateRendering();
+      this.changed();
+      this.resizer.updateRendering();
+    }
+    y = this.label.bottom() + this.edge / 2;
+    w = this.width() - this.edge;
+    w -= this.edge;
+    b = this.bottom() - (2 * this.edge) - handleSize;
+    h = b - y;
+    this.morphsList.setPosition(new Point(x, y));
+    this.morphsList.setExtent(new Point(w, h));
+    x = this.morphsList.left();
+    y = this.morphsList.bottom() + this.edge;
+    h = handleSize;
+    w = this.morphsList.width() - h - this.edge;
+    this.buttonClose.setPosition(new Point(x, y));
+    this.buttonClose.setExtent(new Point(w, h));
+    Morph.prototype.trackChanges = true;
+    return this.changed();
   };
 
-  StringMorph.coffeeScriptSourceOfThisClass = '# StringMorph /////////////////////////////////////////////////////////\n\n# A StringMorph is a single line of text. It can only be left-aligned.\n\nclass StringMorph extends Morph\n\n  text: null\n  fontSize: null\n  fontName: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isEditable: false\n  isNumeric: null\n  isPassword: false\n  shadowOffset: null\n  shadowColor: null\n  isShowingBlanks: false\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  blanksColor: new Color(180, 140, 140)\n  #\n  # Properties for text-editing\n  isScrollable: true\n  currentlySelecting: false\n  startMark: null\n  endMark: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedTextColor: new Color(255, 255, 255)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedBackgoundColor: new Color(60, 60, 120)\n\n  constructor: (\n      text,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false,\n      shadowOffset,\n      @shadowColor,\n      color,\n      fontName\n      ) ->\n    # additional properties:\n    @text = text or ((if (text is "") then "" else "StringMorph"))\n    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n    @shadowOffset = shadowOffset or new Point(0, 0)\n    #\n    super()\n    #\n    # override inherited properites:\n    @color = color or new Color(0, 0, 0)\n    @noticesTransparentClick = true\n    @updateRendering()\n  \n  toString: ->\n    # e.g. \'a StringMorph("Hello World")\'\n    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  password: (letter, length) ->\n    ans = ""\n    for i in [0...length]\n      ans += letter\n    ans\n\n  font: ->\n    # answer a font string, e.g. \'bold italic 12px sans-serif\'\n    font = ""\n    font = font + "bold "  if @isBold\n    font = font + "italic "  if @isItalic\n    font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle\n  \n  updateRendering: ->\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    # initialize my surface property\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # set my extent based on the size of the text\n    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)\n    @bounds.corner = @bounds.origin.add(new Point(\n      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))\n    @image.width = width\n    @image.height = @height()\n\n    # changing the canvas size resets many of\n    # the properties of the canvas, so we need to\n    # re-initialise the font and alignments here\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # first draw the shadow, if any\n    if @shadowColor\n      x = Math.max(@shadowOffset.x, 0)\n      y = Math.max(@shadowOffset.y, 0)\n      context.fillStyle = @shadowColor.toString()\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # now draw the actual text\n    x = Math.abs(Math.min(@shadowOffset.x, 0))\n    y = Math.abs(Math.min(@shadowOffset.y, 0))\n    context.fillStyle = @color.toString()\n    if @isShowingBlanks\n      @renderWithBlanks context, x, fontHeight(@fontSize) + y\n    else\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotCoordinates(i).subtract(@position())\n      c = text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,\n        fontHeight(@fontSize) + y\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x + x, fontHeight(@fontSize) + y\n    #\n    # notify my parent of layout change\n    @parent.fixLayout()  if @parent.fixLayout  if @parent\n  \n  renderWithBlanks: (context, startX, y) ->\n    # create the blank form\n    drawBlank = ->\n      context.drawImage blank, Math.round(x), 0\n      x += space\n    space = context.measureText(" ").width\n    blank = newCanvas(new Point(space, @height()))\n    ctx = blank.getContext("2d")\n    words = @text.split(" ")\n    x = startX or 0\n    isFirst = true\n    ctx.fillStyle = @blanksColor.toString()\n    ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)\n    ctx.fill()\n    #\n    # render my text inserting blanks\n    words.forEach (word) ->\n      drawBlank()  unless isFirst\n      isFirst = false\n      if word isnt ""\n        context.fillText word, x, y\n        x += context.measureText(word).width\n  \n  \n  # StringMorph mesuring:\n  slotCoordinates: (slot) ->\n    # answer the position point of the given index ("slot")\n    # where the caret should be placed\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    dest = Math.min(Math.max(slot, 0), text.length)\n    context = @image.getContext("2d")\n    xOffset = context.measureText(text.substring(0,dest)).width\n    @pos = dest\n    x = @left() + xOffset\n    y = @top()\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    idx = 0\n    charX = 0\n    context = @image.getContext("2d")\n    while aPoint.x - @left() > charX\n      charX += context.measureText(text[idx]).width\n      idx += 1\n      if idx is text.length\n        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  \n          return idx\n    idx - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    slot\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    slot\n  \n  startOfLine: ->\n    # answer the first slot (index) of the line for the given slot\n    0\n  \n  endOfLine: ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @text.length\n\n  rawHeight: ->\n    # answer my corrected fontSize\n    @height() / 1.2\n    \n  # StringMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 500, true\n    ), "set this String\'s\nfont point size"\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n\n    if @isShowingBlanks\n      menu.addItem "hide blanks", "toggleShowBlanks"\n    else\n      menu.addItem "show blanks", "toggleShowBlanks"\n\n    if @isPassword\n      menu.addItem "show characters", "toggleIsPassword"\n    else\n      menu.addItem "hide characters", "toggleIsPassword"\n\n    menu\n  \n  toggleIsDraggable: ->\n    # for context menu demo purposes\n    @isDraggable = not @isDraggable\n    if @isDraggable\n      @disableSelecting()\n    else\n      @enableSelecting()\n  \n  toggleShowBlanks: ->\n    @isShowingBlanks = not @isShowingBlanks\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleWeight: ->\n    @isBold = not @isBold\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleItalic: ->\n    @isItalic = not @isItalic\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleIsPassword: ->\n    @isPassword = not @isPassword\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSerif: ->\n    @fontStyle = "serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSansSerif: ->\n    @fontStyle = "sans-serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setFontSize: (size) ->\n    # for context menu demo purposes\n    if typeof size is "number"\n      @fontSize = Math.round(Math.min(Math.max(size, 4), 500))\n    else\n      newSize = parseFloat(size)\n      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setText: (size) ->\n    # for context menu demo purposes\n    @text = Math.round(size).toString()\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]\n  \n  \n  # StringMorph editing:\n  edit: ->\n    @root().edit @\n  \n  selection: ->\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text.slice start, stop\n  \n  selectionStartSlot: ->\n    Math.min @startMark, @endMark\n  \n  clearSelection: ->\n    @currentlySelecting = false\n    @startMark = null\n    @endMark = null\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  deleteSelection: ->\n    text = @text\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text = text.slice(0, start) + text.slice(stop)\n    @changed()\n    @clearSelection()\n  \n  selectAll: ->\n    @startMark = 0\n    @endMark = @text.length\n    @updateRendering()\n    @changed()\n\n  mouseDownLeft: (pos) ->\n    if @isEditable\n      @clearSelection()\n    else\n      @escalateEvent "mouseDownLeft", pos\n\n  # Every time the user clicks on the text, a new edit()\n  # is triggered, which creates a new caret.\n  mouseClickLeft: (pos) ->\n    caret = @root().caret;\n    if @isEditable\n      @edit()  unless @currentlySelecting\n      if caret then caret.gotoPos pos\n      @root().caret.gotoPos pos\n      @currentlySelecting = true\n    else\n      @escalateEvent "mouseClickLeft", pos\n  \n  #mouseDoubleClick: ->\n  #  alert "mouseDoubleClick!"\n\n  enableSelecting: ->\n    @mouseDownLeft = (pos) ->\n      @clearSelection()\n      if @isEditable and (not @isDraggable)\n        @edit()\n        @root().caret.gotoPos pos\n        @startMark = @slotAt(pos)\n        @endMark = @startMark\n        @currentlySelecting = true\n    \n    @mouseMove = (pos) ->\n      if @isEditable and @currentlySelecting and (not @isDraggable)\n        newMark = @slotAt(pos)\n        if newMark isnt @endMark\n          @endMark = newMark\n          @updateRendering()\n          @changed()\n  \n  disableSelecting: ->\n    # re-establish the original definition of the method\n    @mouseDownLeft = StringMorph::mouseDownLeft\n    delete @mouseMove';
+  WorkspaceMorph.prototype.setExtent = function(aPoint) {
+    WorkspaceMorph.__super__.setExtent.call(this, aPoint);
+    return this.fixLayout();
+  };
 
-  return StringMorph;
+  WorkspaceMorph.coffeeScriptSourceOfThisClass = '# WorkspaceMorph //////////////////////////////////////////////////////\n\nclass WorkspaceMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n  closeIcon: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    @closeIcon = new CloseCircleButtonMorph()\n    @closeIcon.color = new Color(255, 255, 255)\n    @add @closeIcon\n    @closeIcon.mouseClickLeft = =>\n        @destroy()\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    handleSize = WorldMorph.MorphicPreferences.handleSize;\n\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n\n    # close icon\n    @closeIcon.setPosition new Point(x, y)\n    closeIconScale = 2/3\n    @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)\n\n    # label\n    @label.setPosition new Point(x + handleSize * closeIconScale + @edge, y - @edge/2)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + @edge/2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
 
-})(Morph);
+  return WorkspaceMorph;
+
+})(BoxMorph);
+
+modules = {};
+
+useBlurredShadows = getBlurredShadowSupport();
+
+standardSettings = {
+  minimumFontHeight: getMinimumFontHeight(),
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 12,
+  bubbleHelpFontSize: 10,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 12,
+  prompterSliderSize: 10,
+  handleSize: 15,
+  scrollBarSize: 12,
+  mouseScrollAmount: 40,
+  useSliderForInput: false,
+  useVirtualKeyboard: true,
+  isTouchDevice: false,
+  rasterizeSVGs: false,
+  isFlat: false
+};
+
+touchScreenSettings = {
+  minimumFontHeight: standardSettings.minimumFontHeight,
+  globalFontFamily: "",
+  menuFontName: "sans-serif",
+  menuFontSize: 24,
+  bubbleHelpFontSize: 18,
+  prompterFontName: "sans-serif",
+  prompterFontSize: 24,
+  prompterSliderSize: 20,
+  handleSize: 26,
+  scrollBarSize: 24,
+  mouseScrollAmount: 40,
+  useSliderForInput: true,
+  useVirtualKeyboard: true,
+  isTouchDevice: false,
+  rasterizeSVGs: false,
+  isFlat: false
+};
 
 WorldMorph = (function(_super) {
   __extends(WorldMorph, _super);
@@ -4714,80 +3472,165 @@ WorldMorph = (function(_super) {
 
 })(FrameMorph);
 
-BouncerMorph = (function(_super) {
-  __extends(BouncerMorph, _super);
+ColorPaletteMorph = (function(_super) {
+  __extends(ColorPaletteMorph, _super);
 
-  BouncerMorph.prototype.isStopped = false;
+  ColorPaletteMorph.prototype.target = null;
 
-  BouncerMorph.prototype.type = null;
+  ColorPaletteMorph.prototype.targetSetter = "color";
 
-  BouncerMorph.prototype.direction = null;
+  ColorPaletteMorph.prototype.choice = null;
 
-  BouncerMorph.prototype.speed = null;
-
-  function BouncerMorph(type, speed) {
-    this.type = type != null ? type : "vertical";
-    this.speed = speed != null ? speed : 1;
-    BouncerMorph.__super__.constructor.call(this);
-    this.fps = 50;
-    if (this.type === "vertical") {
-      this.direction = "down";
-    } else {
-      this.direction = "right";
-    }
+  function ColorPaletteMorph(target, sizePoint) {
+    this.target = target != null ? target : null;
+    ColorPaletteMorph.__super__.constructor.call(this);
+    this.silentSetExtent(sizePoint || new Point(80, 50));
+    this.updateRendering();
   }
 
-  BouncerMorph.prototype.moveUp = function() {
-    return this.moveBy(new Point(0, -this.speed));
+  ColorPaletteMorph.prototype.updateRendering = function() {
+    var context, ext, h, l, x, y, _i, _ref, _results;
+
+    ext = this.extent();
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    this.choice = new Color();
+    _results = [];
+    for (x = _i = 0, _ref = ext.x; 0 <= _ref ? _i <= _ref : _i >= _ref; x = 0 <= _ref ? ++_i : --_i) {
+      h = 360 * x / ext.x;
+      y = 0;
+      _results.push((function() {
+        var _j, _ref1, _results1;
+
+        _results1 = [];
+        for (y = _j = 0, _ref1 = ext.y; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
+          l = 100 - (y / ext.y * 100);
+          context.fillStyle = "hsl(" + h + ",100%," + l + "%)";
+          _results1.push(context.fillRect(x, y, 1, 1));
+        }
+        return _results1;
+      })());
+    }
+    return _results;
   };
 
-  BouncerMorph.prototype.moveDown = function() {
-    return this.moveBy(new Point(0, this.speed));
+  ColorPaletteMorph.prototype.mouseMove = function(pos) {
+    this.choice = this.getPixelColor(pos);
+    return this.updateTarget();
   };
 
-  BouncerMorph.prototype.moveRight = function() {
-    return this.moveBy(new Point(this.speed, 0));
+  ColorPaletteMorph.prototype.mouseDownLeft = function(pos) {
+    this.choice = this.getPixelColor(pos);
+    return this.updateTarget();
   };
 
-  BouncerMorph.prototype.moveLeft = function() {
-    return this.moveBy(new Point(-this.speed, 0));
-  };
-
-  BouncerMorph.prototype.step = function() {
-    if (!this.isStopped) {
-      if (this.type === "vertical") {
-        if (this.direction === "down") {
-          this.moveDown();
-        } else {
-          this.moveUp();
-        }
-        if (this.boundsIncludingChildren().top() < this.parent.top() && this.direction === "up") {
-          this.direction = "down";
-        }
-        if (this.boundsIncludingChildren().bottom() > this.parent.bottom() && this.direction === "down") {
-          return this.direction = "up";
-        }
-      } else if (this.type === "horizontal") {
-        if (this.direction === "right") {
-          this.moveRight();
-        } else {
-          this.moveLeft();
-        }
-        if (this.boundsIncludingChildren().left() < this.parent.left() && this.direction === "left") {
-          this.direction = "right";
-        }
-        if (this.boundsIncludingChildren().right() > this.parent.right() && this.direction === "right") {
-          return this.direction = "left";
-        }
+  ColorPaletteMorph.prototype.updateTarget = function() {
+    if (this.target instanceof Morph && this.choice !== null) {
+      if (this.target[this.targetSetter] instanceof Function) {
+        return this.target[this.targetSetter](this.choice);
+      } else {
+        this.target[this.targetSetter] = this.choice;
+        this.target.updateRendering();
+        return this.target.changed();
       }
     }
   };
 
-  BouncerMorph.coffeeScriptSourceOfThisClass = '# BouncerMorph ////////////////////////////////////////////////////////\n# fishy constructor\n# I am a Demo of a stepping custom Morph\n# Bounces vertically or horizontally within the parent\n\nclass BouncerMorph extends Morph\n\n  isStopped: false\n  type: null\n  direction: null\n  speed: null\n\n  constructor: (@type = "vertical", @speed = 1) ->\n    super()\n    @fps = 50\n    # additional properties:\n    if @type is "vertical"\n      @direction = "down"\n    else\n      @direction = "right"\n  \n  \n  # BouncerMorph moving:\n  moveUp: ->\n    @moveBy new Point(0, -@speed)\n  \n  moveDown: ->\n    @moveBy new Point(0, @speed)\n  \n  moveRight: ->\n    @moveBy new Point(@speed, 0)\n  \n  moveLeft: ->\n    @moveBy new Point(-@speed, 0)\n  \n  \n  # BouncerMorph stepping:\n  step: ->\n    unless @isStopped\n      if @type is "vertical"\n        if @direction is "down"\n          @moveDown()\n        else\n          @moveUp()\n        @direction = "down"  if @boundsIncludingChildren().top() < @parent.top() and @direction is "up"\n        @direction = "up"  if @boundsIncludingChildren().bottom() > @parent.bottom() and @direction is "down"\n      else if @type is "horizontal"\n        if @direction is "right"\n          @moveRight()\n        else\n          @moveLeft()\n        @direction = "right"  if @boundsIncludingChildren().left() < @parent.left() and @direction is "left"\n        @direction = "left"  if @boundsIncludingChildren().right() > @parent.right() and @direction is "right"';
+  ColorPaletteMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
 
-  return BouncerMorph;
+    c = ColorPaletteMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
+    }
+    return c;
+  };
+
+  ColorPaletteMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = ColorPaletteMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one");
+    return menu;
+  };
+
+  ColorPaletteMorph.prototype.setTarget = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.push(this.world());
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        _this.target = each;
+        return _this.setTargetSetter();
+      });
+    });
+    if (choices.length === 1) {
+      this.target = choices[0];
+      return this.setTargetSetter();
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
+    }
+  };
+
+  ColorPaletteMorph.prototype.setTargetSetter = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.target.colorSetters();
+    menu = new MenuMorph(this, "choose target property:");
+    choices.forEach(function(each) {
+      return menu.addItem(each, function() {
+        return _this.targetSetter = each;
+      });
+    });
+    if (choices.length === 1) {
+      return this.targetSetter = choices[0];
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
+    }
+  };
+
+  ColorPaletteMorph.coffeeScriptSourceOfThisClass = '# ColorPaletteMorph ///////////////////////////////////////////////////\n\nclass ColorPaletteMorph extends Morph\n\n  target: null\n  targetSetter: "color"\n  choice: null\n\n  constructor: (@target = null, sizePoint) ->\n    super()\n    @silentSetExtent sizePoint or new Point(80, 50)\n    @updateRendering()\n  \n  updateRendering: ->\n    ext = @extent()\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    @choice = new Color()\n    for x in [0..ext.x]\n      h = 360 * x / ext.x\n      y = 0\n      for y in [0..ext.y]\n        l = 100 - (y / ext.y * 100)\n        context.fillStyle = "hsl(" + h + ",100%," + l + "%)"\n        context.fillRect x, y, 1, 1\n  \n  mouseMove: (pos) ->\n    @choice = @getPixelColor(pos)\n    @updateTarget()\n  \n  mouseDownLeft: (pos) ->\n    @choice = @getPixelColor(pos)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @target instanceof Morph and @choice isnt null\n      if @target[@targetSetter] instanceof Function\n        @target[@targetSetter] @choice\n      else\n        @target[@targetSetter] = @choice\n        @target.updateRendering()\n        @target.changed()\n  \n  \n  # ColorPaletteMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  # ColorPaletteMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"\n    menu\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.colorSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @targetSetter = each\n    if choices.length is 1\n      @targetSetter = choices[0]\n    else menu.popUpAtHand @world()  if choices.length';
+
+  return ColorPaletteMorph;
 
 })(Morph);
+
+GrayPaletteMorph = (function(_super) {
+  __extends(GrayPaletteMorph, _super);
+
+  function GrayPaletteMorph(target, sizePoint) {
+    this.target = target != null ? target : null;
+    GrayPaletteMorph.__super__.constructor.call(this, this.target, sizePoint || new Point(80, 10));
+  }
+
+  GrayPaletteMorph.prototype.updateRendering = function() {
+    var context, ext, gradient;
+
+    ext = this.extent();
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    this.choice = new Color();
+    gradient = context.createLinearGradient(0, 0, ext.x, ext.y);
+    gradient.addColorStop(0, "black");
+    gradient.addColorStop(1, "white");
+    context.fillStyle = gradient;
+    return context.fillRect(0, 0, ext.x, ext.y);
+  };
+
+  GrayPaletteMorph.coffeeScriptSourceOfThisClass = '# GrayPaletteMorph ///////////////////////////////////////////////////\n\nclass GrayPaletteMorph extends ColorPaletteMorph\n\n  constructor: (@target = null, sizePoint) ->\n    super @target, sizePoint or new Point(80, 10)\n  \n  updateRendering: ->\n    ext = @extent()\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    @choice = new Color()\n    gradient = context.createLinearGradient(0, 0, ext.x, ext.y)\n    gradient.addColorStop 0, "black"\n    gradient.addColorStop 1, "white"\n    context.fillStyle = gradient\n    context.fillRect 0, 0, ext.x, ext.y';
+
+  return GrayPaletteMorph;
+
+})(ColorPaletteMorph);
 
 /*
 Copyright 2013 Craig Campbell
@@ -5558,1702 +4401,176 @@ Mousetrap = {
 
 window.Mousetrap = Mousetrap;
 
-ScrollFrameMorph = (function(_super) {
-  __extends(ScrollFrameMorph, _super);
+SpeechBubbleMorph = (function(_super) {
+  __extends(SpeechBubbleMorph, _super);
 
-  ScrollFrameMorph.prototype.autoScrollTrigger = null;
+  SpeechBubbleMorph.prototype.isPointingRight = true;
 
-  ScrollFrameMorph.prototype.hasVelocity = true;
+  SpeechBubbleMorph.prototype.contents = null;
 
-  ScrollFrameMorph.prototype.padding = 0;
+  SpeechBubbleMorph.prototype.padding = null;
 
-  ScrollFrameMorph.prototype.growth = 0;
+  SpeechBubbleMorph.prototype.isThought = null;
 
-  ScrollFrameMorph.prototype.isTextLineWrapping = false;
+  SpeechBubbleMorph.prototype.isClickable = false;
 
-  ScrollFrameMorph.prototype.isScrollingByDragging = true;
-
-  ScrollFrameMorph.prototype.scrollBarSize = null;
-
-  ScrollFrameMorph.prototype.contents = null;
-
-  ScrollFrameMorph.prototype.vBar = null;
-
-  ScrollFrameMorph.prototype.hBar = null;
-
-  function ScrollFrameMorph(contents, scrollBarSize, sliderColor) {
-    var _this = this;
-
-    this.alpha = 0;
-    ScrollFrameMorph.__super__.constructor.call(this);
-    this.scrollBarSize = scrollBarSize || WorldMorph.MorphicPreferences.scrollBarSize;
-    this.contents = contents || new FrameMorph(this);
-    this.add(this.contents);
-    this.color = this.contents.color;
-    this.alpha = this.contents.alpha;
-    this.updateRendering = this.contents.updateRendering;
-    this.hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor);
-    this.hBar.setHeight(this.scrollBarSize);
-    this.hBar.action = function(num) {
-      return _this.contents.setPosition(new Point(_this.left() - num, _this.contents.position().y));
-    };
-    this.hBar.isDraggable = false;
-    this.add(this.hBar);
-    this.vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor);
-    this.vBar.setWidth(this.scrollBarSize);
-    this.vBar.action = function(num) {
-      return _this.contents.setPosition(new Point(_this.contents.position().x, _this.top() - num));
-    };
-    this.vBar.isDraggable = false;
-    this.add(this.vBar);
-  }
-
-  ScrollFrameMorph.prototype.setColor = function(aColor) {
-    this.color = aColor;
-    return this.contents.setColor(aColor);
-  };
-
-  ScrollFrameMorph.prototype.setAlphaScaled = function(alpha) {
-    this.alpha = this.calculateAlphaScaled(alpha);
-    return this.contents.setAlphaScaled(alpha);
-  };
-
-  ScrollFrameMorph.prototype.adjustScrollBars = function() {
-    var hWidth, vHeight;
-
-    hWidth = this.width() - this.scrollBarSize;
-    vHeight = this.height() - this.scrollBarSize;
-    this.changed();
-    if (this.contents.width() > this.width() + WorldMorph.MorphicPreferences.scrollBarSize) {
-      this.hBar.show();
-      if (this.hBar.width() !== hWidth) {
-        this.hBar.setWidth(hWidth);
-      }
-      this.hBar.setPosition(new Point(this.left(), this.bottom() - this.hBar.height()));
-      this.hBar.start = 0;
-      this.hBar.stop = this.contents.width() - this.width();
-      this.hBar.size = this.width() / this.contents.width() * this.hBar.stop;
-      this.hBar.value = this.left() - this.contents.left();
-      this.hBar.updateRendering();
-    } else {
-      this.hBar.hide();
-    }
-    if (this.contents.height() > this.height() + this.scrollBarSize) {
-      this.vBar.show();
-      if (this.vBar.height() !== vHeight) {
-        this.vBar.setHeight(vHeight);
-      }
-      this.vBar.setPosition(new Point(this.right() - this.vBar.width(), this.top()));
-      this.vBar.start = 0;
-      this.vBar.stop = this.contents.height() - this.height();
-      this.vBar.size = this.height() / this.contents.height() * this.vBar.stop;
-      this.vBar.value = this.top() - this.contents.top();
-      return this.vBar.updateRendering();
-    } else {
-      return this.vBar.hide();
-    }
-  };
-
-  ScrollFrameMorph.prototype.addContents = function(aMorph) {
-    this.contents.add(aMorph);
-    return this.contents.adjustBounds();
-  };
-
-  ScrollFrameMorph.prototype.setContents = function(aMorph) {
-    this.contents.children.forEach(function(m) {
-      return m.destroy();
-    });
-    this.contents.children = [];
-    aMorph.setPosition(this.position().add(this.padding + 2));
-    return this.addContents(aMorph);
-  };
-
-  ScrollFrameMorph.prototype.setExtent = function(aPoint) {
-    if (this.isTextLineWrapping) {
-      this.contents.setPosition(this.position().copy());
-    }
-    ScrollFrameMorph.__super__.setExtent.call(this, aPoint);
-    return this.contents.adjustBounds();
-  };
-
-  ScrollFrameMorph.prototype.scrollX = function(steps) {
-    var cl, cw, l, newX, r;
-
-    cl = this.contents.left();
-    l = this.left();
-    cw = this.contents.width();
-    r = this.right();
-    newX = cl + steps;
-    if (newX + cw < r) {
-      newX = r - cw;
-    }
-    if (newX > l) {
-      newX = l;
-    }
-    if (newX !== cl) {
-      return this.contents.setLeft(newX);
-    }
-  };
-
-  ScrollFrameMorph.prototype.scrollY = function(steps) {
-    var b, ch, ct, newY, t;
-
-    ct = this.contents.top();
-    t = this.top();
-    ch = this.contents.height();
-    b = this.bottom();
-    newY = ct + steps;
-    if (newY + ch < b) {
-      newY = b - ch;
-    }
-    if (newY > t) {
-      newY = t;
-    }
-    if (newY !== ct) {
-      return this.contents.setTop(newY);
-    }
-  };
-
-  ScrollFrameMorph.prototype.mouseDownLeft = function(pos) {
-    var deltaX, deltaY, friction, oldPos, world,
-      _this = this;
-
-    if (!this.isScrollingByDragging) {
-      return null;
-    }
-    world = this.root();
-    oldPos = pos;
-    deltaX = 0;
-    deltaY = 0;
-    friction = 0.8;
-    return this.step = function() {
-      var newPos;
-
-      if (world.hand.mouseButton && (!world.hand.children.length) && (_this.bounds.containsPoint(world.hand.position()))) {
-        newPos = world.hand.bounds.origin;
-        deltaX = newPos.x - oldPos.x;
-        if (deltaX !== 0) {
-          _this.scrollX(deltaX);
-        }
-        deltaY = newPos.y - oldPos.y;
-        if (deltaY !== 0) {
-          _this.scrollY(deltaY);
-        }
-        oldPos = newPos;
-      } else {
-        if (!_this.hasVelocity) {
-          _this.step = noOperation;
-        } else {
-          if ((Math.abs(deltaX) < 0.5) && (Math.abs(deltaY) < 0.5)) {
-            _this.step = noOperation;
-          } else {
-            deltaX = deltaX * friction;
-            _this.scrollX(Math.round(deltaX));
-            deltaY = deltaY * friction;
-            _this.scrollY(Math.round(deltaY));
-          }
-        }
-      }
-      return _this.adjustScrollBars();
-    };
-  };
-
-  ScrollFrameMorph.prototype.startAutoScrolling = function() {
-    var hand, inset, world,
-      _this = this;
-
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
-    world = this.world();
-    if (!world) {
-      return null;
-    }
-    hand = world.hand;
-    if (!this.autoScrollTrigger) {
-      this.autoScrollTrigger = Date.now();
-    }
-    return this.step = function() {
-      var inner, pos;
-
-      pos = hand.bounds.origin;
-      inner = _this.bounds.insetBy(inset);
-      if ((_this.bounds.containsPoint(pos)) && (!(inner.containsPoint(pos))) && hand.children.length) {
-        return _this.autoScroll(pos);
-      } else {
-        _this.step = noOperation;
-        return _this.autoScrollTrigger = null;
-      }
-    };
-  };
-
-  ScrollFrameMorph.prototype.autoScroll = function(pos) {
-    var area, inset;
-
-    if (Date.now() - this.autoScrollTrigger < 500) {
-      return null;
-    }
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
-    area = this.topLeft().extent(new Point(this.width(), inset));
-    if (area.containsPoint(pos)) {
-      this.scrollY(inset - (pos.y - this.top()));
-    }
-    area = this.topLeft().extent(new Point(inset, this.height()));
-    if (area.containsPoint(pos)) {
-      this.scrollX(inset - (pos.x - this.left()));
-    }
-    area = (new Point(this.right() - inset, this.top())).extent(new Point(inset, this.height()));
-    if (area.containsPoint(pos)) {
-      this.scrollX(-(inset - (this.right() - pos.x)));
-    }
-    area = (new Point(this.left(), this.bottom() - inset)).extent(new Point(this.width(), inset));
-    if (area.containsPoint(pos)) {
-      this.scrollY(-(inset - (this.bottom() - pos.y)));
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.scrollCaretIntoView = function(morph) {
-    var fb, ft, offset, txt;
-
-    txt = morph.target;
-    offset = txt.position().subtract(this.contents.position());
-    ft = this.top() + this.padding;
-    fb = this.bottom() - this.padding;
-    this.contents.setExtent(txt.extent().add(offset).add(this.padding));
-    if (morph.top() < ft) {
-      this.contents.setTop(this.contents.top() + ft - morph.top());
-      morph.setTop(ft);
-    } else if (morph.bottom() > fb) {
-      this.contents.setBottom(this.contents.bottom() + fb - morph.bottom());
-      morph.setBottom(fb);
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.mouseScroll = function(y, x) {
-    if (y) {
-      this.scrollY(y * WorldMorph.MorphicPreferences.mouseScrollAmount);
-    }
-    if (x) {
-      this.scrollX(x * WorldMorph.MorphicPreferences.mouseScrollAmount);
-    }
-    return this.adjustScrollBars();
-  };
-
-  ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = ScrollFrameMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.contents && dict[this.contents]) {
-      c.contents = dict[this.contents];
-    }
-    if (c.hBar && dict[this.hBar]) {
-      c.hBar = dict[this.hBar];
-      c.hBar.action = function(num) {
-        return c.contents.setPosition(new Point(c.left() - num, c.contents.position().y));
-      };
-    }
-    if (c.vBar && dict[this.vBar]) {
-      c.vBar = dict[this.vBar];
-      c.vBar.action = function(num) {
-        return c.contents.setPosition(new Point(c.contents.position().x, c.top() - num));
-      };
-    }
-    return c;
-  };
-
-  ScrollFrameMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = ScrollFrameMorph.__super__.developersMenu.call(this);
-    if (this.isTextLineWrapping) {
-      menu.addItem("auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff");
-    } else {
-      menu.addItem("auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping");
-    }
-    return menu;
-  };
-
-  ScrollFrameMorph.prototype.toggleTextLineWrapping = function() {
-    return this.isTextLineWrapping = !this.isTextLineWrapping;
-  };
-
-  ScrollFrameMorph.coffeeScriptSourceOfThisClass = '# ScrollFrameMorph ////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass ScrollFrameMorph extends FrameMorph\n\n  autoScrollTrigger: null\n  hasVelocity: true # dto.\n  padding: 0 # around the scrollable area\n  growth: 0 # pixels or Point to grow right/left when near edge\n  isTextLineWrapping: false\n  isScrollingByDragging: true\n  scrollBarSize: null\n  contents: null\n  vBar: null\n  hBar: null\n\n  constructor: (contents, scrollBarSize, sliderColor) ->\n    # super() paints the scrollframe, which we don\'t want,\n    # so we set 0 opacity here.\n    @alpha = 0\n    super()\n    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize\n    @contents = contents or new FrameMorph(@)\n    @add @contents\n\n    # the scrollFrame is never going to paint itself,\n    # but its values are going to mimick the values of the\n    # contained frame\n    @color = @contents.color\n    @alpha = @contents.alpha\n    # the scrollFrame is a container, it redirects most\n    # commands to the "contained" frame\n    @updateRendering = @contents.updateRendering\n    #@setColor = @contents.setColor\n    #@setAlphaScaled = @contents.setAlphaScaled\n\n    @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)\n    @hBar.setHeight @scrollBarSize\n    @hBar.action = (num) =>\n      @contents.setPosition new Point(@left() - num, @contents.position().y)\n    @hBar.isDraggable = false\n    @add @hBar\n\n    @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)\n    @vBar.setWidth @scrollBarSize\n    @vBar.action = (num) =>\n      @contents.setPosition new Point(@contents.position().x, @top() - num)\n    @vBar.isDraggable = false\n    @add @vBar\n\n\n  setColor: (aColor) ->\n    # update the color of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the color so that its value is the same as the\n    # contained frame\n    @color = aColor\n    @contents.setColor(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # update the alpha of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the alpha so that its value is the same as the\n    # contained frame\n    @alpha = @calculateAlphaScaled(alpha)\n    @contents.setAlphaScaled(alpha)\n\n  adjustScrollBars: ->\n    hWidth = @width() - @scrollBarSize\n    vHeight = @height() - @scrollBarSize\n    @changed()\n    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize\n      @hBar.show()\n      @hBar.setWidth hWidth  if @hBar.width() isnt hWidth\n      @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())\n      @hBar.start = 0\n      @hBar.stop = @contents.width() - @width()\n      @hBar.size = @width() / @contents.width() * @hBar.stop\n      @hBar.value = @left() - @contents.left()\n      @hBar.updateRendering()\n    else\n      @hBar.hide()\n    if @contents.height() > @height() + @scrollBarSize\n      @vBar.show()\n      @vBar.setHeight vHeight  if @vBar.height() isnt vHeight\n      @vBar.setPosition new Point(@right() - @vBar.width(), @top())\n      @vBar.start = 0\n      @vBar.stop = @contents.height() - @height()\n      @vBar.size = @height() / @contents.height() * @vBar.stop\n      @vBar.value = @top() - @contents.top()\n      @vBar.updateRendering()\n    else\n      @vBar.hide()\n  \n  addContents: (aMorph) ->\n    @contents.add aMorph\n    @contents.adjustBounds()\n  \n  setContents: (aMorph) ->\n    @contents.children.forEach (m) ->\n      m.destroy()\n    #\n    @contents.children = []\n    aMorph.setPosition @position().add(@padding + 2)\n    @addContents aMorph\n  \n  setExtent: (aPoint) ->\n    @contents.setPosition @position().copy()  if @isTextLineWrapping\n    super aPoint\n    @contents.adjustBounds()\n  \n  \n  # ScrollFrameMorph scrolling by dragging:\n  scrollX: (steps) ->\n    cl = @contents.left()\n    l = @left()\n    cw = @contents.width()\n    r = @right()\n    newX = cl + steps\n    newX = r - cw  if newX + cw < r\n    newX = l  if newX > l\n    @contents.setLeft newX  if newX isnt cl\n  \n  scrollY: (steps) ->\n    ct = @contents.top()\n    t = @top()\n    ch = @contents.height()\n    b = @bottom()\n    newY = ct + steps\n    if newY + ch < b\n      newY = b - ch\n    # prevents content to be scrolled to the frame\'s\n    # bottom if the content is otherwise empty\n    newY = t  if newY > t\n    @contents.setTop newY  if newY isnt ct\n  \n  mouseDownLeft: (pos) ->\n    return null  unless @isScrollingByDragging\n    world = @root()\n    oldPos = pos\n    deltaX = 0\n    deltaY = 0\n    friction = 0.8\n    @step = =>\n      if world.hand.mouseButton and\n        (!world.hand.children.length) and\n        (@bounds.containsPoint(world.hand.position()))\n          newPos = world.hand.bounds.origin\n          deltaX = newPos.x - oldPos.x\n          @scrollX deltaX  if deltaX isnt 0\n          deltaY = newPos.y - oldPos.y\n          @scrollY deltaY  if deltaY isnt 0\n          oldPos = newPos\n      else\n        unless @hasVelocity\n          @step = noOperation\n        else\n          if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)\n            @step = noOperation\n          else\n            deltaX = deltaX * friction\n            @scrollX Math.round(deltaX)\n            deltaY = deltaY * friction\n            @scrollY Math.round(deltaY)\n      @adjustScrollBars()\n  \n  startAutoScrolling: ->\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    world = @world()\n    return null  unless world\n    hand = world.hand\n    @autoScrollTrigger = Date.now()  unless @autoScrollTrigger\n    @step = =>\n      pos = hand.bounds.origin\n      inner = @bounds.insetBy(inset)\n      if (@bounds.containsPoint(pos)) and\n        (not (inner.containsPoint(pos))) and\n        (hand.children.length)\n          @autoScroll pos\n      else\n        @step = noOperation\n        @autoScrollTrigger = null\n  \n  autoScroll: (pos) ->\n    return null  if Date.now() - @autoScrollTrigger < 500\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    area = @topLeft().extent(new Point(@width(), inset))\n    @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)\n    area = @topLeft().extent(new Point(inset, @height()))\n    @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)\n    area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))\n    @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)\n    area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))\n    @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)\n    @adjustScrollBars()  \n  \n  # ScrollFrameMorph scrolling by editing text:\n  scrollCaretIntoView: (morph) ->\n    txt = morph.target\n    offset = txt.position().subtract(@contents.position())\n    ft = @top() + @padding\n    fb = @bottom() - @padding\n    @contents.setExtent txt.extent().add(offset).add(@padding)\n    if morph.top() < ft\n      @contents.setTop @contents.top() + ft - morph.top()\n      morph.setTop ft\n    else if morph.bottom() > fb\n      @contents.setBottom @contents.bottom() + fb - morph.bottom()\n      morph.setBottom fb\n    @adjustScrollBars()\n\n  # ScrollFrameMorph events:\n  mouseScroll: (y, x) ->\n    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y\n    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x\n    @adjustScrollBars()\n  \n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.contents = (dict[@contents])  if c.contents and dict[@contents]\n    if c.hBar and dict[@hBar]\n      c.hBar = (dict[@hBar])\n      c.hBar.action = (num) ->\n        c.contents.setPosition new Point(c.left() - num, c.contents.position().y)\n    if c.vBar and dict[@vBar]\n      c.vBar = (dict[@vBar])\n      c.vBar.action = (num) ->\n        c.contents.setPosition new Point(c.contents.position().x, c.top() - num)\n    c\n  \n  developersMenu: ->\n    menu = super()\n    if @isTextLineWrapping\n      menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"\n    else\n      menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"\n    menu\n  \n  toggleTextLineWrapping: ->\n    @isTextLineWrapping = not @isTextLineWrapping';
-
-  return ScrollFrameMorph;
-
-})(FrameMorph);
-
-ShadowMorph = (function(_super) {
-  __extends(ShadowMorph, _super);
-
-  function ShadowMorph() {
-    ShadowMorph.__super__.constructor.call(this);
-  }
-
-  ShadowMorph.coffeeScriptSourceOfThisClass = '# ShadowMorph /////////////////////////////////////////////////////////\n\nclass ShadowMorph extends Morph\n  constructor: () ->\n    super()';
-
-  return ShadowMorph;
-
-})(Morph);
-
-CircleBoxMorph = (function(_super) {
-  __extends(CircleBoxMorph, _super);
-
-  CircleBoxMorph.prototype.orientation = null;
-
-  CircleBoxMorph.prototype.autoOrient = true;
-
-  function CircleBoxMorph(orientation) {
-    this.orientation = orientation != null ? orientation : "vertical";
-    CircleBoxMorph.__super__.constructor.call(this);
-    this.setExtent(new Point(20, 100));
-  }
-
-  CircleBoxMorph.prototype.autoOrientation = function() {
-    if (this.height() > this.width()) {
-      return this.orientation = "vertical";
-    } else {
-      return this.orientation = "horizontal";
-    }
-  };
-
-  CircleBoxMorph.prototype.updateRendering = function() {
-    var center1, center2, context, ext, points, radius, rect, x, y,
-      _this = this;
-
-    if (this.autoOrient) {
-      this.autoOrientation();
-    }
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    if (this.orientation === "vertical") {
-      radius = this.width() / 2;
-      x = this.center().x;
-      center1 = new Point(x, this.top() + radius);
-      center2 = new Point(x, this.bottom() - radius);
-      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
-    } else {
-      radius = this.height() / 2;
-      y = this.center().y;
-      center1 = new Point(this.left() + radius, y);
-      center2 = new Point(this.right() - radius, y);
-      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
-    }
-    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
-    points.forEach(function(center) {
-      context.fillStyle = _this.color.toString();
-      context.beginPath();
-      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
-      context.closePath();
-      return context.fill();
-    });
-    rect = rect.translateBy(this.bounds.origin.neg());
-    ext = rect.extent();
-    if (ext.x > 0 && ext.y > 0) {
-      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
-    }
-  };
-
-  CircleBoxMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = CircleBoxMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    if (this.orientation === "vertical") {
-      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
-    } else {
-      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
-    }
-    return menu;
-  };
-
-  CircleBoxMorph.prototype.toggleOrientation = function() {
-    var center;
-
-    center = this.center();
-    this.changed();
-    if (this.orientation === "vertical") {
-      this.orientation = "horizontal";
-    } else {
-      this.orientation = "vertical";
-    }
-    this.silentSetExtent(new Point(this.height(), this.width()));
-    this.setCenter(center);
-    this.updateRendering();
-    return this.changed();
-  };
-
-  CircleBoxMorph.coffeeScriptSourceOfThisClass = '# CircleBoxMorph //////////////////////////////////////////////////////\n\n# I can be used for sliders\n\nclass CircleBoxMorph extends Morph\n\n  orientation: null\n  autoOrient: true\n\n  constructor: (@orientation = "vertical") ->\n    super()\n    @setExtent new Point(20, 100)\n  \n  autoOrientation: ->\n    if @height() > @width()\n      @orientation = "vertical"\n    else\n      @orientation = "horizontal"\n  \n  updateRendering: ->\n    @autoOrientation()  if @autoOrient\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    if @orientation is "vertical"\n      radius = @width() / 2\n      x = @center().x\n      center1 = new Point(x, @top() + radius)\n      center2 = new Point(x, @bottom() - radius)\n      rect = @bounds.origin.add(\n        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))\n    else\n      radius = @height() / 2\n      y = @center().y\n      center1 = new Point(@left() + radius, y)\n      center2 = new Point(@right() - radius, y)\n      rect = @bounds.origin.add(\n        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))\n    points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]\n    points.forEach (center) =>\n      context.fillStyle = @color.toString()\n      context.beginPath()\n      context.arc center.x, center.y, radius, 0, 2 * Math.PI, false\n      context.closePath()\n      context.fill()\n    rect = rect.translateBy(@bounds.origin.neg())\n    ext = rect.extent()\n    if ext.x > 0 and ext.y > 0\n      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()\n  \n  \n  # CircleBoxMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    if @orientation is "vertical"\n      menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"\n    else\n      menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"\n    menu\n  \n  toggleOrientation: ->\n    center = @center()\n    @changed()\n    if @orientation is "vertical"\n      @orientation = "horizontal"\n    else\n      @orientation = "vertical"\n    @silentSetExtent new Point(@height(), @width())\n    @setCenter center\n    @updateRendering()\n    @changed()';
-
-  return CircleBoxMorph;
-
-})(Morph);
-
-SliderMorph = (function(_super) {
-  __extends(SliderMorph, _super);
-
-  SliderMorph.prototype.target = null;
-
-  SliderMorph.prototype.action = null;
-
-  SliderMorph.prototype.start = null;
-
-  SliderMorph.prototype.stop = null;
-
-  SliderMorph.prototype.value = null;
-
-  SliderMorph.prototype.size = null;
-
-  SliderMorph.prototype.offset = null;
-
-  SliderMorph.prototype.button = null;
-
-  SliderMorph.prototype.step = null;
-
-  function SliderMorph(start, stop, value, size, orientation, color) {
-    this.start = start != null ? start : 1;
-    this.stop = stop != null ? stop : 100;
-    this.value = value != null ? value : 50;
-    this.size = size != null ? size : 10;
-    this.button = new SliderButtonMorph();
-    this.button.isDraggable = false;
-    this.button.color = new Color(200, 200, 200);
-    this.button.highlightColor = new Color(210, 210, 255);
-    this.button.pressColor = new Color(180, 180, 255);
-    SliderMorph.__super__.constructor.call(this, orientation);
-    this.add(this.button);
-    this.alpha = 0.3;
-    this.color = color || new Color(0, 0, 0);
-    this.setExtent(new Point(20, 100));
-  }
-
-  SliderMorph.prototype.autoOrientation = function() {
-    return noOperation;
-  };
-
-  SliderMorph.prototype.rangeSize = function() {
-    return this.stop - this.start;
-  };
-
-  SliderMorph.prototype.ratio = function() {
-    return this.size / this.rangeSize();
-  };
-
-  SliderMorph.prototype.unitSize = function() {
-    if (this.orientation === "vertical") {
-      return (this.height() - this.button.height()) / this.rangeSize();
-    }
-    return (this.width() - this.button.width()) / this.rangeSize();
-  };
-
-  SliderMorph.prototype.updateRendering = function() {
-    var bh, bw, posX, posY;
-
-    SliderMorph.__super__.updateRendering.call(this);
-    this.button.orientation = this.orientation;
-    if (this.orientation === "vertical") {
-      bw = this.width() - 2;
-      bh = Math.max(bw, Math.round(this.height() * this.ratio()));
-      this.button.silentSetExtent(new Point(bw, bh));
-      posX = 1;
-      posY = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.height() - this.button.height());
-    } else {
-      bh = this.height() - 2;
-      bw = Math.max(bh, Math.round(this.width() * this.ratio()));
-      this.button.silentSetExtent(new Point(bw, bh));
-      posY = 1;
-      posX = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.width() - this.button.width());
-    }
-    this.button.setPosition(new Point(posX, posY).add(this.bounds.origin));
-    this.button.updateRendering();
-    return this.button.changed();
-  };
-
-  SliderMorph.prototype.updateValue = function() {
-    var relPos;
-
-    if (this.orientation === "vertical") {
-      relPos = this.button.top() - this.top();
-    } else {
-      relPos = this.button.left() - this.left();
-    }
-    this.value = Math.round(relPos / this.unitSize() + this.start);
-    return this.updateTarget();
-  };
-
-  SliderMorph.prototype.updateTarget = function() {
-    if (this.action) {
-      if (typeof this.action === "function") {
-        return this.action.call(this.target, this.value);
-      } else {
-        return this.target[this.action](this.value);
-      }
-    }
-  };
-
-  SliderMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = SliderMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
-    }
-    if (c.button && dict[this.button]) {
-      c.button = dict[this.button];
-    }
-    return c;
-  };
-
-  SliderMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = SliderMorph.__super__.developersMenu.call(this);
-    menu.addItem("show value...", "showValue", "display a dialog box\nshowing the selected number");
-    menu.addItem("floor...", (function() {
-      return this.prompt(menu.title + "\nfloor:", this.setStart, this, this.start.toString(), null, 0, this.stop - this.size, true);
-    }), "set the minimum value\nwhich can be selected");
-    menu.addItem("ceiling...", (function() {
-      return this.prompt(menu.title + "\nceiling:", this.setStop, this, this.stop.toString(), null, this.start + this.size, this.size * 100, true);
-    }), "set the maximum value\nwhich can be selected");
-    menu.addItem("button size...", (function() {
-      return this.prompt(menu.title + "\nbutton size:", this.setSize, this, this.size.toString(), null, 1, this.stop - this.start, true);
-    }), "set the range\ncovered by\nthe slider button");
-    menu.addLine();
-    menu.addItem("set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one");
-    return menu;
-  };
-
-  SliderMorph.prototype.showValue = function() {
-    return this.inform(this.value);
-  };
-
-  SliderMorph.prototype.userSetStart = function(num) {
-    return this.start = Math.max(num, this.stop);
-  };
-
-  SliderMorph.prototype.setStart = function(num) {
-    var newStart;
-
-    if (typeof num === "number") {
-      this.start = Math.min(Math.max(num, 0), this.stop - this.size);
-    } else {
-      newStart = parseFloat(num);
-      if (!isNaN(newStart)) {
-        this.start = Math.min(Math.max(newStart, 0), this.stop - this.size);
-      }
-    }
-    this.value = Math.max(this.value, this.start);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setStop = function(num) {
-    var newStop;
-
-    if (typeof num === "number") {
-      this.stop = Math.max(num, this.start + this.size);
-    } else {
-      newStop = parseFloat(num);
-      if (!isNaN(newStop)) {
-        this.stop = Math.max(newStop, this.start + this.size);
-      }
-    }
-    this.value = Math.min(this.value, this.stop);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setSize = function(num) {
-    var newSize;
-
-    if (typeof num === "number") {
-      this.size = Math.min(Math.max(num, 1), this.stop - this.start);
-    } else {
-      newSize = parseFloat(num);
-      if (!isNaN(newSize)) {
-        this.size = Math.min(Math.max(newSize, 1), this.stop - this.start);
-      }
-    }
-    this.value = Math.min(this.value, this.stop - this.size);
-    this.updateTarget();
-    this.updateRendering();
-    return this.changed();
-  };
-
-  SliderMorph.prototype.setTarget = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.push(this.world());
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        _this.target = each;
-        return _this.setTargetSetter();
-      });
-    });
-    if (choices.length === 1) {
-      this.target = choices[0];
-      return this.setTargetSetter();
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  SliderMorph.prototype.setTargetSetter = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.target.numericalSetters();
-    menu = new MenuMorph(this, "choose target property:");
-    choices.forEach(function(each) {
-      return menu.addItem(each, function() {
-        return _this.action = each;
-      });
-    });
-    if (choices.length === 1) {
-      return this.action = choices[0];
-    } else {
-      if (choices.length) {
-        return menu.popUpAtHand(this.world());
-      }
-    }
-  };
-
-  SliderMorph.prototype.numericalSetters = function() {
-    var list;
-
-    list = SliderMorph.__super__.numericalSetters.call(this);
-    list.push("setStart", "setStop", "setSize");
-    return list;
-  };
-
-  SliderMorph.prototype.mouseDownLeft = function(pos) {
-    var world,
-      _this = this;
-
-    if (!this.button.bounds.containsPoint(pos)) {
-      this.offset = new Point();
-    } else {
-      this.offset = pos.subtract(this.button.bounds.origin);
-    }
-    world = this.root();
-    return this.step = function() {
-      var mousePos, newX, newY;
-
-      if (world.hand.mouseButton) {
-        mousePos = world.hand.bounds.origin;
-        if (_this.orientation === "vertical") {
-          newX = _this.button.bounds.origin.x;
-          newY = Math.max(Math.min(mousePos.y - _this.offset.y, _this.bottom() - _this.button.height()), _this.top());
-        } else {
-          newY = _this.button.bounds.origin.y;
-          newX = Math.max(Math.min(mousePos.x - _this.offset.x, _this.right() - _this.button.width()), _this.left());
-        }
-        _this.button.setPosition(new Point(newX, newY));
-        return _this.updateValue();
-      } else {
-        return _this.step = null;
-      }
-    };
-  };
-
-  SliderMorph.coffeeScriptSourceOfThisClass = '# SliderMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderMorph extends CircleBoxMorph\n\n  target: null\n  action: null\n  start: null\n  stop: null\n  value: null\n  size: null\n  offset: null\n  button: null\n  step: null\n\n  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->\n    @button = new SliderButtonMorph()\n    @button.isDraggable = false\n    @button.color = new Color(200, 200, 200)\n    @button.highlightColor = new Color(210, 210, 255)\n    @button.pressColor = new Color(180, 180, 255)\n    super orientation # if null, then a vertical one will be created\n    @add @button\n    @alpha = 0.3\n    @color = color or new Color(0, 0, 0)\n    @setExtent new Point(20, 100)\n  \n  \n  # this.updateRendering();\n  autoOrientation: ->\n      noOperation\n  \n  rangeSize: ->\n    @stop - @start\n  \n  ratio: ->\n    @size / @rangeSize()\n  \n  unitSize: ->\n    return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"\n    (@width() - @button.width()) / @rangeSize()\n  \n  updateRendering: ->\n    super()\n    @button.orientation = @orientation\n    if @orientation is "vertical"\n      bw = @width() - 2\n      bh = Math.max(bw, Math.round(@height() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posX = 1\n      posY = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @height() - @button.height())\n    else\n      bh = @height() - 2\n      bw = Math.max(bh, Math.round(@width() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posY = 1\n      posX = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @width() - @button.width())\n    @button.setPosition new Point(posX, posY).add(@bounds.origin)\n    @button.updateRendering()\n    @button.changed()\n  \n  updateValue: ->\n    if @orientation is "vertical"\n      relPos = @button.top() - @top()\n    else\n      relPos = @button.left() - @left()\n    @value = Math.round(relPos / @unitSize() + @start)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @action\n      if typeof @action is "function"\n        @action.call @target, @value\n      else # assume it\'s a String\n        @target[@action] @value\n  \n  \n  # SliderMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c.button = (dict[@button])  if c.button and dict[@button]\n    c\n  \n  \n  # SliderMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"\n    menu.addItem "floor...", (->\n      @prompt menu.title + "\nfloor:",\n        @setStart,\n        @,\n        @start.toString(),\n        null,\n        0,\n        @stop - @size,\n        true\n    ), "set the minimum value\nwhich can be selected"\n    menu.addItem "ceiling...", (->\n      @prompt menu.title + "\nceiling:",\n        @setStop,\n        @,\n        @stop.toString(),\n        null,\n        @start + @size,\n        @size * 100,\n        true\n    ), "set the maximum value\nwhich can be selected"\n    menu.addItem "button size...", (->\n      @prompt menu.title + "\nbutton size:",\n        @setSize,\n        @,\n        @size.toString(),\n        null,\n        1,\n        @stop - @start,\n        true\n    ), "set the range\ncovered by\nthe slider button"\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"\n    menu\n  \n  showValue: ->\n    @inform @value\n  \n  userSetStart: (num) ->\n    # for context menu demo purposes\n    @start = Math.max(num, @stop)\n  \n  setStart: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @start = Math.min(Math.max(num, 0), @stop - @size)\n    else\n      newStart = parseFloat(num)\n      @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)\n    @value = Math.max(@value, @start)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setStop: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @stop = Math.max(num, @start + @size)\n    else\n      newStop = parseFloat(num)\n      @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)\n    @value = Math.min(@value, @stop)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setSize: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @size = Math.min(Math.max(num, 1), @stop - @start)\n    else\n      newSize = parseFloat(num)\n      @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)\n    @value = Math.min(@value, @stop - @size)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    #\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.numericalSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @action = each\n    #\n    if choices.length is 1\n      @action = choices[0]\n    else menu.popUpAtHand @world()  if choices.length\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    list = super()\n    list.push "setStart", "setStop", "setSize"\n    list\n  \n  \n  # SliderMorph stepping:\n  mouseDownLeft: (pos) ->\n    unless @button.bounds.containsPoint(pos)\n      @offset = new Point() # return null;\n    else\n      @offset = pos.subtract(@button.bounds.origin)\n    world = @root()\n    # this is to create the "drag the slider" effect\n    # basically if the mouse is pressing within the boundaries\n    # then in the next step you remember to check again where the mouse\n    # is and update the scrollbar. As soon as the mouse is unpressed\n    # then the step function is set to null to save cycles.\n    @step = =>\n      if world.hand.mouseButton\n        mousePos = world.hand.bounds.origin\n        if @orientation is "vertical"\n          newX = @button.bounds.origin.x\n          newY = Math.max(\n            Math.min(mousePos.y - @offset.y,\n            @bottom() - @button.height()), @top())\n        else\n          newY = @button.bounds.origin.y\n          newX = Math.max(\n            Math.min(mousePos.x - @offset.x,\n            @right() - @button.width()), @left())\n        @button.setPosition new Point(newX, newY)\n        @updateValue()\n      else\n        @step = null';
-
-  return SliderMorph;
-
-})(CircleBoxMorph);
-
-SystemTestsRecorderAndPlayer = (function() {
-  SystemTestsRecorderAndPlayer.prototype.eventQueue = [];
-
-  SystemTestsRecorderAndPlayer.prototype.recordingASystemTest = false;
-
-  SystemTestsRecorderAndPlayer.prototype.replayingASystemTest = false;
-
-  SystemTestsRecorderAndPlayer.prototype.lastRecordedEventTime = null;
-
-  SystemTestsRecorderAndPlayer.prototype.handMorph = null;
-
-  SystemTestsRecorderAndPlayer.prototype.systemInfo = null;
-
-  function SystemTestsRecorderAndPlayer(worldMorph, handMorph) {
-    this.worldMorph = worldMorph;
-    this.handMorph = handMorph;
-  }
-
-  SystemTestsRecorderAndPlayer.prototype.initialiseSystemInfo = function() {
-    this.systemInfo = {};
-    this.systemInfo.zombieKernelTestHarnessVersionMajor = 0;
-    this.systemInfo.zombieKernelTestHarnessVersionMinor = 1;
-    this.systemInfo.zombieKernelTestHarnessVersionRelease = 0;
-    this.systemInfo.userAgent = navigator.userAgent;
-    this.systemInfo.screenWidth = window.screen.width;
-    this.systemInfo.screenHeight = window.screen.height;
-    this.systemInfo.screenColorDepth = window.screen.colorDepth;
-    if (window.devicePixelRatio != null) {
-      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
-    } else {
-      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
-    }
-    this.systemInfo.appCodeName = navigator.appCodeName;
-    this.systemInfo.appName = navigator.appName;
-    this.systemInfo.appVersion = navigator.appVersion;
-    this.systemInfo.cookieEnabled = navigator.cookieEnabled;
-    this.systemInfo.platform = navigator.platform;
-    return this.systemInfo.systemLanguage = navigator.systemLanguage;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.startTestRecording = function() {
-    var systemTestEvent;
-
-    this.worldMorph.destroyAll();
-    this.eventQueue = [];
-    this.lastRecordedEventTime = new Date().getTime();
-    this.recordingASystemTest = true;
-    this.replayingASystemTest = false;
-    this.initialiseSystemInfo();
-    systemTestEvent = {};
-    systemTestEvent.type = "systemInfo";
-    systemTestEvent.time = 0;
-    systemTestEvent.systemInfo = this.systemInfo;
-    return this.eventQueue.push(systemTestEvent);
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.stopTestRecording = function() {
-    return this.recordingASystemTest = false;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.startTestPlaying = function() {
-    this.recordingASystemTest = false;
-    this.replayingASystemTest = true;
-    return this.replayEvents();
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.stopPlaying = function() {
-    return this.replayingASystemTest = false;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.showTestSource = function() {
-    return window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify(this.eventQueue)));
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseMoveEvent = function(pageX, pageY) {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseMove";
-    systemTestEvent.mouseX = pageX;
-    systemTestEvent.mouseY = pageY;
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseDownEvent = function(button, ctrlKey) {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseDown";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    systemTestEvent.button = button;
-    systemTestEvent.ctrlKey = ctrlKey;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.addMouseUpEvent = function() {
-    var currentTime, systemTestEvent;
-
-    if (!this.recordingASystemTest) {
-      return;
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "mouseUp";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    this.eventQueue.push(systemTestEvent);
-    return this.lastRecordedEventTime = currentTime;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.takeScreenshot = function() {
-    var currentTime, systemTestEvent;
-
-    console.log("taking screenshot");
-    if (this.systemInfo === null) {
-      this.initialiseSystemInfo();
-    }
-    currentTime = new Date().getTime();
-    systemTestEvent = {};
-    systemTestEvent.type = "takeScreenshot";
-    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
-    systemTestEvent.screenShotImageData = [];
-    systemTestEvent.screenShotImageData.push([this.systemInfo, this.worldMorph.fullImageData()]);
-    this.eventQueue.push(systemTestEvent);
-    this.lastRecordedEventTime = currentTime;
-    if (!this.recordingASystemTest) {
-      return systemTestEvent;
-    }
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.compareScreenshots = function(expected) {
-    var a, _i, _len;
-
-    i = 0;
-    console.log("expected length " + expected.length);
-    for (_i = 0, _len = expected.length; _i < _len; _i++) {
-      a = expected[_i];
-      console.log("trying to match screenshot: " + i);
-      i++;
-      if (a[1] === this.worldMorph.fullImageData()) {
-        console.log("PASS - screenshot (" + i + ") matched");
-        return;
-      }
-    }
-    return console.log("FAIL - no screenshots like this one");
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.replayEvents = function() {
-    var lastPlayedEventTime, queuedEvent, _i, _len, _ref, _results;
-
-    lastPlayedEventTime = 0;
-    console.log("events: " + this.eventQueue);
-    _ref = this.eventQueue;
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      queuedEvent = _ref[_i];
-      lastPlayedEventTime += queuedEvent.time;
-      _results.push(this.scheduleEvent(queuedEvent, lastPlayedEventTime));
-    }
-    return _results;
-  };
-
-  SystemTestsRecorderAndPlayer.prototype.scheduleEvent = function(queuedEvent, lastPlayedEventTime) {
-    var callback,
-      _this = this;
-
-    if (queuedEvent.type === 'mouseMove') {
-      callback = function() {
-        return _this.handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY);
-      };
-    } else if (queuedEvent.type === 'mouseDown') {
-      callback = function() {
-        return _this.handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey);
-      };
-    } else if (queuedEvent.type === 'mouseUp') {
-      callback = function() {
-        return _this.handMorph.processMouseUp();
-      };
-    } else if (queuedEvent.type === 'takeScreenshot') {
-      callback = function() {
-        return _this.compareScreenshots(queuedEvent.screenShotImageData);
-      };
-    } else {
-      return;
-    }
-    return setTimeout(callback, lastPlayedEventTime);
-  };
-
-  SystemTestsRecorderAndPlayer.coffeeScriptSourceOfThisClass = 'class SystemTestsRecorderAndPlayer\n  eventQueue: []\n  recordingASystemTest: false\n  replayingASystemTest: false\n  lastRecordedEventTime: null\n  handMorph: null\n  systemInfo: null\n\n  constructor: (@worldMorph, @handMorph) ->\n\n  initialiseSystemInfo: ->\n    @systemInfo = {}\n    @systemInfo.zombieKernelTestHarnessVersionMajor = 0\n    @systemInfo.zombieKernelTestHarnessVersionMinor = 1\n    @systemInfo.zombieKernelTestHarnessVersionRelease = 0\n    @systemInfo.userAgent = navigator.userAgent\n    @systemInfo.screenWidth = window.screen.width\n    @systemInfo.screenHeight = window.screen.height\n    @systemInfo.screenColorDepth = window.screen.colorDepth\n    if window.devicePixelRatio?\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    else\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    @systemInfo.appCodeName = navigator.appCodeName\n    @systemInfo.appName = navigator.appName\n    @systemInfo.appVersion = navigator.appVersion\n    @systemInfo.cookieEnabled = navigator.cookieEnabled\n    @systemInfo.platform = navigator.platform\n    @systemInfo.systemLanguage = navigator.systemLanguage\n\n  startTestRecording: ->\n    # clean up the world so we start from clean slate\n    @worldMorph.destroyAll()\n    @eventQueue = []\n    @lastRecordedEventTime = new Date().getTime()\n    @recordingASystemTest = true\n    @replayingASystemTest = false\n\n    @initialiseSystemInfo()\n    systemTestEvent = {}\n    systemTestEvent.type = "systemInfo"\n    systemTestEvent.time = 0\n    systemTestEvent.systemInfo = @systemInfo\n    @eventQueue.push systemTestEvent\n\n  stopTestRecording: ->\n    @recordingASystemTest = false\n\n  startTestPlaying: ->\n    @recordingASystemTest = false\n    @replayingASystemTest = true\n    @replayEvents()\n\n  stopPlaying: ->\n    @replayingASystemTest = false\n\n  showTestSource: ->\n    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue )))\n\n  addMouseMoveEvent: (pageX, pageY) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseMove"\n    systemTestEvent.mouseX = pageX\n    systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseDownEvent: (button, ctrlKey) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseDown"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    systemTestEvent.button = button\n    systemTestEvent.ctrlKey = ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseUpEvent: () ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseUp"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  takeScreenshot: () ->\n    console.log "taking screenshot"\n    if @systemInfo is null\n      @initialiseSystemInfo()\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "takeScreenshot"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    systemTestEvent.screenShotImageData = []\n    systemTestEvent.screenShotImageData.push [@systemInfo, @worldMorph.fullImageData()]\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n    if not @recordingASystemTest\n      return systemTestEvent\n\n  compareScreenshots: (expected) ->\n   i = 0\n   console.log "expected length " + expected.length\n   for a in expected\n     console.log "trying to match screenshot: " + i\n     i++\n     if a[1] == @worldMorph.fullImageData()\n      console.log "PASS - screenshot (" + i + ") matched"\n      return\n   console.log "FAIL - no screenshots like this one"\n\n  replayEvents: () ->\n   lastPlayedEventTime = 0\n   console.log "events: " + @eventQueue\n   for queuedEvent in @eventQueue\n      lastPlayedEventTime += queuedEvent.time\n      @scheduleEvent(queuedEvent, lastPlayedEventTime)\n\n  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->\n    if queuedEvent.type == \'mouseMove\'\n      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)\n    else if queuedEvent.type == \'mouseDown\'\n      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)\n    else if queuedEvent.type == \'mouseUp\'\n      callback = => @handMorph.processMouseUp()\n    else if queuedEvent.type == \'takeScreenshot\'\n      callback = => @compareScreenshots(queuedEvent.screenShotImageData)\n    else return\n\n    setTimeout callback, lastPlayedEventTime\n    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime';
-
-  return SystemTestsRecorderAndPlayer;
-
-})();
-
-TextMorph = (function(_super) {
-  __extends(TextMorph, _super);
-
-  TextMorph.prototype.words = [];
-
-  TextMorph.prototype.lines = [];
-
-  TextMorph.prototype.lineSlots = [];
-
-  TextMorph.prototype.alignment = null;
-
-  TextMorph.prototype.maxWidth = null;
-
-  TextMorph.prototype.maxLineWidth = 0;
-
-  TextMorph.prototype.backgroundColor = null;
-
-  TextMorph.prototype.receiver = null;
-
-  function TextMorph(text, fontSize, fontStyle, isBold, isItalic, alignment, maxWidth, fontName, shadowOffset, shadowColor) {
-    this.fontSize = fontSize != null ? fontSize : 12;
-    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
-    this.isBold = isBold != null ? isBold : false;
-    this.isItalic = isItalic != null ? isItalic : false;
-    this.alignment = alignment != null ? alignment : "left";
-    this.maxWidth = maxWidth != null ? maxWidth : 0;
-    this.shadowColor = shadowColor != null ? shadowColor : null;
-    TextMorph.__super__.constructor.call(this);
-    this.markedTextColor = new Color(255, 255, 255);
-    this.markedBackgoundColor = new Color(60, 60, 120);
-    this.text = text || (text === "" ? text : "TextMorph");
-    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
-    this.shadowOffset = shadowOffset || new Point(0, 0);
-    this.color = new Color(0, 0, 0);
-    this.noticesTransparentClick = true;
+  function SpeechBubbleMorph(contents, color, edge, border, borderColor, padding, isThought) {
+    this.contents = contents != null ? contents : "";
+    this.padding = padding != null ? padding : 0;
+    this.isThought = isThought != null ? isThought : false;
+    SpeechBubbleMorph.__super__.constructor.call(this, edge || 6, border || (border === 0 ? 0 : 1), borderColor || new Color(140, 140, 140));
+    this.color = color || new Color(230, 230, 230);
     this.updateRendering();
   }
 
-  TextMorph.prototype.breakTextIntoLines = function() {
-    var canvas, context, currentLine, paragraphs, slot,
-      _this = this;
-
-    paragraphs = this.text.split("\n");
-    canvas = newCanvas();
-    context = canvas.getContext("2d");
-    currentLine = "";
-    slot = 0;
-    context.font = this.font();
-    this.maxLineWidth = 0;
-    this.lines = [];
-    this.lineSlots = [0];
-    this.words = [];
-    paragraphs.forEach(function(p) {
-      _this.words = _this.words.concat(p.split(" "));
-      return _this.words.push("\n");
-    });
-    return this.words.forEach(function(word) {
-      var lineForOverflowTest, w;
-
-      if (word === "\n") {
-        _this.lines.push(currentLine);
-        _this.lineSlots.push(slot);
-        _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(currentLine).width);
-        return currentLine = "";
-      } else {
-        if (_this.maxWidth > 0) {
-          lineForOverflowTest = currentLine + word + " ";
-          w = context.measureText(lineForOverflowTest).width;
-          if (w > _this.maxWidth) {
-            _this.lines.push(currentLine);
-            _this.lineSlots.push(slot);
-            _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(currentLine).width);
-            currentLine = word + " ";
-          } else {
-            currentLine = lineForOverflowTest;
-          }
-        } else {
-          currentLine = currentLine + word + " ";
-        }
-        return slot += word.length + 1;
-      }
-    });
-  };
-
-  TextMorph.prototype.updateRendering = function() {
-    var c, context, height, line, offx, offy, p, shadowHeight, shadowWidth, start, stop, width, x, y, _i, _j, _k, _len, _len1, _ref, _ref1;
-
-    this.image = newCanvas();
-    context = this.image.getContext("2d");
-    context.font = this.font();
-    this.breakTextIntoLines();
-    shadowWidth = Math.abs(this.shadowOffset.x);
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    height = this.lines.length * (fontHeight(this.fontSize) + shadowHeight);
-    if (this.maxWidth === 0) {
-      this.bounds = this.bounds.origin.extent(new Point(this.maxLineWidth + shadowWidth, height));
-    } else {
-      this.bounds = this.bounds.origin.extent(new Point(this.maxWidth + shadowWidth, height));
-    }
-    this.image.width = this.width();
-    this.image.height = this.height();
-    context.font = this.font();
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    if (this.backgroundColor) {
-      context.fillStyle = this.backgroundColor.toString();
-      context.fillRect(0, 0, this.width(), this.height());
-    }
-    if (this.shadowColor) {
-      offx = Math.max(this.shadowOffset.x, 0);
-      offy = Math.max(this.shadowOffset.y, 0);
-      context.fillStyle = this.shadowColor.toString();
-      i = 0;
-      _ref = this.lines;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        line = _ref[_i];
-        width = context.measureText(line).width + shadowWidth;
-        if (this.alignment === "right") {
-          x = this.width() - width;
-        } else if (this.alignment === "center") {
-          x = (this.width() - width) / 2;
-        } else {
-          x = 0;
-        }
-        y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
-        i++;
-        context.fillText(line, x + offx, y + offy);
-      }
-    }
-    offx = Math.abs(Math.min(this.shadowOffset.x, 0));
-    offy = Math.abs(Math.min(this.shadowOffset.y, 0));
-    context.fillStyle = this.color.toString();
-    i = 0;
-    _ref1 = this.lines;
-    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
-      line = _ref1[_j];
-      width = context.measureText(line).width + shadowWidth;
-      if (this.alignment === "right") {
-        x = this.width() - width;
-      } else if (this.alignment === "center") {
-        x = (this.width() - width) / 2;
-      } else {
-        x = 0;
-      }
-      y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
-      i++;
-      context.fillText(line, x + offx, y + offy);
-    }
-    start = Math.min(this.startMark, this.endMark);
-    stop = Math.max(this.startMark, this.endMark);
-    for (i = _k = start; start <= stop ? _k < stop : _k > stop; i = start <= stop ? ++_k : --_k) {
-      p = this.slotCoordinates(i).subtract(this.position());
-      c = this.text.charAt(i);
-      context.fillStyle = this.markedBackgoundColor.toString();
-      context.fillRect(p.x, p.y, context.measureText(c).width + 1, fontHeight(this.fontSize));
-      context.fillStyle = this.markedTextColor.toString();
-      context.fillText(c, p.x, p.y + fontHeight(this.fontSize));
-    }
-    if (this.parent ? this.parent.layoutChanged : void 0) {
-      return this.parent.layoutChanged();
-    }
-  };
-
-  TextMorph.prototype.setExtent = function(aPoint) {
-    this.maxWidth = Math.max(aPoint.x, 0);
-    this.changed();
-    return this.updateRendering();
-  };
-
-  TextMorph.prototype.slotRowAndColumn = function(slot) {
-    var col, idx, row, _i, _j, _ref, _ref1;
-
-    idx = 0;
-    for (row = _i = 0, _ref = this.lines.length; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
-      idx = this.lineSlots[row];
-      for (col = _j = 0, _ref1 = this.lines[row].length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
-        if (idx === slot) {
-          return [row, col];
-        }
-        idx += 1;
-      }
-    }
-    return [this.lines.length - 1, this.lines[this.lines.length - 1].length - 1];
-  };
-
-  TextMorph.prototype.slotCoordinates = function(slot) {
-    var context, shadowHeight, slotColumn, slotRow, x, xOffset, y, yOffset, _ref;
-
-    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
-    context = this.image.getContext("2d");
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    yOffset = slotRow * (fontHeight(this.fontSize) + shadowHeight);
-    xOffset = context.measureText(this.lines[slotRow].substring(0, slotColumn)).width;
-    x = this.left() + xOffset;
-    y = this.top() + yOffset;
-    return new Point(x, y);
-  };
-
-  TextMorph.prototype.slotAt = function(aPoint) {
-    var charX, col, context, row, shadowHeight;
-
-    charX = 0;
-    row = 0;
-    col = 0;
-    shadowHeight = Math.abs(this.shadowOffset.y);
-    context = this.image.getContext("2d");
-    while (aPoint.y - this.top() > ((fontHeight(this.fontSize) + shadowHeight) * row)) {
-      row += 1;
-    }
-    row = Math.max(row, 1);
-    while (aPoint.x - this.left() > charX) {
-      charX += context.measureText(this.lines[row - 1][col]).width;
-      col += 1;
-    }
-    return this.lineSlots[Math.max(row - 1, 0)] + col - 1;
-  };
-
-  TextMorph.prototype.upFrom = function(slot) {
-    var above, slotColumn, slotRow, _ref;
-
-    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
-    if (slotRow < 1) {
-      return slot;
-    }
-    above = this.lines[slotRow - 1];
-    if (above.length < slotColumn - 1) {
-      return this.lineSlots[slotRow - 1] + above.length;
-    }
-    return this.lineSlots[slotRow - 1] + slotColumn;
-  };
-
-  TextMorph.prototype.downFrom = function(slot) {
-    var below, slotColumn, slotRow, _ref;
-
-    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
-    if (slotRow > this.lines.length - 2) {
-      return slot;
-    }
-    below = this.lines[slotRow + 1];
-    if (below.length < slotColumn - 1) {
-      return this.lineSlots[slotRow + 1] + below.length;
-    }
-    return this.lineSlots[slotRow + 1] + slotColumn;
-  };
-
-  TextMorph.prototype.startOfLine = function(slot) {
-    return this.lineSlots[this.slotRowAndColumn(slot).y];
-  };
-
-  TextMorph.prototype.endOfLine = function(slot) {
-    return this.startOfLine(slot) + this.lines[this.slotRowAndColumn(slot).y].length - 1;
-  };
-
-  TextMorph.prototype.developersMenu = function() {
-    var menu;
-
-    menu = TextMorph.__super__.developersMenu.call(this);
-    menu.addLine();
-    menu.addItem("edit", "edit");
-    menu.addItem("font size...", (function() {
-      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 100, true);
-    }), "set this Text's\nfont point size");
-    if (this.alignment !== "left") {
-      menu.addItem("align left", "setAlignmentToLeft");
-    }
-    if (this.alignment !== "right") {
-      menu.addItem("align right", "setAlignmentToRight");
-    }
-    if (this.alignment !== "center") {
-      menu.addItem("align center", "setAlignmentToCenter");
-    }
-    menu.addLine();
-    if (this.fontStyle !== "serif") {
-      menu.addItem("serif", "setSerif");
-    }
-    if (this.fontStyle !== "sans-serif") {
-      menu.addItem("sans-serif", "setSansSerif");
-    }
-    if (this.isBold) {
-      menu.addItem("normal weight", "toggleWeight");
-    } else {
-      menu.addItem("bold", "toggleWeight");
-    }
-    if (this.isItalic) {
-      menu.addItem("normal style", "toggleItalic");
-    } else {
-      menu.addItem("italic", "toggleItalic");
-    }
-    return menu;
-  };
-
-  TextMorph.prototype.setAlignmentToLeft = function() {
-    this.alignment = "left";
+  SpeechBubbleMorph.prototype.popUp = function(world, pos, isClickable) {
     this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.setAlignmentToRight = function() {
-    this.alignment = "right";
-    this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.setAlignmentToCenter = function() {
-    this.alignment = "center";
-    this.updateRendering();
-    return this.changed();
-  };
-
-  TextMorph.prototype.evaluationMenu = function() {
-    var menu;
-
-    menu = new MenuMorph(this, null);
-    menu.addItem("do it", "doIt", "evaluate the\nselected expression");
-    menu.addItem("show it", "showIt", "evaluate the\nselected expression\nand show the result");
-    menu.addItem("inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result");
-    menu.addLine();
-    menu.addItem("select all", "selectAllAndEdit");
-    return menu;
-  };
-
-  TextMorph.prototype.selectAllAndEdit = function() {
-    this.edit();
-    return this.selectAll();
-  };
-
-  TextMorph.prototype.setReceiver = function(obj) {
-    this.receiver = obj;
-    return this.customContextMenu = this.evaluationMenu();
-  };
-
-  TextMorph.prototype.doIt = function() {
-    this.receiver.evaluateString(this.selection());
-    return this.edit();
-  };
-
-  TextMorph.prototype.showIt = function() {
-    var result;
-
-    result = this.receiver.evaluateString(this.selection());
-    if (result != null) {
-      return this.inform(result);
-    }
-  };
-
-  TextMorph.prototype.inspectIt = function() {
-    var result;
-
-    result = this.receiver.evaluateString(this.selection());
-    if (result != null) {
-      return this.spawnInspector(result);
-    }
-  };
-
-  TextMorph.coffeeScriptSourceOfThisClass = '# TextMorph ///////////////////////////////////////////////////////////\n\n# I am a multi-line, word-wrapping String\n\n# Note that in the original Jens\' Morphic.js version he\n# has made this quasi-inheriting from StringMorph i.e. he is copying\n# over manually the following methods like so:\n#\n#  TextMorph::font = StringMorph::font\n#  TextMorph::edit = StringMorph::edit\n#  TextMorph::selection = StringMorph::selection\n#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot\n#  TextMorph::clearSelection = StringMorph::clearSelection\n#  TextMorph::deleteSelection = StringMorph::deleteSelection\n#  TextMorph::selectAll = StringMorph::selectAll\n#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft\n#  TextMorph::enableSelecting = StringMorph::enableSelecting \n#  TextMorph::disableSelecting = StringMorph::disableSelecting\n#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable\n#  TextMorph::toggleWeight = StringMorph::toggleWeight\n#  TextMorph::toggleItalic = StringMorph::toggleItalic\n#  TextMorph::setSerif = StringMorph::setSerif\n#  TextMorph::setSansSerif = StringMorph::setSansSerif\n#  TextMorph::setText = StringMorph::setText\n#  TextMorph::setFontSize = StringMorph::setFontSize\n#  TextMorph::numericalSetters = StringMorph::numericalSetters\n\n\nclass TextMorph extends StringMorph\n\n  words: []\n  lines: []\n  lineSlots: []\n  alignment: null\n  maxWidth: null\n  maxLineWidth: 0\n  backgroundColor: null\n\n  #additional properties for ad-hoc evaluation:\n  receiver: null\n\n  constructor: (\n    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,\n    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,\n    @shadowColor = null\n    ) ->\n      super()\n      # override inherited properites:\n      @markedTextColor = new Color(255, 255, 255)\n      @markedBackgoundColor = new Color(60, 60, 120)\n      @text = text or ((if text is "" then text else "TextMorph"))\n      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n      @shadowOffset = shadowOffset or new Point(0, 0)\n      @color = new Color(0, 0, 0)\n      @noticesTransparentClick = true\n      @updateRendering()\n  \n  breakTextIntoLines: ->\n    paragraphs = @text.split("\n")\n    canvas = newCanvas()\n    context = canvas.getContext("2d")\n    currentLine = ""\n    slot = 0\n    context.font = @font()\n    @maxLineWidth = 0\n    @lines = []\n    @lineSlots = [0]\n    @words = []\n    \n    # put all the text in an array, word by word\n    paragraphs.forEach (p) =>\n      @words = @words.concat(p.split(" "))\n      @words.push "\n"\n\n    # takes the text, word by word, and re-flows\n    # it according to the available width for the\n    # text (if there is such limit).\n    # The end result is an array of lines\n    # called @lines, which contains the string for\n    # each line (excluding the end of lines).\n    # Also another array is created, called\n    # @lineSlots, which memorises how many characters\n    # of the text have been consumed up to each line\n    #  example: original text: "Hello\nWorld"\n    # then @lines[0] = "Hello" @lines[1] = "World"\n    # and @lineSlots[0] = 6, @lineSlots[1] = 11\n    # Note that this algorithm doesn\'t work in case\n    # of single non-spaced words that are longer than\n    # the allowed width.\n    @words.forEach (word) =>\n      if word is "\n"\n        # we reached the end of the line in the\n        # original text, so push the line and the\n        # slots count in the arrays\n        @lines.push currentLine\n        @lineSlots.push slot\n        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)\n        currentLine = ""\n      else\n        if @maxWidth > 0\n          # there is a width limit, so we need\n          # to check whether we overflowed it. So create\n          # a prospective line and then check its width.\n          lineForOverflowTest = currentLine + word + " "\n          w = context.measureText(lineForOverflowTest).width\n          if w > @maxWidth\n            # ok we just overflowed the available space,\n            # so we need to push the old line and its\n            # "slot" number to the respective arrays.\n            # the new line is going to only contain the\n            # word that has caused the overflow.\n            @lines.push currentLine\n            @lineSlots.push slot\n            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)\n            currentLine = word + " "\n          else\n            # no overflow happened, so just proceed as normal\n            currentLine = lineForOverflowTest\n        else\n          currentLine = currentLine + word + " "\n        slot += word.length + 1\n  \n  \n  updateRendering: ->\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    @breakTextIntoLines()\n\n    # set my extent\n    shadowWidth = Math.abs(@shadowOffset.x)\n    shadowHeight = Math.abs(@shadowOffset.y)\n    height = @lines.length * (fontHeight(@fontSize) + shadowHeight)\n    if @maxWidth is 0\n      @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))\n    else\n      @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))\n    @image.width = @width()\n    @image.height = @height()\n\n    # changing the canvas size resets many of\n    # the properties of the canvas, so we need to\n    # re-initialise the font and alignments here\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # fill the background, if desired\n    if @backgroundColor\n      context.fillStyle = @backgroundColor.toString()\n      context.fillRect 0, 0, @width(), @height()\n    #\n    # draw the shadow, if any\n    if @shadowColor\n      offx = Math.max(@shadowOffset.x, 0)\n      offy = Math.max(@shadowOffset.y, 0)\n      #console.log \'shadow x: \' + offx + " y: " + offy\n      context.fillStyle = @shadowColor.toString()\n      i = 0\n      for line in @lines\n        width = context.measureText(line).width + shadowWidth\n        if @alignment is "right"\n          x = @width() - width\n        else if @alignment is "center"\n          x = (@width() - width) / 2\n        else # \'left\'\n          x = 0\n        y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n        i++\n        context.fillText line, x + offx, y + offy\n    #\n    # now draw the actual text\n    offx = Math.abs(Math.min(@shadowOffset.x, 0))\n    offy = Math.abs(Math.min(@shadowOffset.y, 0))\n    #console.log \'maintext x: \' + offx + " y: " + offy\n    context.fillStyle = @color.toString()\n    i = 0\n    for line in @lines\n      width = context.measureText(line).width + shadowWidth\n      if @alignment is "right"\n        x = @width() - width\n      else if @alignment is "center"\n        x = (@width() - width) / 2\n      else # \'left\'\n        x = 0\n      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n      i++\n      context.fillText line, x + offx, y + offy\n\n    # Draw the selection. This is done by re-drawing the\n    # selected text, one character at the time, just with\n    # a background rectangle.\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotCoordinates(i).subtract(@position())\n      c = @text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x, p.y + fontHeight(@fontSize)\n    #\n    # notify my parent of layout change\n    @parent.layoutChanged()  if @parent.layoutChanged  if @parent\n  \n  setExtent: (aPoint) ->\n    @maxWidth = Math.max(aPoint.x, 0)\n    @changed()\n    @updateRendering()\n  \n  # TextMorph measuring ////\n\n  # answer the logical position point of the given index ("slot")\n  # i.e. the row and the column where a particular character is.\n  slotRowAndColumn: (slot) ->\n    idx = 0\n    # Note that this solution scans all the characters\n    # in all the rows up to the slot. This could be\n    # done a lot quicker by stopping at the first row\n    # such that @lineSlots[theRow] <= slot\n    # You could even do a binary search if one really\n    # wanted to, because the contents of @lineSlots are\n    # in order, as they contain a cumulative count...\n    for row in [0...@lines.length]\n      idx = @lineSlots[row]\n      for col in [0...@lines[row].length]\n        return [row, col]  if idx is slot\n        idx += 1\n    [@lines.length - 1, @lines[@lines.length - 1].length - 1]\n  \n  # Answer the position (in pixels) of the given index ("slot")\n  # where the caret should be placed.\n  # This is in absolute world coordinates.\n  # This function assumes that the text is left-justified.\n  slotCoordinates: (slot) ->\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    context = @image.getContext("2d")\n    shadowHeight = Math.abs(@shadowOffset.y)\n    yOffset = slotRow * (fontHeight(@fontSize) + shadowHeight)\n    xOffset = context.measureText((@lines[slotRow]).substring(0,slotColumn)).width\n    x = @left() + xOffset\n    y = @top() + yOffset\n    new Point(x, y)\n  \n  # Returns the slot (index) closest to the given point\n  # so the caret can be moved accordingly\n  # This function assumes that the text is left-justified.\n  slotAt: (aPoint) ->\n    charX = 0\n    row = 0\n    col = 0\n    shadowHeight = Math.abs(@shadowOffset.y)\n    context = @image.getContext("2d")\n    row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)\n    row = Math.max(row, 1)\n    while aPoint.x - @left() > charX\n      charX += context.measureText(@lines[row - 1][col]).width\n      col += 1\n    @lineSlots[Math.max(row - 1, 0)] + col - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    return slot  if slotRow < 1\n    above = @lines[slotRow - 1]\n    return @lineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1\n    @lineSlots[slotRow - 1] + slotColumn\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    return slot  if slotRow > @lines.length - 2\n    below = @lines[slotRow + 1]\n    return @lineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1\n    @lineSlots[slotRow + 1] + slotColumn\n  \n  startOfLine: (slot) ->\n    # answer the first slot (index) of the line for the given slot\n    @lineSlots[@slotRowAndColumn(slot).y]\n  \n  endOfLine: (slot) ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1\n  \n  # TextMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 100, true\n    ), "set this Text\'s\nfont point size"\n    menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"\n    menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"\n    menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"\n    menu.addLine()\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n    menu\n  \n  setAlignmentToLeft: ->\n    @alignment = "left"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToRight: ->\n    @alignment = "right"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToCenter: ->\n    @alignment = "center"\n    @updateRendering()\n    @changed()  \n  \n  # TextMorph evaluation:\n  evaluationMenu: ->\n    menu = new MenuMorph(@, null)\n    menu.addItem "do it", "doIt", "evaluate the\nselected expression"\n    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"\n    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"\n    menu.addLine()\n    menu.addItem "select all", "selectAllAndEdit"\n    menu\n\n  selectAllAndEdit: ->\n    @edit()\n    @selectAll()\n   \n  setReceiver: (obj) ->\n    @receiver = obj\n    @customContextMenu = @evaluationMenu()\n  \n  doIt: ->\n    @receiver.evaluateString @selection()\n    @edit()\n  \n  showIt: ->\n    result = @receiver.evaluateString(@selection())\n    if result? then @inform result\n  \n  inspectIt: ->\n    # evaluateString is a pimped-up eval in\n    # the Morph class.\n    result = @receiver.evaluateString(@selection())\n    if result? then @spawnInspector result';
-
-  return TextMorph;
-
-})(StringMorph);
-
-ColorPickerMorph = (function(_super) {
-  __extends(ColorPickerMorph, _super);
-
-  ColorPickerMorph.prototype.choice = null;
-
-  function ColorPickerMorph(defaultColor) {
-    this.choice = defaultColor || new Color(255, 255, 255);
-    ColorPickerMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.silentSetExtent(new Point(80, 80));
-    this.updateRendering();
-  }
-
-  ColorPickerMorph.prototype.updateRendering = function() {
-    ColorPickerMorph.__super__.updateRendering.call(this);
-    return this.buildSubmorphs();
-  };
-
-  ColorPickerMorph.prototype.buildSubmorphs = function() {
-    var cpal, gpal, x, y;
-
-    this.children.forEach(function(child) {
-      return child.destroy();
-    });
-    this.children = [];
-    this.feedback = new Morph();
-    this.feedback.color = this.choice;
-    this.feedback.setExtent(new Point(20, 20));
-    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
-    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
-    cpal.setPosition(this.bounds.origin);
-    this.add(cpal);
-    gpal.setPosition(cpal.bottomLeft());
-    this.add(gpal);
-    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
-    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
-    this.feedback.setPosition(new Point(x, y));
-    return this.add(this.feedback);
-  };
-
-  ColorPickerMorph.prototype.getChoice = function() {
-    return this.feedback.color;
-  };
-
-  ColorPickerMorph.prototype.rootForGrab = function() {
-    return this;
-  };
-
-  ColorPickerMorph.coffeeScriptSourceOfThisClass = '# ColorPickerMorph ///////////////////////////////////////////////////\n\nclass ColorPickerMorph extends Morph\n\n  choice: null\n\n  constructor: (defaultColor) ->\n    @choice = defaultColor or new Color(255, 255, 255)\n    super()\n    @color = new Color(255, 255, 255)\n    @silentSetExtent new Point(80, 80)\n    @updateRendering()\n  \n  updateRendering: ->\n    super()\n    @buildSubmorphs()\n  \n  buildSubmorphs: ->\n    @children.forEach (child) ->\n      child.destroy()\n    @children = []\n    @feedback = new Morph()\n    @feedback.color = @choice\n    @feedback.setExtent new Point(20, 20)\n    cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))\n    gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))\n    cpal.setPosition @bounds.origin\n    @add cpal\n    gpal.setPosition cpal.bottomLeft()\n    @add gpal\n    x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))\n    y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)\n    @feedback.setPosition new Point(x, y)\n    @add @feedback\n  \n  getChoice: ->\n    @feedback.color\n  \n  rootForGrab: ->\n    @';
-
-  return ColorPickerMorph;
-
-})(Morph);
-
-MenuMorph = (function(_super) {
-  __extends(MenuMorph, _super);
-
-  MenuMorph.prototype.target = null;
-
-  MenuMorph.prototype.title = null;
-
-  MenuMorph.prototype.environment = null;
-
-  MenuMorph.prototype.fontSize = null;
-
-  MenuMorph.prototype.items = null;
-
-  MenuMorph.prototype.label = null;
-
-  MenuMorph.prototype.world = null;
-
-  MenuMorph.prototype.isListContents = false;
-
-  function MenuMorph(target, title, environment, fontSize) {
-    this.target = target;
-    this.title = title != null ? title : null;
-    this.environment = environment != null ? environment : null;
-    this.fontSize = fontSize != null ? fontSize : null;
-    this.items = [];
-    MenuMorph.__super__.constructor.call(this);
-    this.border = null;
-  }
-
-  MenuMorph.prototype.addItem = function(labelString, action, hint, color, bold, italic, doubleClickAction) {
-    if (bold == null) {
-      bold = false;
-    }
-    if (italic == null) {
-      italic = false;
-    }
-    return this.items.push([localize(labelString || "close"), action || nop, hint, color, bold, italic, doubleClickAction]);
-  };
-
-  MenuMorph.prototype.addLine = function(width) {
-    return this.items.push([0, width || 1]);
-  };
-
-  MenuMorph.prototype.createLabel = function() {
-    var text;
-
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    text = new TextMorph(localize(this.title), this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center");
-    text.alignment = "center";
-    text.color = new Color(255, 255, 255);
-    text.backgroundColor = this.borderColor;
-    text.updateRendering();
-    this.label = new BoxMorph(3, 0);
-    if (WorldMorph.MorphicPreferences.isFlat) {
-      this.label.edge = 0;
-    }
-    this.label.color = this.borderColor;
-    this.label.borderColor = this.borderColor;
-    this.label.setExtent(text.extent().add(4));
-    this.label.updateRendering();
-    this.label.add(text);
-    return this.label.text = text;
-  };
-
-  MenuMorph.prototype.updateRendering = function() {
-    var fb, isLine, x, y,
-      _this = this;
-
-    isLine = false;
-    this.children.forEach(function(m) {
-      return m.destroy();
-    });
-    this.children = [];
-    if (!this.isListContents) {
-      this.edge = WorldMorph.MorphicPreferences.isFlat ? 0 : 5;
-      this.border = WorldMorph.MorphicPreferences.isFlat ? 1 : 2;
-    }
-    this.color = new Color(255, 255, 255);
-    this.borderColor = new Color(60, 60, 60);
-    this.silentSetExtent(new Point(0, 0));
-    y = 2;
-    x = this.left() + 4;
-    if (!this.isListContents) {
-      if (this.title) {
-        this.createLabel();
-        this.label.setPosition(this.bounds.origin.add(4));
-        this.add(this.label);
-        y = this.label.bottom();
-      } else {
-        y = this.top() + 4;
-      }
-    }
-    y += 1;
-    this.items.forEach(function(tuple) {
-      var item;
-
-      isLine = false;
-      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
-        item = tuple;
-      } else if (tuple[0] === 0) {
-        isLine = true;
-        item = new Morph();
-        item.color = _this.borderColor;
-        item.setHeight(tuple[1]);
-      } else {
-        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3], tuple[4], tuple[5], tuple[6]);
-      }
-      if (isLine) {
-        y += 1;
-      }
-      item.setPosition(new Point(x, y));
-      _this.add(item);
-      y = y + item.height();
-      if (isLine) {
-        return y += 1;
-      }
-    });
-    fb = this.boundsIncludingChildren();
-    this.silentSetExtent(fb.extent().add(4));
-    this.adjustWidths();
-    return MenuMorph.__super__.updateRendering.call(this);
-  };
-
-  MenuMorph.prototype.maxWidth = function() {
-    var w;
-
-    w = 0;
-    if (this.parent instanceof FrameMorph) {
-      if (this.parent.scrollFrame instanceof ScrollFrameMorph) {
-        w = this.parent.scrollFrame.width();
-      }
-    }
-    this.children.forEach(function(item) {
-      if (item instanceof MenuItemMorph) {
-        return w = Math.max(w, item.children[0].width() + 8);
-      } else if ((item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
-        return w = Math.max(w, item.width());
-      }
-    });
-    if (this.label) {
-      w = Math.max(w, this.label.width());
-    }
-    return w;
-  };
-
-  MenuMorph.prototype.adjustWidths = function() {
-    var w,
-      _this = this;
-
-    w = this.maxWidth();
-    return this.children.forEach(function(item) {
-      var isSelected;
-
-      item.silentSetWidth(w);
-      if (item instanceof MenuItemMorph) {
-        isSelected = item.image === item.pressImage;
-        item.createBackgrounds();
-        if (isSelected) {
-          return item.image = item.pressImage;
-        }
-      } else {
-        item.updateRendering();
-        if (item === _this.label) {
-          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
-        }
-      }
-    });
-  };
-
-  MenuMorph.prototype.unselectAllItems = function() {
-    this.children.forEach(function(item) {
-      if (item instanceof MenuItemMorph) {
-        return item.image = item.normalImage;
-      }
-    });
-    return this.changed();
-  };
-
-  MenuMorph.prototype.popup = function(world, pos) {
-    this.updateRendering();
-    this.setPosition(pos);
+    this.setPosition(pos.subtract(new Point(0, this.height())));
     this.addShadow(new Point(2, 2), 80);
     this.keepWithin(world);
-    if (world.activeMenu) {
-      world.activeMenu.destroy();
-    }
     world.add(this);
-    world.activeMenu = this;
-    return this.fullChanged();
-  };
-
-  MenuMorph.prototype.popUpAtHand = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    return this.popup(wrrld, wrrld.hand.position());
-  };
-
-  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    this.updateRendering();
-    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
-    var wrrld;
-
-    wrrld = world || this.world;
-    this.updateRendering();
-    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
-  };
-
-  MenuMorph.coffeeScriptSourceOfThisClass = '# MenuMorph ///////////////////////////////////////////////////////////\n\nclass MenuMorph extends BoxMorph\n\n  target: null\n  title: null\n  environment: null\n  fontSize: null\n  items: null\n  label: null\n  world: null\n  isListContents: false\n\n  constructor: (@target, @title = null, @environment = null, @fontSize = null) ->\n    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need\n    # to initialise the items before calling super. We can\'t initialise it\n    # outside the constructor because the array would be shared across instantiated\n    # objects.\n    @items = []\n    super()\n    @border = null # the Box Morph constructor puts this to 2\n    # important not to traverse all the children for stepping through, because\n    # there could be a lot of entries for example in the inspector the number\n    # of properties of an object - there could be a 100 of those and we don\'t\n    # want to traverse them all. Setting step to null (as opposed to nop) means\n    # that\n  \n  addItem: (\n      labelString,\n      action,\n      hint,\n      color,\n      bold = false,\n      italic = false,\n      doubleClickAction # optional, when used as list contents\n      ) ->\n    # labelString is normally a single-line string. But it can also be one\n    # of the following:\n    #     * a multi-line string (containing line breaks)\n    #     * an icon (either a Morph or a Canvas)\n    #     * a tuple of format: [icon, string]\n    @items.push [\n      localize(labelString or "close"),\n      action or nop,\n      hint,\n      color,\n      bold,\n      italic,\n      doubleClickAction\n    ]\n  \n  addLine: (width) ->\n    @items.push [0, width or 1]\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    text = new TextMorph(localize(@title),\n      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")\n    text.alignment = "center"\n    text.color = new Color(255, 255, 255)\n    text.backgroundColor = @borderColor\n    text.updateRendering()\n    @label = new BoxMorph(3, 0)\n    if WorldMorph.MorphicPreferences.isFlat\n      @label.edge = 0\n    @label.color = @borderColor\n    @label.borderColor = @borderColor\n    @label.setExtent text.extent().add(4)\n    @label.updateRendering()\n    @label.add text\n    @label.text = text\n  \n  updateRendering: ->\n    isLine = false\n    @children.forEach (m) ->\n      m.destroy()\n    #\n    @children = []\n    unless @isListContents\n      @edge = if WorldMorph.MorphicPreferences.isFlat then 0 else 5\n      @border = if WorldMorph.MorphicPreferences.isFlat then 1 else 2\n    @color = new Color(255, 255, 255)\n    @borderColor = new Color(60, 60, 60)\n    @silentSetExtent new Point(0, 0)\n    y = 2\n    x = @left() + 4\n    unless @isListContents\n      if @title\n        @createLabel()\n        @label.setPosition @bounds.origin.add(4)\n        @add @label\n        y = @label.bottom()\n      else\n        y = @top() + 4\n    y += 1\n    @items.forEach (tuple) =>\n      isLine = false\n      if tuple instanceof StringFieldMorph or\n        tuple instanceof ColorPickerMorph or\n        tuple instanceof SliderMorph\n          item = tuple\n      else if tuple[0] is 0\n        isLine = true\n        item = new Morph()\n        item.color = @borderColor\n        item.setHeight tuple[1]\n      else\n        # bubble help hint\n        item = new MenuItemMorph(\n          @target,\n          tuple[1],\n          tuple[0],\n          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n          WorldMorph.MorphicPreferences.menuFontName, @environment,\n          tuple[2],\n          tuple[3], # color\n          tuple[4], # bold\n          tuple[5], # italic\n          tuple[6]  # doubleclick action\n          )\n      y += 1  if isLine\n      item.setPosition new Point(x, y)\n      @add item\n      y = y + item.height()\n      y += 1  if isLine\n    #\n    fb = @boundsIncludingChildren()\n    @silentSetExtent fb.extent().add(4)\n    @adjustWidths()\n    super()\n  \n  maxWidth: ->\n    w = 0\n    if @parent instanceof FrameMorph\n      if @parent.scrollFrame instanceof ScrollFrameMorph\n        w = @parent.scrollFrame.width()    \n    @children.forEach (item) ->\n      if (item instanceof MenuItemMorph)\n        w = Math.max(w, item.children[0].width() + 8)\n      else if (item instanceof StringFieldMorph) or\n        (item instanceof ColorPickerMorph) or\n        (item instanceof SliderMorph)\n          w = Math.max(w, item.width())  \n    #\n    w = Math.max(w, @label.width())  if @label\n    w\n  \n  adjustWidths: ->\n    w = @maxWidth()\n    @children.forEach (item) =>\n      item.silentSetWidth w\n      if item instanceof MenuItemMorph\n        isSelected = (item.image == item.pressImage)\n        item.createBackgrounds()\n        if isSelected then item.image = item.pressImage          \n      else\n        item.updateRendering()\n        if item is @label\n          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))\n  \n  \n  unselectAllItems: ->\n    @children.forEach (item) ->\n      item.image = item.normalImage  if item instanceof MenuItemMorph\n    #\n    @changed()\n  \n  popup: (world, pos) ->\n    @updateRendering()\n    @setPosition pos\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.activeMenu.destroy()  if world.activeMenu\n    world.add @\n    world.activeMenu = @\n    @fullChanged()\n  \n  popUpAtHand: (world) ->\n    wrrld = world or @world\n    @popup wrrld, wrrld.hand.position()\n  \n  popUpCenteredAtHand: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))\n  \n  popUpCenteredInWorld: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))';
-
-  return MenuMorph;
-
-})(BoxMorph);
-
-WorkspaceMorph = (function(_super) {
-  __extends(WorkspaceMorph, _super);
-
-  WorkspaceMorph.prototype.morphsList = null;
-
-  WorkspaceMorph.prototype.buttonClose = null;
-
-  WorkspaceMorph.prototype.resizer = null;
-
-  WorkspaceMorph.prototype.closeIcon = null;
-
-  function WorkspaceMorph(target) {
-    WorkspaceMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.updateRendering();
-    this.buildPanes();
-  }
-
-  WorkspaceMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  WorkspaceMorph.prototype.buildPanes = function() {
-    var ListOfMorphs, attribs, theWordMorph,
-      _this = this;
-
-    attribs = [];
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph("Morphs List");
-    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.updateRendering();
-    this.add(this.label);
-    this.closeIcon = new CloseCircleButtonMorph();
-    this.closeIcon.color = new Color(255, 255, 255);
-    this.add(this.closeIcon);
-    this.closeIcon.mouseClickLeft = function() {
-      return _this.destroy();
-    };
-    theWordMorph = "Morph";
-    ListOfMorphs = (Object.keys(window)).filter(function(i) {
-      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
-    });
-    this.morphsList = new ListMorph(ListOfMorphs, null);
-    this.morphsList.hBar.alpha = 0.6;
-    this.morphsList.vBar.alpha = 0.6;
-    this.add(this.morphsList);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  WorkspaceMorph.prototype.fixLayout = function() {
-    var b, closeIconScale, h, handleSize, r, w, x, y;
-
-    Morph.prototype.trackChanges = false;
-    handleSize = WorldMorph.MorphicPreferences.handleSize;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.closeIcon.setPosition(new Point(x, y));
-    closeIconScale = 2 / 3;
-    this.closeIcon.setExtent(new Point(handleSize * closeIconScale, handleSize * closeIconScale));
-    this.label.setPosition(new Point(x + handleSize * closeIconScale + this.edge, y - this.edge / 2));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.updateRendering();
-      this.changed();
-      this.resizer.updateRendering();
+    this.changed();
+    world.hand.destroyTemporaries();
+    world.hand.temporaries.push(this);
+    if (isClickable) {
+      return this.mouseEnter = function() {
+        return this.destroy();
+      };
+    } else {
+      return this.isClickable = false;
     }
-    y = this.label.bottom() + this.edge / 2;
-    w = this.width() - this.edge;
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - handleSize;
-    h = b - y;
-    this.morphsList.setPosition(new Point(x, y));
-    this.morphsList.setExtent(new Point(w, h));
-    x = this.morphsList.left();
-    y = this.morphsList.bottom() + this.edge;
-    h = handleSize;
-    w = this.morphsList.width() - h - this.edge;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
   };
 
-  WorkspaceMorph.prototype.setExtent = function(aPoint) {
-    WorkspaceMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
+  SpeechBubbleMorph.prototype.updateRendering = function() {
+    if (this.contentsMorph) {
+      this.contentsMorph.destroy();
+    }
+    if (this.contents instanceof Morph) {
+      this.contentsMorph = this.contents;
+    } else if (isString(this.contents)) {
+      this.contentsMorph = new TextMorph(this.contents, WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
+    } else if (this.contents instanceof HTMLCanvasElement) {
+      this.contentsMorph = new Morph();
+      this.contentsMorph.silentSetWidth(this.contents.width);
+      this.contentsMorph.silentSetHeight(this.contents.height);
+      this.contentsMorph.image = this.contents;
+    } else {
+      this.contentsMorph = new TextMorph(this.contents.toString(), WorldMorph.MorphicPreferences.bubbleHelpFontSize, null, false, true, "center");
+    }
+    this.add(this.contentsMorph);
+    this.silentSetWidth(this.contentsMorph.width() + (this.padding ? this.padding * 2 : this.edge * 2));
+    this.silentSetHeight(this.contentsMorph.height() + this.edge + this.border * 2 + this.padding * 2 + 2);
+    SpeechBubbleMorph.__super__.updateRendering.call(this);
+    return this.contentsMorph.setPosition(this.position().add(new Point(this.padding || this.edge, this.border + this.padding + 1)));
   };
 
-  WorkspaceMorph.coffeeScriptSourceOfThisClass = '# WorkspaceMorph //////////////////////////////////////////////////////\n\nclass WorkspaceMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n  closeIcon: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    @closeIcon = new CloseCircleButtonMorph()\n    @closeIcon.color = new Color(255, 255, 255)\n    @add @closeIcon\n    @closeIcon.mouseClickLeft = =>\n        @destroy()\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    handleSize = WorldMorph.MorphicPreferences.handleSize;\n\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n\n    # close icon\n    @closeIcon.setPosition new Point(x, y)\n    closeIconScale = 2/3\n    @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)\n\n    # label\n    @label.setPosition new Point(x + handleSize * closeIconScale + @edge, y - @edge/2)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + @edge/2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
+  SpeechBubbleMorph.prototype.outlinePath = function(context, radius, inset) {
+    var circle, h, offset, rad, w;
 
-  return WorkspaceMorph;
+    circle = function(x, y, r) {
+      context.moveTo(x + r, y);
+      return context.arc(x, y, r, radians(0), radians(360));
+    };
+    offset = radius + inset;
+    w = this.width();
+    h = this.height();
+    context.arc(offset, offset, radius, radians(-180), radians(-90), false);
+    context.arc(w - offset, offset, radius, radians(-90), radians(-0), false);
+    context.arc(w - offset, h - offset - radius, radius, radians(0), radians(90), false);
+    if (!this.isThought) {
+      if (this.isPointingRight) {
+        context.lineTo(offset + radius, h - offset);
+        context.lineTo(radius / 2 + inset, h - inset);
+      } else {
+        context.lineTo(w - (radius / 2 + inset), h - inset);
+        context.lineTo(w - (offset + radius), h - offset);
+      }
+    }
+    context.arc(offset, h - offset - radius, radius, radians(90), radians(180), false);
+    if (this.isThought) {
+      context.lineTo(inset, offset);
+      if (this.isPointingRight) {
+        rad = radius / 4;
+        circle(rad + inset, h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(rad * 2 + inset, h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(rad * 3 + inset * 2, h - rad - inset * 4, rad);
+      } else {
+        rad = radius / 4;
+        circle(w - (rad + inset), h - rad - inset, rad);
+        rad = radius / 3.2;
+        circle(w - (rad * 2 + inset), h - rad - inset * 2, rad);
+        rad = radius / 2.8;
+        return circle(w - (rad * 3 + inset * 2), h - rad - inset * 4, rad);
+      }
+    }
+  };
+
+  SpeechBubbleMorph.prototype.shadowImage = function(off_, color) {
+    var clr, ctx, fb, img, offset, outline, sha;
+
+    fb = void 0;
+    img = void 0;
+    outline = void 0;
+    sha = void 0;
+    ctx = void 0;
+    offset = off_ || new Point(7, 7);
+    clr = color || new Color(0, 0, 0);
+    fb = this.extent();
+    img = this.image;
+    outline = newCanvas(fb);
+    ctx = outline.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.drawImage(img, -offset.x, -offset.y);
+    sha = newCanvas(fb);
+    ctx = sha.getContext("2d");
+    ctx.drawImage(outline, 0, 0);
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = clr.toString();
+    ctx.fillRect(0, 0, fb.x, fb.y);
+    return sha;
+  };
+
+  SpeechBubbleMorph.prototype.shadowImageBlurred = function(off_, color) {
+    var blur, clr, ctx, fb, img, offset, sha;
+
+    fb = void 0;
+    img = void 0;
+    sha = void 0;
+    ctx = void 0;
+    offset = off_ || new Point(7, 7);
+    blur = this.shadowBlur;
+    clr = color || new Color(0, 0, 0);
+    fb = this.extent().add(blur * 2);
+    img = this.image;
+    sha = newCanvas(fb);
+    ctx = sha.getContext("2d");
+    ctx.shadowOffsetX = offset.x;
+    ctx.shadowOffsetY = offset.y;
+    ctx.shadowBlur = blur;
+    ctx.shadowColor = clr.toString();
+    ctx.drawImage(img, blur - offset.x, blur - offset.y);
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.drawImage(img, blur - offset.x, blur - offset.y);
+    return sha;
+  };
+
+  SpeechBubbleMorph.prototype.fixLayout = function() {
+    this.removeShadow();
+    this.updateRendering();
+    return this.addShadow(new Point(2, 2), 80);
+  };
+
+  SpeechBubbleMorph.coffeeScriptSourceOfThisClass = '# SpeechBubbleMorph ///////////////////////////////////////////////////\n\n#\n#	I am a comic-style speech bubble that can display either a string,\n#	a Morph, a Canvas or a toString() representation of anything else.\n#	If I am invoked using popUp() I behave like a tool tip.\n#\n\nclass SpeechBubbleMorph extends BoxMorph\n\n  isPointingRight: true # orientation of text\n  contents: null\n  padding: null # additional vertical pixels\n  isThought: null # draw "think" bubble\n  isClickable: false\n\n  constructor: (\n    @contents="",\n    color,\n    edge,\n    border,\n    borderColor,\n    @padding = 0,\n    @isThought = false) ->\n      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)\n      @color = color or new Color(230, 230, 230)\n      @updateRendering()\n  \n  \n  # SpeechBubbleMorph invoking:\n  popUp: (world, pos, isClickable) ->\n    @updateRendering()\n    @setPosition pos.subtract(new Point(0, @height()))\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.add @\n    @changed()\n    world.hand.destroyTemporaries()\n    world.hand.temporaries.push @\n    if isClickable\n      @mouseEnter = ->\n        @destroy()\n    else\n      @isClickable = false\n    \n  \n  \n  # SpeechBubbleMorph drawing:\n  updateRendering: ->\n    # re-build my contents\n    @contentsMorph.destroy()  if @contentsMorph\n    if @contents instanceof Morph\n      @contentsMorph = @contents\n    else if isString(@contents)\n      @contentsMorph = new TextMorph(\n        @contents,\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    else if @contents instanceof HTMLCanvasElement\n      @contentsMorph = new Morph()\n      @contentsMorph.silentSetWidth @contents.width\n      @contentsMorph.silentSetHeight @contents.height\n      @contentsMorph.image = @contents\n    else\n      @contentsMorph = new TextMorph(\n        @contents.toString(),\n        WorldMorph.MorphicPreferences.bubbleHelpFontSize,\n        null,\n        false,\n        true,\n        "center")\n    @add @contentsMorph\n    #\n    # adjust my layout\n    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))\n    @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2\n    #\n    # draw my outline\n    super()\n    #\n    # position my contents\n    @contentsMorph.setPosition @position().add(\n      new Point(@padding or @edge, @border + @padding + 1))\n  \n  outlinePath: (context, radius, inset) ->\n    circle = (x, y, r) ->\n      context.moveTo x + r, y\n      context.arc x, y, r, radians(0), radians(360)\n    offset = radius + inset\n    w = @width()\n    h = @height()\n    #\n    # top left:\n    context.arc offset, offset, radius, radians(-180), radians(-90), false\n    #\n    # top right:\n    context.arc w - offset, offset, radius, radians(-90), radians(-0), false\n    #\n    # bottom right:\n    context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false\n    unless @isThought # draw speech bubble hook\n      if @isPointingRight\n        context.lineTo offset + radius, h - offset\n        context.lineTo radius / 2 + inset, h - inset\n      else # pointing left\n        context.lineTo w - (radius / 2 + inset), h - inset\n        context.lineTo w - (offset + radius), h - offset\n    #\n    # bottom left:\n    context.arc offset, h - offset - radius, radius, radians(90), radians(180), false\n    if @isThought\n      #\n      # close large bubble:\n      context.lineTo inset, offset\n      #\n      # draw thought bubbles:\n      if @isPointingRight\n        #\n        # tip bubble:\n        rad = radius / 4\n        circle rad + inset, h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle rad * 2 + inset, h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle rad * 3 + inset * 2, h - rad - inset * 4, rad\n      else # pointing left\n        # tip bubble:\n        rad = radius / 4\n        circle w - (rad + inset), h - rad - inset, rad\n        #\n        # middle bubble:\n        rad = radius / 3.2\n        circle w - (rad * 2 + inset), h - rad - inset * 2, rad\n        #\n        # top bubble:\n        rad = radius / 2.8\n        circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad\n\n  # SpeechBubbleMorph shadow\n  #\n  #    only take the \'plain\' image, so the box rounding and the\n  #    shadow doesn\'t become conflicted by embedded scrolling panes\n  #\n  shadowImage: (off_, color) ->\n    \n    # fallback for Windows Chrome-Shadow bug\n    fb = undefined\n    img = undefined\n    outline = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    clr = color or new Color(0, 0, 0)\n    fb = @extent()\n    img = @image\n    outline = newCanvas(fb)\n    ctx = outline.getContext("2d")\n    ctx.drawImage img, 0, 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, -offset.x, -offset.y\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.drawImage outline, 0, 0\n    ctx.globalCompositeOperation = "source-atop"\n    ctx.fillStyle = clr.toString()\n    ctx.fillRect 0, 0, fb.x, fb.y\n    sha\n\n  shadowImageBlurred: (off_, color) ->\n    fb = undefined\n    img = undefined\n    sha = undefined\n    ctx = undefined\n    offset = off_ or new Point(7, 7)\n    blur = @shadowBlur\n    clr = color or new Color(0, 0, 0)\n    fb = @extent().add(blur * 2)\n    img = @image\n    sha = newCanvas(fb)\n    ctx = sha.getContext("2d")\n    ctx.shadowOffsetX = offset.x\n    ctx.shadowOffsetY = offset.y\n    ctx.shadowBlur = blur\n    ctx.shadowColor = clr.toString()\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    ctx.shadowOffsetX = 0\n    ctx.shadowOffsetY = 0\n    ctx.shadowBlur = 0\n    ctx.globalCompositeOperation = "destination-out"\n    ctx.drawImage img, blur - offset.x, blur - offset.y\n    sha\n\n  # SpeechBubbleMorph resizing\n  fixLayout: ->\n    @removeShadow()\n    @updateRendering()\n    @addShadow new Point(2, 2), 80';
+
+  return SpeechBubbleMorph;
 
 })(BoxMorph);
-
-GrayPaletteMorph = (function(_super) {
-  __extends(GrayPaletteMorph, _super);
-
-  function GrayPaletteMorph(target, sizePoint) {
-    this.target = target != null ? target : null;
-    GrayPaletteMorph.__super__.constructor.call(this, this.target, sizePoint || new Point(80, 10));
-  }
-
-  GrayPaletteMorph.prototype.updateRendering = function() {
-    var context, ext, gradient;
-
-    ext = this.extent();
-    this.image = newCanvas(this.extent());
-    context = this.image.getContext("2d");
-    this.choice = new Color();
-    gradient = context.createLinearGradient(0, 0, ext.x, ext.y);
-    gradient.addColorStop(0, "black");
-    gradient.addColorStop(1, "white");
-    context.fillStyle = gradient;
-    return context.fillRect(0, 0, ext.x, ext.y);
-  };
-
-  GrayPaletteMorph.coffeeScriptSourceOfThisClass = '# GrayPaletteMorph ///////////////////////////////////////////////////\n\nclass GrayPaletteMorph extends ColorPaletteMorph\n\n  constructor: (@target = null, sizePoint) ->\n    super @target, sizePoint or new Point(80, 10)\n  \n  updateRendering: ->\n    ext = @extent()\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    @choice = new Color()\n    gradient = context.createLinearGradient(0, 0, ext.x, ext.y)\n    gradient.addColorStop 0, "black"\n    gradient.addColorStop 1, "white"\n    context.fillStyle = gradient\n    context.fillRect 0, 0, ext.x, ext.y';
-
-  return GrayPaletteMorph;
-
-})(ColorPaletteMorph);
 
 BlinkerMorph = (function(_super) {
   __extends(BlinkerMorph, _super);
@@ -7275,1136 +4592,80 @@ BlinkerMorph = (function(_super) {
 
 })(Morph);
 
-CaretMorph = (function(_super) {
-  __extends(CaretMorph, _super);
+BouncerMorph = (function(_super) {
+  __extends(BouncerMorph, _super);
 
-  CaretMorph.prototype.keyDownEventUsed = false;
+  BouncerMorph.prototype.isStopped = false;
 
-  CaretMorph.prototype.target = null;
+  BouncerMorph.prototype.type = null;
 
-  CaretMorph.prototype.originalContents = null;
+  BouncerMorph.prototype.direction = null;
 
-  CaretMorph.prototype.slot = null;
+  BouncerMorph.prototype.speed = null;
 
-  CaretMorph.prototype.viewPadding = 1;
-
-  function CaretMorph(target) {
-    var ls;
-
-    this.target = target;
-    this.originalContents = this.target.text;
-    this.originalAlignment = this.target.alignment;
-    this.slot = this.target.text.length;
-    CaretMorph.__super__.constructor.call(this);
-    ls = fontHeight(this.target.fontSize);
-    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
-    this.updateRendering();
-    this.image.getContext("2d").font = this.target.font();
-    if (this.target instanceof TextMorph && (this.target.alignment !== 'left')) {
-      this.target.setAlignmentToLeft();
+  function BouncerMorph(type, speed) {
+    this.type = type != null ? type : "vertical";
+    this.speed = speed != null ? speed : 1;
+    BouncerMorph.__super__.constructor.call(this);
+    this.fps = 50;
+    if (this.type === "vertical") {
+      this.direction = "down";
+    } else {
+      this.direction = "right";
     }
-    this.gotoSlot(this.slot);
   }
 
-  CaretMorph.prototype.processKeyPress = function(event) {
-    if (this.keyDownEventUsed) {
-      this.keyDownEventUsed = false;
-      return null;
-    }
-    if ((event.keyCode === 40) || event.charCode === 40) {
-      this.insert("(");
-      return null;
-    }
-    if ((event.keyCode === 37) || event.charCode === 37) {
-      this.insert("%");
-      return null;
-    }
-    if (event.keyCode) {
-      if (event.ctrlKey) {
-        this.ctrl(event.keyCode);
-      } else if (event.metaKey) {
-        this.cmd(event.keyCode);
-      } else {
-        this.insert(String.fromCharCode(event.keyCode), event.shiftKey);
-      }
-    } else if (event.charCode) {
-      if (event.ctrlKey) {
-        this.ctrl(event.charCode);
-      } else if (event.metaKey) {
-        this.cmd(event.keyCode);
-      } else {
-        this.insert(String.fromCharCode(event.charCode), event.shiftKey);
-      }
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
+  BouncerMorph.prototype.moveUp = function() {
+    return this.moveBy(new Point(0, -this.speed));
   };
 
-  CaretMorph.prototype.processKeyDown = function(event) {
-    var shift;
+  BouncerMorph.prototype.moveDown = function() {
+    return this.moveBy(new Point(0, this.speed));
+  };
 
-    shift = event.shiftKey;
-    this.keyDownEventUsed = false;
-    if (event.ctrlKey) {
-      this.ctrl(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    } else if (event.metaKey) {
-      this.cmd(event.keyCode);
-      this.target.escalateEvent("reactToKeystroke", event);
-      return;
-    }
-    switch (event.keyCode) {
-      case 37:
-        this.goLeft(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 39:
-        this.goRight(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 38:
-        this.goUp(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 40:
-        this.goDown(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 36:
-        this.goHome(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 35:
-        this.goEnd(shift);
-        this.keyDownEventUsed = true;
-        break;
-      case 46:
-        this.deleteRight();
-        this.keyDownEventUsed = true;
-        break;
-      case 8:
-        this.deleteLeft();
-        this.keyDownEventUsed = true;
-        break;
-      case 13:
-        if (this.target.constructor.name === "StringMorph") {
-          this.accept();
+  BouncerMorph.prototype.moveRight = function() {
+    return this.moveBy(new Point(this.speed, 0));
+  };
+
+  BouncerMorph.prototype.moveLeft = function() {
+    return this.moveBy(new Point(-this.speed, 0));
+  };
+
+  BouncerMorph.prototype.step = function() {
+    if (!this.isStopped) {
+      if (this.type === "vertical") {
+        if (this.direction === "down") {
+          this.moveDown();
         } else {
-          this.insert("\n");
+          this.moveUp();
         }
-        this.keyDownEventUsed = true;
-        break;
-      case 27:
-        this.cancel();
-        this.keyDownEventUsed = true;
-        break;
-    }
-    return this.target.escalateEvent("reactToKeystroke", event);
-  };
-
-  CaretMorph.prototype.gotoSlot = function(slot) {
-    var left, length, pos, right;
-
-    length = this.target.text.length;
-    this.slot = (slot < 0 ? 0 : (slot > length ? length : slot));
-    pos = this.target.slotCoordinates(this.slot);
-    if (this.parent && this.target.isScrollable) {
-      right = this.parent.right() - this.viewPadding;
-      left = this.parent.left() + this.viewPadding;
-      if (pos.x > right) {
-        this.target.setLeft(this.target.left() + right - pos.x);
-        pos.x = right;
-      }
-      if (pos.x < left) {
-        left = Math.min(this.parent.left(), left);
-        this.target.setLeft(this.target.left() + left - pos.x);
-        pos.x = left;
-      }
-      if (this.target.right() < right && right - this.target.width() < left) {
-        pos.x += right - this.target.right();
-        this.target.setRight(right);
-      }
-    }
-    this.show();
-    this.setPosition(pos);
-    if (this.parent && this.parent.parent instanceof ScrollFrameMorph && this.target.isScrollable) {
-      return this.parent.parent.scrollCaretIntoView(this);
-    }
-  };
-
-  CaretMorph.prototype.goLeft = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.slot - 1);
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goRight = function(shift, howMany) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.slot + (howMany || 1));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goUp = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.upFrom(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goDown = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.downFrom(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goHome = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.startOfLine(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.goEnd = function(shift) {
-    this.updateSelection(shift);
-    this.gotoSlot(this.target.endOfLine(this.slot));
-    return this.updateSelection(shift);
-  };
-
-  CaretMorph.prototype.gotoPos = function(aPoint) {
-    this.gotoSlot(this.target.slotAt(aPoint));
-    return this.show();
-  };
-
-  CaretMorph.prototype.updateSelection = function(shift) {
-    if (shift) {
-      if ((this.target.endMark === null) && (this.target.startMark === null)) {
-        this.target.startMark = this.slot;
-        return this.target.endMark = this.slot;
-      } else if (this.target.endMark !== this.slot) {
-        this.target.endMark = this.slot;
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } else {
-      return this.target.clearSelection();
-    }
-  };
-
-  CaretMorph.prototype.accept = function() {
-    var world;
-
-    world = this.root();
-    if (world) {
-      world.stopEditing();
-    }
-    return this.escalateEvent("accept", null);
-  };
-
-  CaretMorph.prototype.cancel = function() {
-    var world;
-
-    world = this.root();
-    this.undo();
-    if (world) {
-      world.stopEditing();
-    }
-    return this.escalateEvent('cancel', null);
-  };
-
-  CaretMorph.prototype.undo = function() {
-    this.target.text = this.originalContents;
-    this.target.clearSelection();
-    this.target.changed();
-    this.target.updateRendering();
-    this.target.changed();
-    return this.gotoSlot(0);
-  };
-
-  CaretMorph.prototype.insert = function(aChar, shiftKey) {
-    var text;
-
-    if (aChar === "\t") {
-      this.target.escalateEvent('reactToEdit', this.target);
-      if (shiftKey) {
-        return this.target.backTab(this.target);
-      }
-      return this.target.tab(this.target);
-    }
-    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
-      if (this.target.selection() !== "") {
-        this.gotoSlot(this.target.selectionStartSlot());
-        this.target.deleteSelection();
-      }
-      text = this.target.text;
-      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
-      this.target.text = text;
-      this.target.updateRendering();
-      this.target.changed();
-      return this.goRight(false, aChar.length);
-    }
-  };
-
-  CaretMorph.prototype.ctrl = function(aChar) {
-    if ((aChar === 97) || (aChar === 65)) {
-      return this.target.selectAll();
-    } else if (aChar === 90) {
-      return this.undo();
-    } else if (aChar === 123) {
-      return this.insert("{");
-    } else if (aChar === 125) {
-      return this.insert("}");
-    } else if (aChar === 91) {
-      return this.insert("[");
-    } else if (aChar === 93) {
-      return this.insert("]");
-    } else if (aChar === 64) {
-      return this.insert("@");
-    }
-  };
-
-  CaretMorph.prototype.cmd = function(aChar) {
-    if (aChar === 65) {
-      return this.target.selectAll();
-    } else if (aChar === 90) {
-      return this.undo();
-    }
-  };
-
-  CaretMorph.prototype.deleteRight = function() {
-    var text;
-
-    if (this.target.selection() !== "") {
-      this.gotoSlot(this.target.selectionStartSlot());
-      return this.target.deleteSelection();
-    } else {
-      text = this.target.text;
-      this.target.changed();
-      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
-      this.target.text = text;
-      return this.target.updateRendering();
-    }
-  };
-
-  CaretMorph.prototype.deleteLeft = function() {
-    var text;
-
-    if (this.target.selection()) {
-      this.gotoSlot(this.target.selectionStartSlot());
-      return this.target.deleteSelection();
-    }
-    text = this.target.text;
-    this.target.changed();
-    this.target.text = text.substring(0, this.slot - 1) + text.substr(this.slot);
-    this.target.updateRendering();
-    return this.goLeft();
-  };
-
-  CaretMorph.prototype.destroy = function() {
-    if (this.target.alignment !== this.originalAlignment) {
-      this.target.alignment = this.originalAlignment;
-      this.target.updateRendering();
-      this.target.changed();
-    }
-    return CaretMorph.__super__.destroy.apply(this, arguments);
-  };
-
-  CaretMorph.prototype.inspectKeyEvent = function(event) {
-    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
-  };
-
-  CaretMorph.coffeeScriptSourceOfThisClass = '# CaretMorph /////////////////////////////////////////////////////////\n\n# I am a String/Text editing widget\n\nclass CaretMorph extends BlinkerMorph\n\n  keyDownEventUsed: false\n  target: null\n  originalContents: null\n  slot: null\n  viewPadding: 1\n\n  constructor: (@target) ->\n    # additional properties:\n    @originalContents = @target.text\n    @originalAlignment = @target.alignment\n    @slot = @target.text.length\n    super()\n    ls = fontHeight(@target.fontSize)\n    @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)\n    @updateRendering()\n    @image.getContext("2d").font = @target.font()\n    if (@target instanceof TextMorph && (@target.alignment != \'left\'))\n      @target.setAlignmentToLeft()\n    @gotoSlot @slot\n  \n  # CaretMorph event processing:\n  processKeyPress: (event) ->\n    # @inspectKeyEvent event\n    if @keyDownEventUsed\n      @keyDownEventUsed = false\n      return null\n    if (event.keyCode is 40) or event.charCode is 40\n      @insert "("\n      return null\n    if (event.keyCode is 37) or event.charCode is 37\n      @insert "%"\n      return null\n    if event.keyCode # Opera doesn\'t support charCode\n      if event.ctrlKey\n        @ctrl event.keyCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.keyCode), event.shiftKey\n    else if event.charCode # all other browsers\n      if event.ctrlKey\n        @ctrl event.charCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.charCode), event.shiftKey\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  processKeyDown: (event) ->\n    # this.inspectKeyEvent(event);\n    shift = event.shiftKey\n    @keyDownEventUsed = false\n    if event.ctrlKey\n      @ctrl event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    else if event.metaKey\n      @cmd event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    switch event.keyCode\n      when 37\n        @goLeft(shift)\n        @keyDownEventUsed = true\n      when 39\n        @goRight(shift)\n        @keyDownEventUsed = true\n      when 38\n        @goUp(shift)\n        @keyDownEventUsed = true\n      when 40\n        @goDown(shift)\n        @keyDownEventUsed = true\n      when 36\n        @goHome(shift)\n        @keyDownEventUsed = true\n      when 35\n        @goEnd(shift)\n        @keyDownEventUsed = true\n      when 46\n        @deleteRight()\n        @keyDownEventUsed = true\n      when 8\n        @deleteLeft()\n        @keyDownEventUsed = true\n      when 13\n        # we can\'t check the class using instanceOf\n        # because TextMorphs are instances of StringMorphs\n        # but they want the enter to insert a carriage return.\n        if @target.constructor.name == "StringMorph"\n          @accept()\n        else\n          @insert "\n"\n        @keyDownEventUsed = true\n      when 27\n        @cancel()\n        @keyDownEventUsed = true\n      else\n    # this.inspectKeyEvent(event);\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  \n  # CaretMorph navigation - simple version\n  #gotoSlot: (newSlot) ->\n  #  @setPosition @target.slotCoordinates(newSlot)\n  #  @slot = Math.max(newSlot, 0)\n\n  gotoSlot: (slot) ->\n    # check that slot is within the allowed boundaries of\n    # of zero and text length.\n    length = @target.text.length\n    @slot = (if slot < 0 then 0 else (if slot > length then length else slot))\n\n    pos = @target.slotCoordinates(@slot)\n    if @parent and @target.isScrollable\n      right = @parent.right() - @viewPadding\n      left = @parent.left() + @viewPadding\n      if pos.x > right\n        @target.setLeft @target.left() + right - pos.x\n        pos.x = right\n      if pos.x < left\n        left = Math.min(@parent.left(), left)\n        @target.setLeft @target.left() + left - pos.x\n        pos.x = left\n      if @target.right() < right and right - @target.width() < left\n        pos.x += right - @target.right()\n        @target.setRight right\n    @show()\n    @setPosition pos\n\n    if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable\n      @parent.parent.scrollCaretIntoView @\n  \n  goLeft: (shift) ->\n    @updateSelection shift\n    @gotoSlot @slot - 1\n    @updateSelection shift\n  \n  goRight: (shift, howMany) ->\n    @updateSelection shift\n    @gotoSlot @slot + (howMany || 1)\n    @updateSelection shift\n  \n  goUp: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.upFrom(@slot)\n    @updateSelection shift\n  \n  goDown: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.downFrom(@slot)\n    @updateSelection shift\n  \n  goHome: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.startOfLine(@slot)\n    @updateSelection shift\n  \n  goEnd: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.endOfLine(@slot)\n    @updateSelection shift\n  \n  gotoPos: (aPoint) ->\n    @gotoSlot @target.slotAt(aPoint)\n    @show()\n\n  updateSelection: (shift) ->\n    if shift\n      if (@target.endMark is null) and (@target.startMark is null)\n        @target.startMark = @slot\n        @target.endMark = @slot\n      else if @target.endMark isnt @slot\n        @target.endMark = @slot\n        @target.updateRendering()\n        @target.changed()\n    else\n      @target.clearSelection()  \n  \n  # CaretMorph editing.\n\n  # User presses enter on a stringMorph\n  accept: ->\n    world = @root()\n    world.stopEditing()  if world\n    @escalateEvent "accept", null\n  \n  # User presses ESC\n  cancel: ->\n    world = @root()\n    @undo()\n    world.stopEditing()  if world\n    @escalateEvent \'cancel\', null\n    \n  # User presses CTRL-Z or CMD-Z\n  # Note that this is not a real undo,\n  # what we are doing here is just reverting\n  # all the changes and sort-of-resetting the\n  # state of the target.\n  undo: ->\n    @target.text = @originalContents\n    @target.clearSelection()\n    \n    # in theory these three lines are not\n    # needed because clearSelection runs them\n    # already, but I\'m leaving them here\n    # until I understand better this changed\n    # vs. updateRendering semantics.\n    @target.changed()\n    @target.updateRendering()\n    @target.changed()\n\n    @gotoSlot 0\n  \n  insert: (aChar, shiftKey) ->\n    if aChar is "\t"\n      @target.escalateEvent \'reactToEdit\', @target\n      if shiftKey\n        return @target.backTab(@target);\n      return @target.tab(@target)\n    if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)\n      if @target.selection() isnt ""\n        @gotoSlot @target.selectionStartSlot()\n        @target.deleteSelection()\n      text = @target.text\n      text = text.slice(0, @slot) + aChar + text.slice(@slot)\n      @target.text = text\n      @target.updateRendering()\n      @target.changed()\n      @goRight false, aChar.length\n  \n  ctrl: (aChar) ->\n    if (aChar is 97) or (aChar is 65)\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n    else if aChar is 123\n      @insert "{"\n    else if aChar is 125\n      @insert "}"\n    else if aChar is 91\n      @insert "["\n    else if aChar is 93\n      @insert "]"\n    else if aChar is 64\n      @insert "@"\n  \n  cmd: (aChar) ->\n    if aChar is 65\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n  \n  deleteRight: ->\n    if @target.selection() isnt ""\n      @gotoSlot @target.selectionStartSlot()\n      @target.deleteSelection()\n    else\n      text = @target.text\n      @target.changed()\n      text = text.slice(0, @slot) + text.slice(@slot + 1)\n      @target.text = text\n      @target.updateRendering()\n  \n  deleteLeft: ->\n    if @target.selection()\n      @gotoSlot @target.selectionStartSlot()\n      return @target.deleteSelection()\n    text = @target.text\n    @target.changed()\n    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)\n    @target.updateRendering()\n    @goLeft()\n\n  # CaretMorph destroying:\n  destroy: ->\n    if @target.alignment isnt @originalAlignment\n      @target.alignment = @originalAlignment\n      @target.updateRendering()\n      @target.changed()\n    super  \n  \n  # CaretMorph utilities:\n  inspectKeyEvent: (event) ->\n    # private\n    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()';
-
-  return CaretMorph;
-
-})(BlinkerMorph);
-
-HandleMorph = (function(_super) {
-  var step;
-
-  __extends(HandleMorph, _super);
-
-  HandleMorph.prototype.target = null;
-
-  HandleMorph.prototype.minExtent = null;
-
-  HandleMorph.prototype.inset = null;
-
-  HandleMorph.prototype.type = null;
-
-  function HandleMorph(target, minX, minY, insetX, insetY, type) {
-    var size;
-
-    this.target = target != null ? target : null;
-    if (minX == null) {
-      minX = 0;
-    }
-    if (minY == null) {
-      minY = 0;
-    }
-    this.type = type != null ? type : "resize";
-    this.minExtent = new Point(minX, minY);
-    this.inset = new Point(insetX || 0, insetY || insetX || 0);
-    HandleMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.noticesTransparentClick = true;
-    size = WorldMorph.MorphicPreferences.handleSize;
-    this.setExtent(new Point(size, size));
-  }
-
-  HandleMorph.prototype.updateRendering = function() {
-    this.normalImage = newCanvas(this.extent());
-    this.highlightImage = newCanvas(this.extent());
-    this.handleMorphRenderingHelper(this.normalImage, this.color, new Color(100, 100, 100));
-    this.handleMorphRenderingHelper(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
-    this.image = this.normalImage;
-    if (this.target) {
-      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
-      this.target.add(this);
-      return this.target.changed();
-    }
-  };
-
-  HandleMorph.prototype.handleMorphRenderingHelper = function(aCanvas, color, shadowColor) {
-    var context, p1, p11, p2, p22, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _results;
-
-    context = aCanvas.getContext("2d");
-    context.lineWidth = 1;
-    context.lineCap = "round";
-    context.strokeStyle = color.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      for (i = _i = 0, _ref = this.height(); _i <= _ref; i = _i += 6) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-      }
-    }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    for (i = _j = 0, _ref1 = this.width(); _j <= _ref1; i = _j += 6) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      context.stroke();
-    }
-    context.strokeStyle = shadowColor.toString();
-    if (this.type === "move") {
-      p1 = this.bottomLeft().subtract(this.position());
-      p11 = p1.copy();
-      p2 = this.topRight().subtract(this.position());
-      p22 = p2.copy();
-      for (i = _k = -1, _ref2 = this.height(); _k <= _ref2; i = _k += 6) {
-        p11.y = p1.y - i;
-        p22.y = p2.y - i;
-        context.beginPath();
-        context.moveTo(p11.x, p11.y);
-        context.lineTo(p22.x, p22.y);
-        context.closePath();
-        context.stroke();
-      }
-    }
-    p1 = this.bottomLeft().subtract(this.position());
-    p11 = p1.copy();
-    p2 = this.topRight().subtract(this.position());
-    p22 = p2.copy();
-    _results = [];
-    for (i = _l = 2, _ref3 = this.width(); _l <= _ref3; i = _l += 6) {
-      p11.x = p1.x + i;
-      p22.x = p2.x + i;
-      context.beginPath();
-      context.moveTo(p11.x, p11.y);
-      context.lineTo(p22.x, p22.y);
-      context.closePath();
-      _results.push(context.stroke());
-    }
-    return _results;
-  };
-
-  step = null;
-
-  HandleMorph.prototype.mouseDownLeft = function(pos) {
-    var offset, world,
-      _this = this;
-
-    world = this.root();
-    offset = pos.subtract(this.bounds.origin);
-    if (!this.target) {
-      return null;
-    }
-    this.step = function() {
-      var newExt, newPos;
-
-      if (world.hand.mouseButton) {
-        newPos = world.hand.bounds.origin.copy().subtract(offset);
-        if (_this.type === "resize") {
-          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
-          newExt = newExt.max(_this.minExtent);
-          _this.target.setExtent(newExt);
-          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
+        if (this.boundsIncludingChildren().top() < this.parent.top() && this.direction === "up") {
+          this.direction = "down";
+        }
+        if (this.boundsIncludingChildren().bottom() > this.parent.bottom() && this.direction === "down") {
+          return this.direction = "up";
+        }
+      } else if (this.type === "horizontal") {
+        if (this.direction === "right") {
+          this.moveRight();
         } else {
-          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
+          this.moveLeft();
         }
-      } else {
-        return _this.step = null;
+        if (this.boundsIncludingChildren().left() < this.parent.left() && this.direction === "left") {
+          this.direction = "right";
+        }
+        if (this.boundsIncludingChildren().right() > this.parent.right() && this.direction === "right") {
+          return this.direction = "left";
+        }
       }
-    };
-    if (!this.target.step) {
-      return this.target.step = noOperation;
     }
   };
 
-  HandleMorph.prototype.rootForGrab = function() {
-    return this;
-  };
+  BouncerMorph.coffeeScriptSourceOfThisClass = '# BouncerMorph ////////////////////////////////////////////////////////\n# fishy constructor\n# I am a Demo of a stepping custom Morph\n# Bounces vertically or horizontally within the parent\n\nclass BouncerMorph extends Morph\n\n  isStopped: false\n  type: null\n  direction: null\n  speed: null\n\n  constructor: (@type = "vertical", @speed = 1) ->\n    super()\n    @fps = 50\n    # additional properties:\n    if @type is "vertical"\n      @direction = "down"\n    else\n      @direction = "right"\n  \n  \n  # BouncerMorph moving:\n  moveUp: ->\n    @moveBy new Point(0, -@speed)\n  \n  moveDown: ->\n    @moveBy new Point(0, @speed)\n  \n  moveRight: ->\n    @moveBy new Point(@speed, 0)\n  \n  moveLeft: ->\n    @moveBy new Point(-@speed, 0)\n  \n  \n  # BouncerMorph stepping:\n  step: ->\n    unless @isStopped\n      if @type is "vertical"\n        if @direction is "down"\n          @moveDown()\n        else\n          @moveUp()\n        @direction = "down"  if @boundsIncludingChildren().top() < @parent.top() and @direction is "up"\n        @direction = "up"  if @boundsIncludingChildren().bottom() > @parent.bottom() and @direction is "down"\n      else if @type is "horizontal"\n        if @direction is "right"\n          @moveRight()\n        else\n          @moveLeft()\n        @direction = "right"  if @boundsIncludingChildren().left() < @parent.left() and @direction is "left"\n        @direction = "left"  if @boundsIncludingChildren().right() > @parent.right() and @direction is "right"';
 
-  HandleMorph.prototype.mouseEnter = function() {
-    this.image = this.highlightImage;
-    return this.changed();
-  };
-
-  HandleMorph.prototype.mouseLeave = function() {
-    this.image = this.normalImage;
-    return this.changed();
-  };
-
-  HandleMorph.prototype.copyRecordingReferences = function(dict) {
-    var c;
-
-    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.target && dict[this.target]) {
-      c.target = dict[this.target];
-    }
-    return c;
-  };
-
-  HandleMorph.prototype.attach = function() {
-    var choices, menu,
-      _this = this;
-
-    choices = this.overlappedMorphs();
-    menu = new MenuMorph(this, "choose target:");
-    choices.forEach(function(each) {
-      return menu.addItem(each.toString().slice(0, 50), function() {
-        this.isDraggable = false;
-        this.target = each;
-        this.updateRendering();
-        return this.noticesTransparentClick = true;
-      });
-    });
-    if (choices.length) {
-      return menu.popUpAtHand(this.world());
-    }
-  };
-
-  HandleMorph.coffeeScriptSourceOfThisClass = '# HandleMorph ////////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\n# I am a resize / move handle that can be attached to any Morph\n\nclass HandleMorph extends Morph\n\n  target: null\n  minExtent: null\n  inset: null\n  type: null # "resize" or "move"\n\n  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->\n    # if insetY is missing, it will be the same as insetX\n    @minExtent = new Point(minX, minY)\n    @inset = new Point(insetX or 0, insetY or insetX or 0)\n    super()\n    @color = new Color(255, 255, 255)\n    @noticesTransparentClick = true\n    size = WorldMorph.MorphicPreferences.handleSize\n    @setExtent new Point(size, size)  \n  \n  # HandleMorph drawing:\n  updateRendering: ->\n    @normalImage = newCanvas(@extent())\n    @highlightImage = newCanvas(@extent())\n    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)\n    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)\n    @image = @normalImage\n    if @target\n      @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n      @target.add @\n      @target.changed()\n  \n  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->\n    context = aCanvas.getContext("2d")\n    context.lineWidth = 1\n    context.lineCap = "round"\n    context.strokeStyle = color.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [0..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [0..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n\n    context.strokeStyle = shadowColor.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [-1..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [2..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n  \n  \n  # HandleMorph stepping:\n  step = null\n  mouseDownLeft: (pos) ->\n    world = @root()\n    offset = pos.subtract(@bounds.origin)\n    return null  unless @target\n    @step = =>\n      if world.hand.mouseButton\n        newPos = world.hand.bounds.origin.copy().subtract(offset)\n        if @type is "resize"\n          newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)\n          newExt = newExt.max(@minExtent)\n          @target.setExtent newExt\n          @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n        else # type === \'move\'\n          @target.setPosition newPos.subtract(@target.extent()).add(@extent())\n      else\n        @step = null\n    \n    unless @target.step\n      @target.step = noOperation\n  \n  \n  # HandleMorph dragging and dropping:\n  rootForGrab: ->\n    @\n  \n  \n  # HandleMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  \n  # HandleMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  \n  # HandleMorph menu:\n  attach: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), ->\n        @isDraggable = false\n        @target = each\n        @updateRendering()\n        @noticesTransparentClick = true\n    menu.popUpAtHand @world()  if choices.length';
-
-  return HandleMorph;
+  return BouncerMorph;
 
 })(Morph);
-
-MenuItemMorph = (function(_super) {
-  __extends(MenuItemMorph, _super);
-
-  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) {
-    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction);
-  }
-
-  MenuItemMorph.prototype.createLabel = function() {
-    var icon, lbl, np;
-
-    if (this.label !== null) {
-      this.label.destroy();
-    }
-    if (isString(this.labelString)) {
-      this.label = this.createLabelString(this.labelString);
-    } else if (this.labelString instanceof Array) {
-      this.label = new Morph();
-      this.label.alpha = 0;
-      icon = this.createIcon(this.labelString[0]);
-      this.label.add(icon);
-      lbl = this.createLabelString(this.labelString[1]);
-      this.label.add(lbl);
-      lbl.setCenter(icon.center());
-      lbl.setLeft(icon.right() + 4);
-      this.label.bounds = icon.bounds.merge(lbl.bounds);
-      this.label.updateRendering();
-    } else {
-      this.label = this.createIcon(this.labelString);
-    }
-    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
-    np = this.position().add(new Point(4, 0));
-    this.label.bounds = np.extent(this.label.extent());
-    return this.add(this.label);
-  };
-
-  MenuItemMorph.prototype.createIcon = function(source) {
-    var icon, src;
-
-    icon = new Morph();
-    icon.image = (source instanceof Morph ? source.fullImage() : source);
-    if (source instanceof Morph && source.getShadow()) {
-      src = icon.image;
-      icon.image = newCanvas(source.fullBounds().extent().subtract(this.shadowBlur * (useBlurredShadows ? 1 : 2)));
-      icon.image.getContext("2d").drawImage(src, 0, 0);
-    }
-    icon.silentSetWidth(icon.image.width);
-    icon.silentSetHeight(icon.image.height);
-    return icon;
-  };
-
-  MenuItemMorph.prototype.createLabelString = function(string) {
-    var lbl;
-
-    lbl = new TextMorph(string, this.fontSize, this.fontStyle);
-    lbl.setColor(this.labelColor);
-    return lbl;
-  };
-
-  MenuItemMorph.prototype.mouseEnter = function() {
-    if (!this.isListItem()) {
-      this.image = this.highlightImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.bubbleHelp(this.hint);
-    }
-  };
-
-  MenuItemMorph.prototype.mouseLeave = function() {
-    if (!this.isListItem()) {
-      this.image = this.normalImage;
-      this.changed();
-    }
-    if (this.hint) {
-      return this.world().hand.destroyTemporaries();
-    }
-  };
-
-  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
-    if (this.isListItem()) {
-      this.parent.unselectAllItems();
-      this.escalateEvent("mouseDownLeft", pos);
-    }
-    this.image = this.pressImage;
-    return this.changed();
-  };
-
-  MenuItemMorph.prototype.mouseMove = function() {
-    if (this.isListItem()) {
-      return this.escalateEvent("mouseMove");
-    }
-  };
-
-  MenuItemMorph.prototype.mouseClickLeft = function() {
-    if (!this.isListItem()) {
-      this.parent.destroy();
-      this.root().activeMenu = null;
-    }
-    return this.trigger();
-  };
-
-  MenuItemMorph.prototype.isListItem = function() {
-    if (this.parent) {
-      return this.parent.isListContents;
-    }
-    return false;
-  };
-
-  MenuItemMorph.prototype.isSelectedListItem = function() {
-    if (this.isListItem()) {
-      return this.image === this.pressImage;
-    }
-    return false;
-  };
-
-  MenuItemMorph.coffeeScriptSourceOfThisClass = '# MenuItemMorph ///////////////////////////////////////////////////////\n\n# I automatically determine my bounds\n\nclass MenuItemMorph extends TriggerMorph\n\n  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]\n  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) ->\n    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction \n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n\n    if isString(@labelString)\n      @label = @createLabelString(@labelString)\n    else if @labelString instanceof Array      \n      # assume its pattern is: [icon, string] \n      @label = new Morph()\n      @label.alpha = 0 # transparent\n\n      icon = @createIcon(@labelString[0])\n      @label.add icon\n      lbl = @createLabelString(@labelString[1])\n      @label.add lbl\n\n      lbl.setCenter icon.center()\n      lbl.setLeft icon.right() + 4\n      @label.bounds = (icon.bounds.merge(lbl.bounds))\n      @label.updateRendering()\n    else # assume it\'s either a Morph or a Canvas\n      @label = @createIcon(@labelString)\n  \n    @silentSetExtent @label.extent().add(new Point(8, 0))\n    np = @position().add(new Point(4, 0))\n    @label.bounds = np.extent(@label.extent())\n    @add @label\n  \n  createIcon: (source) ->\n    # source can be either a Morph or an HTMLCanvasElement\n    icon = new Morph()\n    icon.image = (if source instanceof Morph then source.fullImage() else source)\n\n    # adjust shadow dimensions\n    if source instanceof Morph and source.getShadow()\n      src = icon.image\n      icon.image = newCanvas(\n        source.fullBounds().extent().subtract(\n          @shadowBlur * ((if useBlurredShadows then 1 else 2))))\n      icon.image.getContext("2d").drawImage src, 0, 0\n\n    icon.silentSetWidth icon.image.width\n    icon.silentSetHeight icon.image.height\n    icon\n\n  createLabelString: (string) ->\n    lbl = new TextMorph(string, @fontSize, @fontStyle)\n    lbl.setColor @labelColor\n    lbl  \n\n  # MenuItemMorph events:\n  mouseEnter: ->\n    unless @isListItem()\n      @image = @highlightImage\n      @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    unless @isListItem()\n      @image = @normalImage\n      @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: (pos) ->\n    if @isListItem()\n      @parent.unselectAllItems()\n      @escalateEvent "mouseDownLeft", pos\n    @image = @pressImage\n    @changed()\n  \n  mouseMove: ->\n    @escalateEvent "mouseMove"  if @isListItem()\n  \n  mouseClickLeft: ->\n    unless @isListItem()\n      @parent.destroy()\n      @root().activeMenu = null\n    @trigger()\n  \n  isListItem: ->\n    return @parent.isListContents  if @parent\n    false\n  \n  isSelectedListItem: ->\n    return @image is @pressImage  if @isListItem()\n    false';
-
-  return MenuItemMorph;
-
-})(TriggerMorph);
-
-SystemTest_SimpleMenuTest = (function() {
-  function SystemTest_SimpleMenuTest() {}
-
-  SystemTest_SimpleMenuTest.testData = [
-    {
-      type: "systemInfo",
-      time: 0,
-      systemInfo: {
-        zombieKernelTestHarnessVersionMajor: 0,
-        zombieKernelTestHarnessVersionMinor: 1,
-        zombieKernelTestHarnessVersionRelease: 0,
-        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
-        screenWidth: 1920,
-        screenHeight: 1080,
-        screenColorDepth: 24,
-        screenPixelRatio: 1,
-        appCodeName: "Mozilla",
-        appName: "Netscape",
-        appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
-        cookieEnabled: true,
-        platform: "MacIntel"
-      }
-    }, {
-      type: "mouseMove",
-      mouseX: 604,
-      mouseY: 4,
-      time: 1742
-    }, {
-      type: "mouseMove",
-      mouseX: 592,
-      mouseY: 14,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 581,
-      mouseY: 21,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 556,
-      mouseY: 25,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 544,
-      mouseY: 28,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 529,
-      mouseY: 37,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 513,
-      mouseY: 44,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 492,
-      mouseY: 55,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 482,
-      mouseY: 59,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 472,
-      mouseY: 64,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 464,
-      mouseY: 66,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 461,
-      mouseY: 67,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 460,
-      mouseY: 68,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 460,
-      mouseY: 69,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 458,
-      mouseY: 70,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 456,
-      mouseY: 72,
-      time: 18
-    }, {
-      type: "mouseMove",
-      mouseX: 455,
-      mouseY: 72,
-      time: 15
-    }, {
-      type: "mouseMove",
-      mouseX: 452,
-      mouseY: 74,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 450,
-      mouseY: 74,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 449,
-      mouseY: 75,
-      time: 50
-    }, {
-      type: "mouseMove",
-      mouseX: 448,
-      mouseY: 76,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 447,
-      mouseY: 77,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 445,
-      mouseY: 79,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 444,
-      mouseY: 80,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 444,
-      mouseY: 81,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 442,
-      mouseY: 83,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 436,
-      mouseY: 91,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 433,
-      mouseY: 95,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 423,
-      mouseY: 106,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 417,
-      mouseY: 115,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 414,
-      mouseY: 118,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 408,
-      mouseY: 123,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 396,
-      mouseY: 131,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 387,
-      mouseY: 135,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 380,
-      mouseY: 138,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 379,
-      mouseY: 139,
-      time: 66
-    }, {
-      type: "mouseMove",
-      mouseX: 378,
-      mouseY: 141,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 375,
-      mouseY: 142,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 373,
-      mouseY: 145,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 368,
-      mouseY: 149,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 365,
-      mouseY: 154,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 364,
-      mouseY: 154,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 364,
-      mouseY: 155,
-      time: 16
-    }, {
-      type: "mouseDown",
-      time: 145,
-      button: 2,
-      ctrlKey: false
-    }, {
-      type: "mouseUp",
-      time: 113
-    }, {
-      type: "mouseMove",
-      mouseX: 364,
-      mouseY: 156,
-      time: 1809
-    }, {
-      type: "takeScreenshot",
-      time: 801,
-      screenShotImageData: [
-        [
-          {
-            zombieKernelTestHarnessVersionMajor: 0,
-            zombieKernelTestHarnessVersionMinor: 1,
-            zombieKernelTestHarnessVersionRelease: 0,
-            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
-            screenWidth: 1920,
-            screenHeight: 1080,
-            screenColorDepth: 24,
-            screenPixelRatio: 1,
-            appCodeName: "Mozilla",
-            appName: "Netscape",
-            appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
-            cookieEnabled: true,
-            platform: "MacIntel"
-          }, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAgAElEQVR4XuzdCZhU1Z338T+KLKIgOrggjMiAoyDLgASIedkGRxxAEGVTUAMBF5AJIxNlBzPRQFRAGRWBCYtsKoJBgUQWFUSRfVE0rogsIkuUsBhF3vf3n7n1Fk03Vd1ddauq63ufpx8a6t5zzv2cmzz185xzT7F169adMA4EEEAAAQQQQAABBBBAIASBYgSQEJSpAgEEEEAAAQQQQAABBFyAAMKDgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIz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A0jWwWTpDRNAsrTjuW0EioAAAaQIdCK3gAAC2SFAAMmOfo73Lgkg8UpxHgIIpJsAASTdeoT2IIAAAnkIEEB4NKIFCCA8DwggkKkCBJBM7TnajQACWSeQM4AEX0CzDiLLb3jFihUuQADJ8geB20cggwUIIBnceTQdAQSyS4ARkOzq71h3SwCJJcTnCCCQrgIEkHTtGdqFAAII5BAggPBIRAsQQHgeEEAgUwUIIJnac7QbAQSyToAAknVdftobJoDwPCCAQKYKEEAytedoNwIIZJ1ArACSc0PBaKBt27b5buebN2+2M8888yQ77ZLeqFEj39G8fPnyhXb9+OOPrXnz5vb+++/bV199Ffn93HPPLXTZFPD/BQggPA0IIJCpAgSQTO052o0AAlknEE8AUcjYuHGjFStW7CQfbUCoHdEbN258itvnn39u2u08kQHk2muv9fL2799vwe+JCDdZ1+mnuWECCE8DAghkqgABJFN7jnYjgEDWCcQTQFq1amUDBw60Xr16WaVKley1116zK6+80r788kubM2eO9e/f33dJf/fdd61r1652wQUXeECYOXNmJIBoROT++++3efPmWb9+/WzYsGF+Xs7j9ddft549e9qnn35qnTp1sjFjxljFihVNIyAEkOQ/ngSQ5BtTAwIIJEeAAJIcV0pFAAEEEi4QK4Doi3/16tWtY8eONnjwYJsyZYqtW7fOFBQ+/PBD69Kli61fv96nRtWuXdsDg6ZetWvXztuqEQsdCiwKHipn6NChtnv3blu2bJkVL148ck8KNJUrV7ZZs2b5qMrYsWNt79699txzz9knn3xCAEl4759aIAEkBGSqQACBpAgQQJLCSqEIIIBA4gXiCSD16tUzTak6//zz/c9gatW+fft8DciGDRs8NCxcuNBmzJgRCR5Nmzb1ALJkyRIbMmSIT9dS4FD40KiGRjkuv/zyyE1pSpdGUVq0aGHff/+9TZ8+3aZNm2bLly83jaAwApL4/s9ZIgEk+cbUgAACyREggCTHlVIRQACBhAvECiBahN6+ffvIQvPoqVDRAeTuu++2a665xnr37u1tjD5v6dKlPvKR81izZo1fExxHjhyxRx991IYPHx75t7Zt29r8+fM9rBBAEt79pxRIAEm+MTUggEByBAggyXGlVAQQQCDhAvEEkGCUQ+s88gogWt+hNR0a6dAR/RYsjYxM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FiCAJBiU4hBAAIFkCcQKIHrTlfbr0B4a2m1cr7bVpoPRu43rzVHRGwgmq62Um3wBAkjyjakBAQSSI0AASY4rpSKAAAIJF4gVQB555BHf2K9evXq+i7k2+9PO49oLIwgdeQWQHTt22JNPPmkXX3yx7yB+/fXX+y7ql112md+H9ubQHh0qq1OnTr4pYcWKFf0zbVT485//3F9127t3b9/YT5sA6u8afVF52tiwX79+NmzYMN8JnaPwAgSQwhtSAgIIpEaAAJIad2pFAAEE8i0QK4AocOjNTpp+pSDRo0cP0w7lCgGxAohGSbTBn67RxoOayvXWW2/5a2oVWipXruzlakRl7NixtnfvXt/BXGFD1z377LNWs2ZNr0f7hWi/Dh0akVHw6Nixow0dOtR2795ty5Yti7mfSL5xsvACAkgWdjq3jEARESCAFJGO5DYQQKDoC8QKIJqCdfXVV3vo0AZ+2i9jw4YNcY2AfPTRR9aqVavIvhh63a3Cw6uvvmpXXHGFj3Jo4z7VMX36dJs2bZrvYK7fVZ92GNexZcsWa9mypQcQ7ZquMKOpYNr8T+FDoyYaRbn88suLfocl+Q4JIEkGpngEEEiaAAEkabQUjAACCCRWIFYA0cZ6derUsXfeece010V+A4imT2mHce1QrrLq169vU6dOtRo1atijjz7qoyLB0bZtW5s/f77ddtttvqhd1+qIXm+isjTykfNYs2aNr1HhKJwAAaRwflyNAAKpEyCApM6emhFAAIF8CSQ7gLRv395HMIIAoilVc+bMsS+//NLXcShQVKlSxVatWmUPPvigrwv53e9+Zz/88IMNHjzY70UjH02bNvU/Fy5c6OtINBKic/SjERlN4ypRokS+7p2TTxUggPBUIIBApgoQQDK152g3AghknUAyA0iwBuSll16ym266ySZNmmQjR460bdu2+a7hWlS+adMmO3TokLVu3drXeWgE5I033vDztV7k0ksv9Wlc27dv9wCitSfasXzlypVWu3Ztn641YMAA+/zzz+2ss87yhfLt2rXzUJPb79WqVcu6Ps7PDRNA8qPFuQggkE4CBJB06g3aggACCJxGIL8BRG+t0ihF8BYshQztA6KF4vo9eh+QIIBEV681HgoQGgHRqIbK0TFixAj/0bqP++67z8NKr169/LNGjRrZgQMHbOPGjVa6dOmTPtPna9eu9aldmuKlEZbZs2dbrVq1cv29QYMGPA+nESCA8HgggECmChBAMrXnaDcCCGSdQKwAUhgQjVjcc889Ps1Kb70655xzPEAEx/Hjxz1YKLTo9bpHjx71UQyNcuhHb98qVqyYL0jXK3k11UpTuXR8++23vni9XLlyvP2qMJ2U41oCSAIxKQoBBEIVIICEyk1lCCCAQMEFkhlANNVKi9a1c/qZZ54ZdyO1u7pGMrRAvWrVqnbHHXf463q7dOkSdxmcWDABAkjB3LgKAQRSL0AASX0f0AIEEEAgLoFkBhC9dlfTpjTlSiMZ+Tn0Ct/XXnvNdu7cirzqbQAAIABJREFUaW3atPFF5hzJFyCAJN+YGhBAIDkCBJDkuFIqAgggkHCBZAaQhDeWApMuQABJOjEVIIBAkgQIIEmCpVgEEEAg0QIEkESLZnZ5BJDM7j9aj0A2CxBAsrn3uXcEEMgogVgBRFOhgjdfBQvAgxvUW660YaDWbES//SqZAFqcrrdiaYF7+fLlY1Z1uvbHvDjqhPzWm5+y0+lcAkg69QZtQQCB/AgQQPKjxbkIIIBACgViBZDgTVbLli07ZR1H9A7l8YSBRNym9vto2LBhvgKIFsJrLUp+16FEtze/9SbiXlNRBgEkFerUiQACiRAggCRCkTIQQACBEARiBZAgZPziF7+whx9+2K6//np75plnfKO/6ADyzTff2Pjx42306NH+qlx9YQ/+roXkTz/9tG8cqPr0Wt6ZM2dG/q6Q85e//MV3Rp83b57169fPhg0bZhdccIELvPvuu9a1a1f/u/Yb0bU5R0C0I/qUKVMie4dMmzbNunXr5m3URoYDBw70zypVquSL26+88kovW3uaaIRH+5F06tTJxowZYxUrVoxZr14N3LFjR7+uR48eft/nn3++PfDAA3bjjTfaz372M1u9erU98sgj9txzz/kriHWO3u4lw9zaWpiAlKhHhQCSKEnKQQCBsAUIIGGLUx8CCCBQQIF4Akj16tXt3nvv9R9tFLhkyRLbunWrv6FKgUBhQJsRdu7c2ffs0Ct39W/B3zV9SWVop/OnnnrKatSo4T/B3/WlVxsHKnjoS/3QoUNt9+7dplEXvcpXwUXBQFOvtMu5jpwBZM2aNdahQwdbtGiR7xGidilcaCd11a1yBw8e7F/8161b55/t2rXLKleu7K/41Vu2xo4da3v37vXAoPvLq16FJb0eeOLEidayZUsvV5shvvfee972H3/80UaNGmW//e1vPfho9EX3W7duXQ9Pf/vb33JtqzZmTPVBAEl1D1A/AggUVIAAUlA5rkMAAQRCFogVQLSGQiMI+sKvTQIPHz7sX75fffVVO++88yIBZN++fb7nR7BZoK4L/q5Rgnr16vlohEKH/oz++wsvvGBDhgzxL/DFixf38KFRCF23atUqW7hwoc2YMSMSPPRFPWcAefnll61v3762ePFi/7KvOrTpoXZHV10akdEIRfRUKgUlja60aNHCNzWcPn26aeREu7VrN/W86p0/f76HsKBNCjwKOQpMGgnSSMumTZt8pEP/poCjNv/kJz+xP//5z/anP/0p17ZqdCbVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgngASvQhdX+jr169vU6dOPW0AUQC4+eabPZAoSAQjJVorknPtyIsvvugjFDkPjWo8++yzds0111jv3r3947zWnRw5csRHUCZPnuzn6fdBgwb5aEj79u0jmyFGX1+yZEl79NFHfcPD4Gjbtq0pYNx999151quRIC2+D9oUmGh0pVq1aj69S+FFn6vsP/zhDz4t65VXXvH7yautF110Uci9f2p1BJCUdwENQACBAgoQQAoIx2UIIIBA2ALxBBB9gd+yZYuv7dCXba1jmDNnzikBJPqLvsKD1nRoqlOsAKKRhAkTJviogtZy6EfBRdOitKZCaz80QqIjr7dR7dmzx0dPypQp49On+vTp41PA9MU/emQmOoC88cYb3katSdGaFo22PPjgg95m/Xte9Wpti9ZrBG0KRoU02qHRF4UpTR1r3bq1t1//pkOjKxoVyautqjPVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgVgDRF3ZNL5o7d67ddNNNPsKghdW5rQG56qqrfC2ERgGaNGlil112mY8mxAogWjei3dJXrlzp6y40FWrAgAE+XUpTpDQqoQXdmvqlUQ2t0cg5BUsBRkFGC8xLlCjhay8qVKhw2gCiUYqHHnrIp0sdOnTIA4OmiKnNb731Vp71bt682T9T2zTaofUpCiXBNDWt87jtttsiZpripVcVay3IJZdc4mErt7aqL8aNG+frXBSIcvtdtsk8CCDJ1KVsBBBIpgABJJm6lI0AAggkUCDeABJUqf0+NEIQrOHQ1CqFFL3lSaHh8ccf91Ov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CAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBH4DTLBE+1uQpVLAAAAAElFTkSuQmCC"
-        ], [
-          {
-            zombieKernelTestHarnessVersionMajor: 0,
-            zombieKernelTestHarnessVersionMinor: 1,
-            zombieKernelTestHarnessVersionRelease: 0,
-            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17",
-            screenWidth: 1920,
-            screenHeight: 1080,
-            screenColorDepth: 24,
-            screenPixelRatio: 1,
-            appCodeName: "Mozilla",
-            appName: "Netscape",
-            appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17",
-            cookieEnabled: true,
-            platform: "MacIntel"
-          }, "data:image/png;base64,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kSOtWbNmftfqiqVgQ+NA1AUraAHRM0NCAAEEElWAhQgT9ZuhXggggMDfBGKn3NUuDThWUssHKX8JBN+5WkGU1DKmWdHOnj1r6pp1+fJl36dnhoQAAggkqgABSKJ+M9QLAQQQiBHQD83kiW5XyUXy/ueUvvPz58+bXpqkQGOFUnpW8r4Md4gAArlJgAAkN31b1BUBBPKlgLrT5OcuNRpQfbNSbhhL8e2335peGhOkACS/Py8361nhugggkH4BApD0W5ETAQQQuCkCifKD8tlnn7VRo0aFBrfffru9/fbb1rdv33Bfw4YNbdOmTRmaoatu3br2xhtvhGXEbmjGr4ULF/ouTTerWcCef/752Cy+PXHiRD9WuXLlHxzL7I4GDRrY7NmzM3t6ZOcFrR7qdqVXojwvkQFwIQQQyHUCBCC57iujwgggkB8FEqEF5MMPPzT9KA9SkyZNTAPj9R4kHddsXeoOlBNJP7a1CrgGXQdJMz/9+Mc/9laAYF9+e48NOhLhWclv/twvAghkTIAAJGNe5EYAAQTyrYACkBo1aoStGwo8FixY4EFJ0E1KAcif//xnN9JsXXPnzrU1a9aYWijuuOMO31+1alX793//d+vZs6e99NJLP/D8u7/7O3v11VftlVdesVatWv3guBbga9myZbi/efPmprrFDrxO77UVuIwYMcKGDRtm//u//2vTp0+3ihUrhmVrRfEhQ4bY4sWLvU66/0RLQfARvCda/agPAgggkFyAACS5CJ8RQAABBFIUOHDggM+4pMXvlBSA/OEPfzCt0K2uV0p6VzCg7lITJkzwAENdtDRT07/92795niJFingAoeDi9ddf933BH00j+//+3/+zt956y/7zP//TunTpEhzyd43J+P3vf29t2rQJ97du3dq7ghUo8Nf/pWXk2pq6VoHQN99842tsHDx40B577LGw7OrVq1upUqVs7Nixpvv/p3/6p/AYGwgggAACmRMgAMmcG2chgAAC+VJArRsKMqpUqeItDl9++aVt3brVgxH98Fcrx/bt233RvE8++cS2bNliZ86csddee83UUhFMH3vLLbf4Qnp//OMfb3Bs3Lix7dq1y958801vSQnGfwSZ1CKhFpB77rnHW2K0AJ8Coc2bNwdZMnxtraUxZ84cX1l8xowZptYTXUdJs0upVURB1pIlS3zV8fBCbCCAAAIIZErg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BAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBAaU0YynAt9EwgAAAABJRU5ErkJggg=="
-        ]
-      ]
-    }, {
-      type: "mouseMove",
-      mouseX: 335,
-      mouseY: 134,
-      time: 915
-    }, {
-      type: "mouseMove",
-      mouseX: 318,
-      mouseY: 129,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 302,
-      mouseY: 128,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 218,
-      mouseY: 120,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 156,
-      mouseY: 121,
-      time: 16
-    }, {
-      type: "mouseMove",
-      mouseX: 97,
-      mouseY: 130,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 42,
-      mouseY: 134,
-      time: 17
-    }, {
-      type: "mouseMove",
-      mouseX: 12,
-      mouseY: 135,
-      time: 16
-    }
-  ];
-
-  SystemTest_SimpleMenuTest.coffeeScriptSourceOfThisClass = '# How to play a test:\n# from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):\n# window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData\n# window.world.systemTestsRecorderAndPlayer.startTestPlaying()\n\n# How to save a test:\n# window.world.systemTestsRecorderAndPlayer.startTestRecording()\n# ...do the test...\n# window.world.systemTestsRecorderAndPlayer.stopTestRecording()\n# if you want to verify the test on the spot:\n# window.world.systemTestsRecorderAndPlayer.startTestPlaying()\n# then to save the test:\n# console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))\n# copy that blurb\n# For recording screenshot data at any time:\n# console.log(JSON.stringify(window.world.systemTestsRecorderAndPlayer.takeScreenshot()))\n# Note for Chrome: You have to replace the data URL because\n# it contains an ellipsis for more comfortable viewing in the console.\n# Workaround: find that url and right-click: open in new tab and then copy the\n# full data URL from the location bar and substitute it with the one\n# of the ellipses.\n# Then pass the JSON into http://js2coffee.org/\n# and save it in this file.\n\n# Tests name must start with "SystemTest_"\nclass SystemTest_SimpleMenuTest\n  @testData = [\n    type: "systemInfo"\n    time: 0\n    systemInfo:\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      cookieEnabled: true\n      platform: "MacIntel"\n  ,\n    type: "mouseMove"\n    mouseX: 604\n    mouseY: 4\n    time: 1742\n  ,\n    type: "mouseMove"\n    mouseX: 592\n    mouseY: 14\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 581\n    mouseY: 21\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 556\n    mouseY: 25\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 544\n    mouseY: 28\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 529\n    mouseY: 37\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 513\n    mouseY: 44\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 492\n    mouseY: 55\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 482\n    mouseY: 59\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 472\n    mouseY: 64\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 464\n    mouseY: 66\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 461\n    mouseY: 67\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 460\n    mouseY: 68\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 460\n    mouseY: 69\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 458\n    mouseY: 70\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 456\n    mouseY: 72\n    time: 18\n  ,\n    type: "mouseMove"\n    mouseX: 455\n    mouseY: 72\n    time: 15\n  ,\n    type: "mouseMove"\n    mouseX: 452\n    mouseY: 74\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 450\n    mouseY: 74\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 449\n    mouseY: 75\n    time: 50\n  ,\n    type: "mouseMove"\n    mouseX: 448\n    mouseY: 76\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 447\n    mouseY: 77\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 445\n    mouseY: 79\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 444\n    mouseY: 80\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 444\n    mouseY: 81\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 442\n    mouseY: 83\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 436\n    mouseY: 91\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 433\n    mouseY: 95\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 423\n    mouseY: 106\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 417\n    mouseY: 115\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 414\n    mouseY: 118\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 408\n    mouseY: 123\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 396\n    mouseY: 131\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 387\n    mouseY: 135\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 380\n    mouseY: 138\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 379\n    mouseY: 139\n    time: 66\n  ,\n    type: "mouseMove"\n    mouseX: 378\n    mouseY: 141\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 375\n    mouseY: 142\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 373\n    mouseY: 145\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 368\n    mouseY: 149\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 365\n    mouseY: 154\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 154\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 155\n    time: 16\n  ,\n    type: "mouseDown"\n    time: 145\n    button: 2\n    ctrlKey: false\n  ,\n    type: "mouseUp"\n    time: 113\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 156\n    time: 1809\n  ,\n    type: "takeScreenshot"\n    time: 801\n    screenShotImageData: [[\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      cookieEnabled: true\n      platform: "MacIntel"\n      , "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAgAElEQVR4XuzdCZhU1Z338T+KLKIgOrggjMiAoyDLgASIedkGRxxAEGVTUAMBF5AJIxNlBzPRQFRAGRWBCYtsKoJBgUQWFUSRfVE0rogsIkuUsBhF3vf3n7n1Fk03Vd1ddauq63ufpx8a6t5zzv2cmzz185xzT7F169adMA4EEEAAAQQQQAABBBBAIASBYgSQEJSpAgEEEEAAAQQQQAABBFyAAMKDgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIz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A0jWwWTpDRNAsrTjuW0EioAAAaQIdCK3gAAC2SFAAMmOfo73Lgkg8UpxHgIIpJsAASTdeoT2IIAAAnkIEEB4NKIFCCA8DwggkKkCBJBM7TnajQACWSeQM4AEX0CzDiLLb3jFihUuQADJ8geB20cggwUIIBnceTQdAQSyS4ARkOzq71h3SwCJJcTnCCCQrgIEkHTtGdqFAAII5BAggPBIRAsQQHgeEEAgUwUIIJnac7QbAQSyToAAknVdftobJoDwPCCAQKYKEEAytedoNwIIZJ1ArACSc0PBaKBt27b5buebN2+2M8888yQ77ZLeqFEj39G8fPnyhXb9+OOPrXnz5vb+++/bV199Ffn93HPPLXTZFPD/BQggPA0IIJCpAgSQTO052o0AAlknEE8AUcjYuHGjFStW7CQfbUCoHdEbN258itvnn39u2u08kQHk2muv9fL2799vwe+JCDdZ1+mnuWECCE8DAghkqgABJFN7jnYjgEDWCcQTQFq1amUDBw60Xr16WaVKley1116zK6+80r788kubM2eO9e/f33dJf/fdd61r1652wQUXeECYOXNmJIBoROT++++3efPmWb9+/WzYsGF+Xs7j9ddft549e9qnn35qnTp1sjFjxljFihVNIyAEkOQ/ngSQ5BtTAwIIJEeAAJIcV0pFAAEEEi4QK4Doi3/16tWtY8eONnjwYJsyZYqtW7fOFBQ+/PBD69Kli61fv96nRtWuXdsDg6ZetWvXztuqEQsdCiwKHipn6NChtnv3blu2bJkVL148ck8KNJUrV7ZZs2b5qMrYsWNt79699txzz9knn3xCAEl4759aIAEkBGSqQACBpAgQQJLCSqEIIIBA4gXiCSD16tUzTak6//zz/c9gatW+fft8DciGDRs8NCxcuNBmzJgRCR5Nmzb1ALJkyRIbMmSIT9dS4FD40KiGRjkuv/zyyE1pSpdGUVq0aGHff/+9TZ8+3aZNm2bLly83jaAwApL4/s9ZIgEk+cbUgAACyREggCTHlVIRQACBhAvECiBahN6+ffvIQvPoqVDRAeTuu++2a665xnr37u1tjD5v6dKlPvKR81izZo1fExxHjhyxRx991IYPHx75t7Zt29r8+fM9rBBAEt79pxRIAEm+MTUggEByBAggyXGlVAQQQCDhAvEEkGCUQ+s88gogWt+hNR0a6dAR/RYsjYxM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FiCAJBiU4hBAAIFkCcQKIHrTlfbr0B4a2m1cr7bVpoPRu43rzVHRGwgmq62Um3wBAkjyjakBAQSSI0AASY4rpSKAAAIJF4gVQB555BHf2K9evXq+i7k2+9PO49oLIwgdeQWQHTt22JNPPmkXX3yx7yB+/fXX+y7ql112md+H9ubQHh0qq1OnTr4pYcWKFf0zbVT485//3F9127t3b9/YT5sA6u8afVF52tiwX79+NmzYMN8JnaPwAgSQwhtSAgIIpEaAAJIad2pFAAEE8i0QK4AocOjNTpp+pSDRo0cP0w7lCgGxAohGSbTBn67RxoOayvXWW2/5a2oVWipXruzlakRl7NixtnfvXt/BXGFD1z377LNWs2ZNr0f7hWi/Dh0akVHw6Nixow0dOtR2795ty5Yti7mfSL5xsvACAkgWdjq3jEARESCAFJGO5DYQQKDoC8QKIJqCdfXVV3vo0AZ+2i9jw4YNcY2AfPTRR9aqVavIvhh63a3Cw6uvvmpXXHGFj3Jo4z7VMX36dJs2bZrvYK7fVZ92GNexZcsWa9mypQcQ7ZquMKOpYNr8T+FDoyYaRbn88suLfocl+Q4JIEkGpngEEEiaAAEkabQUjAACCCRWIFYA0cZ6derUsXfeece010V+A4imT2mHce1QrrLq169vU6dOtRo1atijjz7qoyLB0bZtW5s/f77ddtttvqhd1+qIXm+isjTykfNYs2aNr1HhKJwAAaRwflyNAAKpEyCApM6emhFAAIF8CSQ7gLRv395HMIIAoilVc+bMsS+//NLXcShQVKlSxVatWmUPPvigrwv53e9+Zz/88IMNHjzY70UjH02bNvU/Fy5c6OtINBKic/SjERlN4ypRokS+7p2TTxUggPBUIIBApgoQQDK152g3AghknUAyA0iwBuSll16ym266ySZNmmQjR460bdu2+a7hWlS+adMmO3TokLVu3drXeWgE5I033vDztV7k0ksv9Wlc27dv9wCitSfasXzlypVWu3Ztn641YMAA+/zzz+2ss87yhfLt2rXzUJPb79WqVcu6Ps7PDRNA8qPFuQggkE4CBJB06g3aggACCJxGIL8BRG+t0ihF8BYshQztA6KF4vo9eh+QIIBEV681HgoQGgHRqIbK0TFixAj/0bqP++67z8NKr169/LNGjRrZgQMHbOPGjVa6dOmTPtPna9eu9aldmuKlEZbZs2dbrVq1cv29QYMGPA+nESCA8HgggECmChBAMrXnaDcCCGSdQKwAUhgQjVjcc889Ps1Kb70655xzPEAEx/Hjxz1YKLTo9bpHjx71UQyNcuhHb98qVqyYL0jXK3k11UpTuXR8++23vni9XLlyvP2qMJ2U41oCSAIxKQoBBEIVIICEyk1lCCCAQMEFkhlANNVKi9a1c/qZZ54ZdyO1u7pGMrRAvWrVqnbHHXf463q7dOkSdxmcWDABAkjB3LgKAQRSL0AASX0f0AIEEEAgLoFkBhC9dlfTpjTlSiMZ+Tn0Ct/XXnvNdu7cirzqbQAAIABJREFUaW3atPFF5hzJFyCAJN+YGhBAIDkCBJDkuFIqAgggkHCBZAaQhDeWApMuQABJOjEVIIBAkgQIIEmCpVgEEEAg0QIEkESLZnZ5BJDM7j9aj0A2CxBAsrn3uXcEEMgogVgBRFOhgjdfBQvAgxvUW660YaDWbES//SqZAFqcrrdiaYF7+fLlY1Z1uvbHvDjqhPzWm5+y0+lcAkg69QZtQQCB/AgQQPKjxbkIIIBACgViBZDgTVbLli07ZR1H9A7l8YSBRNym9vto2LBhvgKIFsJrLUp+16FEtze/9SbiXlNRBgEkFerUiQACiRAggCRCkTIQQACBEARiBZAgZPziF7+whx9+2K6//np75plnfKO/6ADyzTff2Pjx42306NH+qlx9YQ/+roXkTz/9tG8cqPr0Wt6ZM2dG/q6Q85e//MV3Rp83b57169fPhg0bZhdccIELvPvuu9a1a1f/u/Yb0bU5R0C0I/qUKVMie4dMmzbNunXr5m3URoYDBw70zypVquSL26+88kovW3uaaIRH+5F06tTJxowZYxUrVoxZr14N3LFjR7+uR48eft/nn3++PfDAA3bjjTfaz372M1u9erU98sgj9txzz/kriHWO3u4lw9zaWpiAlKhHhQCSKEnKQQCBsAUIIGGLUx8CCCBQQIF4Akj16tXt3nvv9R9tFLhkyRLbunWrv6FKgUBhQJsRdu7c2ffs0Ct39W/B3zV9SWVop/OnnnrKatSo4T/B3/WlVxsHKnjoS/3QoUNt9+7dplEXvcpXwUXBQFOvtMu5jpwBZM2aNdahQwdbtGiR7xGidilcaCd11a1yBw8e7F/8161b55/t2rXLKleu7K/41Vu2xo4da3v37vXAoPvLq16FJb0eeOLEidayZUsvV5shvvfee972H3/80UaNGmW//e1vPfho9EX3W7duXQ9Pf/vb33JtqzZmTPVBAEl1D1A/AggUVIAAUlA5rkMAAQRCFogVQLSGQiMI+sKvTQIPHz7sX75fffVVO++88yIBZN++fb7nR7BZoK4L/q5Rgnr16vlohEKH/oz++wsvvGBDhgzxL/DFixf38KFRCF23atUqW7hwoc2YMSMSPPRFPWcAefnll61v3762ePFi/7KvOrTpoXZHV10akdEIRfRUKgUlja60aNHCNzWcPn26aeREu7VrN/W86p0/f76HsKBNCjwKOQpMGgnSSMumTZt8pEP/poCjNv/kJz+xP//5z/anP/0p17ZqdCbVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgngASvQhdX+jr169vU6dOPW0AUQC4+eabPZAoSAQjJVorknPtyIsvvugjFDkPjWo8++yzds0111jv3r3947zWnRw5csRHUCZPnuzn6fdBgwb5aEj79u0jmyFGX1+yZEl79NFHfcPD4Gjbtq0pYNx999151quRIC2+D9oUmGh0pVq1aj69S+FFn6vsP/zhDz4t65VXXvH7yautF110Uci9f2p1BJCUdwENQACBAgoQQAoIx2UIIIBA2ALxBBB9gd+yZYuv7dCXba1jmDNnzikBJPqLvsKD1nRoqlOsAKKRhAkTJviogtZy6EfBRdOitKZCaz80QqIjr7dR7dmzx0dPypQp49On+vTp41PA9MU/emQmOoC88cYb3katSdGaFo22PPjgg95m/Xte9Wpti9ZrBG0KRoU02qHRF4UpTR1r3bq1t1//pkOjKxoVyautqjPVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgVgDRF3ZNL5o7d67ddNNNPsKghdW5rQG56qqrfC2ERgGaNGlil112mY8mxAogWjei3dJXrlzp6y40FWrAgAE+XUpTpDQqoQXdmvqlUQ2t0cg5BUsBRkFGC8xLlCjhay8qVKhw2gCiUYqHHnrIp0sdOnTIA4OmiKnNb731Vp71bt682T9T2zTaofUpCiXBNDWt87jtttsiZpripVcVay3IJZdc4mErt7aqL8aNG+frXBSIcvtdtsk8CCDJ1KVsBBBIpgABJJm6lI0AAggkUCDeABJUqf0+NEIQrOHQ1CqFFL3lSaHh8ccf91Ov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CAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBH4DTLBE+1uQpVLAAAAAElFTkSuQmCC"\n      ],[\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17"\n      cookieEnabled: true\n      platform: "MacIntel"\n      , "data:image/png;base64,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kSOtWbNmftfqiqVgQ+NA1AUraAHRM0NCAAEEElWAhQgT9ZuhXggggMDfBGKn3NUuDThWUssHKX8JBN+5WkGU1DKmWdHOnj1r6pp1+fJl36dnhoQAAggkqgABSKJ+M9QLAQQQiBHQD83kiW5XyUXy/ueUvvPz58+bXpqkQGOFUnpW8r4Md4gAArlJgAAkN31b1BUBBPKlgLrT5OcuNRpQfbNSbhhL8e2335peGhOkACS/Py8361nhugggkH4BApD0W5ETAQQQuCkCifKD8tlnn7VRo0aFBrfffru9/fbb1rdv33Bfw4YNbdOmTRmaoatu3br2xhtvhGXEbmjGr4ULF/ouTTerWcCef/752Cy+PXHiRD9WuXLlHxzL7I4GDRrY7NmzM3t6ZOcFrR7qdqVXojwvkQFwIQQQyHUCBCC57iujwgggkB8FEqEF5MMPPzT9KA9SkyZNTAPj9R4kHddsXeoOlBNJP7a1CrgGXQdJMz/9+Mc/9laAYF9+e48NOhLhWclv/twvAghkTIAAJGNe5EYAAQTyrYACkBo1aoStGwo8FixY4EFJ0E1KAcif//xnN9JsXXPnzrU1a9aYWijuuOMO31+1alX793//d+vZs6e99NJLP/D8u7/7O3v11VftlVdesVatWv3guBbga9myZbi/efPmprrFDrxO77UVuIwYMcKGDRtm//u//2vTp0+3ihUrhmVrRfEhQ4bY4sWLvU66/0RLQfARvCda/agPAgggkFyAACS5CJ8RQAABBFIUOHDggM+4pMXvlBSA/OEPfzCt0K2uV0p6VzCg7lITJkzwAENdtDRT07/92795niJFingAoeDi9ddf933BH00j+//+3/+zt956y/7zP//TunTpEhzyd43J+P3vf29t2rQJ97du3dq7ghUo8Nf/pWXk2pq6VoHQN99842tsHDx40B577LGw7OrVq1upUqVs7Nixpvv/p3/6p/AYGwgggAACmRMgAMmcG2chgAAC+VJArRsKMqpUqeItDl9++aVt3brVgxH98Fcrx/bt233RvE8++cS2bNliZ86csddee83UUhFMH3vLLbf4Qnp//OMfb3Bs3Lix7dq1y958801vSQnGfwSZ1CKhFpB77rnHW2K0AJ8Coc2bNwdZMnxtraUxZ84cX1l8xowZptYTXUdJs0upVURB1pIlS3zV8fBCbCCAAAIIZErg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BAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBAaU0YynAt9EwgAAAABJRU5ErkJggg=="\n      ]\n    ]\n  ,\n    type: "mouseMove"\n    mouseX: 335\n    mouseY: 134\n    time: 915\n  ,\n    type: "mouseMove"\n    mouseX: 318\n    mouseY: 129\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 302\n    mouseY: 128\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 218\n    mouseY: 120\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 156\n    mouseY: 121\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 97\n    mouseY: 130\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 42\n    mouseY: 134\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 12\n    mouseY: 135\n    time: 16\n  ]';
-
-  return SystemTest_SimpleMenuTest;
-
-})();
-
-MorphsListMorph = (function(_super) {
-  __extends(MorphsListMorph, _super);
-
-  MorphsListMorph.prototype.morphsList = null;
-
-  MorphsListMorph.prototype.buttonClose = null;
-
-  MorphsListMorph.prototype.resizer = null;
-
-  function MorphsListMorph(target) {
-    MorphsListMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
-    this.isDraggable = true;
-    this.border = 1;
-    this.edge = 5;
-    this.color = new Color(60, 60, 60);
-    this.borderColor = new Color(95, 95, 95);
-    this.updateRendering();
-    this.buildPanes();
-  }
-
-  MorphsListMorph.prototype.setTarget = function(target) {
-    this.target = target;
-    this.currentProperty = null;
-    return this.buildPanes();
-  };
-
-  MorphsListMorph.prototype.buildPanes = function() {
-    var ListOfMorphs, attribs, theWordMorph,
-      _this = this;
-
-    attribs = [];
-    this.children.forEach(function(m) {
-      if (m !== this.work) {
-        return m.destroy();
-      }
-    });
-    this.children = [];
-    this.label = new TextMorph("Morphs List");
-    this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
-    this.label.isBold = true;
-    this.label.color = new Color(255, 255, 255);
-    this.label.updateRendering();
-    this.add(this.label);
-    theWordMorph = "Morph";
-    ListOfMorphs = (Object.keys(window)).filter(function(i) {
-      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
-    });
-    this.morphsList = new ListMorph(ListOfMorphs, null);
-    this.morphsList.hBar.alpha = 0.6;
-    this.morphsList.vBar.alpha = 0.6;
-    this.add(this.morphsList);
-    this.buttonClose = new TriggerMorph();
-    this.buttonClose.labelString = "close";
-    this.buttonClose.action = function() {
-      return _this.destroy();
-    };
-    this.add(this.buttonClose);
-    this.resizer = new HandleMorph(this, 150, 100, this.edge, this.edge);
-    return this.fixLayout();
-  };
-
-  MorphsListMorph.prototype.fixLayout = function() {
-    var b, h, r, w, x, y;
-
-    Morph.prototype.trackChanges = false;
-    x = this.left() + this.edge;
-    y = this.top() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.label.setPosition(new Point(x, y));
-    this.label.setWidth(w);
-    if (this.label.height() > (this.height() - 50)) {
-      this.silentSetHeight(this.label.height() + 50);
-      this.updateRendering();
-      this.changed();
-      this.resizer.updateRendering();
-    }
-    y = this.label.bottom() + 2;
-    w = this.width() - this.edge;
-    w -= this.edge;
-    b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
-    h = b - y;
-    this.morphsList.setPosition(new Point(x, y));
-    this.morphsList.setExtent(new Point(w, h));
-    x = this.morphsList.left();
-    y = this.morphsList.bottom() + this.edge;
-    h = WorldMorph.MorphicPreferences.handleSize;
-    w = this.morphsList.width() - h - this.edge;
-    this.buttonClose.setPosition(new Point(x, y));
-    this.buttonClose.setExtent(new Point(w, h));
-    Morph.prototype.trackChanges = true;
-    return this.changed();
-  };
-
-  MorphsListMorph.prototype.setExtent = function(aPoint) {
-    MorphsListMorph.__super__.setExtent.call(this, aPoint);
-    return this.fixLayout();
-  };
-
-  MorphsListMorph.coffeeScriptSourceOfThisClass = '# MorphsListMorph //////////////////////////////////////////////////////\n\nclass MorphsListMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + 2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = WorldMorph.MorphicPreferences.handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
-
-  return MorphsListMorph;
-
-})(BoxMorph);
-
-CloseCircleButtonMorph = (function(_super) {
-  __extends(CloseCircleButtonMorph, _super);
-
-  function CloseCircleButtonMorph(orientation) {
-    this.orientation = orientation != null ? orientation : "vertical";
-    CloseCircleButtonMorph.__super__.constructor.call(this);
-  }
-
-  CloseCircleButtonMorph.prototype.updateRendering = function() {
-    var context;
-
-    CloseCircleButtonMorph.__super__.updateRendering.call(this);
-    context = this.image.getContext("2d");
-    context.beginPath();
-    context.moveTo(3, 3);
-    context.lineTo(7, 7);
-    context.moveTo(7, 3);
-    context.lineTo(3, 7);
-    context.strokeStyle = '#000';
-    context.lineWidth = 1.5;
-    context.lineCap = 'round';
-    return context.stroke();
-  };
-
-  CloseCircleButtonMorph.coffeeScriptSourceOfThisClass = '# CloseCircleButtonMorph //////////////////////////////////////////////////////\n\n# This is basically a circle with an x inside, it\'s for\n# the little icon on the top left of a window, to close\n# the window.\n# TODO: this little widget doesn\'t scale well into\n# touch mode.\n\nclass CloseCircleButtonMorph extends CircleBoxMorph\n\n  constructor: (@orientation = "vertical") ->\n    super()\n  \n  updateRendering: ->\n    super()\n\n    # TODO: this context has already been created\n    # and used in the superclass, there is no\n    # reason why we have to re-create another\n    # one here. Ideally we wanto to save the\n    # first one into an instance variable, and\n    # just reuse it here.\n    context = @image.getContext("2d")\n\n    # Now stroke the "x" inside the circle button\n    # that closes the window.\n    context.beginPath()\n    context.moveTo 3,3\n    context.lineTo 7,7\n    context.moveTo 7,3\n    context.lineTo 3,7\n    context.strokeStyle = \'#000\'\n    context.lineWidth = 1.5\n    context.lineCap = \'round\'\n    context.stroke()\n  ';
-
-  return CloseCircleButtonMorph;
-
-})(CircleBoxMorph);
 
 HandMorph = (function(_super) {
   __extends(HandMorph, _super);
@@ -8926,6 +5187,331 @@ HandMorph = (function(_super) {
 
 })(Morph);
 
+ScrollFrameMorph = (function(_super) {
+  __extends(ScrollFrameMorph, _super);
+
+  ScrollFrameMorph.prototype.autoScrollTrigger = null;
+
+  ScrollFrameMorph.prototype.hasVelocity = true;
+
+  ScrollFrameMorph.prototype.padding = 0;
+
+  ScrollFrameMorph.prototype.growth = 0;
+
+  ScrollFrameMorph.prototype.isTextLineWrapping = false;
+
+  ScrollFrameMorph.prototype.isScrollingByDragging = true;
+
+  ScrollFrameMorph.prototype.scrollBarSize = null;
+
+  ScrollFrameMorph.prototype.contents = null;
+
+  ScrollFrameMorph.prototype.vBar = null;
+
+  ScrollFrameMorph.prototype.hBar = null;
+
+  function ScrollFrameMorph(contents, scrollBarSize, sliderColor) {
+    var _this = this;
+
+    this.alpha = 0;
+    ScrollFrameMorph.__super__.constructor.call(this);
+    this.scrollBarSize = scrollBarSize || WorldMorph.MorphicPreferences.scrollBarSize;
+    this.contents = contents || new FrameMorph(this);
+    this.add(this.contents);
+    this.color = this.contents.color;
+    this.alpha = this.contents.alpha;
+    this.updateRendering = this.contents.updateRendering;
+    this.hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor);
+    this.hBar.setHeight(this.scrollBarSize);
+    this.hBar.action = function(num) {
+      return _this.contents.setPosition(new Point(_this.left() - num, _this.contents.position().y));
+    };
+    this.hBar.isDraggable = false;
+    this.add(this.hBar);
+    this.vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor);
+    this.vBar.setWidth(this.scrollBarSize);
+    this.vBar.action = function(num) {
+      return _this.contents.setPosition(new Point(_this.contents.position().x, _this.top() - num));
+    };
+    this.vBar.isDraggable = false;
+    this.add(this.vBar);
+  }
+
+  ScrollFrameMorph.prototype.setColor = function(aColor) {
+    this.color = aColor;
+    return this.contents.setColor(aColor);
+  };
+
+  ScrollFrameMorph.prototype.setAlphaScaled = function(alpha) {
+    this.alpha = this.calculateAlphaScaled(alpha);
+    return this.contents.setAlphaScaled(alpha);
+  };
+
+  ScrollFrameMorph.prototype.adjustScrollBars = function() {
+    var hWidth, vHeight;
+
+    hWidth = this.width() - this.scrollBarSize;
+    vHeight = this.height() - this.scrollBarSize;
+    this.changed();
+    if (this.contents.width() > this.width() + WorldMorph.MorphicPreferences.scrollBarSize) {
+      this.hBar.show();
+      if (this.hBar.width() !== hWidth) {
+        this.hBar.setWidth(hWidth);
+      }
+      this.hBar.setPosition(new Point(this.left(), this.bottom() - this.hBar.height()));
+      this.hBar.start = 0;
+      this.hBar.stop = this.contents.width() - this.width();
+      this.hBar.size = this.width() / this.contents.width() * this.hBar.stop;
+      this.hBar.value = this.left() - this.contents.left();
+      this.hBar.updateRendering();
+    } else {
+      this.hBar.hide();
+    }
+    if (this.contents.height() > this.height() + this.scrollBarSize) {
+      this.vBar.show();
+      if (this.vBar.height() !== vHeight) {
+        this.vBar.setHeight(vHeight);
+      }
+      this.vBar.setPosition(new Point(this.right() - this.vBar.width(), this.top()));
+      this.vBar.start = 0;
+      this.vBar.stop = this.contents.height() - this.height();
+      this.vBar.size = this.height() / this.contents.height() * this.vBar.stop;
+      this.vBar.value = this.top() - this.contents.top();
+      return this.vBar.updateRendering();
+    } else {
+      return this.vBar.hide();
+    }
+  };
+
+  ScrollFrameMorph.prototype.addContents = function(aMorph) {
+    this.contents.add(aMorph);
+    return this.contents.adjustBounds();
+  };
+
+  ScrollFrameMorph.prototype.setContents = function(aMorph) {
+    this.contents.children.forEach(function(m) {
+      return m.destroy();
+    });
+    this.contents.children = [];
+    aMorph.setPosition(this.position().add(this.padding + 2));
+    return this.addContents(aMorph);
+  };
+
+  ScrollFrameMorph.prototype.setExtent = function(aPoint) {
+    if (this.isTextLineWrapping) {
+      this.contents.setPosition(this.position().copy());
+    }
+    ScrollFrameMorph.__super__.setExtent.call(this, aPoint);
+    return this.contents.adjustBounds();
+  };
+
+  ScrollFrameMorph.prototype.scrollX = function(steps) {
+    var cl, cw, l, newX, r;
+
+    cl = this.contents.left();
+    l = this.left();
+    cw = this.contents.width();
+    r = this.right();
+    newX = cl + steps;
+    if (newX + cw < r) {
+      newX = r - cw;
+    }
+    if (newX > l) {
+      newX = l;
+    }
+    if (newX !== cl) {
+      return this.contents.setLeft(newX);
+    }
+  };
+
+  ScrollFrameMorph.prototype.scrollY = function(steps) {
+    var b, ch, ct, newY, t;
+
+    ct = this.contents.top();
+    t = this.top();
+    ch = this.contents.height();
+    b = this.bottom();
+    newY = ct + steps;
+    if (newY + ch < b) {
+      newY = b - ch;
+    }
+    if (newY > t) {
+      newY = t;
+    }
+    if (newY !== ct) {
+      return this.contents.setTop(newY);
+    }
+  };
+
+  ScrollFrameMorph.prototype.mouseDownLeft = function(pos) {
+    var deltaX, deltaY, friction, oldPos, world,
+      _this = this;
+
+    if (!this.isScrollingByDragging) {
+      return null;
+    }
+    world = this.root();
+    oldPos = pos;
+    deltaX = 0;
+    deltaY = 0;
+    friction = 0.8;
+    return this.step = function() {
+      var newPos;
+
+      if (world.hand.mouseButton && (!world.hand.children.length) && (_this.bounds.containsPoint(world.hand.position()))) {
+        newPos = world.hand.bounds.origin;
+        deltaX = newPos.x - oldPos.x;
+        if (deltaX !== 0) {
+          _this.scrollX(deltaX);
+        }
+        deltaY = newPos.y - oldPos.y;
+        if (deltaY !== 0) {
+          _this.scrollY(deltaY);
+        }
+        oldPos = newPos;
+      } else {
+        if (!_this.hasVelocity) {
+          _this.step = noOperation;
+        } else {
+          if ((Math.abs(deltaX) < 0.5) && (Math.abs(deltaY) < 0.5)) {
+            _this.step = noOperation;
+          } else {
+            deltaX = deltaX * friction;
+            _this.scrollX(Math.round(deltaX));
+            deltaY = deltaY * friction;
+            _this.scrollY(Math.round(deltaY));
+          }
+        }
+      }
+      return _this.adjustScrollBars();
+    };
+  };
+
+  ScrollFrameMorph.prototype.startAutoScrolling = function() {
+    var hand, inset, world,
+      _this = this;
+
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
+    world = this.world();
+    if (!world) {
+      return null;
+    }
+    hand = world.hand;
+    if (!this.autoScrollTrigger) {
+      this.autoScrollTrigger = Date.now();
+    }
+    return this.step = function() {
+      var inner, pos;
+
+      pos = hand.bounds.origin;
+      inner = _this.bounds.insetBy(inset);
+      if ((_this.bounds.containsPoint(pos)) && (!(inner.containsPoint(pos))) && hand.children.length) {
+        return _this.autoScroll(pos);
+      } else {
+        _this.step = noOperation;
+        return _this.autoScrollTrigger = null;
+      }
+    };
+  };
+
+  ScrollFrameMorph.prototype.autoScroll = function(pos) {
+    var area, inset;
+
+    if (Date.now() - this.autoScrollTrigger < 500) {
+      return null;
+    }
+    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3;
+    area = this.topLeft().extent(new Point(this.width(), inset));
+    if (area.containsPoint(pos)) {
+      this.scrollY(inset - (pos.y - this.top()));
+    }
+    area = this.topLeft().extent(new Point(inset, this.height()));
+    if (area.containsPoint(pos)) {
+      this.scrollX(inset - (pos.x - this.left()));
+    }
+    area = (new Point(this.right() - inset, this.top())).extent(new Point(inset, this.height()));
+    if (area.containsPoint(pos)) {
+      this.scrollX(-(inset - (this.right() - pos.x)));
+    }
+    area = (new Point(this.left(), this.bottom() - inset)).extent(new Point(this.width(), inset));
+    if (area.containsPoint(pos)) {
+      this.scrollY(-(inset - (this.bottom() - pos.y)));
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.scrollCaretIntoView = function(morph) {
+    var fb, ft, offset, txt;
+
+    txt = morph.target;
+    offset = txt.position().subtract(this.contents.position());
+    ft = this.top() + this.padding;
+    fb = this.bottom() - this.padding;
+    this.contents.setExtent(txt.extent().add(offset).add(this.padding));
+    if (morph.top() < ft) {
+      this.contents.setTop(this.contents.top() + ft - morph.top());
+      morph.setTop(ft);
+    } else if (morph.bottom() > fb) {
+      this.contents.setBottom(this.contents.bottom() + fb - morph.bottom());
+      morph.setBottom(fb);
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.mouseScroll = function(y, x) {
+    if (y) {
+      this.scrollY(y * WorldMorph.MorphicPreferences.mouseScrollAmount);
+    }
+    if (x) {
+      this.scrollX(x * WorldMorph.MorphicPreferences.mouseScrollAmount);
+    }
+    return this.adjustScrollBars();
+  };
+
+  ScrollFrameMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = ScrollFrameMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.contents && dict[this.contents]) {
+      c.contents = dict[this.contents];
+    }
+    if (c.hBar && dict[this.hBar]) {
+      c.hBar = dict[this.hBar];
+      c.hBar.action = function(num) {
+        return c.contents.setPosition(new Point(c.left() - num, c.contents.position().y));
+      };
+    }
+    if (c.vBar && dict[this.vBar]) {
+      c.vBar = dict[this.vBar];
+      c.vBar.action = function(num) {
+        return c.contents.setPosition(new Point(c.contents.position().x, c.top() - num));
+      };
+    }
+    return c;
+  };
+
+  ScrollFrameMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = ScrollFrameMorph.__super__.developersMenu.call(this);
+    if (this.isTextLineWrapping) {
+      menu.addItem("auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff");
+    } else {
+      menu.addItem("auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping");
+    }
+    return menu;
+  };
+
+  ScrollFrameMorph.prototype.toggleTextLineWrapping = function() {
+    return this.isTextLineWrapping = !this.isTextLineWrapping;
+  };
+
+  ScrollFrameMorph.coffeeScriptSourceOfThisClass = '# ScrollFrameMorph ////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass ScrollFrameMorph extends FrameMorph\n\n  autoScrollTrigger: null\n  hasVelocity: true # dto.\n  padding: 0 # around the scrollable area\n  growth: 0 # pixels or Point to grow right/left when near edge\n  isTextLineWrapping: false\n  isScrollingByDragging: true\n  scrollBarSize: null\n  contents: null\n  vBar: null\n  hBar: null\n\n  constructor: (contents, scrollBarSize, sliderColor) ->\n    # super() paints the scrollframe, which we don\'t want,\n    # so we set 0 opacity here.\n    @alpha = 0\n    super()\n    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize\n    @contents = contents or new FrameMorph(@)\n    @add @contents\n\n    # the scrollFrame is never going to paint itself,\n    # but its values are going to mimick the values of the\n    # contained frame\n    @color = @contents.color\n    @alpha = @contents.alpha\n    # the scrollFrame is a container, it redirects most\n    # commands to the "contained" frame\n    @updateRendering = @contents.updateRendering\n    #@setColor = @contents.setColor\n    #@setAlphaScaled = @contents.setAlphaScaled\n\n    @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)\n    @hBar.setHeight @scrollBarSize\n    @hBar.action = (num) =>\n      @contents.setPosition new Point(@left() - num, @contents.position().y)\n    @hBar.isDraggable = false\n    @add @hBar\n\n    @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)\n    @vBar.setWidth @scrollBarSize\n    @vBar.action = (num) =>\n      @contents.setPosition new Point(@contents.position().x, @top() - num)\n    @vBar.isDraggable = false\n    @add @vBar\n\n\n  setColor: (aColor) ->\n    # update the color of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the color so that its value is the same as the\n    # contained frame\n    @color = aColor\n    @contents.setColor(aColor)\n\n  setAlphaScaled: (alpha) ->\n    # update the alpha of the scrollFrame - note\n    # that we are never going to paint the scrollFrame\n    # we are updating the alpha so that its value is the same as the\n    # contained frame\n    @alpha = @calculateAlphaScaled(alpha)\n    @contents.setAlphaScaled(alpha)\n\n  adjustScrollBars: ->\n    hWidth = @width() - @scrollBarSize\n    vHeight = @height() - @scrollBarSize\n    @changed()\n    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize\n      @hBar.show()\n      @hBar.setWidth hWidth  if @hBar.width() isnt hWidth\n      @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())\n      @hBar.start = 0\n      @hBar.stop = @contents.width() - @width()\n      @hBar.size = @width() / @contents.width() * @hBar.stop\n      @hBar.value = @left() - @contents.left()\n      @hBar.updateRendering()\n    else\n      @hBar.hide()\n    if @contents.height() > @height() + @scrollBarSize\n      @vBar.show()\n      @vBar.setHeight vHeight  if @vBar.height() isnt vHeight\n      @vBar.setPosition new Point(@right() - @vBar.width(), @top())\n      @vBar.start = 0\n      @vBar.stop = @contents.height() - @height()\n      @vBar.size = @height() / @contents.height() * @vBar.stop\n      @vBar.value = @top() - @contents.top()\n      @vBar.updateRendering()\n    else\n      @vBar.hide()\n  \n  addContents: (aMorph) ->\n    @contents.add aMorph\n    @contents.adjustBounds()\n  \n  setContents: (aMorph) ->\n    @contents.children.forEach (m) ->\n      m.destroy()\n    #\n    @contents.children = []\n    aMorph.setPosition @position().add(@padding + 2)\n    @addContents aMorph\n  \n  setExtent: (aPoint) ->\n    @contents.setPosition @position().copy()  if @isTextLineWrapping\n    super aPoint\n    @contents.adjustBounds()\n  \n  \n  # ScrollFrameMorph scrolling by dragging:\n  scrollX: (steps) ->\n    cl = @contents.left()\n    l = @left()\n    cw = @contents.width()\n    r = @right()\n    newX = cl + steps\n    newX = r - cw  if newX + cw < r\n    newX = l  if newX > l\n    @contents.setLeft newX  if newX isnt cl\n  \n  scrollY: (steps) ->\n    ct = @contents.top()\n    t = @top()\n    ch = @contents.height()\n    b = @bottom()\n    newY = ct + steps\n    if newY + ch < b\n      newY = b - ch\n    # prevents content to be scrolled to the frame\'s\n    # bottom if the content is otherwise empty\n    newY = t  if newY > t\n    @contents.setTop newY  if newY isnt ct\n  \n  mouseDownLeft: (pos) ->\n    return null  unless @isScrollingByDragging\n    world = @root()\n    oldPos = pos\n    deltaX = 0\n    deltaY = 0\n    friction = 0.8\n    @step = =>\n      if world.hand.mouseButton and\n        (!world.hand.children.length) and\n        (@bounds.containsPoint(world.hand.position()))\n          newPos = world.hand.bounds.origin\n          deltaX = newPos.x - oldPos.x\n          @scrollX deltaX  if deltaX isnt 0\n          deltaY = newPos.y - oldPos.y\n          @scrollY deltaY  if deltaY isnt 0\n          oldPos = newPos\n      else\n        unless @hasVelocity\n          @step = noOperation\n        else\n          if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)\n            @step = noOperation\n          else\n            deltaX = deltaX * friction\n            @scrollX Math.round(deltaX)\n            deltaY = deltaY * friction\n            @scrollY Math.round(deltaY)\n      @adjustScrollBars()\n  \n  startAutoScrolling: ->\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    world = @world()\n    return null  unless world\n    hand = world.hand\n    @autoScrollTrigger = Date.now()  unless @autoScrollTrigger\n    @step = =>\n      pos = hand.bounds.origin\n      inner = @bounds.insetBy(inset)\n      if (@bounds.containsPoint(pos)) and\n        (not (inner.containsPoint(pos))) and\n        (hand.children.length)\n          @autoScroll pos\n      else\n        @step = noOperation\n        @autoScrollTrigger = null\n  \n  autoScroll: (pos) ->\n    return null  if Date.now() - @autoScrollTrigger < 500\n    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3\n    area = @topLeft().extent(new Point(@width(), inset))\n    @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)\n    area = @topLeft().extent(new Point(inset, @height()))\n    @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)\n    area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))\n    @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)\n    area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))\n    @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)\n    @adjustScrollBars()  \n  \n  # ScrollFrameMorph scrolling by editing text:\n  scrollCaretIntoView: (morph) ->\n    txt = morph.target\n    offset = txt.position().subtract(@contents.position())\n    ft = @top() + @padding\n    fb = @bottom() - @padding\n    @contents.setExtent txt.extent().add(offset).add(@padding)\n    if morph.top() < ft\n      @contents.setTop @contents.top() + ft - morph.top()\n      morph.setTop ft\n    else if morph.bottom() > fb\n      @contents.setBottom @contents.bottom() + fb - morph.bottom()\n      morph.setBottom fb\n    @adjustScrollBars()\n\n  # ScrollFrameMorph events:\n  mouseScroll: (y, x) ->\n    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y\n    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x\n    @adjustScrollBars()\n  \n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.contents = (dict[@contents])  if c.contents and dict[@contents]\n    if c.hBar and dict[@hBar]\n      c.hBar = (dict[@hBar])\n      c.hBar.action = (num) ->\n        c.contents.setPosition new Point(c.left() - num, c.contents.position().y)\n    if c.vBar and dict[@vBar]\n      c.vBar = (dict[@vBar])\n      c.vBar.action = (num) ->\n        c.contents.setPosition new Point(c.contents.position().x, c.top() - num)\n    c\n  \n  developersMenu: ->\n    menu = super()\n    if @isTextLineWrapping\n      menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"\n    else\n      menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"\n    menu\n  \n  toggleTextLineWrapping: ->\n    @isTextLineWrapping = not @isTextLineWrapping';
+
+  return ScrollFrameMorph;
+
+})(FrameMorph);
+
 ListMorph = (function(_super) {
   __extends(ListMorph, _super);
 
@@ -9028,6 +5614,99 @@ ListMorph = (function(_super) {
   return ListMorph;
 
 })(ScrollFrameMorph);
+
+CircleBoxMorph = (function(_super) {
+  __extends(CircleBoxMorph, _super);
+
+  CircleBoxMorph.prototype.orientation = null;
+
+  CircleBoxMorph.prototype.autoOrient = true;
+
+  function CircleBoxMorph(orientation) {
+    this.orientation = orientation != null ? orientation : "vertical";
+    CircleBoxMorph.__super__.constructor.call(this);
+    this.setExtent(new Point(20, 100));
+  }
+
+  CircleBoxMorph.prototype.autoOrientation = function() {
+    if (this.height() > this.width()) {
+      return this.orientation = "vertical";
+    } else {
+      return this.orientation = "horizontal";
+    }
+  };
+
+  CircleBoxMorph.prototype.updateRendering = function() {
+    var center1, center2, context, ext, points, radius, rect, x, y,
+      _this = this;
+
+    if (this.autoOrient) {
+      this.autoOrientation();
+    }
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    if (this.orientation === "vertical") {
+      radius = this.width() / 2;
+      x = this.center().x;
+      center1 = new Point(x, this.top() + radius);
+      center2 = new Point(x, this.bottom() - radius);
+      rect = this.bounds.origin.add(new Point(0, radius)).corner(this.bounds.corner.subtract(new Point(0, radius)));
+    } else {
+      radius = this.height() / 2;
+      y = this.center().y;
+      center1 = new Point(this.left() + radius, y);
+      center2 = new Point(this.right() - radius, y);
+      rect = this.bounds.origin.add(new Point(radius, 0)).corner(this.bounds.corner.subtract(new Point(radius, 0)));
+    }
+    points = [center1.subtract(this.bounds.origin), center2.subtract(this.bounds.origin)];
+    points.forEach(function(center) {
+      context.fillStyle = _this.color.toString();
+      context.beginPath();
+      context.arc(center.x, center.y, radius, 0, 2 * Math.PI, false);
+      context.closePath();
+      return context.fill();
+    });
+    rect = rect.translateBy(this.bounds.origin.neg());
+    ext = rect.extent();
+    if (ext.x > 0 && ext.y > 0) {
+      return context.fillRect(rect.origin.x, rect.origin.y, rect.width(), rect.height());
+    }
+  };
+
+  CircleBoxMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = CircleBoxMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    if (this.orientation === "vertical") {
+      menu.addItem("horizontal...", "toggleOrientation", "toggle the\norientation");
+    } else {
+      menu.addItem("vertical...", "toggleOrientation", "toggle the\norientation");
+    }
+    return menu;
+  };
+
+  CircleBoxMorph.prototype.toggleOrientation = function() {
+    var center;
+
+    center = this.center();
+    this.changed();
+    if (this.orientation === "vertical") {
+      this.orientation = "horizontal";
+    } else {
+      this.orientation = "vertical";
+    }
+    this.silentSetExtent(new Point(this.height(), this.width()));
+    this.setCenter(center);
+    this.updateRendering();
+    return this.changed();
+  };
+
+  CircleBoxMorph.coffeeScriptSourceOfThisClass = '# CircleBoxMorph //////////////////////////////////////////////////////\n\n# I can be used for sliders\n\nclass CircleBoxMorph extends Morph\n\n  orientation: null\n  autoOrient: true\n\n  constructor: (@orientation = "vertical") ->\n    super()\n    @setExtent new Point(20, 100)\n  \n  autoOrientation: ->\n    if @height() > @width()\n      @orientation = "vertical"\n    else\n      @orientation = "horizontal"\n  \n  updateRendering: ->\n    @autoOrientation()  if @autoOrient\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    if @orientation is "vertical"\n      radius = @width() / 2\n      x = @center().x\n      center1 = new Point(x, @top() + radius)\n      center2 = new Point(x, @bottom() - radius)\n      rect = @bounds.origin.add(\n        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))\n    else\n      radius = @height() / 2\n      y = @center().y\n      center1 = new Point(@left() + radius, y)\n      center2 = new Point(@right() - radius, y)\n      rect = @bounds.origin.add(\n        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))\n    points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]\n    points.forEach (center) =>\n      context.fillStyle = @color.toString()\n      context.beginPath()\n      context.arc center.x, center.y, radius, 0, 2 * Math.PI, false\n      context.closePath()\n      context.fill()\n    rect = rect.translateBy(@bounds.origin.neg())\n    ext = rect.extent()\n    if ext.x > 0 and ext.y > 0\n      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()\n  \n  \n  # CircleBoxMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    if @orientation is "vertical"\n      menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"\n    else\n      menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"\n    menu\n  \n  toggleOrientation: ->\n    center = @center()\n    @changed()\n    if @orientation is "vertical"\n      @orientation = "horizontal"\n    else\n      @orientation = "vertical"\n    @silentSetExtent new Point(@height(), @width())\n    @setCenter center\n    @updateRendering()\n    @changed()';
+
+  return CircleBoxMorph;
+
+})(Morph);
 
 SliderButtonMorph = (function(_super) {
   __extends(SliderButtonMorph, _super);
@@ -9178,58 +5857,1122 @@ SliderButtonMorph = (function(_super) {
 
 })(CircleBoxMorph);
 
-InspectorMorph = (function(_super) {
-  __extends(InspectorMorph, _super);
+StringMorph = (function(_super) {
+  __extends(StringMorph, _super);
 
-  InspectorMorph.prototype.target = null;
+  StringMorph.prototype.text = null;
 
-  InspectorMorph.prototype.currentProperty = null;
+  StringMorph.prototype.fontSize = null;
 
-  InspectorMorph.prototype.showing = "attributes";
+  StringMorph.prototype.fontName = null;
 
-  InspectorMorph.prototype.markOwnershipOfProperties = false;
+  StringMorph.prototype.fontStyle = null;
 
-  InspectorMorph.prototype.label = null;
+  StringMorph.prototype.isBold = null;
 
-  InspectorMorph.prototype.list = null;
+  StringMorph.prototype.isItalic = null;
 
-  InspectorMorph.prototype.detail = null;
+  StringMorph.prototype.isEditable = false;
 
-  InspectorMorph.prototype.work = null;
+  StringMorph.prototype.isNumeric = null;
 
-  InspectorMorph.prototype.buttonInspect = null;
+  StringMorph.prototype.isPassword = false;
 
-  InspectorMorph.prototype.buttonClose = null;
+  StringMorph.prototype.shadowOffset = null;
 
-  InspectorMorph.prototype.buttonSubset = null;
+  StringMorph.prototype.shadowColor = null;
 
-  InspectorMorph.prototype.buttonEdit = null;
+  StringMorph.prototype.isShowingBlanks = false;
 
-  InspectorMorph.prototype.resizer = null;
+  StringMorph.prototype.blanksColor = new Color(180, 140, 140);
 
-  function InspectorMorph(target) {
+  StringMorph.prototype.isScrollable = true;
+
+  StringMorph.prototype.currentlySelecting = false;
+
+  StringMorph.prototype.startMark = null;
+
+  StringMorph.prototype.endMark = null;
+
+  StringMorph.prototype.markedTextColor = new Color(255, 255, 255);
+
+  StringMorph.prototype.markedBackgoundColor = new Color(60, 60, 120);
+
+  function StringMorph(text, fontSize, fontStyle, isBold, isItalic, isNumeric, shadowOffset, shadowColor, color, fontName) {
+    this.fontSize = fontSize != null ? fontSize : 12;
+    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
+    this.isBold = isBold != null ? isBold : false;
+    this.isItalic = isItalic != null ? isItalic : false;
+    this.isNumeric = isNumeric != null ? isNumeric : false;
+    this.shadowColor = shadowColor;
+    this.text = text || (text === "" ? "" : "StringMorph");
+    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
+    this.shadowOffset = shadowOffset || new Point(0, 0);
+    StringMorph.__super__.constructor.call(this);
+    this.color = color || new Color(0, 0, 0);
+    this.noticesTransparentClick = true;
+    this.updateRendering();
+  }
+
+  StringMorph.prototype.toString = function() {
+    return "a " + (this.constructor.name || this.constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + this.text.slice(0, 30) + "...\")";
+  };
+
+  StringMorph.prototype.password = function(letter, length) {
+    var ans, _i;
+
+    ans = "";
+    for (i = _i = 0; 0 <= length ? _i < length : _i > length; i = 0 <= length ? ++_i : --_i) {
+      ans += letter;
+    }
+    return ans;
+  };
+
+  StringMorph.prototype.font = function() {
+    var font;
+
+    font = "";
+    if (this.isBold) {
+      font = font + "bold ";
+    }
+    if (this.isItalic) {
+      font = font + "italic ";
+    }
+    return font + this.fontSize + "px " + (this.fontName ? this.fontName + ", " : "") + this.fontStyle;
+  };
+
+  StringMorph.prototype.updateRendering = function() {
+    var c, context, p, start, stop, text, width, x, y, _i;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    this.image = newCanvas();
+    context = this.image.getContext("2d");
+    context.font = this.font();
+    context.textAlign = "left";
+    context.textBaseline = "bottom";
+    width = Math.max(context.measureText(text).width + Math.abs(this.shadowOffset.x), 1);
+    this.bounds.corner = this.bounds.origin.add(new Point(width, fontHeight(this.fontSize) + Math.abs(this.shadowOffset.y)));
+    this.image.width = width;
+    this.image.height = this.height();
+    context.font = this.font();
+    context.textAlign = "left";
+    context.textBaseline = "bottom";
+    if (this.shadowColor) {
+      x = Math.max(this.shadowOffset.x, 0);
+      y = Math.max(this.shadowOffset.y, 0);
+      context.fillStyle = this.shadowColor.toString();
+      context.fillText(text, x, fontHeight(this.fontSize) + y);
+    }
+    x = Math.abs(Math.min(this.shadowOffset.x, 0));
+    y = Math.abs(Math.min(this.shadowOffset.y, 0));
+    context.fillStyle = this.color.toString();
+    if (this.isShowingBlanks) {
+      this.renderWithBlanks(context, x, fontHeight(this.fontSize) + y);
+    } else {
+      context.fillText(text, x, fontHeight(this.fontSize) + y);
+    }
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    for (i = _i = start; start <= stop ? _i < stop : _i > stop; i = start <= stop ? ++_i : --_i) {
+      p = this.slotCoordinates(i).subtract(this.position());
+      c = text.charAt(i);
+      context.fillStyle = this.markedBackgoundColor.toString();
+      context.fillRect(p.x, p.y, context.measureText(c).width + 1 + x, fontHeight(this.fontSize) + y);
+      context.fillStyle = this.markedTextColor.toString();
+      context.fillText(c, p.x + x, fontHeight(this.fontSize) + y);
+    }
+    if (this.parent ? this.parent.fixLayout : void 0) {
+      return this.parent.fixLayout();
+    }
+  };
+
+  StringMorph.prototype.renderWithBlanks = function(context, startX, y) {
+    var blank, ctx, drawBlank, isFirst, space, words, x;
+
+    drawBlank = function() {
+      context.drawImage(blank, Math.round(x), 0);
+      return x += space;
+    };
+    space = context.measureText(" ").width;
+    blank = newCanvas(new Point(space, this.height()));
+    ctx = blank.getContext("2d");
+    words = this.text.split(" ");
+    x = startX || 0;
+    isFirst = true;
+    ctx.fillStyle = this.blanksColor.toString();
+    ctx.arc(space / 2, blank.height / 2, space / 2, radians(0), radians(360));
+    ctx.fill();
+    return words.forEach(function(word) {
+      if (!isFirst) {
+        drawBlank();
+      }
+      isFirst = false;
+      if (word !== "") {
+        context.fillText(word, x, y);
+        return x += context.measureText(word).width;
+      }
+    });
+  };
+
+  StringMorph.prototype.slotCoordinates = function(slot) {
+    var context, dest, text, x, xOffset, y;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    dest = Math.min(Math.max(slot, 0), text.length);
+    context = this.image.getContext("2d");
+    xOffset = context.measureText(text.substring(0, dest)).width;
+    this.pos = dest;
+    x = this.left() + xOffset;
+    y = this.top();
+    return new Point(x, y);
+  };
+
+  StringMorph.prototype.slotAt = function(aPoint) {
+    var charX, context, idx, text;
+
+    text = (this.isPassword ? this.password("*", this.text.length) : this.text);
+    idx = 0;
+    charX = 0;
+    context = this.image.getContext("2d");
+    while (aPoint.x - this.left() > charX) {
+      charX += context.measureText(text[idx]).width;
+      idx += 1;
+      if (idx === text.length) {
+        if ((context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - this.left())) {
+          return idx;
+        }
+      }
+    }
+    return idx - 1;
+  };
+
+  StringMorph.prototype.upFrom = function(slot) {
+    return slot;
+  };
+
+  StringMorph.prototype.downFrom = function(slot) {
+    return slot;
+  };
+
+  StringMorph.prototype.startOfLine = function() {
+    return 0;
+  };
+
+  StringMorph.prototype.endOfLine = function() {
+    return this.text.length;
+  };
+
+  StringMorph.prototype.rawHeight = function() {
+    return this.height() / 1.2;
+  };
+
+  StringMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = StringMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("edit", "edit");
+    menu.addItem("font size...", (function() {
+      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 500, true);
+    }), "set this String's\nfont point size");
+    if (this.fontStyle !== "serif") {
+      menu.addItem("serif", "setSerif");
+    }
+    if (this.fontStyle !== "sans-serif") {
+      menu.addItem("sans-serif", "setSansSerif");
+    }
+    if (this.isBold) {
+      menu.addItem("normal weight", "toggleWeight");
+    } else {
+      menu.addItem("bold", "toggleWeight");
+    }
+    if (this.isItalic) {
+      menu.addItem("normal style", "toggleItalic");
+    } else {
+      menu.addItem("italic", "toggleItalic");
+    }
+    if (this.isShowingBlanks) {
+      menu.addItem("hide blanks", "toggleShowBlanks");
+    } else {
+      menu.addItem("show blanks", "toggleShowBlanks");
+    }
+    if (this.isPassword) {
+      menu.addItem("show characters", "toggleIsPassword");
+    } else {
+      menu.addItem("hide characters", "toggleIsPassword");
+    }
+    return menu;
+  };
+
+  StringMorph.prototype.toggleIsDraggable = function() {
+    this.isDraggable = !this.isDraggable;
+    if (this.isDraggable) {
+      return this.disableSelecting();
+    } else {
+      return this.enableSelecting();
+    }
+  };
+
+  StringMorph.prototype.toggleShowBlanks = function() {
+    this.isShowingBlanks = !this.isShowingBlanks;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleWeight = function() {
+    this.isBold = !this.isBold;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleItalic = function() {
+    this.isItalic = !this.isItalic;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.toggleIsPassword = function() {
+    this.isPassword = !this.isPassword;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setSerif = function() {
+    this.fontStyle = "serif";
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setSansSerif = function() {
+    this.fontStyle = "sans-serif";
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setFontSize = function(size) {
+    var newSize;
+
+    if (typeof size === "number") {
+      this.fontSize = Math.round(Math.min(Math.max(size, 4), 500));
+    } else {
+      newSize = parseFloat(size);
+      if (!isNaN(newSize)) {
+        this.fontSize = Math.round(Math.min(Math.max(newSize, 4), 500));
+      }
+    }
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.setText = function(size) {
+    this.text = Math.round(size).toString();
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.numericalSetters = function() {
+    return ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"];
+  };
+
+  StringMorph.prototype.edit = function() {
+    return this.root().edit(this);
+  };
+
+  StringMorph.prototype.selection = function() {
+    var start, stop;
+
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    return this.text.slice(start, stop);
+  };
+
+  StringMorph.prototype.selectionStartSlot = function() {
+    return Math.min(this.startMark, this.endMark);
+  };
+
+  StringMorph.prototype.clearSelection = function() {
+    this.currentlySelecting = false;
+    this.startMark = null;
+    this.endMark = null;
+    this.changed();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.deleteSelection = function() {
+    var start, stop, text;
+
+    text = this.text;
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    this.text = text.slice(0, start) + text.slice(stop);
+    this.changed();
+    return this.clearSelection();
+  };
+
+  StringMorph.prototype.selectAll = function() {
+    this.startMark = 0;
+    this.endMark = this.text.length;
+    this.updateRendering();
+    return this.changed();
+  };
+
+  StringMorph.prototype.mouseDownLeft = function(pos) {
+    if (this.isEditable) {
+      return this.clearSelection();
+    } else {
+      return this.escalateEvent("mouseDownLeft", pos);
+    }
+  };
+
+  StringMorph.prototype.mouseClickLeft = function(pos) {
+    var caret;
+
+    caret = this.root().caret;
+    if (this.isEditable) {
+      if (!this.currentlySelecting) {
+        this.edit();
+      }
+      if (caret) {
+        caret.gotoPos(pos);
+      }
+      this.root().caret.gotoPos(pos);
+      return this.currentlySelecting = true;
+    } else {
+      return this.escalateEvent("mouseClickLeft", pos);
+    }
+  };
+
+  StringMorph.prototype.enableSelecting = function() {
+    this.mouseDownLeft = function(pos) {
+      this.clearSelection();
+      if (this.isEditable && (!this.isDraggable)) {
+        this.edit();
+        this.root().caret.gotoPos(pos);
+        this.startMark = this.slotAt(pos);
+        this.endMark = this.startMark;
+        return this.currentlySelecting = true;
+      }
+    };
+    return this.mouseMove = function(pos) {
+      var newMark;
+
+      if (this.isEditable && this.currentlySelecting && (!this.isDraggable)) {
+        newMark = this.slotAt(pos);
+        if (newMark !== this.endMark) {
+          this.endMark = newMark;
+          this.updateRendering();
+          return this.changed();
+        }
+      }
+    };
+  };
+
+  StringMorph.prototype.disableSelecting = function() {
+    this.mouseDownLeft = StringMorph.prototype.mouseDownLeft;
+    return delete this.mouseMove;
+  };
+
+  StringMorph.coffeeScriptSourceOfThisClass = '# StringMorph /////////////////////////////////////////////////////////\n\n# A StringMorph is a single line of text. It can only be left-aligned.\n\nclass StringMorph extends Morph\n\n  text: null\n  fontSize: null\n  fontName: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isEditable: false\n  isNumeric: null\n  isPassword: false\n  shadowOffset: null\n  shadowColor: null\n  isShowingBlanks: false\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  blanksColor: new Color(180, 140, 140)\n  #\n  # Properties for text-editing\n  isScrollable: true\n  currentlySelecting: false\n  startMark: null\n  endMark: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedTextColor: new Color(255, 255, 255)\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  markedBackgoundColor: new Color(60, 60, 120)\n\n  constructor: (\n      text,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false,\n      shadowOffset,\n      @shadowColor,\n      color,\n      fontName\n      ) ->\n    # additional properties:\n    @text = text or ((if (text is "") then "" else "StringMorph"))\n    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n    @shadowOffset = shadowOffset or new Point(0, 0)\n    #\n    super()\n    #\n    # override inherited properites:\n    @color = color or new Color(0, 0, 0)\n    @noticesTransparentClick = true\n    @updateRendering()\n  \n  toString: ->\n    # e.g. \'a StringMorph("Hello World")\'\n    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"\n  \n  password: (letter, length) ->\n    ans = ""\n    for i in [0...length]\n      ans += letter\n    ans\n\n  font: ->\n    # answer a font string, e.g. \'bold italic 12px sans-serif\'\n    font = ""\n    font = font + "bold "  if @isBold\n    font = font + "italic "  if @isItalic\n    font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle\n  \n  updateRendering: ->\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    # initialize my surface property\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # set my extent based on the size of the text\n    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)\n    @bounds.corner = @bounds.origin.add(new Point(\n      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))\n    @image.width = width\n    @image.height = @height()\n\n    # changing the canvas size resets many of\n    # the properties of the canvas, so we need to\n    # re-initialise the font and alignments here\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # first draw the shadow, if any\n    if @shadowColor\n      x = Math.max(@shadowOffset.x, 0)\n      y = Math.max(@shadowOffset.y, 0)\n      context.fillStyle = @shadowColor.toString()\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # now draw the actual text\n    x = Math.abs(Math.min(@shadowOffset.x, 0))\n    y = Math.abs(Math.min(@shadowOffset.y, 0))\n    context.fillStyle = @color.toString()\n    if @isShowingBlanks\n      @renderWithBlanks context, x, fontHeight(@fontSize) + y\n    else\n      context.fillText text, x, fontHeight(@fontSize) + y\n    #\n    # draw the selection\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotCoordinates(i).subtract(@position())\n      c = text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,\n        fontHeight(@fontSize) + y\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x + x, fontHeight(@fontSize) + y\n    #\n    # notify my parent of layout change\n    @parent.fixLayout()  if @parent.fixLayout  if @parent\n  \n  renderWithBlanks: (context, startX, y) ->\n    # create the blank form\n    drawBlank = ->\n      context.drawImage blank, Math.round(x), 0\n      x += space\n    space = context.measureText(" ").width\n    blank = newCanvas(new Point(space, @height()))\n    ctx = blank.getContext("2d")\n    words = @text.split(" ")\n    x = startX or 0\n    isFirst = true\n    ctx.fillStyle = @blanksColor.toString()\n    ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)\n    ctx.fill()\n    #\n    # render my text inserting blanks\n    words.forEach (word) ->\n      drawBlank()  unless isFirst\n      isFirst = false\n      if word isnt ""\n        context.fillText word, x, y\n        x += context.measureText(word).width\n  \n  \n  # StringMorph mesuring:\n  slotCoordinates: (slot) ->\n    # answer the position point of the given index ("slot")\n    # where the caret should be placed\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    dest = Math.min(Math.max(slot, 0), text.length)\n    context = @image.getContext("2d")\n    xOffset = context.measureText(text.substring(0,dest)).width\n    @pos = dest\n    x = @left() + xOffset\n    y = @top()\n    new Point(x, y)\n  \n  slotAt: (aPoint) ->\n    # answer the slot (index) closest to the given point\n    # so the caret can be moved accordingly\n    text = (if @isPassword then @password("*", @text.length) else @text)\n    idx = 0\n    charX = 0\n    context = @image.getContext("2d")\n    while aPoint.x - @left() > charX\n      charX += context.measureText(text[idx]).width\n      idx += 1\n      if idx is text.length\n        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  \n          return idx\n    idx - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    slot\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    slot\n  \n  startOfLine: ->\n    # answer the first slot (index) of the line for the given slot\n    0\n  \n  endOfLine: ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @text.length\n\n  rawHeight: ->\n    # answer my corrected fontSize\n    @height() / 1.2\n    \n  # StringMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 500, true\n    ), "set this String\'s\nfont point size"\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n\n    if @isShowingBlanks\n      menu.addItem "hide blanks", "toggleShowBlanks"\n    else\n      menu.addItem "show blanks", "toggleShowBlanks"\n\n    if @isPassword\n      menu.addItem "show characters", "toggleIsPassword"\n    else\n      menu.addItem "hide characters", "toggleIsPassword"\n\n    menu\n  \n  toggleIsDraggable: ->\n    # for context menu demo purposes\n    @isDraggable = not @isDraggable\n    if @isDraggable\n      @disableSelecting()\n    else\n      @enableSelecting()\n  \n  toggleShowBlanks: ->\n    @isShowingBlanks = not @isShowingBlanks\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleWeight: ->\n    @isBold = not @isBold\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleItalic: ->\n    @isItalic = not @isItalic\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  toggleIsPassword: ->\n    @isPassword = not @isPassword\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSerif: ->\n    @fontStyle = "serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setSansSerif: ->\n    @fontStyle = "sans-serif"\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setFontSize: (size) ->\n    # for context menu demo purposes\n    if typeof size is "number"\n      @fontSize = Math.round(Math.min(Math.max(size, 4), 500))\n    else\n      newSize = parseFloat(size)\n      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  setText: (size) ->\n    # for context menu demo purposes\n    @text = Math.round(size).toString()\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]\n  \n  \n  # StringMorph editing:\n  edit: ->\n    @root().edit @\n  \n  selection: ->\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text.slice start, stop\n  \n  selectionStartSlot: ->\n    Math.min @startMark, @endMark\n  \n  clearSelection: ->\n    @currentlySelecting = false\n    @startMark = null\n    @endMark = null\n    @changed()\n    @updateRendering()\n    @changed()\n  \n  deleteSelection: ->\n    text = @text\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    @text = text.slice(0, start) + text.slice(stop)\n    @changed()\n    @clearSelection()\n  \n  selectAll: ->\n    @startMark = 0\n    @endMark = @text.length\n    @updateRendering()\n    @changed()\n\n  mouseDownLeft: (pos) ->\n    if @isEditable\n      @clearSelection()\n    else\n      @escalateEvent "mouseDownLeft", pos\n\n  # Every time the user clicks on the text, a new edit()\n  # is triggered, which creates a new caret.\n  mouseClickLeft: (pos) ->\n    caret = @root().caret;\n    if @isEditable\n      @edit()  unless @currentlySelecting\n      if caret then caret.gotoPos pos\n      @root().caret.gotoPos pos\n      @currentlySelecting = true\n    else\n      @escalateEvent "mouseClickLeft", pos\n  \n  #mouseDoubleClick: ->\n  #  alert "mouseDoubleClick!"\n\n  enableSelecting: ->\n    @mouseDownLeft = (pos) ->\n      @clearSelection()\n      if @isEditable and (not @isDraggable)\n        @edit()\n        @root().caret.gotoPos pos\n        @startMark = @slotAt(pos)\n        @endMark = @startMark\n        @currentlySelecting = true\n    \n    @mouseMove = (pos) ->\n      if @isEditable and @currentlySelecting and (not @isDraggable)\n        newMark = @slotAt(pos)\n        if newMark isnt @endMark\n          @endMark = newMark\n          @updateRendering()\n          @changed()\n  \n  disableSelecting: ->\n    # re-establish the original definition of the method\n    @mouseDownLeft = StringMorph::mouseDownLeft\n    delete @mouseMove';
+
+  return StringMorph;
+
+})(Morph);
+
+CaretMorph = (function(_super) {
+  __extends(CaretMorph, _super);
+
+  CaretMorph.prototype.keyDownEventUsed = false;
+
+  CaretMorph.prototype.target = null;
+
+  CaretMorph.prototype.originalContents = null;
+
+  CaretMorph.prototype.slot = null;
+
+  CaretMorph.prototype.viewPadding = 1;
+
+  function CaretMorph(target) {
+    var ls;
+
     this.target = target;
-    InspectorMorph.__super__.constructor.call(this);
-    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 20, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
+    this.originalContents = this.target.text;
+    this.originalAlignment = this.target.alignment;
+    this.slot = this.target.text.length;
+    CaretMorph.__super__.constructor.call(this);
+    ls = fontHeight(this.target.fontSize);
+    this.setExtent(new Point(Math.max(Math.floor(ls / 20), 1), ls));
+    this.updateRendering();
+    this.image.getContext("2d").font = this.target.font();
+    if (this.target instanceof TextMorph && (this.target.alignment !== 'left')) {
+      this.target.setAlignmentToLeft();
+    }
+    this.gotoSlot(this.slot);
+  }
+
+  CaretMorph.prototype.processKeyPress = function(event) {
+    if (this.keyDownEventUsed) {
+      this.keyDownEventUsed = false;
+      return null;
+    }
+    if ((event.keyCode === 40) || event.charCode === 40) {
+      this.insert("(");
+      return null;
+    }
+    if ((event.keyCode === 37) || event.charCode === 37) {
+      this.insert("%");
+      return null;
+    }
+    if (event.keyCode) {
+      if (event.ctrlKey) {
+        this.ctrl(event.keyCode);
+      } else if (event.metaKey) {
+        this.cmd(event.keyCode);
+      } else {
+        this.insert(String.fromCharCode(event.keyCode), event.shiftKey);
+      }
+    } else if (event.charCode) {
+      if (event.ctrlKey) {
+        this.ctrl(event.charCode);
+      } else if (event.metaKey) {
+        this.cmd(event.keyCode);
+      } else {
+        this.insert(String.fromCharCode(event.charCode), event.shiftKey);
+      }
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CaretMorph.prototype.processKeyDown = function(event) {
+    var shift;
+
+    shift = event.shiftKey;
+    this.keyDownEventUsed = false;
+    if (event.ctrlKey) {
+      this.ctrl(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    } else if (event.metaKey) {
+      this.cmd(event.keyCode);
+      this.target.escalateEvent("reactToKeystroke", event);
+      return;
+    }
+    switch (event.keyCode) {
+      case 37:
+        this.goLeft(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 39:
+        this.goRight(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 38:
+        this.goUp(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 40:
+        this.goDown(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 36:
+        this.goHome(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 35:
+        this.goEnd(shift);
+        this.keyDownEventUsed = true;
+        break;
+      case 46:
+        this.deleteRight();
+        this.keyDownEventUsed = true;
+        break;
+      case 8:
+        this.deleteLeft();
+        this.keyDownEventUsed = true;
+        break;
+      case 13:
+        if (this.target.constructor.name === "StringMorph") {
+          this.accept();
+        } else {
+          this.insert("\n");
+        }
+        this.keyDownEventUsed = true;
+        break;
+      case 27:
+        this.cancel();
+        this.keyDownEventUsed = true;
+        break;
+    }
+    return this.target.escalateEvent("reactToKeystroke", event);
+  };
+
+  CaretMorph.prototype.gotoSlot = function(slot) {
+    var left, length, pos, right;
+
+    length = this.target.text.length;
+    this.slot = (slot < 0 ? 0 : (slot > length ? length : slot));
+    pos = this.target.slotCoordinates(this.slot);
+    if (this.parent && this.target.isScrollable) {
+      right = this.parent.right() - this.viewPadding;
+      left = this.parent.left() + this.viewPadding;
+      if (pos.x > right) {
+        this.target.setLeft(this.target.left() + right - pos.x);
+        pos.x = right;
+      }
+      if (pos.x < left) {
+        left = Math.min(this.parent.left(), left);
+        this.target.setLeft(this.target.left() + left - pos.x);
+        pos.x = left;
+      }
+      if (this.target.right() < right && right - this.target.width() < left) {
+        pos.x += right - this.target.right();
+        this.target.setRight(right);
+      }
+    }
+    this.show();
+    this.setPosition(pos);
+    if (this.parent && this.parent.parent instanceof ScrollFrameMorph && this.target.isScrollable) {
+      return this.parent.parent.scrollCaretIntoView(this);
+    }
+  };
+
+  CaretMorph.prototype.goLeft = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.slot - 1);
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goRight = function(shift, howMany) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.slot + (howMany || 1));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goUp = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.upFrom(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goDown = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.downFrom(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goHome = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.startOfLine(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.goEnd = function(shift) {
+    this.updateSelection(shift);
+    this.gotoSlot(this.target.endOfLine(this.slot));
+    return this.updateSelection(shift);
+  };
+
+  CaretMorph.prototype.gotoPos = function(aPoint) {
+    this.gotoSlot(this.target.slotAt(aPoint));
+    return this.show();
+  };
+
+  CaretMorph.prototype.updateSelection = function(shift) {
+    if (shift) {
+      if ((this.target.endMark === null) && (this.target.startMark === null)) {
+        this.target.startMark = this.slot;
+        return this.target.endMark = this.slot;
+      } else if (this.target.endMark !== this.slot) {
+        this.target.endMark = this.slot;
+        this.target.updateRendering();
+        return this.target.changed();
+      }
+    } else {
+      return this.target.clearSelection();
+    }
+  };
+
+  CaretMorph.prototype.accept = function() {
+    var world;
+
+    world = this.root();
+    if (world) {
+      world.stopEditing();
+    }
+    return this.escalateEvent("accept", null);
+  };
+
+  CaretMorph.prototype.cancel = function() {
+    var world;
+
+    world = this.root();
+    this.undo();
+    if (world) {
+      world.stopEditing();
+    }
+    return this.escalateEvent('cancel', null);
+  };
+
+  CaretMorph.prototype.undo = function() {
+    this.target.text = this.originalContents;
+    this.target.clearSelection();
+    this.target.changed();
+    this.target.updateRendering();
+    this.target.changed();
+    return this.gotoSlot(0);
+  };
+
+  CaretMorph.prototype.insert = function(aChar, shiftKey) {
+    var text;
+
+    if (aChar === "\t") {
+      this.target.escalateEvent('reactToEdit', this.target);
+      if (shiftKey) {
+        return this.target.backTab(this.target);
+      }
+      return this.target.tab(this.target);
+    }
+    if (!this.target.isNumeric || !isNaN(parseFloat(aChar)) || contains(["-", "."], aChar)) {
+      if (this.target.selection() !== "") {
+        this.gotoSlot(this.target.selectionStartSlot());
+        this.target.deleteSelection();
+      }
+      text = this.target.text;
+      text = text.slice(0, this.slot) + aChar + text.slice(this.slot);
+      this.target.text = text;
+      this.target.updateRendering();
+      this.target.changed();
+      return this.goRight(false, aChar.length);
+    }
+  };
+
+  CaretMorph.prototype.ctrl = function(aChar) {
+    if ((aChar === 97) || (aChar === 65)) {
+      return this.target.selectAll();
+    } else if (aChar === 90) {
+      return this.undo();
+    } else if (aChar === 123) {
+      return this.insert("{");
+    } else if (aChar === 125) {
+      return this.insert("}");
+    } else if (aChar === 91) {
+      return this.insert("[");
+    } else if (aChar === 93) {
+      return this.insert("]");
+    } else if (aChar === 64) {
+      return this.insert("@");
+    }
+  };
+
+  CaretMorph.prototype.cmd = function(aChar) {
+    if (aChar === 65) {
+      return this.target.selectAll();
+    } else if (aChar === 90) {
+      return this.undo();
+    }
+  };
+
+  CaretMorph.prototype.deleteRight = function() {
+    var text;
+
+    if (this.target.selection() !== "") {
+      this.gotoSlot(this.target.selectionStartSlot());
+      return this.target.deleteSelection();
+    } else {
+      text = this.target.text;
+      this.target.changed();
+      text = text.slice(0, this.slot) + text.slice(this.slot + 1);
+      this.target.text = text;
+      return this.target.updateRendering();
+    }
+  };
+
+  CaretMorph.prototype.deleteLeft = function() {
+    var text;
+
+    if (this.target.selection()) {
+      this.gotoSlot(this.target.selectionStartSlot());
+      return this.target.deleteSelection();
+    }
+    text = this.target.text;
+    this.target.changed();
+    this.target.text = text.substring(0, this.slot - 1) + text.substr(this.slot);
+    this.target.updateRendering();
+    return this.goLeft();
+  };
+
+  CaretMorph.prototype.destroy = function() {
+    if (this.target.alignment !== this.originalAlignment) {
+      this.target.alignment = this.originalAlignment;
+      this.target.updateRendering();
+      this.target.changed();
+    }
+    return CaretMorph.__super__.destroy.apply(this, arguments);
+  };
+
+  CaretMorph.prototype.inspectKeyEvent = function(event) {
+    return this.inform("Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString() + "\ncmdKey: " + event.metaKey.toString());
+  };
+
+  CaretMorph.coffeeScriptSourceOfThisClass = '# CaretMorph /////////////////////////////////////////////////////////\n\n# I am a String/Text editing widget\n\nclass CaretMorph extends BlinkerMorph\n\n  keyDownEventUsed: false\n  target: null\n  originalContents: null\n  slot: null\n  viewPadding: 1\n\n  constructor: (@target) ->\n    # additional properties:\n    @originalContents = @target.text\n    @originalAlignment = @target.alignment\n    @slot = @target.text.length\n    super()\n    ls = fontHeight(@target.fontSize)\n    @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)\n    @updateRendering()\n    @image.getContext("2d").font = @target.font()\n    if (@target instanceof TextMorph && (@target.alignment != \'left\'))\n      @target.setAlignmentToLeft()\n    @gotoSlot @slot\n  \n  # CaretMorph event processing:\n  processKeyPress: (event) ->\n    # @inspectKeyEvent event\n    if @keyDownEventUsed\n      @keyDownEventUsed = false\n      return null\n    if (event.keyCode is 40) or event.charCode is 40\n      @insert "("\n      return null\n    if (event.keyCode is 37) or event.charCode is 37\n      @insert "%"\n      return null\n    if event.keyCode # Opera doesn\'t support charCode\n      if event.ctrlKey\n        @ctrl event.keyCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.keyCode), event.shiftKey\n    else if event.charCode # all other browsers\n      if event.ctrlKey\n        @ctrl event.charCode\n      else if event.metaKey\n        @cmd event.keyCode\n      else\n        @insert String.fromCharCode(event.charCode), event.shiftKey\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  processKeyDown: (event) ->\n    # this.inspectKeyEvent(event);\n    shift = event.shiftKey\n    @keyDownEventUsed = false\n    if event.ctrlKey\n      @ctrl event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    else if event.metaKey\n      @cmd event.keyCode\n      # notify target\'s parent of key event\n      @target.escalateEvent "reactToKeystroke", event\n      return\n    switch event.keyCode\n      when 37\n        @goLeft(shift)\n        @keyDownEventUsed = true\n      when 39\n        @goRight(shift)\n        @keyDownEventUsed = true\n      when 38\n        @goUp(shift)\n        @keyDownEventUsed = true\n      when 40\n        @goDown(shift)\n        @keyDownEventUsed = true\n      when 36\n        @goHome(shift)\n        @keyDownEventUsed = true\n      when 35\n        @goEnd(shift)\n        @keyDownEventUsed = true\n      when 46\n        @deleteRight()\n        @keyDownEventUsed = true\n      when 8\n        @deleteLeft()\n        @keyDownEventUsed = true\n      when 13\n        # we can\'t check the class using instanceOf\n        # because TextMorphs are instances of StringMorphs\n        # but they want the enter to insert a carriage return.\n        if @target.constructor.name == "StringMorph"\n          @accept()\n        else\n          @insert "\n"\n        @keyDownEventUsed = true\n      when 27\n        @cancel()\n        @keyDownEventUsed = true\n      else\n    # this.inspectKeyEvent(event);\n    # notify target\'s parent of key event\n    @target.escalateEvent "reactToKeystroke", event\n  \n  \n  # CaretMorph navigation - simple version\n  #gotoSlot: (newSlot) ->\n  #  @setPosition @target.slotCoordinates(newSlot)\n  #  @slot = Math.max(newSlot, 0)\n\n  gotoSlot: (slot) ->\n    # check that slot is within the allowed boundaries of\n    # of zero and text length.\n    length = @target.text.length\n    @slot = (if slot < 0 then 0 else (if slot > length then length else slot))\n\n    pos = @target.slotCoordinates(@slot)\n    if @parent and @target.isScrollable\n      right = @parent.right() - @viewPadding\n      left = @parent.left() + @viewPadding\n      if pos.x > right\n        @target.setLeft @target.left() + right - pos.x\n        pos.x = right\n      if pos.x < left\n        left = Math.min(@parent.left(), left)\n        @target.setLeft @target.left() + left - pos.x\n        pos.x = left\n      if @target.right() < right and right - @target.width() < left\n        pos.x += right - @target.right()\n        @target.setRight right\n    @show()\n    @setPosition pos\n\n    if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable\n      @parent.parent.scrollCaretIntoView @\n  \n  goLeft: (shift) ->\n    @updateSelection shift\n    @gotoSlot @slot - 1\n    @updateSelection shift\n  \n  goRight: (shift, howMany) ->\n    @updateSelection shift\n    @gotoSlot @slot + (howMany || 1)\n    @updateSelection shift\n  \n  goUp: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.upFrom(@slot)\n    @updateSelection shift\n  \n  goDown: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.downFrom(@slot)\n    @updateSelection shift\n  \n  goHome: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.startOfLine(@slot)\n    @updateSelection shift\n  \n  goEnd: (shift) ->\n    @updateSelection shift\n    @gotoSlot @target.endOfLine(@slot)\n    @updateSelection shift\n  \n  gotoPos: (aPoint) ->\n    @gotoSlot @target.slotAt(aPoint)\n    @show()\n\n  updateSelection: (shift) ->\n    if shift\n      if (@target.endMark is null) and (@target.startMark is null)\n        @target.startMark = @slot\n        @target.endMark = @slot\n      else if @target.endMark isnt @slot\n        @target.endMark = @slot\n        @target.updateRendering()\n        @target.changed()\n    else\n      @target.clearSelection()  \n  \n  # CaretMorph editing.\n\n  # User presses enter on a stringMorph\n  accept: ->\n    world = @root()\n    world.stopEditing()  if world\n    @escalateEvent "accept", null\n  \n  # User presses ESC\n  cancel: ->\n    world = @root()\n    @undo()\n    world.stopEditing()  if world\n    @escalateEvent \'cancel\', null\n    \n  # User presses CTRL-Z or CMD-Z\n  # Note that this is not a real undo,\n  # what we are doing here is just reverting\n  # all the changes and sort-of-resetting the\n  # state of the target.\n  undo: ->\n    @target.text = @originalContents\n    @target.clearSelection()\n    \n    # in theory these three lines are not\n    # needed because clearSelection runs them\n    # already, but I\'m leaving them here\n    # until I understand better this changed\n    # vs. updateRendering semantics.\n    @target.changed()\n    @target.updateRendering()\n    @target.changed()\n\n    @gotoSlot 0\n  \n  insert: (aChar, shiftKey) ->\n    if aChar is "\t"\n      @target.escalateEvent \'reactToEdit\', @target\n      if shiftKey\n        return @target.backTab(@target);\n      return @target.tab(@target)\n    if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)\n      if @target.selection() isnt ""\n        @gotoSlot @target.selectionStartSlot()\n        @target.deleteSelection()\n      text = @target.text\n      text = text.slice(0, @slot) + aChar + text.slice(@slot)\n      @target.text = text\n      @target.updateRendering()\n      @target.changed()\n      @goRight false, aChar.length\n  \n  ctrl: (aChar) ->\n    if (aChar is 97) or (aChar is 65)\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n    else if aChar is 123\n      @insert "{"\n    else if aChar is 125\n      @insert "}"\n    else if aChar is 91\n      @insert "["\n    else if aChar is 93\n      @insert "]"\n    else if aChar is 64\n      @insert "@"\n  \n  cmd: (aChar) ->\n    if aChar is 65\n      @target.selectAll()\n    else if aChar is 90\n      @undo()\n  \n  deleteRight: ->\n    if @target.selection() isnt ""\n      @gotoSlot @target.selectionStartSlot()\n      @target.deleteSelection()\n    else\n      text = @target.text\n      @target.changed()\n      text = text.slice(0, @slot) + text.slice(@slot + 1)\n      @target.text = text\n      @target.updateRendering()\n  \n  deleteLeft: ->\n    if @target.selection()\n      @gotoSlot @target.selectionStartSlot()\n      return @target.deleteSelection()\n    text = @target.text\n    @target.changed()\n    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)\n    @target.updateRendering()\n    @goLeft()\n\n  # CaretMorph destroying:\n  destroy: ->\n    if @target.alignment isnt @originalAlignment\n      @target.alignment = @originalAlignment\n      @target.updateRendering()\n      @target.changed()\n    super  \n  \n  # CaretMorph utilities:\n  inspectKeyEvent: (event) ->\n    # private\n    @inform "Key pressed: " + String.fromCharCode(event.charCode) + "\n------------------------" + "\ncharCode: " + event.charCode.toString() + "\nkeyCode: " + event.keyCode.toString() + "\naltKey: " + event.altKey.toString() + "\nctrlKey: " + event.ctrlKey.toString()  + "\ncmdKey: " + event.metaKey.toString()';
+
+  return CaretMorph;
+
+})(BlinkerMorph);
+
+TriggerMorph = (function(_super) {
+  __extends(TriggerMorph, _super);
+
+  TriggerMorph.prototype.target = null;
+
+  TriggerMorph.prototype.action = null;
+
+  TriggerMorph.prototype.environment = null;
+
+  TriggerMorph.prototype.label = null;
+
+  TriggerMorph.prototype.labelString = null;
+
+  TriggerMorph.prototype.labelColor = null;
+
+  TriggerMorph.prototype.labelBold = null;
+
+  TriggerMorph.prototype.labelItalic = null;
+
+  TriggerMorph.prototype.doubleClickAction = null;
+
+  TriggerMorph.prototype.hint = null;
+
+  TriggerMorph.prototype.fontSize = null;
+
+  TriggerMorph.prototype.fontStyle = null;
+
+  TriggerMorph.prototype.highlightColor = new Color(192, 192, 192);
+
+  TriggerMorph.prototype.highlightImage = null;
+
+  TriggerMorph.prototype.pressColor = new Color(128, 128, 128);
+
+  TriggerMorph.prototype.normalImage = null;
+
+  TriggerMorph.prototype.pressImage = null;
+
+  function TriggerMorph(target, action, labelString, fontSize, fontStyle, environment, hint, labelColor, labelBold, labelItalic, doubleClickAction) {
+    this.target = target != null ? target : null;
+    this.action = action != null ? action : null;
+    this.labelString = labelString != null ? labelString : null;
+    this.environment = environment != null ? environment : null;
+    this.hint = hint != null ? hint : null;
+    this.labelBold = labelBold != null ? labelBold : false;
+    this.labelItalic = labelItalic != null ? labelItalic : false;
+    this.doubleClickAction = doubleClickAction != null ? doubleClickAction : null;
+    this.fontSize = fontSize || WorldMorph.MorphicPreferences.menuFontSize;
+    this.fontStyle = fontStyle || "sans-serif";
+    this.labelColor = labelColor || new Color(0, 0, 0);
+    TriggerMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.updateRendering();
+  }
+
+  TriggerMorph.prototype.updateRendering = function() {
+    this.createBackgrounds();
+    if (this.labelString !== null) {
+      return this.createLabel();
+    }
+  };
+
+  TriggerMorph.prototype.createBackgrounds = function() {
+    var context, ext;
+
+    ext = this.extent();
+    this.normalImage = newCanvas(ext);
+    context = this.normalImage.getContext("2d");
+    context.fillStyle = this.color.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.highlightImage = newCanvas(ext);
+    context = this.highlightImage.getContext("2d");
+    context.fillStyle = this.highlightColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    this.pressImage = newCanvas(ext);
+    context = this.pressImage.getContext("2d");
+    context.fillStyle = this.pressColor.toString();
+    context.fillRect(0, 0, ext.x, ext.y);
+    return this.image = this.normalImage;
+  };
+
+  TriggerMorph.prototype.createLabel = function() {
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    this.label = new StringMorph(this.labelString, this.fontSize, this.fontStyle, false, false, false, null, null, this.labelColor, this.labelBold, this.labelItalic);
+    this.label.setPosition(this.center().subtract(this.label.extent().floorDivideBy(2)));
+    return this.add(this.label);
+  };
+
+  TriggerMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = TriggerMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.label && dict[this.label]) {
+      c.label = dict[this.label];
+    }
+    return c;
+  };
+
+  TriggerMorph.prototype.trigger = function() {
+    if (typeof this.target === "function") {
+      if (typeof this.action === "function") {
+        return this.target.call(this.environment, this.action.call(), this);
+      } else {
+        return this.target.call(this.environment, this.action, this);
+      }
+    } else {
+      if (typeof this.action === "function") {
+        return this.action.call(this.target);
+      } else {
+        return this.target[this.action]();
+      }
+    }
+  };
+
+  TriggerMorph.prototype.triggerDoubleClick = function() {
+    if (!this.doubleClickAction) {
+      return;
+    }
+    if (typeof this.target === "function") {
+      if (typeof this.doubleClickAction === "function") {
+        return this.target.call(this.environment, this.doubleClickAction.call(), this);
+      } else {
+        return this.target.call(this.environment, this.doubleClickAction, this);
+      }
+    } else {
+      if (typeof this.doubleClickAction === "function") {
+        return this.doubleClickAction.call(this.target);
+      } else {
+        return this.target[this.doubleClickAction]();
+      }
+    }
+  };
+
+  TriggerMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  TriggerMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    this.changed();
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  TriggerMorph.prototype.mouseDownLeft = function() {
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  TriggerMorph.prototype.mouseClickLeft = function() {
+    this.image = this.highlightImage;
+    this.changed();
+    return this.trigger();
+  };
+
+  TriggerMorph.prototype.mouseDoubleClick = function() {
+    return this.triggerDoubleClick();
+  };
+
+  TriggerMorph.prototype.rootForGrab = function() {
+    if (this.isDraggable) {
+      return TriggerMorph.__super__.rootForGrab.call(this);
+    }
+    return null;
+  };
+
+  TriggerMorph.prototype.bubbleHelp = function(contents) {
+    var _this = this;
+
+    this.fps = 2;
+    return this.step = function() {
+      if (_this.bounds.containsPoint(_this.world().hand.position())) {
+        _this.popUpbubbleHelp(contents);
+      }
+      _this.fps = 0;
+      return delete _this.step;
+    };
+  };
+
+  TriggerMorph.prototype.popUpbubbleHelp = function(contents) {
+    return new SpeechBubbleMorph(localize(contents), null, null, 1).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
+  };
+
+  TriggerMorph.coffeeScriptSourceOfThisClass = '# TriggerMorph ////////////////////////////////////////////////////////\n\n# I provide basic button functionality\n\nclass TriggerMorph extends Morph\n\n  target: null\n  action: null\n  environment: null\n  label: null\n  labelString: null\n  labelColor: null\n  labelBold: null\n  labelItalic: null\n  doubleClickAction: null\n  hint: null\n  fontSize: null\n  fontStyle: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  highlightColor: new Color(192, 192, 192)\n  highlightImage: null\n  # careful: this Color object is shared with all the instances of this class.\n  # if you modify it, then all the objects will get the change\n  # but if you replace it with a new Color, then that will only affect the\n  # specific object instance. Same behaviour as with arrays.\n  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333\n  pressColor: new Color(128, 128, 128)\n  normalImage: null\n  pressImage: null\n\n  constructor: (\n      @target = null,\n      @action = null,\n      @labelString = null,\n      fontSize,\n      fontStyle,\n      @environment = null,\n      @hint = null,\n      labelColor,\n      @labelBold = false,\n      @labelItalic = false\n      @doubleClickAction = null) ->\n\n    # additional properties:\n    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize\n    @fontStyle = fontStyle or "sans-serif"\n    @labelColor = labelColor or new Color(0, 0, 0)\n    #\n    super()\n    #\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  \n  # TriggerMorph drawing:\n  updateRendering: ->\n    @createBackgrounds()\n    @createLabel()  if @labelString isnt null\n  \n  createBackgrounds: ->\n    ext = @extent()\n    @normalImage = newCanvas(ext)\n    context = @normalImage.getContext("2d")\n    context.fillStyle = @color.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @highlightImage = newCanvas(ext)\n    context = @highlightImage.getContext("2d")\n    context.fillStyle = @highlightColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @pressImage = newCanvas(ext)\n    context = @pressImage.getContext("2d")\n    context.fillStyle = @pressColor.toString()\n    context.fillRect 0, 0, ext.x, ext.y\n    @image = @normalImage\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    # bold\n    # italic\n    # numeric\n    # shadow offset\n    # shadow color\n    @label = new StringMorph(\n      @labelString,\n      @fontSize,\n      @fontStyle,\n      false,\n      false,\n      false,\n      null,\n      null,\n      @labelColor,\n      @labelBold,\n      @labelItalic\n    )\n    @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))\n    @add @label\n  \n  \n  # TriggerMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.label = (dict[@label])  if c.label and dict[@label]\n    c\n  \n  \n  # TriggerMorph action:\n  trigger: ->\n    #\n    #	if target is a function, use it as callback:\n    #	execute target as callback function with action as argument\n    #	in the environment as optionally specified.\n    #	Note: if action is also a function, instead of becoming\n    #	the argument itself it will be called to answer the argument.\n    #	for selections, Yes/No Choices etc. As second argument pass\n    # myself, so I can be modified to reflect status changes, e.g.\n    # inside a list box:\n    #\n    #	else (if target is not a function):\n    #\n    #		if action is a function:\n    #		execute the action with target as environment (can be null)\n    #		for lambdafied (inline) actions\n    #\n    #		else if action is a String:\n    #		treat it as function property of target and execute it\n    #		for selector-like actions\n    #	\n    if typeof @target is "function"\n      if typeof @action is "function"\n        @target.call @environment, @action.call(), @\n      else\n        @target.call @environment, @action, @\n    else\n      if typeof @action is "function"\n        @action.call @target\n      else # assume it\'s a String\n        @target[@action]()\n\n  triggerDoubleClick: ->\n    # same as trigger() but use doubleClickAction instead of action property\n    # note that specifying a doubleClickAction is optional\n    return  unless @doubleClickAction\n    if typeof @target is "function"\n      if typeof @doubleClickAction is "function"\n        @target.call @environment, @doubleClickAction.call(), this\n      else\n        @target.call @environment, @doubleClickAction, this\n    else\n      if typeof @doubleClickAction is "function"\n        @doubleClickAction.call @target\n      else # assume it\'s a String\n        @target[@doubleClickAction]()  \n  \n  # TriggerMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: ->\n    @image = @pressImage\n    @changed()\n  \n  mouseClickLeft: ->\n    @image = @highlightImage\n    @changed()\n    @trigger()\n\n  mouseDoubleClick: ->\n    @triggerDoubleClick()\n\n  # Disable dragging compound Morphs by Triggers\n  # User can still move the trigger itself though\n  # (it it\'s unlocked)\n  rootForGrab: ->\n    if @isDraggable\n      return super()\n    null\n  \n  # TriggerMorph bubble help:\n  bubbleHelp: (contents) ->\n    @fps = 2\n    @step = =>\n      @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())\n      @fps = 0\n      delete @step\n  \n  popUpbubbleHelp: (contents) ->\n    new SpeechBubbleMorph(\n      localize(contents), null, null, 1).popUp @world(),\n      @rightCenter().add(new Point(-8, 0))';
+
+  return TriggerMorph;
+
+})(Morph);
+
+MenuItemMorph = (function(_super) {
+  __extends(MenuItemMorph, _super);
+
+  function MenuItemMorph(target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) {
+    MenuItemMorph.__super__.constructor.call(this, target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction);
+  }
+
+  MenuItemMorph.prototype.createLabel = function() {
+    var icon, lbl, np;
+
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    if (isString(this.labelString)) {
+      this.label = this.createLabelString(this.labelString);
+    } else if (this.labelString instanceof Array) {
+      this.label = new Morph();
+      this.label.alpha = 0;
+      icon = this.createIcon(this.labelString[0]);
+      this.label.add(icon);
+      lbl = this.createLabelString(this.labelString[1]);
+      this.label.add(lbl);
+      lbl.setCenter(icon.center());
+      lbl.setLeft(icon.right() + 4);
+      this.label.bounds = icon.bounds.merge(lbl.bounds);
+      this.label.updateRendering();
+    } else {
+      this.label = this.createIcon(this.labelString);
+    }
+    this.silentSetExtent(this.label.extent().add(new Point(8, 0)));
+    np = this.position().add(new Point(4, 0));
+    this.label.bounds = np.extent(this.label.extent());
+    return this.add(this.label);
+  };
+
+  MenuItemMorph.prototype.createIcon = function(source) {
+    var icon, src;
+
+    icon = new Morph();
+    icon.image = (source instanceof Morph ? source.fullImage() : source);
+    if (source instanceof Morph && source.getShadow()) {
+      src = icon.image;
+      icon.image = newCanvas(source.fullBounds().extent().subtract(this.shadowBlur * (useBlurredShadows ? 1 : 2)));
+      icon.image.getContext("2d").drawImage(src, 0, 0);
+    }
+    icon.silentSetWidth(icon.image.width);
+    icon.silentSetHeight(icon.image.height);
+    return icon;
+  };
+
+  MenuItemMorph.prototype.createLabelString = function(string) {
+    var lbl;
+
+    lbl = new TextMorph(string, this.fontSize, this.fontStyle);
+    lbl.setColor(this.labelColor);
+    return lbl;
+  };
+
+  MenuItemMorph.prototype.mouseEnter = function() {
+    if (!this.isListItem()) {
+      this.image = this.highlightImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.bubbleHelp(this.hint);
+    }
+  };
+
+  MenuItemMorph.prototype.mouseLeave = function() {
+    if (!this.isListItem()) {
+      this.image = this.normalImage;
+      this.changed();
+    }
+    if (this.hint) {
+      return this.world().hand.destroyTemporaries();
+    }
+  };
+
+  MenuItemMorph.prototype.mouseDownLeft = function(pos) {
+    if (this.isListItem()) {
+      this.parent.unselectAllItems();
+      this.escalateEvent("mouseDownLeft", pos);
+    }
+    this.image = this.pressImage;
+    return this.changed();
+  };
+
+  MenuItemMorph.prototype.mouseMove = function() {
+    if (this.isListItem()) {
+      return this.escalateEvent("mouseMove");
+    }
+  };
+
+  MenuItemMorph.prototype.mouseClickLeft = function() {
+    if (!this.isListItem()) {
+      this.parent.destroy();
+      this.root().activeMenu = null;
+    }
+    return this.trigger();
+  };
+
+  MenuItemMorph.prototype.isListItem = function() {
+    if (this.parent) {
+      return this.parent.isListContents;
+    }
+    return false;
+  };
+
+  MenuItemMorph.prototype.isSelectedListItem = function() {
+    if (this.isListItem()) {
+      return this.image === this.pressImage;
+    }
+    return false;
+  };
+
+  MenuItemMorph.coffeeScriptSourceOfThisClass = '# MenuItemMorph ///////////////////////////////////////////////////////\n\n# I automatically determine my bounds\n\nclass MenuItemMorph extends TriggerMorph\n\n  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]\n  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) ->\n    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction \n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n\n    if isString(@labelString)\n      @label = @createLabelString(@labelString)\n    else if @labelString instanceof Array      \n      # assume its pattern is: [icon, string] \n      @label = new Morph()\n      @label.alpha = 0 # transparent\n\n      icon = @createIcon(@labelString[0])\n      @label.add icon\n      lbl = @createLabelString(@labelString[1])\n      @label.add lbl\n\n      lbl.setCenter icon.center()\n      lbl.setLeft icon.right() + 4\n      @label.bounds = (icon.bounds.merge(lbl.bounds))\n      @label.updateRendering()\n    else # assume it\'s either a Morph or a Canvas\n      @label = @createIcon(@labelString)\n  \n    @silentSetExtent @label.extent().add(new Point(8, 0))\n    np = @position().add(new Point(4, 0))\n    @label.bounds = np.extent(@label.extent())\n    @add @label\n  \n  createIcon: (source) ->\n    # source can be either a Morph or an HTMLCanvasElement\n    icon = new Morph()\n    icon.image = (if source instanceof Morph then source.fullImage() else source)\n\n    # adjust shadow dimensions\n    if source instanceof Morph and source.getShadow()\n      src = icon.image\n      icon.image = newCanvas(\n        source.fullBounds().extent().subtract(\n          @shadowBlur * ((if useBlurredShadows then 1 else 2))))\n      icon.image.getContext("2d").drawImage src, 0, 0\n\n    icon.silentSetWidth icon.image.width\n    icon.silentSetHeight icon.image.height\n    icon\n\n  createLabelString: (string) ->\n    lbl = new TextMorph(string, @fontSize, @fontStyle)\n    lbl.setColor @labelColor\n    lbl  \n\n  # MenuItemMorph events:\n  mouseEnter: ->\n    unless @isListItem()\n      @image = @highlightImage\n      @changed()\n    @bubbleHelp @hint  if @hint\n  \n  mouseLeave: ->\n    unless @isListItem()\n      @image = @normalImage\n      @changed()\n    @world().hand.destroyTemporaries()  if @hint\n  \n  mouseDownLeft: (pos) ->\n    if @isListItem()\n      @parent.unselectAllItems()\n      @escalateEvent "mouseDownLeft", pos\n    @image = @pressImage\n    @changed()\n  \n  mouseMove: ->\n    @escalateEvent "mouseMove"  if @isListItem()\n  \n  mouseClickLeft: ->\n    unless @isListItem()\n      @parent.destroy()\n      @root().activeMenu = null\n    @trigger()\n  \n  isListItem: ->\n    return @parent.isListContents  if @parent\n    false\n  \n  isSelectedListItem: ->\n    return @image is @pressImage  if @isListItem()\n    false';
+
+  return MenuItemMorph;
+
+})(TriggerMorph);
+
+MorphsListMorph = (function(_super) {
+  __extends(MorphsListMorph, _super);
+
+  MorphsListMorph.prototype.morphsList = null;
+
+  MorphsListMorph.prototype.buttonClose = null;
+
+  MorphsListMorph.prototype.resizer = null;
+
+  function MorphsListMorph(target) {
+    MorphsListMorph.__super__.constructor.call(this);
+    this.silentSetExtent(new Point(WorldMorph.MorphicPreferences.handleSize * 10, WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3));
     this.isDraggable = true;
     this.border = 1;
-    this.edge = WorldMorph.MorphicPreferences.isFlat ? 1 : 5;
+    this.edge = 5;
     this.color = new Color(60, 60, 60);
     this.borderColor = new Color(95, 95, 95);
     this.updateRendering();
-    if (this.target) {
-      this.buildPanes();
-    }
+    this.buildPanes();
   }
 
-  InspectorMorph.prototype.setTarget = function(target) {
+  MorphsListMorph.prototype.setTarget = function(target) {
     this.target = target;
     this.currentProperty = null;
     return this.buildPanes();
   };
 
-  InspectorMorph.prototype.buildPanes = function() {
-    var attribs, ctrl, doubleClickAction, ev, property, staticAttributes, staticFunctions, staticProperties, targetOwnMethods,
+  MorphsListMorph.prototype.buildPanes = function() {
+    var ListOfMorphs, attribs, theWordMorph,
       _this = this;
 
     attribs = [];
@@ -9239,206 +6982,20 @@ InspectorMorph = (function(_super) {
       }
     });
     this.children = [];
-    this.label = new TextMorph(this.target.toString());
+    this.label = new TextMorph("Morphs List");
     this.label.fontSize = WorldMorph.MorphicPreferences.menuFontSize;
     this.label.isBold = true;
     this.label.color = new Color(255, 255, 255);
     this.label.updateRendering();
     this.add(this.label);
-    for (property in this.target) {
-      if (property) {
-        attribs.push(property);
-      }
-    }
-    if (this.showing === "attributes") {
-      attribs = attribs.filter(function(prop) {
-        return !isFunction(_this.target[prop]);
-      });
-    } else if (this.showing === "methods") {
-      attribs = attribs.filter(function(prop) {
-        return isFunction(_this.target[prop]);
-      });
-    }
-    staticProperties = Object.getOwnPropertyNames(this.target.constructor);
-    staticProperties = staticProperties.filter(function(prop) {
-      return prop !== "name" && prop !== "length" && prop !== "prototype" && prop !== "caller" && prop !== "__super__" && prop !== "arguments";
+    theWordMorph = "Morph";
+    ListOfMorphs = (Object.keys(window)).filter(function(i) {
+      return i.indexOf(theWordMorph, i.length - theWordMorph.length) !== -1;
     });
-    if (this.showing === "attributes") {
-      staticFunctions = [];
-      staticAttributes = staticProperties.filter(function(prop) {
-        return !isFunction(_this.target.constructor[prop]);
-      });
-    } else if (this.showing === "methods") {
-      staticFunctions = staticProperties.filter(function(prop) {
-        return isFunction(_this.target.constructor[prop]);
-      });
-      staticAttributes = [];
-    } else {
-      staticFunctions = staticProperties.filter(function(prop) {
-        return isFunction(_this.target.constructor[prop]);
-      });
-      staticAttributes = staticProperties.filter(function(prop) {
-        return __indexOf.call(staticFunctions, prop) < 0;
-      });
-    }
-    attribs = (attribs.concat(staticFunctions)).concat(staticAttributes);
-    if (this.markOwnershipOfProperties) {
-      targetOwnMethods = Object.getOwnPropertyNames(this.target.constructor.prototype);
-    }
-    doubleClickAction = function() {
-      var inspector, world;
-
-      if (!isObject(_this.currentProperty)) {
-        return;
-      }
-      world = _this.world();
-      inspector = new InspectorMorph(_this.currentProperty);
-      inspector.setPosition(world.hand.position());
-      inspector.keepWithin(world);
-      world.add(inspector);
-      return inspector.changed();
-    };
-    this.list = new ListMorph((this.target instanceof Array ? attribs : attribs.sort()), null, (this.markOwnershipOfProperties ? [
-      [
-        new Color(0, 0, 180), function(element) {
-          return true;
-        }
-      ], [
-        new Color(255, 165, 0), function(element) {
-          return __indexOf.call(staticProperties, element) >= 0;
-        }
-      ], [
-        new Color(0, 180, 0), function(element) {
-          return Object.prototype.hasOwnProperty.call(_this.target, element);
-        }
-      ], [
-        new Color(180, 0, 0), function(element) {
-          return __indexOf.call(targetOwnMethods, element) >= 0;
-        }
-      ]
-    ] : null), doubleClickAction);
-    this.list.action = function(selected) {
-      var cnts, txt, val;
-
-      if (selected === void 0) {
-        return;
-      }
-      val = _this.target[selected];
-      if (val === void 0) {
-        val = _this.target.constructor[selected];
-      }
-      _this.currentProperty = val;
-      if (val === null) {
-        txt = "NULL";
-      } else if (isString(val)) {
-        txt = val;
-      } else {
-        txt = val.toString();
-      }
-      cnts = new TextMorph(txt);
-      cnts.isEditable = true;
-      cnts.enableSelecting();
-      cnts.setReceiver(_this.target);
-      return _this.detail.setContents(cnts);
-    };
-    this.list.hBar.alpha = 0.6;
-    this.list.vBar.alpha = 0.6;
-    this.list.listContents.step = null;
-    this.add(this.list);
-    this.detail = new ScrollFrameMorph();
-    this.detail.acceptsDrops = false;
-    this.detail.contents.acceptsDrops = false;
-    this.detail.isTextLineWrapping = true;
-    this.detail.color = new Color(255, 255, 255);
-    this.detail.hBar.alpha = 0.6;
-    this.detail.vBar.alpha = 0.6;
-    ctrl = new TextMorph("");
-    ctrl.isEditable = true;
-    ctrl.enableSelecting();
-    ctrl.setReceiver(this.target);
-    this.detail.setContents(ctrl);
-    this.add(this.detail);
-    if (this.work === null) {
-      this.work = new ScrollFrameMorph();
-      this.work.acceptsDrops = false;
-      this.work.contents.acceptsDrops = false;
-      this.work.isTextLineWrapping = true;
-      this.work.color = new Color(255, 255, 255);
-      this.work.hBar.alpha = 0.6;
-      this.work.vBar.alpha = 0.6;
-      ev = new TextMorph("");
-      ev.isEditable = true;
-      ev.enableSelecting();
-      ev.setReceiver(this.target);
-      this.work.setContents(ev);
-    }
-    this.add(this.work);
-    this.buttonSubset = new TriggerMorph();
-    this.buttonSubset.labelString = "show...";
-    this.buttonSubset.action = function() {
-      var menu;
-
-      menu = new MenuMorph();
-      menu.addItem("attributes", function() {
-        _this.showing = "attributes";
-        return _this.buildPanes();
-      });
-      menu.addItem("methods", function() {
-        _this.showing = "methods";
-        return _this.buildPanes();
-      });
-      menu.addItem("all", function() {
-        _this.showing = "all";
-        return _this.buildPanes();
-      });
-      menu.addLine();
-      menu.addItem((_this.markOwnershipOfProperties ? "un-mark ownership" : "mark ownership"), (function() {
-        _this.markOwnershipOfProperties = !_this.markOwnershipOfProperties;
-        return _this.buildPanes();
-      }), "highlight\nownership of properties");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonSubset);
-    this.buttonInspect = new TriggerMorph();
-    this.buttonInspect.labelString = "inspect...";
-    this.buttonInspect.action = function() {
-      var menu;
-
-      if (isObject(_this.currentProperty)) {
-        menu = new MenuMorph();
-        menu.addItem("in new inspector...", function() {
-          var inspector, world;
-
-          world = _this.world();
-          inspector = new InspectorMorph(_this.currentProperty);
-          inspector.setPosition(world.hand.position());
-          inspector.keepWithin(world);
-          world.add(inspector);
-          return inspector.changed();
-        });
-        menu.addItem("here...", function() {
-          return _this.setTarget(_this.currentProperty);
-        });
-        return menu.popUpAtHand(_this.world());
-      } else {
-        return _this.inform((_this.currentProperty === null ? "null" : typeof _this.currentProperty) + "\nis not inspectable");
-      }
-    };
-    this.add(this.buttonInspect);
-    this.buttonEdit = new TriggerMorph();
-    this.buttonEdit.labelString = "edit...";
-    this.buttonEdit.action = function() {
-      var menu;
-
-      menu = new MenuMorph(_this);
-      menu.addItem("save", "save", "accept changes");
-      menu.addLine();
-      menu.addItem("add property...", "addProperty");
-      menu.addItem("rename...", "renameProperty");
-      menu.addItem("remove...", "removeProperty");
-      return menu.popUpAtHand(_this.world());
-    };
-    this.add(this.buttonEdit);
+    this.morphsList = new ListMorph(ListOfMorphs, null);
+    this.morphsList.hBar.alpha = 0.6;
+    this.morphsList.vBar.alpha = 0.6;
+    this.add(this.morphsList);
     this.buttonClose = new TriggerMorph();
     this.buttonClose.labelString = "close";
     this.buttonClose.action = function() {
@@ -9449,7 +7006,7 @@ InspectorMorph = (function(_super) {
     return this.fixLayout();
   };
 
-  InspectorMorph.prototype.fixLayout = function() {
+  MorphsListMorph.prototype.fixLayout = function() {
     var b, h, r, w, x, y;
 
     Morph.prototype.trackChanges = false;
@@ -9466,275 +7023,2718 @@ InspectorMorph = (function(_super) {
       this.resizer.updateRendering();
     }
     y = this.label.bottom() + 2;
-    w = Math.min(Math.floor(this.width() / 3), this.list.listContents.width());
+    w = this.width() - this.edge;
     w -= this.edge;
     b = this.bottom() - (2 * this.edge) - WorldMorph.MorphicPreferences.handleSize;
     h = b - y;
-    this.list.setPosition(new Point(x, y));
-    this.list.setExtent(new Point(w, h));
-    x = this.list.right() + this.edge;
-    r = this.right() - this.edge;
-    w = r - x;
-    this.detail.setPosition(new Point(x, y));
-    this.detail.setExtent(new Point(w, (h * 2 / 3) - this.edge));
-    y = this.detail.bottom() + this.edge;
-    this.work.setPosition(new Point(x, y));
-    this.work.setExtent(new Point(w, h / 3));
-    x = this.list.left();
-    y = this.list.bottom() + this.edge;
-    w = this.list.width();
+    this.morphsList.setPosition(new Point(x, y));
+    this.morphsList.setExtent(new Point(w, h));
+    x = this.morphsList.left();
+    y = this.morphsList.bottom() + this.edge;
     h = WorldMorph.MorphicPreferences.handleSize;
-    this.buttonSubset.setPosition(new Point(x, y));
-    this.buttonSubset.setExtent(new Point(w, h));
-    x = this.detail.left();
-    w = this.detail.width() - this.edge - WorldMorph.MorphicPreferences.handleSize;
-    w = w / 3 - this.edge / 3;
-    this.buttonInspect.setPosition(new Point(x, y));
-    this.buttonInspect.setExtent(new Point(w, h));
-    x = this.buttonInspect.right() + this.edge;
-    this.buttonEdit.setPosition(new Point(x, y));
-    this.buttonEdit.setExtent(new Point(w, h));
-    x = this.buttonEdit.right() + this.edge;
-    r = this.detail.right() - this.edge - WorldMorph.MorphicPreferences.handleSize;
-    w = r - x;
+    w = this.morphsList.width() - h - this.edge;
     this.buttonClose.setPosition(new Point(x, y));
     this.buttonClose.setExtent(new Point(w, h));
     Morph.prototype.trackChanges = true;
     return this.changed();
   };
 
-  InspectorMorph.prototype.setExtent = function(aPoint) {
-    InspectorMorph.__super__.setExtent.call(this, aPoint);
+  MorphsListMorph.prototype.setExtent = function(aPoint) {
+    MorphsListMorph.__super__.setExtent.call(this, aPoint);
     return this.fixLayout();
   };
 
-  InspectorMorph.prototype.save = function() {
-    var err, prop, txt;
+  MorphsListMorph.coffeeScriptSourceOfThisClass = '# MorphsListMorph //////////////////////////////////////////////////////\n\nclass MorphsListMorph extends BoxMorph\n\n  # panes:\n  morphsList: null\n  buttonClose: null\n  resizer: null\n\n  constructor: (target) ->\n    super()\n\n    @silentSetExtent new Point(\n      WorldMorph.MorphicPreferences.handleSize * 10,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n\n    @children = []\n\n    # label\n    @label = new TextMorph("Morphs List")\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n\n    # Check which objects end with the word Morph\n    theWordMorph = "Morph"\n    ListOfMorphs = (Object.keys(window)).filter (i) ->\n      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1\n    @morphsList = new ListMorph(ListOfMorphs, null)\n\n    # so far nothing happens when items are selected\n    #@morphsList.action = (selected) ->\n    #  val = myself.target[selected]\n    #  myself.currentProperty = val\n    #  if val is null\n    #    txt = "NULL"\n    #  else if isString(val)\n    #    txt = val\n    #  else\n    #    txt = val.toString()\n    #  cnts = new TextMorph(txt)\n    #  cnts.isEditable = true\n    #  cnts.enableSelecting()\n    #  cnts.setReceiver myself.target\n    #  myself.detail.setContents cnts\n\n    @morphsList.hBar.alpha = 0.6\n    @morphsList.vBar.alpha = 0.6\n    @add @morphsList\n\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n\n    @add @buttonClose\n\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n\n    # morphsList\n    y = @label.bottom() + 2\n    w = @width() - @edge\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @morphsList.setPosition new Point(x, y)\n    @morphsList.setExtent new Point(w, h)\n\n    # close button\n    x = @morphsList.left()\n    y = @morphsList.bottom() + @edge\n    h = WorldMorph.MorphicPreferences.handleSize\n    w = @morphsList.width() - h - @edge\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()';
 
-    txt = this.detail.contents.children[0].text.toString();
-    prop = this.list.selected;
-    try {
-      this.target.evaluateString("this." + prop + " = " + txt);
-      if (this.target.updateRendering) {
-        this.target.changed();
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } catch (_error) {
-      err = _error;
-      return this.inform(err);
-    }
-  };
-
-  InspectorMorph.prototype.addProperty = function() {
-    var _this = this;
-
-    return this.prompt("new property name:", (function(prop) {
-      if (prop) {
-        _this.target[prop] = null;
-        _this.buildPanes();
-        if (_this.target.updateRendering) {
-          _this.target.changed();
-          _this.target.updateRendering();
-          return _this.target.changed();
-        }
-      }
-    }), this, "property");
-  };
-
-  InspectorMorph.prototype.renameProperty = function() {
-    var propertyName,
-      _this = this;
-
-    propertyName = this.list.selected;
-    return this.prompt("property name:", (function(prop) {
-      var err;
-
-      try {
-        delete _this.target[propertyName];
-        _this.target[prop] = _this.currentProperty;
-      } catch (_error) {
-        err = _error;
-        _this.inform(err);
-      }
-      _this.buildPanes();
-      if (_this.target.updateRendering) {
-        _this.target.changed();
-        _this.target.updateRendering();
-        return _this.target.changed();
-      }
-    }), this, propertyName);
-  };
-
-  InspectorMorph.prototype.removeProperty = function() {
-    var err, prop;
-
-    prop = this.list.selected;
-    try {
-      delete this.target[prop];
-      this.currentProperty = null;
-      this.buildPanes();
-      if (this.target.updateRendering) {
-        this.target.changed();
-        this.target.updateRendering();
-        return this.target.changed();
-      }
-    } catch (_error) {
-      err = _error;
-      return this.inform(err);
-    }
-  };
-
-  InspectorMorph.coffeeScriptSourceOfThisClass = '# InspectorMorph //////////////////////////////////////////////////////\n\nclass InspectorMorph extends BoxMorph\n\n  target: null\n  currentProperty: null\n  showing: "attributes"\n  markOwnershipOfProperties: false\n  # panes:\n  label: null\n  list: null\n  detail: null\n  work: null\n  buttonInspect: null\n  buttonClose: null\n  buttonSubset: null\n  buttonEdit: null\n  resizer: null\n\n  constructor: (@target) ->\n    super()\n    # override inherited properties:\n    @silentSetExtent new Point(WorldMorph.MorphicPreferences.handleSize * 20,\n      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)\n    @isDraggable = true\n    @border = 1\n    @edge = if WorldMorph.MorphicPreferences.isFlat then 1 else 5\n    @color = new Color(60, 60, 60)\n    @borderColor = new Color(95, 95, 95)\n    @updateRendering()\n    @buildPanes()  if @target\n  \n  setTarget: (target) ->\n    @target = target\n    @currentProperty = null\n    @buildPanes()\n  \n  buildPanes: ->\n    attribs = []\n    #\n    # remove existing panes\n    @children.forEach (m) ->\n      # keep work pane around\n      m.destroy()  if m isnt @work\n    #\n    @children = []\n    #\n    # label\n    @label = new TextMorph(@target.toString())\n    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize\n    @label.isBold = true\n    @label.color = new Color(255, 255, 255)\n    @label.updateRendering()\n    @add @label\n    \n    # properties list. Note that this picks up ALL properties\n    # (enumerable such as strings and un-enumerable such as functions)\n    # of the whole prototype chain.\n    #\n    #   a) some of these are DECLARED as part of the class that defines the object\n    #   and are proprietary to the object. These are shown RED\n    # \n    #   b) some of these are proprietary to the object but are initialised by\n    #   code higher in the prototype chain. These are shown GREEN\n    #\n    #   c) some of these are not proprietary, i.e. they belong to an object up\n    #   the chain of prototypes. These are shown BLUE\n    #\n    # todo: show the static methods and variables in yet another color.\n    \n    for property of @target\n      # dummy condition, to be refined\n      attribs.push property  if property\n    if @showing is "attributes"\n      attribs = attribs.filter((prop) =>\n        not isFunction @target[prop]\n      )\n    else if @showing is "methods"\n      attribs = attribs.filter((prop) =>\n        isFunction @target[prop]\n      )\n    # otherwise show all properties\n    # label getter\n    # format list\n    # format element: [color, predicate(element]\n    \n    staticProperties = Object.getOwnPropertyNames(@target.constructor)\n    # get rid of all the standar fuff properties that are in classes\n    staticProperties = staticProperties.filter((prop) =>\n        prop not in ["name","length","prototype","caller","__super__","arguments"]\n    )\n    if @showing is "attributes"\n      staticFunctions = []\n      staticAttributes = staticProperties.filter((prop) =>\n        not isFunction(@target.constructor[prop])\n      )\n    else if @showing is "methods"\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = []\n    else\n      staticFunctions = staticProperties.filter((prop) =>\n        isFunction(@target.constructor[prop])\n      )\n      staticAttributes = staticProperties.filter((prop) =>\n        prop not in staticFunctions\n      )\n    #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes\n    attribs = (attribs.concat staticFunctions).concat staticAttributes\n    #alert " all attribs " + attribs\n    \n    # caches the own methods of the object\n    if @markOwnershipOfProperties\n      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)\n      #alert targetOwnMethods\n\n    doubleClickAction = =>\n      if (!isObject(@currentProperty))\n        return\n      world = @world()\n      inspector = new InspectorMorph @currentProperty\n      inspector.setPosition world.hand.position()\n      inspector.keepWithin world\n      world.add inspector\n      inspector.changed()\n\n    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(\n      if @markOwnershipOfProperties\n        [\n          # give color criteria from the most general to the most specific\n          [new Color(0, 0, 180),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              true\n          ],\n          [new Color(255, 165, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              element in staticProperties\n          ],\n          [new Color(0, 180, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (Object.prototype.hasOwnProperty.call(@target, element))\n          ],\n          [new Color(180, 0, 0),\n            (element) =>\n              # if the element is either an enumerable property of the object\n              # or it belongs to the own methods, then it is highlighted.\n              # Note that hasOwnProperty doesn\'t pick up non-enumerable properties such as\n              # functions.\n              # In theory, getOwnPropertyNames should give ALL the properties but the methods\n              # are still not picked up, maybe because of the coffeescript construction system, I am not sure\n              (element in targetOwnMethods)\n          ]\n        ]\n      else null\n    ),doubleClickAction)\n\n    @list.action = (selected) =>\n      if (selected == undefined) then return\n      val = @target[selected]\n      # this is for finding the static variables\n      if val is undefined\n        val = @target.constructor[selected]\n      @currentProperty = val\n      if val is null\n        txt = "NULL"\n      else if isString(val)\n        txt = val\n      else\n        txt = val.toString()\n      cnts = new TextMorph(txt)\n      cnts.isEditable = true\n      cnts.enableSelecting()\n      cnts.setReceiver @target\n      @detail.setContents cnts\n    #\n    @list.hBar.alpha = 0.6\n    @list.vBar.alpha = 0.6\n    # we know that the content of this list in this pane is not going to need the\n    # step function, so we disable that from here by setting it to null, which\n    # prevents the recursion to children. We could have disabled that from the\n    # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph\n    # with some animated content? We know that in this specific case it won\'t need animation so\n    # we set that here. Note that the ListMorph itself does require animation because of the\n    # scrollbars, but the MenuMorph (which contains the actual list contents)\n    # in this context doesn\'t.\n    @list.listContents.step = null\n    @add @list\n    #\n    # details pane\n    @detail = new ScrollFrameMorph()\n    @detail.acceptsDrops = false\n    @detail.contents.acceptsDrops = false\n    @detail.isTextLineWrapping = true\n    @detail.color = new Color(255, 255, 255)\n    @detail.hBar.alpha = 0.6\n    @detail.vBar.alpha = 0.6\n    ctrl = new TextMorph("")\n    ctrl.isEditable = true\n    ctrl.enableSelecting()\n    ctrl.setReceiver @target\n    @detail.setContents ctrl\n    @add @detail\n    #\n    # work (\'evaluation\') pane\n    # don\'t refresh the work pane if it already exists\n    if @work is null\n      @work = new ScrollFrameMorph()\n      @work.acceptsDrops = false\n      @work.contents.acceptsDrops = false\n      @work.isTextLineWrapping = true\n      @work.color = new Color(255, 255, 255)\n      @work.hBar.alpha = 0.6\n      @work.vBar.alpha = 0.6\n      ev = new TextMorph("")\n      ev.isEditable = true\n      ev.enableSelecting()\n      ev.setReceiver @target\n      @work.setContents ev\n    @add @work\n    #\n    # properties button\n    @buttonSubset = new TriggerMorph()\n    @buttonSubset.labelString = "show..."\n    @buttonSubset.action = =>\n      menu = new MenuMorph()\n      menu.addItem "attributes", =>\n        @showing = "attributes"\n        @buildPanes()\n      #\n      menu.addItem "methods", =>\n        @showing = "methods"\n        @buildPanes()\n      #\n      menu.addItem "all", =>\n        @showing = "all"\n        @buildPanes()\n      #\n      menu.addLine()\n      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>\n        @markOwnershipOfProperties = not @markOwnershipOfProperties\n        @buildPanes()\n      ), "highlight\nownership of properties"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonSubset\n    #\n    # inspect button\n    @buttonInspect = new TriggerMorph()\n    @buttonInspect.labelString = "inspect..."\n    @buttonInspect.action = =>\n      if isObject(@currentProperty)\n        menu = new MenuMorph()\n        menu.addItem "in new inspector...", =>\n          world = @world()\n          inspector = new InspectorMorph(@currentProperty)\n          inspector.setPosition world.hand.position()\n          inspector.keepWithin world\n          world.add inspector\n          inspector.changed()\n        #\n        menu.addItem "here...", =>\n          @setTarget @currentProperty\n        #\n        menu.popUpAtHand @world()\n      else\n        @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"\n    #\n    @add @buttonInspect\n    #\n    # edit button\n    @buttonEdit = new TriggerMorph()\n    @buttonEdit.labelString = "edit..."\n    @buttonEdit.action = =>\n      menu = new MenuMorph(@)\n      menu.addItem "save", "save", "accept changes"\n      menu.addLine()\n      menu.addItem "add property...", "addProperty"\n      menu.addItem "rename...", "renameProperty"\n      menu.addItem "remove...", "removeProperty"\n      menu.popUpAtHand @world()\n    #\n    @add @buttonEdit\n    #\n    # close button\n    @buttonClose = new TriggerMorph()\n    @buttonClose.labelString = "close"\n    @buttonClose.action = =>\n      @destroy()\n    #\n    @add @buttonClose\n    #\n    # resizer\n    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)\n    #\n    # update layout\n    @fixLayout()\n  \n  fixLayout: ->\n    Morph::trackChanges = false\n    #\n    # label\n    x = @left() + @edge\n    y = @top() + @edge\n    r = @right() - @edge\n    w = r - x\n    @label.setPosition new Point(x, y)\n    @label.setWidth w\n    if @label.height() > (@height() - 50)\n      @silentSetHeight @label.height() + 50\n      @updateRendering()\n      @changed()\n      @resizer.updateRendering()\n    #\n    # list\n    y = @label.bottom() + 2\n    w = Math.min(Math.floor(@width() / 3), @list.listContents.width())\n    w -= @edge\n    b = @bottom() - (2 * @edge) - WorldMorph.MorphicPreferences.handleSize\n    h = b - y\n    @list.setPosition new Point(x, y)\n    @list.setExtent new Point(w, h)\n    #\n    # detail\n    x = @list.right() + @edge\n    r = @right() - @edge\n    w = r - x\n    @detail.setPosition new Point(x, y)\n    @detail.setExtent new Point(w, (h * 2 / 3) - @edge)\n    #\n    # work\n    y = @detail.bottom() + @edge\n    @work.setPosition new Point(x, y)\n    @work.setExtent new Point(w, h / 3)\n    #\n    # properties button\n    x = @list.left()\n    y = @list.bottom() + @edge\n    w = @list.width()\n    h = WorldMorph.MorphicPreferences.handleSize\n    @buttonSubset.setPosition new Point(x, y)\n    @buttonSubset.setExtent new Point(w, h)\n    #\n    # inspect button\n    x = @detail.left()\n    w = @detail.width() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = w / 3 - @edge / 3\n    @buttonInspect.setPosition new Point(x, y)\n    @buttonInspect.setExtent new Point(w, h)\n    #\n    # edit button\n    x = @buttonInspect.right() + @edge\n    @buttonEdit.setPosition new Point(x, y)\n    @buttonEdit.setExtent new Point(w, h)\n    #\n    # close button\n    x = @buttonEdit.right() + @edge\n    r = @detail.right() - @edge - WorldMorph.MorphicPreferences.handleSize\n    w = r - x\n    @buttonClose.setPosition new Point(x, y)\n    @buttonClose.setExtent new Point(w, h)\n    Morph::trackChanges = true\n    @changed()\n  \n  setExtent: (aPoint) ->\n    super aPoint\n    @fixLayout()\n  \n  \n  #InspectorMorph editing ops:\n  save: ->\n    txt = @detail.contents.children[0].text.toString()\n    prop = @list.selected\n    try\n      #\n      # this.target[prop] = evaluate(txt);\n      @target.evaluateString "this." + prop + " = " + txt\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err\n  \n  addProperty: ->\n    @prompt "new property name:", ((prop) =>\n      if prop\n        @target[prop] = null\n        @buildPanes()\n        if @target.updateRendering\n          @target.changed()\n          @target.updateRendering()\n          @target.changed()\n    ), @, "property" # Chrome cannot handle empty strings (others do)\n  \n  renameProperty: ->\n    propertyName = @list.selected\n    @prompt "property name:", ((prop) =>\n      try\n        delete (@target[propertyName])\n        @target[prop] = @currentProperty\n      catch err\n        @inform err\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    ), @, propertyName\n  \n  removeProperty: ->\n    prop = @list.selected\n    try\n      delete (@target[prop])\n      #\n      @currentProperty = null\n      @buildPanes()\n      if @target.updateRendering\n        @target.changed()\n        @target.updateRendering()\n        @target.changed()\n    catch err\n      @inform err';
-
-  return InspectorMorph;
+  return MorphsListMorph;
 
 })(BoxMorph);
 
-MouseSensorMorph = (function(_super) {
-  __extends(MouseSensorMorph, _super);
+ColorPickerMorph = (function(_super) {
+  __extends(ColorPickerMorph, _super);
 
-  function MouseSensorMorph(edge, border, borderColor) {
-    MouseSensorMorph.__super__.constructor.apply(this, arguments);
-    this.edge = edge || 4;
-    this.border = border || 2;
+  ColorPickerMorph.prototype.choice = null;
+
+  function ColorPickerMorph(defaultColor) {
+    this.choice = defaultColor || new Color(255, 255, 255);
+    ColorPickerMorph.__super__.constructor.call(this);
     this.color = new Color(255, 255, 255);
-    this.borderColor = borderColor || new Color();
-    this.isTouched = false;
-    this.upStep = 0.05;
-    this.downStep = 0.02;
-    this.noticesTransparentClick = false;
+    this.silentSetExtent(new Point(80, 80));
     this.updateRendering();
   }
 
-  MouseSensorMorph.prototype.touch = function() {
-    var _this = this;
-
-    if (!this.isTouched) {
-      this.isTouched = true;
-      this.alpha = 0.6;
-      return this.step = function() {
-        if (_this.isTouched) {
-          if (_this.alpha < 1) {
-            _this.alpha = _this.alpha + _this.upStep;
-          }
-        } else if (_this.alpha > _this.downStep) {
-          _this.alpha = _this.alpha - _this.downStep;
-        } else {
-          _this.alpha = 0;
-          _this.step = null;
-        }
-        return _this.changed();
-      };
-    }
+  ColorPickerMorph.prototype.updateRendering = function() {
+    ColorPickerMorph.__super__.updateRendering.call(this);
+    return this.buildSubmorphs();
   };
 
-  MouseSensorMorph.prototype.unTouch = function() {
-    return this.isTouched = false;
-  };
+  ColorPickerMorph.prototype.buildSubmorphs = function() {
+    var cpal, gpal, x, y;
 
-  MouseSensorMorph.prototype.mouseEnter = function() {
-    return this.touch();
-  };
-
-  MouseSensorMorph.prototype.mouseLeave = function() {
-    return this.unTouch();
-  };
-
-  MouseSensorMorph.prototype.mouseDownLeft = function() {
-    return this.touch();
-  };
-
-  MouseSensorMorph.prototype.mouseClickLeft = function() {
-    return this.unTouch();
-  };
-
-  MouseSensorMorph.coffeeScriptSourceOfThisClass = '# MouseSensorMorph ////////////////////////////////////////////////////\n\n# for demo and debuggin purposes only, to be removed later\nclass MouseSensorMorph extends BoxMorph\n  constructor: (edge, border, borderColor) ->\n    super\n    @edge = edge or 4\n    @border = border or 2\n    @color = new Color(255, 255, 255)\n    @borderColor = borderColor or new Color()\n    @isTouched = false\n    @upStep = 0.05\n    @downStep = 0.02\n    @noticesTransparentClick = false\n    @updateRendering()\n  \n  touch: ->\n    unless @isTouched\n      @isTouched = true\n      @alpha = 0.6\n      @step = =>\n        if @isTouched\n          @alpha = @alpha + @upStep  if @alpha < 1\n        else if @alpha > (@downStep)\n          @alpha = @alpha - @downStep\n        else\n          @alpha = 0\n          @step = null\n        @changed()\n  \n  unTouch: ->\n    @isTouched = false\n  \n  mouseEnter: ->\n    @touch()\n  \n  mouseLeave: ->\n    @unTouch()\n  \n  mouseDownLeft: ->\n    @touch()\n  \n  mouseClickLeft: ->\n    @unTouch()';
-
-  return MouseSensorMorph;
-
-})(BoxMorph);
-
-StringFieldMorph = (function(_super) {
-  __extends(StringFieldMorph, _super);
-
-  StringFieldMorph.prototype.defaultContents = null;
-
-  StringFieldMorph.prototype.minWidth = null;
-
-  StringFieldMorph.prototype.fontSize = null;
-
-  StringFieldMorph.prototype.fontStyle = null;
-
-  StringFieldMorph.prototype.isBold = null;
-
-  StringFieldMorph.prototype.isItalic = null;
-
-  StringFieldMorph.prototype.isNumeric = null;
-
-  StringFieldMorph.prototype.text = null;
-
-  StringFieldMorph.prototype.isEditable = true;
-
-  function StringFieldMorph(defaultContents, minWidth, fontSize, fontStyle, isBold, isItalic, isNumeric) {
-    this.defaultContents = defaultContents != null ? defaultContents : "";
-    this.minWidth = minWidth != null ? minWidth : 100;
-    this.fontSize = fontSize != null ? fontSize : 12;
-    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
-    this.isBold = isBold != null ? isBold : false;
-    this.isItalic = isItalic != null ? isItalic : false;
-    this.isNumeric = isNumeric != null ? isNumeric : false;
-    StringFieldMorph.__super__.constructor.call(this);
-    this.color = new Color(255, 255, 255);
-    this.updateRendering();
-  }
-
-  StringFieldMorph.prototype.updateRendering = function() {
-    var txt;
-
-    txt = (this.text ? this.string() : this.defaultContents);
-    this.text = null;
     this.children.forEach(function(child) {
       return child.destroy();
     });
     this.children = [];
-    this.text = new StringMorph(txt, this.fontSize, this.fontStyle, this.isBold, this.isItalic, this.isNumeric);
-    this.text.isNumeric = this.isNumeric;
-    this.text.setPosition(this.bounds.origin.copy());
-    this.text.isEditable = this.isEditable;
-    this.text.isDraggable = false;
-    this.text.enableSelecting();
-    this.silentSetExtent(new Point(Math.max(this.width(), this.minWidth), this.text.height()));
-    StringFieldMorph.__super__.updateRendering.call(this);
-    return this.add(this.text);
+    this.feedback = new Morph();
+    this.feedback.color = this.choice;
+    this.feedback.setExtent(new Point(20, 20));
+    cpal = new ColorPaletteMorph(this.feedback, new Point(this.width(), 50));
+    gpal = new GrayPaletteMorph(this.feedback, new Point(this.width(), 5));
+    cpal.setPosition(this.bounds.origin);
+    this.add(cpal);
+    gpal.setPosition(cpal.bottomLeft());
+    this.add(gpal);
+    x = gpal.left() + Math.floor((gpal.width() - this.feedback.width()) / 2);
+    y = gpal.bottom() + Math.floor((this.bottom() - gpal.bottom() - this.feedback.height()) / 2);
+    this.feedback.setPosition(new Point(x, y));
+    return this.add(this.feedback);
   };
 
-  StringFieldMorph.prototype.string = function() {
-    return this.text.text;
+  ColorPickerMorph.prototype.getChoice = function() {
+    return this.feedback.color;
   };
 
-  StringFieldMorph.prototype.mouseClickLeft = function(pos) {
-    if (this.isEditable) {
-      return this.text.edit();
-    } else {
-      return this.escalateEvent('mouseClickLeft', pos);
+  ColorPickerMorph.prototype.rootForGrab = function() {
+    return this;
+  };
+
+  ColorPickerMorph.coffeeScriptSourceOfThisClass = '# ColorPickerMorph ///////////////////////////////////////////////////\n\nclass ColorPickerMorph extends Morph\n\n  choice: null\n\n  constructor: (defaultColor) ->\n    @choice = defaultColor or new Color(255, 255, 255)\n    super()\n    @color = new Color(255, 255, 255)\n    @silentSetExtent new Point(80, 80)\n    @updateRendering()\n  \n  updateRendering: ->\n    super()\n    @buildSubmorphs()\n  \n  buildSubmorphs: ->\n    @children.forEach (child) ->\n      child.destroy()\n    @children = []\n    @feedback = new Morph()\n    @feedback.color = @choice\n    @feedback.setExtent new Point(20, 20)\n    cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))\n    gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))\n    cpal.setPosition @bounds.origin\n    @add cpal\n    gpal.setPosition cpal.bottomLeft()\n    @add gpal\n    x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))\n    y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)\n    @feedback.setPosition new Point(x, y)\n    @add @feedback\n  \n  getChoice: ->\n    @feedback.color\n  \n  rootForGrab: ->\n    @';
+
+  return ColorPickerMorph;
+
+})(Morph);
+
+HandleMorph = (function(_super) {
+  var step;
+
+  __extends(HandleMorph, _super);
+
+  HandleMorph.prototype.target = null;
+
+  HandleMorph.prototype.minExtent = null;
+
+  HandleMorph.prototype.inset = null;
+
+  HandleMorph.prototype.type = null;
+
+  function HandleMorph(target, minX, minY, insetX, insetY, type) {
+    var size;
+
+    this.target = target != null ? target : null;
+    if (minX == null) {
+      minX = 0;
+    }
+    if (minY == null) {
+      minY = 0;
+    }
+    this.type = type != null ? type : "resize";
+    this.minExtent = new Point(minX, minY);
+    this.inset = new Point(insetX || 0, insetY || insetX || 0);
+    HandleMorph.__super__.constructor.call(this);
+    this.color = new Color(255, 255, 255);
+    this.noticesTransparentClick = true;
+    size = WorldMorph.MorphicPreferences.handleSize;
+    this.setExtent(new Point(size, size));
+  }
+
+  HandleMorph.prototype.updateRendering = function() {
+    this.normalImage = newCanvas(this.extent());
+    this.highlightImage = newCanvas(this.extent());
+    this.handleMorphRenderingHelper(this.normalImage, this.color, new Color(100, 100, 100));
+    this.handleMorphRenderingHelper(this.highlightImage, new Color(100, 100, 255), new Color(255, 255, 255));
+    this.image = this.normalImage;
+    if (this.target) {
+      this.setPosition(this.target.bottomRight().subtract(this.extent().add(this.inset)));
+      this.target.add(this);
+      return this.target.changed();
     }
   };
 
-  StringFieldMorph.prototype.copyRecordingReferences = function(dict) {
+  HandleMorph.prototype.handleMorphRenderingHelper = function(aCanvas, color, shadowColor) {
+    var context, p1, p11, p2, p22, _i, _j, _k, _l, _ref, _ref1, _ref2, _ref3, _results;
+
+    context = aCanvas.getContext("2d");
+    context.lineWidth = 1;
+    context.lineCap = "round";
+    context.strokeStyle = color.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      for (i = _i = 0, _ref = this.height(); _i <= _ref; i = _i += 6) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    for (i = _j = 0, _ref1 = this.width(); _j <= _ref1; i = _j += 6) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      context.stroke();
+    }
+    context.strokeStyle = shadowColor.toString();
+    if (this.type === "move") {
+      p1 = this.bottomLeft().subtract(this.position());
+      p11 = p1.copy();
+      p2 = this.topRight().subtract(this.position());
+      p22 = p2.copy();
+      for (i = _k = -1, _ref2 = this.height(); _k <= _ref2; i = _k += 6) {
+        p11.y = p1.y - i;
+        p22.y = p2.y - i;
+        context.beginPath();
+        context.moveTo(p11.x, p11.y);
+        context.lineTo(p22.x, p22.y);
+        context.closePath();
+        context.stroke();
+      }
+    }
+    p1 = this.bottomLeft().subtract(this.position());
+    p11 = p1.copy();
+    p2 = this.topRight().subtract(this.position());
+    p22 = p2.copy();
+    _results = [];
+    for (i = _l = 2, _ref3 = this.width(); _l <= _ref3; i = _l += 6) {
+      p11.x = p1.x + i;
+      p22.x = p2.x + i;
+      context.beginPath();
+      context.moveTo(p11.x, p11.y);
+      context.lineTo(p22.x, p22.y);
+      context.closePath();
+      _results.push(context.stroke());
+    }
+    return _results;
+  };
+
+  step = null;
+
+  HandleMorph.prototype.mouseDownLeft = function(pos) {
+    var offset, world,
+      _this = this;
+
+    world = this.root();
+    offset = pos.subtract(this.bounds.origin);
+    if (!this.target) {
+      return null;
+    }
+    this.step = function() {
+      var newExt, newPos;
+
+      if (world.hand.mouseButton) {
+        newPos = world.hand.bounds.origin.copy().subtract(offset);
+        if (_this.type === "resize") {
+          newExt = newPos.add(_this.extent().add(_this.inset)).subtract(_this.target.bounds.origin);
+          newExt = newExt.max(_this.minExtent);
+          _this.target.setExtent(newExt);
+          return _this.setPosition(_this.target.bottomRight().subtract(_this.extent().add(_this.inset)));
+        } else {
+          return _this.target.setPosition(newPos.subtract(_this.target.extent()).add(_this.extent()));
+        }
+      } else {
+        return _this.step = null;
+      }
+    };
+    if (!this.target.step) {
+      return this.target.step = noOperation;
+    }
+  };
+
+  HandleMorph.prototype.rootForGrab = function() {
+    return this;
+  };
+
+  HandleMorph.prototype.mouseEnter = function() {
+    this.image = this.highlightImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.mouseLeave = function() {
+    this.image = this.normalImage;
+    return this.changed();
+  };
+
+  HandleMorph.prototype.copyRecordingReferences = function(dict) {
     var c;
 
-    c = StringFieldMorph.__super__.copyRecordingReferences.call(this, dict);
-    if (c.text && dict[this.text]) {
-      c.text = dict[this.text];
+    c = HandleMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
     }
     return c;
   };
 
-  StringFieldMorph.coffeeScriptSourceOfThisClass = '# StringFieldMorph ////////////////////////////////////////////////////\n\nclass StringFieldMorph extends FrameMorph\n\n  defaultContents: null\n  minWidth: null\n  fontSize: null\n  fontStyle: null\n  isBold: null\n  isItalic: null\n  isNumeric: null\n  text: null\n  isEditable: true\n\n  constructor: (\n      @defaultContents = "",\n      @minWidth = 100,\n      @fontSize = 12,\n      @fontStyle = "sans-serif",\n      @isBold = false,\n      @isItalic = false,\n      @isNumeric = false\n      ) ->\n    super()\n    @color = new Color(255, 255, 255)\n    @updateRendering()\n  \n  updateRendering: ->\n    txt = (if @text then @string() else @defaultContents)\n    @text = null\n    @children.forEach (child) ->\n      child.destroy()\n    #\n    @children = []\n    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)\n    @text.isNumeric = @isNumeric # for whichever reason...\n    @text.setPosition @bounds.origin.copy()\n    @text.isEditable = @isEditable\n    @text.isDraggable = false\n    @text.enableSelecting()\n    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())\n    super()\n    @add @text\n  \n  string: ->\n    @text.text\n  \n  mouseClickLeft: (pos)->\n    if @isEditable\n      @text.edit()\n    else\n      @escalateEvent \'mouseClickLeft\', pos\n  \n  \n  # StringFieldMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.text = (dict[@text])  if c.text and dict[@text]\n    c';
+  HandleMorph.prototype.attach = function() {
+    var choices, menu,
+      _this = this;
 
-  return StringFieldMorph;
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        this.isDraggable = false;
+        this.target = each;
+        this.updateRendering();
+        return this.noticesTransparentClick = true;
+      });
+    });
+    if (choices.length) {
+      return menu.popUpAtHand(this.world());
+    }
+  };
 
-})(FrameMorph);
+  HandleMorph.coffeeScriptSourceOfThisClass = '# HandleMorph ////////////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\n# I am a resize / move handle that can be attached to any Morph\n\nclass HandleMorph extends Morph\n\n  target: null\n  minExtent: null\n  inset: null\n  type: null # "resize" or "move"\n\n  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->\n    # if insetY is missing, it will be the same as insetX\n    @minExtent = new Point(minX, minY)\n    @inset = new Point(insetX or 0, insetY or insetX or 0)\n    super()\n    @color = new Color(255, 255, 255)\n    @noticesTransparentClick = true\n    size = WorldMorph.MorphicPreferences.handleSize\n    @setExtent new Point(size, size)  \n  \n  # HandleMorph drawing:\n  updateRendering: ->\n    @normalImage = newCanvas(@extent())\n    @highlightImage = newCanvas(@extent())\n    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)\n    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)\n    @image = @normalImage\n    if @target\n      @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n      @target.add @\n      @target.changed()\n  \n  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->\n    context = aCanvas.getContext("2d")\n    context.lineWidth = 1\n    context.lineCap = "round"\n    context.strokeStyle = color.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [0..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [0..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n\n    context.strokeStyle = shadowColor.toString()\n    if @type is "move"\n      p1 = @bottomLeft().subtract(@position())\n      p11 = p1.copy()\n      p2 = @topRight().subtract(@position())\n      p22 = p2.copy()\n      for i in [-1..@height()] by 6\n        p11.y = p1.y - i\n        p22.y = p2.y - i\n        context.beginPath()\n        context.moveTo p11.x, p11.y\n        context.lineTo p22.x, p22.y\n        context.closePath()\n        context.stroke()\n\n    p1 = @bottomLeft().subtract(@position())\n    p11 = p1.copy()\n    p2 = @topRight().subtract(@position())\n    p22 = p2.copy()\n    for i in [2..@width()] by 6\n      p11.x = p1.x + i\n      p22.x = p2.x + i\n      context.beginPath()\n      context.moveTo p11.x, p11.y\n      context.lineTo p22.x, p22.y\n      context.closePath()\n      context.stroke()\n  \n  \n  # HandleMorph stepping:\n  step = null\n  mouseDownLeft: (pos) ->\n    world = @root()\n    offset = pos.subtract(@bounds.origin)\n    return null  unless @target\n    @step = =>\n      if world.hand.mouseButton\n        newPos = world.hand.bounds.origin.copy().subtract(offset)\n        if @type is "resize"\n          newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)\n          newExt = newExt.max(@minExtent)\n          @target.setExtent newExt\n          @setPosition @target.bottomRight().subtract(@extent().add(@inset))\n        else # type === \'move\'\n          @target.setPosition newPos.subtract(@target.extent()).add(@extent())\n      else\n        @step = null\n    \n    unless @target.step\n      @target.step = noOperation\n  \n  \n  # HandleMorph dragging and dropping:\n  rootForGrab: ->\n    @\n  \n  \n  # HandleMorph events:\n  mouseEnter: ->\n    @image = @highlightImage\n    @changed()\n  \n  mouseLeave: ->\n    @image = @normalImage\n    @changed()\n  \n  \n  # HandleMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c\n  \n  \n  # HandleMorph menu:\n  attach: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), ->\n        @isDraggable = false\n        @target = each\n        @updateRendering()\n        @noticesTransparentClick = true\n    menu.popUpAtHand @world()  if choices.length';
 
-morphicVersion = 'version of 2013-09-04 11:31:15';
+  return HandleMorph;
+
+})(Morph);
+
+SystemTestsRecorderAndPlayer = (function() {
+  SystemTestsRecorderAndPlayer.prototype.eventQueue = [];
+
+  SystemTestsRecorderAndPlayer.prototype.recordingASystemTest = false;
+
+  SystemTestsRecorderAndPlayer.prototype.replayingASystemTest = false;
+
+  SystemTestsRecorderAndPlayer.prototype.lastRecordedEventTime = null;
+
+  SystemTestsRecorderAndPlayer.prototype.handMorph = null;
+
+  SystemTestsRecorderAndPlayer.prototype.systemInfo = null;
+
+  function SystemTestsRecorderAndPlayer(worldMorph, handMorph) {
+    this.worldMorph = worldMorph;
+    this.handMorph = handMorph;
+  }
+
+  SystemTestsRecorderAndPlayer.prototype.initialiseSystemInfo = function() {
+    this.systemInfo = {};
+    this.systemInfo.zombieKernelTestHarnessVersionMajor = 0;
+    this.systemInfo.zombieKernelTestHarnessVersionMinor = 1;
+    this.systemInfo.zombieKernelTestHarnessVersionRelease = 0;
+    this.systemInfo.userAgent = navigator.userAgent;
+    this.systemInfo.screenWidth = window.screen.width;
+    this.systemInfo.screenHeight = window.screen.height;
+    this.systemInfo.screenColorDepth = window.screen.colorDepth;
+    if (window.devicePixelRatio != null) {
+      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
+    } else {
+      this.systemInfo.screenPixelRatio = window.devicePixelRatio;
+    }
+    this.systemInfo.appCodeName = navigator.appCodeName;
+    this.systemInfo.appName = navigator.appName;
+    this.systemInfo.appVersion = navigator.appVersion;
+    this.systemInfo.cookieEnabled = navigator.cookieEnabled;
+    this.systemInfo.platform = navigator.platform;
+    return this.systemInfo.systemLanguage = navigator.systemLanguage;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.startTestRecording = function() {
+    var systemTestEvent;
+
+    this.worldMorph.destroyAll();
+    this.eventQueue = [];
+    this.lastRecordedEventTime = new Date().getTime();
+    this.recordingASystemTest = true;
+    this.replayingASystemTest = false;
+    this.initialiseSystemInfo();
+    systemTestEvent = {};
+    systemTestEvent.type = "systemInfo";
+    systemTestEvent.time = 0;
+    systemTestEvent.systemInfo = this.systemInfo;
+    return this.eventQueue.push(systemTestEvent);
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.stopTestRecording = function() {
+    return this.recordingASystemTest = false;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.startTestPlaying = function() {
+    this.recordingASystemTest = false;
+    this.replayingASystemTest = true;
+    return this.replayEvents();
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.stopPlaying = function() {
+    return this.replayingASystemTest = false;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.showTestSource = function() {
+    return window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify(this.eventQueue)));
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseMoveEvent = function(pageX, pageY) {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseMove";
+    systemTestEvent.mouseX = pageX;
+    systemTestEvent.mouseY = pageY;
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseDownEvent = function(button, ctrlKey) {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseDown";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    systemTestEvent.button = button;
+    systemTestEvent.ctrlKey = ctrlKey;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.addMouseUpEvent = function() {
+    var currentTime, systemTestEvent;
+
+    if (!this.recordingASystemTest) {
+      return;
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "mouseUp";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    this.eventQueue.push(systemTestEvent);
+    return this.lastRecordedEventTime = currentTime;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.takeScreenshot = function() {
+    var currentTime, systemTestEvent;
+
+    console.log("taking screenshot");
+    if (this.systemInfo === null) {
+      this.initialiseSystemInfo();
+    }
+    currentTime = new Date().getTime();
+    systemTestEvent = {};
+    systemTestEvent.type = "takeScreenshot";
+    systemTestEvent.time = currentTime - this.lastRecordedEventTime;
+    systemTestEvent.screenShotImageData = [];
+    systemTestEvent.screenShotImageData.push([this.systemInfo, this.worldMorph.fullImageData()]);
+    this.eventQueue.push(systemTestEvent);
+    this.lastRecordedEventTime = currentTime;
+    if (!this.recordingASystemTest) {
+      return systemTestEvent;
+    }
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.compareScreenshots = function(expected) {
+    var a, _i, _len;
+
+    i = 0;
+    console.log("expected length " + expected.length);
+    for (_i = 0, _len = expected.length; _i < _len; _i++) {
+      a = expected[_i];
+      console.log("trying to match screenshot: " + i);
+      i++;
+      if (a[1] === this.worldMorph.fullImageData()) {
+        console.log("PASS - screenshot (" + i + ") matched");
+        return;
+      }
+    }
+    return console.log("FAIL - no screenshots like this one");
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.replayEvents = function() {
+    var lastPlayedEventTime, queuedEvent, _i, _len, _ref, _results;
+
+    lastPlayedEventTime = 0;
+    console.log("events: " + this.eventQueue);
+    _ref = this.eventQueue;
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      queuedEvent = _ref[_i];
+      lastPlayedEventTime += queuedEvent.time;
+      _results.push(this.scheduleEvent(queuedEvent, lastPlayedEventTime));
+    }
+    return _results;
+  };
+
+  SystemTestsRecorderAndPlayer.prototype.scheduleEvent = function(queuedEvent, lastPlayedEventTime) {
+    var callback,
+      _this = this;
+
+    if (queuedEvent.type === 'mouseMove') {
+      callback = function() {
+        return _this.handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY);
+      };
+    } else if (queuedEvent.type === 'mouseDown') {
+      callback = function() {
+        return _this.handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey);
+      };
+    } else if (queuedEvent.type === 'mouseUp') {
+      callback = function() {
+        return _this.handMorph.processMouseUp();
+      };
+    } else if (queuedEvent.type === 'takeScreenshot') {
+      callback = function() {
+        return _this.compareScreenshots(queuedEvent.screenShotImageData);
+      };
+    } else {
+      return;
+    }
+    return setTimeout(callback, lastPlayedEventTime);
+  };
+
+  SystemTestsRecorderAndPlayer.coffeeScriptSourceOfThisClass = 'class SystemTestsRecorderAndPlayer\n  eventQueue: []\n  recordingASystemTest: false\n  replayingASystemTest: false\n  lastRecordedEventTime: null\n  handMorph: null\n  systemInfo: null\n\n  constructor: (@worldMorph, @handMorph) ->\n\n  initialiseSystemInfo: ->\n    @systemInfo = {}\n    @systemInfo.zombieKernelTestHarnessVersionMajor = 0\n    @systemInfo.zombieKernelTestHarnessVersionMinor = 1\n    @systemInfo.zombieKernelTestHarnessVersionRelease = 0\n    @systemInfo.userAgent = navigator.userAgent\n    @systemInfo.screenWidth = window.screen.width\n    @systemInfo.screenHeight = window.screen.height\n    @systemInfo.screenColorDepth = window.screen.colorDepth\n    if window.devicePixelRatio?\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    else\n      @systemInfo.screenPixelRatio = window.devicePixelRatio\n    @systemInfo.appCodeName = navigator.appCodeName\n    @systemInfo.appName = navigator.appName\n    @systemInfo.appVersion = navigator.appVersion\n    @systemInfo.cookieEnabled = navigator.cookieEnabled\n    @systemInfo.platform = navigator.platform\n    @systemInfo.systemLanguage = navigator.systemLanguage\n\n  startTestRecording: ->\n    # clean up the world so we start from clean slate\n    @worldMorph.destroyAll()\n    @eventQueue = []\n    @lastRecordedEventTime = new Date().getTime()\n    @recordingASystemTest = true\n    @replayingASystemTest = false\n\n    @initialiseSystemInfo()\n    systemTestEvent = {}\n    systemTestEvent.type = "systemInfo"\n    systemTestEvent.time = 0\n    systemTestEvent.systemInfo = @systemInfo\n    @eventQueue.push systemTestEvent\n\n  stopTestRecording: ->\n    @recordingASystemTest = false\n\n  startTestPlaying: ->\n    @recordingASystemTest = false\n    @replayingASystemTest = true\n    @replayEvents()\n\n  stopPlaying: ->\n    @replayingASystemTest = false\n\n  showTestSource: ->\n    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue )))\n\n  addMouseMoveEvent: (pageX, pageY) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseMove"\n    systemTestEvent.mouseX = pageX\n    systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseDownEvent: (button, ctrlKey) ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseDown"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    systemTestEvent.button = button\n    systemTestEvent.ctrlKey = ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  addMouseUpEvent: () ->\n    return if not @recordingASystemTest\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "mouseUp"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    #systemTestEvent.screenShotImageData\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n\n  takeScreenshot: () ->\n    console.log "taking screenshot"\n    if @systemInfo is null\n      @initialiseSystemInfo()\n    currentTime = new Date().getTime()\n    systemTestEvent = {}\n    systemTestEvent.type = "takeScreenshot"\n    #systemTestEvent.mouseX = pageX\n    #systemTestEvent.mouseY = pageY\n    systemTestEvent.time = currentTime - @lastRecordedEventTime\n    #systemTestEvent.button\n    #systemTestEvent.ctrlKey\n    systemTestEvent.screenShotImageData = []\n    systemTestEvent.screenShotImageData.push [@systemInfo, @worldMorph.fullImageData()]\n    @eventQueue.push systemTestEvent\n    @lastRecordedEventTime = currentTime\n    if not @recordingASystemTest\n      return systemTestEvent\n\n  compareScreenshots: (expected) ->\n   i = 0\n   console.log "expected length " + expected.length\n   for a in expected\n     console.log "trying to match screenshot: " + i\n     i++\n     if a[1] == @worldMorph.fullImageData()\n      console.log "PASS - screenshot (" + i + ") matched"\n      return\n   console.log "FAIL - no screenshots like this one"\n\n  replayEvents: () ->\n   lastPlayedEventTime = 0\n   console.log "events: " + @eventQueue\n   for queuedEvent in @eventQueue\n      lastPlayedEventTime += queuedEvent.time\n      @scheduleEvent(queuedEvent, lastPlayedEventTime)\n\n  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->\n    if queuedEvent.type == \'mouseMove\'\n      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)\n    else if queuedEvent.type == \'mouseDown\'\n      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)\n    else if queuedEvent.type == \'mouseUp\'\n      callback = => @handMorph.processMouseUp()\n    else if queuedEvent.type == \'takeScreenshot\'\n      callback = => @compareScreenshots(queuedEvent.screenShotImageData)\n    else return\n\n    setTimeout callback, lastPlayedEventTime\n    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime';
+
+  return SystemTestsRecorderAndPlayer;
+
+})();
+
+Point = (function() {
+  Point.prototype.x = null;
+
+  Point.prototype.y = null;
+
+  function Point(x, y) {
+    this.x = x != null ? x : 0;
+    this.y = y != null ? y : 0;
+  }
+
+  Point.prototype.toString = function() {
+    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
+  };
+
+  Point.prototype.copy = function() {
+    return new Point(this.x, this.y);
+  };
+
+  Point.prototype.eq = function(aPoint) {
+    return this.x === aPoint.x && this.y === aPoint.y;
+  };
+
+  Point.prototype.lt = function(aPoint) {
+    return this.x < aPoint.x && this.y < aPoint.y;
+  };
+
+  Point.prototype.gt = function(aPoint) {
+    return this.x > aPoint.x && this.y > aPoint.y;
+  };
+
+  Point.prototype.ge = function(aPoint) {
+    return this.x >= aPoint.x && this.y >= aPoint.y;
+  };
+
+  Point.prototype.le = function(aPoint) {
+    return this.x <= aPoint.x && this.y <= aPoint.y;
+  };
+
+  Point.prototype.max = function(aPoint) {
+    return new Point(Math.max(this.x, aPoint.x), Math.max(this.y, aPoint.y));
+  };
+
+  Point.prototype.min = function(aPoint) {
+    return new Point(Math.min(this.x, aPoint.x), Math.min(this.y, aPoint.y));
+  };
+
+  Point.prototype.round = function() {
+    return new Point(Math.round(this.x), Math.round(this.y));
+  };
+
+  Point.prototype.abs = function() {
+    return new Point(Math.abs(this.x), Math.abs(this.y));
+  };
+
+  Point.prototype.neg = function() {
+    return new Point(-this.x, -this.y);
+  };
+
+  Point.prototype.mirror = function() {
+    return new Point(this.y, this.x);
+  };
+
+  Point.prototype.floor = function() {
+    return new Point(Math.max(Math.floor(this.x), 0), Math.max(Math.floor(this.y), 0));
+  };
+
+  Point.prototype.ceil = function() {
+    return new Point(Math.ceil(this.x), Math.ceil(this.y));
+  };
+
+  Point.prototype.add = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x + other.x, this.y + other.y);
+    }
+    return new Point(this.x + other, this.y + other);
+  };
+
+  Point.prototype.subtract = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x - other.x, this.y - other.y);
+    }
+    return new Point(this.x - other, this.y - other);
+  };
+
+  Point.prototype.multiplyBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x * other.x, this.y * other.y);
+    }
+    return new Point(this.x * other, this.y * other);
+  };
+
+  Point.prototype.divideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(this.x / other.x, this.y / other.y);
+    }
+    return new Point(this.x / other, this.y / other);
+  };
+
+  Point.prototype.floorDivideBy = function(other) {
+    if (other instanceof Point) {
+      return new Point(Math.floor(this.x / other.x), Math.floor(this.y / other.y));
+    }
+    return new Point(Math.floor(this.x / other), Math.floor(this.y / other));
+  };
+
+  Point.prototype.r = function() {
+    var t;
+
+    t = this.multiplyBy(this);
+    return Math.sqrt(t.x + t.y);
+  };
+
+  Point.prototype.degrees = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return 90;
+      }
+      return 270;
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return degrees(theta);
+      }
+      return 360 + (degrees(theta));
+    }
+    return 180 + degrees(theta);
+  };
+
+  Point.prototype.theta = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return radians(90);
+      }
+      return radians(270);
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return theta;
+      }
+      return radians(360) + theta;
+    }
+    return radians(180) + theta;
+  };
+
+  Point.prototype.crossProduct = function(aPoint) {
+    return this.multiplyBy(aPoint.mirror());
+  };
+
+  Point.prototype.distanceTo = function(aPoint) {
+    return (aPoint.subtract(this)).r();
+  };
+
+  Point.prototype.rotate = function(direction, center) {
+    var offset;
+
+    offset = this.subtract(center);
+    if (direction === "right") {
+      return new Point(-offset.y, offset.y).add(center);
+    }
+    if (direction === "left") {
+      return new Point(offset.y, -offset.y).add(center);
+    }
+    return center.subtract(offset);
+  };
+
+  Point.prototype.flip = function(direction, center) {
+    if (direction === "vertical") {
+      return new Point(this.x, center.y * 2 - this.y);
+    }
+    return new Point(center.x * 2 - this.x, this.y);
+  };
+
+  Point.prototype.distanceAngle = function(dist, angle) {
+    var deg, x, y;
+
+    deg = angle;
+    if (deg > 270) {
+      deg = deg - 360;
+    } else {
+      if (deg < -270) {
+        deg = deg + 360;
+      }
+    }
+    if (-90 <= deg && deg <= 90) {
+      x = Math.sin(radians(deg)) * dist;
+      y = Math.sqrt((dist * dist) - (x * x));
+      return new Point(x + this.x, this.y - y);
+    }
+    x = Math.sin(radians(180 - deg)) * dist;
+    y = Math.sqrt((dist * dist) - (x * x));
+    return new Point(x + this.x, this.y + y);
+  };
+
+  Point.prototype.scaleBy = function(scalePoint) {
+    return this.multiplyBy(scalePoint);
+  };
+
+  Point.prototype.translateBy = function(deltaPoint) {
+    return this.add(deltaPoint);
+  };
+
+  Point.prototype.rotateBy = function(angle, centerPoint) {
+    var center, p, r, theta;
+
+    center = centerPoint || new Point(0, 0);
+    p = this.subtract(center);
+    r = p.r();
+    theta = angle - p.theta();
+    return new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)));
+  };
+
+  Point.prototype.asArray = function() {
+    return [this.x, this.y];
+  };
+
+  Point.prototype.corner = function(cornerPoint) {
+    return new Rectangle(this.x, this.y, cornerPoint.x, cornerPoint.y);
+  };
+
+  Point.prototype.rectangle = function(aPoint) {
+    var crn, org;
+
+    org = this.min(aPoint);
+    crn = this.max(aPoint);
+    return new Rectangle(org.x, org.y, crn.x, crn.y);
+  };
+
+  Point.prototype.extent = function(aPoint) {
+    var crn;
+
+    crn = this.add(aPoint);
+    return new Rectangle(this.x, this.y, crn.x, crn.y);
+  };
+
+  Point.coffeeScriptSourceOfThisClass = '# Points //////////////////////////////////////////////////////////////\n\nclass Point\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point copying:\n  copy: ->\n    new Point(@x, @y)\n  \n  # Point comparison:\n  eq: (aPoint) ->\n    # ==\n    @x is aPoint.x and @y is aPoint.y\n  \n  lt: (aPoint) ->\n    # <\n    @x < aPoint.x and @y < aPoint.y\n  \n  gt: (aPoint) ->\n    # >\n    @x > aPoint.x and @y > aPoint.y\n  \n  ge: (aPoint) ->\n    # >=\n    @x >= aPoint.x and @y >= aPoint.y\n  \n  le: (aPoint) ->\n    # <=\n    @x <= aPoint.x and @y <= aPoint.y\n  \n  max: (aPoint) ->\n    new Point(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))\n  \n  min: (aPoint) ->\n    new Point(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))\n  \n  \n  # Point conversion:\n  round: ->\n    new Point(Math.round(@x), Math.round(@y))\n  \n  abs: ->\n    new Point(Math.abs(@x), Math.abs(@y))\n  \n  neg: ->\n    new Point(-@x, -@y)\n  \n  mirror: ->\n    new Point(@y, @x)\n  \n  floor: ->\n    new Point(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n  \n  ceil: ->\n    new Point(Math.ceil(@x), Math.ceil(@y))\n  \n  \n  # Point arithmetic:\n  add: (other) ->\n    return new Point(@x + other.x, @y + other.y)  if other instanceof Point\n    new Point(@x + other, @y + other)\n  \n  subtract: (other) ->\n    return new Point(@x - other.x, @y - other.y)  if other instanceof Point\n    new Point(@x - other, @y - other)\n  \n  multiplyBy: (other) ->\n    return new Point(@x * other.x, @y * other.y)  if other instanceof Point\n    new Point(@x * other, @y * other)\n  \n  divideBy: (other) ->\n    return new Point(@x / other.x, @y / other.y)  if other instanceof Point\n    new Point(@x / other, @y / other)\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point\n      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))\n    new Point(Math.floor(@x / other), Math.floor(@y / other))\n  \n  \n  # Point polar coordinates:\n  r: ->\n    t = (@multiplyBy(@))\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point functions:\n  crossProduct: (aPoint) ->\n    @multiplyBy aPoint.mirror()\n  \n  distanceTo: (aPoint) ->\n    (aPoint.subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @subtract(center)\n    return new Point(-offset.y, offset.y).add(center)  if direction is "right"\n    return new Point(offset.y, -offset.y).add(center)  if direction is "left"\n    #\n    # direction === \'pi\'\n    center.subtract offset\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    return new Point(@x, center.y * 2 - @y)  if direction is "vertical"\n    #\n    # direction === \'horizontal\'\n    new Point(center.x * 2 - @x, @y)\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      return new Point(x + @x, @y - y)\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    new Point(x + @x, @y + y)\n  \n  \n  # Point transforming:\n  scaleBy: (scalePoint) ->\n    @multiplyBy scalePoint\n  \n  translateBy: (deltaPoint) ->\n    @add deltaPoint\n  \n  rotateBy: (angle, centerPoint) ->\n    center = centerPoint or new Point(0, 0)\n    p = @subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))\n  \n  \n  # Point conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Points:\n  corner: (cornerPoint) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)\n  \n  rectangle: (aPoint) ->\n    # answer a new Rectangle\n    org = @min(aPoint)\n    crn = @max(aPoint)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint) ->\n    #answer a new Rectangle\n    crn = @add(aPoint)\n    new Rectangle(@x, @y, crn.x, crn.y)';
+
+  return Point;
+
+})();
+
+Point2 = (function() {
+  Point2.prototype.x = null;
+
+  Point2.prototype.y = null;
+
+  function Point2(x, y) {
+    this.x = x != null ? x : 0;
+    this.y = y != null ? y : 0;
+  }
+
+  Point2.prototype.toString = function() {
+    return Math.round(this.x.toString()) + "@" + Math.round(this.y.toString());
+  };
+
+  Point2.prototype.copy = function() {
+    return new Point2(this.x, this.y);
+  };
+
+  Point2.prototype.eq = function(aPoint2) {
+    return this.x === aPoint2.x && this.y === aPoint2.y;
+  };
+
+  Point2.prototype.lt = function(aPoint2) {
+    return this.x < aPoint2.x && this.y < aPoint2.y;
+  };
+
+  Point2.prototype.gt = function(aPoint2) {
+    return this.x > aPoint2.x && this.y > aPoint2.y;
+  };
+
+  Point2.prototype.ge = function(aPoint2) {
+    return this.x >= aPoint2.x && this.y >= aPoint2.y;
+  };
+
+  Point2.prototype.le = function(aPoint2) {
+    return this.x <= aPoint2.x && this.y <= aPoint2.y;
+  };
+
+  Point2.prototype.max = function(aPoint2) {
+    this.x = Math.max(this.x, aPoint2.x);
+    return this.y = Math.max(this.y, aPoint2.y);
+  };
+
+  Point2.prototype.min = function(aPoint2) {
+    this.x = Math.min(this.x, aPoint2.x);
+    return this.y = Math.min(this.y, aPoint2.y);
+  };
+
+  Point2.prototype.round = function() {
+    this.x = Math.round(this.x);
+    return this.y = Math.round(this.y);
+  };
+
+  Point2.prototype.abs = function() {
+    this.x = Math.abs(this.x);
+    return this.y = Math.abs(this.y);
+  };
+
+  Point2.prototype.neg = function() {
+    this.x = -this.x;
+    return this.y = -this.y;
+  };
+
+  Point2.prototype.mirror = function() {
+    var tmpValueForSwappingXAndY;
+
+    tmpValueForSwappingXAndY = this.x;
+    this.x = this.y;
+    return this.y = tmpValueForSwappingXAndY;
+  };
+
+  Point2.prototype.floor = function() {
+    this.x = Math.max(Math.floor(this.x), 0);
+    return this.y = Math.max(Math.floor(this.y), 0);
+  };
+
+  Point2.prototype.ceil = function() {
+    this.x = Math.ceil(this.x);
+    return this.y = Math.ceil(this.y);
+  };
+
+  Point2.prototype.add = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x + other.x;
+      this.y = this.y + other.y;
+      return;
+    }
+    this.x = this.x + other;
+    return this.y = this.y + other;
+  };
+
+  Point2.prototype.subtract = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x - other.x;
+      this.y = this.y - other.y;
+      return;
+    }
+    this.x = this.x - other;
+    return this.y = this.y - other;
+  };
+
+  Point2.prototype.multiplyBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x * other.x;
+      this.y = this.y * other.y;
+      return;
+    }
+    this.x = this.x * other;
+    return this.y = this.y * other;
+  };
+
+  Point2.prototype.divideBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = this.x / other.x;
+      this.y = this.y / other.y;
+      return;
+    }
+    this.x = this.x / other;
+    return this.y = this.y / other;
+  };
+
+  Point2.prototype.floorDivideBy = function(other) {
+    if (other instanceof Point2) {
+      this.x = Math.floor(this.x / other.x);
+      this.y = Math.floor(this.y / other.y);
+      return;
+    }
+    this.x = Math.floor(this.x / other);
+    return this.y = Math.floor(this.y / other);
+  };
+
+  Point2.prototype.r = function() {
+    var t;
+
+    t = this.copy();
+    t.multiplyBy(t);
+    return Math.sqrt(t.x + t.y);
+  };
+
+  Point2.prototype.degrees = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return 90;
+      }
+      return 270;
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return degrees(theta);
+      }
+      return 360 + (degrees(theta));
+    }
+    return 180 + degrees(theta);
+  };
+
+  Point2.prototype.theta = function() {
+    var tan, theta;
+
+    if (this.x === 0) {
+      if (this.y >= 0) {
+        return radians(90);
+      }
+      return radians(270);
+    }
+    tan = this.y / this.x;
+    theta = Math.atan(tan);
+    if (this.x >= 0) {
+      if (this.y >= 0) {
+        return theta;
+      }
+      return radians(360) + theta;
+    }
+    return radians(180) + theta;
+  };
+
+  Point2.prototype.crossProduct = function(aPoint2) {
+    return this.multiplyBy(aPoint2.copy().mirror());
+  };
+
+  Point2.prototype.distanceTo = function(aPoint2) {
+    return (aPoint2.copy().subtract(this)).r();
+  };
+
+  Point2.prototype.rotate = function(direction, center) {
+    var offset, tmpPointForRotate;
+
+    offset = this.copy().subtract(center);
+    if (direction === "right") {
+      this.x = -offset.y + center.x;
+      this.y = offset.y + center.y;
+      return;
+    }
+    if (direction === "left") {
+      this.x = offset.y + center.x;
+      this.y = -offset.y + center.y;
+      return;
+    }
+    tmpPointForRotate = center.copy().subtract(offset);
+    this.x = tmpPointForRotate.x;
+    return this.y = tmpPointForRotate.y;
+  };
+
+  Point2.prototype.flip = function(direction, center) {
+    if (direction === "vertical") {
+      this.y = center.y * 2 - this.y;
+      return;
+    }
+    return this.x = center.x * 2 - this.x;
+  };
+
+  Point2.prototype.distanceAngle = function(dist, angle) {
+    var deg, x, y;
+
+    deg = angle;
+    if (deg > 270) {
+      deg = deg - 360;
+    } else {
+      if (deg < -270) {
+        deg = deg + 360;
+      }
+    }
+    if (-90 <= deg && deg <= 90) {
+      x = Math.sin(radians(deg)) * dist;
+      y = Math.sqrt((dist * dist) - (x * x));
+      this.x = x + this.x;
+      this.y = this.y - y;
+      return;
+    }
+    x = Math.sin(radians(180 - deg)) * dist;
+    y = Math.sqrt((dist * dist) - (x * x));
+    this.x = x + this.x;
+    return this.y = this.y + y;
+  };
+
+  Point2.prototype.scaleBy = function(scalePoint2) {
+    return this.multiplyBy(scalePoint2);
+  };
+
+  Point2.prototype.translateBy = function(deltaPoint2) {
+    return this.add(deltaPoint2);
+  };
+
+  Point2.prototype.rotateBy = function(angle, centerPoint2) {
+    var center, p, r, theta;
+
+    center = centerPoint2 || new Point2(0, 0);
+    p = this.copy().subtract(center);
+    r = p.r();
+    theta = angle - p.theta();
+    this.x = center.x + (r * Math.cos(theta));
+    return this.y = center.y - (r * Math.sin(theta));
+  };
+
+  Point2.prototype.asArray = function() {
+    return [this.x, this.y];
+  };
+
+  Point2.prototype.corner = function(cornerPoint2) {
+    return new Rectangle(this.x, this.y, cornerPoint2.x, cornerPoint2.y);
+  };
+
+  Point2.prototype.rectangle = function(aPoint2) {
+    var crn, org;
+
+    org = this.copy().min(aPoint2);
+    crn = this.copy().max(aPoint2);
+    return new Rectangle(org.x, org.y, crn.x, crn.y);
+  };
+
+  Point2.prototype.extent = function(aPoint2) {
+    var crn;
+
+    crn = this.copy().add(aPoint2);
+    return new Rectangle(this.x, this.y, crn.x, crn.y);
+  };
+
+  Point2.coffeeScriptSourceOfThisClass = '# Point2 //////////////////////////////////////////////////////////////\n# like Point, but it tries not to create new objects like there is\n# no tomorrow. Any operation that returned a new point now directly\n# modifies the current point.\n# Note that the arguments passed to any of these functions are never\n# modified.\n\nclass Point2\n\n  x: null\n  y: null\n   \n  constructor: (@x = 0, @y = 0) ->\n  \n  # Point2 string representation: e.g. \'12@68\'\n  toString: ->\n    Math.round(@x.toString()) + "@" + Math.round(@y.toString())\n  \n  # Point2 copying:\n  copy: ->\n    new Point2(@x, @y)\n  \n  # Point2 comparison:\n  eq: (aPoint2) ->\n    # ==\n    @x is aPoint2.x and @y is aPoint2.y\n  \n  lt: (aPoint2) ->\n    # <\n    @x < aPoint2.x and @y < aPoint2.y\n  \n  gt: (aPoint2) ->\n    # >\n    @x > aPoint2.x and @y > aPoint2.y\n  \n  ge: (aPoint2) ->\n    # >=\n    @x >= aPoint2.x and @y >= aPoint2.y\n  \n  le: (aPoint2) ->\n    # <=\n    @x <= aPoint2.x and @y <= aPoint2.y\n  \n  max: (aPoint2) ->\n    #new Point2(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))\n    @x = Math.max(@x, aPoint2.x)\n    @y = Math.max(@y, aPoint2.y)\n  \n  min: (aPoint2) ->\n    #new Point2(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))\n    @x = Math.min(@x, aPoint2.x)\n    @y = Math.min(@y, aPoint2.y)\n  \n  \n  # Point2 conversion:\n  round: ->\n    #new Point2(Math.round(@x), Math.round(@y))\n    @x = Math.round(@x)\n    @y = Math.round(@y)\n  \n  abs: ->\n    #new Point2(Math.abs(@x), Math.abs(@y))\n    @x = Math.abs(@x)\n    @y = Math.abs(@y)\n  \n  neg: ->\n    #new Point2(-@x, -@y)\n    @x = -@x\n    @y = -@y\n  \n  mirror: ->\n    #new Point2(@y, @x)\n    # note that coffeescript would allow [@x,@y] = [@y,@x]\n    # but we want to be faster here\n    tmpValueForSwappingXAndY = @x\n    @x = @y\n    @y = tmpValueForSwappingXAndY \n  \n  floor: ->\n    #new Point2(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))\n    @x = Math.max(Math.floor(@x), 0)\n    @y = Math.max(Math.floor(@y), 0)\n  \n  ceil: ->\n    #new Point2(Math.ceil(@x), Math.ceil(@y))\n    @x = Math.ceil(@x)\n    @y = Math.ceil(@y)\n  \n  \n  # Point2 arithmetic:\n  add: (other) ->\n    if other instanceof Point2\n      @x = @x + other.x\n      @y = @y + other.y\n      return\n    @x = @x + other\n    @y = @y + other\n  \n  subtract: (other) ->\n    if other instanceof Point2\n      @x = @x - other.x\n      @y = @y - other.y\n      return\n    @x = @x - other\n    @y = @y - other\n  \n  multiplyBy: (other) ->\n    if other instanceof Point2\n      @x = @x * other.x\n      @y = @y * other.y\n      return\n    @x = @x * other\n    @y = @y * other\n  \n  divideBy: (other) ->\n    if other instanceof Point2\n      @x = @x / other.x\n      @y = @y / other.y\n      return\n    @x = @x / other\n    @y = @y / other\n  \n  floorDivideBy: (other) ->\n    if other instanceof Point2\n      @x = Math.floor(@x / other.x)\n      @y = Math.floor(@y / other.y)\n      return\n    @x = Math.floor(@x / other)\n    @y = Math.floor(@y / other)\n  \n  \n  # Point2 polar coordinates:\n  # distance from the origin\n  r: ->\n    t = @copy()\n    t.multiplyBy(t)\n    Math.sqrt t.x + t.y\n  \n  degrees: ->\n    #\n    #    answer the angle I make with origin in degrees.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return 90  if @y >= 0\n      return 270\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return degrees(theta)  if @y >= 0\n      return 360 + (degrees(theta))\n    180 + degrees(theta)\n  \n  theta: ->\n    #\n    #    answer the angle I make with origin in radians.\n    #    Right is 0, down is 90\n    #\n    if @x is 0\n      return radians(90)  if @y >= 0\n      return radians(270)\n    tan = @y / @x\n    theta = Math.atan(tan)\n    if @x >= 0\n      return theta  if @y >= 0\n      return radians(360) + theta\n    radians(180) + theta\n  \n  \n  # Point2 functions:\n  \n  # this function is a bit fishy.\n  # a cross product in 2d is probably not a vector\n  # see https://github.com/jmoenig/morphic.js/issues/6\n  # this function is not used\n  crossProduct: (aPoint2) ->\n    @multiplyBy aPoint2.copy().mirror()\n  \n  distanceTo: (aPoint2) ->\n    (aPoint2.copy().subtract(@)).r()\n  \n  rotate: (direction, center) ->\n    # direction must be \'right\', \'left\' or \'pi\'\n    offset = @copy().subtract(center)\n    if direction is "right"\n      @x = -offset.y + center.x\n      @y = offset.y + center.y\n      return\n    if direction is "left"\n      @x = offset.y + center.x\n      @y = -offset.y + center.y\n      return\n    #\n    # direction === \'pi\'\n    tmpPointForRotate = center.copy().subtract offset\n    @x = tmpPointForRotate.x\n    @y = tmpPointForRotate.y\n  \n  flip: (direction, center) ->\n    # direction must be \'vertical\' or \'horizontal\'\n    if direction is "vertical"\n      @y = center.y * 2 - @y\n      return\n    #\n    # direction === \'horizontal\'\n    @x = center.x * 2 - @x\n  \n  distanceAngle: (dist, angle) ->\n    deg = angle\n    if deg > 270\n      deg = deg - 360\n    else deg = deg + 360  if deg < -270\n    if -90 <= deg and deg <= 90\n      x = Math.sin(radians(deg)) * dist\n      y = Math.sqrt((dist * dist) - (x * x))\n      @x = x + @x\n      @y = @y - y\n      return\n    x = Math.sin(radians(180 - deg)) * dist\n    y = Math.sqrt((dist * dist) - (x * x))\n    @x = x + @x\n    @y = @y + y\n  \n  \n  # Point2 transforming:\n  scaleBy: (scalePoint2) ->\n    @multiplyBy scalePoint2\n  \n  translateBy: (deltaPoint2) ->\n    @add deltaPoint2\n  \n  rotateBy: (angle, centerPoint2) ->\n    center = centerPoint2 or new Point2(0, 0)\n    p = @copy().subtract(center)\n    r = p.r()\n    theta = angle - p.theta()\n    @x = center.x + (r * Math.cos(theta))\n    @y = center.y - (r * Math.sin(theta))\n  \n  \n  # Point2 conversion:\n  asArray: ->\n    [@x, @y]\n  \n  # creating Rectangle instances from Point2:\n  corner: (cornerPoint2) ->\n    # answer a new Rectangle\n    new Rectangle(@x, @y, cornerPoint2.x, cornerPoint2.y)\n  \n  rectangle: (aPoint2) ->\n    # answer a new Rectangle\n    org = @copy().min(aPoint2)\n    crn = @copy().max(aPoint2)\n    new Rectangle(org.x, org.y, crn.x, crn.y)\n  \n  extent: (aPoint2) ->\n    #answer a new Rectangle\n    crn = @copy().add(aPoint2)\n    new Rectangle(@x, @y, crn.x, crn.y)';
+
+  return Point2;
+
+})();
+
+ShadowMorph = (function(_super) {
+  __extends(ShadowMorph, _super);
+
+  function ShadowMorph() {
+    ShadowMorph.__super__.constructor.call(this);
+  }
+
+  ShadowMorph.coffeeScriptSourceOfThisClass = '# ShadowMorph /////////////////////////////////////////////////////////\n\nclass ShadowMorph extends Morph\n  constructor: () ->\n    super()';
+
+  return ShadowMorph;
+
+})(Morph);
+
+CloseCircleButtonMorph = (function(_super) {
+  __extends(CloseCircleButtonMorph, _super);
+
+  function CloseCircleButtonMorph(orientation) {
+    this.orientation = orientation != null ? orientation : "vertical";
+    CloseCircleButtonMorph.__super__.constructor.call(this);
+  }
+
+  CloseCircleButtonMorph.prototype.updateRendering = function() {
+    var context;
+
+    CloseCircleButtonMorph.__super__.updateRendering.call(this);
+    context = this.image.getContext("2d");
+    context.beginPath();
+    context.moveTo(3, 3);
+    context.lineTo(7, 7);
+    context.moveTo(7, 3);
+    context.lineTo(3, 7);
+    context.strokeStyle = '#000';
+    context.lineWidth = 1.5;
+    context.lineCap = 'round';
+    return context.stroke();
+  };
+
+  CloseCircleButtonMorph.coffeeScriptSourceOfThisClass = '# CloseCircleButtonMorph //////////////////////////////////////////////////////\n\n# This is basically a circle with an x inside, it\'s for\n# the little icon on the top left of a window, to close\n# the window.\n# TODO: this little widget doesn\'t scale well into\n# touch mode.\n\nclass CloseCircleButtonMorph extends CircleBoxMorph\n\n  constructor: (@orientation = "vertical") ->\n    super()\n  \n  updateRendering: ->\n    super()\n\n    # TODO: this context has already been created\n    # and used in the superclass, there is no\n    # reason why we have to re-create another\n    # one here. Ideally we wanto to save the\n    # first one into an instance variable, and\n    # just reuse it here.\n    context = @image.getContext("2d")\n\n    # Now stroke the "x" inside the circle button\n    # that closes the window.\n    context.beginPath()\n    context.moveTo 3,3\n    context.lineTo 7,7\n    context.moveTo 7,3\n    context.lineTo 3,7\n    context.strokeStyle = \'#000\'\n    context.lineWidth = 1.5\n    context.lineCap = \'round\'\n    context.stroke()\n  ';
+
+  return CloseCircleButtonMorph;
+
+})(CircleBoxMorph);
+
+SystemTest_SimpleMenuTest = (function() {
+  function SystemTest_SimpleMenuTest() {}
+
+  SystemTest_SimpleMenuTest.testData = [
+    {
+      type: "systemInfo",
+      time: 0,
+      systemInfo: {
+        zombieKernelTestHarnessVersionMajor: 0,
+        zombieKernelTestHarnessVersionMinor: 1,
+        zombieKernelTestHarnessVersionRelease: 0,
+        userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
+        screenWidth: 1920,
+        screenHeight: 1080,
+        screenColorDepth: 24,
+        screenPixelRatio: 1,
+        appCodeName: "Mozilla",
+        appName: "Netscape",
+        appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
+        cookieEnabled: true,
+        platform: "MacIntel"
+      }
+    }, {
+      type: "mouseMove",
+      mouseX: 604,
+      mouseY: 4,
+      time: 1742
+    }, {
+      type: "mouseMove",
+      mouseX: 592,
+      mouseY: 14,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 581,
+      mouseY: 21,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 556,
+      mouseY: 25,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 544,
+      mouseY: 28,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 529,
+      mouseY: 37,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 513,
+      mouseY: 44,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 492,
+      mouseY: 55,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 482,
+      mouseY: 59,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 472,
+      mouseY: 64,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 464,
+      mouseY: 66,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 461,
+      mouseY: 67,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 460,
+      mouseY: 68,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 460,
+      mouseY: 69,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 458,
+      mouseY: 70,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 456,
+      mouseY: 72,
+      time: 18
+    }, {
+      type: "mouseMove",
+      mouseX: 455,
+      mouseY: 72,
+      time: 15
+    }, {
+      type: "mouseMove",
+      mouseX: 452,
+      mouseY: 74,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 450,
+      mouseY: 74,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 449,
+      mouseY: 75,
+      time: 50
+    }, {
+      type: "mouseMove",
+      mouseX: 448,
+      mouseY: 76,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 447,
+      mouseY: 77,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 445,
+      mouseY: 79,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 444,
+      mouseY: 80,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 444,
+      mouseY: 81,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 442,
+      mouseY: 83,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 436,
+      mouseY: 91,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 433,
+      mouseY: 95,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 423,
+      mouseY: 106,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 417,
+      mouseY: 115,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 414,
+      mouseY: 118,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 408,
+      mouseY: 123,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 396,
+      mouseY: 131,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 387,
+      mouseY: 135,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 380,
+      mouseY: 138,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 379,
+      mouseY: 139,
+      time: 66
+    }, {
+      type: "mouseMove",
+      mouseX: 378,
+      mouseY: 141,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 375,
+      mouseY: 142,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 373,
+      mouseY: 145,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 368,
+      mouseY: 149,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 365,
+      mouseY: 154,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 364,
+      mouseY: 154,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 364,
+      mouseY: 155,
+      time: 16
+    }, {
+      type: "mouseDown",
+      time: 145,
+      button: 2,
+      ctrlKey: false
+    }, {
+      type: "mouseUp",
+      time: 113
+    }, {
+      type: "mouseMove",
+      mouseX: 364,
+      mouseY: 156,
+      time: 1809
+    }, {
+      type: "takeScreenshot",
+      time: 801,
+      screenShotImageData: [
+        [
+          {
+            zombieKernelTestHarnessVersionMajor: 0,
+            zombieKernelTestHarnessVersionMinor: 1,
+            zombieKernelTestHarnessVersionRelease: 0,
+            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
+            screenWidth: 1920,
+            screenHeight: 1080,
+            screenColorDepth: 24,
+            screenPixelRatio: 1,
+            appCodeName: "Mozilla",
+            appName: "Netscape",
+            appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31",
+            cookieEnabled: true,
+            platform: "MacIntel"
+          }, "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAgAElEQVR4XuzdCZhU1Z338T+KLKIgOrggjMiAoyDLgASIedkGRxxAEGVTUAMBF5AJIxNlBzPRQFRAGRWBCYtsKoJBgUQWFUSRfVE0rogsIkuUsBhF3vf3n7n1Fk03Vd1ddauq63ufpx8a6t5zzv2cmzz185xzT7F169adMA4EEEAAAQQQQAABBBBAIASBYgSQEJSpAgEEEEAAAQQQQAABBFyAAMKDgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIz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A0jWwWTpDRNAsrTjuW0EioAAAaQIdCK3gAAC2SFAAMmOfo73Lgkg8UpxHgIIpJsAASTdeoT2IIAAAnkIEEB4NKIFCCA8DwggkKkCBJBM7TnajQACWSeQM4AEX0CzDiLLb3jFihUuQADJ8geB20cggwUIIBnceTQdAQSyS4ARkOzq71h3SwCJJcTnCCCQrgIEkHTtGdqFAAII5BAggPBIRAsQQHgeEEAgUwUIIJnac7QbAQSyToAAknVdftobJoDwPCCAQKYKEEAytedoNwIIZJ1ArACSc0PBaKBt27b5buebN2+2M8888yQ77ZLeqFEj39G8fPnyhXb9+OOPrXnz5vb+++/bV199Ffn93HPPLXTZFPD/BQggPA0IIJCpAgSQTO052o0AAlknEE8AUcjYuHGjFStW7CQfbUCoHdEbN258itvnn39u2u08kQHk2muv9fL2799vwe+JCDdZ1+mnuWECCE8DAghkqgABJFN7jnYjgEDWCcQTQFq1amUDBw60Xr16WaVKley1116zK6+80r788kubM2eO9e/f33dJf/fdd61r1652wQUXeECYOXNmJIBoROT++++3efPmWb9+/WzYsGF+Xs7j9ddft549e9qnn35qnTp1sjFjxljFihVNIyAEkOQ/ngSQ5BtTAwIIJEeAAJIcV0pFAAEEEi4QK4Doi3/16tWtY8eONnjwYJsyZYqtW7fOFBQ+/PBD69Kli61fv96nRtWuXdsDg6ZetWvXztuqEQsdCiwKHipn6NChtnv3blu2bJkVL148ck8KNJUrV7ZZs2b5qMrYsWNt79699txzz9knn3xCAEl4759aIAEkBGSqQACBpAgQQJLCSqEIIIBA4gXiCSD16tUzTak6//zz/c9gatW+fft8DciGDRs8NCxcuNBmzJgRCR5Nmzb1ALJkyRIbMmSIT9dS4FD40KiGRjkuv/zyyE1pSpdGUVq0aGHff/+9TZ8+3aZNm2bLly83jaAwApL4/s9ZIgEk+cbUgAACyREggCTHlVIRQACBhAvECiBahN6+ffvIQvPoqVDRAeTuu++2a665xnr37u1tjD5v6dKlPvKR81izZo1fExxHjhyxRx991IYPHx75t7Zt29r8+fM9rBBAEt79pxRIAEm+MTUggEByBAggyXGlVAQQQCDhAvEEkGCUQ+s88gogWt+hNR0a6dAR/RYsjYxM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FiCAJBiU4hBAAIFkCcQKIHrTlfbr0B4a2m1cr7bVpoPRu43rzVHRGwgmq62Um3wBAkjyjakBAQSSI0AASY4rpSKAAAIJF4gVQB555BHf2K9evXq+i7k2+9PO49oLIwgdeQWQHTt22JNPPmkXX3yx7yB+/fXX+y7ql112md+H9ubQHh0qq1OnTr4pYcWKFf0zbVT485//3F9127t3b9/YT5sA6u8afVF52tiwX79+NmzYMN8JnaPwAgSQwhtSAgIIpEaAAJIad2pFAAEE8i0QK4AocOjNTpp+pSDRo0cP0w7lCgGxAohGSbTBn67RxoOayvXWW2/5a2oVWipXruzlakRl7NixtnfvXt/BXGFD1z377LNWs2ZNr0f7hWi/Dh0akVHw6Nixow0dOtR2795ty5Yti7mfSL5xsvACAkgWdjq3jEARESCAFJGO5DYQQKDoC8QKIJqCdfXVV3vo0AZ+2i9jw4YNcY2AfPTRR9aqVavIvhh63a3Cw6uvvmpXXHGFj3Jo4z7VMX36dJs2bZrvYK7fVZ92GNexZcsWa9mypQcQ7ZquMKOpYNr8T+FDoyYaRbn88suLfocl+Q4JIEkGpngEEEiaAAEkabQUjAACCCRWIFYA0cZ6derUsXfeece010V+A4imT2mHce1QrrLq169vU6dOtRo1atijjz7qoyLB0bZtW5s/f77ddtttvqhd1+qIXm+isjTykfNYs2aNr1HhKJwAAaRwflyNAAKpEyCApM6emhFAAIF8CSQ7gLRv395HMIIAoilVc+bMsS+//NLXcShQVKlSxVatWmUPPvigrwv53e9+Zz/88IMNHjzY70UjH02bNvU/Fy5c6OtINBKic/SjERlN4ypRokS+7p2TTxUggPBUIIBApgoQQDK152g3AghknUAyA0iwBuSll16ym266ySZNmmQjR460bdu2+a7hWlS+adMmO3TokLVu3drXeWgE5I033vDztV7k0ksv9Wlc27dv9wCitSfasXzlypVWu3Ztn641YMAA+/zzz+2ss87yhfLt2rXzUJPb79WqVcu6Ps7PDRNA8qPFuQggkE4CBJB06g3aggACCJxGIL8BRG+t0ihF8BYshQztA6KF4vo9eh+QIIBEV681HgoQGgHRqIbK0TFixAj/0bqP++67z8NKr169/LNGjRrZgQMHbOPGjVa6dOmTPtPna9eu9aldmuKlEZbZs2dbrVq1cv29QYMGPA+nESCA8HgggECmChBAMrXnaDcCCGSdQKwAUhgQjVjcc889Ps1Kb70655xzPEAEx/Hjxz1YKLTo9bpHjx71UQyNcuhHb98qVqyYL0jXK3k11UpTuXR8++23vni9XLlyvP2qMJ2U41oCSAIxKQoBBEIVIICEyk1lCCCAQMEFkhlANNVKi9a1c/qZZ54ZdyO1u7pGMrRAvWrVqnbHHXf463q7dOkSdxmcWDABAkjB3LgKAQRSL0AASX0f0AIEEEAgLoFkBhC9dlfTpjTlSiMZ+Tn0Ct/XXnvNdu7cirzqbQAAIABJREFUaW3atPFF5hzJFyCAJN+YGhBAIDkCBJDkuFIqAgggkHCBZAaQhDeWApMuQABJOjEVIIBAkgQIIEmCpVgEEEAg0QIEkESLZnZ5BJDM7j9aj0A2CxBAsrn3uXcEEMgogVgBRFOhgjdfBQvAgxvUW660YaDWbES//SqZAFqcrrdiaYF7+fLlY1Z1uvbHvDjqhPzWm5+y0+lcAkg69QZtQQCB/AgQQPKjxbkIIIBACgViBZDgTVbLli07ZR1H9A7l8YSBRNym9vto2LBhvgKIFsJrLUp+16FEtze/9SbiXlNRBgEkFerUiQACiRAggCRCkTIQQACBEARiBZAgZPziF7+whx9+2K6//np75plnfKO/6ADyzTff2Pjx42306NH+qlx9YQ/+roXkTz/9tG8cqPr0Wt6ZM2dG/q6Q85e//MV3Rp83b57169fPhg0bZhdccIELvPvuu9a1a1f/u/Yb0bU5R0C0I/qUKVMie4dMmzbNunXr5m3URoYDBw70zypVquSL26+88kovW3uaaIRH+5F06tTJxowZYxUrVoxZr14N3LFjR7+uR48eft/nn3++PfDAA3bjjTfaz372M1u9erU98sgj9txzz/kriHWO3u4lw9zaWpiAlKhHhQCSKEnKQQCBsAUIIGGLUx8CCCBQQIF4Akj16tXt3nvv9R9tFLhkyRLbunWrv6FKgUBhQJsRdu7c2ffs0Ct39W/B3zV9SWVop/OnnnrKatSo4T/B3/WlVxsHKnjoS/3QoUNt9+7dplEXvcpXwUXBQFOvtMu5jpwBZM2aNdahQwdbtGiR7xGidilcaCd11a1yBw8e7F/8161b55/t2rXLKleu7K/41Vu2xo4da3v37vXAoPvLq16FJb0eeOLEidayZUsvV5shvvfee972H3/80UaNGmW//e1vPfho9EX3W7duXQ9Pf/vb33JtqzZmTPVBAEl1D1A/AggUVIAAUlA5rkMAAQRCFogVQLSGQiMI+sKvTQIPHz7sX75fffVVO++88yIBZN++fb7nR7BZoK4L/q5Rgnr16vlohEKH/oz++wsvvGBDhgzxL/DFixf38KFRCF23atUqW7hwoc2YMSMSPPRFPWcAefnll61v3762ePFi/7KvOrTpoXZHV10akdEIRfRUKgUlja60aNHCNzWcPn26aeREu7VrN/W86p0/f76HsKBNCjwKOQpMGgnSSMumTZt8pEP/poCjNv/kJz+xP//5z/anP/0p17ZqdCbVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgngASvQhdX+jr169vU6dOPW0AUQC4+eabPZAoSAQjJVorknPtyIsvvugjFDkPjWo8++yzds0111jv3r3947zWnRw5csRHUCZPnuzn6fdBgwb5aEj79u0jmyFGX1+yZEl79NFHfcPD4Gjbtq0pYNx999151quRIC2+D9oUmGh0pVq1aj69S+FFn6vsP/zhDz4t65VXXvH7yautF110Uci9f2p1BJCUdwENQACBAgoQQAoIx2UIIIBA2ALxBBB9gd+yZYuv7dCXba1jmDNnzikBJPqLvsKD1nRoqlOsAKKRhAkTJviogtZy6EfBRdOitKZCaz80QqIjr7dR7dmzx0dPypQp49On+vTp41PA9MU/emQmOoC88cYb3katSdGaFo22PPjgg95m/Xte9Wpti9ZrBG0KRoU02qHRF4UpTR1r3bq1t1//pkOjKxoVyautqjPVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgVgDRF3ZNL5o7d67ddNNNPsKghdW5rQG56qqrfC2ERgGaNGlil112mY8mxAogWjei3dJXrlzp6y40FWrAgAE+XUpTpDQqoQXdmvqlUQ2t0cg5BUsBRkFGC8xLlCjhay8qVKhw2gCiUYqHHnrIp0sdOnTIA4OmiKnNb731Vp71bt682T9T2zTaofUpCiXBNDWt87jtttsiZpripVcVay3IJZdc4mErt7aqL8aNG+frXBSIcvtdtsk8CCDJ1KVsBBBIpgABJJm6lI0AAggkUCDeABJUqf0+NEIQrOHQ1CqFFL3lSaHh8ccf91Ov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CAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBH4DTLBE+1uQpVLAAAAAElFTkSuQmCC"
+        ], [
+          {
+            zombieKernelTestHarnessVersionMajor: 0,
+            zombieKernelTestHarnessVersionMinor: 1,
+            zombieKernelTestHarnessVersionRelease: 0,
+            userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17",
+            screenWidth: 1920,
+            screenHeight: 1080,
+            screenColorDepth: 24,
+            screenPixelRatio: 1,
+            appCodeName: "Mozilla",
+            appName: "Netscape",
+            appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17",
+            cookieEnabled: true,
+            platform: "MacIntel"
+          }, "data:image/png;base64,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kSOtWbNmftfqiqVgQ+NA1AUraAHRM0NCAAEEElWAhQgT9ZuhXggggMDfBGKn3NUuDThWUssHKX8JBN+5WkGU1DKmWdHOnj1r6pp1+fJl36dnhoQAAggkqgABSKJ+M9QLAQQQiBHQD83kiW5XyUXy/ueUvvPz58+bXpqkQGOFUnpW8r4Md4gAArlJgAAkN31b1BUBBPKlgLrT5OcuNRpQfbNSbhhL8e2335peGhOkACS/Py8361nhugggkH4BApD0W5ETAQQQuCkCifKD8tlnn7VRo0aFBrfffru9/fbb1rdv33Bfw4YNbdOmTRmaoatu3br2xhtvhGXEbmjGr4ULF/ouTTerWcCef/752Cy+PXHiRD9WuXLlHxzL7I4GDRrY7NmzM3t6ZOcFrR7qdqVXojwvkQFwIQQQyHUCBCC57iujwgggkB8FEqEF5MMPPzT9KA9SkyZNTAPj9R4kHddsXeoOlBNJP7a1CrgGXQdJMz/9+Mc/9laAYF9+e48NOhLhWclv/twvAghkTIAAJGNe5EYAAQTyrYACkBo1aoStGwo8FixY4EFJ0E1KAcif//xnN9JsXXPnzrU1a9aYWijuuOMO31+1alX793//d+vZs6e99NJLP/D8u7/7O3v11VftlVdesVatWv3guBbga9myZbi/efPmprrFDrxO77UVuIwYMcKGDRtm//u//2vTp0+3ihUrhmVrRfEhQ4bY4sWLvU66/0RLQfARvCda/agPAgggkFyAACS5CJ8RQAABBFIUOHDggM+4pMXvlBSA/OEPfzCt0K2uV0p6VzCg7lITJkzwAENdtDRT07/92795niJFingAoeDi9ddf933BH00j+//+3/+zt956y/7zP//TunTpEhzyd43J+P3vf29t2rQJ97du3dq7ghUo8Nf/pWXk2pq6VoHQN99842tsHDx40B577LGw7OrVq1upUqVs7Nixpvv/p3/6p/AYGwgggAACmRMgAMmcG2chgAAC+VJArRsKMqpUqeItDl9++aVt3brVgxH98Fcrx/bt233RvE8++cS2bNliZ86csddee83UUhFMH3vLLbf4Qnp//OMfb3Bs3Lix7dq1y958801vSQnGfwSZ1CKhFpB77rnHW2K0AJ8Coc2bNwdZMnxtraUxZ84cX1l8xowZptYTXUdJs0upVURB1pIlS3zV8fBCbCCAAAIIZErg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BAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBAaU0YynAt9EwgAAAABJRU5ErkJggg=="
+        ]
+      ]
+    }, {
+      type: "mouseMove",
+      mouseX: 335,
+      mouseY: 134,
+      time: 915
+    }, {
+      type: "mouseMove",
+      mouseX: 318,
+      mouseY: 129,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 302,
+      mouseY: 128,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 218,
+      mouseY: 120,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 156,
+      mouseY: 121,
+      time: 16
+    }, {
+      type: "mouseMove",
+      mouseX: 97,
+      mouseY: 130,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 42,
+      mouseY: 134,
+      time: 17
+    }, {
+      type: "mouseMove",
+      mouseX: 12,
+      mouseY: 135,
+      time: 16
+    }
+  ];
+
+  SystemTest_SimpleMenuTest.coffeeScriptSourceOfThisClass = '# How to play a test:\n# from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):\n# window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData\n# window.world.systemTestsRecorderAndPlayer.startTestPlaying()\n\n# How to save a test:\n# window.world.systemTestsRecorderAndPlayer.startTestRecording()\n# ...do the test...\n# window.world.systemTestsRecorderAndPlayer.stopTestRecording()\n# if you want to verify the test on the spot:\n# window.world.systemTestsRecorderAndPlayer.startTestPlaying()\n# then to save the test:\n# console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))\n# copy that blurb\n# For recording screenshot data at any time:\n# console.log(JSON.stringify(window.world.systemTestsRecorderAndPlayer.takeScreenshot()))\n# Note for Chrome: You have to replace the data URL because\n# it contains an ellipsis for more comfortable viewing in the console.\n# Workaround: find that url and right-click: open in new tab and then copy the\n# full data URL from the location bar and substitute it with the one\n# of the ellipses.\n# Then pass the JSON into http://js2coffee.org/\n# and save it in this file.\n\n# Tests name must start with "SystemTest_"\nclass SystemTest_SimpleMenuTest\n  @testData = [\n    type: "systemInfo"\n    time: 0\n    systemInfo:\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      cookieEnabled: true\n      platform: "MacIntel"\n  ,\n    type: "mouseMove"\n    mouseX: 604\n    mouseY: 4\n    time: 1742\n  ,\n    type: "mouseMove"\n    mouseX: 592\n    mouseY: 14\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 581\n    mouseY: 21\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 556\n    mouseY: 25\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 544\n    mouseY: 28\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 529\n    mouseY: 37\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 513\n    mouseY: 44\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 492\n    mouseY: 55\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 482\n    mouseY: 59\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 472\n    mouseY: 64\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 464\n    mouseY: 66\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 461\n    mouseY: 67\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 460\n    mouseY: 68\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 460\n    mouseY: 69\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 458\n    mouseY: 70\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 456\n    mouseY: 72\n    time: 18\n  ,\n    type: "mouseMove"\n    mouseX: 455\n    mouseY: 72\n    time: 15\n  ,\n    type: "mouseMove"\n    mouseX: 452\n    mouseY: 74\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 450\n    mouseY: 74\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 449\n    mouseY: 75\n    time: 50\n  ,\n    type: "mouseMove"\n    mouseX: 448\n    mouseY: 76\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 447\n    mouseY: 77\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 445\n    mouseY: 79\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 444\n    mouseY: 80\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 444\n    mouseY: 81\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 442\n    mouseY: 83\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 436\n    mouseY: 91\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 433\n    mouseY: 95\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 423\n    mouseY: 106\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 417\n    mouseY: 115\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 414\n    mouseY: 118\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 408\n    mouseY: 123\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 396\n    mouseY: 131\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 387\n    mouseY: 135\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 380\n    mouseY: 138\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 379\n    mouseY: 139\n    time: 66\n  ,\n    type: "mouseMove"\n    mouseX: 378\n    mouseY: 141\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 375\n    mouseY: 142\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 373\n    mouseY: 145\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 368\n    mouseY: 149\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 365\n    mouseY: 154\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 154\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 155\n    time: 16\n  ,\n    type: "mouseDown"\n    time: 145\n    button: 2\n    ctrlKey: false\n  ,\n    type: "mouseUp"\n    time: 113\n  ,\n    type: "mouseMove"\n    mouseX: 364\n    mouseY: 156\n    time: 1809\n  ,\n    type: "takeScreenshot"\n    time: 801\n    screenShotImageData: [[\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.31 (KHTML, like Gecko) Chrome/26.0.1410.43 Safari/537.31"\n      cookieEnabled: true\n      platform: "MacIntel"\n      , "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAACadoJwAAAgAElEQVR4XuzdCZhU1Z338T+KLKIgOrggjMiAoyDLgASIedkGRxxAEGVTUAMBF5AJIxNlBzPRQFRAGRWBCYtsKoJBgUQWFUSRfVE0rogsIkuUsBhF3vf3n7n1Fk03Vd1ddauq63ufpx8a6t5zzv2cmzz185xzT7F169adMA4EEEAAAQQQQAABBBBAIASBYgSQEJSpAgEEEEAAAQQQQAABBFyAAMKDgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIzgAACCCCAAAIIIIAAAqEJEEBCo6YiBBBAAAEEEEAAAQQQIIDwDCCAAAIIIIAAAggggEBoAgSQ0KipCAEEEEAAAQQQQAABBAggPAMIIIAAAggggAACCCAQmgABJDRqKkIAAQQQQAABBBBAAAECCM8AAggggAACCCCAAAIIhCZAAAmNmooQQAABBBBAAAEEEECAAMIz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A0jWwWTpDRNAsrTjuW0EioAAAaQIdCK3gAAC2SFAAMmOfo73Lgkg8UpxHgIIpJsAASTdeoT2IIAAAnkIEEB4NKIFCCA8DwggkKkCBJBM7TnajQACWSeQM4AEX0CzDiLLb3jFihUuQADJ8geB20cggwUIIBnceTQdAQSyS4ARkOzq71h3SwCJJcTnCCCQrgIEkHTtGdqFAAII5BAggPBIRAsQQHgeEEAgUwUIIJnac7QbAQSyToAAknVdftobJoDwPCCAQKYKEEAytedoNwIIZJ1ArACSc0PBaKBt27b5buebN2+2M8888yQ77ZLeqFEj39G8fPnyhXb9+OOPrXnz5vb+++/bV199Ffn93HPPLXTZFPD/BQggPA0IIJCpAgSQTO052o0AAlknEE8AUcjYuHGjFStW7CQfbUCoHdEbN258itvnn39u2u08kQHk2muv9fL2799vwe+JCDdZ1+mnuWECCE8DAghkqgABJFN7jnYjgEDWCcQTQFq1amUDBw60Xr16WaVKley1116zK6+80r788kubM2eO9e/f33dJf/fdd61r1652wQUXeECYOXNmJIBoROT++++3efPmWb9+/WzYsGF+Xs7j9ddft549e9qnn35qnTp1sjFjxljFihVNIyAEkOQ/ngSQ5BtTAwIIJEeAAJIcV0pFAAEEEi4QK4Doi3/16tWtY8eONnjwYJsyZYqtW7fOFBQ+/PBD69Kli61fv96nRtWuXdsDg6ZetWvXztuqEQsdCiwKHipn6NChtnv3blu2bJkVL148ck8KNJUrV7ZZs2b5qMrYsWNt79699txzz9knn3xCAEl4759aIAEkBGSqQACBpAgQQJLCSqEIIIBA4gXiCSD16tUzTak6//zz/c9gatW+fft8DciGDRs8NCxcuNBmzJgRCR5Nmzb1ALJkyRIbMmSIT9dS4FD40KiGRjkuv/zyyE1pSpdGUVq0aGHff/+9TZ8+3aZNm2bLly83jaAwApL4/s9ZIgEk+cbUgAACyREggCTHlVIRQACBhAvECiBahN6+ffvIQvPoqVDRAeTuu++2a665xnr37u1tjD5v6dKlPvKR81izZo1fExxHjhyxRx991IYPHx75t7Zt29r8+fM9rBBAEt79pxRIAEm+MTUggEByBAggyXGlVAQQQCDhAvEEkGCUQ+s88gogWt+hNR0a6dAR/RYsjYxM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FiCAJBiU4hBAAIFkCcQKIHrTlfbr0B4a2m1cr7bVpoPRu43rzVHRGwgmq62Um3wBAkjyjakBAQSSI0AASY4rpSKAAAIJF4gVQB555BHf2K9evXq+i7k2+9PO49oLIwgdeQWQHTt22JNPPmkXX3yx7yB+/fXX+y7ql112md+H9ubQHh0qq1OnTr4pYcWKFf0zbVT485//3F9127t3b9/YT5sA6u8afVF52tiwX79+NmzYMN8JnaPwAgSQwhtSAgIIpEaAAJIad2pFAAEE8i0QK4AocOjNTpp+pSDRo0cP0w7lCgGxAohGSbTBn67RxoOayvXWW2/5a2oVWipXruzlakRl7NixtnfvXt/BXGFD1z377LNWs2ZNr0f7hWi/Dh0akVHw6Nixow0dOtR2795ty5Yti7mfSL5xsvACAkgWdjq3jEARESCAFJGO5DYQQKDoC8QKIJqCdfXVV3vo0AZ+2i9jw4YNcY2AfPTRR9aqVavIvhh63a3Cw6uvvmpXXHGFj3Jo4z7VMX36dJs2bZrvYK7fVZ92GNexZcsWa9mypQcQ7ZquMKOpYNr8T+FDoyYaRbn88suLfocl+Q4JIEkGpngEEEiaAAEkabQUjAACCCRWIFYA0cZ6derUsXfeece010V+A4imT2mHce1QrrLq169vU6dOtRo1atijjz7qoyLB0bZtW5s/f77ddtttvqhd1+qIXm+isjTykfNYs2aNr1HhKJwAAaRwflyNAAKpEyCApM6emhFAAIF8CSQ7gLRv395HMIIAoilVc+bMsS+//NLXcShQVKlSxVatWmUPPvigrwv53e9+Zz/88IMNHjzY70UjH02bNvU/Fy5c6OtINBKic/SjERlN4ypRokS+7p2TTxUggPBUIIBApgoQQDK152g3AghknUAyA0iwBuSll16ym266ySZNmmQjR460bdu2+a7hWlS+adMmO3TokLVu3drXeWgE5I033vDztV7k0ksv9Wlc27dv9wCitSfasXzlypVWu3Ztn641YMAA+/zzz+2ss87yhfLt2rXzUJPb79WqVcu6Ps7PDRNA8qPFuQggkE4CBJB06g3aggACCJxGIL8BRG+t0ihF8BYshQztA6KF4vo9eh+QIIBEV681HgoQGgHRqIbK0TFixAj/0bqP++67z8NKr169/LNGjRrZgQMHbOPGjVa6dOmTPtPna9eu9aldmuKlEZbZs2dbrVq1cv29QYMGPA+nESCA8HgggECmChBAMrXnaDcCCGSdQKwAUhgQjVjcc889Ps1Kb70655xzPEAEx/Hjxz1YKLTo9bpHjx71UQyNcuhHb98qVqyYL0jXK3k11UpTuXR8++23vni9XLlyvP2qMJ2U41oCSAIxKQoBBEIVIICEyk1lCCCAQMEFkhlANNVKi9a1c/qZZ54ZdyO1u7pGMrRAvWrVqnbHHXf463q7dOkSdxmcWDABAkjB3LgKAQRSL0AASX0f0AIEEEAgLoFkBhC9dlfTpjTlSiMZ+Tn0Ct/XXnvNdu7cirzqbQAAIABJREFUaW3atPFF5hzJFyCAJN+YGhBAIDkCBJDkuFIqAgggkHCBZAaQhDeWApMuQABJOjEVIIBAkgQIIEmCpVgEEEAg0QIEkESLZnZ5BJDM7j9aj0A2CxBAsrn3uXcEEMgogVgBRFOhgjdfBQvAgxvUW660YaDWbES//SqZAFqcrrdiaYF7+fLlY1Z1uvbHvDjqhPzWm5+y0+lcAkg69QZtQQCB/AgQQPKjxbkIIIBACgViBZDgTVbLli07ZR1H9A7l8YSBRNym9vto2LBhvgKIFsJrLUp+16FEtze/9SbiXlNRBgEkFerUiQACiRAggCRCkTIQQACBEARiBZAgZPziF7+whx9+2K6//np75plnfKO/6ADyzTff2Pjx42306NH+qlx9YQ/+roXkTz/9tG8cqPr0Wt6ZM2dG/q6Q85e//MV3Rp83b57169fPhg0bZhdccIELvPvuu9a1a1f/u/Yb0bU5R0C0I/qUKVMie4dMmzbNunXr5m3URoYDBw70zypVquSL26+88kovW3uaaIRH+5F06tTJxowZYxUrVoxZr14N3LFjR7+uR48eft/nn3++PfDAA3bjjTfaz372M1u9erU98sgj9txzz/kriHWO3u4lw9zaWpiAlKhHhQCSKEnKQQCBsAUIIGGLUx8CCCBQQIF4Akj16tXt3nvv9R9tFLhkyRLbunWrv6FKgUBhQJsRdu7c2ffs0Ct39W/B3zV9SWVop/OnnnrKatSo4T/B3/WlVxsHKnjoS/3QoUNt9+7dplEXvcpXwUXBQFOvtMu5jpwBZM2aNdahQwdbtGiR7xGidilcaCd11a1yBw8e7F/8161b55/t2rXLKleu7K/41Vu2xo4da3v37vXAoPvLq16FJb0eeOLEidayZUsvV5shvvfee972H3/80UaNGmW//e1vPfho9EX3W7duXQ9Pf/vb33JtqzZmTPVBAEl1D1A/AggUVIAAUlA5rkMAAQRCFogVQLSGQiMI+sKvTQIPHz7sX75fffVVO++88yIBZN++fb7nR7BZoK4L/q5Rgnr16vlohEKH/oz++wsvvGBDhgzxL/DFixf38KFRCF23atUqW7hwoc2YMSMSPPRFPWcAefnll61v3762ePFi/7KvOrTpoXZHV10akdEIRfRUKgUlja60aNHCNzWcPn26aeREu7VrN/W86p0/f76HsKBNCjwKOQpMGgnSSMumTZt8pEP/poCjNv/kJz+xP//5z/anP/0p17ZqdCbVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgngASvQhdX+jr169vU6dOPW0AUQC4+eabPZAoSAQjJVorknPtyIsvvugjFDkPjWo8++yzds0111jv3r3947zWnRw5csRHUCZPnuzn6fdBgwb5aEj79u0jmyFGX1+yZEl79NFHfcPD4Gjbtq0pYNx999151quRIC2+D9oUmGh0pVq1aj69S+FFn6vsP/zhDz4t65VXXvH7yautF110Uci9f2p1BJCUdwENQACBAgoQQAoIx2UIIIBA2ALxBBB9gd+yZYuv7dCXba1jmDNnzikBJPqLvsKD1nRoqlOsAKKRhAkTJviogtZy6EfBRdOitKZCaz80QqIjr7dR7dmzx0dPypQp49On+vTp41PA9MU/emQmOoC88cYb3katSdGaFo22PPjgg95m/Xte9Wpti9ZrBG0KRoU02qHRF4UpTR1r3bq1t1//pkOjKxoVyautqjPVBwEk1T1A/QggUFABAkhB5bgOAQQQCFkgVgDRF3ZNL5o7d67ddNNNPsKghdW5rQG56qqrfC2ERgGaNGlil112mY8mxAogWjei3dJXrlzp6y40FWrAgAE+XUpTpDQqoQXdmvqlUQ2t0cg5BUsBRkFGC8xLlCjhay8qVKhw2gCiUYqHHnrIp0sdOnTIA4OmiKnNb731Vp71bt682T9T2zTaofUpCiXBNDWt87jtttsiZpripVcVay3IJZdc4mErt7aqL8aNG+frXBSIcvtdtsk8CCDJ1KVsBBBIpgABJJm6lI0AAggkUCDeABJUqf0+NEIQrOHQ1CqFFL3lSaHh8ccf91Ov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CAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBEwQFaadAcBAgQIECBAgACBgIABEihJRAIECBAgQIAAAQIrAgbISpPuIECAAAECBAgQIBAQMEACJYlIgAABAgQIECBAYEXAAFlp0h0ECBAgQIAAAQIEAgIGSKAkEQkQIECAAAECBAisCBggK026gwABAgQIECBAgEBAwAAJlCQiAQIECBAgQIAAgRUBA2SlSXcQIECAAAECBAgQCAgYIIGSRCRAgAABAgQIECCwImCArDTpDgIECBAgQIAAAQIBAQMkUJKIBAgQIECAAAECBFYEDJCVJt1BgAABAgQIECBAICBggARKEpEAAQIECBAgQIDAioABstKkOwgQIECAAAECBAgEBAyQQEkiEiBAgAABAgQIEFgRMEBWmnQHAQIECBAgQIAAgYCAARIoSUQCBAgQIECAAAECKwIGyEqT7iBAgAABAgQIECAQEDBAAiWJSIAAAQIECBAgQGBFwABZadIdBAgQIECAAAECBAICBkigJBEJECBAgAABAgQIrAgYICtNuoMAAQIECBAgQIBAQMAACZQkIgECBAgQIECAAIEVAQNkpUl3ECBAgAABAgQIEAgIGCCBkkQkQIAAAQIECBAgsCJggKw06Q4CBAgQIECAAAECAQEDJFCSiAQIECBAgAABAgRWBAyQlSbdQYAAAQIECBAgQCAgYIAEShKRAAECBAgQIECAwIqAAbLSpDsIECBAgAABAgQIBAQMkEBJIhIgQIAAAQIECBBYETBAVpp0BwECBAgQIECAAIGAgAESKElEAgQIECBAgAABAisCBshKk+4gQIAAAQIECBAgEBAwQAIliUiAAAECBAgQIEBgRcAAWWnSHQQIECBAgAABAgQCAgZIoCQRCRAgQIAAAQIECKwIGCArTbqDAAECBAgQIECAQEDAAAmUJCIBAgQIECBAgACBFQEDZKVJdxAgQIAAAQIECBAICBgggZJEJECAAAECBAgQILAiYICsNOkOAgQIECBAgAABAgEBAyRQkogECBAgQIAAAQIEVgQMkJUm3UGAAAECBAgQIEAgIGCABEoSkQABAgQIECBAgMCKgAGy0qQ7CBAgQIAAAQIECAQEDJBASSISIECAAAECBAgQWBH4DTLBE+1uQpVLAAAAAElFTkSuQmCC"\n      ],[\n      zombieKernelTestHarnessVersionMajor: 0\n      zombieKernelTestHarnessVersionMinor: 1\n      zombieKernelTestHarnessVersionRelease: 0\n      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17"\n      screenWidth: 1920\n      screenHeight: 1080\n      screenColorDepth: 24\n      screenPixelRatio: 1\n      appCodeName: "Mozilla"\n      appName: "Netscape"\n      appVersion: "5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.17 (KHTML, like Gecko) Version/6.0.2 Safari/536.26.17"\n      cookieEnabled: true\n      platform: "MacIntel"\n      , "data:image/png;base64,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kSOtWbNmftfqiqVgQ+NA1AUraAHRM0NCAAEEElWAhQgT9ZuhXggggMDfBGKn3NUuDThWUssHKX8JBN+5WkGU1DKmWdHOnj1r6pp1+fJl36dnhoQAAggkqgABSKJ+M9QLAQQQiBHQD83kiW5XyUXy/ueUvvPz58+bXpqkQGOFUnpW8r4Md4gAArlJgAAkN31b1BUBBPKlgLrT5OcuNRpQfbNSbhhL8e2335peGhOkACS/Py8361nhugggkH4BApD0W5ETAQQQuCkCifKD8tlnn7VRo0aFBrfffru9/fbb1rdv33Bfw4YNbdOmTRmaoatu3br2xhtvhGXEbmjGr4ULF/ouTTerWcCef/752Cy+PXHiRD9WuXLlHxzL7I4GDRrY7NmzM3t6ZOcFrR7qdqVXojwvkQFwIQQQyHUCBCC57iujwgggkB8FEqEF5MMPPzT9KA9SkyZNTAPj9R4kHddsXeoOlBNJP7a1CrgGXQdJMz/9+Mc/9laAYF9+e48NOhLhWclv/twvAghkTIAAJGNe5EYAAQTyrYACkBo1aoStGwo8FixY4EFJ0E1KAcif//xnN9JsXXPnzrU1a9aYWijuuOMO31+1alX793//d+vZs6e99NJLP/D8u7/7O3v11VftlVdesVatWv3guBbga9myZbi/efPmprrFDrxO77UVuIwYMcKGDRtm//u//2vTp0+3ihUrhmVrRfEhQ4bY4sWLvU66/0RLQfARvCda/agPAgggkFyAACS5CJ8RQAABBFIUOHDggM+4pMXvlBSA/OEPfzCt0K2uV0p6VzCg7lITJkzwAENdtDRT07/92795niJFingAoeDi9ddf933BH00j+//+3/+zt956y/7zP//TunTpEhzyd43J+P3vf29t2rQJ97du3dq7ghUo8Nf/pWXk2pq6VoHQN99842tsHDx40B577LGw7OrVq1upUqVs7Nixpvv/p3/6p/AYGwgggAACmRMgAMmcG2chgAAC+VJArRsKMqpUqeItDl9++aVt3brVgxH98Fcrx/bt233RvE8++cS2bNliZ86csddee83UUhFMH3vLLbf4Qnp//OMfb3Bs3Lix7dq1y958801vSQnGfwSZ1CKhFpB77rnHW2K0AJ8Coc2bNwdZMnxtraUxZ84cX1l8xowZptYTXUdJs0upVURB1pIlS3zV8fBCbCCAAAIIZErg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BAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBByQqzmVIUCAAAECBAgQINAWcEDa+0hHgAABAgQIECBA4ErAAbmaUxkCBAgQIECAAAECbQEHpL2PdAQIECBAgAABAgSuBAaU0YynAt9EwgAAAABJRU5ErkJggg=="\n      ]\n    ]\n  ,\n    type: "mouseMove"\n    mouseX: 335\n    mouseY: 134\n    time: 915\n  ,\n    type: "mouseMove"\n    mouseX: 318\n    mouseY: 129\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 302\n    mouseY: 128\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 218\n    mouseY: 120\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 156\n    mouseY: 121\n    time: 16\n  ,\n    type: "mouseMove"\n    mouseX: 97\n    mouseY: 130\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 42\n    mouseY: 134\n    time: 17\n  ,\n    type: "mouseMove"\n    mouseX: 12\n    mouseY: 135\n    time: 16\n  ]';
+
+  return SystemTest_SimpleMenuTest;
+
+})();
+
+MenuMorph = (function(_super) {
+  __extends(MenuMorph, _super);
+
+  MenuMorph.prototype.target = null;
+
+  MenuMorph.prototype.title = null;
+
+  MenuMorph.prototype.environment = null;
+
+  MenuMorph.prototype.fontSize = null;
+
+  MenuMorph.prototype.items = null;
+
+  MenuMorph.prototype.label = null;
+
+  MenuMorph.prototype.world = null;
+
+  MenuMorph.prototype.isListContents = false;
+
+  function MenuMorph(target, title, environment, fontSize) {
+    this.target = target;
+    this.title = title != null ? title : null;
+    this.environment = environment != null ? environment : null;
+    this.fontSize = fontSize != null ? fontSize : null;
+    this.items = [];
+    MenuMorph.__super__.constructor.call(this);
+    this.border = null;
+  }
+
+  MenuMorph.prototype.addItem = function(labelString, action, hint, color, bold, italic, doubleClickAction) {
+    if (bold == null) {
+      bold = false;
+    }
+    if (italic == null) {
+      italic = false;
+    }
+    return this.items.push([localize(labelString || "close"), action || nop, hint, color, bold, italic, doubleClickAction]);
+  };
+
+  MenuMorph.prototype.addLine = function(width) {
+    return this.items.push([0, width || 1]);
+  };
+
+  MenuMorph.prototype.createLabel = function() {
+    var text;
+
+    if (this.label !== null) {
+      this.label.destroy();
+    }
+    text = new TextMorph(localize(this.title), this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, true, false, "center");
+    text.alignment = "center";
+    text.color = new Color(255, 255, 255);
+    text.backgroundColor = this.borderColor;
+    text.updateRendering();
+    this.label = new BoxMorph(3, 0);
+    if (WorldMorph.MorphicPreferences.isFlat) {
+      this.label.edge = 0;
+    }
+    this.label.color = this.borderColor;
+    this.label.borderColor = this.borderColor;
+    this.label.setExtent(text.extent().add(4));
+    this.label.updateRendering();
+    this.label.add(text);
+    return this.label.text = text;
+  };
+
+  MenuMorph.prototype.updateRendering = function() {
+    var fb, isLine, x, y,
+      _this = this;
+
+    isLine = false;
+    this.children.forEach(function(m) {
+      return m.destroy();
+    });
+    this.children = [];
+    if (!this.isListContents) {
+      this.edge = WorldMorph.MorphicPreferences.isFlat ? 0 : 5;
+      this.border = WorldMorph.MorphicPreferences.isFlat ? 1 : 2;
+    }
+    this.color = new Color(255, 255, 255);
+    this.borderColor = new Color(60, 60, 60);
+    this.silentSetExtent(new Point(0, 0));
+    y = 2;
+    x = this.left() + 4;
+    if (!this.isListContents) {
+      if (this.title) {
+        this.createLabel();
+        this.label.setPosition(this.bounds.origin.add(4));
+        this.add(this.label);
+        y = this.label.bottom();
+      } else {
+        y = this.top() + 4;
+      }
+    }
+    y += 1;
+    this.items.forEach(function(tuple) {
+      var item;
+
+      isLine = false;
+      if (tuple instanceof StringFieldMorph || tuple instanceof ColorPickerMorph || tuple instanceof SliderMorph) {
+        item = tuple;
+      } else if (tuple[0] === 0) {
+        isLine = true;
+        item = new Morph();
+        item.color = _this.borderColor;
+        item.setHeight(tuple[1]);
+      } else {
+        item = new MenuItemMorph(_this.target, tuple[1], tuple[0], _this.fontSize || WorldMorph.MorphicPreferences.menuFontSize, WorldMorph.MorphicPreferences.menuFontName, _this.environment, tuple[2], tuple[3], tuple[4], tuple[5], tuple[6]);
+      }
+      if (isLine) {
+        y += 1;
+      }
+      item.setPosition(new Point(x, y));
+      _this.add(item);
+      y = y + item.height();
+      if (isLine) {
+        return y += 1;
+      }
+    });
+    fb = this.boundsIncludingChildren();
+    this.silentSetExtent(fb.extent().add(4));
+    this.adjustWidths();
+    return MenuMorph.__super__.updateRendering.call(this);
+  };
+
+  MenuMorph.prototype.maxWidth = function() {
+    var w;
+
+    w = 0;
+    if (this.parent instanceof FrameMorph) {
+      if (this.parent.scrollFrame instanceof ScrollFrameMorph) {
+        w = this.parent.scrollFrame.width();
+      }
+    }
+    this.children.forEach(function(item) {
+      if (item instanceof MenuItemMorph) {
+        return w = Math.max(w, item.children[0].width() + 8);
+      } else if ((item instanceof StringFieldMorph) || (item instanceof ColorPickerMorph) || (item instanceof SliderMorph)) {
+        return w = Math.max(w, item.width());
+      }
+    });
+    if (this.label) {
+      w = Math.max(w, this.label.width());
+    }
+    return w;
+  };
+
+  MenuMorph.prototype.adjustWidths = function() {
+    var w,
+      _this = this;
+
+    w = this.maxWidth();
+    return this.children.forEach(function(item) {
+      var isSelected;
+
+      item.silentSetWidth(w);
+      if (item instanceof MenuItemMorph) {
+        isSelected = item.image === item.pressImage;
+        item.createBackgrounds();
+        if (isSelected) {
+          return item.image = item.pressImage;
+        }
+      } else {
+        item.updateRendering();
+        if (item === _this.label) {
+          return item.text.setPosition(item.center().subtract(item.text.extent().floorDivideBy(2)));
+        }
+      }
+    });
+  };
+
+  MenuMorph.prototype.unselectAllItems = function() {
+    this.children.forEach(function(item) {
+      if (item instanceof MenuItemMorph) {
+        return item.image = item.normalImage;
+      }
+    });
+    return this.changed();
+  };
+
+  MenuMorph.prototype.popup = function(world, pos) {
+    this.updateRendering();
+    this.setPosition(pos);
+    this.addShadow(new Point(2, 2), 80);
+    this.keepWithin(world);
+    if (world.activeMenu) {
+      world.activeMenu.destroy();
+    }
+    world.add(this);
+    world.activeMenu = this;
+    return this.fullChanged();
+  };
+
+  MenuMorph.prototype.popUpAtHand = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    return this.popup(wrrld, wrrld.hand.position());
+  };
+
+  MenuMorph.prototype.popUpCenteredAtHand = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    this.updateRendering();
+    return this.popup(wrrld, wrrld.hand.position().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  MenuMorph.prototype.popUpCenteredInWorld = function(world) {
+    var wrrld;
+
+    wrrld = world || this.world;
+    this.updateRendering();
+    return this.popup(wrrld, wrrld.center().subtract(this.extent().floorDivideBy(2)));
+  };
+
+  MenuMorph.coffeeScriptSourceOfThisClass = '# MenuMorph ///////////////////////////////////////////////////////////\n\nclass MenuMorph extends BoxMorph\n\n  target: null\n  title: null\n  environment: null\n  fontSize: null\n  items: null\n  label: null\n  world: null\n  isListContents: false\n\n  constructor: (@target, @title = null, @environment = null, @fontSize = null) ->\n    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need\n    # to initialise the items before calling super. We can\'t initialise it\n    # outside the constructor because the array would be shared across instantiated\n    # objects.\n    @items = []\n    super()\n    @border = null # the Box Morph constructor puts this to 2\n    # important not to traverse all the children for stepping through, because\n    # there could be a lot of entries for example in the inspector the number\n    # of properties of an object - there could be a 100 of those and we don\'t\n    # want to traverse them all. Setting step to null (as opposed to nop) means\n    # that\n  \n  addItem: (\n      labelString,\n      action,\n      hint,\n      color,\n      bold = false,\n      italic = false,\n      doubleClickAction # optional, when used as list contents\n      ) ->\n    # labelString is normally a single-line string. But it can also be one\n    # of the following:\n    #     * a multi-line string (containing line breaks)\n    #     * an icon (either a Morph or a Canvas)\n    #     * a tuple of format: [icon, string]\n    @items.push [\n      localize(labelString or "close"),\n      action or nop,\n      hint,\n      color,\n      bold,\n      italic,\n      doubleClickAction\n    ]\n  \n  addLine: (width) ->\n    @items.push [0, width or 1]\n  \n  createLabel: ->\n    @label.destroy()  if @label isnt null\n    text = new TextMorph(localize(@title),\n      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")\n    text.alignment = "center"\n    text.color = new Color(255, 255, 255)\n    text.backgroundColor = @borderColor\n    text.updateRendering()\n    @label = new BoxMorph(3, 0)\n    if WorldMorph.MorphicPreferences.isFlat\n      @label.edge = 0\n    @label.color = @borderColor\n    @label.borderColor = @borderColor\n    @label.setExtent text.extent().add(4)\n    @label.updateRendering()\n    @label.add text\n    @label.text = text\n  \n  updateRendering: ->\n    isLine = false\n    @children.forEach (m) ->\n      m.destroy()\n    #\n    @children = []\n    unless @isListContents\n      @edge = if WorldMorph.MorphicPreferences.isFlat then 0 else 5\n      @border = if WorldMorph.MorphicPreferences.isFlat then 1 else 2\n    @color = new Color(255, 255, 255)\n    @borderColor = new Color(60, 60, 60)\n    @silentSetExtent new Point(0, 0)\n    y = 2\n    x = @left() + 4\n    unless @isListContents\n      if @title\n        @createLabel()\n        @label.setPosition @bounds.origin.add(4)\n        @add @label\n        y = @label.bottom()\n      else\n        y = @top() + 4\n    y += 1\n    @items.forEach (tuple) =>\n      isLine = false\n      if tuple instanceof StringFieldMorph or\n        tuple instanceof ColorPickerMorph or\n        tuple instanceof SliderMorph\n          item = tuple\n      else if tuple[0] is 0\n        isLine = true\n        item = new Morph()\n        item.color = @borderColor\n        item.setHeight tuple[1]\n      else\n        # bubble help hint\n        item = new MenuItemMorph(\n          @target,\n          tuple[1],\n          tuple[0],\n          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,\n          WorldMorph.MorphicPreferences.menuFontName, @environment,\n          tuple[2],\n          tuple[3], # color\n          tuple[4], # bold\n          tuple[5], # italic\n          tuple[6]  # doubleclick action\n          )\n      y += 1  if isLine\n      item.setPosition new Point(x, y)\n      @add item\n      y = y + item.height()\n      y += 1  if isLine\n    #\n    fb = @boundsIncludingChildren()\n    @silentSetExtent fb.extent().add(4)\n    @adjustWidths()\n    super()\n  \n  maxWidth: ->\n    w = 0\n    if @parent instanceof FrameMorph\n      if @parent.scrollFrame instanceof ScrollFrameMorph\n        w = @parent.scrollFrame.width()    \n    @children.forEach (item) ->\n      if (item instanceof MenuItemMorph)\n        w = Math.max(w, item.children[0].width() + 8)\n      else if (item instanceof StringFieldMorph) or\n        (item instanceof ColorPickerMorph) or\n        (item instanceof SliderMorph)\n          w = Math.max(w, item.width())  \n    #\n    w = Math.max(w, @label.width())  if @label\n    w\n  \n  adjustWidths: ->\n    w = @maxWidth()\n    @children.forEach (item) =>\n      item.silentSetWidth w\n      if item instanceof MenuItemMorph\n        isSelected = (item.image == item.pressImage)\n        item.createBackgrounds()\n        if isSelected then item.image = item.pressImage          \n      else\n        item.updateRendering()\n        if item is @label\n          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))\n  \n  \n  unselectAllItems: ->\n    @children.forEach (item) ->\n      item.image = item.normalImage  if item instanceof MenuItemMorph\n    #\n    @changed()\n  \n  popup: (world, pos) ->\n    @updateRendering()\n    @setPosition pos\n    @addShadow new Point(2, 2), 80\n    @keepWithin world\n    world.activeMenu.destroy()  if world.activeMenu\n    world.add @\n    world.activeMenu = @\n    @fullChanged()\n  \n  popUpAtHand: (world) ->\n    wrrld = world or @world\n    @popup wrrld, wrrld.hand.position()\n  \n  popUpCenteredAtHand: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))\n  \n  popUpCenteredInWorld: (world) ->\n    wrrld = world or @world\n    @updateRendering()\n    @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))';
+
+  return MenuMorph;
+
+})(BoxMorph);
+
+PenMorph = (function(_super) {
+  __extends(PenMorph, _super);
+
+  PenMorph.prototype.heading = 0;
+
+  PenMorph.prototype.penSize = null;
+
+  PenMorph.prototype.isWarped = false;
+
+  PenMorph.prototype.isDown = true;
+
+  PenMorph.prototype.wantsRedraw = false;
+
+  PenMorph.prototype.penPoint = 'tip';
+
+  function PenMorph() {
+    this.penSize = WorldMorph.MorphicPreferences.handleSize * 4;
+    PenMorph.__super__.constructor.call(this);
+    this.setExtent(new Point(this.penSize, this.penSize));
+    this.penSize = 1;
+  }
+
+  PenMorph.staticVariable = 1;
+
+  PenMorph.staticFunction = function() {
+    return 3.14;
+  };
+
+  PenMorph.prototype.changed = function() {
+    var w;
+
+    if (this.isWarped === false) {
+      w = this.root();
+      if (w instanceof WorldMorph) {
+        w.broken.push(this.visibleBounds().spread());
+      }
+      if (this.parent) {
+        return this.parent.childChanged(this);
+      }
+    }
+  };
+
+  PenMorph.prototype.updateRendering = function(facing) {
+    var context, dest, direction, left, len, right, start;
+
+    direction = facing || this.heading;
+    if (this.isWarped) {
+      this.wantsRedraw = true;
+      return;
+    }
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext("2d");
+    len = this.width() / 2;
+    start = this.center().subtract(this.bounds.origin);
+    if (this.penPoint === "tip") {
+      dest = start.distanceAngle(len * 0.75, direction - 180);
+      left = start.distanceAngle(len, direction + 195);
+      right = start.distanceAngle(len, direction - 195);
+    } else {
+      dest = start.distanceAngle(len * 0.75, direction);
+      left = start.distanceAngle(len * 0.33, direction + 230);
+      right = start.distanceAngle(len * 0.33, direction - 230);
+    }
+    context.fillStyle = this.color.toString();
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.lineTo(left.x, left.y);
+    context.lineTo(dest.x, dest.y);
+    context.lineTo(right.x, right.y);
+    context.closePath();
+    context.strokeStyle = "white";
+    context.lineWidth = 3;
+    context.stroke();
+    context.strokeStyle = "black";
+    context.lineWidth = 1;
+    context.stroke();
+    context.fill();
+    return this.wantsRedraw = false;
+  };
+
+  PenMorph.prototype.setHeading = function(degrees) {
+    this.heading = parseFloat(degrees) % 360;
+    this.updateRendering();
+    return this.changed();
+  };
+
+  PenMorph.prototype.drawLine = function(start, dest) {
+    var context, from, to;
+
+    context = this.parent.penTrails().getContext("2d");
+    from = start.subtract(this.parent.bounds.origin);
+    to = dest.subtract(this.parent.bounds.origin);
+    if (this.isDown) {
+      context.lineWidth = this.penSize;
+      context.strokeStyle = this.color.toString();
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.beginPath();
+      context.moveTo(from.x, from.y);
+      context.lineTo(to.x, to.y);
+      context.stroke();
+      if (this.isWarped === false) {
+        return this.world().broken.push(start.rectangle(dest).expandBy(Math.max(this.penSize / 2, 1)).intersect(this.parent.visibleBounds()).spread());
+      }
+    }
+  };
+
+  PenMorph.prototype.turn = function(degrees) {
+    return this.setHeading(this.heading + parseFloat(degrees));
+  };
+
+  PenMorph.prototype.forward = function(steps) {
+    var dest, dist, start;
+
+    start = this.center();
+    dist = parseFloat(steps);
+    if (dist >= 0) {
+      dest = this.position().distanceAngle(dist, this.heading);
+    } else {
+      dest = this.position().distanceAngle(Math.abs(dist), this.heading - 180);
+    }
+    this.setPosition(dest);
+    return this.drawLine(start, this.center());
+  };
+
+  PenMorph.prototype.down = function() {
+    return this.isDown = true;
+  };
+
+  PenMorph.prototype.up = function() {
+    return this.isDown = false;
+  };
+
+  PenMorph.prototype.clear = function() {
+    this.parent.updateRendering();
+    return this.parent.changed();
+  };
+
+  PenMorph.prototype.startWarp = function() {
+    this.wantsRedraw = false;
+    return this.isWarped = true;
+  };
+
+  PenMorph.prototype.endWarp = function() {
+    this.isWarped = false;
+    if (this.wantsRedraw) {
+      this.updateRendering();
+      this.wantsRedraw = false;
+    }
+    return this.parent.changed();
+  };
+
+  PenMorph.prototype.warp = function(fun) {
+    this.startWarp();
+    fun.call(this);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpOp = function(selector, argsArray) {
+    this.startWarp();
+    this[selector].apply(this, argsArray);
+    return this.endWarp();
+  };
+
+  PenMorph.prototype.warpSierpinski = function(length, min) {
+    return this.warpOp("sierpinski", [length, min]);
+  };
+
+  PenMorph.prototype.sierpinski = function(length, min) {
+    var _i, _results;
+
+    if (length > min) {
+      _results = [];
+      for (i = _i = 0; _i < 3; i = ++_i) {
+        this.sierpinski(length * 0.5, min);
+        this.turn(120);
+        _results.push(this.forward(length));
+      }
+      return _results;
+    }
+  };
+
+  PenMorph.prototype.warpTree = function(level, length, angle) {
+    return this.warpOp("tree", [level, length, angle]);
+  };
+
+  PenMorph.prototype.tree = function(level, length, angle) {
+    if (level > 0) {
+      this.penSize = level;
+      this.forward(length);
+      this.turn(angle);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle * -2);
+      this.tree(level - 1, length * 0.75, angle);
+      this.turn(angle);
+      return this.forward(-length);
+    }
+  };
+
+  PenMorph.coffeeScriptSourceOfThisClass = '# PenMorph ////////////////////////////////////////////////////////////\n\n# I am a simple LOGO-wise turtle.\n\nclass PenMorph extends Morph\n  \n  heading: 0\n  penSize: null\n  isWarped: false # internal optimization\n  isDown: true\n  wantsRedraw: false # internal optimization\n  penPoint: \'tip\' # or \'center\'\n  \n  constructor: () ->\n    @penSize = WorldMorph.MorphicPreferences.handleSize * 4\n    super()\n    @setExtent new Point(@penSize, @penSize)\n    # todo we need to change the size two times, for getting the right size\n    # of the arrow and of the line. Probably should make the two distinct\n    @penSize = 1\n    #alert @morphMethod() # works\n    # doesn\'t work cause coffeescript doesn\'t support static inheritance\n    #alert @morphStaticMethod()\n\n  @staticVariable: 1\n  @staticFunction: -> 3.14\n    \n  # PenMorph updating - optimized for warping, i.e atomic recursion\n  changed: ->\n    if @isWarped is false\n      w = @root()\n      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph\n      @parent.childChanged @  if @parent\n  \n  \n  # PenMorph display:\n  updateRendering: (facing) ->\n    #\n    #    my orientation can be overridden with the "facing" parameter to\n    #    implement Scratch-style rotation styles\n    #    \n    #\n    direction = facing or @heading\n    if @isWarped\n      @wantsRedraw = true\n      return\n    @image = newCanvas(@extent())\n    context = @image.getContext("2d")\n    len = @width() / 2\n    start = @center().subtract(@bounds.origin)\n\n    if @penPoint is "tip"\n      dest = start.distanceAngle(len * 0.75, direction - 180)\n      left = start.distanceAngle(len, direction + 195)\n      right = start.distanceAngle(len, direction - 195)\n    else # \'middle\'\n      dest = start.distanceAngle(len * 0.75, direction)\n      left = start.distanceAngle(len * 0.33, direction + 230)\n      right = start.distanceAngle(len * 0.33, direction - 230)\n\n    context.fillStyle = @color.toString()\n    context.beginPath()\n\n    context.moveTo start.x, start.y\n    context.lineTo left.x, left.y\n    context.lineTo dest.x, dest.y\n    context.lineTo right.x, right.y\n\n    context.closePath()\n    context.strokeStyle = "white"\n    context.lineWidth = 3\n    context.stroke()\n    context.strokeStyle = "black"\n    context.lineWidth = 1\n    context.stroke()\n    context.fill()\n    @wantsRedraw = false\n  \n  \n  # PenMorph access:\n  setHeading: (degrees) ->\n    @heading = parseFloat(degrees) % 360\n    @updateRendering()\n    @changed()\n  \n  \n  # PenMorph drawing:\n  drawLine: (start, dest) ->\n    context = @parent.penTrails().getContext("2d")\n    from = start.subtract(@parent.bounds.origin)\n    to = dest.subtract(@parent.bounds.origin)\n    if @isDown\n      context.lineWidth = @penSize\n      context.strokeStyle = @color.toString()\n      context.lineCap = "round"\n      context.lineJoin = "round"\n      context.beginPath()\n      context.moveTo from.x, from.y\n      context.lineTo to.x, to.y\n      context.stroke()\n      if @isWarped is false\n        @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()\n  \n  \n  # PenMorph turtle ops:\n  turn: (degrees) ->\n    @setHeading @heading + parseFloat(degrees)\n  \n  forward: (steps) ->\n    start = @center()\n    dist = parseFloat(steps)\n    if dist >= 0\n      dest = @position().distanceAngle(dist, @heading)\n    else\n      dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))\n    @setPosition dest\n    @drawLine start, @center()\n  \n  down: ->\n    @isDown = true\n  \n  up: ->\n    @isDown = false\n  \n  clear: ->\n    @parent.updateRendering()\n    @parent.changed()\n  \n  \n  # PenMorph optimization for atomic recursion:\n  startWarp: ->\n    @wantsRedraw = false\n    @isWarped = true\n  \n  endWarp: ->\n    @isWarped = false\n    if @wantsRedraw\n      @updateRendering()\n      @wantsRedraw = false\n    @parent.changed()\n  \n  warp: (fun) ->\n    @startWarp()\n    fun.call @\n    @endWarp()\n  \n  warpOp: (selector, argsArray) ->\n    @startWarp()\n    @[selector].apply @, argsArray\n    @endWarp()\n  \n  \n  # PenMorph demo ops:\n  # try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})\n  warpSierpinski: (length, min) ->\n    @warpOp "sierpinski", [length, min]\n  \n  sierpinski: (length, min) ->\n    if length > min\n      for i in [0...3]\n        @sierpinski length * 0.5, min\n        @turn 120\n        @forward length\n  \n  warpTree: (level, length, angle) ->\n    @warpOp "tree", [level, length, angle]\n  \n  tree: (level, length, angle) ->\n    if level > 0\n      @penSize = level\n      @forward length\n      @turn angle\n      @tree level - 1, length * 0.75, angle\n      @turn angle * -2\n      @tree level - 1, length * 0.75, angle\n      @turn angle\n      @forward -length';
+
+  return PenMorph;
+
+})(Morph);
+
+SliderMorph = (function(_super) {
+  __extends(SliderMorph, _super);
+
+  SliderMorph.prototype.target = null;
+
+  SliderMorph.prototype.action = null;
+
+  SliderMorph.prototype.start = null;
+
+  SliderMorph.prototype.stop = null;
+
+  SliderMorph.prototype.value = null;
+
+  SliderMorph.prototype.size = null;
+
+  SliderMorph.prototype.offset = null;
+
+  SliderMorph.prototype.button = null;
+
+  SliderMorph.prototype.step = null;
+
+  function SliderMorph(start, stop, value, size, orientation, color) {
+    this.start = start != null ? start : 1;
+    this.stop = stop != null ? stop : 100;
+    this.value = value != null ? value : 50;
+    this.size = size != null ? size : 10;
+    this.button = new SliderButtonMorph();
+    this.button.isDraggable = false;
+    this.button.color = new Color(200, 200, 200);
+    this.button.highlightColor = new Color(210, 210, 255);
+    this.button.pressColor = new Color(180, 180, 255);
+    SliderMorph.__super__.constructor.call(this, orientation);
+    this.add(this.button);
+    this.alpha = 0.3;
+    this.color = color || new Color(0, 0, 0);
+    this.setExtent(new Point(20, 100));
+  }
+
+  SliderMorph.prototype.autoOrientation = function() {
+    return noOperation;
+  };
+
+  SliderMorph.prototype.rangeSize = function() {
+    return this.stop - this.start;
+  };
+
+  SliderMorph.prototype.ratio = function() {
+    return this.size / this.rangeSize();
+  };
+
+  SliderMorph.prototype.unitSize = function() {
+    if (this.orientation === "vertical") {
+      return (this.height() - this.button.height()) / this.rangeSize();
+    }
+    return (this.width() - this.button.width()) / this.rangeSize();
+  };
+
+  SliderMorph.prototype.updateRendering = function() {
+    var bh, bw, posX, posY;
+
+    SliderMorph.__super__.updateRendering.call(this);
+    this.button.orientation = this.orientation;
+    if (this.orientation === "vertical") {
+      bw = this.width() - 2;
+      bh = Math.max(bw, Math.round(this.height() * this.ratio()));
+      this.button.silentSetExtent(new Point(bw, bh));
+      posX = 1;
+      posY = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.height() - this.button.height());
+    } else {
+      bh = this.height() - 2;
+      bw = Math.max(bh, Math.round(this.width() * this.ratio()));
+      this.button.silentSetExtent(new Point(bw, bh));
+      posY = 1;
+      posX = Math.min(Math.round((this.value - this.start) * this.unitSize()), this.width() - this.button.width());
+    }
+    this.button.setPosition(new Point(posX, posY).add(this.bounds.origin));
+    this.button.updateRendering();
+    return this.button.changed();
+  };
+
+  SliderMorph.prototype.updateValue = function() {
+    var relPos;
+
+    if (this.orientation === "vertical") {
+      relPos = this.button.top() - this.top();
+    } else {
+      relPos = this.button.left() - this.left();
+    }
+    this.value = Math.round(relPos / this.unitSize() + this.start);
+    return this.updateTarget();
+  };
+
+  SliderMorph.prototype.updateTarget = function() {
+    if (this.action) {
+      if (typeof this.action === "function") {
+        return this.action.call(this.target, this.value);
+      } else {
+        return this.target[this.action](this.value);
+      }
+    }
+  };
+
+  SliderMorph.prototype.copyRecordingReferences = function(dict) {
+    var c;
+
+    c = SliderMorph.__super__.copyRecordingReferences.call(this, dict);
+    if (c.target && dict[this.target]) {
+      c.target = dict[this.target];
+    }
+    if (c.button && dict[this.button]) {
+      c.button = dict[this.button];
+    }
+    return c;
+  };
+
+  SliderMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = SliderMorph.__super__.developersMenu.call(this);
+    menu.addItem("show value...", "showValue", "display a dialog box\nshowing the selected number");
+    menu.addItem("floor...", (function() {
+      return this.prompt(menu.title + "\nfloor:", this.setStart, this, this.start.toString(), null, 0, this.stop - this.size, true);
+    }), "set the minimum value\nwhich can be selected");
+    menu.addItem("ceiling...", (function() {
+      return this.prompt(menu.title + "\nceiling:", this.setStop, this, this.stop.toString(), null, this.start + this.size, this.size * 100, true);
+    }), "set the maximum value\nwhich can be selected");
+    menu.addItem("button size...", (function() {
+      return this.prompt(menu.title + "\nbutton size:", this.setSize, this, this.size.toString(), null, 1, this.stop - this.start, true);
+    }), "set the range\ncovered by\nthe slider button");
+    menu.addLine();
+    menu.addItem("set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one");
+    return menu;
+  };
+
+  SliderMorph.prototype.showValue = function() {
+    return this.inform(this.value);
+  };
+
+  SliderMorph.prototype.userSetStart = function(num) {
+    return this.start = Math.max(num, this.stop);
+  };
+
+  SliderMorph.prototype.setStart = function(num) {
+    var newStart;
+
+    if (typeof num === "number") {
+      this.start = Math.min(Math.max(num, 0), this.stop - this.size);
+    } else {
+      newStart = parseFloat(num);
+      if (!isNaN(newStart)) {
+        this.start = Math.min(Math.max(newStart, 0), this.stop - this.size);
+      }
+    }
+    this.value = Math.max(this.value, this.start);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  SliderMorph.prototype.setStop = function(num) {
+    var newStop;
+
+    if (typeof num === "number") {
+      this.stop = Math.max(num, this.start + this.size);
+    } else {
+      newStop = parseFloat(num);
+      if (!isNaN(newStop)) {
+        this.stop = Math.max(newStop, this.start + this.size);
+      }
+    }
+    this.value = Math.min(this.value, this.stop);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  SliderMorph.prototype.setSize = function(num) {
+    var newSize;
+
+    if (typeof num === "number") {
+      this.size = Math.min(Math.max(num, 1), this.stop - this.start);
+    } else {
+      newSize = parseFloat(num);
+      if (!isNaN(newSize)) {
+        this.size = Math.min(Math.max(newSize, 1), this.stop - this.start);
+      }
+    }
+    this.value = Math.min(this.value, this.stop - this.size);
+    this.updateTarget();
+    this.updateRendering();
+    return this.changed();
+  };
+
+  SliderMorph.prototype.setTarget = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.overlappedMorphs();
+    menu = new MenuMorph(this, "choose target:");
+    choices.push(this.world());
+    choices.forEach(function(each) {
+      return menu.addItem(each.toString().slice(0, 50), function() {
+        _this.target = each;
+        return _this.setTargetSetter();
+      });
+    });
+    if (choices.length === 1) {
+      this.target = choices[0];
+      return this.setTargetSetter();
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
+    }
+  };
+
+  SliderMorph.prototype.setTargetSetter = function() {
+    var choices, menu,
+      _this = this;
+
+    choices = this.target.numericalSetters();
+    menu = new MenuMorph(this, "choose target property:");
+    choices.forEach(function(each) {
+      return menu.addItem(each, function() {
+        return _this.action = each;
+      });
+    });
+    if (choices.length === 1) {
+      return this.action = choices[0];
+    } else {
+      if (choices.length) {
+        return menu.popUpAtHand(this.world());
+      }
+    }
+  };
+
+  SliderMorph.prototype.numericalSetters = function() {
+    var list;
+
+    list = SliderMorph.__super__.numericalSetters.call(this);
+    list.push("setStart", "setStop", "setSize");
+    return list;
+  };
+
+  SliderMorph.prototype.mouseDownLeft = function(pos) {
+    var world,
+      _this = this;
+
+    if (!this.button.bounds.containsPoint(pos)) {
+      this.offset = new Point();
+    } else {
+      this.offset = pos.subtract(this.button.bounds.origin);
+    }
+    world = this.root();
+    return this.step = function() {
+      var mousePos, newX, newY;
+
+      if (world.hand.mouseButton) {
+        mousePos = world.hand.bounds.origin;
+        if (_this.orientation === "vertical") {
+          newX = _this.button.bounds.origin.x;
+          newY = Math.max(Math.min(mousePos.y - _this.offset.y, _this.bottom() - _this.button.height()), _this.top());
+        } else {
+          newY = _this.button.bounds.origin.y;
+          newX = Math.max(Math.min(mousePos.x - _this.offset.x, _this.right() - _this.button.width()), _this.left());
+        }
+        _this.button.setPosition(new Point(newX, newY));
+        return _this.updateValue();
+      } else {
+        return _this.step = null;
+      }
+    };
+  };
+
+  SliderMorph.coffeeScriptSourceOfThisClass = '# SliderMorph ///////////////////////////////////////////////////\n\n# this comment below is needed to figure our dependencies between classes\n# REQUIRES globalFunctions\n\nclass SliderMorph extends CircleBoxMorph\n\n  target: null\n  action: null\n  start: null\n  stop: null\n  value: null\n  size: null\n  offset: null\n  button: null\n  step: null\n\n  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->\n    @button = new SliderButtonMorph()\n    @button.isDraggable = false\n    @button.color = new Color(200, 200, 200)\n    @button.highlightColor = new Color(210, 210, 255)\n    @button.pressColor = new Color(180, 180, 255)\n    super orientation # if null, then a vertical one will be created\n    @add @button\n    @alpha = 0.3\n    @color = color or new Color(0, 0, 0)\n    @setExtent new Point(20, 100)\n  \n  \n  # this.updateRendering();\n  autoOrientation: ->\n      noOperation\n  \n  rangeSize: ->\n    @stop - @start\n  \n  ratio: ->\n    @size / @rangeSize()\n  \n  unitSize: ->\n    return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"\n    (@width() - @button.width()) / @rangeSize()\n  \n  updateRendering: ->\n    super()\n    @button.orientation = @orientation\n    if @orientation is "vertical"\n      bw = @width() - 2\n      bh = Math.max(bw, Math.round(@height() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posX = 1\n      posY = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @height() - @button.height())\n    else\n      bh = @height() - 2\n      bw = Math.max(bh, Math.round(@width() * @ratio()))\n      @button.silentSetExtent new Point(bw, bh)\n      posY = 1\n      posX = Math.min(\n        Math.round((@value - @start) * @unitSize()),\n        @width() - @button.width())\n    @button.setPosition new Point(posX, posY).add(@bounds.origin)\n    @button.updateRendering()\n    @button.changed()\n  \n  updateValue: ->\n    if @orientation is "vertical"\n      relPos = @button.top() - @top()\n    else\n      relPos = @button.left() - @left()\n    @value = Math.round(relPos / @unitSize() + @start)\n    @updateTarget()\n  \n  updateTarget: ->\n    if @action\n      if typeof @action is "function"\n        @action.call @target, @value\n      else # assume it\'s a String\n        @target[@action] @value\n  \n  \n  # SliderMorph duplicating:\n  copyRecordingReferences: (dict) ->\n    # inherited, see comment in Morph\n    c = super dict\n    c.target = (dict[@target])  if c.target and dict[@target]\n    c.button = (dict[@button])  if c.button and dict[@button]\n    c\n  \n  \n  # SliderMorph menu:\n  developersMenu: ->\n    menu = super()\n    menu.addItem "show value...", "showValue", "display a dialog box\nshowing the selected number"\n    menu.addItem "floor...", (->\n      @prompt menu.title + "\nfloor:",\n        @setStart,\n        @,\n        @start.toString(),\n        null,\n        0,\n        @stop - @size,\n        true\n    ), "set the minimum value\nwhich can be selected"\n    menu.addItem "ceiling...", (->\n      @prompt menu.title + "\nceiling:",\n        @setStop,\n        @,\n        @stop.toString(),\n        null,\n        @start + @size,\n        @size * 100,\n        true\n    ), "set the maximum value\nwhich can be selected"\n    menu.addItem "button size...", (->\n      @prompt menu.title + "\nbutton size:",\n        @setSize,\n        @,\n        @size.toString(),\n        null,\n        1,\n        @stop - @start,\n        true\n    ), "set the range\ncovered by\nthe slider button"\n    menu.addLine()\n    menu.addItem "set target", "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"\n    menu\n  \n  showValue: ->\n    @inform @value\n  \n  userSetStart: (num) ->\n    # for context menu demo purposes\n    @start = Math.max(num, @stop)\n  \n  setStart: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @start = Math.min(Math.max(num, 0), @stop - @size)\n    else\n      newStart = parseFloat(num)\n      @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)\n    @value = Math.max(@value, @start)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setStop: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @stop = Math.max(num, @start + @size)\n    else\n      newStop = parseFloat(num)\n      @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)\n    @value = Math.min(@value, @stop)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setSize: (num) ->\n    # for context menu demo purposes\n    if typeof num is "number"\n      @size = Math.min(Math.max(num, 1), @stop - @start)\n    else\n      newSize = parseFloat(num)\n      @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)\n    @value = Math.min(@value, @stop - @size)\n    @updateTarget()\n    @updateRendering()\n    @changed()\n  \n  setTarget: ->\n    choices = @overlappedMorphs()\n    menu = new MenuMorph(@, "choose target:")\n    choices.push @world()\n    choices.forEach (each) =>\n      menu.addItem each.toString().slice(0, 50), =>\n        @target = each\n        @setTargetSetter()\n    #\n    if choices.length is 1\n      @target = choices[0]\n      @setTargetSetter()\n    else menu.popUpAtHand @world()  if choices.length\n  \n  setTargetSetter: ->\n    choices = @target.numericalSetters()\n    menu = new MenuMorph(@, "choose target property:")\n    choices.forEach (each) =>\n      menu.addItem each, =>\n        @action = each\n    #\n    if choices.length is 1\n      @action = choices[0]\n    else menu.popUpAtHand @world()  if choices.length\n  \n  numericalSetters: ->\n    # for context menu demo purposes\n    list = super()\n    list.push "setStart", "setStop", "setSize"\n    list\n  \n  \n  # SliderMorph stepping:\n  mouseDownLeft: (pos) ->\n    unless @button.bounds.containsPoint(pos)\n      @offset = new Point() # return null;\n    else\n      @offset = pos.subtract(@button.bounds.origin)\n    world = @root()\n    # this is to create the "drag the slider" effect\n    # basically if the mouse is pressing within the boundaries\n    # then in the next step you remember to check again where the mouse\n    # is and update the scrollbar. As soon as the mouse is unpressed\n    # then the step function is set to null to save cycles.\n    @step = =>\n      if world.hand.mouseButton\n        mousePos = world.hand.bounds.origin\n        if @orientation is "vertical"\n          newX = @button.bounds.origin.x\n          newY = Math.max(\n            Math.min(mousePos.y - @offset.y,\n            @bottom() - @button.height()), @top())\n        else\n          newY = @button.bounds.origin.y\n          newX = Math.max(\n            Math.min(mousePos.x - @offset.x,\n            @right() - @button.width()), @left())\n        @button.setPosition new Point(newX, newY)\n        @updateValue()\n      else\n        @step = null';
+
+  return SliderMorph;
+
+})(CircleBoxMorph);
+
+Rectangle = (function() {
+  Rectangle.prototype.origin = null;
+
+  Rectangle.prototype.corner = null;
+
+  function Rectangle(left, top, right, bottom) {
+    this.origin = new Point(left || 0, top || 0);
+    this.corner = new Point(right || 0, bottom || 0);
+  }
+
+  Rectangle.prototype.toString = function() {
+    return "[" + this.origin.toString() + " | " + this.extent().toString() + "]";
+  };
+
+  Rectangle.prototype.copy = function() {
+    return new Rectangle(this.left(), this.top(), this.right(), this.bottom());
+  };
+
+  Rectangle.prototype.setTo = function(left, top, right, bottom) {
+    this.origin = new Point(left || (left === 0 ? 0 : this.left()), top || (top === 0 ? 0 : this.top()));
+    return this.corner = new Point(right || (right === 0 ? 0 : this.right()), bottom || (bottom === 0 ? 0 : this.bottom()));
+  };
+
+  Rectangle.prototype.area = function() {
+    var w;
+
+    w = this.width();
+    if (w < 0) {
+      return 0;
+    }
+    return Math.max(w * this.height(), 0);
+  };
+
+  Rectangle.prototype.bottom = function() {
+    return this.corner.y;
+  };
+
+  Rectangle.prototype.bottomCenter = function() {
+    return new Point(this.center().x, this.bottom());
+  };
+
+  Rectangle.prototype.bottomLeft = function() {
+    return new Point(this.origin.x, this.corner.y);
+  };
+
+  Rectangle.prototype.bottomRight = function() {
+    return this.corner.copy();
+  };
+
+  Rectangle.prototype.boundingBox = function() {
+    return this;
+  };
+
+  Rectangle.prototype.center = function() {
+    return this.origin.add(this.corner.subtract(this.origin).floorDivideBy(2));
+  };
+
+  Rectangle.prototype.corners = function() {
+    return [this.origin, this.bottomLeft(), this.corner, this.topRight()];
+  };
+
+  Rectangle.prototype.extent = function() {
+    return this.corner.subtract(this.origin);
+  };
+
+  Rectangle.prototype.isEmpty = function() {
+    var theExtent;
+
+    theExtent = this.corner.subtract(this.origin);
+    return theExtent.x = 0 || (theExtent.y = 0);
+  };
+
+  Rectangle.prototype.isNotEmpty = function() {
+    var theExtent;
+
+    theExtent = this.corner.subtract(this.origin);
+    return theExtent.x > 0 && theExtent.y > 0;
+  };
+
+  Rectangle.prototype.height = function() {
+    return this.corner.y - this.origin.y;
+  };
+
+  Rectangle.prototype.left = function() {
+    return this.origin.x;
+  };
+
+  Rectangle.prototype.leftCenter = function() {
+    return new Point(this.left(), this.center().y);
+  };
+
+  Rectangle.prototype.right = function() {
+    return this.corner.x;
+  };
+
+  Rectangle.prototype.rightCenter = function() {
+    return new Point(this.right(), this.center().y);
+  };
+
+  Rectangle.prototype.top = function() {
+    return this.origin.y;
+  };
+
+  Rectangle.prototype.topCenter = function() {
+    return new Point(this.center().x, this.top());
+  };
+
+  Rectangle.prototype.topLeft = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.topRight = function() {
+    return new Point(this.corner.x, this.origin.y);
+  };
+
+  Rectangle.prototype.width = function() {
+    return this.corner.x - this.origin.x;
+  };
+
+  Rectangle.prototype.position = function() {
+    return this.origin;
+  };
+
+  Rectangle.prototype.eq = function(aRect) {
+    return this.origin.eq(aRect.origin) && this.corner.eq(aRect.corner);
+  };
+
+  Rectangle.prototype.abs = function() {
+    var newCorner, newOrigin;
+
+    newOrigin = this.origin.abs();
+    newCorner = this.corner.max(newOrigin);
+    return newOrigin.corner(newCorner);
+  };
+
+  Rectangle.prototype.insetBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.add(delta);
+    result.corner = this.corner.subtract(delta);
+    return result;
+  };
+
+  Rectangle.prototype.expandBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.subtract(delta);
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.growBy = function(delta) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.copy();
+    result.corner = this.corner.add(delta);
+    return result;
+  };
+
+  Rectangle.prototype.intersect = function(aRect) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.max(aRect.origin);
+    result.corner = this.corner.min(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.merge = function(aRect) {
+    var result;
+
+    result = new Rectangle();
+    result.origin = this.origin.min(aRect.origin);
+    result.corner = this.corner.max(aRect.corner);
+    return result;
+  };
+
+  Rectangle.prototype.round = function() {
+    return this.origin.round().corner(this.corner.round());
+  };
+
+  Rectangle.prototype.spread = function() {
+    return this.origin.floor().corner(this.corner.ceil());
+  };
+
+  Rectangle.prototype.amountToTranslateWithin = function(aRect) {
+    var dx, dy;
+
+    if (this.right() > aRect.right()) {
+      dx = aRect.right() - this.right();
+    }
+    if (this.bottom() > aRect.bottom()) {
+      dy = aRect.bottom() - this.bottom();
+    }
+    if ((this.left() + dx) < aRect.left()) {
+      dx = aRect.left() - this.right();
+    }
+    if ((this.top() + dy) < aRect.top()) {
+      dy = aRect.top() - this.top();
+    }
+    return new Point(dx, dy);
+  };
+
+  Rectangle.prototype.containsPoint = function(aPoint) {
+    return this.origin.le(aPoint) && aPoint.lt(this.corner);
+  };
+
+  Rectangle.prototype.containsRectangle = function(aRect) {
+    return aRect.origin.gt(this.origin) && aRect.corner.lt(this.corner);
+  };
+
+  Rectangle.prototype.intersects = function(aRect) {
+    var rc, ro;
+
+    ro = aRect.origin;
+    rc = aRect.corner;
+    return (rc.x >= this.origin.x) && (rc.y >= this.origin.y) && (ro.x <= this.corner.x) && (ro.y <= this.corner.y);
+  };
+
+  Rectangle.prototype.scaleBy = function(scale) {
+    var c, o;
+
+    o = this.origin.multiplyBy(scale);
+    c = this.corner.multiplyBy(scale);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.translateBy = function(factor) {
+    var c, o;
+
+    o = this.origin.add(factor);
+    c = this.corner.add(factor);
+    return new Rectangle(o.x, o.y, c.x, c.y);
+  };
+
+  Rectangle.prototype.asArray = function() {
+    return [this.left(), this.top(), this.right(), this.bottom()];
+  };
+
+  Rectangle.prototype.asArray_xywh = function() {
+    return [this.left(), this.top(), this.width(), this.height()];
+  };
+
+  Rectangle.coffeeScriptSourceOfThisClass = '# Rectangles //////////////////////////////////////////////////////////\n\nclass Rectangle\n\n  origin: null\n  corner: null\n  \n  constructor: (left, top, right, bottom) ->\n    \n    @origin = new Point((left or 0), (top or 0))\n    @corner = new Point((right or 0), (bottom or 0))\n  \n  \n  # Rectangle string representation: e.g. \'[0@0 | 160@80]\'\n  toString: ->\n    "[" + @origin.toString() + " | " + @extent().toString() + "]"\n  \n  # Rectangle copying:\n  copy: ->\n    new Rectangle(@left(), @top(), @right(), @bottom())\n  \n  # Rectangle accessing - setting:\n  setTo: (left, top, right, bottom) ->\n    # note: all inputs are optional and can be omitted\n    @origin = new Point(\n      left or ((if (left is 0) then 0 else @left())),\n      top or ((if (top is 0) then 0 else @top())))\n    @corner = new Point(\n      right or ((if (right is 0) then 0 else @right())),\n      bottom or ((if (bottom is 0) then 0 else @bottom())))\n  \n  # Rectangle accessing - getting:\n  area: ->\n    #requires width() and height() to be defined\n    w = @width()\n    return 0  if w < 0\n    Math.max w * @height(), 0\n  \n  bottom: ->\n    @corner.y\n  \n  bottomCenter: ->\n    new Point(@center().x, @bottom())\n  \n  bottomLeft: ->\n    new Point(@origin.x, @corner.y)\n  \n  bottomRight: ->\n    @corner.copy()\n  \n  boundingBox: ->\n    @\n  \n  center: ->\n    @origin.add @corner.subtract(@origin).floorDivideBy(2)\n  \n  corners: ->\n    [@origin, @bottomLeft(), @corner, @topRight()]\n  \n  extent: ->\n    @corner.subtract @origin\n  \n  isEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x = 0 or theExtent.y = 0\n\n  isNotEmpty: ->\n    # The subtract method creates a new Point\n    theExtent = @corner.subtract @origin\n    theExtent.x > 0 and theExtent.y > 0\n  \n  height: ->\n    @corner.y - @origin.y\n  \n  left: ->\n    @origin.x\n  \n  leftCenter: ->\n    new Point(@left(), @center().y)\n  \n  right: ->\n    @corner.x\n  \n  rightCenter: ->\n    new Point(@right(), @center().y)\n  \n  top: ->\n    @origin.y\n  \n  topCenter: ->\n    new Point(@center().x, @top())\n  \n  topLeft: ->\n    @origin\n  \n  topRight: ->\n    new Point(@corner.x, @origin.y)\n  \n  width: ->\n    @corner.x - @origin.x\n  \n  position: ->\n    @origin\n  \n  # Rectangle comparison:\n  eq: (aRect) ->\n    @origin.eq(aRect.origin) and @corner.eq(aRect.corner)\n  \n  abs: ->\n    newOrigin = @origin.abs()\n    newCorner = @corner.max(newOrigin)\n    newOrigin.corner newCorner\n  \n  # Rectangle functions:\n  insetBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.add(delta)\n    result.corner = @corner.subtract(delta)\n    result\n  \n  expandBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.subtract(delta)\n    result.corner = @corner.add(delta)\n    result\n  \n  growBy: (delta) ->\n    # delta can be either a Point or a Number\n    result = new Rectangle()\n    result.origin = @origin.copy()\n    result.corner = @corner.add(delta)\n    result\n  \n  intersect: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.max(aRect.origin)\n    result.corner = @corner.min(aRect.corner)\n    result\n  \n  merge: (aRect) ->\n    result = new Rectangle()\n    result.origin = @origin.min(aRect.origin)\n    result.corner = @corner.max(aRect.corner)\n    result\n  \n  round: ->\n    @origin.round().corner @corner.round()\n  \n  spread: ->\n    # round me by applying floor() to my origin and ceil() to my corner\n    @origin.floor().corner @corner.ceil()\n  \n  amountToTranslateWithin: (aRect) ->\n    #\n    #    Answer a Point, delta, such that self + delta is forced within\n    #    aRectangle. when all of me cannot be made to fit, prefer to keep\n    #    my topLeft inside. Taken from Squeak.\n    #\n    dx = aRect.right() - @right()  if @right() > aRect.right()\n    dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()\n    dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()\n    dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()\n    new Point(dx, dy)\n  \n  \n  # Rectangle testing:\n  containsPoint: (aPoint) ->\n    @origin.le(aPoint) and aPoint.lt(@corner)\n  \n  containsRectangle: (aRect) ->\n    aRect.origin.gt(@origin) and aRect.corner.lt(@corner)\n  \n  intersects: (aRect) ->\n    ro = aRect.origin\n    rc = aRect.corner\n    (rc.x >= @origin.x) and\n      (rc.y >= @origin.y) and\n      (ro.x <= @corner.x) and\n      (ro.y <= @corner.y)\n  \n  \n  # Rectangle transforming:\n  scaleBy: (scale) ->\n    # scale can be either a Point or a scalar\n    o = @origin.multiplyBy(scale)\n    c = @corner.multiplyBy(scale)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  translateBy: (factor) ->\n    # factor can be either a Point or a scalar\n    o = @origin.add(factor)\n    c = @corner.add(factor)\n    new Rectangle(o.x, o.y, c.x, c.y)\n  \n  \n  # Rectangle converting:\n  asArray: ->\n    [@left(), @top(), @right(), @bottom()]\n  \n  asArray_xywh: ->\n    [@left(), @top(), @width(), @height()]';
+
+  return Rectangle;
+
+})();
+
+TextMorph = (function(_super) {
+  __extends(TextMorph, _super);
+
+  TextMorph.prototype.words = [];
+
+  TextMorph.prototype.lines = [];
+
+  TextMorph.prototype.lineSlots = [];
+
+  TextMorph.prototype.alignment = null;
+
+  TextMorph.prototype.maxWidth = null;
+
+  TextMorph.prototype.maxLineWidth = 0;
+
+  TextMorph.prototype.backgroundColor = null;
+
+  TextMorph.prototype.receiver = null;
+
+  function TextMorph(text, fontSize, fontStyle, isBold, isItalic, alignment, maxWidth, fontName, shadowOffset, shadowColor) {
+    this.fontSize = fontSize != null ? fontSize : 12;
+    this.fontStyle = fontStyle != null ? fontStyle : "sans-serif";
+    this.isBold = isBold != null ? isBold : false;
+    this.isItalic = isItalic != null ? isItalic : false;
+    this.alignment = alignment != null ? alignment : "left";
+    this.maxWidth = maxWidth != null ? maxWidth : 0;
+    this.shadowColor = shadowColor != null ? shadowColor : null;
+    TextMorph.__super__.constructor.call(this);
+    this.markedTextColor = new Color(255, 255, 255);
+    this.markedBackgoundColor = new Color(60, 60, 120);
+    this.text = text || (text === "" ? text : "TextMorph");
+    this.fontName = fontName || WorldMorph.MorphicPreferences.globalFontFamily;
+    this.shadowOffset = shadowOffset || new Point(0, 0);
+    this.color = new Color(0, 0, 0);
+    this.noticesTransparentClick = true;
+    this.updateRendering();
+  }
+
+  TextMorph.prototype.breakTextIntoLines = function() {
+    var canvas, context, currentLine, paragraphs, slot,
+      _this = this;
+
+    paragraphs = this.text.split("\n");
+    canvas = newCanvas();
+    context = canvas.getContext("2d");
+    currentLine = "";
+    slot = 0;
+    context.font = this.font();
+    this.maxLineWidth = 0;
+    this.lines = [];
+    this.lineSlots = [0];
+    this.words = [];
+    paragraphs.forEach(function(p) {
+      _this.words = _this.words.concat(p.split(" "));
+      return _this.words.push("\n");
+    });
+    return this.words.forEach(function(word) {
+      var lineForOverflowTest, w;
+
+      if (word === "\n") {
+        _this.lines.push(currentLine);
+        _this.lineSlots.push(slot);
+        _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(currentLine).width);
+        return currentLine = "";
+      } else {
+        if (_this.maxWidth > 0) {
+          lineForOverflowTest = currentLine + word + " ";
+          w = context.measureText(lineForOverflowTest).width;
+          if (w > _this.maxWidth) {
+            _this.lines.push(currentLine);
+            _this.lineSlots.push(slot);
+            _this.maxLineWidth = Math.max(_this.maxLineWidth, context.measureText(currentLine).width);
+            currentLine = word + " ";
+          } else {
+            currentLine = lineForOverflowTest;
+          }
+        } else {
+          currentLine = currentLine + word + " ";
+        }
+        return slot += word.length + 1;
+      }
+    });
+  };
+
+  TextMorph.prototype.updateRendering = function() {
+    var c, context, height, line, offx, offy, p, shadowHeight, shadowWidth, start, stop, width, x, y, _i, _j, _k, _len, _len1, _ref, _ref1;
+
+    this.image = newCanvas();
+    context = this.image.getContext("2d");
+    context.font = this.font();
+    this.breakTextIntoLines();
+    shadowWidth = Math.abs(this.shadowOffset.x);
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    height = this.lines.length * (fontHeight(this.fontSize) + shadowHeight);
+    if (this.maxWidth === 0) {
+      this.bounds = this.bounds.origin.extent(new Point(this.maxLineWidth + shadowWidth, height));
+    } else {
+      this.bounds = this.bounds.origin.extent(new Point(this.maxWidth + shadowWidth, height));
+    }
+    this.image.width = this.width();
+    this.image.height = this.height();
+    context.font = this.font();
+    context.textAlign = "left";
+    context.textBaseline = "bottom";
+    if (this.backgroundColor) {
+      context.fillStyle = this.backgroundColor.toString();
+      context.fillRect(0, 0, this.width(), this.height());
+    }
+    if (this.shadowColor) {
+      offx = Math.max(this.shadowOffset.x, 0);
+      offy = Math.max(this.shadowOffset.y, 0);
+      context.fillStyle = this.shadowColor.toString();
+      i = 0;
+      _ref = this.lines;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        line = _ref[_i];
+        width = context.measureText(line).width + shadowWidth;
+        if (this.alignment === "right") {
+          x = this.width() - width;
+        } else if (this.alignment === "center") {
+          x = (this.width() - width) / 2;
+        } else {
+          x = 0;
+        }
+        y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
+        i++;
+        context.fillText(line, x + offx, y + offy);
+      }
+    }
+    offx = Math.abs(Math.min(this.shadowOffset.x, 0));
+    offy = Math.abs(Math.min(this.shadowOffset.y, 0));
+    context.fillStyle = this.color.toString();
+    i = 0;
+    _ref1 = this.lines;
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      line = _ref1[_j];
+      width = context.measureText(line).width + shadowWidth;
+      if (this.alignment === "right") {
+        x = this.width() - width;
+      } else if (this.alignment === "center") {
+        x = (this.width() - width) / 2;
+      } else {
+        x = 0;
+      }
+      y = (i + 1) * (fontHeight(this.fontSize) + shadowHeight) - shadowHeight;
+      i++;
+      context.fillText(line, x + offx, y + offy);
+    }
+    start = Math.min(this.startMark, this.endMark);
+    stop = Math.max(this.startMark, this.endMark);
+    for (i = _k = start; start <= stop ? _k < stop : _k > stop; i = start <= stop ? ++_k : --_k) {
+      p = this.slotCoordinates(i).subtract(this.position());
+      c = this.text.charAt(i);
+      context.fillStyle = this.markedBackgoundColor.toString();
+      context.fillRect(p.x, p.y, context.measureText(c).width + 1, fontHeight(this.fontSize));
+      context.fillStyle = this.markedTextColor.toString();
+      context.fillText(c, p.x, p.y + fontHeight(this.fontSize));
+    }
+    if (this.parent ? this.parent.layoutChanged : void 0) {
+      return this.parent.layoutChanged();
+    }
+  };
+
+  TextMorph.prototype.setExtent = function(aPoint) {
+    this.maxWidth = Math.max(aPoint.x, 0);
+    this.changed();
+    return this.updateRendering();
+  };
+
+  TextMorph.prototype.slotRowAndColumn = function(slot) {
+    var col, idx, row, _i, _j, _ref, _ref1;
+
+    idx = 0;
+    for (row = _i = 0, _ref = this.lines.length; 0 <= _ref ? _i < _ref : _i > _ref; row = 0 <= _ref ? ++_i : --_i) {
+      idx = this.lineSlots[row];
+      for (col = _j = 0, _ref1 = this.lines[row].length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; col = 0 <= _ref1 ? ++_j : --_j) {
+        if (idx === slot) {
+          return [row, col];
+        }
+        idx += 1;
+      }
+    }
+    return [this.lines.length - 1, this.lines[this.lines.length - 1].length - 1];
+  };
+
+  TextMorph.prototype.slotCoordinates = function(slot) {
+    var context, shadowHeight, slotColumn, slotRow, x, xOffset, y, yOffset, _ref;
+
+    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
+    context = this.image.getContext("2d");
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    yOffset = slotRow * (fontHeight(this.fontSize) + shadowHeight);
+    xOffset = context.measureText(this.lines[slotRow].substring(0, slotColumn)).width;
+    x = this.left() + xOffset;
+    y = this.top() + yOffset;
+    return new Point(x, y);
+  };
+
+  TextMorph.prototype.slotAt = function(aPoint) {
+    var charX, col, context, row, shadowHeight;
+
+    charX = 0;
+    row = 0;
+    col = 0;
+    shadowHeight = Math.abs(this.shadowOffset.y);
+    context = this.image.getContext("2d");
+    while (aPoint.y - this.top() > ((fontHeight(this.fontSize) + shadowHeight) * row)) {
+      row += 1;
+    }
+    row = Math.max(row, 1);
+    while (aPoint.x - this.left() > charX) {
+      charX += context.measureText(this.lines[row - 1][col]).width;
+      col += 1;
+    }
+    return this.lineSlots[Math.max(row - 1, 0)] + col - 1;
+  };
+
+  TextMorph.prototype.upFrom = function(slot) {
+    var above, slotColumn, slotRow, _ref;
+
+    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
+    if (slotRow < 1) {
+      return slot;
+    }
+    above = this.lines[slotRow - 1];
+    if (above.length < slotColumn - 1) {
+      return this.lineSlots[slotRow - 1] + above.length;
+    }
+    return this.lineSlots[slotRow - 1] + slotColumn;
+  };
+
+  TextMorph.prototype.downFrom = function(slot) {
+    var below, slotColumn, slotRow, _ref;
+
+    _ref = this.slotRowAndColumn(slot), slotRow = _ref[0], slotColumn = _ref[1];
+    if (slotRow > this.lines.length - 2) {
+      return slot;
+    }
+    below = this.lines[slotRow + 1];
+    if (below.length < slotColumn - 1) {
+      return this.lineSlots[slotRow + 1] + below.length;
+    }
+    return this.lineSlots[slotRow + 1] + slotColumn;
+  };
+
+  TextMorph.prototype.startOfLine = function(slot) {
+    return this.lineSlots[this.slotRowAndColumn(slot).y];
+  };
+
+  TextMorph.prototype.endOfLine = function(slot) {
+    return this.startOfLine(slot) + this.lines[this.slotRowAndColumn(slot).y].length - 1;
+  };
+
+  TextMorph.prototype.developersMenu = function() {
+    var menu;
+
+    menu = TextMorph.__super__.developersMenu.call(this);
+    menu.addLine();
+    menu.addItem("edit", "edit");
+    menu.addItem("font size...", (function() {
+      return this.prompt(menu.title + "\nfont\nsize:", this.setFontSize, this, this.fontSize.toString(), null, 6, 100, true);
+    }), "set this Text's\nfont point size");
+    if (this.alignment !== "left") {
+      menu.addItem("align left", "setAlignmentToLeft");
+    }
+    if (this.alignment !== "right") {
+      menu.addItem("align right", "setAlignmentToRight");
+    }
+    if (this.alignment !== "center") {
+      menu.addItem("align center", "setAlignmentToCenter");
+    }
+    menu.addLine();
+    if (this.fontStyle !== "serif") {
+      menu.addItem("serif", "setSerif");
+    }
+    if (this.fontStyle !== "sans-serif") {
+      menu.addItem("sans-serif", "setSansSerif");
+    }
+    if (this.isBold) {
+      menu.addItem("normal weight", "toggleWeight");
+    } else {
+      menu.addItem("bold", "toggleWeight");
+    }
+    if (this.isItalic) {
+      menu.addItem("normal style", "toggleItalic");
+    } else {
+      menu.addItem("italic", "toggleItalic");
+    }
+    return menu;
+  };
+
+  TextMorph.prototype.setAlignmentToLeft = function() {
+    this.alignment = "left";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.setAlignmentToRight = function() {
+    this.alignment = "right";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.setAlignmentToCenter = function() {
+    this.alignment = "center";
+    this.updateRendering();
+    return this.changed();
+  };
+
+  TextMorph.prototype.evaluationMenu = function() {
+    var menu;
+
+    menu = new MenuMorph(this, null);
+    menu.addItem("do it", "doIt", "evaluate the\nselected expression");
+    menu.addItem("show it", "showIt", "evaluate the\nselected expression\nand show the result");
+    menu.addItem("inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result");
+    menu.addLine();
+    menu.addItem("select all", "selectAllAndEdit");
+    return menu;
+  };
+
+  TextMorph.prototype.selectAllAndEdit = function() {
+    this.edit();
+    return this.selectAll();
+  };
+
+  TextMorph.prototype.setReceiver = function(obj) {
+    this.receiver = obj;
+    return this.customContextMenu = this.evaluationMenu();
+  };
+
+  TextMorph.prototype.doIt = function() {
+    this.receiver.evaluateString(this.selection());
+    return this.edit();
+  };
+
+  TextMorph.prototype.showIt = function() {
+    var result;
+
+    result = this.receiver.evaluateString(this.selection());
+    if (result != null) {
+      return this.inform(result);
+    }
+  };
+
+  TextMorph.prototype.inspectIt = function() {
+    var result;
+
+    result = this.receiver.evaluateString(this.selection());
+    if (result != null) {
+      return this.spawnInspector(result);
+    }
+  };
+
+  TextMorph.coffeeScriptSourceOfThisClass = '# TextMorph ///////////////////////////////////////////////////////////\n\n# I am a multi-line, word-wrapping String\n\n# Note that in the original Jens\' Morphic.js version he\n# has made this quasi-inheriting from StringMorph i.e. he is copying\n# over manually the following methods like so:\n#\n#  TextMorph::font = StringMorph::font\n#  TextMorph::edit = StringMorph::edit\n#  TextMorph::selection = StringMorph::selection\n#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot\n#  TextMorph::clearSelection = StringMorph::clearSelection\n#  TextMorph::deleteSelection = StringMorph::deleteSelection\n#  TextMorph::selectAll = StringMorph::selectAll\n#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft\n#  TextMorph::enableSelecting = StringMorph::enableSelecting \n#  TextMorph::disableSelecting = StringMorph::disableSelecting\n#  TextMorph::toggleIsDraggable = StringMorph::toggleIsDraggable\n#  TextMorph::toggleWeight = StringMorph::toggleWeight\n#  TextMorph::toggleItalic = StringMorph::toggleItalic\n#  TextMorph::setSerif = StringMorph::setSerif\n#  TextMorph::setSansSerif = StringMorph::setSansSerif\n#  TextMorph::setText = StringMorph::setText\n#  TextMorph::setFontSize = StringMorph::setFontSize\n#  TextMorph::numericalSetters = StringMorph::numericalSetters\n\n\nclass TextMorph extends StringMorph\n\n  words: []\n  lines: []\n  lineSlots: []\n  alignment: null\n  maxWidth: null\n  maxLineWidth: 0\n  backgroundColor: null\n\n  #additional properties for ad-hoc evaluation:\n  receiver: null\n\n  constructor: (\n    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,\n    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,\n    @shadowColor = null\n    ) ->\n      super()\n      # override inherited properites:\n      @markedTextColor = new Color(255, 255, 255)\n      @markedBackgoundColor = new Color(60, 60, 120)\n      @text = text or ((if text is "" then text else "TextMorph"))\n      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily\n      @shadowOffset = shadowOffset or new Point(0, 0)\n      @color = new Color(0, 0, 0)\n      @noticesTransparentClick = true\n      @updateRendering()\n  \n  breakTextIntoLines: ->\n    paragraphs = @text.split("\n")\n    canvas = newCanvas()\n    context = canvas.getContext("2d")\n    currentLine = ""\n    slot = 0\n    context.font = @font()\n    @maxLineWidth = 0\n    @lines = []\n    @lineSlots = [0]\n    @words = []\n    \n    # put all the text in an array, word by word\n    paragraphs.forEach (p) =>\n      @words = @words.concat(p.split(" "))\n      @words.push "\n"\n\n    # takes the text, word by word, and re-flows\n    # it according to the available width for the\n    # text (if there is such limit).\n    # The end result is an array of lines\n    # called @lines, which contains the string for\n    # each line (excluding the end of lines).\n    # Also another array is created, called\n    # @lineSlots, which memorises how many characters\n    # of the text have been consumed up to each line\n    #  example: original text: "Hello\nWorld"\n    # then @lines[0] = "Hello" @lines[1] = "World"\n    # and @lineSlots[0] = 6, @lineSlots[1] = 11\n    # Note that this algorithm doesn\'t work in case\n    # of single non-spaced words that are longer than\n    # the allowed width.\n    @words.forEach (word) =>\n      if word is "\n"\n        # we reached the end of the line in the\n        # original text, so push the line and the\n        # slots count in the arrays\n        @lines.push currentLine\n        @lineSlots.push slot\n        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)\n        currentLine = ""\n      else\n        if @maxWidth > 0\n          # there is a width limit, so we need\n          # to check whether we overflowed it. So create\n          # a prospective line and then check its width.\n          lineForOverflowTest = currentLine + word + " "\n          w = context.measureText(lineForOverflowTest).width\n          if w > @maxWidth\n            # ok we just overflowed the available space,\n            # so we need to push the old line and its\n            # "slot" number to the respective arrays.\n            # the new line is going to only contain the\n            # word that has caused the overflow.\n            @lines.push currentLine\n            @lineSlots.push slot\n            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)\n            currentLine = word + " "\n          else\n            # no overflow happened, so just proceed as normal\n            currentLine = lineForOverflowTest\n        else\n          currentLine = currentLine + word + " "\n        slot += word.length + 1\n  \n  \n  updateRendering: ->\n    @image = newCanvas()\n    context = @image.getContext("2d")\n    context.font = @font()\n    @breakTextIntoLines()\n\n    # set my extent\n    shadowWidth = Math.abs(@shadowOffset.x)\n    shadowHeight = Math.abs(@shadowOffset.y)\n    height = @lines.length * (fontHeight(@fontSize) + shadowHeight)\n    if @maxWidth is 0\n      @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))\n    else\n      @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))\n    @image.width = @width()\n    @image.height = @height()\n\n    # changing the canvas size resets many of\n    # the properties of the canvas, so we need to\n    # re-initialise the font and alignments here\n    context.font = @font()\n    context.textAlign = "left"\n    context.textBaseline = "bottom"\n\n    # fill the background, if desired\n    if @backgroundColor\n      context.fillStyle = @backgroundColor.toString()\n      context.fillRect 0, 0, @width(), @height()\n    #\n    # draw the shadow, if any\n    if @shadowColor\n      offx = Math.max(@shadowOffset.x, 0)\n      offy = Math.max(@shadowOffset.y, 0)\n      #console.log \'shadow x: \' + offx + " y: " + offy\n      context.fillStyle = @shadowColor.toString()\n      i = 0\n      for line in @lines\n        width = context.measureText(line).width + shadowWidth\n        if @alignment is "right"\n          x = @width() - width\n        else if @alignment is "center"\n          x = (@width() - width) / 2\n        else # \'left\'\n          x = 0\n        y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n        i++\n        context.fillText line, x + offx, y + offy\n    #\n    # now draw the actual text\n    offx = Math.abs(Math.min(@shadowOffset.x, 0))\n    offy = Math.abs(Math.min(@shadowOffset.y, 0))\n    #console.log \'maintext x: \' + offx + " y: " + offy\n    context.fillStyle = @color.toString()\n    i = 0\n    for line in @lines\n      width = context.measureText(line).width + shadowWidth\n      if @alignment is "right"\n        x = @width() - width\n      else if @alignment is "center"\n        x = (@width() - width) / 2\n      else # \'left\'\n        x = 0\n      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight\n      i++\n      context.fillText line, x + offx, y + offy\n\n    # Draw the selection. This is done by re-drawing the\n    # selected text, one character at the time, just with\n    # a background rectangle.\n    start = Math.min(@startMark, @endMark)\n    stop = Math.max(@startMark, @endMark)\n    for i in [start...stop]\n      p = @slotCoordinates(i).subtract(@position())\n      c = @text.charAt(i)\n      context.fillStyle = @markedBackgoundColor.toString()\n      context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)\n      context.fillStyle = @markedTextColor.toString()\n      context.fillText c, p.x, p.y + fontHeight(@fontSize)\n    #\n    # notify my parent of layout change\n    @parent.layoutChanged()  if @parent.layoutChanged  if @parent\n  \n  setExtent: (aPoint) ->\n    @maxWidth = Math.max(aPoint.x, 0)\n    @changed()\n    @updateRendering()\n  \n  # TextMorph measuring ////\n\n  # answer the logical position point of the given index ("slot")\n  # i.e. the row and the column where a particular character is.\n  slotRowAndColumn: (slot) ->\n    idx = 0\n    # Note that this solution scans all the characters\n    # in all the rows up to the slot. This could be\n    # done a lot quicker by stopping at the first row\n    # such that @lineSlots[theRow] <= slot\n    # You could even do a binary search if one really\n    # wanted to, because the contents of @lineSlots are\n    # in order, as they contain a cumulative count...\n    for row in [0...@lines.length]\n      idx = @lineSlots[row]\n      for col in [0...@lines[row].length]\n        return [row, col]  if idx is slot\n        idx += 1\n    [@lines.length - 1, @lines[@lines.length - 1].length - 1]\n  \n  # Answer the position (in pixels) of the given index ("slot")\n  # where the caret should be placed.\n  # This is in absolute world coordinates.\n  # This function assumes that the text is left-justified.\n  slotCoordinates: (slot) ->\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    context = @image.getContext("2d")\n    shadowHeight = Math.abs(@shadowOffset.y)\n    yOffset = slotRow * (fontHeight(@fontSize) + shadowHeight)\n    xOffset = context.measureText((@lines[slotRow]).substring(0,slotColumn)).width\n    x = @left() + xOffset\n    y = @top() + yOffset\n    new Point(x, y)\n  \n  # Returns the slot (index) closest to the given point\n  # so the caret can be moved accordingly\n  # This function assumes that the text is left-justified.\n  slotAt: (aPoint) ->\n    charX = 0\n    row = 0\n    col = 0\n    shadowHeight = Math.abs(@shadowOffset.y)\n    context = @image.getContext("2d")\n    row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)\n    row = Math.max(row, 1)\n    while aPoint.x - @left() > charX\n      charX += context.measureText(@lines[row - 1][col]).width\n      col += 1\n    @lineSlots[Math.max(row - 1, 0)] + col - 1\n  \n  upFrom: (slot) ->\n    # answer the slot above the given one\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    return slot  if slotRow < 1\n    above = @lines[slotRow - 1]\n    return @lineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1\n    @lineSlots[slotRow - 1] + slotColumn\n  \n  downFrom: (slot) ->\n    # answer the slot below the given one\n    [slotRow, slotColumn] = @slotRowAndColumn(slot)\n    return slot  if slotRow > @lines.length - 2\n    below = @lines[slotRow + 1]\n    return @lineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1\n    @lineSlots[slotRow + 1] + slotColumn\n  \n  startOfLine: (slot) ->\n    # answer the first slot (index) of the line for the given slot\n    @lineSlots[@slotRowAndColumn(slot).y]\n  \n  endOfLine: (slot) ->\n    # answer the slot (index) indicating the EOL for the given slot\n    @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1\n  \n  # TextMorph menus:\n  developersMenu: ->\n    menu = super()\n    menu.addLine()\n    menu.addItem "edit", "edit"\n    menu.addItem "font size...", (->\n      @prompt menu.title + "\nfont\nsize:",\n        @setFontSize, @, @fontSize.toString(), null, 6, 100, true\n    ), "set this Text\'s\nfont point size"\n    menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"\n    menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"\n    menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"\n    menu.addLine()\n    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"\n    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"\n    if @isBold\n      menu.addItem "normal weight", "toggleWeight"\n    else\n      menu.addItem "bold", "toggleWeight"\n    if @isItalic\n      menu.addItem "normal style", "toggleItalic"\n    else\n      menu.addItem "italic", "toggleItalic"\n    menu\n  \n  setAlignmentToLeft: ->\n    @alignment = "left"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToRight: ->\n    @alignment = "right"\n    @updateRendering()\n    @changed()\n  \n  setAlignmentToCenter: ->\n    @alignment = "center"\n    @updateRendering()\n    @changed()  \n  \n  # TextMorph evaluation:\n  evaluationMenu: ->\n    menu = new MenuMorph(@, null)\n    menu.addItem "do it", "doIt", "evaluate the\nselected expression"\n    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"\n    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"\n    menu.addLine()\n    menu.addItem "select all", "selectAllAndEdit"\n    menu\n\n  selectAllAndEdit: ->\n    @edit()\n    @selectAll()\n   \n  setReceiver: (obj) ->\n    @receiver = obj\n    @customContextMenu = @evaluationMenu()\n  \n  doIt: ->\n    @receiver.evaluateString @selection()\n    @edit()\n  \n  showIt: ->\n    result = @receiver.evaluateString(@selection())\n    if result? then @inform result\n  \n  inspectIt: ->\n    # evaluateString is a pimped-up eval in\n    # the Morph class.\n    result = @receiver.evaluateString(@selection())\n    if result? then @spawnInspector result';
+
+  return TextMorph;
+
+})(StringMorph);
+
+morphicVersion = 'version of 2013-09-05 16:06:07';
