@@ -10,3 +10,11 @@ It's "live" in the sense that it allows direct interaction/inspection with/of al
 How to play with it
 -------------------
 Just drag "morphee-coffee.html" from the "build" directory into any browser and right click to open a system menu. The "demo" section has some elements that you can play with.
+
+Where are the docs?
+-------------------
+Please check the index.html file in the docs directory, which contains an overview of the system, and links to detailed docco files (and more).
+
+I made changes - how do I try them / re-build?
+---------------------------------------------
+If you make changes to any of the coffeescript .coffee files in the src directory, just run the script "build_it_please.sh", which will rebuild everything.
