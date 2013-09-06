@@ -65,8 +65,6 @@ def merge(files):
 
 def filterOverviewDocComments(files):
 
-	text = merge(files)
-	text = re.split(r"\n+",text)
 
 	outfile = open('../docs/overview/filteredCommentsForReadableStandaloneDoc.md','w')
 	for line in open('../docs/overview/headerDoc.md'):
@@ -74,17 +72,25 @@ def filterOverviewDocComments(files):
 	outfile.write("\n\n")
 	outfile.close()
 
-	outfile2 = open('../docs/overview/filteredCommentsForReadableStandaloneDoc.md','a')
+	# This part was meant to include in the overview document
+	# a little snippet of the beginning comments of each
+	# class, marked with a particular #| style
+	# But the styling is crap and the generated API is good enough
+	# so I'm taking that away.
+
+	#text = merge(files)
+	#text = re.split(r"\n+",text)
+	#outfile2 = open('../docs/overview/filteredCommentsForReadableStandaloneDoc.md','a')
 	
-	pattern = re.compile('\s*#\| (.*)')
+	#pattern = re.compile('\s*#\| (.*)')
 
 	
-	for line in text:
-		found = pattern.match(line)
-		if found:
-			outfile2.write("\n"+found.group(1))
-	outfile2.write("\n"+line)
-	outfile2.close()
+	#for line in text:
+	#	found = pattern.match(line)
+	#	if found:
+	#		outfile2.write("\n"+found.group(1))
+	#outfile2.write("\n"+line)
+	#outfile2.close()
 
 
 
