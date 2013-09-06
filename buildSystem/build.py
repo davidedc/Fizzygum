@@ -117,30 +117,16 @@ def parse_args():
 	if ap:
 		parser = argparse.ArgumentParser(description='Build and compress Three.js')
 		parser.add_argument('--includes', help='Build includes.js', action='store_true')
-		parser.add_argument('--common', help='Build Three.js', action='store_const', const=True)
-		parser.add_argument('--extras', help='Build ThreeExtras.js', action='store_const', const=True)
-		parser.add_argument('--canvas', help='Build ThreeCanvas.js', action='store_true')
-		parser.add_argument('--webgl', help='Build ThreeWebGL.js', action='store_true')
-		parser.add_argument('--svg', help='Build ThreeSVG.js', action='store_true')
-		parser.add_argument('--dom', help='Build ThreeDOM.js', action='store_true')
-		parser.add_argument('--debug', help='Generate debug versions', action='store_const', const=True, default=False)
-		parser.add_argument('--minified', help='Generate minified versions', action='store_const', const=True, default=False)
-		parser.add_argument('--all', help='Build all Three.js versions', action='store_true')
+		#parser.add_argument('--common', help='Build Three.js', action='store_const', const=True)
+		#parser.add_argument('--debug', help='Generate debug versions', action='store_const', const=True, default=False)
 
 		args = parser.parse_args()
 
 	else:
 		parser = optparse.OptionParser(description='Build and compress Three.js')
 		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
-		parser.add_option('--common', dest='common', help='Build Three.js', action='store_const', const=True)
-		parser.add_option('--extras', dest='extras', help='Build ThreeExtras.js', action='store_const', const=True)
-		parser.add_option('--canvas', dest='canvas', help='Build ThreeCanvas.js', action='store_true')
-		parser.add_option('--webgl', dest='webgl', help='Build ThreeWebGL.js', action='store_true')
-		parser.add_option('--svg', dest='svg', help='Build ThreeSVG.js', action='store_true')
-		parser.add_option('--dom', dest='dom', help='Build ThreeDOM.js', action='store_true')
-		parser.add_option('--debug', dest='debug', help='Generate debug versions', action='store_const', const=True, default=False)
-		parser.add_option('--minified', help='Generate minified versions', action='store_const', const=True, default=False)
-		parser.add_option('--all', dest='all', help='Build all Three.js versions', action='store_true')
+		#parser.add_option('--common', dest='common', help='Build Three.js', action='store_const', const=True)
+		#parser.add_option('--minified', help='Generate minified versions', action='store_const', const=True, default=False)
 
 		args, remainder = parser.parse_args()
 
