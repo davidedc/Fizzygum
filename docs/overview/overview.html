@@ -91,30 +91,11 @@
 <li><p>Ch.15 <strong>Aknowlegments and contributors</strong></p></li>
 </ul>
 <h1 id="history-of-morphic"><a href="#TOC">1. History of Morphic</a></h1>
-<p>As mentioned, Zombie Kernel is based on Morphic.js, which is an implementation of an existing UI framework from</p>
-<p>the late 90s called Morphic.</p>
-<p>What makes Morphic special is that it’s a) a direct manipulation system, b) it’s highly compositive</p>
-<p>and c) it’s highly orthogonal.</p>
-<p>What a) means is that the user can compose and decompose UIs (and their behaviour) by direct manipulation of what</p>
-<p>she sees on her desktop (as opposed to only via scripting). Think of it as a glorified powerpoint system,</p>
-<p>where one can add/remove/modify widgets just by clicking around. For example one can attach/detach a slider</p>
-<p>from a window by just hovering over it, right-clicking and selecting the “pick up” option from the menu.</p>
-<ol start="2" style="list-style-type: lower-alpha">
-<li>“highly compositive” means that any part of the system is made from a few common building blocks, which</li>
-</ol>
-<p>at the basic level consist of little more than simple shapes. For</p>
-<p>example the menu is not a special bar with particular privileges - it’s just a list of strings. A window is</p>
-<p>basically a rounded rectangle with some added behaviours.</p>
-<p>“Highly-compositive” entails that any widget mostly consists of piecing together simple components,</p>
-<p>meaning that the actual specific code for a new widget is small. Hence the “size” of the entire system</p>
-<p>is limited - Morphic.js and Zombie Kernel can be totally read and understood in a week-end. c) Highly-orthogonal</p>
-<p>means that any group of elements attempts to respond to the same operations that the basic elements respond to.</p>
-<p>An example of this is the following: in powerpoint, when one creates a rectangle shape one expects at the</p>
-<p>very minimum to be able to stick it anywhere in the background of the slide. Beyond that, it follows that one</p>
-<p>can stick the same rectangle on any other shape or group of shapes. Similarly, in Morphic one can</p>
-<p>create a rectangle and stick it on the desktop, or inside any other shape. Since applies to a rectangle</p>
-<p>applies to any other widget, so one can stick a window inside a scrollable panel for example. Compare that</p>
-<p>to mainstream windowing system: can one normally drag a window and stick it inside another window?</p>
+<p>As mentioned, Zombie Kernel is based on Morphic.js, which is an implementation of an existing UI framework from the late 90s called Morphic.</p>
+<p>What makes Morphic special is that it’s a) a direct manipulation system, b) it’s highly compositive and c) it’s highly orthogonal.</p>
+<p>What a) means is that the user can compose and decompose UIs (and their behaviour) by direct manipulation of what she sees on her desktop (as opposed to only via scripting). Think of it as a glorified powerpoint system, where one can add/remove/modify widgets just by clicking around. For example one can attach/detach a slider from a window by just hovering over it, right-clicking and selecting the “pick up” option from the menu. b) “highly compositive” means that any part of the system is made from a few common building blocks, which at the basic level consist of little more than simple shapes. For example the menu is not a special bar with particular privileges - it’s just a list of strings. A window is basically a rounded rectangle with some added behaviours.</p>
+<p>“Highly-compositive” entails that any widget mostly consists of piecing together simple components, meaning that the actual specific code for a new widget is small. Hence the “size” of the entire system is limited - Morphic.js and Zombie Kernel can be totally read and understood in a week-end. c) Highly-orthogonal means that any group of elements attempts to respond to the same operations that the basic elements respond to.</p>
+<p>An example of this is the following: in powerpoint, when one creates a rectangle shape one expects at the very minimum to be able to stick it anywhere in the background of the slide. Beyond that, it follows that one can stick the same rectangle on any other shape or group of shapes. Similarly, in Morphic one can create a rectangle and stick it on the desktop, or inside any other shape. Since applies to a rectangle applies to any other widget, so one can stick a window inside a scrollable panel for example. Compare that to mainstream windowing system: can one normally drag a window and stick it inside another window?</p>
 <h1 id="hierarchy"><a href="#TOC">1. Hierarchy</a></h1>
 <p>The following tree lists all constructors hierarchically, indentation indicating inheritance. Refer to this list to get a contextual overview:</p>
 <ul>
@@ -644,8 +625,5 @@ droppedText(aString, name)</code></pre>
 <li><p>Nathan Dinsmore contributed mouse wheel scrolling, cached background texture handling and countless bug fixes.</p></li>
 <li><p>Ian Reynolds contributed backspace key handling for Chrome.</p></li>
 </ul>
-<p>FrameMorph //////////////////////////////////////////////////////////</p>
-<p>I clip my submorphs at my bounds. Which potentially saves a lot of redrawing</p>
-<p>and event handling.</p>
 </body>
 </html>
