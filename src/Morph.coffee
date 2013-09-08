@@ -327,7 +327,14 @@ class Morph extends MorphicNode
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateRendering: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children
+  #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
+  #   contains three children Morphs (a color palette, a greyscale palette and
+  #   a feedback). The updateRendering method of ColorPickerMorph only creates
+  #   a canvas for the container Morph. So that's just a canvas with a
+  #   solid color. As the
+  #   ColorPickerMorph constructor runs, the three childredn Morphs will
+  #   run their own updateRendering method, so each child will have its own
+  #   canvas with their own contents.
   # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
