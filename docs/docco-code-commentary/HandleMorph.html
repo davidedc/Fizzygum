@@ -12,7 +12,9 @@ REQUIRES globalFunctions</p>             </td>             <td class="code">    
     <span class="vi">@color = </span><span class="k">new</span> <span class="nx">Color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
     <span class="vi">@noticesTransparentClick = </span><span class="kc">true</span>
     <span class="nv">size = </span><span class="nx">WorldMorph</span><span class="p">.</span><span class="nx">MorphicPreferences</span><span class="p">.</span><span class="nx">handleSize</span>
-    <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span> <span class="nx">size</span><span class="p">)</span>  
+    <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">size</span><span class="p">,</span> <span class="nx">size</span><span class="p">)</span>
+    <span class="nx">@updateRendering</span><span class="p">()</span>
+
   </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>HandleMorph drawing:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">updateRendering: </span><span class="nf">-&gt;</span>
     <span class="vi">@normalImage = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>
     <span class="vi">@highlightImage = </span><span class="nx">newCanvas</span><span class="p">(</span><span class="nx">@extent</span><span class="p">())</span>

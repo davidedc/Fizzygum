@@ -401,8 +401,13 @@ class Morph extends MorphicNode
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @updateRendering()
     @lastTime = Date.now()
+    # Note that we don't call @updateRendering()
+    # that's because the actual extending morph will probably
+    # set more details of how it should look (e.g. size),
+    # so we wait and we let the actual extending
+    # morph to draw itself.
+
   
   #
   #    damage list housekeeping
@@ -640,6 +645,7 @@ class Morph extends MorphicNode
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
+    # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       # question: why two "changed" invocations?
       @changed()
@@ -1532,8 +1538,13 @@ class Morph extends MorphicNode
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @updateRendering()
     @lastTime = Date.now()
+    # Note that we don't call @updateRendering()
+    # that's because the actual extending morph will probably
+    # set more details of how it should look (e.g. size),
+    # so we wait and we let the actual extending
+    # morph to draw itself.
+
   
   #
   #    damage list housekeeping
@@ -1771,6 +1782,7 @@ class Morph extends MorphicNode
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
+    # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       # question: why two "changed" invocations?
       @changed()
@@ -2670,6 +2682,12 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
+
+    # @updateRendering() not needed, probably
+    # because it's repainted in the
+    # next frame since it's an animation?
+    #@updateRendering()
+
   
   
   # BouncerMorph moving:
@@ -2725,6 +2743,12 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
+
+    # @updateRendering() not needed, probably
+    # because it's repainted in the
+    # next frame since it's an animation?
+    #@updateRendering()
+
   
   
   # BouncerMorph moving:
@@ -2774,6 +2798,8 @@ class BoxMorph extends Morph
     @border = border or ((if (border is 0) then 0 else 2))
     @borderColor = borderColor or new Color()
     super()
+    @updateRendering()
+
   
   # BoxMorph drawing:
   updateRendering: ->
@@ -2890,6 +2916,8 @@ class BoxMorph extends Morph
     @border = border or ((if (border is 0) then 0 else 2))
     @borderColor = borderColor or new Color()
     super()
+    @updateRendering()
+
   
   # BoxMorph drawing:
   updateRendering: ->
@@ -3600,6 +3628,8 @@ class CircleBoxMorph extends Morph
   constructor: (@orientation = "vertical") ->
     super()
     @setExtent new Point(20, 100)
+    @updateRendering()
+
   
   autoOrientation: ->
     if @height() > @width()
@@ -3673,6 +3703,8 @@ class CircleBoxMorph extends Morph
   constructor: (@orientation = "vertical") ->
     super()
     @setExtent new Point(20, 100)
+    @updateRendering()
+
   
   autoOrientation: ->
     if @height() > @width()
@@ -4073,6 +4105,11 @@ class ColorPaletteMorph extends Morph
       y = 0
       for y in [0..ext.y]
         l = 100 - (y / ext.y * 100)
+        # see link below for alternatives on how to set a single
+        # pixel color.
+        # You should really be using putImageData of the whole buffer
+        # here anyways. But this is clearer.
+        # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
   
@@ -4155,6 +4192,11 @@ class ColorPaletteMorph extends Morph
       y = 0
       for y in [0..ext.y]
         l = 100 - (y / ext.y * 100)
+        # see link below for alternatives on how to set a single
+        # pixel color.
+        # You should really be using putImageData of the whole buffer
+        # here anyways. But this is clearer.
+        # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
   
@@ -4238,6 +4280,13 @@ class ColorPickerMorph extends Morph
     @feedback = new Morph()
     @feedback.color = @choice
     @feedback.setExtent new Point(20, 20)
+    # it's not critical that we paint the
+    # feedback immediately, as it's going to
+    # be of the same color of the background
+    # until a color is picked...
+    # but let's do things cleanly in case one
+    # day the background color changes...
+    @feedback.updateRendering()
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin
@@ -4280,6 +4329,13 @@ class ColorPickerMorph extends Morph
     @feedback = new Morph()
     @feedback.color = @choice
     @feedback.setExtent new Point(20, 20)
+    # it's not critical that we paint the
+    # feedback immediately, as it's going to
+    # be of the same color of the background
+    # until a color is picked...
+    # but let's do things cleanly in case one
+    # day the background color changes...
+    @feedback.updateRendering()
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin
@@ -5568,7 +5624,9 @@ class HandleMorph extends Morph
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true
     size = WorldMorph.MorphicPreferences.handleSize
-    @setExtent new Point(size, size)  
+    @setExtent new Point(size, size)
+    @updateRendering()
+
   
   # HandleMorph drawing:
   updateRendering: ->
@@ -5724,7 +5782,9 @@ class HandleMorph extends Morph
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true
     size = WorldMorph.MorphicPreferences.handleSize
-    @setExtent new Point(size, size)  
+    @setExtent new Point(size, size)
+    @updateRendering()
+
   
   # HandleMorph drawing:
   updateRendering: ->
@@ -9477,6 +9537,11 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
+    # no need to call @updateRendering() because @setExtent does it.
+    # (should it?)
+    #@updateRendering()
+
+
   @staticVariable: 1
   @staticFunction: -> 3.14
     
@@ -9656,6 +9721,11 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
+    # no need to call @updateRendering() because @setExtent does it.
+    # (should it?)
+    #@updateRendering()
+
+
   @staticVariable: 1
   @staticFunction: -> 3.14
     
@@ -11144,6 +11214,8 @@ class Rectangle
 class ShadowMorph extends Morph
   constructor: () ->
     super()
+    @updateRendering()
+
 
   @coffeeScriptSourceOfThisClass: '''
 # ShadowMorph /////////////////////////////////////////////////////////
@@ -11151,6 +11223,8 @@ class ShadowMorph extends Morph
 class ShadowMorph extends Morph
   constructor: () ->
     super()
+    @updateRendering()
+
   '''
 
 # SliderButtonMorph ///////////////////////////////////////////////////
@@ -16658,4 +16732,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-08 17:00:08'
+morphicVersion = 'version of 2013-09-08 21:31:45'

@@ -6,6 +6,8 @@
   <span class="nv">constructor: </span><span class="nf">(@orientation = &quot;vertical&quot;) -&gt;</span>
     <span class="k">super</span><span class="p">()</span>
     <span class="nx">@setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+    <span class="nx">@updateRendering</span><span class="p">()</span>
+
   
   <span class="nv">autoOrientation: </span><span class="nf">-&gt;</span>
     <span class="k">if</span> <span class="nx">@height</span><span class="p">()</span> <span class="o">&gt;</span> <span class="nx">@width</span><span class="p">()</span>

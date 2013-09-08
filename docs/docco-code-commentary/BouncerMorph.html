@@ -13,9 +13,11 @@ Bounces vertically or horizontally within the parent</p>             </td>      
     <span class="vi">@fps = </span><span class="mi">50</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>additional properties:</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@type</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
       <span class="vi">@direction = </span><span class="s">&quot;down&quot;</span>
     <span class="k">else</span>
-      <span class="vi">@direction = </span><span class="s">&quot;right&quot;</span>
-  
-  </pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>BouncerMorph moving:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">moveUp: </span><span class="nf">-&gt;</span>
+      <span class="vi">@direction = </span><span class="s">&quot;right&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>@updateRendering() not needed, probably
+because it's repainted in the
+next frame since it's an animation?
+@updateRendering()</p>             </td>             <td class="code">               <div class="highlight"><pre>  
+  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>BouncerMorph moving:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">moveUp: </span><span class="nf">-&gt;</span>
     <span class="nx">@moveBy</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="nx">@speed</span><span class="p">)</span>
   
   <span class="nv">moveDown: </span><span class="nf">-&gt;</span>
@@ -27,7 +29,7 @@ Bounces vertically or horizontally within the parent</p>             </td>      
   <span class="nv">moveLeft: </span><span class="nf">-&gt;</span>
     <span class="nx">@moveBy</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="o">-</span><span class="nx">@speed</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
   
-  </pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>BouncerMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">step: </span><span class="nf">-&gt;</span>
+  </pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>BouncerMorph stepping:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">step: </span><span class="nf">-&gt;</span>
     <span class="k">unless</span> <span class="nx">@isStopped</span>
       <span class="k">if</span> <span class="nx">@type</span> <span class="o">is</span> <span class="s">&quot;vertical&quot;</span>
         <span class="k">if</span> <span class="nx">@direction</span> <span class="o">is</span> <span class="s">&quot;down&quot;</span>

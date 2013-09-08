@@ -19,7 +19,12 @@
     <span class="vi">@children = </span><span class="p">[]</span>
     <span class="vi">@feedback = </span><span class="k">new</span> <span class="nx">Morph</span><span class="p">()</span>
     <span class="vi">@feedback.color = </span><span class="nx">@choice</span>
-    <span class="nx">@feedback</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="nx">@feedback</span><span class="p">.</span><span class="nx">setExtent</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>it's not critical that we paint the
+feedback immediately, as it's going to
+be of the same color of the background
+until a color is picked...
+but let's do things cleanly in case one
+day the background color changes...</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">@feedback</span><span class="p">.</span><span class="nx">updateRendering</span><span class="p">()</span>
     <span class="nv">cpal = </span><span class="k">new</span> <span class="nx">ColorPaletteMorph</span><span class="p">(</span><span class="nx">@feedback</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@width</span><span class="p">(),</span> <span class="mi">50</span><span class="p">))</span>
     <span class="nv">gpal = </span><span class="k">new</span> <span class="nx">GrayPaletteMorph</span><span class="p">(</span><span class="nx">@feedback</span><span class="p">,</span> <span class="k">new</span> <span class="nx">Point</span><span class="p">(</span><span class="nx">@width</span><span class="p">(),</span> <span class="mi">5</span><span class="p">))</span>
     <span class="nx">cpal</span><span class="p">.</span><span class="nx">setPosition</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
