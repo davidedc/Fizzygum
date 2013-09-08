@@ -687,7 +687,14 @@ class Morph extends MorphicNode
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateRendering: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children
+  #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
+  #   contains three children Morphs (a color palette, a greyscale palette and
+  #   a feedback). The updateRendering method of ColorPickerMorph only creates
+  #   a canvas for the container Morph. So that's just a canvas with a
+  #   solid color. As the
+  #   ColorPickerMorph constructor runs, the three childredn Morphs will
+  #   run their own updateRendering method, so each child will have its own
+  #   canvas with their own contents.
   # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
@@ -1824,7 +1831,14 @@ class Morph extends MorphicNode
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateRendering: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children
+  #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
+  #   contains three children Morphs (a color palette, a greyscale palette and
+  #   a feedback). The updateRendering method of ColorPickerMorph only creates
+  #   a canvas for the container Morph. So that's just a canvas with a
+  #   solid color. As the
+  #   ColorPickerMorph constructor runs, the three childredn Morphs will
+  #   run their own updateRendering method, so each child will have its own
+  #   canvas with their own contents.
   # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
@@ -4267,26 +4281,14 @@ class ColorPickerMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
-    @updateRendering()
-  
-  updateRendering: ->
-    super()
     @buildSubmorphs()
+    @updateRendering()
   
   buildSubmorphs: ->
     @children.forEach (child) ->
       child.destroy()
     @children = []
-    @feedback = new Morph()
-    @feedback.color = @choice
-    @feedback.setExtent new Point(20, 20)
-    # it's not critical that we paint the
-    # feedback immediately, as it's going to
-    # be of the same color of the background
-    # until a color is picked...
-    # but let's do things cleanly in case one
-    # day the background color changes...
-    @feedback.updateRendering()
+    @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin
@@ -4316,26 +4318,14 @@ class ColorPickerMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
-    @updateRendering()
-  
-  updateRendering: ->
-    super()
     @buildSubmorphs()
+    @updateRendering()
   
   buildSubmorphs: ->
     @children.forEach (child) ->
       child.destroy()
     @children = []
-    @feedback = new Morph()
-    @feedback.color = @choice
-    @feedback.setExtent new Point(20, 20)
-    # it's not critical that we paint the
-    # feedback immediately, as it's going to
-    # be of the same color of the background
-    # until a color is picked...
-    # but let's do things cleanly in case one
-    # day the background color changes...
-    @feedback.updateRendering()
+    @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin
@@ -11209,6 +11199,28 @@ class Rectangle
     [@left(), @top(), @width(), @height()]
   '''
 
+# RectangleMorph /////////////////////////////////////////////////////////
+
+class RectangleMorph extends Morph
+  constructor: (extent, color) ->
+    super()
+    @silentSetExtent(extent) if extent?
+    @color = color if color?
+    @updateRendering()
+
+
+  @coffeeScriptSourceOfThisClass: '''
+# RectangleMorph /////////////////////////////////////////////////////////
+
+class RectangleMorph extends Morph
+  constructor: (extent, color) ->
+    super()
+    @silentSetExtent(extent) if extent?
+    @color = color if color?
+    @updateRendering()
+
+  '''
+
 # ShadowMorph /////////////////////////////////////////////////////////
 
 class ShadowMorph extends Morph
@@ -15790,7 +15802,7 @@ class WorldMorph extends FrameMorph
       aMorph.pickUp @
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
-      create new Morph()
+      create new RectangleMorph()
     
     menu.addItem "box", ->
       create new BoxMorph()
@@ -16483,7 +16495,7 @@ class WorldMorph extends FrameMorph
       aMorph.pickUp @
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
-      create new Morph()
+      create new RectangleMorph()
     
     menu.addItem "box", ->
       create new BoxMorph()
@@ -16732,4 +16744,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-08 21:31:45'
+morphicVersion = 'version of 2013-09-08 22:23:05'
