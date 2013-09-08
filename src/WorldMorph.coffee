@@ -442,7 +442,7 @@ class WorldMorph extends FrameMorph
       aMorph.pickUp @
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
-      create new Morph()
+      create new RectangleMorph()
     
     menu.addItem "box", ->
       create new BoxMorph()
