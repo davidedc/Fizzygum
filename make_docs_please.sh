@@ -1,5 +1,3 @@
-rake
-
 # unfortunately the -o option of docco doesn't work
 cd docs
 rm -r docco-code-commentary
