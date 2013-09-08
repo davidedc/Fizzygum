@@ -9,26 +9,14 @@ class ColorPickerMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
-    @updateRendering()
-  
-  updateRendering: ->
-    super()
     @buildSubmorphs()
+    @updateRendering()
   
   buildSubmorphs: ->
     @children.forEach (child) ->
       child.destroy()
     @children = []
-    @feedback = new Morph()
-    @feedback.color = @choice
-    @feedback.setExtent new Point(20, 20)
-    # it's not critical that we paint the
-    # feedback immediately, as it's going to
-    # be of the same color of the background
-    # until a color is picked...
-    # but let's do things cleanly in case one
-    # day the background color changes...
-    @feedback.updateRendering()
+    @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin
