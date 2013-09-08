@@ -22,6 +22,13 @@ class ColorPickerMorph extends Morph
     @feedback = new Morph()
     @feedback.color = @choice
     @feedback.setExtent new Point(20, 20)
+    # it's not critical that we paint the
+    # feedback immediately, as it's going to
+    # be of the same color of the background
+    # until a color is picked...
+    # but let's do things cleanly in case one
+    # day the background color changes...
+    @feedback.updateRendering()
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin

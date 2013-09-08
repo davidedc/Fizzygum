@@ -41,8 +41,13 @@ class Morph extends MorphicNode
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @updateRendering()
     @lastTime = Date.now()
+    # Note that we don't call @updateRendering()
+    # that's because the actual extending morph will probably
+    # set more details of how it should look (e.g. size),
+    # so we wait and we let the actual extending
+    # morph to draw itself.
+
   
   #
   #    damage list housekeeping
@@ -280,6 +285,7 @@ class Morph extends MorphicNode
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
+    # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       # question: why two "changed" invocations?
       @changed()
