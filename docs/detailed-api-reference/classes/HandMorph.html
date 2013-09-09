@@ -200,7 +200,7 @@
       </a>
     </span>
     <span class='desc'>
-      HandMorph event dispatching: mouse events: mouseDownLeft mouseDownRight mouseClickLeft mouseClickRight mouseDoubleClick mouseEnter mouseLeave mouseEnterDragging mouseLeaveDragging mouseMove mouseScroll
+      
     </span>
   </li>
   <li>
@@ -236,11 +236,11 @@
   <li>
     <span class='signature'>
       <a href='#processMouseUp-instance'>
-        - (void) <strong>processMouseUp</strong>()
+        - (void) <strong>processMouseUp</strong>(button)
       </a>
     </span>
     <span class='desc'>
-      
+      note that the button param is not used, but adding it for consistency...
     </span>
   </li>
   <li>
@@ -528,20 +528,7 @@ reactToDropOf(droppedMorph, handMorph) -&gt; newParent</code></pre>
     <p class='signature' id='processMouseDown-instance'>
       - (void) <strong>processMouseDown</strong>(button, ctrlKey)
     </p>
-    <div class='docstring'>
-  <p>HandMorph event dispatching:</p><p>   mouse events:</p><pre><code>mouseDownLeft
-mouseDownRight
-mouseClickLeft
-mouseClickRight mouseDoubleClick
-mouseEnter
-mouseLeave
-mouseEnterDragging
-mouseLeaveDragging
-mouseMove
-mouseScroll</code></pre>
-
-</div>
-<div class='tags'>
+    <div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -571,9 +558,13 @@ mouseScroll</code></pre>
   </div>
   <div class='method_details'>
     <p class='signature' id='processMouseUp-instance'>
-      - (void) <strong>processMouseUp</strong>()
+      - (void) <strong>processMouseUp</strong>(button)
     </p>
-    <div class='tags'>
+    <div class='docstring'>
+  <p>note that the button param is not used,
+but adding it for consistency...</p>
+</div>
+<div class='tags'>
 </div>
   </div>
   <div class='method_details'>
@@ -635,7 +626,7 @@ mouseScroll</code></pre>
     </div>
     <div id='footer'>
   Generated on
-  Mon Sep 09 2013 19:22:15 GMT+0100 (BST)
+  Mon Sep 09 2013 20:53:00 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0
