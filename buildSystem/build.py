@@ -1,158 +1,190 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-try:
-	import argparse
-	ap = 1
-except ImportError:
-	import optparse
-	ap = 0
+"""
+This script performs only some of the steps of the build:
 
-import os
-import tempfile
-import sys
+1) generates an ordered list of the coffee files, so the order respects the
+   dependencies between the files.
 
-COMMON_FILES = [
-'build/morphee-coffee.js',
-]
+2) For each class file (not all of the coffee files are class files), it adds
+   a special string that contains the source of the file itself.  This is so we
+   can allow some editing of the classes in coffeescript, and do something like
+   generating the documentation on the fly.
 
-EXTRAS_FILES = []
+3) Finally, combine the "extended" coffee files.  Note that 2) is a bit naive
+   because we just do some simple string checks. So, there could be strings in
+   the source code that mangle this process. It's not likely though.
 
-CANVAS_FILES = []
+The order in which the files are combined does matter.  There are three cases
+where order matters:
 
-DOM_FILES = []
+1) if class A extends class B, then B needs to be before class A. This
+   dependency can be figured out automatically (although at the moment in
+   a sort of naive way) by looking at the source code.
 
-SVG_FILES = []
+2) no objects of a class can be instantiated before the definition of the
+   class. This dependency can be figured out automatically (although at the
+   moment in a sort of naive way) by looking at the source code.
 
-WEBGL_FILES = []
+3) some classes use global functions or global variables. These dependencies
+   must be manually specified by creating a specially formatted comment.
 
-def merge(files):
+"""
 
-	buffer = []
+# These are included in order to make the script compatible both
+# with Python 2 and 3.
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import absolute_import
 
-	for filename in files:
-		with open(os.path.join('..', '', filename), 'r') as f:
-			buffer.append(f.read())
+# standard library's imports
+from collections import OrderedDict
+from datetime import datetime
+from glob import glob
+import codecs
+import re
 
-	return "".join(buffer)
+# GLOBALS
+FINAL_OUTPUT_FILE = 'build/morphee-coffee.coffee'
 
+STRING_BLOCK = \
+"""  @coffeeScriptSourceOfThisClass: '''
+%s  '''
+"""
 
-def output(text, filename):
+# RegEx Patterns
+# We precompile them in order to improve performance and increase
+# code readability
+REQUIRES = re.compile(r"\sREQUIRES\s*(\w+)")
+EXTENDS = re.compile(r"\sextends\s*(\w+)")
+DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
+IS_CLASS = re.compile(r"\s*class\s+(\w+)")
+TRIPLE_QUOTES = re.compile(r"'''")
 
-	with open(os.path.join('../build/', filename), 'w') as f:
-		f.write(text)
-
-
-def compress(text, fname_externs):
-
-	externs = ""
-	if fname_externs:
-		externs = "--externs %s.js" % fname_externs
-
-	in_tuple = tempfile.mkstemp()
-	with os.fdopen(in_tuple[0], 'w') as handle:
-		handle.write(text)
-
-	out_tuple = tempfile.mkstemp()
-
-	os.system("java -jar compiler/compiler.jar --warning_level=VERBOSE --jscomp_off=globalThis --jscomp_off=checkTypes --externs externs_common.js %s --language_in=ECMASCRIPT5_STRICT --js %s --js_output_file %s" % (externs, in_tuple[1], out_tuple[1]))
-
-	with os.fdopen(out_tuple[0], 'r') as handle:
-		compressed = handle.read()
-
-	os.unlink(in_tuple[1])
-	os.unlink(out_tuple[1])
-
-	return compressed
-
-
-def addHeader(text, endFilename):
-
-	return ("// %s - https://github.com/davidedc/livecodelab\n" % endFilename) + text
-
-
-def makeDebug(text):
-	position = 0
-	while True:
-		position = text.find("/* DEBUG", position)
-		if position == -1:
-			break
-		text = text[0:position] + text[position+8:]
-		position = text.find("*/", position)
-		text = text[0:position] + text[position+2:]
-	return text
+# These two functions search for "requires" comments in the
+# files and generate a list of the order in which the files
+# should be combined. Basically creates a directed graph
+# and creates the list making sure that the dependencies
+# are respected.
 
 
-def buildLib(files, debug, minified, filename, fname_externs):
+def generate_inclusion_order(dependencies):
+    """
+    Returns a list of the coffee files. The list is ordered in such a way  that
+    the dependencies between the files are respected.
 
-	text = merge(files)
+    :param dict dependencies:
 
-	if debug:
-		text = makeDebug(text)
-		filename = filename + 'Debug'
+    """
+    inclusion_order = []
+    nodes = OrderedDict()
+    filenames = list(dependencies.keys())
 
-	folder = ''
+    for filename, requirements in dependencies.items():
+        required_paths = []
+        requirements = list(OrderedDict.fromkeys(requirements))
+        for req in requirements:
+            # convert class names to file paths
+            class_filename = "/%s.coffee" % req
 
-	filename = filename + '.js'
+            for f in filenames:
+                if class_filename in f:
+                    required_paths.append(f)
 
-	print "=" * 40
-	print "Compiling", filename
-	print "=" * 40
+        nodes[filename] = dict(requires=required_paths, visited=False)
 
-	if minified:
-		text = compress(text, fname_externs)
+    for filename in nodes.keys():
+        visit(filename, nodes, inclusion_order)
 
-	output(addHeader(text, filename), folder + filename)
-
-
-def buildIncludes(files, filename):
-
-	template = '\t\t<script src="../src/%s"></script>'
-	text = "\n".join(template % f for f in files)
-
-	output(text, filename + '.js')
-
-
-def parse_args():
-
-	if ap:
-		parser = argparse.ArgumentParser(description='Build and compress Three.js')
-		parser.add_argument('--includes', help='Build includes.js', action='store_true')
-		#parser.add_argument('--common', help='Build Three.js', action='store_const', const=True)
-		#parser.add_argument('--debug', help='Generate debug versions', action='store_const', const=True, default=False)
-
-		args = parser.parse_args()
-
-	else:
-		parser = optparse.OptionParser(description='Build and compress Three.js')
-		parser.add_option('--includes', dest='includes', help='Build includes.js', action='store_true')
-		#parser.add_option('--common', dest='common', help='Build Three.js', action='store_const', const=True)
-		#parser.add_option('--minified', help='Generate minified versions', action='store_const', const=True, default=False)
-
-		args, remainder = parser.parse_args()
-
-	# If no arguments have been passed, show the help message and exit
-	if len(sys.argv) == 1:
-		parser.print_help()
-		sys.exit(1)
-
-	return args
+    return inclusion_order
 
 
-def main(argv=None):
+def visit(filename, nodes, inclusion_order):
+    """
+    :param str filename:
+    :param dict nodes:
+    :param list inclusion_order:
 
-	args = parse_args()
-	debug = args.debug
-	minified = args.minified
+    """
+    node = nodes[filename]
+    if not node["visited"]:
+        node["visited"] = True
+        for other_filename in node["requires"]:
+            visit(other_filename, nodes, inclusion_order)
 
-	config = [
-	['morphee-coffee-minified', 'includes', '', COMMON_FILES + EXTRAS_FILES, args.common],
-	]
+    if filename not in inclusion_order:
+        inclusion_order.append(filename)
 
-	for fname_lib, fname_inc, fname_externs, files, enabled in config:
-		if enabled or args.all:
-			buildLib(files, debug, minified, fname_lib, fname_externs)
-			if args.includes:
-				buildIncludes(files, fname_inc)
+
+def main():
+    """
+    Creates an ordered list of the coffee files, iterates through it, reads the
+    source code of each file and combines them all into one final output file.
+    """
+    dependencies = OrderedDict()
+
+    # create a list with the coffeescript files
+    filenames = sorted(glob("src/*.coffee"))
+
+    # Read each file and search it for each sort of dependency.
+    for filename in filenames:
+        dependencies[filename] = list()
+        with open(filename, "r") as f:
+            lines = f.readlines()
+
+        for line in lines:
+            matches = EXTENDS.search(line)
+            if matches:
+                dependencies[filename].append(matches.group(1))
+                print("%s extends %s" % (filename, matches.group(1)))
+
+            matches = REQUIRES.search(line)
+            if matches:
+                dependencies[filename].append(matches.group(1))
+                print("%s requires %s" % (filename, matches.group(1)))
+
+            matches = DEPENDS.search(line)
+            if matches:
+                dependencies[filename].append(matches.group(1))
+                print("%s has class init in instance variable %s" %
+                      (filename, matches.group(1)))
+
+    # Generate inclusion order and print it
+    inclusion_order = generate_inclusion_order(dependencies)
+    print("Order /////////////////")
+    for filename in inclusion_order:
+        print(filename)
+
+    # now iterate through the files and create the giant final *.coffee file.
+    text = []
+    for filename in inclusion_order:
+        # open file and read its contents
+        with codecs.open(filename, "r", "utf-8") as f:
+            content = f.read()
+        text.append(content)
+
+        # if the file is a class, then we add its source code in the giant
+        # *.coffee file as a static variable (string block).
+        # We check if the file is a class by searching its contents for a
+        # class ... declaration.
+        is_class_file = IS_CLASS.search(content)
+        if is_class_file:
+            # If there is a string block in the source, then we must escape it.
+            escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
+            text.append(STRING_BLOCK % escaped_content)
+
+    # add the morphic version. This is used in the about box.
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    text.append("morphicVersion = 'version of %s'" % time)
+
+    #concatenate text to a huge string.
+    text = str.join(str("\n"), text)
+
+    # write to disk
+    with codecs.open(FINAL_OUTPUT_FILE, "w", "utf-8") as f:
+        f.write(text)
 
 if __name__ == "__main__":
-	main()
+    main()

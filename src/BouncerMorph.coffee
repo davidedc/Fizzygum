@@ -18,6 +18,12 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
+
+    # @updateRendering() not needed, probably
+    # because it's repainted in the
+    # next frame since it's an animation?
+    #@updateRendering()
+
   
   
   # BouncerMorph moving:

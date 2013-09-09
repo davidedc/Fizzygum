@@ -9,19 +9,14 @@ class ColorPickerMorph extends Morph
     super()
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
-    @updateRendering()
-  
-  updateRendering: ->
-    super()
     @buildSubmorphs()
+    @updateRendering()
   
   buildSubmorphs: ->
     @children.forEach (child) ->
       child.destroy()
     @children = []
-    @feedback = new Morph()
-    @feedback.color = @choice
-    @feedback.setExtent new Point(20, 20)
+    @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
     cpal.setPosition @bounds.origin

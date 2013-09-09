@@ -10,6 +10,8 @@ class CircleBoxMorph extends Morph
   constructor: (@orientation = "vertical") ->
     super()
     @setExtent new Point(20, 100)
+    @updateRendering()
+
   
   autoOrientation: ->
     if @height() > @width()
