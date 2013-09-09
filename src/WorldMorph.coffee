@@ -265,11 +265,11 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
-    # trying to find out whether iOS interprets a touch as a scroll
-    # which would explain why some timers are not fired...
-    window.addEventListener "scroll", ((event) =>
-      nop # nothing to do, I just need this to set an interrupt point.
-    ), false
+
+    # in theory there should be no scroll event on the page
+    # window.addEventListener "scroll", ((event) =>
+    #  nop # nothing to do, I just need this to set an interrupt point.
+    # ), false
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
