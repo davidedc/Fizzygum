@@ -186,12 +186,10 @@ class HandMorph extends Morph
         @processMouseUp 2 # button 2 is the right one, we don't use this parameter
         event.preventDefault()
         clearInterval @touchHoldTimeout
-        return
       , 400)
       @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
       @processMouseDown 0 # button zero is the left button
       event.preventDefault()
-      return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
