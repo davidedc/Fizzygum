@@ -4802,6 +4802,12 @@ class HandMorph extends Morph
   #		mouseMove
   #		mouseScroll
   #
+  # Note that some handlers don't want the event but the
+  # interesting parameters of the event. This is because
+  # the testing harness only stores the interesting parameters
+  # rather than a multifaceted and sometimes browser-specific
+  # event object.
+
   processMouseDown: (button, ctrlKey) ->
     @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
 
@@ -4860,29 +4866,31 @@ class HandMorph extends Morph
     if event.touches.length is 1
       # simulate mouseRightClick
       @touchHoldTimeout = setInterval(=>
-        @processMouseDown button: 2
-        @processMouseUp button: 2
+        @processMouseDown 2 # button 2 is the right one
+        @processMouseUp 2 # button 2 is the right one, we don't use this parameter
         event.preventDefault()
         clearInterval @touchHoldTimeout
         return
       , 400)
-      @processMouseMove event.touches[0] # update my position
-      @processMouseDown button: 0
+      @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
+      @processMouseDown 0 # button zero is the left button
       event.preventDefault()
       return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
       touch = event.touches[0]
-      @processMouseMove touch
+      @processMouseMove touch.pageX, touch.pageY
       clearInterval @touchHoldTimeout
   
   processTouchEnd: (event) ->
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
-    @processMouseUp button: 0
+    @processMouseUp 0 # button zero is the left button, we don't use this parameter
   
-  processMouseUp: ->
+   # note that the button param is not used,
+   # but adding it for consistency...
+   processMouseUp: (button) ->
     @world.systemTestsRecorderAndPlayer.addMouseUpEvent()
 
     morph = @morphAtPointer()
@@ -5261,6 +5269,12 @@ class HandMorph extends Morph
   #		mouseMove
   #		mouseScroll
   #
+  # Note that some handlers don't want the event but the
+  # interesting parameters of the event. This is because
+  # the testing harness only stores the interesting parameters
+  # rather than a multifaceted and sometimes browser-specific
+  # event object.
+
   processMouseDown: (button, ctrlKey) ->
     @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
 
@@ -5319,29 +5333,31 @@ class HandMorph extends Morph
     if event.touches.length is 1
       # simulate mouseRightClick
       @touchHoldTimeout = setInterval(=>
-        @processMouseDown button: 2
-        @processMouseUp button: 2
+        @processMouseDown 2 # button 2 is the right one
+        @processMouseUp 2 # button 2 is the right one, we don't use this parameter
         event.preventDefault()
         clearInterval @touchHoldTimeout
         return
       , 400)
-      @processMouseMove event.touches[0] # update my position
-      @processMouseDown button: 0
+      @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
+      @processMouseDown 0 # button zero is the left button
       event.preventDefault()
       return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
       touch = event.touches[0]
-      @processMouseMove touch
+      @processMouseMove touch.pageX, touch.pageY
       clearInterval @touchHoldTimeout
   
   processTouchEnd: (event) ->
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
-    @processMouseUp button: 0
+    @processMouseUp 0 # button zero is the left button, we don't use this parameter
   
-  processMouseUp: ->
+   # note that the button param is not used,
+   # but adding it for consistency...
+   processMouseUp: (button) ->
     @world.systemTestsRecorderAndPlayer.addMouseUpEvent()
 
     morph = @morphAtPointer()
@@ -15570,7 +15586,7 @@ class WorldMorph extends FrameMorph
     ), false
     canvas.addEventListener "mouseup", ((event) =>
       event.preventDefault()
-      @hand.processMouseUp event
+      @hand.processMouseUp event.button
     ), false
     canvas.addEventListener "touchend", ((event) =>
       @hand.processTouchEnd event
@@ -16268,7 +16284,7 @@ class WorldMorph extends FrameMorph
     ), false
     canvas.addEventListener "mouseup", ((event) =>
       event.preventDefault()
-      @hand.processMouseUp event
+      @hand.processMouseUp event.button
     ), false
     canvas.addEventListener "touchend", ((event) =>
       @hand.processTouchEnd event
@@ -16762,4 +16778,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-09 20:01:46'
+morphicVersion = 'version of 2013-09-09 20:52:22'
