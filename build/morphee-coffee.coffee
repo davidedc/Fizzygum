@@ -4852,6 +4852,8 @@ class HandMorph extends Morph
       morph = morph.parent  until morph[actualClick]
       morph[actualClick] @bounds.origin
   
+  # touch events, see:
+  # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
@@ -4862,10 +4864,12 @@ class HandMorph extends Morph
         @processMouseUp button: 2
         event.preventDefault()
         clearInterval @touchHoldTimeout
+        return
       , 400)
       @processMouseMove event.touches[0] # update my position
       @processMouseDown button: 0
       event.preventDefault()
+      return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
@@ -5307,6 +5311,8 @@ class HandMorph extends Morph
       morph = morph.parent  until morph[actualClick]
       morph[actualClick] @bounds.origin
   
+  # touch events, see:
+  # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
@@ -5317,10 +5323,12 @@ class HandMorph extends Morph
         @processMouseUp button: 2
         event.preventDefault()
         clearInterval @touchHoldTimeout
+        return
       , 400)
       @processMouseMove event.touches[0] # update my position
       @processMouseDown button: 0
       event.preventDefault()
+      return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
@@ -15959,7 +15967,7 @@ class WorldMorph extends FrameMorph
         versions += ("\n" + module + " (" + modules[module] + ")")  
     if versions isnt ""
       versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
-    @inform "Zombie kernel\n\n" +
+    @inform "Zombie Kernel\n\n" +
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
       "\n\nby Davide Della Casa" +
@@ -16652,7 +16660,7 @@ class WorldMorph extends FrameMorph
         versions += ("\n" + module + " (" + modules[module] + ")")  
     if versions isnt ""
       versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
-    @inform "Zombie kernel\n\n" +
+    @inform "Zombie Kernel\n\n" +
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
       "\n\nby Davide Della Casa" +
@@ -16744,4 +16752,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-08 22:23:05'
+morphicVersion = 'version of 2013-09-09 19:21:35'
