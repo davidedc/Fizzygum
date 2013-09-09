@@ -21,6 +21,11 @@ class ColorPaletteMorph extends Morph
       y = 0
       for y in [0..ext.y]
         l = 100 - (y / ext.y * 100)
+        # see link below for alternatives on how to set a single
+        # pixel color.
+        # You should really be using putImageData of the whole buffer
+        # here anyways. But this is clearer.
+        # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
   

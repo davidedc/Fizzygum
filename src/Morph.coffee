@@ -41,8 +41,13 @@ class Morph extends MorphicNode
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
-    @updateRendering()
     @lastTime = Date.now()
+    # Note that we don't call @updateRendering()
+    # that's because the actual extending morph will probably
+    # set more details of how it should look (e.g. size),
+    # so we wait and we let the actual extending
+    # morph to draw itself.
+
   
   #
   #    damage list housekeeping
@@ -280,6 +285,7 @@ class Morph extends MorphicNode
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
+    # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       # question: why two "changed" invocations?
       @changed()
@@ -321,7 +327,14 @@ class Morph extends MorphicNode
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateRendering: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children
+  #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
+  #   contains three children Morphs (a color palette, a greyscale palette and
+  #   a feedback). The updateRendering method of ColorPickerMorph only creates
+  #   a canvas for the container Morph. So that's just a canvas with a
+  #   solid color. As the
+  #   ColorPickerMorph constructor runs, the three childredn Morphs will
+  #   run their own updateRendering method, so each child will have its own
+  #   canvas with their own contents.
   # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.

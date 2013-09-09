@@ -12,6 +12,8 @@ class BoxMorph extends Morph
     @border = border or ((if (border is 0) then 0 else 2))
     @borderColor = borderColor or new Color()
     super()
+    @updateRendering()
+
   
   # BoxMorph drawing:
   updateRendering: ->

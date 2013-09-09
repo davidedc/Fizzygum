@@ -22,6 +22,11 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
+    # no need to call @updateRendering() because @setExtent does it.
+    # (should it?)
+    #@updateRendering()
+
+
   @staticVariable: 1
   @staticFunction: -> 3.14
     
