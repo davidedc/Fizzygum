@@ -15627,7 +15627,7 @@ class WorldMorph extends FrameMorph
     ), false
     # trying to find out whether iOS interprets a touch as a scroll
     # which would explain why some timers are not fired...
-    canvas.addEventListener "scroll", ((event) =>
+    window.addEventListener "scroll", ((event) =>
       nop # nothing to do, I just need this to set an interrupt point.
     ), false
 
@@ -16325,7 +16325,7 @@ class WorldMorph extends FrameMorph
     ), false
     # trying to find out whether iOS interprets a touch as a scroll
     # which would explain why some timers are not fired...
-    canvas.addEventListener "scroll", ((event) =>
+    window.addEventListener "scroll", ((event) =>
       nop # nothing to do, I just need this to set an interrupt point.
     ), false
 
@@ -16762,4 +16762,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-09 19:57:59'
+morphicVersion = 'version of 2013-09-09 20:01:46'
