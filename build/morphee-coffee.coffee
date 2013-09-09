@@ -4861,6 +4861,7 @@ class HandMorph extends Morph
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
+    event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
@@ -4868,16 +4869,16 @@ class HandMorph extends Morph
       @touchHoldTimeout = setInterval(=>
         @processMouseDown 2 # button 2 is the right one
         @processMouseUp 2 # button 2 is the right one, we don't use this parameter
-        event.preventDefault()
+        event.preventDefault() # I don't think that this is needed
         clearInterval @touchHoldTimeout
-        return
       , 400)
       @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
       @processMouseDown 0 # button zero is the left button
-      event.preventDefault()
-      return
   
   processTouchMove: (event) ->
+    # Prevent scrolling on this element
+    event.preventDefault()
+
     if event.touches.length is 1
       touch = event.touches[0]
       @processMouseMove touch.pageX, touch.pageY
@@ -5328,6 +5329,7 @@ class HandMorph extends Morph
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
+    event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
@@ -5335,16 +5337,16 @@ class HandMorph extends Morph
       @touchHoldTimeout = setInterval(=>
         @processMouseDown 2 # button 2 is the right one
         @processMouseUp 2 # button 2 is the right one, we don't use this parameter
-        event.preventDefault()
+        event.preventDefault() # I don't think that this is needed
         clearInterval @touchHoldTimeout
-        return
       , 400)
       @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
       @processMouseDown 0 # button zero is the left button
-      event.preventDefault()
-      return
   
   processTouchMove: (event) ->
+    # Prevent scrolling on this element
+    event.preventDefault()
+
     if event.touches.length is 1
       touch = event.touches[0]
       @processMouseMove touch.pageX, touch.pageY
@@ -15597,6 +15599,14 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchmove", ((event) =>
       @hand.processTouchMove event
     ), false
+    canvas.addEventListener "gesturestart", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
+    canvas.addEventListener "gesturechange", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
     canvas.addEventListener "contextmenu", ((event) ->
       # suppress context menu for Mac-Firefox
       event.preventDefault()
@@ -15641,11 +15651,11 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
-    # trying to find out whether iOS interprets a touch as a scroll
-    # which would explain why some timers are not fired...
-    window.addEventListener "scroll", ((event) =>
-      nop # nothing to do, I just need this to set an interrupt point.
-    ), false
+
+    # in theory there should be no scroll event on the page
+    # window.addEventListener "scroll", ((event) =>
+    #  nop # nothing to do, I just need this to set an interrupt point.
+    # ), false
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
@@ -16295,6 +16305,14 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchmove", ((event) =>
       @hand.processTouchMove event
     ), false
+    canvas.addEventListener "gesturestart", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
+    canvas.addEventListener "gesturechange", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
     canvas.addEventListener "contextmenu", ((event) ->
       # suppress context menu for Mac-Firefox
       event.preventDefault()
@@ -16339,11 +16357,11 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
-    # trying to find out whether iOS interprets a touch as a scroll
-    # which would explain why some timers are not fired...
-    window.addEventListener "scroll", ((event) =>
-      nop # nothing to do, I just need this to set an interrupt point.
-    ), false
+
+    # in theory there should be no scroll event on the page
+    # window.addEventListener "scroll", ((event) =>
+    #  nop # nothing to do, I just need this to set an interrupt point.
+    # ), false
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
@@ -16778,4 +16796,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-09 20:52:22'
+morphicVersion = 'version of 2013-09-09 21:10:35'

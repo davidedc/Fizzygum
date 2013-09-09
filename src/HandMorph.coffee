@@ -177,6 +177,7 @@ class HandMorph extends Morph
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
+    event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
@@ -184,16 +185,16 @@ class HandMorph extends Morph
       @touchHoldTimeout = setInterval(=>
         @processMouseDown 2 # button 2 is the right one
         @processMouseUp 2 # button 2 is the right one, we don't use this parameter
-        event.preventDefault()
+        event.preventDefault() # I don't think that this is needed
         clearInterval @touchHoldTimeout
-        return
       , 400)
       @processMouseMove event.touches[0].pageX, event.touches[0].pageY # update my position
       @processMouseDown 0 # button zero is the left button
-      event.preventDefault()
-      return
   
   processTouchMove: (event) ->
+    # Prevent scrolling on this element
+    event.preventDefault()
+
     if event.touches.length is 1
       touch = event.touches[0]
       @processMouseMove touch.pageX, touch.pageY
