@@ -202,7 +202,7 @@ class WorldMorph extends FrameMorph
     ), false
     canvas.addEventListener "mouseup", ((event) =>
       event.preventDefault()
-      @hand.processMouseUp event
+      @hand.processMouseUp event.button
     ), false
     canvas.addEventListener "touchend", ((event) =>
       @hand.processTouchEnd event
