@@ -599,7 +599,7 @@ class WorldMorph extends FrameMorph
         versions += ("\n" + module + " (" + modules[module] + ")")  
     if versions isnt ""
       versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
-    @inform "Zombie kernel\n\n" +
+    @inform "Zombie Kernel\n\n" +
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
       "\n\nby Davide Della Casa" +
