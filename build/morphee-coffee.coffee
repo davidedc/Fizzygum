@@ -15625,6 +15625,11 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
+    # trying to find out whether iOS interprets a touch as a scroll
+    # which would explain why some timers are not fired...
+    canvas.addEventListener "scroll", ((event) =>
+      nop # nothing to do, I just need this to set an interrupt point.
+    ), false
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
@@ -16318,6 +16323,11 @@ class WorldMorph extends FrameMorph
       @hand.processMouseScroll event
       event.preventDefault()
     ), false
+    # trying to find out whether iOS interprets a touch as a scroll
+    # which would explain why some timers are not fired...
+    canvas.addEventListener "scroll", ((event) =>
+      nop # nothing to do, I just need this to set an interrupt point.
+    ), false
 
     # snippets of clipboard-handling code taken from
     # http://codebits.glennjones.net/editing/setclipboarddata.htm
@@ -16752,4 +16762,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-09 19:21:35'
+morphicVersion = 'version of 2013-09-09 19:57:59'
