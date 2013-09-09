@@ -213,6 +213,14 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchmove", ((event) =>
       @hand.processTouchMove event
     ), false
+    canvas.addEventListener "gesturestart", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
+    canvas.addEventListener "gesturechange", ((event) =>
+      # Disable browser zoom
+      event.preventDefault()
+    ), false
     canvas.addEventListener "contextmenu", ((event) ->
       # suppress context menu for Mac-Firefox
       event.preventDefault()
