@@ -168,6 +168,8 @@ class HandMorph extends Morph
       morph = morph.parent  until morph[actualClick]
       morph[actualClick] @bounds.origin
   
+  # touch events, see:
+  # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
   processTouchStart: (event) ->
     WorldMorph.MorphicPreferences.isTouchDevice = true
     clearInterval @touchHoldTimeout
@@ -178,10 +180,12 @@ class HandMorph extends Morph
         @processMouseUp button: 2
         event.preventDefault()
         clearInterval @touchHoldTimeout
+        return
       , 400)
       @processMouseMove event.touches[0] # update my position
       @processMouseDown button: 0
       event.preventDefault()
+      return
   
   processTouchMove: (event) ->
     if event.touches.length is 1
