@@ -437,7 +437,7 @@ Keyboard events are:
   - keydown
   - keyup
 
-These are caught by either the Canvas or, in the case of touch devices, by a virtualKeyboard, which is a hidden textbox. Either case, the keyboard events are dispatched to the active keyboardReceiver.
+These are caught by either the Canvas or, in the case of touch devices, by a hidden textbox (which needs to be in focus so that the virtual keyboard is brought up). Either case, the keyboard events are dispatched to the active keyboardReceiver.
 
 Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
