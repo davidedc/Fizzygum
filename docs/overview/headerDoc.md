@@ -57,7 +57,7 @@ The following tree lists all constructors hierarchically, indentation indicating
 - Node
 - Morph
     -  BlinkerMorph
-    -  CursorMorph
+    -  CaretMorph
     -  BouncerMorph*
     -  BoxMorph
     -  InspectorMorph
@@ -437,7 +437,7 @@ The World dispatches the following key events to its active keyboardReceiver:
   - keydown
   - keyup
 
-Currently the only morph which acts as keyboard receiver is CursorMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
+Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
   - processKeyPress(event)
   - processKeyDown(event)
