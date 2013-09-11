@@ -625,6 +625,7 @@ class WorldMorph extends FrameMorph
     # create the new Caret
     @caret = new CaretMorph(aStringMorphOrTextMorph)
     aStringMorphOrTextMorph.parent.add @caret
+    # this is the only place where the @keyboardReceiver is set
     @keyboardReceiver = @caret
     @initVirtualKeyboard()
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
@@ -647,6 +648,7 @@ class WorldMorph extends FrameMorph
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
       @caret.destroy()
       @caret = null
+    # the only place where the @keyboardReceiver is unset
     @keyboardReceiver = null
     if @virtualKeyboard
       @virtualKeyboard.blur()
