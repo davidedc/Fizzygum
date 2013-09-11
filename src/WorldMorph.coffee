@@ -629,6 +629,12 @@ class WorldMorph extends FrameMorph
     @keyboardReceiver = @caret
     @initVirtualKeyboard()
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+      # For touch devices, giving focus on the textbox causes
+      # the keyboard to slide up, and since the page viewport
+      # shrinks, the page is scrolled to where the texbox is.
+      # So, it is important to position the textbox around
+      # where the caret is, so that the changed text is going to
+      # be visible rather than out of the viewport.
       pos = getDocumentPositionOf(@worldCanvas)
       @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
