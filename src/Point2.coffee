@@ -168,14 +168,7 @@ class Point2
   
   
   # Point2 functions:
-  
-  # this function is a bit fishy.
-  # a cross product in 2d is probably not a vector
-  # see https://github.com/jmoenig/morphic.js/issues/6
-  # this function is not used
-  crossProduct: (aPoint2) ->
-    @multiplyBy aPoint2.copy().mirror()
-  
+    
   distanceTo: (aPoint2) ->
     (aPoint2.copy().subtract(@)).r()
   

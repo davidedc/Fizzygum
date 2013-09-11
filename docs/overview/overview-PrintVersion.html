@@ -106,7 +106,7 @@
 <li><p>Morph</p>
 <ul>
 <li><p>BlinkerMorph</p></li>
-<li><p>CursorMorph</p></li>
+<li><p>CaretMorph</p></li>
 <li><p>BouncerMorph*</p></li>
 <li><p>BoxMorph</p></li>
 <li><p>InspectorMorph</p></li>
@@ -178,7 +178,7 @@
 <h1 id="setting-up-words"><a href="#TOC">6. Setting up words</a></h1>
 <p>Morphic.js provides a library for lively GUIs inside single HTML Canvas elements. Each such canvas element functions as a “world” in which other visible shapes (“morphs”) can be positioned and manipulated, often directly and interactively by the user. Morphs are tree nodes and may contain any number of submorphs (“children”).</p>
 <p>All things visible in a morphic World are morphs themselves, i.e. all text rendering, blinking cursors, entry fields, menus, buttons, sliders, windows and dialog boxes etc. are created with morphic.js rather than using HTML DOM elements, and as a consequence can be changed and adjusted by the programmer regardless of proprietary browser behavior.</p>
-<p>Each World has an - invisible - “Hand” resembling the mouse cursor (or the user’s finger on touch screens) which handles mouse events, and may also have a keyboardReceiver to handle key events.</p>
+<p>Each World has an - invisible - “Hand” resembling the mouse cursor (or the user’s finger on touch screens) which handles mouse events, and may also have a keyboardEventsReceiver to handle key events.</p>
 <p>The basic idea of Morphic is to continuously run display cycles and to incrementally update the screen by only redrawing those World regions which have been “dirtied” since the last redraw. Before each shape is processed for redisplay it gets the chance to perform a “step” procedure, thus allowing for an illusion of concurrency.</p>
 <h2 id="setting-up-a-web-page---basics"><a href="#TOC">1. Setting up a web page - basics</a></h2>
 <p>Setting up a web page for Morphic always involves three steps: adding one or more Canvas elements, defining one or more worlds, initializing and starting the main loop.</p>
@@ -460,12 +460,12 @@
 <p>method. Currently there are:</p>
 <ul>
 <li><p>mouse</p></li>
+<li><p>touch</p></li>
 <li><p>drop</p></li>
 <li><p>keyboard</p></li>
 <li><p>(window) resize</p></li>
 </ul>
 <p>events.</p>
-<p>These system events are dispatched within the morphic World by the World’s Hand and its keyboardReceiver (usually the active text cursor).</p>
 <h2 id="mouse-events"><a href="#TOC">8.1 Mouse events</a></h2>
 <p>The Hand dispatches the following mouse events to relevant morphs:</p>
 <ul>
@@ -510,19 +510,20 @@
 droppedText(aString, name)</code></pre>
 <p>events to interested Morphs at the mouse pointer.</p>
 <h2 id="keyboard-events"><a href="#TOC">8.1 Keyboard events</a></h2>
-<p>The World dispatches the following key events to its active keyboardReceiver:</p>
+<p>Keyboard events are:</p>
 <ul>
 <li><p>keypress</p></li>
 <li><p>keydown</p></li>
 <li><p>keyup</p></li>
 </ul>
-<p>Currently the only morph which acts as keyboard receiver is CursorMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for</p>
+<p>These are caught by either the Canvas or, in the case of touch devices, by a hidden textbox (which needs to be in focus so that the virtual keyboard is brought up). Either case, the keyboard events are dispatched to the active keyboardEventsReceiver.</p>
+<p>Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for</p>
 <ul>
 <li><p>processKeyPress(event)</p></li>
 <li><p>processKeyDown(event)</p></li>
 <li><p>processKeyUp(event)</p></li>
 </ul>
-<p>and activate them by assigning your morph to the World’s <strong>keyboardReceiver</strong> property.</p>
+<p>and activate them by assigning your morph to the World’s <strong>keyboardEventsReceiver</strong> property.</p>
 <p>Note that processKeyUp() is optional and doesn’t have to be present if your morph doesn’t require it.</p>
 <h2 id="resize-events"><a href="#TOC">8.3 Resize events</a></h2>
 <p>The Window resize event is handled by the World and allows the World’s extent to be adjusted so that it always completely fills the browser’s visible page. You can turn off this default behavior by setting the World’s <strong>useFillPage</strong> property to false.</p>

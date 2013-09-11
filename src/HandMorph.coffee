@@ -176,6 +176,11 @@ class HandMorph extends Morph
   
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
+  # A long touch emulates a right click. This is done via
+  # setting a timer 400ms after the touch which triggers
+  # a right mouse click. Any touch event before then just
+  # resets the timer, so one has to hold the finger in
+  # position for the right click to happen.
   processTouchStart: (event) ->
     event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
