@@ -33,7 +33,7 @@ class WorldMorph extends FrameMorph
     @isDevMode = false
     @broken = []
     @hand = new HandMorph(@)
-    @keyboardReceiver = null
+    @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
     @activeMenu = null
@@ -154,7 +154,7 @@ class WorldMorph extends FrameMorph
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown", ((event) =>
 
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -163,18 +163,18 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event  
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event  
       event.preventDefault()
     ), false
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
   
@@ -220,7 +220,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
     ), false
     canvas.addEventListener "keydown", ((event) =>
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -229,19 +229,19 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
     #
     canvas.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event    
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
     ), false
     canvas.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
     # Safari, Chrome
@@ -625,8 +625,8 @@ class WorldMorph extends FrameMorph
     # create the new Caret
     @caret = new CaretMorph(aStringMorphOrTextMorph)
     aStringMorphOrTextMorph.parent.add @caret
-    # this is the only place where the @keyboardReceiver is set
-    @keyboardReceiver = @caret
+    # this is the only place where the @keyboardEventsReceiver is set
+    @keyboardEventsReceiver = @caret
     @initVirtualKeyboard()
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
       # For touch devices, giving focus on the textbox causes
@@ -654,8 +654,8 @@ class WorldMorph extends FrameMorph
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
       @caret.destroy()
       @caret = null
-    # the only place where the @keyboardReceiver is unset
-    @keyboardReceiver = null
+    # the only place where the @keyboardEventsReceiver is unset
+    @keyboardEventsReceiver = null
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.blur()
       document.body.removeChild @inputDOMElementForVirtualKeyboard

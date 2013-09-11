@@ -147,7 +147,7 @@ Morphic.js provides a library for lively GUIs inside single HTML Canvas elements
 
 All things visible in a morphic World are morphs themselves, i.e. all text rendering, blinking cursors, entry fields, menus, buttons, sliders, windows and dialog boxes etc. are created with morphic.js rather than using HTML DOM elements, and as a consequence can be changed and adjusted by the programmer regardless of proprietary browser behavior.
 
-Each World has an - invisible - "Hand" resembling the mouse cursor (or the user's finger on touch screens) which handles mouse events, and may also have a keyboardReceiver to handle key events.
+Each World has an - invisible - "Hand" resembling the mouse cursor (or the user's finger on touch screens) which handles mouse events, and may also have a keyboardEventsReceiver to handle key events.
 
 The basic idea of Morphic is to continuously run display cycles and to incrementally update the screen by only redrawing those  World regions which have been "dirtied" since the last redraw. Before each shape is processed for redisplay it gets the chance to perform a "step" procedure, thus allowing for an illusion of concurrency.
 
@@ -437,7 +437,7 @@ Keyboard events are:
   - keydown
   - keyup
 
-These are caught by either the Canvas or, in the case of touch devices, by a hidden textbox (which needs to be in focus so that the virtual keyboard is brought up). Either case, the keyboard events are dispatched to the active keyboardReceiver.
+These are caught by either the Canvas or, in the case of touch devices, by a hidden textbox (which needs to be in focus so that the virtual keyboard is brought up). Either case, the keyboard events are dispatched to the active keyboardEventsReceiver.
 
 Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
@@ -445,7 +445,7 @@ Currently the only morph which acts as keyboard receiver is CaretMorph, the basi
   - processKeyDown(event)
   - processKeyUp(event)
 
-and activate them by assigning your morph to the World's **keyboardReceiver** property.
+and activate them by assigning your morph to the World's **keyboardEventsReceiver** property.
 
 Note that processKeyUp() is optional and doesn't have to be present if your morph doesn't require it.
 
