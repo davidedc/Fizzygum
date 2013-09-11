@@ -210,7 +210,7 @@
       </a>
     </span>
     <span class='desc'>
-      touch events, see: <a href="https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html">https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html</a>
+      touch events, see: <a href="https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html">https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html</a> A long touch emulates a right click.
     </span>
   </li>
   <li>
@@ -537,7 +537,12 @@ reactToDropOf(droppedMorph, handMorph) -&gt; newParent</code></pre>
     </p>
     <div class='docstring'>
   <p>touch events, see:
-<a href="https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html">https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html</a></p>
+<a href="https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html">https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html</a>
+A long touch emulates a right click. This is done via
+setting a timer 400ms after the touch which triggers
+a right mouse click. Any touch event before then just
+resets the timer, so one has to hold the finger in
+position for the right click to happen.</p>
 </div>
 <div class='tags'>
 </div>
@@ -626,7 +631,7 @@ but adding it for consistency...</p>
     </div>
     <div id='footer'>
   Generated on
-  Mon Sep 09 2013 21:11:28 GMT+0100 (BST)
+  Wed Sep 11 2013 20:15:19 GMT+0100 (BST)
   by
   <a href='https://github.com/netzpirat/codo' title='CoffeeScript API documentation generator'>Codo</a>
   v1.6.0

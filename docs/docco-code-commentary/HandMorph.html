@@ -153,7 +153,12 @@ clicked on is not part of a menu.</p>             </td>             <td class="c
       <span class="nv">morph = </span><span class="nx">morph</span><span class="p">.</span><span class="nx">parent</span>  <span class="k">until</span> <span class="nx">morph</span><span class="p">[</span><span class="nx">actualClick</span><span class="p">]</span>
       <span class="nx">morph</span><span class="p">[</span><span class="nx">actualClick</span><span class="p">]</span> <span class="nx">@bounds</span><span class="p">.</span><span class="nx">origin</span>
   </pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>touch events, see:
-https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">processTouchStart: </span><span class="nf">(event) -&gt;</span>
+https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
+A long touch emulates a right click. This is done via
+setting a timer 400ms after the touch which triggers
+a right mouse click. Any touch event before then just
+resets the timer, so one has to hold the finger in
+position for the right click to happen.</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">processTouchStart: </span><span class="nf">(event) -&gt;</span>
     <span class="nx">event</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">()</span>
     <span class="nv">WorldMorph.MorphicPreferences.isTouchDevice = </span><span class="kc">true</span>
     <span class="nx">clearInterval</span> <span class="nx">@touchHoldTimeout</span>

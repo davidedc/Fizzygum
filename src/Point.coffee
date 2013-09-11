@@ -123,9 +123,6 @@ class Point
   
   
   # Point functions:
-  crossProduct: (aPoint) ->
-    @multiplyBy aPoint.mirror()
-  
   distanceTo: (aPoint) ->
     (aPoint.subtract(@)).r()
   
