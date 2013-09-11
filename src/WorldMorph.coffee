@@ -38,7 +38,7 @@ class WorldMorph extends FrameMorph
     @caret = null
     @activeMenu = null
     @activeHandle = null
-    @virtualKeyboard = null
+    @inputDOMElementForVirtualKeyboard = null
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
   
@@ -133,26 +133,26 @@ class WorldMorph extends FrameMorph
   
   # WorldMorph events:
   initVirtualKeyboard: ->
-    if @virtualKeyboard
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    if @inputDOMElementForVirtualKeyboard
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)
       return
-    @virtualKeyboard = document.createElement("input")
-    @virtualKeyboard.type = "text"
-    @virtualKeyboard.style.color = "transparent"
-    @virtualKeyboard.style.backgroundColor = "transparent"
-    @virtualKeyboard.style.border = "none"
-    @virtualKeyboard.style.outline = "none"
-    @virtualKeyboard.style.position = "absolute"
-    @virtualKeyboard.style.top = "0px"
-    @virtualKeyboard.style.left = "0px"
-    @virtualKeyboard.style.width = "0px"
-    @virtualKeyboard.style.height = "0px"
-    @virtualKeyboard.autocapitalize = "none" # iOS specific
-    document.body.appendChild @virtualKeyboard
+    @inputDOMElementForVirtualKeyboard = document.createElement("input")
+    @inputDOMElementForVirtualKeyboard.type = "text"
+    @inputDOMElementForVirtualKeyboard.style.color = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.backgroundColor = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.border = "none"
+    @inputDOMElementForVirtualKeyboard.style.outline = "none"
+    @inputDOMElementForVirtualKeyboard.style.position = "absolute"
+    @inputDOMElementForVirtualKeyboard.style.top = "0px"
+    @inputDOMElementForVirtualKeyboard.style.left = "0px"
+    @inputDOMElementForVirtualKeyboard.style.width = "0px"
+    @inputDOMElementForVirtualKeyboard.style.height = "0px"
+    @inputDOMElementForVirtualKeyboard.autocapitalize = "none" # iOS specific
+    document.body.appendChild @inputDOMElementForVirtualKeyboard
 
-    @virtualKeyboard.addEventListener "keydown", ((event) =>
+    @inputDOMElementForVirtualKeyboard.addEventListener "keydown", ((event) =>
 
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
@@ -166,14 +166,14 @@ class WorldMorph extends FrameMorph
         @keyboardReceiver.processKeyPress event  if @keyboardReceiver
         event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keyup", ((event) =>
+    @inputDOMElementForVirtualKeyboard.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
       if @keyboardReceiver
         if @keyboardReceiver.processKeyUp
           @keyboardReceiver.processKeyUp event  
       event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keypress", ((event) =>
+    @inputDOMElementForVirtualKeyboard.addEventListener "keypress", ((event) =>
       @keyboardReceiver.processKeyPress event  if @keyboardReceiver
       event.preventDefault()
     ), false
@@ -636,9 +636,9 @@ class WorldMorph extends FrameMorph
       # where the caret is, so that the changed text is going to
       # be visible rather than out of the viewport.
       pos = getDocumentPositionOf(@worldCanvas)
-      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
-      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
-      @virtualKeyboard.focus()
+      @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
+      @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
+      @inputDOMElementForVirtualKeyboard.focus()
     if WorldMorph.MorphicPreferences.useSliderForInput
       if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
         @slide aStringMorphOrTextMorph
@@ -656,10 +656,10 @@ class WorldMorph extends FrameMorph
       @caret = null
     # the only place where the @keyboardReceiver is unset
     @keyboardReceiver = null
-    if @virtualKeyboard
-      @virtualKeyboard.blur()
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    if @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard.blur()
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     @worldCanvas.focus()
   
   slide: (aStringMorphOrTextMorph) ->
