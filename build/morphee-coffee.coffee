@@ -4860,6 +4860,11 @@ class HandMorph extends Morph
   
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
+  # A long touch emulates a right click. This is done via
+  # setting a timer 400ms after the touch which triggers
+  # a right mouse click. Any touch event before then just
+  # resets the timer, so one has to hold the finger in
+  # position for the right click to happen.
   processTouchStart: (event) ->
     event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
@@ -5328,6 +5333,11 @@ class HandMorph extends Morph
   
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
+  # A long touch emulates a right click. This is done via
+  # setting a timer 400ms after the touch which triggers
+  # a right mouse click. Any touch event before then just
+  # resets the timer, so one has to hold the finger in
+  # position for the right click to happen.
   processTouchStart: (event) ->
     event.preventDefault()
     WorldMorph.MorphicPreferences.isTouchDevice = true
@@ -10022,9 +10032,6 @@ class Point
   
   
   # Point functions:
-  crossProduct: (aPoint) ->
-    @multiplyBy aPoint.mirror()
-  
   distanceTo: (aPoint) ->
     (aPoint.subtract(@)).r()
   
@@ -10219,9 +10226,6 @@ class Point
   
   
   # Point functions:
-  crossProduct: (aPoint) ->
-    @multiplyBy aPoint.mirror()
-  
   distanceTo: (aPoint) ->
     (aPoint.subtract(@)).r()
   
@@ -10461,14 +10465,7 @@ class Point2
   
   
   # Point2 functions:
-  
-  # this function is a bit fishy.
-  # a cross product in 2d is probably not a vector
-  # see https://github.com/jmoenig/morphic.js/issues/6
-  # this function is not used
-  crossProduct: (aPoint2) ->
-    @multiplyBy aPoint2.copy().mirror()
-  
+    
   distanceTo: (aPoint2) ->
     (aPoint2.copy().subtract(@)).r()
   
@@ -10722,14 +10719,7 @@ class Point2
   
   
   # Point2 functions:
-  
-  # this function is a bit fishy.
-  # a cross product in 2d is probably not a vector
-  # see https://github.com/jmoenig/morphic.js/issues/6
-  # this function is not used
-  crossProduct: (aPoint2) ->
-    @multiplyBy aPoint2.copy().mirror()
-  
+    
   distanceTo: (aPoint2) ->
     (aPoint2.copy().subtract(@)).r()
   
@@ -15410,7 +15400,6 @@ class WorldMorph extends FrameMorph
     @updateRendering()
     @isVisible = true
     @isDraggable = false
-    @currentKey = null # currently pressed key code
     @worldCanvas = aCanvas
 
     # additional properties:
@@ -15420,12 +15409,12 @@ class WorldMorph extends FrameMorph
     @isDevMode = false
     @broken = []
     @hand = new HandMorph(@)
-    @keyboardReceiver = null
+    @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
     @activeMenu = null
     @activeHandle = null
-    @virtualKeyboard = null
+    @inputDOMElementForVirtualKeyboard = null
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
   
@@ -15520,30 +15509,28 @@ class WorldMorph extends FrameMorph
   
   # WorldMorph events:
   initVirtualKeyboard: ->
-    if @virtualKeyboard
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    if @inputDOMElementForVirtualKeyboard
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)
       return
-    @virtualKeyboard = document.createElement("input")
-    @virtualKeyboard.type = "text"
-    @virtualKeyboard.style.color = "transparent"
-    @virtualKeyboard.style.backgroundColor = "transparent"
-    @virtualKeyboard.style.border = "none"
-    @virtualKeyboard.style.outline = "none"
-    @virtualKeyboard.style.position = "absolute"
-    @virtualKeyboard.style.top = "0px"
-    @virtualKeyboard.style.left = "0px"
-    @virtualKeyboard.style.width = "0px"
-    @virtualKeyboard.style.height = "0px"
-    @virtualKeyboard.autocapitalize = "none" # iOS specific
-    document.body.appendChild @virtualKeyboard
+    @inputDOMElementForVirtualKeyboard = document.createElement("input")
+    @inputDOMElementForVirtualKeyboard.type = "text"
+    @inputDOMElementForVirtualKeyboard.style.color = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.backgroundColor = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.border = "none"
+    @inputDOMElementForVirtualKeyboard.style.outline = "none"
+    @inputDOMElementForVirtualKeyboard.style.position = "absolute"
+    @inputDOMElementForVirtualKeyboard.style.top = "0px"
+    @inputDOMElementForVirtualKeyboard.style.left = "0px"
+    @inputDOMElementForVirtualKeyboard.style.width = "0px"
+    @inputDOMElementForVirtualKeyboard.style.height = "0px"
+    @inputDOMElementForVirtualKeyboard.autocapitalize = "none" # iOS specific
+    document.body.appendChild @inputDOMElementForVirtualKeyboard
 
-    @virtualKeyboard.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
+    @inputDOMElementForVirtualKeyboard.addEventListener "keydown", ((event) =>
 
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -15552,21 +15539,18 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keyup", ((event) =>
-      # flush the world's currentKey property
-      @currentKey = null
-      #
+    @inputDOMElementForVirtualKeyboard.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event  
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event  
       event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+    @inputDOMElementForVirtualKeyboard.addEventListener "keypress", ((event) =>
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
   
@@ -15612,9 +15596,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
     ), false
     canvas.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -15623,22 +15605,19 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
     #
-    canvas.addEventListener "keyup", ((event) =>  
-      # flush the world's currentKey property
-      @currentKey = null
-      #
+    canvas.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event    
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
     ), false
     canvas.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
     # Safari, Chrome
@@ -16022,13 +16001,21 @@ class WorldMorph extends FrameMorph
     # create the new Caret
     @caret = new CaretMorph(aStringMorphOrTextMorph)
     aStringMorphOrTextMorph.parent.add @caret
-    @keyboardReceiver = @caret
-    @initVirtualKeyboard()
+    # this is the only place where the @keyboardEventsReceiver is set
+    @keyboardEventsReceiver = @caret
+
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+      @initVirtualKeyboard()
+      # For touch devices, giving focus on the textbox causes
+      # the keyboard to slide up, and since the page viewport
+      # shrinks, the page is scrolled to where the texbox is.
+      # So, it is important to position the textbox around
+      # where the caret is, so that the changed text is going to
+      # be visible rather than out of the viewport.
       pos = getDocumentPositionOf(@worldCanvas)
-      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
-      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
-      @virtualKeyboard.focus()
+      @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
+      @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
+      @inputDOMElementForVirtualKeyboard.focus()
     if WorldMorph.MorphicPreferences.useSliderForInput
       if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
         @slide aStringMorphOrTextMorph
@@ -16044,11 +16031,13 @@ class WorldMorph extends FrameMorph
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
       @caret.destroy()
       @caret = null
-    @keyboardReceiver = null
-    if @virtualKeyboard
-      @virtualKeyboard.blur()
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    # the only place where the @keyboardEventsReceiver is unset
+    # (and the hidden input is removed)
+    @keyboardEventsReceiver = null
+    if @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard.blur()
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     @worldCanvas.focus()
   
   slide: (aStringMorphOrTextMorph) ->
@@ -16116,7 +16105,6 @@ class WorldMorph extends FrameMorph
     @updateRendering()
     @isVisible = true
     @isDraggable = false
-    @currentKey = null # currently pressed key code
     @worldCanvas = aCanvas
 
     # additional properties:
@@ -16126,12 +16114,12 @@ class WorldMorph extends FrameMorph
     @isDevMode = false
     @broken = []
     @hand = new HandMorph(@)
-    @keyboardReceiver = null
+    @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
     @activeMenu = null
     @activeHandle = null
-    @virtualKeyboard = null
+    @inputDOMElementForVirtualKeyboard = null
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
   
@@ -16226,30 +16214,28 @@ class WorldMorph extends FrameMorph
   
   # WorldMorph events:
   initVirtualKeyboard: ->
-    if @virtualKeyboard
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    if @inputDOMElementForVirtualKeyboard
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)
       return
-    @virtualKeyboard = document.createElement("input")
-    @virtualKeyboard.type = "text"
-    @virtualKeyboard.style.color = "transparent"
-    @virtualKeyboard.style.backgroundColor = "transparent"
-    @virtualKeyboard.style.border = "none"
-    @virtualKeyboard.style.outline = "none"
-    @virtualKeyboard.style.position = "absolute"
-    @virtualKeyboard.style.top = "0px"
-    @virtualKeyboard.style.left = "0px"
-    @virtualKeyboard.style.width = "0px"
-    @virtualKeyboard.style.height = "0px"
-    @virtualKeyboard.autocapitalize = "none" # iOS specific
-    document.body.appendChild @virtualKeyboard
+    @inputDOMElementForVirtualKeyboard = document.createElement("input")
+    @inputDOMElementForVirtualKeyboard.type = "text"
+    @inputDOMElementForVirtualKeyboard.style.color = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.backgroundColor = "transparent"
+    @inputDOMElementForVirtualKeyboard.style.border = "none"
+    @inputDOMElementForVirtualKeyboard.style.outline = "none"
+    @inputDOMElementForVirtualKeyboard.style.position = "absolute"
+    @inputDOMElementForVirtualKeyboard.style.top = "0px"
+    @inputDOMElementForVirtualKeyboard.style.left = "0px"
+    @inputDOMElementForVirtualKeyboard.style.width = "0px"
+    @inputDOMElementForVirtualKeyboard.style.height = "0px"
+    @inputDOMElementForVirtualKeyboard.autocapitalize = "none" # iOS specific
+    document.body.appendChild @inputDOMElementForVirtualKeyboard
 
-    @virtualKeyboard.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
+    @inputDOMElementForVirtualKeyboard.addEventListener "keydown", ((event) =>
 
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -16258,21 +16244,18 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keyup", ((event) =>
-      # flush the world's currentKey property
-      @currentKey = null
-      #
+    @inputDOMElementForVirtualKeyboard.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event  
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event  
       event.preventDefault()
     ), false
-    @virtualKeyboard.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+    @inputDOMElementForVirtualKeyboard.addEventListener "keypress", ((event) =>
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
   
@@ -16318,9 +16301,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
     ), false
     canvas.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
-      @keyboardReceiver.processKeyDown event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
@@ -16329,22 +16310,19 @@ class WorldMorph extends FrameMorph
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
     ), false
     #
-    canvas.addEventListener "keyup", ((event) =>  
-      # flush the world's currentKey property
-      @currentKey = null
-      #
+    canvas.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
-      if @keyboardReceiver
-        if @keyboardReceiver.processKeyUp
-          @keyboardReceiver.processKeyUp event    
+      if @keyboardEventsReceiver
+        if @keyboardEventsReceiver.processKeyUp
+          @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
     ), false
     canvas.addEventListener "keypress", ((event) =>
-      @keyboardReceiver.processKeyPress event  if @keyboardReceiver
+      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
     ), false
     # Safari, Chrome
@@ -16728,13 +16706,21 @@ class WorldMorph extends FrameMorph
     # create the new Caret
     @caret = new CaretMorph(aStringMorphOrTextMorph)
     aStringMorphOrTextMorph.parent.add @caret
-    @keyboardReceiver = @caret
-    @initVirtualKeyboard()
+    # this is the only place where the @keyboardEventsReceiver is set
+    @keyboardEventsReceiver = @caret
+
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+      @initVirtualKeyboard()
+      # For touch devices, giving focus on the textbox causes
+      # the keyboard to slide up, and since the page viewport
+      # shrinks, the page is scrolled to where the texbox is.
+      # So, it is important to position the textbox around
+      # where the caret is, so that the changed text is going to
+      # be visible rather than out of the viewport.
       pos = getDocumentPositionOf(@worldCanvas)
-      @virtualKeyboard.style.top = @caret.top() + pos.y + "px"
-      @virtualKeyboard.style.left = @caret.left() + pos.x + "px"
-      @virtualKeyboard.focus()
+      @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
+      @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
+      @inputDOMElementForVirtualKeyboard.focus()
     if WorldMorph.MorphicPreferences.useSliderForInput
       if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
         @slide aStringMorphOrTextMorph
@@ -16750,11 +16736,13 @@ class WorldMorph extends FrameMorph
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
       @caret.destroy()
       @caret = null
-    @keyboardReceiver = null
-    if @virtualKeyboard
-      @virtualKeyboard.blur()
-      document.body.removeChild @virtualKeyboard
-      @virtualKeyboard = null
+    # the only place where the @keyboardEventsReceiver is unset
+    # (and the hidden input is removed)
+    @keyboardEventsReceiver = null
+    if @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard.blur()
+      document.body.removeChild @inputDOMElementForVirtualKeyboard
+      @inputDOMElementForVirtualKeyboard = null
     @worldCanvas.focus()
   
   slide: (aStringMorphOrTextMorph) ->
@@ -16796,4 +16784,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-09 21:10:35'
+morphicVersion = 'version of 2013-09-11 20:14:40'

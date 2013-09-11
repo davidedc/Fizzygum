@@ -117,7 +117,7 @@ The following tree lists all constructors hierarchically, indentation indicating
 
     -  BlinkerMorph
 
-    -  CursorMorph
+    -  CaretMorph
 
     -  BouncerMorph*
 
@@ -297,7 +297,7 @@ All things visible in a morphic World are morphs themselves, i.e. all text rende
 
 
 
-Each World has an - invisible - "Hand" resembling the mouse cursor (or the user's finger on touch screens) which handles mouse events, and may also have a keyboardReceiver to handle key events.
+Each World has an - invisible - "Hand" resembling the mouse cursor (or the user's finger on touch screens) which handles mouse events, and may also have a keyboardEventsReceiver to handle key events.
 
 
 
@@ -693,6 +693,8 @@ method. Currently there are:
 
   - mouse
 
+  - touch
+
   - drop
 
   - keyboard
@@ -704,8 +706,6 @@ method. Currently there are:
 events.
 
 
-
-These system events are dispatched within the morphic World by the World's Hand and its keyboardReceiver (usually the active text cursor).
 
 
 
@@ -865,7 +865,7 @@ events to interested Morphs at the mouse pointer.
 
 
 
-The World dispatches the following key events to its active keyboardReceiver:
+Keyboard events are:
 
 
 
@@ -877,7 +877,11 @@ The World dispatches the following key events to its active keyboardReceiver:
 
 
 
-Currently the only morph which acts as keyboard receiver is CursorMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
+These are caught by either the Canvas or, in the case of touch devices, by a hidden textbox (which needs to be in focus so that the virtual keyboard is brought up). Either case, the keyboard events are dispatched to the active keyboardEventsReceiver.
+
+
+
+Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
 
 
@@ -889,7 +893,7 @@ Currently the only morph which acts as keyboard receiver is CursorMorph, the bas
 
 
 
-and activate them by assigning your morph to the World's **keyboardReceiver** property.
+and activate them by assigning your morph to the World's **keyboardEventsReceiver** property.
 
 
 
