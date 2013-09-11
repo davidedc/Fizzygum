@@ -345,13 +345,13 @@ All user (and system) interaction is triggered by events, which are passed on fr
 method. Currently there are:
 
   - mouse
+  - touch
   - drop
   - keyboard
   - (window) resize
 
 events.
 
-These system events are dispatched within the morphic World by the World's Hand and its keyboardReceiver (usually the active text cursor).
 
 ##8.1 Mouse events##
 
@@ -431,11 +431,13 @@ events to interested Morphs at the mouse pointer.
 
 ##8.1 Keyboard events##
 
-The World dispatches the following key events to its active keyboardReceiver:
+Keyboard events are:
 
   - keypress
   - keydown
   - keyup
+
+These are caught by either the Canvas or, in the case of touch devices, by a virtualKeyboard, which is a hidden textbox. Either case, the keyboard events are dispatched to the active keyboardReceiver.
 
 Currently the only morph which acts as keyboard receiver is CaretMorph, the basic text editing widget. If you wish to add keyboard support to your morph you need to add event handling methods for
 
