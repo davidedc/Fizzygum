@@ -655,6 +655,7 @@ class WorldMorph extends FrameMorph
       @caret.destroy()
       @caret = null
     # the only place where the @keyboardEventsReceiver is unset
+    # (and the hidden input is removed)
     @keyboardEventsReceiver = null
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.blur()
