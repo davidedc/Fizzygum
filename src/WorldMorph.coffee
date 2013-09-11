@@ -24,7 +24,6 @@ class WorldMorph extends FrameMorph
     @updateRendering()
     @isVisible = true
     @isDraggable = false
-    @currentKey = null # currently pressed key code
     @worldCanvas = aCanvas
 
     # additional properties:
@@ -154,8 +153,6 @@ class WorldMorph extends FrameMorph
     document.body.appendChild @virtualKeyboard
 
     @virtualKeyboard.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
 
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
@@ -170,9 +167,6 @@ class WorldMorph extends FrameMorph
         event.preventDefault()
     ), false
     @virtualKeyboard.addEventListener "keyup", ((event) =>
-      # flush the world's currentKey property
-      @currentKey = null
-      #
       # dispatch to keyboard receiver
       if @keyboardReceiver
         if @keyboardReceiver.processKeyUp
@@ -226,8 +220,6 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
     ), false
     canvas.addEventListener "keydown", ((event) =>
-      # remember the keyCode in the world's currentKey property
-      @currentKey = event.keyCode
       @keyboardReceiver.processKeyDown event  if @keyboardReceiver
       #
       # supress backspace override
@@ -241,10 +233,7 @@ class WorldMorph extends FrameMorph
         event.preventDefault()
     ), false
     #
-    canvas.addEventListener "keyup", ((event) =>  
-      # flush the world's currentKey property
-      @currentKey = null
-      #
+    canvas.addEventListener "keyup", ((event) =>
       # dispatch to keyboard receiver
       if @keyboardReceiver
         if @keyboardReceiver.processKeyUp
