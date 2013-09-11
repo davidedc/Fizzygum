@@ -627,8 +627,9 @@ class WorldMorph extends FrameMorph
     aStringMorphOrTextMorph.parent.add @caret
     # this is the only place where the @keyboardEventsReceiver is set
     @keyboardEventsReceiver = @caret
-    @initVirtualKeyboard()
+
     if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+      @initVirtualKeyboard()
       # For touch devices, giving focus on the textbox causes
       # the keyboard to slide up, and since the page viewport
       # shrinks, the page is scrolled to where the texbox is.
