@@ -48,9 +48,36 @@ class MenuMorph extends BoxMorph
       italic,
       doubleClickAction
     ]
+
+  prependItem: (
+      labelString,
+      action,
+      hint,
+      color,
+      bold = false,
+      italic = false,
+      doubleClickAction # optional, when used as list contents
+      ) ->
+    # labelString is normally a single-line string. But it can also be one
+    # of the following:
+    #     * a multi-line string (containing line breaks)
+    #     * an icon (either a Morph or a Canvas)
+    #     * a tuple of format: [icon, string]
+    @items.unshift [
+      localize(labelString or "close"),
+      action or nop,
+      hint,
+      color,
+      bold,
+      italic,
+      doubleClickAction
+    ]
   
   addLine: (width) ->
     @items.push [0, width or 1]
+
+  prependLine: (width) ->
+    @items.unshift [0, width or 1]
   
   createLabel: ->
     @label.destroy()  if @label isnt null
