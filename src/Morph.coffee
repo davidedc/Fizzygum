@@ -926,7 +926,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world

@@ -339,7 +339,7 @@ class TextMorph extends StringMorph
    
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()
