@@ -171,6 +171,8 @@ class MenuMorph extends BoxMorph
     @setPosition pos
     @addShadow new Point(2, 2), 80
     @keepWithin world
+    # keep only one active menu at a time, destroy the
+    # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
     world.activeMenu = @
