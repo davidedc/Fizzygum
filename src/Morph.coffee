@@ -937,6 +937,8 @@ class Morph extends MorphicNode
     parents = @allParents()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
+    # show all the entries of all the developers menus of all
+    # the parents.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
