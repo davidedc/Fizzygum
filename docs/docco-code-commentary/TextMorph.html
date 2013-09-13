@@ -252,12 +252,13 @@ This function assumes that the text is left-justified.</p>             </td>    
     <span class="nx">@updateRendering</span><span class="p">()</span>
     <span class="nx">@changed</span><span class="p">()</span>  
   </pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>TextMorph evaluation:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">evaluationMenu: </span><span class="nf">-&gt;</span>
-    <span class="nv">menu = </span><span class="k">new</span> <span class="nx">MenuMorph</span><span class="p">(</span><span class="nx">@</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;do it&quot;</span><span class="p">,</span> <span class="s">&quot;doIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;show it&quot;</span><span class="p">,</span> <span class="s">&quot;showIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand show the result&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;inspect it&quot;</span><span class="p">,</span> <span class="s">&quot;inspectIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand inspect the result&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addLine</span><span class="p">()</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">addItem</span> <span class="s">&quot;select all&quot;</span><span class="p">,</span> <span class="s">&quot;selectAllAndEdit&quot;</span>
+    <span class="nv">menu = </span><span class="nx">@hierarchyMenu</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependLine</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;select all&quot;</span><span class="p">,</span> <span class="s">&quot;selectAllAndEdit&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependLine</span><span class="p">()</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;inspect it&quot;</span><span class="p">,</span> <span class="s">&quot;inspectIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand inspect the result&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;show it&quot;</span><span class="p">,</span> <span class="s">&quot;showIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand show the result&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;do it&quot;</span><span class="p">,</span> <span class="s">&quot;doIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression&quot;</span>
     <span class="nx">menu</span>
 
   <span class="nv">selectAllAndEdit: </span><span class="nf">-&gt;</span>
