@@ -324,12 +324,13 @@ class TextMorph extends StringMorph
   
   # TextMorph evaluation:
   evaluationMenu: ->
-    menu = new MenuMorph(@, null)
-    menu.addItem "do it", "doIt", "evaluate the\nselected expression"
-    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-    menu.addLine()
-    menu.addItem "select all", "selectAllAndEdit"
+    menu = @hierarchyMenu()
+    menu.prependLine()
+    menu.prependItem "select all", "selectAllAndEdit"
+    menu.prependLine()
+    menu.prependItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
+    menu.prependItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
+    menu.prependItem "do it", "doIt", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
