@@ -942,7 +942,7 @@ class Morph extends MorphicNode
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
-          each.developersMenu().popUpAtHand world
+          each.developersMenu().popUpAtHand @world()
     #  
     menu
   
@@ -955,7 +955,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
-        userMenu.popUpAtHand world
+        userMenu.popUpAtHand @world()
       #
       menu.addLine()
     menu.addItem "color...", (->
@@ -989,7 +989,7 @@ class Morph extends MorphicNode
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand world
+        world.contextMenu().popUpAtHand @world()
       ), "show the\nWorld's menu"
     menu
   
