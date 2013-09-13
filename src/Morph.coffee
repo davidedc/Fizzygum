@@ -621,11 +621,13 @@ class Morph extends MorphicNode
     return root.world  if root instanceof HandMorph
     null
   
+  # attaches submorph ontop
   add: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
   
+  # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
