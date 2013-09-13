@@ -1296,7 +1296,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
@@ -2444,7 +2444,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
@@ -14752,7 +14752,7 @@ class TextMorph extends StringMorph
    
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()
@@ -15110,7 +15110,7 @@ class TextMorph extends StringMorph
    
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()
@@ -16868,4 +16868,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-14 00:22:54'
+morphicVersion = 'version of 2013-09-14 00:40:35'

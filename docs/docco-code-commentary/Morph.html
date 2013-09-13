@@ -763,7 +763,7 @@ I can slide back to it if I'm dropped somewhere else</p>             </td>      
     
   </pre></div>             </td>           </tr>                               <tr id="section-74">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-74">&#182;</a>               </div>               <p>Morph menus ////////////////////////////////////////////////////////////////</p>             </td>             <td class="code">               <div class="highlight"><pre>  
   <span class="nv">contextMenu: </span><span class="nf">-&gt;</span>
-    <span class="k">return</span> <span class="nx">@customContextMenu</span>  <span class="k">if</span> <span class="nx">@customContextMenu</span>
+    <span class="k">return</span> <span class="nx">@customContextMenu</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@customContextMenu</span>
     <span class="nv">world = </span><span class="p">(</span><span class="k">if</span> <span class="nx">@world</span> <span class="k">instanceof</span> <span class="nb">Function</span> <span class="k">then</span> <span class="nx">@world</span><span class="p">()</span> <span class="k">else</span> <span class="p">(</span><span class="nx">@root</span><span class="p">()</span> <span class="o">or</span> <span class="nx">@world</span><span class="p">))</span>
     <span class="k">if</span> <span class="nx">world</span> <span class="o">and</span> <span class="nx">world</span><span class="p">.</span><span class="nx">isDevMode</span>
       <span class="k">return</span> <span class="nx">@developersMenu</span><span class="p">()</span>  <span class="k">if</span> <span class="nx">@parent</span> <span class="o">is</span> <span class="nx">world</span>
