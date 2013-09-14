@@ -254,18 +254,20 @@ This function assumes that the text is left-justified.</p>             </td>    
   </pre></div>             </td>           </tr>                               <tr id="section-31">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-31">&#182;</a>               </div>               <p>TextMorph evaluation:</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">evaluationMenu: </span><span class="nf">-&gt;</span>
     <span class="nv">menu = </span><span class="nx">@hierarchyMenu</span><span class="p">()</span>
     <span class="nx">menu</span><span class="p">.</span><span class="nx">prependLine</span><span class="p">()</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;select all&quot;</span><span class="p">,</span> <span class="s">&quot;selectAllAndEdit&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependLine</span><span class="p">()</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;inspect it&quot;</span><span class="p">,</span> <span class="s">&quot;inspectIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand inspect the result&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;show it&quot;</span><span class="p">,</span> <span class="s">&quot;showIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand show the result&quot;</span>
-    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;do it&quot;</span><span class="p">,</span> <span class="s">&quot;doIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression&quot;</span>
+    <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;select all&quot;</span><span class="p">,</span> <span class="s">&quot;selectAllAndEdit&quot;</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>only show the do it / show it / inspect it entries
+if there is actually something selected.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="nx">@selection</span><span class="p">().</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\s\s*/</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\s\s*$/</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s">&#39;&#39;</span>
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">prependLine</span><span class="p">()</span>
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;inspect it&quot;</span><span class="p">,</span> <span class="s">&quot;inspectIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand inspect the result&quot;</span>
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;show it&quot;</span><span class="p">,</span> <span class="s">&quot;showIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression\nand show the result&quot;</span>
+      <span class="nx">menu</span><span class="p">.</span><span class="nx">prependItem</span> <span class="s">&quot;do it&quot;</span><span class="p">,</span> <span class="s">&quot;doIt&quot;</span><span class="p">,</span> <span class="s">&quot;evaluate the\nselected expression&quot;</span>
     <span class="nx">menu</span>
 
   <span class="nv">selectAllAndEdit: </span><span class="nf">-&gt;</span>
     <span class="nx">@edit</span><span class="p">()</span>
     <span class="nx">@selectAll</span><span class="p">()</span>
-   
-  <span class="nv">setReceiver: </span><span class="nf">(obj) -&gt;</span>
+   </pre></div>             </td>           </tr>                               <tr id="section-33">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-33">&#182;</a>               </div>               <p>this is set by the inspector. It tells the TextMorph
+that any following doIt/showIt/inspectIt action needs to be
+done apropos a particural obj</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nv">setReceiver: </span><span class="nf">(obj) -&gt;</span>
     <span class="vi">@receiver = </span><span class="nx">obj</span>
     <span class="vi">@customContextMenu = </span><span class="nx">@evaluationMenu</span>
   
@@ -277,7 +279,7 @@ This function assumes that the text is left-justified.</p>             </td>    
     <span class="nv">result = </span><span class="nx">@receiver</span><span class="p">.</span><span class="nx">evaluateString</span><span class="p">(</span><span class="nx">@selection</span><span class="p">())</span>
     <span class="k">if</span> <span class="nx">result</span><span class="o">?</span> <span class="k">then</span> <span class="nx">@inform</span> <span class="nx">result</span>
   
-  <span class="nv">inspectIt: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-32">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-32">&#182;</a>               </div>               <p>evaluateString is a pimped-up eval in
+  <span class="nv">inspectIt: </span><span class="nf">-&gt;</span></pre></div>             </td>           </tr>                               <tr id="section-34">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-34">&#182;</a>               </div>               <p>evaluateString is a pimped-up eval in
 the Morph class.</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nv">result = </span><span class="nx">@receiver</span><span class="p">.</span><span class="nx">evaluateString</span><span class="p">(</span><span class="nx">@selection</span><span class="p">())</span>
     <span class="k">if</span> <span class="nx">result</span><span class="o">?</span> <span class="k">then</span> <span class="nx">@spawnInspector</span> <span class="nx">result</span>
 
