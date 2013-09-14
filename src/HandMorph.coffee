@@ -136,6 +136,9 @@ class HandMorph extends Morph
       morph = @morphAtPointer()
       if @world.activeMenu
         unless contains(morph.allParents(), @world.activeMenu)
+          # if there is a menu open and the user clicked on
+          # something that is not part of the menu then
+          # destroy the menu 
           @world.activeMenu.destroy()
         else
           clearInterval @touchHoldTimeout

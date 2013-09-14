@@ -169,6 +169,11 @@ copy = (target) ->
 class MorphicNode
 
   parent: null
+  # "children" is an ordered list. First child is at the
+  # back relative to other children, last child is at the
+  # top. The shadow is added as the first child, and it's
+  # actually a special child that gets drawn before the
+  # others.
   children: null
 
   constructor: (@parent = null, @children = []) ->
@@ -265,6 +270,11 @@ class MorphicNode
 class MorphicNode
 
   parent: null
+  # "children" is an ordered list. First child is at the
+  # back relative to other children, last child is at the
+  # top. The shadow is added as the first child, and it's
+  # actually a special child that gets drawn before the
+  # others.
   children: null
 
   constructor: (@parent = null, @children = []) ->
@@ -981,11 +991,13 @@ class Morph extends MorphicNode
     return root.world  if root instanceof HandMorph
     null
   
+  # attaches submorph ontop
   add: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
   
+  # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
@@ -1284,7 +1296,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
@@ -1295,10 +1307,12 @@ class Morph extends MorphicNode
     parents = @allParents()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
+    # show all the entries of all the developers menus of all
+    # the parents.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
-          each.developersMenu().popUpAtHand world
+          each.developersMenu().popUpAtHand @world()
     #  
     menu
   
@@ -1311,7 +1325,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
-        userMenu.popUpAtHand world
+        userMenu.popUpAtHand @world()
       #
       menu.addLine()
     menu.addItem "color...", (->
@@ -1345,7 +1359,7 @@ class Morph extends MorphicNode
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand world
+        world.contextMenu().popUpAtHand @world()
       ), "show the\nWorld's menu"
     menu
   
@@ -2125,11 +2139,13 @@ class Morph extends MorphicNode
     return root.world  if root instanceof HandMorph
     null
   
+  # attaches submorph ontop
   add: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
   
+  # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
@@ -2428,7 +2444,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
@@ -2439,10 +2455,12 @@ class Morph extends MorphicNode
     parents = @allParents()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
+    # show all the entries of all the developers menus of all
+    # the parents.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
-          each.developersMenu().popUpAtHand world
+          each.developersMenu().popUpAtHand @world()
     #  
     menu
   
@@ -2455,7 +2473,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
-        userMenu.popUpAtHand world
+        userMenu.popUpAtHand @world()
       #
       menu.addLine()
     menu.addItem "color...", (->
@@ -2489,7 +2507,7 @@ class Morph extends MorphicNode
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand world
+        world.contextMenu().popUpAtHand @world()
       ), "show the\nWorld's menu"
     menu
   
@@ -4820,6 +4838,9 @@ class HandMorph extends Morph
       morph = @morphAtPointer()
       if @world.activeMenu
         unless contains(morph.allParents(), @world.activeMenu)
+          # if there is a menu open and the user clicked on
+          # something that is not part of the menu then
+          # destroy the menu 
           @world.activeMenu.destroy()
         else
           clearInterval @touchHoldTimeout
@@ -5293,6 +5314,9 @@ class HandMorph extends Morph
       morph = @morphAtPointer()
       if @world.activeMenu
         unless contains(morph.allParents(), @world.activeMenu)
+          # if there is a menu open and the user clicked on
+          # something that is not part of the menu then
+          # destroy the menu 
           @world.activeMenu.destroy()
         else
           clearInterval @touchHoldTimeout
@@ -8152,9 +8176,36 @@ class MenuMorph extends BoxMorph
       italic,
       doubleClickAction
     ]
+
+  prependItem: (
+      labelString,
+      action,
+      hint,
+      color,
+      bold = false,
+      italic = false,
+      doubleClickAction # optional, when used as list contents
+      ) ->
+    # labelString is normally a single-line string. But it can also be one
+    # of the following:
+    #     * a multi-line string (containing line breaks)
+    #     * an icon (either a Morph or a Canvas)
+    #     * a tuple of format: [icon, string]
+    @items.unshift [
+      localize(labelString or "close"),
+      action or nop,
+      hint,
+      color,
+      bold,
+      italic,
+      doubleClickAction
+    ]
   
   addLine: (width) ->
     @items.push [0, width or 1]
+
+  prependLine: (width) ->
+    @items.unshift [0, width or 1]
   
   createLabel: ->
     @label.destroy()  if @label isnt null
@@ -8275,6 +8326,8 @@ class MenuMorph extends BoxMorph
     @setPosition pos
     @addShadow new Point(2, 2), 80
     @keepWithin world
+    # keep only one active menu at a time, destroy the
+    # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
     world.activeMenu = @
@@ -8345,9 +8398,36 @@ class MenuMorph extends BoxMorph
       italic,
       doubleClickAction
     ]
+
+  prependItem: (
+      labelString,
+      action,
+      hint,
+      color,
+      bold = false,
+      italic = false,
+      doubleClickAction # optional, when used as list contents
+      ) ->
+    # labelString is normally a single-line string. But it can also be one
+    # of the following:
+    #     * a multi-line string (containing line breaks)
+    #     * an icon (either a Morph or a Canvas)
+    #     * a tuple of format: [icon, string]
+    @items.unshift [
+      localize(labelString or "close"),
+      action or nop,
+      hint,
+      color,
+      bold,
+      italic,
+      doubleClickAction
+    ]
   
   addLine: (width) ->
     @items.push [0, width or 1]
+
+  prependLine: (width) ->
+    @items.unshift [0, width or 1]
   
   createLabel: ->
     @label.destroy()  if @label isnt null
@@ -8468,6 +8548,8 @@ class MenuMorph extends BoxMorph
     @setPosition pos
     @addShadow new Point(2, 2), 80
     @keepWithin world
+    # keep only one active menu at a time, destroy the
+    # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
     world.activeMenu = @
@@ -14655,21 +14737,29 @@ class TextMorph extends StringMorph
   
   # TextMorph evaluation:
   evaluationMenu: ->
-    menu = new MenuMorph(@, null)
-    menu.addItem "do it", "doIt", "evaluate the\nselected expression"
-    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-    menu.addLine()
-    menu.addItem "select all", "selectAllAndEdit"
+    menu = @hierarchyMenu()
+    menu.prependLine()
+    menu.prependItem "select all", "selectAllAndEdit"
+
+    # only show the do it / show it / inspect it entries
+    # if there is actually something selected.
+    if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
+      menu.prependLine()
+      menu.prependItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do it", "doIt", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
     @edit()
     @selectAll()
    
+  # this is set by the inspector. It tells the TextMorph
+  # that any following doIt/showIt/inspectIt action needs to be
+  # done apropos a particural obj
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()
@@ -15012,21 +15102,29 @@ class TextMorph extends StringMorph
   
   # TextMorph evaluation:
   evaluationMenu: ->
-    menu = new MenuMorph(@, null)
-    menu.addItem "do it", "doIt", "evaluate the\nselected expression"
-    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-    menu.addLine()
-    menu.addItem "select all", "selectAllAndEdit"
+    menu = @hierarchyMenu()
+    menu.prependLine()
+    menu.prependItem "select all", "selectAllAndEdit"
+
+    # only show the do it / show it / inspect it entries
+    # if there is actually something selected.
+    if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
+      menu.prependLine()
+      menu.prependItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do it", "doIt", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
     @edit()
     @selectAll()
    
+  # this is set by the inspector. It tells the TextMorph
+  # that any following doIt/showIt/inspectIt action needs to be
+  # done apropos a particural obj
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()
@@ -16784,4 +16882,4 @@ class WorldMorph extends FrameMorph
       WorldMorph.MorphicPreferences = standardSettings
   '''
 
-morphicVersion = 'version of 2013-09-11 20:14:40'
+morphicVersion = 'version of 2013-09-14 01:00:07'

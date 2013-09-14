@@ -1,6 +1,11 @@
 class MorphicNode
 
   parent: null
+  # "children" is an ordered list. First child is at the
+  # back relative to other children, last child is at the
+  # top. The shadow is added as the first child, and it's
+  # actually a special child that gets drawn before the
+  # others.
   children: null
 
   constructor: (@parent = null, @children = []) ->

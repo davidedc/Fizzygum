@@ -324,21 +324,29 @@ class TextMorph extends StringMorph
   
   # TextMorph evaluation:
   evaluationMenu: ->
-    menu = new MenuMorph(@, null)
-    menu.addItem "do it", "doIt", "evaluate the\nselected expression"
-    menu.addItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-    menu.addItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-    menu.addLine()
-    menu.addItem "select all", "selectAllAndEdit"
+    menu = @hierarchyMenu()
+    menu.prependLine()
+    menu.prependItem "select all", "selectAllAndEdit"
+
+    # only show the do it / show it / inspect it entries
+    # if there is actually something selected.
+    if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
+      menu.prependLine()
+      menu.prependItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do it", "doIt", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
     @edit()
     @selectAll()
    
+  # this is set by the inspector. It tells the TextMorph
+  # that any following doIt/showIt/inspectIt action needs to be
+  # done apropos a particural obj
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu()
+    @customContextMenu = @evaluationMenu
   
   doIt: ->
     @receiver.evaluateString @selection()

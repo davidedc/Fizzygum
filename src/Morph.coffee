@@ -621,11 +621,13 @@ class Morph extends MorphicNode
     return root.world  if root instanceof HandMorph
     null
   
+  # attaches submorph ontop
   add: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
   
+  # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
@@ -924,7 +926,7 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu  if @customContextMenu
+    return @customContextMenu()  if @customContextMenu
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       return @developersMenu()  if @parent is world
@@ -935,10 +937,12 @@ class Morph extends MorphicNode
     parents = @allParents()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
+    # show all the entries of all the developers menus of all
+    # the parents.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
-          each.developersMenu().popUpAtHand world
+          each.developersMenu().popUpAtHand @world()
     #  
     menu
   
@@ -951,7 +955,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
-        userMenu.popUpAtHand world
+        userMenu.popUpAtHand @world()
       #
       menu.addLine()
     menu.addItem "color...", (->
@@ -985,7 +989,7 @@ class Morph extends MorphicNode
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand world
+        world.contextMenu().popUpAtHand @world()
       ), "show the\nWorld's menu"
     menu
   
