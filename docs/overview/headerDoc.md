@@ -521,7 +521,7 @@ Use switching between user and development modes while you are developing an app
 
 #12 Turtle graphics#
 
-The basic Morphic kernel features a simple LOGO turtle constructor called **PenMorph** , which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its **penTrails()** property, so that it keeps a separate offscreen canvas for pen trails (and doesn't loose these on redraw).
+The basic Morphic kernel features a simple LOGO turtle constructor called **PenMorph** , which you can use to draw onto its parent Morph. By default every Morph in the system (including the World) is able to act as turtle canvas and can display pen trails. Pen trails will be lost whenever the trails morph (the pen's parent) performs a "drawNew()" operation. If you want to create your own pen trails canvas, you may wish to modify its **penTrails()** property, so that it keeps a separate offscreen canvas for pen trails (and doesn't lose these on redraw).
 
 The following properties of PenMorph are relevant for turtle graphics:
 
