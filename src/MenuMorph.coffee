@@ -112,6 +112,8 @@ class MenuMorph extends BoxMorph
     @silentSetExtent new Point(0, 0)
     y = 2
     x = @left() + 4
+
+
     unless @isListContents
       if @title
         @createLabel()
@@ -173,6 +175,8 @@ class MenuMorph extends BoxMorph
     w = Math.max(w, @label.width())  if @label
     w
   
+  # makes all the elements of this menu the
+  # right width.
   adjustWidths: ->
     w = @maxWidth()
     @children.forEach (item) =>
