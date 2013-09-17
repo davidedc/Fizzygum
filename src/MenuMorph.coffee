@@ -135,14 +135,14 @@ class MenuMorph extends BoxMorph
         item.color = @borderColor
         item.setHeight tuple[1]
       else
-        # bubble help hint
         item = new MenuItemMorph(
           @target,
           tuple[1],
           tuple[0],
           @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
-          WorldMorph.MorphicPreferences.menuFontName, @environment,
-          tuple[2],
+          WorldMorph.MorphicPreferences.menuFontName,
+          @environment,
+          tuple[2], # bubble help hint
           tuple[3], # color
           tuple[4], # bold
           tuple[5], # italic
