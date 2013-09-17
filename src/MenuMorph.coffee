@@ -123,17 +123,26 @@ class MenuMorph extends BoxMorph
       else
         y = @top() + 4
     y += 1
+
+    # note that menus can contain:
+    # strings, colorpickers,
+    # sliders, menuItems (which are buttons)
+    # and lines.
     @items.forEach (tuple) =>
       isLine = false
+      # string, color picker and slider
       if tuple instanceof StringFieldMorph or
         tuple instanceof ColorPickerMorph or
         tuple instanceof SliderMorph
           item = tuple
+      # line. A thin Morph is used
+      # to draw the line.
       else if tuple[0] is 0
         isLine = true
         item = new Morph()
         item.color = @borderColor
         item.setHeight tuple[1]
+      # menuItem
       else
         item = new MenuItemMorph(
           @target,
