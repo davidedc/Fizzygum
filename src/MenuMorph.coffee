@@ -11,6 +11,12 @@ class MenuMorph extends BoxMorph
   world: null
   isListContents: false
   closeIcon: null
+  # we need to keep some MenuMorphs in a set
+  # so we need to have a uniqueIDString, these
+  # two properties (one of which static) help
+  # us achieve that.
+  @instancesCounter: 0
+  uniqueIDString: ""
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
     # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
@@ -19,6 +25,15 @@ class MenuMorph extends BoxMorph
     # objects.
     @items = []
     super()
+
+    # this gives us a uniqueIDString that is still unique if one day someone
+    # creates and uses subclasses of MenuMorph (cause the @instancesCounter
+    # would start from zero for eac subclass, but the name of the class is
+    # added to create the uniqueIDString, so it's unique again)
+    @constructor.instancesCounter++
+    # @constructor.name is the name of the class of the object
+    @uniqueIDString = @constructor.name + "-" +@constructor.instancesCounter
+
     @border = null # the Box Morph constructor puts this to 2
     # important not to traverse all the children for stepping through, because
     # there could be a lot of entries for example in the inspector the number
