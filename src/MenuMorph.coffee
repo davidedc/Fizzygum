@@ -10,6 +10,7 @@ class MenuMorph extends BoxMorph
   label: null
   world: null
   isListContents: false
+  closeIcon: null
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
     # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
@@ -162,10 +163,25 @@ class MenuMorph extends BoxMorph
       @add item
       y = y + item.height()
       y += 1  if isLine
-    #
+  
     fb = @boundsIncludingChildren()
     @silentSetExtent fb.extent().add(4)
     @adjustWidths()
+  
+    unless @isListContents
+      # add a close icon only if the menu is not
+      # an embedded list
+      @closeIcon = new CloseCircleButtonMorph()
+      @closeIcon.color = new Color(255, 255, 255)
+      @add @closeIcon
+      @closeIcon.mouseClickLeft = =>
+          @destroy()
+      # close icon
+      @closeIcon.setPosition new Point(@top() - 6, @left() - 6)
+      closeIconScale = 2/3
+      handleSize = WorldMorph.MorphicPreferences.handleSize;
+      @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)
+
     super()
   
   maxWidth: ->
@@ -194,6 +210,9 @@ class MenuMorph extends BoxMorph
         isSelected = (item.image == item.pressImage)
         item.createBackgrounds()
         if isSelected then item.image = item.pressImage          
+      else if item instanceof CloseCircleButtonMorph
+        # do nothing, close button stays its
+        # original width.
       else
         item.updateRendering()
         if item is @label
@@ -209,7 +228,10 @@ class MenuMorph extends BoxMorph
   popup: (world, pos) ->
     @updateRendering()
     @setPosition pos
-    @addShadow new Point(2, 2), 80
+    # avoid shadow when there is the close button,
+    # as it looks aweful because of the added extent...
+    unless @closeIcon?
+      @addShadow new Point(2, 2), 80
     @keepWithin world
     # keep only one active menu at a time, destroy the
     # previous one.
