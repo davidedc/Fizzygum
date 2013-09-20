@@ -161,7 +161,7 @@ class Rectangle
     #
     dx = aRect.right() - @right()  if @right() > aRect.right()
     dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
-    dx = aRect.left() - @right()  if (@left() + dx) < aRect.left()
+    dx = aRect.left() - @left()  if (@left() + dx) < aRect.left()
     dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
     new Point(dx, dy)
   
