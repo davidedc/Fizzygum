@@ -732,12 +732,17 @@ class Morph extends MorphicNode
   
   # Morph duplicating ////////////////////////////////////////////////////
 
+  # creates a new instance of target's type
   clone: (target) ->
-    # answer a new instance of target's type
+    #alert "cloning a " + target.constructor.name
     if typeof target is "object"
       Clone = ->
       Clone:: = target
-      return new Clone()
+      # note that the constructor method is not run!
+      theClone = new Clone()
+      theClone.assignUniqueID()
+      #theClone.constructor()
+      return theClone
     target
 
   shallowCopy: (target) ->
@@ -748,11 +753,15 @@ class Morph extends MorphicNode
     if target instanceof target.constructor and target.constructor isnt Object
       c = @clone(target.constructor::)
       for property of target
-        c[property] = target[property]  if target.hasOwnProperty(property)
+        # there are a couple of properties that we don't want to copy over...
+        if target.hasOwnProperty(property) and property != "instanceNumber"
+          c[property] = target[property]
     else
       c = {}
       for property of target
-        c[property] = target[property]  unless c[property]
+        # there are a couple of properties that we don't want to copy over...
+        unless c[property] or property == "instanceNumber"
+          c[property] = target[property]
     c
   
   copy: ->
@@ -780,7 +789,7 @@ class Morph extends MorphicNode
     dict[@] = c
     @children.forEach (m) ->
       # the result of this loop is that all the children of this
-      # object are copied and attached to the copy of this
+      # object are (recursively) copied and attached to the copy of this
       # object. dict will contain all the mappings between the
       # children of this object and the copied children.
       c.add m.copyRecordingReferences(dict)
