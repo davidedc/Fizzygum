@@ -99,8 +99,7 @@ class ScrollFrameMorph extends FrameMorph
     @contents.adjustBounds()
   
   setContents: (aMorph) ->
-    @contents.children.forEach (m) ->
-      m.destroy()
+    @contents.destroyAll()
     #
     @contents.children = []
     aMorph.setPosition @position().add(@padding + 2)

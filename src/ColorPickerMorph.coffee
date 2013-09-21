@@ -13,8 +13,7 @@ class ColorPickerMorph extends Morph
     @updateRendering()
   
   buildSubmorphs: ->
-    @children.forEach (child) ->
-      child.destroy()
+    @destroyAll()
     @children = []
     @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))

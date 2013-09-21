@@ -116,8 +116,7 @@ class MenuMorph extends BoxMorph
   
   updateRendering: ->
     isLine = false
-    @children.forEach (m) ->
-      m.destroy()
+    @destroyAll()
     #
     @children = []
     unless @isListContents

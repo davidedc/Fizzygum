@@ -28,8 +28,7 @@ class StringFieldMorph extends FrameMorph
   updateRendering: ->
     txt = (if @text then @string() else @defaultContents)
     @text = null
-    @children.forEach (child) ->
-      child.destroy()
+    @destroyAll()
     #
     @children = []
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
