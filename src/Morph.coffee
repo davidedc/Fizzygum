@@ -52,13 +52,14 @@ class Morph extends MorphicNode
   uniqueIDString: () ->
     (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
 
+  assignUniqueID: () ->
     @constructor.instancesCounter++
     @instanceNumber = @constructor.instancesCounter
   
   constructor: () ->
     super()
 
-    @assignUniqueIDs()
+    @assignUniqueID()
 
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
