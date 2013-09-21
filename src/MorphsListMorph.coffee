@@ -19,14 +19,14 @@ class MorphsListMorph extends BoxMorph
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
     @updateRendering()
-    @buildPanes()
+    @buildAndConnectChildren()
   
   setTarget: (target) ->
     @target = target
     @currentProperty = null
-    @buildPanes()
+    @buildAndConnectChildren()
   
-  buildPanes: ->
+  buildAndConnectChildren: ->
     attribs = []
 
     # remove existing panes

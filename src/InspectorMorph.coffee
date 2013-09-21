@@ -28,18 +28,18 @@ class InspectorMorph extends BoxMorph
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
     @updateRendering()
-    @buildPanes()  if @target
+    @buildAndConnectChildren()  if @target
   
   setTarget: (target) ->
     @target = target
     @currentProperty = null
-    @buildPanes()
+    @buildAndConnectChildren()
   
   updateReferences: (dict) ->
     super(dict)
-    @buildPanes()
+    @buildAndConnectChildren()
 
-  buildPanes: ->
+  buildAndConnectChildren: ->
     attribs = []
     #
     # remove existing panes
@@ -245,20 +245,20 @@ class InspectorMorph extends BoxMorph
       menu = new MenuMorph()
       menu.addItem "attributes", =>
         @showing = "attributes"
-        @buildPanes()
+        @buildAndConnectChildren()
       #
       menu.addItem "methods", =>
         @showing = "methods"
-        @buildPanes()
+        @buildAndConnectChildren()
       #
       menu.addItem "all", =>
         @showing = "all"
-        @buildPanes()
+        @buildAndConnectChildren()
       #
       menu.addLine()
       menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
         @markOwnershipOfProperties = not @markOwnershipOfProperties
-        @buildPanes()
+        @buildAndConnectChildren()
       ), "highlight\nownership of properties"
       menu.popUpAtHand @world()
     #
@@ -405,7 +405,7 @@ class InspectorMorph extends BoxMorph
     @prompt "new property name:", ((prop) =>
       if prop
         @target[prop] = null
-        @buildPanes()
+        @buildAndConnectChildren()
         if @target.updateRendering
           @target.changed()
           @target.updateRendering()
@@ -420,7 +420,7 @@ class InspectorMorph extends BoxMorph
         @target[prop] = @currentProperty
       catch err
         @inform err
-      @buildPanes()
+      @buildAndConnectChildren()
       if @target.updateRendering
         @target.changed()
         @target.updateRendering()
@@ -433,7 +433,7 @@ class InspectorMorph extends BoxMorph
       delete (@target[prop])
       #
       @currentProperty = null
-      @buildPanes()
+      @buildAndConnectChildren()
       if @target.updateRendering
         @target.changed()
         @target.updateRendering()
