@@ -220,20 +220,18 @@ class InspectorMorph extends BoxMorph
     @add @detail
     #
     # work ('evaluation') pane
-    # don't refresh the work pane if it already exists
-    if @work is null
-      @work = new ScrollFrameMorph()
-      @work.acceptsDrops = false
-      @work.contents.acceptsDrops = false
-      @work.isTextLineWrapping = true
-      @work.color = new Color(255, 255, 255)
-      @work.hBar.alpha = 0.6
-      @work.vBar.alpha = 0.6
-      ev = new TextMorph("")
-      ev.isEditable = true
-      ev.enableSelecting()
-      ev.setReceiver @target
-      @work.setContents ev
+    @work = new ScrollFrameMorph()
+    @work.acceptsDrops = false
+    @work.contents.acceptsDrops = false
+    @work.isTextLineWrapping = true
+    @work.color = new Color(255, 255, 255)
+    @work.hBar.alpha = 0.6
+    @work.vBar.alpha = 0.6
+    ev = new TextMorph("")
+    ev.isEditable = true
+    ev.enableSelecting()
+    ev.setReceiver @target
+    @work.setContents ev
     @add @work
     #
     # properties button
