@@ -117,7 +117,9 @@ Great care and considerable effort has been taken to make morphic.js runnable an
 
 #5. The big picture#
 
-Morphic.js is completely based on Canvas and JavaScript, it is just Morphic, nothing else. Morphic.js is very basic and covers only the bare essentials:
+The purpose of the Zombie Kernel project is to provide a malleable framework that will let users experiment with lively GUIs. The original morphic.js has been used as a library for the BYOB4 project, a drag-and-drop, blocks based programming language at http://byob.berkeley.edu .
+
+Zombie Kernel is written in CoffeeScript and, like the original Morphic.js is completely based on Canvas. The Morphic implementation is very basic and covers only the bare essentials:
 
 
   * a stepping mechanism (a time-sharing multiplexer for lively user interaction  ontop of a single OS/browser thread)
@@ -136,8 +138,6 @@ Morphic.js is completely based on Canvas and JavaScript, it is just Morphic, not
 In its current state morphic.js doesn't support Transforms (you cannot rotate Morphs), but with PenMorph there already is a simple LOGO-like turtle that you can use to draw onto any Morph it is attached to. I'm planning to add special Morphs that support these operations later on, but not for every Morph in the system.
 Therefore these additions ("sprites" etc.) are likely to be part of other libraries ("microworld.js") in separate files.
 
-
-The purpose of morphic.js is to provide a malleable framework that will let me experiment with lively GUIs for my hobby horse, which is drag-and-drop, blocks based programming languages. Those things (BYOB4 - http://byob.berkeley.edu) will be written using morphic.js as a library.
 
 
 
