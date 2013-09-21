@@ -30,10 +30,8 @@ class WorkspaceMorph extends BoxMorph
   buildPanes: ->
     attribs = []
 
-    # remove existing panes
-    @children.forEach (m) ->
-      # keep work pane around
-      m.destroy()  if m isnt @work
+    # remove existing panes except the work one
+    @destroyAllButWorkPane()
 
     @children = []
 
