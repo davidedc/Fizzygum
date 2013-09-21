@@ -804,11 +804,26 @@ class Morph extends MorphicNode
     #	
     dict = {}
     c = @copyRecordingReferences(dict)
-    c.forAllChildren (m) ->
-      m.updateReferences dict
+    # note that child.updateReferences is invoked
+    # from the bottom up, i.e. from the leaf children up to the
+    # parents. This is important because it means that each
+    # child can properly fix the connections between the "mapped"
+    # children correctly.
+    c.forAllChildren (child) ->
+      child.updateReferences dict
     #
     c
   
+  # if the constructor of the object you are copying performs
+  # some complex building and connecting of the elements,
+  # then you probably need to override this method. For example
+  # in the inspectorMorph the constructor invokes a
+  # "buildAndConnectChildren" function which attached functions
+  # to the list so that the "detail" pane shows the content.
+  # Since those connections are inside callbacks rather than
+  # in properties of the inspector, those are not copied, so
+  # the inspector needs to override this function so it
+  # also calls buildAndConnectChildren
   updateReferences: (dict) ->
     #
     #	Update intra-morph references within a composite morph that has
