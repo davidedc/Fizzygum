@@ -95,7 +95,7 @@ class Morph extends MorphicNode
     # array first pecause we are iterating over an array that changes
     # its values (and length) while we are iterating on it.
     childrenCopy = @children.filter (x) -> true
-    childrenCopy.forEach (child) =>
+    childrenCopy.forEach (child) ->
       child.destroy()
     
   # Morph stepping:
