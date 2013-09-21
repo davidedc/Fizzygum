@@ -772,17 +772,16 @@ class Morph extends MorphicNode
     c
   
   copyRecordingReferences: (dict) ->
-    #
     # Recursively copy this entire composite morph, recording the
     # correspondence between old and new morphs in the given dictionary.
     # This dictionary will be used to update intra-composite references
     # in the copy. See updateReferences().
-    # Note: This default implementation copies ONLY morphs in the
-    # submorph hierarchy. If a morph stores morphs in other properties
-    # that it wants to copy, then it should override this method to do so.
-    # The same goes for morphs that contain other complex data that
-    # should be copied when the morph is duplicated.
-    # 
+    # Note: This default implementation copies morphs in the
+    # submorph hierarchy and in any property. But not, say, in morphs
+    # that are in some deep fields of any property, or in callbacks.
+    # If that's the case then you might want to override this method
+    # and/or the updateReferences method to fix things.
+
     c = @copy()
     # "dict" maps the correspondences from this object to the
     # copy one. So dict[propertyOfThisObject] = propertyOfCopyObject
