@@ -46,14 +46,7 @@ class ColorPaletteMorph extends Morph
         @target.updateRendering()
         @target.changed()
   
-  
-  # ColorPaletteMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.target = (dict[@target])  if c.target and dict[@target]
-    c
-  
+    
   # ColorPaletteMorph menu:
   developersMenu: ->
     menu = super()

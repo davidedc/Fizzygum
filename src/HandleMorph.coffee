@@ -134,15 +134,7 @@ class HandleMorph extends Morph
     @image = @normalImage
     @changed()
   
-  
-  # HandleMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.target = (dict[@target])  if c.target and dict[@target]
-    c
-  
-  
+    
   # HandleMorph menu:
   attach: ->
     choices = @overlappedMorphs()

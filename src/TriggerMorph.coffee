@@ -101,13 +101,6 @@ class TriggerMorph extends Morph
     @add @label
   
   
-  # TriggerMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.label = (dict[@label])  if c.label and dict[@label]
-    c
-  
   
   # TriggerMorph action:
   trigger: ->

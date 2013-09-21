@@ -126,15 +126,7 @@ class FrameMorph extends Morph
   reactToGrabOf: ->
     @adjustBounds()
   
-  
-  # FrameMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.frame = (dict[@scrollFrame])  if c.frame and dict[@scrollFrame]
-    c
-  
-  
+    
   # FrameMorph menus:
   developersMenu: ->
     menu = super()

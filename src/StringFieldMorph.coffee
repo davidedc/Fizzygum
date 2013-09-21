@@ -51,9 +51,3 @@ class StringFieldMorph extends FrameMorph
       @escalateEvent 'mouseClickLeft', pos
   
   
-  # StringFieldMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.text = (dict[@text])  if c.text and dict[@text]
-    c
