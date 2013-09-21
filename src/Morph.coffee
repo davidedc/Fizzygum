@@ -719,9 +719,32 @@ class Morph extends MorphicNode
     false
   
   # Morph duplicating ////////////////////////////////////////////////////
+
+  clone: (target) ->
+    # answer a new instance of target's type
+    if typeof target is "object"
+      Clone = ->
+      Clone:: = target
+      return new Clone()
+    target
+
+  shallowCopy: (target) ->
+    # answer a shallow copy of target
+    return target  if typeof target isnt "object"
+    value = target.valueOf()
+    return new target.constructor(value)  if target isnt value
+    if target instanceof target.constructor and target.constructor isnt Object
+      c = @clone(target.constructor::)
+      for property of target
+        c[property] = target[property]  if target.hasOwnProperty(property)
+    else
+      c = {}
+      for property of target
+        c[property] = target[property]  unless c[property]
+    c
   
   copy: ->
-    c = copy(@)
+    c = @shallowCopy(@)
     c.parent = null
     c.children = []
     c.bounds = @bounds.copy()
