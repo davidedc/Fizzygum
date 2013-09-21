@@ -750,6 +750,30 @@ class Morph extends MorphicNode
     c.bounds = @bounds.copy()
     c
   
+  copyRecordingReferences: (dict) ->
+    #
+    # Recursively copy this entire composite morph, recording the
+    # correspondence between old and new morphs in the given dictionary.
+    # This dictionary will be used to update intra-composite references
+    # in the copy. See updateReferences().
+    # Note: This default implementation copies ONLY morphs in the
+    # submorph hierarchy. If a morph stores morphs in other properties
+    # that it wants to copy, then it should override this method to do so.
+    # The same goes for morphs that contain other complex data that
+    # should be copied when the morph is duplicated.
+    # 
+    c = @copy()
+    # "dict" maps the correspondences from this object to the
+    # copy one. So dict[propertyOfThisObject] = propertyOfCopyObject
+    dict[@] = c
+    @children.forEach (m) ->
+      # the result of this loop is that all the children of this
+      # object are copied and attached to the copy of this
+      # object. dict will contain all the mappings between the
+      # children of this object and the copied children.
+      c.add m.copyRecordingReferences(dict)
+    c
+  
   fullCopy: ->
     #
     #	Produce a copy of me with my entire tree of submorphs. Morphs
@@ -761,25 +785,6 @@ class Morph extends MorphicNode
     c = @copyRecordingReferences(dict)
     c.forAllChildren (m) ->
       m.updateReferences dict
-    #
-    c
-  
-  copyRecordingReferences: (dict) ->
-    #
-    #	Recursively copy this entire composite morph, recording the
-    #	correspondence between old and new morphs in the given dictionary.
-    #	This dictionary will be used to update intra-composite references
-    #	in the copy. See updateReferences().
-    #	Note: This default implementation copies ONLY morphs in the
-    #	submorph hierarchy. If a morph stores morphs in other properties
-    #	that it wants to copy, then it should override this method to do so.
-    #	The same goes for morphs that contain other complex data that
-    #	should be copied when the morph is duplicated.
-    #	
-    c = @copy()
-    dict[@] = c
-    @children.forEach (m) ->
-      c.add m.copyRecordingReferences(dict)
     #
     c
   
