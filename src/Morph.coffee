@@ -4,6 +4,21 @@
 # REQUIRES globalFunctions
 
 class Morph extends MorphicNode
+
+  # we want to keep track of how many instances we have
+  # of each Morph for a few reasons:
+  # 1) it gives us an identifier for each Morph
+  # 2) profiling
+  # 3) generate a uniqueIDString that we can use
+  #    for example for hashtables
+  # each subclass of Morph has its own static
+  # instancesCounter which starts from zero. First object
+  # has instanceNumber of 1.
+  # instanceNumber and uniqueIDString of this object are
+  # initialised in the constructor.
+  @instancesCounter: 0
+  instanceNumber: null
+  uniqueIDString: null
   
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -38,6 +53,11 @@ class Morph extends MorphicNode
   
   constructor: () ->
     super()
+
+    @constructor.instancesCounter++
+    @instanceNumber = @constructor.instancesCounter
+    @uniqueIDString = (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
+
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = new Color(80, 80, 80)
@@ -78,9 +98,7 @@ class Morph extends MorphicNode
   toString: ->
     "a " +
       (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) +
-      " " +
-      @children.length.toString() +
-      " " +
+      " (#" + @instanceNumber + ") " +
       @bounds
   
   

@@ -67,7 +67,8 @@ class StringMorph extends Morph
   
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
-    "a " + (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "(\"" + @text.slice(0, 30) + "...\")"
+    firstPart = super()
+    return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
   
   password: (letter, length) ->
     ans = ""
