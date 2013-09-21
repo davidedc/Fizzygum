@@ -38,8 +38,9 @@ class InspectorMorph extends BoxMorph
   buildPanes: ->
     attribs = []
     #
-    # remove existing panes except the work one
-    @destroyAllButWorkPane()
+    # remove existing panes
+    @destroyAll()
+
     #
     @children = []
     #
