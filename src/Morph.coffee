@@ -14,11 +14,9 @@ class Morph extends MorphicNode
   # each subclass of Morph has its own static
   # instancesCounter which starts from zero. First object
   # has instanceNumber of 1.
-  # instanceNumber and uniqueIDString of this object are
-  # initialised in the constructor.
+  # instanceNumber is initialised in the constructor.
   @instancesCounter: 0
   instanceNumber: null
-  uniqueIDString: null
   
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -50,13 +48,17 @@ class Morph extends MorphicNode
   # for the worldMorph, this only contains the background
   image: null
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
+
+  uniqueIDString: () ->
+    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
+
+    @constructor.instancesCounter++
+    @instanceNumber = @constructor.instancesCounter
   
   constructor: () ->
     super()
 
-    @constructor.instancesCounter++
-    @instanceNumber = @constructor.instancesCounter
-    @uniqueIDString = (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
+    @assignUniqueIDs()
 
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
@@ -97,8 +99,7 @@ class Morph extends MorphicNode
   # Morph string representation: e.g. 'a Morph 2 [20@45 | 130@250]'
   toString: ->
     "a " +
-      (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) +
-      " (#" + @instanceNumber + ") " +
+      @uniqueIDString() + " " +
       @bounds
   
   
