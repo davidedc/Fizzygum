@@ -35,6 +35,10 @@ class InspectorMorph extends BoxMorph
     @currentProperty = null
     @buildPanes()
   
+  updateReferences: (dict) ->
+    super(dict)
+    @buildPanes()
+
   buildPanes: ->
     attribs = []
     #
