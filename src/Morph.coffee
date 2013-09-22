@@ -756,12 +756,16 @@ class Morph extends MorphicNode
         # there are a couple of properties that we don't want to copy over...
         if target.hasOwnProperty(property) and property != "instanceNumber"
           c[property] = target[property]
+          #if target.constructor.name == "SliderMorph"
+          #  alert "copying property: " + property
     else
       c = {}
       for property of target
         # there are a couple of properties that we don't want to copy over...
         unless c[property] or property == "instanceNumber"
           c[property] = target[property]
+          #if target.constructor.name == "SliderMorph"
+          #  alert "copying property2: " + property
     c
   
   copy: ->
@@ -772,20 +776,16 @@ class Morph extends MorphicNode
     c
   
   copyRecordingReferences: (dict) ->
-    # Recursively copy this entire composite morph, recording the
-    # correspondence between old and new morphs in the given dictionary.
-    # This dictionary will be used to update intra-composite references
-    # in the copy. See updateReferences().
-    # Note: This default implementation copies morphs in the
-    # submorph hierarchy and in any property. But not, say, in morphs
-    # that are in some deep fields of any property, or in callbacks.
-    # If that's the case then you might want to override this method
-    # and/or the updateReferences method to fix things.
+    # copies a Morph, its properties and its submorphs. Properties
+    # are shallow-copied, so for example values are actually copied,
+    # objects are recursively descended, but arrays are not deep-copied.
+    # Also builds a correspndence of the morph and its submorphs to their
+    # respective clones.
 
     c = @copy()
     # "dict" maps the correspondences from this object to the
     # copy one. So dict[propertyOfThisObject] = propertyOfCopyObject
-    dict[@] = c
+    dict[@uniqueIDString()] = c
     @children.forEach (m) ->
       # the result of this loop is that all the children of this
       # object are (recursively) copied and attached to the copy of this
@@ -801,6 +801,7 @@ class Morph extends MorphicNode
     #	Other properties are also *shallow* copied, so you must override
     #	to deep copy Arrays and (complex) Objects
     #	
+    #alert "doing a full copy"
     dict = {}
     c = @copyRecordingReferences(dict)
     # note that child.updateReferences is invoked
@@ -808,8 +809,13 @@ class Morph extends MorphicNode
     # parents. This is important because it means that each
     # child can properly fix the connections between the "mapped"
     # children correctly.
+    #alert "### updating references"
+    #alert "number of children: " + c.children.length
     c.forAllChildren (child) ->
+      #alert ">>> updating reference of " + child.toString()
       child.updateReferences dict
+    #alert ">>> updating reference of " + c.toString()
+    c.updateReferences dict
     #
     c
   
@@ -817,7 +823,7 @@ class Morph extends MorphicNode
   # some complex building and connecting of the elements,
   # then you probably need to override this method. For example
   # in the inspectorMorph the constructor invokes a
-  # "buildAndConnectChildren" function which attached functions
+  # "buildAndConnectChildren" function which attached callbacks
   # to the list so that the "detail" pane shows the content.
   # Since those connections are inside callbacks rather than
   # in properties of the inspector, those are not copied, so
@@ -829,9 +835,20 @@ class Morph extends MorphicNode
     #	been copied. For example, if a button refers to morph X in the
     #	orginal composite then the copy of that button in the new composite
     #	should refer to the copy of X in new composite, not the original X.
+    # This is done via scanning all the properties of the object and
+    # checking whether any of those has a mapping. If so, then it is
+    # replaced with its mapping.
     #	
+    #alert "updateReferences of " + @toString()
     for property of @
-      @[property] = dict[property]  if property.isMorph and dict[property]
+      if @[property]?
+        #if property == "button"
+        #  alert "!! property: " + property + " is morph: " + (@[property]).isMorph
+        #  alert "dict[property]: " + dict[(@[property]).uniqueIDString()]
+        if (@[property]).isMorph and dict[(@[property]).uniqueIDString()]
+          #if property == "button"
+          #  alert "!! updating property: " + property + " to: " + dict[(@[property]).uniqueIDString()]
+          @[property] = dict[(@[property]).uniqueIDString()]
   
   
   # Morph dragging and dropping /////////////////////////////////////////
