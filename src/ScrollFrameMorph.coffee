@@ -16,13 +16,14 @@ class ScrollFrameMorph extends FrameMorph
   vBar: null
   hBar: null
 
-  constructor: (contents, scrollBarSize, sliderColor) ->
+  constructor: (@contents, scrollBarSize, @sliderColor) ->
     # super() paints the scrollframe, which we don't want,
     # so we set 0 opacity here.
     @alpha = 0
     super()
     @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize
-    @contents = contents or new FrameMorph(@)
+
+    @contents = new FrameMorph(@) unless @contents?
     @add @contents
 
     # the scrollFrame is never going to paint itself,
@@ -36,19 +37,30 @@ class ScrollFrameMorph extends FrameMorph
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph(null, null, null, null, "horizontal", sliderColor)
+    @hBar = new SliderMorph(null, null, null, null, "horizontal", @sliderColor)
     @hBar.setHeight @scrollBarSize
-    @hBar.action = (num) =>
-      @contents.setPosition new Point(@left() - num, @contents.position().y)
+
     @hBar.isDraggable = false
     @add @hBar
 
-    @vBar = new SliderMorph(null, null, null, null, "vertical", sliderColor)
+    @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.setWidth @scrollBarSize
-    @vBar.action = (num) =>
-      @contents.setPosition new Point(@contents.position().x, @top() - num)
     @vBar.isDraggable = false
     @add @vBar
+
+    @buildAndConnectChildren(@contents, @scrollBarSize, @sliderColor)
+
+  updateReferences: (dict) ->
+    super(dict)
+    @buildAndConnectChildren(@contents, @scrollBarSize, @sliderColor)
+
+
+  buildAndConnectChildren: (@contents, @scrollBarSize, @sliderColor) ->
+    @hBar.action = (num) =>
+      @contents.setPosition new Point(@left() - num, @contents.position().y)
+    @vBar.action = (num) =>
+      @contents.setPosition new Point(@contents.position().x, @top() - num)
+    @adjustScrollBars()
 
 
   setColor: (aColor) ->
@@ -216,19 +228,6 @@ class ScrollFrameMorph extends FrameMorph
     @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x
     @adjustScrollBars()
   
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.contents = (dict[@contents])  if c.contents and dict[@contents]
-    if c.hBar and dict[@hBar]
-      c.hBar = (dict[@hBar])
-      c.hBar.action = (num) ->
-        c.contents.setPosition new Point(c.left() - num, c.contents.position().y)
-    if c.vBar and dict[@vBar]
-      c.vBar = (dict[@vBar])
-      c.vBar.action = (num) ->
-        c.contents.setPosition new Point(c.contents.position().x, c.top() - num)
-    c
   
   developersMenu: ->
     menu = super()

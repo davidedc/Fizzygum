@@ -79,16 +79,7 @@ class SliderMorph extends CircleBoxMorph
         @action.call @target, @value
       else # assume it's a String
         @target[@action] @value
-  
-  
-  # SliderMorph duplicating:
-  copyRecordingReferences: (dict) ->
-    # inherited, see comment in Morph
-    c = super dict
-    c.target = (dict[@target])  if c.target and dict[@target]
-    c.button = (dict[@button])  if c.button and dict[@button]
-    c
-  
+    
   
   # SliderMorph menu:
   developersMenu: ->
