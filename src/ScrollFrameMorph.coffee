@@ -55,6 +55,10 @@ class ScrollFrameMorph extends FrameMorph
     @buildAndConnectChildren(@contents, @scrollBarSize, @sliderColor)
 
 
+  # these callbacks need to be explicitely handled
+  # when the scrollFrameMorph is duplicated, cause otherwise
+  # the old callbacks stick and the new scrollbars keep
+  # scrolling the old content.
   buildAndConnectChildren: (@contents, @scrollBarSize, @sliderColor) ->
     @hBar.action = (num) =>
       @contents.setPosition new Point(@left() - num, @contents.position().y)
