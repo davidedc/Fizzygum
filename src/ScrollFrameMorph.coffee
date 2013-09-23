@@ -41,31 +41,20 @@ class ScrollFrameMorph extends FrameMorph
     @hBar.setHeight @scrollBarSize
 
     @hBar.isDraggable = false
+    @hBar.target = @contents
     @add @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.setWidth @scrollBarSize
     @vBar.isDraggable = false
+    @vBar.target = @contents
     @add @vBar
 
-    @buildAndConnectChildren(@contents, @scrollBarSize, @sliderColor)
-
-  updateReferences: (dict) ->
-    super(dict)
-    @buildAndConnectChildren(@contents, @scrollBarSize, @sliderColor)
-
-
-  # these callbacks need to be explicitely handled
-  # when the scrollFrameMorph is duplicated, cause otherwise
-  # the old callbacks stick and the new scrollbars keep
-  # scrolling the old content.
-  buildAndConnectChildren: (@contents, @scrollBarSize, @sliderColor) ->
-    @hBar.action = (num) =>
-      @contents.setPosition new Point(@left() - num, @contents.position().y)
-    @vBar.action = (num) =>
-      @contents.setPosition new Point(@contents.position().x, @top() - num)
+    @hBar.action = (num, target) =>
+      target.setPosition new Point(target.parent.left() - num, target.position().y)
+    @vBar.action = (num, target) =>
+      target.setPosition new Point(target.position().x, target.parent.top() - num)
     @adjustScrollBars()
-
 
   setColor: (aColor) ->
     # update the color of the scrollFrame - note

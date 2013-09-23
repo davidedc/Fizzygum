@@ -76,7 +76,7 @@ class SliderMorph extends CircleBoxMorph
   updateTarget: ->
     if @action
       if typeof @action is "function"
-        @action.call @target, @value
+        @action.call @target, @value, @target
       else # assume it's a String
         @target[@action] @value
     
