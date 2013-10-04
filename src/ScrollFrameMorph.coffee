@@ -79,7 +79,11 @@ class ScrollFrameMorph extends FrameMorph
     if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize
       @hBar.show()
       @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
-      @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
+      # we check whether the bar has been detached. If it's still
+      # attached then we possibly move it, together with the
+      # scrollframe, otherwise we don't move it.
+      if @hBar.parent == @
+        @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
       @hBar.start = 0
       @hBar.stop = @contents.width() - @width()
       @hBar.size = @width() / @contents.width() * @hBar.stop
@@ -90,7 +94,11 @@ class ScrollFrameMorph extends FrameMorph
     if @contents.height() > @height() + @scrollBarSize
       @vBar.show()
       @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
-      @vBar.setPosition new Point(@right() - @vBar.width(), @top())
+      # we check whether the bar has been detached. If it's still
+      # attached then we possibly move it, together with the
+      # scrollframe, otherwise we don't move it.
+      if @vBar.parent == @
+        @vBar.setPosition new Point(@right() - @vBar.width(), @top())
       @vBar.start = 0
       @vBar.stop = @contents.height() - @height()
       @vBar.size = @height() / @contents.height() * @vBar.stop
