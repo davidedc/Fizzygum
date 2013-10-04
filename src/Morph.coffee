@@ -147,6 +147,7 @@ class Morph extends MorphicNode
       @children.forEach (child) ->
         child.runChildrensStepFunction()
 
+  # not used within Zombie Kernel yet.
   nextSteps: (arrayOfFunctions) ->
     lst = arrayOfFunctions or []
     nxt = lst.shift()
