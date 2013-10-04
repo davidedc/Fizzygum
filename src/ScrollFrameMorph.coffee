@@ -76,36 +76,59 @@ class ScrollFrameMorph extends FrameMorph
     hWidth = @width() - @scrollBarSize
     vHeight = @height() - @scrollBarSize
     @changed()
-    if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize
-      @hBar.show()
-      @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
-      # we check whether the bar has been detached. If it's still
-      # attached then we possibly move it, together with the
-      # scrollframe, otherwise we don't move it.
-      if @hBar.parent == @
-        @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
-      @hBar.start = 0
-      @hBar.stop = @contents.width() - @width()
-      @hBar.size = @width() / @contents.width() * @hBar.stop
-      @hBar.value = @left() - @contents.left()
-      @hBar.updateRendering()
-    else
-      @hBar.hide()
-    if @contents.height() > @height() + @scrollBarSize
-      @vBar.show()
-      @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
-      # we check whether the bar has been detached. If it's still
-      # attached then we possibly move it, together with the
-      # scrollframe, otherwise we don't move it.
-      if @vBar.parent == @
-        @vBar.setPosition new Point(@right() - @vBar.width(), @top())
-      @vBar.start = 0
-      @vBar.stop = @contents.height() - @height()
-      @vBar.size = @height() / @contents.height() * @vBar.stop
-      @vBar.value = @top() - @contents.top()
-      @vBar.updateRendering()
-    else
-      @vBar.hide()
+
+    # this check is to see whether the bar actually belongs to this
+    # scrollframe. The reason why the bar could belong to another
+    # scrollframe is the following: the bar could have been detached
+    # from a scrollframe A. The scrollframe A (which is still fully
+    # working albeit detached) is then duplicated into
+    # a scrollframe B. What happens is that because the bar is not
+    # a child of A (rather, it's only referenced as a property),
+    # the duplication mechanism does not duplicate the bar and it does
+    # not update the reference to it. This is correct because one cannot
+    # just change all the references to other objects that are not children
+    # , a good example being the targets, i.e. if you duplicate a colorPicker
+    # which targets a Morph you want the duplication of the colorPicker to
+    # still change color of that same Morph.
+    # So: the scrollframe B could still reference the scrollbar
+    # detached from A and that causes a problem because changes to B would
+    # change the dimensions and hiding/unhiding of the scrollbar.
+    # So here we avoid that by actually checking what the scrollbar is
+    # attached to.
+    if @hBar.target == @ 
+      if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize
+        @hBar.show()
+        @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
+        # we check whether the bar has been detached. If it's still
+        # attached then we possibly move it, together with the
+        # scrollframe, otherwise we don't move it.
+        if @hBar.parent == @
+          @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
+        @hBar.start = 0
+        @hBar.stop = @contents.width() - @width()
+        @hBar.size = @width() / @contents.width() * @hBar.stop
+        @hBar.value = @left() - @contents.left()
+        @hBar.updateRendering()
+      else
+        @hBar.hide()
+
+    # see comment on equivalent if line above.
+    if @vBar.target == @ 
+      if @contents.height() > @height() + @scrollBarSize
+        @vBar.show()
+        @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
+        # we check whether the bar has been detached. If it's still
+        # attached then we possibly move it, together with the
+        # scrollframe, otherwise we don't move it.
+        if @vBar.parent == @
+          @vBar.setPosition new Point(@right() - @vBar.width(), @top())
+        @vBar.start = 0
+        @vBar.stop = @contents.height() - @height()
+        @vBar.size = @height() / @contents.height() * @vBar.stop
+        @vBar.value = @top() - @contents.top()
+        @vBar.updateRendering()
+      else
+        @vBar.hide()
   
   addContents: (aMorph) ->
     @contents.add aMorph
