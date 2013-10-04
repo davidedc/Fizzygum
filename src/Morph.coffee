@@ -748,25 +748,13 @@ class Morph extends MorphicNode
 
   shallowCopy: (target) ->
     # answer a shallow copy of target
-    return target  if typeof target isnt "object"
-    value = target.valueOf()
-    return new target.constructor(value)  if target isnt value
-    if target instanceof target.constructor and target.constructor isnt Object
-      c = @clone(target.constructor::)
-      for property of target
-        # there are a couple of properties that we don't want to copy over...
-        if target.hasOwnProperty(property) and property != "instanceNumber"
-          c[property] = target[property]
-          #if target.constructor.name == "SliderMorph"
-          #  alert "copying property: " + property
-    else
-      c = {}
-      for property of target
-        # there are a couple of properties that we don't want to copy over...
-        unless c[property] or property == "instanceNumber"
-          c[property] = target[property]
-          #if target.constructor.name == "SliderMorph"
-          #  alert "copying property2: " + property
+    c = @clone(target.constructor::)
+    for property of target
+      # there are a couple of properties that we don't want to copy over...
+      if target.hasOwnProperty(property) and property != "instanceNumber"
+        c[property] = target[property]
+        #if target.constructor.name == "SliderMorph"
+        #  alert "copying property: " + property
     c
   
   copy: ->
@@ -779,7 +767,7 @@ class Morph extends MorphicNode
   copyRecordingReferences: (dict) ->
     # copies a Morph, its properties and its submorphs. Properties
     # are shallow-copied, so for example values are actually copied,
-    # objects are recursively descended, but arrays are not deep-copied.
+    # but arrays are not deep-copied.
     # Also builds a correspndence of the morph and its submorphs to their
     # respective clones.
 
