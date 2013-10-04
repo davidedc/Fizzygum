@@ -41,19 +41,19 @@ class ScrollFrameMorph extends FrameMorph
     @hBar.setHeight @scrollBarSize
 
     @hBar.isDraggable = false
-    @hBar.target = @contents
+    @hBar.target = @
     @add @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.setWidth @scrollBarSize
     @vBar.isDraggable = false
-    @vBar.target = @contents
+    @vBar.target = @
     @add @vBar
 
     @hBar.action = (num, target) =>
-      target.setPosition new Point(target.parent.left() - num, target.position().y)
+      target.contents.setPosition new Point(target.left() - num, target.contents.position().y)
     @vBar.action = (num, target) =>
-      target.setPosition new Point(target.position().x, target.parent.top() - num)
+      target.contents.setPosition new Point(target.contents.position().x, target.top() - num)
     @adjustScrollBars()
 
   setColor: (aColor) ->
