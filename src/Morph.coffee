@@ -480,6 +480,20 @@ class Morph extends MorphicNode
   #	
   recursivelyBlit: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
     return null  unless @isVisible
+
+    # in general, the children of a Morph could be outside the
+    # bounds of the parent (they could also be much larger
+    # then the parent). This means that we have to traverse
+    # all the children to find out whether any of those overlap
+    # the clipping rectangle. Note that we can be smarter with
+    # FrameMorphs, as their children are actually all contained
+    # within the parent's boundary.
+
+    # Note that if we could dynamically and cheaply keep an updated
+    # boundsIncludingChildren property, then we could be smarter
+    # in discarding whole sections of the scene graph.
+    # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
+
     @blit aCanvas, clippingRectangle
     @children.forEach (child) ->
       child.recursivelyBlit aCanvas, clippingRectangle

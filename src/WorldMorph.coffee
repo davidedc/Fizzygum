@@ -65,6 +65,16 @@ class WorldMorph extends FrameMorph
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
+
+    # each broken rectangle requires traversing the scenegraph to
+    # redraw what's overlapping it. Not all Morphs are traversed
+    # in particular the following can stop the recursion:
+    #  - invisible Morphs
+    #  - FrameMorphs that don't overlap the broken rectangle
+    # Since potentially there is a lot of traversal ongoin for
+    # each broken rectangle, one might want to consolidate overlapping
+    # and nearby rectangles.
+
     @broken.forEach (rect) =>
       @recursivelyBlit @worldCanvas, rect  if rect.isNotEmpty()
     @broken = []

@@ -2,7 +2,11 @@
 #| 
 #| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
 #| 
-#| and event handling.
+#| and event handling. 
+#| 
+#| It's a good idea to use me whenever it's clear that there is a  
+#| 
+#| "container"/"contained" scenario going on.
 
 class FrameMorph extends Morph
 
@@ -49,6 +53,34 @@ class FrameMorph extends Morph
   
   recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless @isVisible
+
+    # a FrameMorph has the special property that all of its children
+    # are actually inside its boundary. This allows
+    # us to avoid the further traversal of potentially
+    # many many morphs if we see that the rectangle we
+    # want to blit is outside its frame.
+    # If the rectangle we want to blit is inside the frame
+    # then we do have to continue traversing all the
+    # children of the Frame.
+
+    # This is why as well it's good to use FrameMorphs whenever
+    # it's clear that there is a "container" case. Think
+    # for example that you could stick a big RectangleMorph
+    # (not a Frame) on the desktop and then attach a thousand
+    # CircleBoxMorphs on it. That's a nightmare scenegraph
+    # to *completely* traverse for *any* broken rectangle.
+    # If the RectangleMorph is made into a frame, one can
+    # avoid the traversal for any broken rectangle not
+    # overlapping it.
+
+    # Also note that in theory you could stop recursion on any
+    # FrameMorph completely covered by a large opaque morph
+    # (or on any Morph which boundsIncludingChildren are completely
+    # covered, for that matter). You could
+    # keep for example a list of the top n biggest opaque morphs
+    # (say, frames and rectangles)
+    # and check that case while you traverse the list.
+    # (see https://github.com/davidedc/Zombie-Kernel/issues/149 )
     
     # the part to be redrawn could be outside the frame entirely,
     # in which case we can stop going down the morphs inside the frame
