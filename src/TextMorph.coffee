@@ -44,7 +44,8 @@ class TextMorph extends StringMorph
     @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
     @shadowColor = null
     ) ->
-      super()
+
+      super(text, @fontSize, @fontStyle, @isBold, @isItalic, null, shadowOffset, @shadowColor,null,fontName)
       # override inherited properites:
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
