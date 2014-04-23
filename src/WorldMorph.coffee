@@ -401,39 +401,39 @@ class WorldMorph extends FrameMorph
     else
       menu = new MenuMorph(@, "Morphic")
     if @isDevMode
-      menu.addItem "demo...", "userCreateMorph", "sample morphs"
+      menu.addItem "demo...", (->@userCreateMorph()), "sample morphs"
       menu.addLine()
-      menu.addItem "hide all...", "minimiseAll"
-      menu.addItem "delete all...", "destroyAll"
-      menu.addItem "show all...", "showAllMinimised"
-      menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
-      menu.addItem "inspect...", "inspect", "open a window on\nall properties"
+      menu.addItem "hide all...", (->@minimiseAll())
+      menu.addItem "delete all...", (->@destroyAll())
+      menu.addItem "show all...", (->@showAllMinimised())
+      menu.addItem "move all inside...", (->@keepAllSubmorphsWithin()), "keep all submorphs\nwithin and visible"
+      menu.addItem "inspect...", (->@inspect()), "open a window on\nall properties"
       menu.addLine()
-      menu.addItem "restore display", "changed", "redraw the\nscreen once"
-      menu.addItem "fill page...", "fillPage", "let the World automatically\nadjust to browser resizings"
+      menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
+      menu.addItem "fill page...", (->@fillPage()), "let the World automatically\nadjust to browser resizings"
       if useBlurredShadows
-        menu.addItem "sharp shadows...", "toggleBlurredShadows", "sharp drop shadows\nuse for old browsers"
+        menu.addItem "sharp shadows...", (->@toggleBlurredShadows()), "sharp drop shadows\nuse for old browsers"
       else
-        menu.addItem "blurred shadows...", "toggleBlurredShadows", "blurry shades,\n use for new browsers"
+        menu.addItem "blurred shadows...", (->@toggleBlurredShadows()), "blurry shades,\n use for new browsers"
       menu.addItem "color...", (->
         @pickColor menu.title + "\ncolor:", @setColor, @, @color
       ), "choose the World's\nbackground color"
       if WorldMorph.MorphicPreferences is standardSettings
-        menu.addItem "touch screen settings", "togglePreferences", "bigger menu fonts\nand sliders"
+        menu.addItem "touch screen settings", (->@togglePreferences()), "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", "togglePreferences", "smaller menu fonts\nand sliders"
+        menu.addItem "standard settings", (->@togglePreferences()), "smaller menu fonts\nand sliders"
       menu.addLine()
-    menu.addItem "run system tests",  "runSystemTests", "runs all the system tests"
-    menu.addItem "start test rec",  "startTestRecording", "start recording a test"
-    menu.addItem "stop test rec",  "stopTestRecording", "stop recording the test"
-    menu.addItem "play test",  "startTestPlaying", "start playing the test"
-    menu.addItem "show test source",  "showTestSource", "opens a window with the source of the latest test"
+    menu.addItem "run system tests",  (->@runSystemTests()), "runs all the system tests"
+    menu.addItem "start test rec",  (->@startTestRecording()), "start recording a test"
+    menu.addItem "stop test rec",  (->@stopTestRecording()), "stop recording the test"
+    menu.addItem "play test",  (->@startTestPlaying()), "start playing the test"
+    menu.addItem "show test source",  (->@showTestSource()), "opens a window with the source of the latest test"
     menu.addLine()
     if @isDevMode
-      menu.addItem "user mode...", "toggleDevMode", "disable developers'\ncontext menus"
+      menu.addItem "user mode...", (->@toggleDevMode()), "disable developers'\ncontext menus"
     else
-      menu.addItem "development mode...", "toggleDevMode"
-    menu.addItem "about Zombie Kernel...", "about"
+      menu.addItem "development mode...", (->@toggleDevMode())
+    menu.addItem "about Zombie Kernel...", (->@about())
     menu
 
   startTestRecording: ->

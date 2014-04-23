@@ -292,11 +292,11 @@ class InspectorMorph extends BoxMorph
     @buttonEdit.labelString = "edit..."
     @buttonEdit.action = =>
       menu = new MenuMorph(@)
-      menu.addItem "save", "save", "accept changes"
+      menu.addItem "save", (->@save()), "accept changes"
       menu.addLine()
-      menu.addItem "add property...", "addProperty"
-      menu.addItem "rename...", "renameProperty"
-      menu.addItem "remove...", "removeProperty"
+      menu.addItem "add property...", (->@addProperty())
+      menu.addItem "rename...", (->@renameProperty())
+      menu.addItem "remove...", (->@removeProperty())
       menu.popUpAtHand @world()
     #
     @add @buttonEdit

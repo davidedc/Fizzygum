@@ -1103,23 +1103,23 @@ class Morph extends MorphicNode
         100,
         true
     ), "set this morph's\nalpha value"
-    menu.addItem "resize...", "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
+    menu.addItem "resize...", (->@resize()), "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
     menu.addLine()
     menu.addItem "duplicate", (->
       @fullCopy().pickUp @world()
     ), "make a copy\nand pick it up"
-    menu.addItem "pick up", "pickUp", "disattach and put \ninto the hand"
-    menu.addItem "attach...", "attach", "stick this morph\nto another one"
-    menu.addItem "move...", "move", "show a handle\nwhich can be dragged\nto move this morph"
-    menu.addItem "inspect...", "inspect", "open a window\non all properties"
-    menu.addItem "pic...", (()->window.open(@fullImageData())), "open a new window\nwith a picture of this morph"
+    menu.addItem "pick up", (->@pickUp()), "disattach and put \ninto the hand"
+    menu.addItem "attach...", (->@attach()), "stick this morph\nto another one"
+    menu.addItem "move...", (->@move()), "show a handle\nwhich can be dragged\nto move this morph"
+    menu.addItem "inspect...", (->@inspect()), "open a window\non all properties"
+    menu.addItem "pic...", (->window.open(@fullImageData())), "open a new window\nwith a picture of this morph"
     menu.addLine()
     if @isDraggable
-      menu.addItem "lock", "toggleIsDraggable", "make this morph\nunmovable"
+      menu.addItem "lock", (->@toggleIsDraggable()), "make this morph\nunmovable"
     else
-      menu.addItem "unlock", "toggleIsDraggable", "make this morph\nmovable"
-    menu.addItem "hide", "minimise"
-    menu.addItem "delete", "destroy"
+      menu.addItem "unlock", (->@toggleIsDraggable()), "make this morph\nmovable"
+    menu.addItem "hide", (->@minimise())
+    menu.addItem "delete", (->@destroy())
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->

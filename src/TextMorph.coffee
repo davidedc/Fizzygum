@@ -287,25 +287,25 @@ class TextMorph extends StringMorph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", "edit"
+    menu.addItem "edit", (->@edit())
     menu.addItem "font size...", (->
       @prompt menu.title + "\nfont\nsize:",
         @setFontSize, @, @fontSize.toString(), null, 6, 100, true
     ), "set this Text's\nfont point size"
-    menu.addItem "align left", "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addItem "align right", "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addItem "align center", "setAlignmentToCenter"  if @alignment isnt "center"
+    menu.addItem "align left", (->@setAlignmentToLeft())  if @alignment isnt "left"
+    menu.addItem "align right", (->@setAlignmentToRight())  if @alignment isnt "right"
+    menu.addItem "align center", (->@setAlignmentToCenter())  if @alignment isnt "center"
     menu.addLine()
-    menu.addItem "serif", "setSerif"  if @fontStyle isnt "serif"
-    menu.addItem "sans-serif", "setSansSerif"  if @fontStyle isnt "sans-serif"
+    menu.addItem "serif", (->@setSerif())  if @fontStyle isnt "serif"
+    menu.addItem "sans-serif", (->@setSansSerif())  if @fontStyle isnt "sans-serif"
     if @isBold
-      menu.addItem "normal weight", "toggleWeight"
+      menu.addItem "normal weight", (->@toggleWeight())
     else
-      menu.addItem "bold", "toggleWeight"
+      menu.addItem "bold", (->@toggleWeight())
     if @isItalic
-      menu.addItem "normal style", "toggleItalic"
+      menu.addItem "normal style", (->@toggleItalic())
     else
-      menu.addItem "italic", "toggleItalic"
+      menu.addItem "italic", (->@toggleItalic())
     menu
   
   setAlignmentToLeft: ->

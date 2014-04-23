@@ -55,9 +55,9 @@ class CircleBoxMorph extends Morph
     menu = super()
     menu.addLine()
     if @orientation is "vertical"
-      menu.addItem "horizontal...", "toggleOrientation", "toggle the\norientation"
+      menu.addItem "horizontal...", (->@toggleOrientation()), "toggle the\norientation"
     else
-      menu.addItem "vertical...", "toggleOrientation", "toggle the\norientation"
+      menu.addItem "vertical...", (->@toggleOrientation()), "toggle the\norientation"
     menu
   
   toggleOrientation: ->

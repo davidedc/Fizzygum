@@ -256,9 +256,9 @@ class ScrollFrameMorph extends FrameMorph
   developersMenu: ->
     menu = super()
     if @isTextLineWrapping
-      menu.addItem "auto line wrap off...", "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
+      menu.addItem "auto line wrap off...", (->@toggleTextLineWrapping()), "turn automatic\nline wrapping\noff"
     else
-      menu.addItem "auto line wrap on...", "toggleTextLineWrapping", "enable automatic\nline wrapping"
+      menu.addItem "auto line wrap on...", (->@toggleTextLineWrapping()), "enable automatic\nline wrapping"
     menu
   
   toggleTextLineWrapping: ->
