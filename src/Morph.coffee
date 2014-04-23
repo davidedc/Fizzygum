@@ -430,7 +430,7 @@ class Morph extends MorphicNode
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle = @bounds) ->
-    return null  unless !@isMinimised and @isVisible
+    return null  if @isMinimised or !@isVisible
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
@@ -501,7 +501,7 @@ class Morph extends MorphicNode
   #		}
   #	
   recursivelyBlit: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
-    return null  unless !@isMinimised and @isVisible
+    return null  if @isMinimised or !@isVisible
 
     # in general, the children of a Morph could be outside the
     # bounds of the parent (they could also be much larger
