@@ -1,6 +1,11 @@
 # TriggerMorph ////////////////////////////////////////////////////////
 
-# I provide basic button functionality
+# I provide basic button functionality.
+# All menu items and buttons are TriggerMorphs.
+# The handling of the triggering is not
+# trivial, as the concepts of
+# environment, target and action
+# are used - see comments.
 
 class TriggerMorph extends Morph
 
@@ -104,17 +109,26 @@ class TriggerMorph extends Morph
   
   # TriggerMorph action:
   trigger: ->
+
+    # Here is the pseudocode for the
+    # four cases. The four cases are
+    # further explained later
+    # with example.
     #
-    #	if target is a function, use it as callback:
-    #	execute target as callback function with action as argument
-    #	in the environment as optionally specified.
-    #	Note: if action is also a function, instead of becoming
-    #	the argument itself it will be called to answer the argument.
-    #	for selections, Yes/No Choices etc. As second argument pass
-    # myself, so I can be modified to reflect status changes, e.g.
-    # inside a list box:
+    #	If target is a function:
+    #   use it as callback, i.e.
+    #	  execute target as callback function passing the action as argument
+    #	  (in the environment as optionally specified) (see case 1 below).
     #
-    #	else (if target is not a function):
+    #	  If the action is a function too, then it's evaluated, so the
+    #   callback is passed the result returned from the action.
+    #   (see case 2 below)
+    #
+    #	  As second argument pass
+    #   myself, so I can be modified to reflect status changes, e.g.
+    #   inside a list box
+    #
+    #	else if (target is not a function):
     #
     #		if action is a function:
     #		execute the action with target as environment (can be null)
@@ -126,13 +140,70 @@ class TriggerMorph extends Morph
     #	
     if typeof @target is "function"
       if typeof @action is "function"
+        # case 1
+        # console.log "action invokation case 1"
+        # Example: color morph "Ok" and "Cancel" buttons
+        # I.e.:
+        #    menu.addItem "color...", (->
+        #        @pickColor menu.title + "\ncolor:", @setColor, @, @color
+        #      ), "choose another color \nfor this morph"
+        #    [...]
+        #    addItem: (labelString,action,hint,color,bold = false,italic = false, doubleClickAction)...
+        #    [...]
+        #    @pickColor menu.title + "\ncolor:", @setColor, @, @color
+        #    [...]
+        #    menu.addItem "Ok", ->
+        #      colorPicker.getChoice()
+        #    [...]
+        #    pickColor: (msg, callback, environment, defaultContents) ->
+        #       menu = new MenuMorph(callback or null, msg or "", environment or null)
+        #    [...]
+        #     MenuMorph constructor: (@target, @title = null, @environment = null, @fontSize = null) ...
+        # i.e. a menu is created where the target is the
+        # callback function "setColor"
+        # which means that "Ok" invokes the callback (setColor) with the
+        # result of getChoice (which just returns the selected color).
         @target.call @environment, @action.call(), @
       else
+        # case 2
+        # console.log "action invokation case 2"
+        # case of selecting any entry from the
+        # inspector menu pane on the left
+        # that pane is a ListMorph, which builds a MenuMorph
+        # like so:
+        #   @list = new ListMorph((if @ ...
+        #   [...]
+        #   @list.action = (selected) => ...shows the content in the pane etc.
+        #   [...] in the ListMorph:
+        #   @listContents = new MenuMorph(@select, null, @)
+        #   [...]
+        #   @listContents.addItem @labelGetter(element), element, null, color, bold, italic, @doubleClickAction
+        # so here the  target is "@select" and the action is "element"
         @target.call @environment, @action, @
     else
       if typeof @action is "function"
+        # case 3
+        # console.log "action invokation case 3"
+        # case of all the menu entries from
+        # the world menu
+        # i.e.
+        #   menu = new MenuMorph(@, "Morphic")
+        #   [...]
+        #   menu.addItem "hide all...", (->@minimiseAll())
+        # as you see the target is not a function (@)
+        # but the action is "(->@minimiseAll())"
         @action.call @target
       else # assume it's a String
+        # case 4
+        # console.log "action invokation case 4"
+        # when instead of writing this (case 3):
+        #    menu.addItem "demo...", (->@userCreateMorph()), "sample morphs"
+        # you write:
+        #    menu.addItem "demo...", "userCreateMorph", "sample morphs"
+        # so it's like above but the action is a strind instead of
+        # a function. Note that this version sould be used sparingly
+        # because it's semantically less correct to identify a
+        # function as a string.
         @target[@action]()
 
   triggerDoubleClick: ->
