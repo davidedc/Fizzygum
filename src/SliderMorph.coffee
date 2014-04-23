@@ -27,7 +27,6 @@ class SliderMorph extends CircleBoxMorph
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
   
-  
   # this.updateRendering();
   autoOrientation: ->
       noOperation

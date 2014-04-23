@@ -32,7 +32,7 @@ class HandMorph extends Morph
     result = null
     morphs.forEach (m) =>
       result = m  if m.visibleBounds().containsPoint(@bounds.origin) and
-        result is null and m.isVisible and (m.noticesTransparentClick or
+        result is null and !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
     #
     return result  if result isnt null
@@ -47,7 +47,8 @@ class HandMorph extends Morph
   #	var myself = this;
   #	return this.world.topMorphSuchThat(function (m) {
   #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
-  #			m.isVisible &&
+  #			!m.isMinimised &&
+  #     m.isVisible &&
   #			(m.noticesTransparentClick ||
   #				(! m.isTransparentAt(myself.bounds.origin))) &&
   #			(! (m instanceof ShadowMorph));
@@ -57,7 +58,7 @@ class HandMorph extends Morph
   allMorphsAtPointer: ->
     morphs = @world.allChildren()
     morphs.filter (m) =>
-      m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
+      !m.isMinimised and m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
   
   
   

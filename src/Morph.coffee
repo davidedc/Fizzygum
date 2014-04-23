@@ -33,7 +33,29 @@ class Morph extends MorphicNode
   cachedTexture: null # internal cache of actual bg image
   lastTime: null
   alpha: 1
+
+  # for a Morph, being visible and minimised
+  # are two separate things.
+  # isVisible means that the morph is meant to show
+  #  as empty or without any surface. For example
+  #  a scrollbar "collapses" itself when there is no
+  #  content to scroll and puts its isVisible = false
+  # isMinimised means that the morph, whatever its
+  #  content or appearance or design, is not drawn
+  #  on the desktop. So a minimised or unminimised scrollbar
+  #  can be independently either visible or not.
+  # If we merge the two flags into one, then the
+  # following happens: "hiding" a morph causes the
+  # scrollbars in it to hide. Unhiding it causes the
+  # scrollbars to show, even if they should be invisible.
+  # Hence the need of two separate flags.
+  # Also, it's semantically two
+  # separate reasons of why a morph is not being
+  # painted on screen, so it makes sense to have
+  # two separate flags.
+  isMinimised: false
   isVisible: true
+
   isDraggable: false
   isTemplate: false
   acceptsDrops: false
@@ -224,7 +246,7 @@ class Morph extends MorphicNode
   boundsIncludingChildren: ->
     result = @bounds
     @children.forEach (child) ->
-      result = result.merge(child.boundsIncludingChildren())  if child.isVisible
+      result = result.merge(child.boundsIncludingChildren())  if !child.isMinimised and child.isVisible
     #
     result
   
@@ -232,7 +254,7 @@ class Morph extends MorphicNode
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
-      if (child not instanceof ShadowMorph) and (child.isVisible)
+      if (child not instanceof ShadowMorph) and (!child.isMinimised) and (child.isVisible)
         result = result.merge(child.boundsIncludingChildren())
     #
     result
@@ -408,7 +430,7 @@ class Morph extends MorphicNode
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle = @bounds) ->
-    return null  unless @isVisible
+    return null  unless !@isMinimised and @isVisible
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
@@ -479,7 +501,7 @@ class Morph extends MorphicNode
   #		}
   #	
   recursivelyBlit: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
-    return null  unless @isVisible
+    return null  unless !@isMinimised and @isVisible
 
     # in general, the children of a Morph could be outside the
     # bounds of the parent (they could also be much larger
@@ -498,23 +520,34 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       child.recursivelyBlit aCanvas, clippingRectangle
   
-  
+
   hide: ->
     @isVisible = false
     @changed()
     @children.forEach (child) ->
       child.hide()
-  
-  
+
   show: ->
     @isVisible = true
     @changed()
     @children.forEach (child) ->
       child.show()
   
+  minimise: ->
+    @isMinimised = true
+    @changed()
+    @children.forEach (child) ->
+      child.minimise()
+  
+  unminimise: ->
+    @isMinimised = false
+    @changed()
+    @children.forEach (child) ->
+      child.unminimise()
+  
   
   toggleVisibility: ->
-    @isVisible = (not @isVisible)
+    @isMinimised = (not @isMinimised)
     @changed()
     @children.forEach (child) ->
       child.toggleVisibility()
@@ -721,7 +754,8 @@ class Morph extends MorphicNode
     allChildren = @allChildren()
     morphs = world.allChildren()
     morphs.filter (m) =>
-      m.isVisible and
+      !m.isMinimised and
+        m.isVisible and
         m isnt @ and
         m isnt world and
         not contains(allParents, m) and
@@ -1084,7 +1118,7 @@ class Morph extends MorphicNode
       menu.addItem "lock", "toggleIsDraggable", "make this morph\nunmovable"
     else
       menu.addItem "unlock", "toggleIsDraggable", "make this morph\nmovable"
-    menu.addItem "hide", "hide"
+    menu.addItem "hide", "minimise"
     menu.addItem "delete", "destroy"
     unless @ instanceof WorldMorph
       menu.addLine()

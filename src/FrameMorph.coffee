@@ -52,7 +52,7 @@ class FrameMorph extends Morph
   #  @image
   
   recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
-    return null  unless @isVisible
+    return null  unless (!@isMinimised and @isVisible)
 
     # a FrameMorph has the special property that all of its children
     # are actually inside its boundary. This allows

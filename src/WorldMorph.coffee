@@ -22,7 +22,7 @@ class WorldMorph extends FrameMorph
     @alpha = 1
     @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
     @updateRendering()
-    @isVisible = true
+    @isMinimised = false
     @isDraggable = false
     @worldCanvas = aCanvas
 
@@ -403,9 +403,9 @@ class WorldMorph extends FrameMorph
     if @isDevMode
       menu.addItem "demo...", "userCreateMorph", "sample morphs"
       menu.addLine()
-      menu.addItem "hide all...", "hideAll"
+      menu.addItem "hide all...", "minimiseAll"
       menu.addItem "delete all...", "destroyAll"
-      menu.addItem "show all...", "showAllHiddens"
+      menu.addItem "show all...", "showAllMinimised"
       menu.addItem "move all inside...", "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addItem "inspect...", "inspect", "open a window on\nall properties"
       menu.addLine()
@@ -596,13 +596,13 @@ class WorldMorph extends FrameMorph
   toggleDevMode: ->
     @isDevMode = not @isDevMode
   
-  hideAll: ->
+  minimiseAll: ->
     @children.forEach (child) ->
-      child.hide()
+      child.minimise()
   
-  showAllHiddens: ->
+  showAllMinimised: ->
     @forAllChildren (child) ->
-      child.show()  unless child.isVisible
+      child.unminimise()  unless !child.isMinimised
   
   about: ->
     versions = ""
