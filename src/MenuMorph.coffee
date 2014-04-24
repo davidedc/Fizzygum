@@ -84,14 +84,14 @@ class MenuMorph extends BoxMorph
   createLabel: ->
     @label.destroy()  if @label isnt null
     text = new TextMorph(localize(@title),
-      @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
-      WorldMorph.MorphicPreferences.menuFontName, true, false, "center")
+      @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
+      WorldMorph.preferencesAndSettings.menuFontName, true, false, "center")
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
     text.backgroundColor = @borderColor
     text.updateRendering()
     @label = new BoxMorph(3, 0)
-    if WorldMorph.MorphicPreferences.isFlat
+    if WorldMorph.preferencesAndSettings.isFlat
       @label.edge = 0
     @label.color = @borderColor
     @label.borderColor = @borderColor
@@ -106,8 +106,8 @@ class MenuMorph extends BoxMorph
     #
     @children = []
     unless @isListContents
-      @edge = if WorldMorph.MorphicPreferences.isFlat then 0 else 5
-      @border = if WorldMorph.MorphicPreferences.isFlat then 1 else 2
+      @edge = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
+      @border = if WorldMorph.preferencesAndSettings.isFlat then 1 else 2
     @color = new Color(255, 255, 255)
     @borderColor = new Color(60, 60, 60)
     @silentSetExtent new Point(0, 0)
@@ -149,8 +149,8 @@ class MenuMorph extends BoxMorph
           @target,
           tuple[1],
           tuple[0],
-          @fontSize or WorldMorph.MorphicPreferences.menuFontSize,
-          WorldMorph.MorphicPreferences.menuFontName,
+          @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
+          WorldMorph.preferencesAndSettings.menuFontName,
           @environment,
           tuple[2], # bubble help hint
           tuple[3], # color
@@ -179,7 +179,7 @@ class MenuMorph extends BoxMorph
       # close icon
       @closeIcon.setPosition new Point(@top() - 6, @left() - 6)
       closeIconScale = 2/3
-      handleSize = WorldMorph.MorphicPreferences.handleSize;
+      handleSize = WorldMorph.preferencesAndSettings.handleSize;
       @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)
 
     super()

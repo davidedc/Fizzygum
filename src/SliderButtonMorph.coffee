@@ -30,17 +30,17 @@ class SliderButtonMorph extends CircleBoxMorph
   updateRendering: ->
     colorBak = @color.copy()
     super()
-    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
       @drawEdges()
     @normalImage = @image
     @color = @highlightColor.copy()
     super()
-    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
       @drawEdges()
     @highlightImage = @image
     @color = @pressColor.copy()
     super()
-    if @is3D or !WorldMorph.MorphicPreferences.isFlat
+    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
       @drawEdges()
     @pressImage = @image
     @color = colorBak

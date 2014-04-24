@@ -2,7 +2,7 @@
 
 # these comments below needed to figure our dependencies between classes
 # REQUIRES globalFunctions
-# REQUIRES globalSettings
+# REQUIRES PreferencesAndSettings
 
 # I represent the <canvas> element
 class WorldMorph extends FrameMorph
@@ -11,13 +11,15 @@ class WorldMorph extends FrameMorph
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)
-  @MorphicPreferences: standardSettings
+  @preferencesAndSettings: null
   @currentTime: null
   @showRedraws: false
   systemTestsRecorderAndPlayer: null
 
   constructor: (aCanvas, fillPage) ->
     super()
+    WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
+    console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
     @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
@@ -146,7 +148,7 @@ class WorldMorph extends FrameMorph
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = null
-    unless (WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard)
+    unless (WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard)
       return
     @inputDOMElementForVirtualKeyboard = document.createElement("input")
     @inputDOMElementForVirtualKeyboard.type = "text"
@@ -411,17 +413,17 @@ class WorldMorph extends FrameMorph
       menu.addLine()
       menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
       menu.addItem "fill page...", (->@fillPage()), "let the World automatically\nadjust to browser resizings"
-      if useBlurredShadows
-        menu.addItem "sharp shadows...", (->@toggleBlurredShadows()), "sharp drop shadows\nuse for old browsers"
+      if WorldMorph.preferencesAndSettings.useBlurredShadows
+        menu.addItem "sharp shadows...", (->WorldMorph.preferencesAndSettings.toggleBlurredShadows()), "sharp drop shadows\nuse for old browsers"
       else
-        menu.addItem "blurred shadows...", (->@toggleBlurredShadows()), "blurry shades,\n use for new browsers"
+        menu.addItem "blurred shadows...", (->WorldMorph.preferencesAndSettings.toggleBlurredShadows()), "blurry shades,\n use for new browsers"
       menu.addItem "color...", (->
         @pickColor menu.title + "\ncolor:", @setColor, @, @color
       ), "choose the World's\nbackground color"
-      if WorldMorph.MorphicPreferences is standardSettings
-        menu.addItem "touch screen settings", (->@togglePreferences()), "bigger menu fonts\nand sliders"
+      if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
+        menu.addItem "touch screen settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", (->@togglePreferences()), "smaller menu fonts\nand sliders"
+        menu.addItem "standard settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
       menu.addLine()
     menu.addItem "run system tests",  (->@runSystemTests()), "runs all the system tests"
     menu.addItem "start test rec",  (->@startTestRecording()), "start recording a test"
@@ -632,7 +634,7 @@ class WorldMorph extends FrameMorph
     # this is the only place where the @keyboardEventsReceiver is set
     @keyboardEventsReceiver = @caret
 
-    if WorldMorph.MorphicPreferences.isTouchDevice and WorldMorph.MorphicPreferences.useVirtualKeyboard
+    if WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard
       @initVirtualKeyboard()
       # For touch devices, giving focus on the textbox causes
       # the keyboard to slide up, and since the page viewport
@@ -644,7 +646,7 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @inputDOMElementForVirtualKeyboard.focus()
-    if WorldMorph.MorphicPreferences.useSliderForInput
+    if WorldMorph.preferencesAndSettings.useSliderForInput
       if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
         @slide aStringMorphOrTextMorph
   
@@ -681,8 +683,8 @@ class WorldMorph extends FrameMorph
     slider.button.highlightColor.b += 100
     slider.button.pressColor = slider.button.color.copy()
     slider.button.pressColor.b += 150
-    slider.silentSetHeight WorldMorph.MorphicPreferences.scrollBarSize
-    slider.silentSetWidth WorldMorph.MorphicPreferences.menuFontSize * 10
+    slider.silentSetHeight WorldMorph.preferencesAndSettings.scrollBarSize
+    slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
     slider.updateRendering()
     slider.action = (num) ->
       aStringMorphOrTextMorph.changed()
@@ -697,11 +699,4 @@ class WorldMorph extends FrameMorph
     menu.items.push slider
     menu.popup @, aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   
-  toggleBlurredShadows: ->
-    useBlurredShadows = not useBlurredShadows
   
-  togglePreferences: ->
-    if WorldMorph.MorphicPreferences is standardSettings
-      WorldMorph.MorphicPreferences = touchScreenSettings
-    else
-      WorldMorph.MorphicPreferences = standardSettings

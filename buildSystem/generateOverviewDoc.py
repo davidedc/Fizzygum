@@ -45,7 +45,7 @@ COMMON_FILES = [
 'src/GrayPaletteMorph.coffee',
 'src/ColorPickerMorph.coffee',
 'src/ColorPaletteMorph.coffee',
-'src/globalSettings.coffee',
+'src/PreferencesAndSettings.coffee',
 'src/BlinkerMorph.coffee',
 'src/MouseSensorMorph.coffee',
 'src/ShadowMorph.coffee',

@@ -21,7 +21,7 @@ class ScrollFrameMorph extends FrameMorph
     # so we set 0 opacity here.
     @alpha = 0
     super()
-    @scrollBarSize = scrollBarSize or WorldMorph.MorphicPreferences.scrollBarSize
+    @scrollBarSize = scrollBarSize or WorldMorph.preferencesAndSettings.scrollBarSize
 
     @contents = new FrameMorph(@) unless @contents?
     @add @contents
@@ -96,7 +96,7 @@ class ScrollFrameMorph extends FrameMorph
     # So here we avoid that by actually checking what the scrollbar is
     # attached to.
     if @hBar.target == @ 
-      if @contents.width() > @width() + WorldMorph.MorphicPreferences.scrollBarSize
+      if @contents.width() > @width() + WorldMorph.preferencesAndSettings.scrollBarSize
         @hBar.show()
         @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
@@ -202,7 +202,7 @@ class ScrollFrameMorph extends FrameMorph
       @adjustScrollBars()
   
   startAutoScrolling: ->
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
+    inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     world = @world()
     return null  unless world
     hand = world.hand
@@ -220,7 +220,7 @@ class ScrollFrameMorph extends FrameMorph
   
   autoScroll: (pos) ->
     return null  if Date.now() - @autoScrollTrigger < 500
-    inset = WorldMorph.MorphicPreferences.scrollBarSize * 3
+    inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     area = @topLeft().extent(new Point(@width(), inset))
     @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
     area = @topLeft().extent(new Point(inset, @height()))
@@ -248,8 +248,8 @@ class ScrollFrameMorph extends FrameMorph
 
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
-    @scrollY y * WorldMorph.MorphicPreferences.mouseScrollAmount  if y
-    @scrollX x * WorldMorph.MorphicPreferences.mouseScrollAmount  if x
+    @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount  if y
+    @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  if x
     @adjustScrollBars()
   
   

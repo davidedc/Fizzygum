@@ -1,6 +1,7 @@
 # StringMorph /////////////////////////////////////////////////////////
 
 # A StringMorph is a single line of text. It can only be left-aligned.
+# REQUIRES WorldMorph
 
 class StringMorph extends Morph
 
@@ -55,7 +56,7 @@ class StringMorph extends Morph
       ) ->
     # additional properties:
     @text = text or ((if (text is "") then "" else "StringMorph"))
-    @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
+    @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
     @shadowOffset = shadowOffset or new Point(0, 0)
     #
     super()

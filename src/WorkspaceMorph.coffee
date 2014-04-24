@@ -12,8 +12,8 @@ class WorkspaceMorph extends BoxMorph
     super()
 
     @silentSetExtent new Point(
-      WorldMorph.MorphicPreferences.handleSize * 10,
-      WorldMorph.MorphicPreferences.handleSize * 20 * 2 / 3)
+      WorldMorph.preferencesAndSettings.handleSize * 10,
+      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @isDraggable = true
     @border = 1
     @edge = 5
@@ -37,7 +37,7 @@ class WorkspaceMorph extends BoxMorph
 
     # label
     @label = new TextMorph("Morphs List")
-    @label.fontSize = WorldMorph.MorphicPreferences.menuFontSize
+    @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
     @label.updateRendering()
@@ -92,7 +92,7 @@ class WorkspaceMorph extends BoxMorph
   fixLayout: ->
     Morph::trackChanges = false
 
-    handleSize = WorldMorph.MorphicPreferences.handleSize;
+    handleSize = WorldMorph.preferencesAndSettings.handleSize;
 
     x = @left() + @edge
     y = @top() + @edge

@@ -45,7 +45,7 @@ class MenuItemMorph extends TriggerMorph
       src = icon.image
       icon.image = newCanvas(
         source.fullBounds().extent().subtract(
-          @shadowBlur * ((if useBlurredShadows then 1 else 2))))
+          @shadowBlur * ((if WorldMorph.preferencesAndSettings.useBlurredShadows then 1 else 2))))
       icon.image.getContext("2d").drawImage src, 0, 0
 
     icon.silentSetWidth icon.image.width

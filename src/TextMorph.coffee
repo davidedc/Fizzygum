@@ -50,7 +50,7 @@ class TextMorph extends StringMorph
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       @text = text or ((if text is "" then text else "TextMorph"))
-      @fontName = fontName or WorldMorph.MorphicPreferences.globalFontFamily
+      @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
       @shadowOffset = shadowOffset or new Point(0, 0)
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true

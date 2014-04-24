@@ -67,7 +67,7 @@ degrees = (radians) ->
   radians * 180 / Math.PI
 
 fontHeight = (height) ->
-  minHeight = Math.max(height, WorldMorph.MorphicPreferences.minimumFontHeight)
+  minHeight = Math.max(height, WorldMorph.preferencesAndSettings.minimumFontHeight)
   minHeight * 1.2 # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->

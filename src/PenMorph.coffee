@@ -12,7 +12,7 @@ class PenMorph extends Morph
   penPoint: 'tip' # or 'center'
   
   constructor: () ->
-    @penSize = WorldMorph.MorphicPreferences.handleSize * 4
+    @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
     super()
     @setExtent new Point(@penSize, @penSize)
     # todo we need to change the size two times, for getting the right size

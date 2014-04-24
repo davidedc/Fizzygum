@@ -625,7 +625,7 @@ class Morph extends MorphicNode
     alpha = a or ((if (a is 0) then 0 else 0.2))
     fb = @boundsIncludingChildren()
     shadow.setExtent fb.extent().add(@shadowBlur * 2)
-    if useBlurredShadows and  !WorldMorph.MorphicPreferences.isFlat
+    if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       shadow.image = @shadowImageBlurred(offset, color)
       shadow.alpha = alpha
       shadow.setPosition fb.origin.add(offset).subtract(@shadowBlur)
@@ -983,13 +983,13 @@ class Morph extends MorphicNode
     entryField = new StringFieldMorph(
       defaultContents or "",
       width or 100,
-      WorldMorph.MorphicPreferences.prompterFontSize,
-      WorldMorph.MorphicPreferences.prompterFontName,
+      WorldMorph.preferencesAndSettings.prompterFontSize,
+      WorldMorph.preferencesAndSettings.prompterFontName,
       false,
       false,
       isNumeric)
     menu.items.push entryField
-    if ceilingNum or WorldMorph.MorphicPreferences.useSliderForInput
+    if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
       slider = new SliderMorph(
         floorNum or 0,
         ceilingNum,
@@ -1003,7 +1003,7 @@ class Morph extends MorphicNode
       slider.button.highlightColor.b += 100
       slider.button.pressColor = slider.button.color.copy()
       slider.button.pressColor.b += 150
-      slider.setHeight WorldMorph.MorphicPreferences.prompterSliderSize
+      slider.setHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       if isRounded
         slider.action = (num) ->
           entryField.changed()

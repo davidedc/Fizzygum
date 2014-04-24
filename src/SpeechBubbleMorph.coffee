@@ -54,7 +54,7 @@ class SpeechBubbleMorph extends BoxMorph
     else if isString(@contents)
       @contentsMorph = new TextMorph(
         @contents,
-        WorldMorph.MorphicPreferences.bubbleHelpFontSize,
+        WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
         null,
         false,
         true,
@@ -67,7 +67,7 @@ class SpeechBubbleMorph extends BoxMorph
     else
       @contentsMorph = new TextMorph(
         @contents.toString(),
-        WorldMorph.MorphicPreferences.bubbleHelpFontSize,
+        WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
         null,
         false,
         true,

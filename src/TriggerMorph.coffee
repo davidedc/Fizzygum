@@ -51,7 +51,7 @@ class TriggerMorph extends Morph
       @doubleClickAction = null) ->
 
     # additional properties:
-    @fontSize = fontSize or WorldMorph.MorphicPreferences.menuFontSize
+    @fontSize = fontSize or WorldMorph.preferencesAndSettings.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
     @labelColor = labelColor or new Color(0, 0, 0)
     #

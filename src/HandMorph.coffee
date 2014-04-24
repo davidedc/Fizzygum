@@ -187,7 +187,7 @@ class HandMorph extends Morph
   # position for the right click to happen.
   processTouchStart: (event) ->
     event.preventDefault()
-    WorldMorph.MorphicPreferences.isTouchDevice = true
+    WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     if event.touches.length is 1
       # simulate mouseRightClick
@@ -210,7 +210,7 @@ class HandMorph extends Morph
       clearInterval @touchHoldTimeout
   
   processTouchEnd: (event) ->
-    WorldMorph.MorphicPreferences.isTouchDevice = true
+    WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     @processMouseUp 0 # button zero is the left button, we don't use this parameter
   
@@ -349,7 +349,7 @@ class HandMorph extends Morph
     
     if files.length
       for file in files
-        if file.type.indexOf("svg") != -1 && !WorldMorph.MorphicPreferences.rasterizeSVGs
+        if file.type.indexOf("svg") != -1 && !WorldMorph.preferencesAndSettings.rasterizeSVGs
           readSVG file
         else if file.type.indexOf("image") is 0
           readImage file
@@ -468,7 +468,7 @@ class HandMorph extends Morph
       if @children.length
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
-                WorldMorph.MorphicPreferences.scrollBarSize * 3
+                WorldMorph.preferencesAndSettings.scrollBarSize * 3
                 ).containsPoint(@bounds.origin)
                   newMorph.startAutoScrolling();
     #
