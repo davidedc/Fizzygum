@@ -6,8 +6,6 @@
 #global window, HTMLCanvasElement, getMinimumFontHeight, FileReader, Audio,
 #FileList, getBlurredShadowSupport
 
-modules = {} # keep track of additional loaded modules
-
 useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
 
 standardSettings =

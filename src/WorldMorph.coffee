@@ -605,12 +605,6 @@ class WorldMorph extends FrameMorph
       child.unminimise() if child.isMinimised
   
   about: ->
-    versions = ""
-    for module of modules
-      if Object.prototype.hasOwnProperty.call(modules, module)
-        versions += ("\n" + module + " (" + modules[module] + ")")  
-    if versions isnt ""
-      versions = "\n\nmodules:\n\n" + "morphic (" + morphicVersion + ")" + versions  
     @inform "Zombie Kernel\n\n" +
       "a lively Web GUI\ninspired by Squeak\n" +
       morphicVersion +
