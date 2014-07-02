@@ -555,7 +555,12 @@ class Morph extends MorphicNode
   
   # Morph full image:
   
-  # this function is not used.
+  # This function is not used and is probably
+  # not needed. After a couple of tweaks, the
+  # "fullImage" method below seems to work well
+  # in all situations, wherease before both the
+  # "fullImageClassic" and "fullImage" methods
+  # were needed to cover different cases.
   fullImageClassic: ->
     # why doesn't this work for all Morphs?
     fb = @boundsIncludingChildren()
@@ -564,12 +569,21 @@ class Morph extends MorphicNode
     img.globalAlpha = @alpha
     img
 
-  # fixes https://github.com/jmoenig/morphic.js/issues/7
+  # Fixes https://github.com/jmoenig/morphic.js/issues/7
+  # and https://github.com/davidedc/Zombie-Kernel/issues/160
   fullImage: ->
     boundsIncludingChildren = @boundsIncludingChildren()
     img = newCanvas(boundsIncludingChildren.extent())
     ctx = img.getContext("2d")
-    ctx.translate -@bounds.origin.x , -@bounds.origin.y
+    # we are going to draw this morph and its children into "img".
+    # note that the children are not necessarily geometrically
+    # contained in the morph (in which case it would be ok to
+    # translate the context so that the origin of *this* morph is
+    # at the top-left of the "img" canvas).
+    # Hence we have to translate the context
+    # so that the origin of the entire boundsIncludingChildren is at the
+    # very top-left of the "img" canvas.
+    ctx.translate -boundsIncludingChildren.origin.x , -boundsIncludingChildren.origin.y
     @recursivelyBlit img, boundsIncludingChildren
     img
 
