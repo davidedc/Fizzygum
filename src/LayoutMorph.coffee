@@ -189,3 +189,7 @@ class LayoutMorph extends Morph
         @addMorph( new LayoutAdjustingMorph() )
         @layoutSpec = LayoutSpec.fixedHeight(thickness)
 
+    #"Add a submorph, at the bottom or right, with aLayoutSpec"
+    addMorphWithLayoutSpec: (aMorph, aLayoutSpec) ->
+      aMorph.layoutSpec = aLayoutSpec
+      @addMorph aMorph
