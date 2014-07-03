@@ -176,3 +176,16 @@ class LayoutMorph extends Morph
       m.setExtent(Math.min(w,boundsForLayout.height()),h)
       if h>0
         t = Math.min(t + h + ySep, boundsBottom)
+
+    # So the user can adjust layout
+    addAdjusterMorph: ->
+      thickness = 4
+
+      if @direction == "#horizontal"
+        @addMorph( new LayoutAdjustingMorph() )
+        @layoutSpec = LayoutSpec.fixedWidth(thickness)
+
+      if @direction == "#vertical"
+        @addMorph( new LayoutAdjustingMorph() )
+        @layoutSpec = LayoutSpec.fixedHeight(thickness)
+
