@@ -178,7 +178,7 @@ class LayoutMorph extends Morph
         t = Math.min(t + h + ySep, boundsBottom)
 
     # So the user can adjust layout
-    addAdjusterMorph: ->
+  addAdjusterMorph: ->
       thickness = 4
 
       if @direction == "#horizontal"
@@ -193,3 +193,23 @@ class LayoutMorph extends Morph
     addMorphWithLayoutSpec: (aMorph, aLayoutSpec) ->
       aMorph.layoutSpec = aLayoutSpec
       @addMorph aMorph
+
+  minPaneHeightForReframe: ->
+        return 20
+
+  minPaneWidthForReframe: ->
+        return 40
+
+  proportionalHeightNormalizationFactor: ->
+        sumOfProportional = 0
+        @children.forEach (child) =>
+          if child.layoutSpec?
+            sumOfProportional += child.layoutSpec.proportionalHeight()
+        return 1.0/Math.max(sumOfProportional, 1.0)
+
+  proportionalWidthNormalizationFactor: ->
+        sumOfProportional = 0
+        @children.forEach (child) =>
+          if child.layoutSpec?
+            sumOfProportional += child.layoutSpec.proportionalWidth()
+        return 1.0/Math.max(sumOfProportional, 1.0)
