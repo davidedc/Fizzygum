@@ -52,7 +52,8 @@ class Color
     [h, s, v]
   
   set_hsv: (h, s, v) ->
-    # ignore alpha, h, s and v are to be within [0, 1]
+    # ignore alpha
+    # h, s and v are to be within [0, 1]
     i = Math.floor(h * 6)
     f = h * 6 - i
     p = v * (1 - s)
@@ -117,3 +118,6 @@ class Color
     vv = Math.max(hsv[2] - 0.16, 0)
     result.set_hsv hsv[0], hsv[1], vv
     result
+
+  @transparent: ->
+    return new Color(0,0,0,0)
