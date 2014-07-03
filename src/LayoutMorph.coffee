@@ -135,3 +135,44 @@ class LayoutMorph extends Morph
       m.setExtent(Math.min(w,boundsForLayout.width()),h)
       if w>0
         l = Math.min(l + w + xSep, boundsRight)
+
+  # this is the symetric of the previous method
+  layoutSubmorphsVerticallyIn: (boundsForLayout) ->
+    usableHeight boundsTop boundsRight t |
+    xSep = @xSeparation()
+    ySep = @ySeparation()
+    usableWidth = boundsForLayout.height() - ((@children.length + 1) * ySep)
+    sumOfFixed = 0
+    @children.forEach (child) =>
+      if child.layoutSpec?
+        if child.layoutSpec.fixedWidth?
+          sumOfFixed += child.layoutSpec.fixedHeight
+    availableForPropHeight = usableHeight - sumOfFixed
+    normalizationFactor = @proportionalHeightNormalizationFactor
+    availableForPropHeight = availableForPropHeight * normalizationFactor
+    heights = []
+    sumOfHeights = 0
+    @children.forEach (child) =>
+      if child.layoutSpec?
+        theHeight = child.layoutSpec.heightFor availableForPropHeight
+        sumOfHeights += theHeight
+        heights.append theHeight
+    t = ((usableHeight - sumOfHeights) * padding + Math.max(ySep, 0)) +  boundsForLayout.top()
+    usableWidth = boundsForLayout.width() - Math.max(2*xSep,0)
+    boundsBottom = boundsForLayout.bottom()
+    boundsLeft = boundsForLayout.left()
+    for i in [children.length-1 .. 0]
+      m = @children[i]
+      # major direction
+      h = heights[i]
+      # minor direction
+      ls = m.layoutSpec
+      w = Math.min(usableWidth, ls.widthFor(usableWidth))
+      l = (usableWidth - w) * ls.minorDirectionPadding() + xSep + boundsLeft
+      # Set bounds and adjust major direction for next step
+      # self flag: #jmvVer2.
+      # should extent be set in m's coordinate system? what if its scale is not 1?
+      m.setPosition(new Point(l,t))
+      m.setExtent(Math.min(w,boundsForLayout.height()),h)
+      if h>0
+        t = Math.min(t + h + ySep, boundsBottom)
