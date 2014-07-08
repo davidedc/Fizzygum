@@ -87,9 +87,9 @@ class WorkspaceMorph extends BoxMorph
     @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
 
     # update layout
-    @fixLayout()
+    @layoutSubmorphs()
   
-  fixLayout: ->
+  layoutSubmorphs: ->
     Morph::trackChanges = false
 
     handleSize = WorldMorph.preferencesAndSettings.handleSize;
@@ -134,4 +134,4 @@ class WorkspaceMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     super aPoint
-    @fixLayout()
+    @layoutSubmorphs()

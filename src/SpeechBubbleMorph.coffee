@@ -198,7 +198,7 @@ class SpeechBubbleMorph extends BoxMorph
     sha
 
   # SpeechBubbleMorph resizing
-  fixLayout: ->
+  layoutSubmorphs: ->
     @removeShadow()
     @updateRendering()
     @addShadow new Point(2, 2), 80

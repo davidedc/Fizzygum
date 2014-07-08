@@ -136,7 +136,7 @@ class StringMorph extends Morph
       context.fillText c, p.x + x, fontHeight(@fontSize) + y
     #
     # notify my parent of layout change
-    @parent.fixLayout()  if @parent.fixLayout  if @parent
+    @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
   
   renderWithBlanks: (context, startX, y) ->
     # create the blank form

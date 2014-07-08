@@ -313,9 +313,10 @@ class InspectorMorph extends BoxMorph
     @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
     #
     # update layout
-    @fixLayout()
+    @layoutSubmorphs()
   
-  fixLayout: ->
+  layoutSubmorphs: ->
+    console.log "fixing the layout of the inspector"
     Morph::trackChanges = false
     #
     # label
@@ -383,7 +384,7 @@ class InspectorMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     super aPoint
-    @fixLayout()
+    @layoutSubmorphs()
   
   
   #InspectorMorph editing ops:

@@ -80,9 +80,9 @@ class MorphsListMorph extends BoxMorph
     @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
 
     # update layout
-    @fixLayout()
+    @layoutSubmorphs()
   
-  fixLayout: ->
+  layoutSubmorphs: ->
     Morph::trackChanges = false
 
     # label
@@ -119,4 +119,4 @@ class MorphsListMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     super aPoint
-    @fixLayout()
+    @layoutSubmorphs()
