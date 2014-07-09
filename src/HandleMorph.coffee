@@ -11,6 +11,7 @@ class HandleMorph extends Morph
   minExtent: null
   inset: null
   type: null # "resize" or "move"
+  step: null
 
   constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->
     # if insetY is missing, it will be the same as insetX
@@ -98,7 +99,7 @@ class HandleMorph extends Morph
   
   
   # HandleMorph stepping:
-  step = null
+
   mouseDownLeft: (pos) ->
     world = @root()
     offset = pos.subtract(@bounds.origin)
