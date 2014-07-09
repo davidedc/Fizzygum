@@ -134,6 +134,13 @@ class LayoutMorph extends Morph
 			w = widths[i]
 			# minor direction
 			ls = m.layoutSpec
+			if not ls?
+				# there might be submorphs that don't have a layout.
+				# for example, currently, the HandleMorph can be attached
+				# to the LayoutMorph without a layoutSpec.
+				# just skip those. The HandleMorph does its own
+				# layouting.
+				continue
 			h = Math.min(usableHeight, ls.heightFor(usableHeight))
 			t = (usableHeight - h) * ls.minorDirectionPadding + ySep + boundsTop
 			# Set bounds and adjust major direction for next step
@@ -145,7 +152,7 @@ class LayoutMorph extends Morph
 			if w>0
 				l = Math.min(l + w + xSep, boundsRight)
 
-	# this is the symetric of the previous method
+	# this is the symmetric of the previous method
 	layoutSubmorphsVerticallyIn: (boundsForLayout) ->
 		usableHeight boundsTop boundsRight t |
 		xSep = @xSeparation()
@@ -291,7 +298,7 @@ class LayoutMorph extends Morph
 	#####################
 
 	addAdjusterAndMorphFixedHeight: (aMorph,aNumber) ->
-		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.fixedHeight aNumber)
+		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedHeight aNumber)
 
 	addAdjusterAndMorphLayoutSpec: (aMorph, aLayoutSpec) ->
 		#Add a submorph, at the bottom or right, with aLayoutSpec"
@@ -299,16 +306,16 @@ class LayoutMorph extends Morph
 		@addMorphLayoutSpec(aMorph, aLayoutSpec)
 
 	addAdjusterAndMorphProportionalHeight: (aMorph, aNumber) ->
-		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.proportionalHeight(aNumber))
+		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalHeight(aNumber))
 
 	addAdjusterAndMorphProportionalWidth: (aMorph, aNumber) ->
-		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.proportionalWidth(aNumber))
+		@addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalWidth(aNumber))
 
 	addMorphFixedHeight: (aMorph, aNumber) ->
-		@addMorphLayoutSpec(aMorph, LayoutSpec.fixedHeight(aNumber))
+		@addMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedHeight(aNumber))
 
 	addMorphFixedWidth: (aMorph, aNumber) ->
-		@addMorphLayoutSpec(aMorph, LayoutSpec.fixedWidth(aNumber))
+		@addMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedWidth(aNumber))
 
 	addMorphLayoutSpec: (aMorph, aLayoutSpec) ->
 		# Add a submorph, at the bottom or right, with aLayoutSpec

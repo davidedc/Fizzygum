@@ -42,38 +42,38 @@ class LayoutSpec
 
   @newWithFixedHeight: (aNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedHeight aNumber
+   layoutSpec.setFixedHeight aNumber
    return layoutSpec
 
   @newWithFixedWidth: (aNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
+   layoutSpec.setFixedWidth aNumber
    return layoutSpec
 
   @newWithFixedWidthFixedHeight: (aNumber, otherNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
-   layoutSpec.fixedHeight otherNumber
+   layoutSpec.setFixedWidth aNumber
+   layoutSpec.setFixedHeight otherNumber
    return layoutSpec
 
   @newWithFixedWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
-   layoutSpec.fixedHeight otherNumber
-   layoutSpec.minorDirectionPadding aSymbolOrNumber
+   layoutSpec.setFixedWidth aNumber
+   layoutSpec.setFixedHeight otherNumber
+   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithFixedWidthProportionalHeight: (aNumber, otherNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
-   layoutSpec.proportionalHeight otherNumber
+   layoutSpec.setFixedWidth aNumber
+   layoutSpec.setProportionalHeight otherNumber
    return layoutSpec
 
   @newWithFixedWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
-   layoutSpec.proportionalHeight otherNumber
-   layoutSpec.minorDirectionPadding aSymbolOrNumber
+   layoutSpec.setFixedWidth aNumber
+   layoutSpec.setProportionalHeight otherNumber
+   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithKeepMorphExtent: ->
@@ -84,26 +84,26 @@ class LayoutSpec
 
   @newWithMorphHeightFixedWidth: (aNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.fixedWidth aNumber
+   layoutSpec.setFixedWidth aNumber
    layoutSpec.useMorphHeight
    return layoutSpec
 
   @newWithMorphHeightProportionalWidth: (aNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.proportionalWidth aNumber
+   layoutSpec.setProportionalWidth aNumber
    layoutSpec.useMorphHeight()
    return layoutSpec
 
   @newWithMorphWidthFixedHeight: (aNumber) ->
    layoutSpec = new LayoutSpec()
    layoutSpec.useMorphWidth()
-   layoutSpec.fixedHeight aNumber
+   layoutSpec.setFixedHeight aNumber
    return layoutSpec
 
   @newWithMorphWidthProportionalHeight: (aNumber) ->
    layoutSpec = new LayoutSpec()
    layoutSpec.useMorphWidth()
-   layoutSpec.proportionalHeight aNumber
+   layoutSpec.setProportionalHeight aNumber
    return layoutSpec
 
   # Will use all available width
@@ -120,28 +120,28 @@ class LayoutSpec
 
   @newWithProportionalWidthFixedHeight: (aNumber, otherNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.proportionalWidth aNumber
-   layoutSpec.fixedHeight otherNumber
+   layoutSpec.setProportionalWidth aNumber
+   layoutSpec.setFixedHeight otherNumber
    return layoutSpec
 
   @newWithProportionalWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.proportionalWidth aNumber
-   layoutSpec.fixedHeight otherNumber
-   layoutSpec.minorDirectionPadding aSymbolOrNumber
+   layoutSpec.setProportionalWidth aNumber
+   layoutSpec.setFixedHeight otherNumber
+   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithProportionalWidthProportionalHeight: (aNumber, otherNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.proportionalWidth aNumber
-   layoutSpec.proportionalHeight otherNumber
+   layoutSpec.setProportionalWidth aNumber
+   layoutSpec.setProportionalHeight otherNumber
    return layoutSpec
 
   @newWithProportionalWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
    layoutSpec = new LayoutSpec()
-   layoutSpec.proportionalWidth aNumber
-   layoutSpec.proportionalHeight otherNumber
-   layoutSpec.minorDirectionPadding aSymbolOrNumber
+   layoutSpec.setProportionalWidth aNumber
+   layoutSpec.setProportionalHeight otherNumber
+   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   # Use all available space
@@ -242,24 +242,24 @@ class LayoutSpec
     @fixedWidth = null
     @proportionalWidth = null
 
-  setFixedHeight: ->
+  getFixedHeight: ->
     # If proportional is zero, answer stored fixed extent,
     # or actual morph extent if undefined. (no proportional extent is computed)
     # Otherwise, we do proportional layout, and the stored extent is
     # a minimum extent, so we don't  really a fixed extent.
-    if proportionalHeight?
+    if @proportionalHeight?
       return 0
-    if not fixedHeight?
+    if not @fixedHeight?
       return @morph.height()
 
-  setFixedWidth: ->
+  getFixedWidth: ->
     # If proportional is zero, answer stored fixed extent,
     # or actual morph extent if undefined. (no proportional extent is computed)
     # Otherwise, we do proportional layout, and the stored extent is
     # a minimum extent, so we don't  really a fixed extent.
-    if proportionalWidth?
+    if @proportionalWidth?
       return 0
-    if not fixedWidth?
+    if not @fixedWidth?
       return @morph.width()
 
   heightFor: (availableSpace) ->
