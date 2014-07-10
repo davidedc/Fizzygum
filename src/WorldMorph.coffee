@@ -233,11 +233,11 @@ class WorldMorph extends FrameMorph
     ), false
     canvas.addEventListener "keydown", ((event) =>
       @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
-      #
+
       # supress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
         event.preventDefault()
-      #
+
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
@@ -252,10 +252,60 @@ class WorldMorph extends FrameMorph
           @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
     ), false
+
+    # This method also handles keypresses from a special
+    # external keypad which is used to
+    # record tests commands (such as capture screen, etc.).
+    # These external keypads are inexpensive
+    # so they are a good device for this kind
+    # of stuff.
+    # http://www.amazon.co.uk/Perixx-PERIPAD-201PLUS-Numeric-Keypad-Laptop/dp/B001R6FZLU/
+    # They keypad is mapped
+    # to Thai keyboard characters via an OSX app
+    # called keyremap4macbook (also one needs to add the
+    # Thai keyboard, which is just a click from System Preferences)
+    # Those Thay characters are used to trigger test
+    # commands. The only added complexity is about
+    # the "00" key of such keypads - see
+    # note below.
+    doublePressOfZeroKeypadKey: null
     canvas.addEventListener "keypress", ((event) =>
+
+      # This if block adapted from:
+      # http://stackoverflow.com/a/16033129
+      # it rejects the
+      # characters from the special
+      # test-command-triggering external
+      # keypad. Also there is a "00" key
+      # in such keypads which is implemented
+      # buy just a double-press of the zero.
+      # We manage that case - if that key is
+      # pressed twice we understand that it's
+      # that particular key. Managing this
+      # special case within Zombie Kernel
+      # is not best, but there aren't any
+      # good alternatives.
+      if String.fromCharCode(event.which) == "ย"
+        unless @doublePressOfZeroKeypadKey?
+          @doublePressOfZeroKeypadKey = 1
+          setTimeout (=>
+            if @doublePressOfZeroKeypadKey is 1
+              console.log "single click"
+            @doublePressOfZeroKeypadKey = null
+            event.keyCode = 0
+            return false
+          ), 300
+        else
+          @doublePressOfZeroKeypadKey = null
+          console.log "double click"
+          event.keyCode = 0
+        return false
+
       @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
+
     ), false
+
     # Safari, Chrome
     canvas.addEventListener "mousewheel", ((event) =>
       @hand.processMouseScroll event

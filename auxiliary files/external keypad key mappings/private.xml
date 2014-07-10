@@ -1,0 +1,271 @@
+<?xml version="1.0"?>
+<root>
+  <devicevendordef>
+    <vendorname>PERIXX</vendorname>
+    <vendorid>0x099a</vendorid>
+  </devicevendordef>
+
+  <deviceproductdef>
+    <productname>USB_KEYPAD</productname>
+    <productid>0x5740</productid>
+  </deviceproductdef>
+
+  <item>
+    <name>Space to Tab in MY_HP_KEYBOARD</name>
+    <identifier>private.deviceproductdef</identifier>
+    <device_only>DeviceVendor::PERIXX, DeviceProduct::USB_KEYPAD</device_only>
+    <autogen> 
+       --KeyToKey-- KeyCode::TAB, KeyCode::A, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_SLASH, KeyCode::B, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_MULTIPLY, KeyCode::C, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::DELETE, KeyCode::D, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_7, KeyCode::E, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_8, KeyCode::F, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_9, KeyCode::G, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_MINUS, KeyCode::H, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_4, KeyCode::I, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_5, KeyCode::J, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_6, KeyCode::K, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_PLUS, KeyCode::L, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_1, KeyCode::M, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_2, KeyCode::N, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_3, KeyCode::O, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::ENTER, KeyCode::P, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_0, KeyCode::Q, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+    <autogen> 
+       --KeyToKey-- KeyCode::KEYPAD_DOT, KeyCode::R, KeyCode::VK_NONE, 
+
+       Option::KEYTOKEY_BEFORE_KEYDOWN, 
+       KeyCode::VK_CHANGE_INPUTMODE_THAI, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+
+       Option::KEYTOKEY_AFTER_KEYUP, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_WAIT_10MS, 
+       KeyCode::VK_CHANGE_INPUTMODE_ENGLISH 
+     </autogen> 
+
+  </item>
+
+</root>
