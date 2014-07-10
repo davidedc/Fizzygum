@@ -578,7 +578,8 @@ class WorldMorph extends FrameMorph
     
     menu.addItem "pen", ->
       create new PenMorph()
-    
+    menu.addLine()
+    menu.addItem "Layout tests", (->@layoutTestsMenu()), "sample morphs"
     menu.addLine()
     menu.addItem "view all...", ->
       newMorph = new MorphsListMorph()
@@ -594,6 +595,22 @@ class WorldMorph extends FrameMorph
           create morph
     
     menu.popUpAtHand @
+
+  layoutTestsMenu: ->
+    create = (aMorph) =>
+      aMorph.isDraggable = true
+      aMorph.pickUp @
+    menu = new MenuMorph(@, "Layout tests")
+    menu.addItem "test1", ->
+      LayoutMorph.test1()
+    menu.addItem "test2", ->
+      LayoutMorph.test2()
+    menu.addItem "test3", ->
+      LayoutMorph.test3()
+    menu.addItem "test4", ->
+      LayoutMorph.test4()
+    menu.popUpAtHand @
+    
   
   toggleDevMode: ->
     @isDevMode = not @isDevMode
