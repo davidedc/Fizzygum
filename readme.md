@@ -19,3 +19,9 @@ Where are the docs?
 I made changes - how do I try them / re-build?
 ---------------------------------------------
 If you make changes to any of the coffeescript .coffee files in the src directory, just run the script "build_it_please.sh", which will rebuild everything.
+
+Standing on the shoulders of giants
+-----------------------------------
+Zombie Kernel was inspired by [Lively Kernel](http://www.lively-kernel.org/).
+Zombie Kernel was built starting from [Morphic.js](https://github.com/jmoenig/morphic.js) by [Jens Mönig](https://twitter.com/moenig).
+Parts of Zombie Kernel are adapted from the compact and awesome [Cuis Smalltalk](http://www.jvuletich.org/Cuis/Index.html) by [Juan Vuletich](http://www.jvuletich.org/).
