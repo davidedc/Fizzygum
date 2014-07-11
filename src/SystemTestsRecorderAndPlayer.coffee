@@ -1,3 +1,23 @@
+# How to play a test:
+# from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
+# window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData
+# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
+
+# How to record a test:
+# window.world.systemTestsRecorderAndPlayer.startTestRecording()
+# ...do the test...
+# window.world.systemTestsRecorderAndPlayer.stopTestRecording()
+# if you want to verify the test on the spot:
+# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
+
+# For recording screenshot data at any time -
+# can be used for screenshot comparisons during the test:
+# window.world.systemTestsRecorderAndPlayer.takeScreenshot()
+
+# How to save the test:
+# window.world.systemTestsRecorderAndPlayer.saveTest('testName')
+# The created file will start with "SystemTest_"
+
 class SystemTestsRecorderAndPlayer
   eventQueue: []
   recordingASystemTest: false
@@ -149,3 +169,35 @@ class SystemTestsRecorderAndPlayer
 
     setTimeout callback, lastPlayedEventTime
     #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime
+
+  testFileContentCreator: (testName, data) ->
+    # these here below is just one string
+    # spanning multiple lines, which
+    # includes the testName and data variables
+    # in the right places.
+    # This is the equivalent of the following
+    # coffeescript content:
+    ###
+      class SystemTest_SimpleMenuTest
+        @testData = [
+          type: "systemInfo"
+          ... all the remaining test data...
+    ###
+    "
+  var SystemTest_#{testName}Test;
+
+  SystemTest_#{testName}Test = (function() {
+    function SystemTest_#{testName}Test() {}
+
+    SystemTest_#{testName}Test.testData = #{data};
+
+    return SystemTest_#{testName}Test;
+
+  })();
+    "
+
+  saveTest:(testName) ->
+    blob = new Blob([@testFileContentCreator(testName,JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue))],
+      type: "text/plain;charset=utf-8"
+      )
+    saveAs blob, "SystemTest_#{testName}Test.js"
