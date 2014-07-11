@@ -3,6 +3,7 @@
 # these comments below needed to figure our dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES PreferencesAndSettings
+# REQUIRES Color
 
 # I represent the <canvas> element
 class WorldMorph extends FrameMorph
@@ -39,6 +40,22 @@ class WorldMorph extends FrameMorph
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
   constructor: (aCanvas, fillPage) ->
+
+    # The WorldMorph is the very first morph to
+    # be created.
+
+    # We first need to initialise
+    # some Color constants, like
+    #   Color.red
+    # See the comment at the beginning of the
+    # color class on why this piece of code
+    # is here instead of somewhere else.
+    for colorName, colorValue of Color.colourNamesValues
+      Color["#{colorName}"] = new Color(colorValue[0],colorValue[1], colorValue[2])
+    # The colourNamesValues data structure is
+    # redundant at this point.
+    delete Color.colourNamesValues
+
     super()
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     console.log WorldMorph.preferencesAndSettings.menuFontName
