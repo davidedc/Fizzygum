@@ -9,7 +9,7 @@ class Point
   
   # Point string representation: e.g. '12@68'
   toString: ->
-    Math.round(@x.toString()) + "@" + Math.round(@y.toString())
+    Math.round(@x) + "@" + Math.round(@y)
   
   # Point copying:
   copy: ->

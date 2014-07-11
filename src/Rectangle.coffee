@@ -13,7 +13,7 @@ class Rectangle
   
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
   toString: ->
-    "[" + @origin.toString() + " | " + @extent().toString() + "]"
+    "[" + @origin + " | " + @extent() + "]"
   
   # Rectangle copying:
   copy: ->

@@ -14,7 +14,7 @@ class MorphicNode
   
   # MorphicNode string representation: e.g. 'a MorphicNode[3]'
   toString: ->
-    "a MorphicNode" + "[" + @children.length.toString() + "]"
+    "a MorphicNode" + "[" + @children.length + "]"
   
   
   # MorphicNode accessing:

@@ -865,9 +865,9 @@ class Morph extends MorphicNode
     #alert "### updating references"
     #alert "number of children: " + c.children.length
     c.forAllChildren (child) ->
-      #alert ">>> updating reference of " + child.toString()
+      #alert ">>> updating reference of " + child
       child.updateReferences dict
-    #alert ">>> updating reference of " + c.toString()
+    #alert ">>> updating reference of " + c
     c.updateReferences dict
     #
     c
