@@ -478,6 +478,43 @@ Add the following method to your Morph to let it automatically fill the whole Wo
 Occasionally you'll want an object to react differently to a mouse click or to some other mouse event while the user holds down a key on the keyboard. Such "shift-click", "ctl-click", or "alt-click" events can be implemented by querying the World's **currentKey** property inside the function that reacts to the mouse event. This property stores the keyCode of the key that's currently pressed.
 Once the key is released by the user it reverts to null.
 
+##8.5 Text editing events
+Much of Morphic's "liveliness" comes out of allowing text elements (instances of either single-lined StringMorph or multi-lined TextMorph) to be directly manipulated and edited by users. This requires other objects which may have an interest in the text element's state to react appropriately. Therefore text elements and their manipulators emit
+a stream of events, mostly by "bubbling" them up the text element's owner chain. Text elements' parents are notified about the following events:
+
+Whenever the user presses a key on the keyboard while a text element is being edited, a
+
+    reactToKeystroke(event)
+
+is escalated up its parent chain, the "event" parameter being the original one received by the World.
+
+Once the user has completed the edit, the following events are dispatched:
+
+    accept() - <enter> was pressed on a single line of text
+    cancel() - <esc> was pressed on any text element
+
+Note that "accept" only gets triggered by single-line text elements, as the <enter> key is used to insert line breaks in multi-line elements. Therefore, whenever a text edit is terminated by the user (accepted, cancelled or otherwise),
+
+    reactToEdit(StringOrTextMorph)
+
+is triggered.
+
+If the MorphicPreference's
+
+    useSliderForInput
+
+setting is turned on, a slider is popped up underneath the currently edited text element letting the user insert numbers out of the given slider range. Whenever this happens, i.e. whenever the slider is moved or while the slider button is pressed, a stream of
+
+    reactToSliderEdit(StringOrTextMorph)
+
+events is dispatched, allowing for "Bret-Victor" style "live coding" applications.
+
+In addition to user-initiated events text elements also emit change notifications to their direct parents whenever their drawNew() method is invoked. That way complex Morphs containing text elements get a chance to react if something about the embedded text has been modified programmatically. These events are:
+
+    layoutChanged() - sent from instances of TextMorph
+    fixLayout() - sent from instances of StringMorph
+
+they are different so that Morphs which contain both multi-line and single-line text elements can hold them apart.
 
 #9 Stepping#
 
