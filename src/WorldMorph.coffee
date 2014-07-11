@@ -16,6 +16,28 @@ class WorldMorph extends FrameMorph
   @showRedraws: false
   systemTestsRecorderAndPlayer: null
 
+  # keypad keys map to special characters
+  # so we can trigger test actions
+  # see more comments below
+  @KEYPAD_TAB_mappedToThaiKeyboard_A: "ฟ"
+  @KEYPAD_SLASH_mappedToThaiKeyboard_B: "ิ"
+  @KEYPAD_MULTIPLY_mappedToThaiKeyboard_C: "แ"
+  @KEYPAD_DELETE_mappedToThaiKeyboard_D: "ก"
+  @KEYPAD_7_mappedToThaiKeyboard_E: "ำ"
+  @KEYPAD_8_mappedToThaiKeyboard_F: "ด"
+  @KEYPAD_9_mappedToThaiKeyboard_G: "เ"
+  @KEYPAD_MINUS_mappedToThaiKeyboard_H: "้"
+  @KEYPAD_4_mappedToThaiKeyboard_I: "ร"
+  @KEYPAD_5_mappedToThaiKeyboard_J: "่" # looks like empty string but isn't :-)
+  @KEYPAD_6_mappedToThaiKeyboard_K: "า"
+  @KEYPAD_PLUS_mappedToThaiKeyboard_L: "ส" 
+  @KEYPAD_1_mappedToThaiKeyboard_M: "ท"
+  @KEYPAD_2_mappedToThaiKeyboard_N: "ท"
+  @KEYPAD_3_mappedToThaiKeyboard_O: "ื"
+  @KEYPAD_ENTER_mappedToThaiKeyboard_P: "น"
+  @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
+  @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
+
   constructor: (aCanvas, fillPage) ->
     super()
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
@@ -285,7 +307,7 @@ class WorldMorph extends FrameMorph
       # special case within Zombie Kernel
       # is not best, but there aren't any
       # good alternatives.
-      if String.fromCharCode(event.which) == "ย"
+      if String.fromCharCode(event.which) == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
         unless @doublePressOfZeroKeypadKey?
           @doublePressOfZeroKeypadKey = 1
           setTimeout (=>
