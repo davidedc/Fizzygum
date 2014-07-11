@@ -264,7 +264,7 @@ class WorldMorph extends FrameMorph
     # to Thai keyboard characters via an OSX app
     # called keyremap4macbook (also one needs to add the
     # Thai keyboard, which is just a click from System Preferences)
-    # Those Thay characters are used to trigger test
+    # Those Thai characters are used to trigger test
     # commands. The only added complexity is about
     # the "00" key of such keypads - see
     # note below.
@@ -290,14 +290,14 @@ class WorldMorph extends FrameMorph
           @doublePressOfZeroKeypadKey = 1
           setTimeout (=>
             if @doublePressOfZeroKeypadKey is 1
-              console.log "single click"
+              console.log "single keypress"
             @doublePressOfZeroKeypadKey = null
             event.keyCode = 0
             return false
           ), 300
         else
           @doublePressOfZeroKeypadKey = null
-          console.log "double click"
+          console.log "double keypress"
           event.keyCode = 0
         return false
 
