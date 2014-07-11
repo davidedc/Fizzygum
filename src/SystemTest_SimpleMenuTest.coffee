@@ -1,28 +1,3 @@
-# How to play a test:
-# from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testData
-# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
-
-# How to save a test:
-# window.world.systemTestsRecorderAndPlayer.startTestRecording()
-# ...do the test...
-# window.world.systemTestsRecorderAndPlayer.stopTestRecording()
-# if you want to verify the test on the spot:
-# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
-# then to save the test:
-# console.log(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue ))
-# copy that blurb
-# For recording screenshot data at any time:
-# console.log(JSON.stringify(window.world.systemTestsRecorderAndPlayer.takeScreenshot()))
-# Note for Chrome: You have to replace the data URL because
-# it contains an ellipsis for more comfortable viewing in the console.
-# Workaround: find that url and right-click: open in new tab and then copy the
-# full data URL from the location bar and substitute it with the one
-# of the ellipses.
-# Then pass the JSON into http://js2coffee.org/
-# and save it in this file.
-
-# Tests name must start with "SystemTest_"
 class SystemTest_SimpleMenuTest
   @testData = [
     type: "systemInfo"
