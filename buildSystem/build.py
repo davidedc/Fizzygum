@@ -45,9 +45,10 @@ from datetime import datetime
 from glob import glob
 import codecs
 import re
+import os
 
 # GLOBALS
-FINAL_OUTPUT_FILE = 'build/morphee-coffee.coffee'
+FINAL_OUTPUT_FILE = 'build/delete_me/zombie-kernel.coffee'
 
 STRING_BLOCK = \
 """  @coffeeScriptSourceOfThisClass: '''
@@ -183,6 +184,8 @@ def main():
     text = str.join(str("\n"), text)
 
     # write to disk
+    if not os.path.exists(os.path.dirname(FINAL_OUTPUT_FILE)):
+        os.makedirs(os.path.dirname(FINAL_OUTPUT_FILE))
     with codecs.open(FINAL_OUTPUT_FILE, "w", "utf-8") as f:
         f.write(text)
 

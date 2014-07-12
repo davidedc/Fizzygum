@@ -1,8 +1,17 @@
-rm build/*
+# cleanup the contents of the build directory
+rm -rf build/*
+
+# generate the zombie-kernel coffee file in the delete_me directory
 python ./buildSystem/build.py
-coffee -b -c -o build ./build/morphee-coffee.coffee 
-cp src/morphee-coffee.html build
-cp src/morphee-coffee-test-launcher.html build
+
+# turn the coffeescript file into js in the js directory
+coffee -b -c -o ./build/js ./build/delete_me/zombie-kernel.coffee 
+
+# copy the html files
+cp src/index.html build
+cp src/test-launcher.html build
+
 # copy the interesting js files from the submodules
-cp auxiliary\ files/FileSaver\ submodule/FileSaver.js build
-cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js build
+mkdir build/js/libs/
+cp auxiliary\ files/FileSaver\ submodule/FileSaver.js build/js/libs/
+cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js build/js/libs/
