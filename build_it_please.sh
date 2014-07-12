@@ -15,3 +15,7 @@ cp src/test-launcher.html build
 mkdir build/js/libs/
 cp auxiliary\ files/FileSaver\ submodule/FileSaver.js build/js/libs/
 cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js build/js/libs/
+
+# copy the test files
+mkdir build/js/tests/
+cp src/tests/*.js build/js/tests

@@ -12,9 +12,12 @@ This script performs only some of the steps of the build:
    can allow some editing of the classes in coffeescript, and do something like
    generating the documentation on the fly.
 
-3) Finally, combine the "extended" coffee files.  Note that 2) is a bit naive
+3) Combines the "extended" coffee files.  Note that 2) is a bit naive
    because we just do some simple string checks. So, there could be strings in
    the source code that mangle this process. It's not likely though.
+
+4) Generates an index html file that also includes all the tests, which
+   are javascripts in a special directory
 
 The order in which the files are combined does matter.  There are three cases
 where order matters:
@@ -46,6 +49,8 @@ from glob import glob
 import codecs
 import re
 import os
+import ntpath
+
 
 # GLOBALS
 FINAL_OUTPUT_FILE = 'build/delete_me/zombie-kernel.coffee'
@@ -54,6 +59,10 @@ STRING_BLOCK = \
 """  @coffeeScriptSourceOfThisClass: '''
 %s  '''
 """
+
+DIRECTORY_WITH_TEST_FILES = "src/tests/"
+FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
+OUTPUT_FILE_WITH_TEST_INCLUDES = "build/indexWithTests.html"
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
@@ -117,6 +126,35 @@ def visit(filename, nodes, inclusion_order):
 
     if filename not in inclusion_order:
         inclusion_order.append(filename)
+
+def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
+    # create a list with the test files
+    # src/tests/
+    filenames = sorted(glob(testsDirectory + "*.js"))
+
+    # create the string with the js inclusions for each
+    # test
+    target = ""
+    for filename in filenames:
+        target = target + '<script type="text/javascript" src="js/tests/'+ntpath.basename(filename)+'"></script>'
+
+    # put the tests inclusion in the right place
+
+    # 'src/index.html'
+    with codecs.open(srcHTMLFile, "r", "utf-8") as f:
+        content = f.read()
+
+    lines = content.split('\n')
+
+    src = "<!--include test scripts here-->"
+
+    replacedContent = ""
+    for line in lines:
+        replacedContent = replacedContent + line.replace(src, target) + "\n"
+
+    # 'build/indexWithTests.html'
+    with codecs.open(destHTMLFile, "w", "utf-8") as f:
+        f.write(replacedContent)
 
 
 def main():
@@ -188,6 +226,14 @@ def main():
         os.makedirs(os.path.dirname(FINAL_OUTPUT_FILE))
     with codecs.open(FINAL_OUTPUT_FILE, "w", "utf-8") as f:
         f.write(text)
+
+    # 4) a new HTML file is generated which also contains
+    # all the loading of the test files
+    generateHTMLFileIncludingTests(
+            DIRECTORY_WITH_TEST_FILES,
+            FILE_TO_BE_ADDED_TEST_INCLUDES,
+            OUTPUT_FILE_WITH_TEST_INCLUDES)
+
 
 if __name__ == "__main__":
     main()
