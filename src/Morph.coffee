@@ -590,7 +590,10 @@ class Morph extends MorphicNode
     img
 
   fullImageData: ->
-    @fullImage().toDataURL()
+    # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."
+    # note that "image/png" below could be omitted as it's
+    # the default, but leaving it here for clarity.
+    @fullImage().toDataURL("image/png")
 
   fullImageHashCode: ->
     return hashCode(@fullImageData())

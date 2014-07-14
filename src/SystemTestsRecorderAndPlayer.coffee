@@ -220,5 +220,13 @@ class SystemTestsRecorderAndPlayer
     zip.file("SystemTest_#{@testName}Test.js", blob);
     for image in @collectedImages
       zip.file(image.imageName + ".js", "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' = "' + image.imageData + '";')
+      
+      # let's also save the png file so it's easier to browse the data
+      # note that these png files are not copied over into the
+      # build directory.
+      # the image.imageData string contains a little bit of string
+      # that we need to strip out before the base64-encoded png data
+      zip.file(image.imageName + ".png", image.imageData.replace(/^data:image\/png;base64,/, ""), {base64: true})
+    
     content = zip.generate({type:"blob"})
     saveAs(content, "SystemTest_#{@testName}Test.zip")    
