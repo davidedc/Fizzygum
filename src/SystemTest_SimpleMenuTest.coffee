@@ -247,7 +247,7 @@ class SystemTest_SimpleMenuTest
   ,
     type: "takeScreenshot"
     time: 801
-    screenShotImageData: [[
+    screenShotImageName: [[
       zombieKernelTestHarnessVersionMajor: 0
       zombieKernelTestHarnessVersionMinor: 1
       zombieKernelTestHarnessVersionRelease: 0
