@@ -7,5 +7,5 @@ class SystemTestsEventMouseDown extends SystemTestsEvent
 
 
   constructor: (@button, @ctrlKey, systemTestsRecorderAndPlayer) ->
-  	super(systemTestsRecorderAndPlayer)
-  	@type = "mouseDown"
+    super(systemTestsRecorderAndPlayer)
+    @type = "mouseDown"
