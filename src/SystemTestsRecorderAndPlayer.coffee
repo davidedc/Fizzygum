@@ -92,7 +92,7 @@ class SystemTestsRecorderAndPlayer
     @replayingASystemTest = false
 
   showTestSource: ->
-    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue )))
+    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
 
   addMouseMoveEvent: (pageX, pageY) ->
     return if not @recordingASystemTest
@@ -215,7 +215,7 @@ class SystemTestsRecorderAndPlayer
     "
 
   saveTest: ->
-    blob = @testFileContentCreator(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue))
+    blob = @testFileContentCreator(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue, null, 4))
     zip = new JSZip()
     zip.file("SystemTest_#{@testName}Test.js", blob);
     for image in @collectedImages
