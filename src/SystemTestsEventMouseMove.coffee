@@ -2,15 +2,9 @@
 
 
 class SystemTestsEventMouseMove extends SystemTestsEvent
-  button: null
-  ctrlKey: null
   mouseX: null
   mouseY: null
 
-
-
-  constructor: (pageX, pageY, systemTestsRecorderAndPlayer) ->
+  constructor: (@mouseX, @mouseY, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     @type = "mouseMove"
-    @mouseX = pageX
-    @mouseY = pageY
