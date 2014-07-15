@@ -89,17 +89,9 @@ class SystemTestsRecorderAndPlayer
 
   addMouseDownEvent: (button, ctrlKey) ->
     return if not @recordingASystemTest
-    currentTime = new Date().getTime()
-    systemTestEvent = {}
-    systemTestEvent.type = "mouseDown"
-    #systemTestEvent.mouseX = pageX
-    #systemTestEvent.mouseY = pageY
-    systemTestEvent.time = currentTime - @lastRecordedEventTime
-    systemTestEvent.button = button
-    systemTestEvent.ctrlKey = ctrlKey
-    #systemTestEvent.screenShotImageName
+    systemTestEvent = new SystemTestsEventMouseDown button, ctrlKey, @
     @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = currentTime
+    @lastRecordedEventTime = new Date().getTime()
 
   addMouseUpEvent: () ->
     return if not @recordingASystemTest
