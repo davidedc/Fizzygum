@@ -88,17 +88,9 @@ class SystemTestsRecorderAndPlayer
 
   addMouseUpEvent: () ->
     return if not @recordingASystemTest
-    currentTime = new Date().getTime()
-    systemTestEvent = {}
-    systemTestEvent.type = "mouseUp"
-    #systemTestEvent.mouseX = pageX
-    #systemTestEvent.mouseY = pageY
-    systemTestEvent.time = currentTime - @lastRecordedEventTime
-    #systemTestEvent.button
-    #systemTestEvent.ctrlKey
-    #systemTestEvent.screenShotImageName
+    systemTestEvent = new SystemTestsEventMouseUp @
     @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = currentTime
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
   takeScreenshot: () ->
     console.log "taking screenshot"
