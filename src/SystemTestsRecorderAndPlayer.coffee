@@ -91,7 +91,7 @@ class SystemTestsRecorderAndPlayer
     return if not @recordingASystemTest
     systemTestEvent = new SystemTestsEventMouseDown button, ctrlKey, @
     @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
   addMouseUpEvent: () ->
     return if not @recordingASystemTest

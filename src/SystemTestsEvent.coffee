@@ -7,6 +7,8 @@
 class SystemTestsEvent
   type: ''
   time: 0
+  timeOfCreation: 0
 
   constructor: (systemTestsRecorderAndPlayer) ->
-    @time = (new Date().getTime()) - systemTestsRecorderAndPlayer.lastRecordedEventTime
+    @timeOfCreation = new Date().getTime()
+    @time = @timeOfCreation - systemTestsRecorderAndPlayer.lastRecordedEventTime
