@@ -2,8 +2,6 @@
 
 
 class SystemTestsEventMouseDown extends SystemTestsEvent
-  type: ''
-  time: 0
   button: null
   ctrlKey: null
 
