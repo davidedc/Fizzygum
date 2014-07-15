@@ -2,7 +2,7 @@
 # Note that some of these could
 # change during user session.
 
-class SystemTest_SystemInfo extends SystemInfo
+class SystemTestsSystemInfo extends SystemInfo
   # cannot just initialise the numbers here
   # cause we are going to make a JSON
   # out of this and these would not

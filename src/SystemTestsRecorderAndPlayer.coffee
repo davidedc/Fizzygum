@@ -1,5 +1,5 @@
 # REQUIRES SystemTestsReferenceImage
-# REQUIRES SystemTest_SystemInfo
+# REQUIRES SystemTestsSystemInfo
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
@@ -56,7 +56,7 @@ class SystemTestsRecorderAndPlayer
     systemTestEvent = {}
     systemTestEvent.type = "systemInfo"
     systemTestEvent.time = 0
-    systemTestEvent.SystemTestsInfo = new SystemTest_SystemInfo()
+    systemTestEvent.SystemTestsInfo = new SystemTestsSystemInfo()
     @eventQueue.push systemTestEvent
 
   stopTestRecording: ->
