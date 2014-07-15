@@ -1,4 +1,5 @@
 # REQUIRES SystemTestsReferenceImage
+# REQUIRES SystemTest_SystemInfo
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
@@ -38,32 +39,11 @@ class SystemTestsRecorderAndPlayer
   replayingASystemTest: false
   lastRecordedEventTime: null
   handMorph: null
-  systemInfo: null
   collectedImages: [] # array of SystemTestsReferenceImage
   testName: ''
   @loadedImages: {}
 
   constructor: (@worldMorph, @handMorph) ->
-
-  initialiseSystemInfo: ->
-    @systemInfo = {}
-    @systemInfo.zombieKernelTestHarnessVersionMajor = 0
-    @systemInfo.zombieKernelTestHarnessVersionMinor = 1
-    @systemInfo.zombieKernelTestHarnessVersionRelease = 0
-    @systemInfo.userAgent = navigator.userAgent
-    @systemInfo.screenWidth = window.screen.width
-    @systemInfo.screenHeight = window.screen.height
-    @systemInfo.screenColorDepth = window.screen.colorDepth
-    if window.devicePixelRatio?
-      @systemInfo.screenPixelRatio = window.devicePixelRatio
-    else
-      @systemInfo.screenPixelRatio = window.devicePixelRatio
-    @systemInfo.appCodeName = navigator.appCodeName
-    @systemInfo.appName = navigator.appName
-    @systemInfo.appVersion = navigator.appVersion
-    @systemInfo.cookieEnabled = navigator.cookieEnabled
-    @systemInfo.platform = navigator.platform
-    @systemInfo.systemLanguage = navigator.systemLanguage
 
   startTestRecording: (@testName) ->
     # clean up the world so we start from clean slate
@@ -73,11 +53,10 @@ class SystemTestsRecorderAndPlayer
     @recordingASystemTest = true
     @replayingASystemTest = false
 
-    @initialiseSystemInfo()
     systemTestEvent = {}
     systemTestEvent.type = "systemInfo"
     systemTestEvent.time = 0
-    systemTestEvent.systemInfo = @systemInfo
+    systemTestEvent.SystemTestsInfo = new SystemTest_SystemInfo()
     @eventQueue.push systemTestEvent
 
   stopTestRecording: ->
@@ -138,8 +117,6 @@ class SystemTestsRecorderAndPlayer
 
   takeScreenshot: () ->
     console.log "taking screenshot"
-    if @systemInfo is null
-      @initialiseSystemInfo()
     currentTime = new Date().getTime()
     systemTestEvent = {}
     systemTestEvent.type = "takeScreenshot"
