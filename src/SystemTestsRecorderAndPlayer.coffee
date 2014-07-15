@@ -94,21 +94,13 @@ class SystemTestsRecorderAndPlayer
 
   takeScreenshot: () ->
     console.log "taking screenshot"
-    currentTime = new Date().getTime()
-    systemTestEvent = {}
-    systemTestEvent.type = "takeScreenshot"
-    #systemTestEvent.mouseX = pageX
-    #systemTestEvent.mouseY = pageY
-    systemTestEvent.time = currentTime - @lastRecordedEventTime
-    #systemTestEvent.button
-    #systemTestEvent.ctrlKey
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
-    systemTestEvent.screenShotImageName = imageName
+    systemTestEvent = new SystemTestsEventScreenshot imageName, @
     imageData = @worldMorph.fullImageData()
     SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = imageData
     @collectedImages.push new SystemTestsReferenceImage(imageName,imageData)
     @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = currentTime
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
     if not @recordingASystemTest
       return systemTestEvent
 
