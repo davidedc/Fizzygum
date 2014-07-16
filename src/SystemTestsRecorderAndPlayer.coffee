@@ -121,18 +121,11 @@ class SystemTestsRecorderAndPlayer
       @scheduleEvent(queuedEvent, lastPlayedEventTime)
 
   scheduleEvent: (queuedEvent, lastPlayedEventTime) ->
-    if queuedEvent.type == 'mouseMove'
-      callback = => @handMorph.processMouseMove(queuedEvent.mouseX, queuedEvent.mouseY)
-    else if queuedEvent.type == 'mouseDown'
-      callback = => @handMorph.processMouseDown(queuedEvent.button, queuedEvent.ctrlKey)
-    else if queuedEvent.type == 'mouseUp'
-      callback = => @handMorph.processMouseUp()
-    else if queuedEvent.type == 'takeScreenshot'
-      callback = => @compareScreenshots(queuedEvent.screenShotImageName)
-    else return
-
-    setTimeout callback, lastPlayedEventTime
-    #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime
+    if window[queuedEvent.type]?
+      if window[queuedEvent.type].replayFunction?
+        callback = =>  window[queuedEvent.type].replayFunction.call @,@,queuedEvent
+        setTimeout callback, lastPlayedEventTime
+        #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime
 
   testFileContentCreator: (data) ->
     # these here below is just one string
