@@ -97,8 +97,9 @@ class SystemTestsRecorderAndPlayer
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestEvent = new SystemTestsEventScreenshot imageName, @
     imageData = @worldMorph.fullImageData()
-    SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = imageData
-    @collectedImages.push new SystemTestsReferenceImage(imageName,imageData)
+    takenScreenshot = new SystemTestsReferenceImage(imageName,imageData)
+    SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = takenScreenshot
+    @collectedImages.push takenScreenshot
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
     if not @recordingASystemTest
@@ -106,9 +107,9 @@ class SystemTestsRecorderAndPlayer
 
   compareScreenshots: (expected) ->
    console.log "trying to match screenshot: " + expected
-   console.log "length1: " + SystemTestsRecorderAndPlayer.loadedImages["#{expected}"].length
+   console.log "length1: " + SystemTestsRecorderAndPlayer.loadedImages["#{expected}"].imageData.length
    console.log "length2: " + @worldMorph.fullImageData().length
-   if SystemTestsRecorderAndPlayer.loadedImages["#{expected}"] == @worldMorph.fullImageData()
+   if SystemTestsRecorderAndPlayer.loadedImages["#{expected}"].imageData == @worldMorph.fullImageData()
     console.log "PASS - screenshot " + expected + " matched"
     return
    console.log "FAIL - no screenshots like this one"
@@ -158,7 +159,7 @@ class SystemTestsRecorderAndPlayer
     zip = new JSZip()
     zip.file("SystemTest_#{@testName}Test.js", blob);
     for image in @collectedImages
-      zip.file(image.imageName + ".js", "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' = "' + image.imageData + '";')
+      zip.file(image.imageName + "-dataHash" + HashCalculator.calculateHash(image.imageData) + ".js", "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' = ' + JSON.stringify(image) + ';')
       
       # let's also save the png file so it's easier to browse the data
       # note that these png files are not copied over into the
