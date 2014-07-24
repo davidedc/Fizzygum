@@ -97,21 +97,31 @@ class SystemTestsRecorderAndPlayer
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestEvent = new SystemTestsEventScreenshot imageName, @
     imageData = @worldMorph.fullImageData()
-    takenScreenshot = new SystemTestsReferenceImage(imageName,imageData)
-    SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = takenScreenshot
+    takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
+    unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
+      SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = []
+    SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"].push takenScreenshot
     @collectedImages.push takenScreenshot
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
     if not @recordingASystemTest
       return systemTestEvent
 
-  compareScreenshots: (expected) ->
-   console.log "trying to match screenshot: " + expected
-   console.log "length1: " + SystemTestsRecorderAndPlayer.loadedImages["#{expected}"].imageData.length
-   console.log "length2: " + @worldMorph.fullImageData().length
-   if SystemTestsRecorderAndPlayer.loadedImages["#{expected}"].imageData == @worldMorph.fullImageData()
-    console.log "PASS - screenshot " + expected + " matched"
-    return
+  compareScreenshots: (testNameWithImageNumber) ->
+   screenshotObtained = @worldMorph.fullImageData()
+   console.log "trying to match screenshot: " + testNameWithImageNumber
+   console.log "length of obtained: " + screenshotObtained.length
+
+   # There can be multiple files for the same image, since
+   # the images vary according to OS and Browser, so for
+   # each image of each test there is an array of candidates
+   # to be checked. If any of them mathes in terms of pixel data,
+   # then fine, otherwise complain...
+   for eachImage in SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
+     console.log "length of obtained: " + eachImage.imageData.length
+     if eachImage.imageData == screenshotObtained
+      console.log "PASS - screenshot " + eachImage.fileName + " matched"
+      return
    console.log "FAIL - no screenshots like this one"
 
   replayEvents: () ->
@@ -158,15 +168,30 @@ class SystemTestsRecorderAndPlayer
     blob = @testFileContentCreator(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue, null, 4))
     zip = new JSZip()
     zip.file("SystemTest_#{@testName}Test.js", blob);
+    
+    # save all the images, each as a .png and .js file
+    # the png is for quick browsing, while the js contains
+    # the pixel data and the metadata of which configuration
+    # the picture was recorded with.
+    # (we expect the screenshots to be different across
+    # browsers and OSs)
+    # The filenames contain the test name and the image "number"
+    # AND hashes of data and metadata. This is because the same
+    # test/step might have different images for different
+    # OSs/browsers, so they all must be different files.
+    # The js files contain directly the code to load the image.
+    # There can be multiple files for the same image, since
+    # the images vary according to OS and Browser, so for
+    # each image of each test there is an array of files.
     for image in @collectedImages
-      zip.file(image.imageName + "-dataHash" + HashCalculator.calculateHash(image.imageData) + ".js", "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' = ' + JSON.stringify(image) + ';')
+      zip.file(image.fileName + ".js", "if (SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' === null) { ' + "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + ' = []}; ' + "SystemTestsRecorderAndPlayer.loadedImages." + image.imageName + '.push(' + JSON.stringify(image) + ');')
       
       # let's also save the png file so it's easier to browse the data
       # note that these png files are not copied over into the
       # build directory.
       # the image.imageData string contains a little bit of string
       # that we need to strip out before the base64-encoded png data
-      zip.file(image.imageName + ".png", image.imageData.replace(/^data:image\/png;base64,/, ""), {base64: true})
+      zip.file(image.fileName + ".png", image.imageData.replace(/^data:image\/png;base64,/, ""), {base64: true})
     
     content = zip.generate({type:"blob"})
     saveAs(content, "SystemTest_#{@testName}Test.zip")    
