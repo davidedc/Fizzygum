@@ -17,6 +17,13 @@ class WorldMorph extends FrameMorph
   @showRedraws: false
   systemTestsRecorderAndPlayer: null
 
+  # By default the world will always fill
+  # the entire page, also when browser window
+  # is resized.
+  # When this flag is set, the onResize callback
+  # automatically adjusts the world size.
+  automaticallyAdjustToFillEntireBrowserAlsoOnResize: true
+
   # keypad keys map to special characters
   # so we can trigger test actions
   # see more comments below
@@ -39,7 +46,10 @@ class WorldMorph extends FrameMorph
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
-  constructor: (aCanvas, fillPage) ->
+  constructor: (
+      aCanvas,
+      @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
+      ) ->
 
     # The WorldMorph is the very first morph to
     # be created.
@@ -69,8 +79,6 @@ class WorldMorph extends FrameMorph
 
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
-    @useFillPage = fillPage
-    @useFillPage = true  if @useFillPage is `undefined`
     @isDevMode = false
     @broken = []
     @hand = new HandMorph(@)
@@ -125,7 +133,7 @@ class WorldMorph extends FrameMorph
     @runChildrensStepFunction()
     @updateBroken()
   
-  fillPage: ->
+  stretchWorldToFillEntirePage: ->
     pos = getDocumentPositionOf(@worldCanvas)
     clientHeight = window.innerHeight
     clientWidth = window.innerWidth
@@ -231,8 +239,8 @@ class WorldMorph extends FrameMorph
   
   initEventListeners: ->
     canvas = @worldCanvas
-    if @useFillPage
-      @fillPage()
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+      @stretchWorldToFillEntirePage()
     else
       @changed()
     canvas.addEventListener "dblclick", ((event) =>
@@ -416,7 +424,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
     ), false
     window.addEventListener "resize", (=>
-      @fillPage()  if @useFillPage
+      @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
     ), false
     window.onbeforeunload = (evt) ->
       e = evt or window.event
@@ -501,7 +509,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "inspect...", (->@inspect()), "open a window on\nall properties"
       menu.addLine()
       menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
-      menu.addItem "fill page...", (->@fillPage()), "let the World automatically\nadjust to browser resizings"
+      menu.addItem "fill page...", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
       if WorldMorph.preferencesAndSettings.useBlurredShadows
         menu.addItem "sharp shadows...", (->WorldMorph.preferencesAndSettings.toggleBlurredShadows()), "sharp drop shadows\nuse for old browsers"
       else

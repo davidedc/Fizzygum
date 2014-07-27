@@ -14,6 +14,10 @@
 
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
+				// Add "false" as second parameter below
+				// to fit the world in canvas as per dimensions
+				// specified in the canvas element. Fill entire
+				// page otherwise.
 				world = new WorldMorph(worldCanvas);
 				world.isDevMode = true;
 
@@ -70,6 +74,11 @@
 	</head>
 
 	<body>
+		<!-- note that the width and height of the
+		canvas below are ignored in case the WorldMorph
+		is created without a second parameter of with
+		second parameter = true, in which case the
+		world will fill the entire page-->
 		<canvas id="world" tabindex="1" width="800" height="600" style="position: absolute;">
 			<p>Your browser doesn't support canvas.</p>
 		</canvas>
