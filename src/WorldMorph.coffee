@@ -17,6 +17,11 @@ class WorldMorph extends FrameMorph
   @showRedraws: false
   systemTestsRecorderAndPlayer: null
 
+  # this is the actual reference to the canvas
+  # on the html page, where the world is
+  # finally painted to.
+  worldCanvas: null
+
   # By default the world will always fill
   # the entire page, also when browser window
   # is resized.
