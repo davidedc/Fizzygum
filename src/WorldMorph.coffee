@@ -47,7 +47,7 @@ class WorldMorph extends FrameMorph
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
   constructor: (
-      aCanvas,
+      @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
       ) ->
 
@@ -71,11 +71,8 @@ class WorldMorph extends FrameMorph
     console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
-    @bounds = new Rectangle(0, 0, aCanvas.width, aCanvas.height)
-    @updateRendering()
     @isMinimised = false
     @isDraggable = false
-    @worldCanvas = aCanvas
 
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
@@ -88,6 +85,11 @@ class WorldMorph extends FrameMorph
     @activeMenu = null
     @activeHandle = null
     @inputDOMElementForVirtualKeyboard = null
+
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+      @stretchWorldToFillEntirePage()
+    @bounds = new Rectangle(0, 0, @worldCanvas.width, @worldCanvas.height)
+
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
   
@@ -239,10 +241,6 @@ class WorldMorph extends FrameMorph
   
   initEventListeners: ->
     canvas = @worldCanvas
-    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-      @stretchWorldToFillEntirePage()
-    else
-      @changed()
     canvas.addEventListener "dblclick", ((event) =>
       event.preventDefault()
       @hand.processDoubleClick event
