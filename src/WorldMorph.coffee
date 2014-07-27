@@ -5,7 +5,7 @@
 # REQUIRES PreferencesAndSettings
 # REQUIRES Color
 
-# I represent the <canvas> element
+# The WorldMorph takes over the canvas on the page
 class WorldMorph extends FrameMorph
 
   # these variables shouldn't be static to the WorldMorph, because
