@@ -97,6 +97,10 @@ class WorldMorph extends FrameMorph
 
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
+
+    @changed()
+    @updateRendering()
+
   
   # World Morph display:
   brokenFor: (aMorph) ->
