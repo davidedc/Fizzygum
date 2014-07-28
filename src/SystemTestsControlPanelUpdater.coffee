@@ -14,11 +14,23 @@ class SystemTestsControlPanelUpdater
   # and make it float to the right of the canvas.
   # This requires tweaking the css of the canvas
   # as well.
+
+  SystemTestsControlPanelDiv: null
+
+  addLink: (theText, theFunction) ->
+    aTag = document.createElement("a")
+    aTag.setAttribute "href", "#"
+    aTag.innerHTML = theText
+    aTag.onclick = theFunction
+    @SystemTestsControlPanelDiv.appendChild aTag
+    br = document.createElement('br')
+    @SystemTestsControlPanelDiv.appendChild(br);
+
   constructor: () ->
-    SystemTestsControlPanelDiv = document.createElement('div')
-    SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
-    SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
-    document.body.appendChild(SystemTestsControlPanelDiv)
+    @SystemTestsControlPanelDiv = document.createElement('div')
+    @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
+    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
+    document.body.appendChild(@SystemTestsControlPanelDiv)
 
     theCanvasDiv = document.getElementById('world')
     # one of these is for IE and the other one
@@ -26,10 +38,34 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.styleFloat = 'left';
     theCanvasDiv.style.cssFloat = 'left';
 
-    aTag = document.createElement("a")
-    aTag.setAttribute "href", "yourlink.htm"
-    aTag.innerHTML = "link text"
-    SystemTestsControlPanelDiv.appendChild aTag
+
+    startTestRecording = ->
+      testName = prompt("Please enter a test name", "test1")
+      window.world.systemTestsRecorderAndPlayer.startTestRecording(testName)
+
+    takeScreenshot = ->
+      window.world.systemTestsRecorderAndPlayer.takeScreenshot()
+
+    stopTestRecording = ->
+      window.world.systemTestsRecorderAndPlayer.stopTestRecording()
+
+    replayRecordedTest = ->
+      window.world.systemTestsRecorderAndPlayer.startTestPlaying()
+
+    saveRecordedTest = ->
+      window.world.systemTestsRecorderAndPlayer.saveTest()
+
+    saveFailedScreenshots = ->
+      window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
+
+
+    @addLink "start test recording", startTestRecording
+    @addLink "take screenshot", takeScreenshot
+    @addLink "stop test recording", stopTestRecording
+    @addLink "replay recorded test", replayRecordedTest
+    @addLink "save recorded test", saveRecordedTest
+    @addLink "save failed screenshots test", saveFailedScreenshots
+
 
 
     
