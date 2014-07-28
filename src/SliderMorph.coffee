@@ -1,4 +1,6 @@
 # SliderMorph ///////////////////////////////////////////////////
+# Sliders (and hence slider button morphs)
+# are also used in the ScrollMorphs .
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
