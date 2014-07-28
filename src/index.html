@@ -18,7 +18,16 @@
 				// to fit the world in canvas as per dimensions
 				// specified in the canvas element. Fill entire
 				// page otherwise.
-				world = new WorldMorph(worldCanvas);
+			    if(window.location.href.indexOf("recordSystemTest") > -1) {
+			    	// the user is here to record a system test so
+			    	// don't fill entire page cause there are some
+			    	// controls on the right side of the canvas
+					world = new WorldMorph(worldCanvas, false);
+			    }
+			    else {
+					world = new WorldMorph(worldCanvas, true);			    	
+			    }
+
 				world.isDevMode = true;
 
 				hi = new StringMorph(
