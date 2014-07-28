@@ -128,53 +128,66 @@ class SystemTestsRecorderAndPlayer
   # are different.
   # So it neatly highlights where the differences
   # are.
-  subtractScreenshots: (expected, obtained) ->
+  subtractScreenshots: (expected, obtained, andThen) ->
     console.log "subtractScreenshots"
     expectedCanvas = document.createElement "canvas"
     expectedImage = new Image
+    # unfortunately the operation of loading
+    # the base64 data into the image is asynchronous
+    # (seems to work immediately in Chrome but it's
+    # recommended to consider it asynchronous)
+    # so here we need to chain two callbacks
+    # to make it all work, as we need to load
+    # two such images.
+    expectedImage.onload = =>
+      console.log "expectedCanvas.imageData: " + expectedCanvas.imageData
+      expectedCanvas.width = expectedImage.width
+      expectedCanvas.height = expectedImage.height
+      expectedCanvasContext = expectedCanvas.getContext "2d"
+      console.log "expectedCanvas.width: " + expectedCanvas.width
+      console.log "expectedCanvas.height: " + expectedCanvas.height
+      expectedCanvasContext.drawImage(expectedImage,0,0)
+      expectedImageData = expectedCanvasContext.getImageData(0, 0, expectedCanvas.width, expectedCanvas.height)
+
+      obtainedCanvas = document.createElement "canvas"
+      obtainedImage = new Image
+      obtainedImage.onload = =>
+        obtainedCanvas.width = obtainedImage.width
+        obtainedCanvas.height = obtainedImage.height
+        obtainedCanvasContext = obtainedCanvas.getContext "2d"
+        obtainedCanvasContext.drawImage(obtainedImage,0,0)
+        obtainedImageData = obtainedCanvasContext.getImageData(0, 0, obtainedCanvas.width, obtainedCanvas.height)
+
+        subtractionCanvas = document.createElement "canvas"
+        subtractionCanvas.width = obtainedImage.width
+        subtractionCanvas.height = obtainedImage.height
+        subtractionCanvasContext = subtractionCanvas.getContext("2d")
+        subtractionCanvasContext.drawImage(obtainedImage,0,0)
+        subtractionImageData = subtractionCanvasContext.getImageData(0, 0, subtractionCanvas.width, subtractionCanvas.height)
+
+        i = 0
+        equalPixels = 0
+        differentPixels = 0
+
+        while i < subtractionImageData.data.length
+          if obtainedImageData.data[i] != expectedImageData.data[i] or
+             obtainedImageData.data[i+1] != expectedImageData.data[i+1] or
+             obtainedImageData.data[i+2] != expectedImageData.data[i+2]
+            subtractionImageData.data[i] = 255
+            subtractionImageData.data[i+1] = 0
+            subtractionImageData.data[i+2] = 0
+            differentPixels++
+          else
+            equalPixels++
+          i += 4
+        console.log "equalPixels: " + equalPixels
+        console.log "differentPixels: " + differentPixels
+        subtractionCanvasContext.putImageData subtractionImageData, 0, 0
+        andThen subtractionCanvas
+
+      obtainedImage.src = obtained.imageData
+
     expectedImage.src = expected.imageData
-    expectedCanvas.width = expectedImage.width
-    expectedCanvas.height = expectedImage.height
-    expectedCanvasContext = expectedCanvas.getContext "2d"
-    expectedCanvasContext.drawImage(expectedImage,0,0)
-    expectedImageData = expectedCanvasContext.getImageData(0, 0, expectedCanvas.width, expectedCanvas.height)
-
-    obtainedCanvas = document.createElement "canvas"
-    obtainedImage = new Image
-    obtainedImage.src = obtained.imageData
-    obtainedCanvas.width = obtainedImage.width
-    obtainedCanvas.height = obtainedImage.height
-    obtainedCanvasContext = obtainedCanvas.getContext "2d"
-    obtainedCanvasContext.drawImage(obtainedImage,0,0)
-    obtainedImageData = obtainedCanvasContext.getImageData(0, 0, obtainedCanvas.width, obtainedCanvas.height)
-
-    subtractionCanvas = document.createElement "canvas"
-    subtractionCanvas.width = obtainedImage.width
-    subtractionCanvas.height = obtainedImage.height
-    subtractionCanvasContext = subtractionCanvas.getContext("2d")
-    subtractionCanvasContext.drawImage(obtainedImage,0,0)
-    subtractionImageData = subtractionCanvasContext.getImageData(0, 0, subtractionCanvas.width, subtractionCanvas.height)
-
-    i = 0
-    equalPixels = 0
-    differentPixels = 0
-
-    while i < subtractionImageData.data.length
-      if obtainedImageData.data[i] != expectedImageData.data[i] or
-         obtainedImageData.data[i+1] != expectedImageData.data[i+1] or
-         obtainedImageData.data[i+2] != expectedImageData.data[i+2]
-        subtractionImageData.data[i] = 255
-        subtractionImageData.data[i+1] = 0
-        subtractionImageData.data[i+2] = 0
-        differentPixels++
-      else
-        equalPixels++
-      i += 4
-    console.log "equalPixels: " + equalPixels
-    console.log "differentPixels: " + differentPixels
-    subtractionCanvasContext.putImageData subtractionImageData, 0, 0
-    return subtractionCanvas
-
 
   compareScreenshots: (testNameWithImageNumber) ->
    screenshotObtained = @worldMorph.fullImageData()
@@ -282,11 +295,38 @@ class SystemTestsRecorderAndPlayer
       aGoodImageName = (failedImage).imageName.replace("obtained-", "")
       setOfGoodImages = SystemTestsRecorderAndPlayer.loadedImages[aGoodImageName]
       aGoodImage = setOfGoodImages[0]
-      subtractionCanvas = @subtractScreenshots failedImage, aGoodImage
-      zip.file("diff-"+failedImage.imageName+".png", subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
+      # note the asynchronous operation here - this is because
+      # the subtractScreenshots needs to create some Images and
+      # load them with data from base64 string. The operation
+      # of loading the data is asynchronous...
+      @subtractScreenshots failedImage, aGoodImage, (subtractionCanvas) ->
+        zip.file("diff-"+failedImage.imageName+".png", subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
 
-    content = zip.generate({type:"blob"})
-    saveAs(content, "SystemTest_#{@testName}TestFailedScreenshots.zip")    
+    # OK the images are all put in the zip
+    # asynchronously. So, in theory what we should do is to
+    # check that we have all the image packed
+    # and then save the zip. In practice we just wait
+    # a second (which is well beyond what we
+    # expect all the images to take to be packed)
+    # and then save it.
+    setTimeout \
+      =>
+        console.log "saving failed screenshots"
+        if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
+          console.log "safari"
+          # Safari can't save blobs nicely with a nice
+          # file name, see
+          # http://stuk.github.io/jszip/documentation/howto/write_zip.html
+          # so what this does is it saves a file "Unknown". User
+          # then has to rename it and open it.
+          location.href="data:application/zip;base64," + zip.generate({type:"base64"})
+        else
+          console.log "not safari"
+          content = zip.generate({type:"blob"})
+          saveAs(content, "SystemTest_#{@testName}TestFailedScreenshots.zip")        
+      , 1000 
+
+
 
   saveTest: ->
     blob = @testFileContentCreator(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue, null, 4))
@@ -307,5 +347,16 @@ class SystemTestsRecorderAndPlayer
       # build directory.
       image.addToZipAsPNG zip
     
-    content = zip.generate({type:"blob"})
-    saveAs(content, "SystemTest_#{@testName}Test.zip")    
+
+    if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
+      # Safari can't save blobs nicely with a nice
+      # file name, see
+      # http://stuk.github.io/jszip/documentation/howto/write_zip.html
+      # so what this does is it saves a file "Unknown". User
+      # then has to rename it and open it.
+      console.log "safari"
+      location.href="data:application/zip;base64," + zip.generate({type:"base64"})
+    else
+      console.log "not safari"
+      content = zip.generate({type:"blob"})
+      saveAs(content, "SystemTest_#{@testName}Test.zip")    
