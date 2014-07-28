@@ -76,6 +76,16 @@
 			    if(window.location.href.indexOf("runAllTests") > -1) {
 			       world.runSystemTests();
 			    }
+
+			    // in case we want to set up the page
+			    // for the System Tests, then add a panel
+			    // to the right where helper commands can be
+			    // clicked.
+			    if(window.location.href.indexOf("recordSystemTest") > -1) {
+    				if (SystemTestsControlPanelUpdater !== null) {
+      					new SystemTestsControlPanelUpdater();
+    				}
+			    }
 				
 			};
 
