@@ -189,14 +189,20 @@ class SystemTestsRecorderAndPlayer
    for eachImage in SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
      console.log "length of obtained: " + eachImage.imageData.length
      if eachImage.imageData == screenshotObtained
-      console.log "PASS - screenshot " + eachImage.fileName + " matched"
+      message = "PASS - screenshot " + eachImage.fileName + " matched"
+      console.log message
+      if SystemTestsControlPanelUpdater?
+        SystemTestsControlPanelUpdater.addMessageToConsole message
       return
    # OK none of the images we loaded matches the one we
    # just takes. Hence create a SystemTestsReferenceImage
    # that we can let the user download - it will contain
    # the image actually obtained (rather than the one
    # we should have seen)
-   console.log "FAIL - no screenshots like this one"
+   message = "FAIL - no screenshots like this one"
+   console.log message
+   if SystemTestsControlPanelUpdater?
+     SystemTestsControlPanelUpdater.addMessageToConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage

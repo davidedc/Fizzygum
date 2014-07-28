@@ -16,6 +16,10 @@ class SystemTestsControlPanelUpdater
   # as well.
 
   SystemTestsControlPanelDiv: null
+  @SystemTestsControlPanelOutputConsoleDiv: null
+
+  @addMessageToConsole: (theText) ->
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML + theText + "</br>";
 
   addLink: (theText, theFunction) ->
     aTag = document.createElement("a")
@@ -31,6 +35,11 @@ class SystemTestsControlPanelUpdater
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
     @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
+
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv = document.createElement('div')
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.id = "SystemTestsControlPanelOutputConsole"
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.style.cssText = 'height: 300px; border: 1px solid red; overflow: hidden;'
+    document.body.appendChild(SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv)
 
     theCanvasDiv = document.getElementById('world')
     # one of these is for IE and the other one
