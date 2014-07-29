@@ -61,8 +61,6 @@ class SystemTestsRecorderAndPlayer
   constructor: (@worldMorph, @handMorph) ->
 
   startTestRecording: (@testName) ->
-    # clean up the world so we start from clean slate
-    @worldMorph.destroyAll()
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
@@ -107,6 +105,13 @@ class SystemTestsRecorderAndPlayer
   addMouseUpEvent: () ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseUp @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
+  deleteAllMorphs: ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventDeleteAllMorphs @
+    window[systemTestEvent.type].replayFunction @, null
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
