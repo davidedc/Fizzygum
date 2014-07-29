@@ -9,7 +9,7 @@ coffee -b -c -o ./build/js ./build/delete_me/zombie-kernel.coffee
 
 # copy the html files
 cp src/index.html build
-cp src/test-tools.html build
+cp src/links-to-common-setups.html build
 
 # copy the interesting js files from the submodules
 mkdir build/js/libs/
