@@ -47,33 +47,17 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.styleFloat = 'left';
     theCanvasDiv.style.cssFloat = 'left';
 
-
     startTestRecording = ->
       testName = prompt("Please enter a test name", "test1")
       window.world.systemTestsRecorderAndPlayer.startTestRecording(testName)
 
-    takeScreenshot = ->
-      window.world.systemTestsRecorderAndPlayer.takeScreenshot()
-
-    stopTestRecording = ->
-      window.world.systemTestsRecorderAndPlayer.stopTestRecording()
-
-    replayRecordedTest = ->
-      window.world.systemTestsRecorderAndPlayer.startTestPlaying()
-
-    saveRecordedTest = ->
-      window.world.systemTestsRecorderAndPlayer.saveTest()
-
-    saveFailedScreenshots = ->
-      window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
-
-
     @addLink "start test recording", startTestRecording
-    @addLink "take screenshot", takeScreenshot
-    @addLink "stop test recording", stopTestRecording
-    @addLink "replay recorded test", replayRecordedTest
-    @addLink "save recorded test", saveRecordedTest
-    @addLink "save failed screenshots test", saveFailedScreenshots
+    @addLink "delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
+    @addLink "take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    @addLink "stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
+    @addLink "replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
+    @addLink "save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
+    @addLink "save failed screenshots test", (-> window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots())
 
 
 
