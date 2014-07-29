@@ -443,8 +443,6 @@ class Morph extends MorphicNode
       st = src.top()
       al = area.left()
       at = area.top()
-      #if @image == null
-      #  debugger
       w = Math.min(src.width(), @image.width - sl)
       h = Math.min(src.height(), @image.height - st)
       return null  if w < 1 or h < 1

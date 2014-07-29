@@ -384,7 +384,6 @@ class SystemTestsRecorderAndPlayer
     console.log "System tests: " + @testsList()
     for i in @testsList()
       #console.log window[i]
-      debugger
       @eventQueue = (window[i]).testData
       # the Zombie kernel safari pop-up is painted weird, needs a refresh
       # for some unknown reason
