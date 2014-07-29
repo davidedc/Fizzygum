@@ -102,7 +102,7 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
-  addMouseUpEvent: () ->
+  addMouseUpEvent: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseUp @
     @eventQueue.push systemTestEvent
@@ -115,7 +115,7 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
-  takeScreenshot: () ->
+  takeScreenshot: ->
     console.log "taking screenshot"
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestEvent = new SystemTestsEventScreenshot imageName, @
@@ -373,14 +373,14 @@ class SystemTestsRecorderAndPlayer
       content = zip.generate({type:"blob"})
       saveAs(content, "SystemTest_#{@testName}.zip")    
 
-  testsList: () ->
+  testsList: ->
     # Check which objects have the right name start
     console.log Object.keys(window)
     (Object.keys(window)).filter (i) ->
       console.log i.indexOf("SystemTest_")
       i.indexOf("SystemTest_") == 0
 
-  runSystemTests: () ->
+  runSystemTests: ->
     console.log "System tests: " + @testsList()
     for i in @testsList()
       #console.log window[i]

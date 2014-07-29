@@ -1,7 +1,7 @@
 # ShadowMorph /////////////////////////////////////////////////////////
 
 class ShadowMorph extends Morph
-  constructor: () ->
+  constructor: ->
     super()
     @updateRendering()
 

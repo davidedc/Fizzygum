@@ -71,14 +71,14 @@ class Morph extends MorphicNode
   image: null
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
-  uniqueIDString: () ->
+  uniqueIDString: ->
     (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
 
-  assignUniqueID: () ->
+  assignUniqueID: ->
     @constructor.instancesCounter++
     @instanceNumber = @constructor.instancesCounter
   
-  constructor: () ->
+  constructor: ->
     super()
 
     @assignUniqueID()

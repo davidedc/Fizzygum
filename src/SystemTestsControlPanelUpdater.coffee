@@ -30,7 +30,7 @@ class SystemTestsControlPanelUpdater
     br = document.createElement('br')
     @SystemTestsControlPanelDiv.appendChild(br);
 
-  constructor: () ->
+  constructor: ->
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
     @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'

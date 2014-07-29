@@ -11,7 +11,7 @@ class PenMorph extends Morph
   wantsRedraw: false # internal optimization
   penPoint: 'tip' # or 'center'
   
-  constructor: () ->
+  constructor: ->
     @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
     super()
     @setExtent new Point(@penSize, @penSize)
