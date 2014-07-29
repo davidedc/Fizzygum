@@ -360,3 +360,22 @@ class SystemTestsRecorderAndPlayer
       console.log "not safari"
       content = zip.generate({type:"blob"})
       saveAs(content, "SystemTest_#{@testName}Test.zip")    
+  testsList: () ->
+    # Check which objects have the right name start
+    console.log Object.keys(window)
+    (Object.keys(window)).filter (i) ->
+      console.log i.indexOf("SystemTest_")
+      i.indexOf("SystemTest_") == 0
+
+  runSystemTests: () ->
+    console.log "System tests: " + @testsList()
+    for i in @testsList()
+      #console.log window[i]
+      debugger
+      @eventQueue = (window[i]).testData
+      # the Zombie kernel safari pop-up is painted weird, needs a refresh
+      # for some unknown reason
+      #@changed()
+      # start from clean slate
+      #@destroyAll()
+      @startTestPlaying()

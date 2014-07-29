@@ -566,24 +566,6 @@ class WorldMorph extends FrameMorph
       prev.selectAll()
       prev.edit()
   
-  testsList: () ->
-    # Check which objects have the right name start
-    console.log Object.keys(window)
-    (Object.keys(window)).filter (i) ->
-      console.log i.indexOf("SystemTest_")
-      i.indexOf("SystemTest_") == 0
-
-  runSystemTests: () ->
-    console.log @testsList()
-    for i in @testsList()
-      console.log window[i]
-      @systemTestsRecorderAndPlayer.eventQueue = (window[i]).testData
-      # the Zombie kernel safari pop-up is painted weird, needs a refresh
-      # for some unknown reason
-      @changed()
-      # start from clean slate
-      @destroyAll()
-      @systemTestsRecorderAndPlayer.startTestPlaying()
 
   # WorldMorph menu:
   contextMenu: ->
