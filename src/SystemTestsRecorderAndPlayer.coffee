@@ -248,14 +248,14 @@ class SystemTestsRecorderAndPlayer
           ... all the remaining test data...
     ###
     "
-  var SystemTest_#{@testName}Test;
+  var SystemTest_#{@testName};
 
-  SystemTest_#{@testName}Test = (function() {
-    function SystemTest_#{@testName}Test() {}
+  SystemTest_#{@testName} = (function() {
+    function SystemTest_#{@testName}() {}
 
-    SystemTest_#{@testName}Test.testData = #{data};
+    SystemTest_#{@testName}.testData = #{data};
 
-    return SystemTest_#{@testName}Test;
+    return SystemTest_#{@testName};
 
   })();
     "
@@ -323,7 +323,7 @@ class SystemTestsRecorderAndPlayer
         else
           console.log "not safari"
           content = zip.generate({type:"blob"})
-          saveAs(content, "SystemTest_#{@testName}TestFailedScreenshots.zip")        
+          saveAs(content, "SystemTest_#{@testName}_failedScreenshots.zip")        
       , 1000 
 
 
@@ -331,7 +331,7 @@ class SystemTestsRecorderAndPlayer
   saveTest: ->
     blob = @testFileContentCreator(JSON.stringify( window.world.systemTestsRecorderAndPlayer.eventQueue, null, 4))
     zip = new JSZip()
-    zip.file("SystemTest_#{@testName}Test.js", blob);
+    zip.file("SystemTest_#{@testName}.js", blob);
     
     # save all the images, each as a .png and .js file
     # the png is for quick browsing, while the js contains
@@ -359,7 +359,8 @@ class SystemTestsRecorderAndPlayer
     else
       console.log "not safari"
       content = zip.generate({type:"blob"})
-      saveAs(content, "SystemTest_#{@testName}Test.zip")    
+      saveAs(content, "SystemTest_#{@testName}.zip")    
+
   testsList: () ->
     # Check which objects have the right name start
     console.log Object.keys(window)
