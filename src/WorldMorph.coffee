@@ -8,6 +8,31 @@
 # The WorldMorph takes over the canvas on the page
 class WorldMorph extends FrameMorph
 
+  # We need to add and remove
+  # the event listeners so we are
+  # going to put them all in properties
+  # here.
+  dblclickEventListener: null
+  mousedownEventListener: null
+  touchstartEventListener: null
+  mouseupEventListener: null
+  touchendEventListener: null
+  mousemoveEventListener: null
+  touchmoveEventListener: null
+  gesturestartEventListener: null
+  gesturechangeEventListener: null
+  contextmenuEventListener: null
+  keydownEventListener: null
+  keyupEventListener: null
+  keypressEventListener: null
+  mousewheelEventListener: null
+  DOMMouseScrollEventListener: null
+  copyEventListener: null
+  pasteEventListener: null
+  dragoverEventListener: null
+  dropEventListener: null
+  resizeEventListener: null
+
   # these variables shouldn't be static to the WorldMorph, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
@@ -250,42 +275,63 @@ class WorldMorph extends FrameMorph
   
   initEventListeners: ->
     canvas = @worldCanvas
-    canvas.addEventListener "dblclick", ((event) =>
+
+    @dblclickEventListener = ((event) =>
       event.preventDefault()
       @hand.processDoubleClick event
-    ), false
-    canvas.addEventListener "mousedown", ((event) =>
+    )
+    canvas.addEventListener "dblclick", @dblclickEventListener, false
+
+    @mousedownEventListener = ((event) =>
       @hand.processMouseDown event.button, event.ctrlKey
-    ), false
-    canvas.addEventListener "touchstart", ((event) =>
+    )
+    canvas.addEventListener "mousedown", @mousedownEventListener, false
+
+    @touchstartEventListener = ((event) =>
       @hand.processTouchStart event
-    ), false
-    canvas.addEventListener "mouseup", ((event) =>
+    )
+    canvas.addEventListener "touchstart", @touchstartEventListener , false
+    
+    @mouseupEventListener = ((event) =>
       event.preventDefault()
       @hand.processMouseUp event.button
-    ), false
-    canvas.addEventListener "touchend", ((event) =>
+    )
+    canvas.addEventListener "mouseup", @mouseupEventListener, false
+    
+    @touchendEventListener = ((event) =>
       @hand.processTouchEnd event
-    ), false
-    canvas.addEventListener "mousemove", ((event) =>
+    )
+    canvas.addEventListener "touchend", @touchendEventListener, false
+    
+    @mousemoveEventListener = ((event) =>
       @hand.processMouseMove  event.pageX, event.pageY
-    ), false
-    canvas.addEventListener "touchmove", ((event) =>
+    )
+    canvas.addEventListener "mousemove", @mousemoveEventListener, false
+    
+    @touchmoveEventListener = ((event) =>
       @hand.processTouchMove event
-    ), false
-    canvas.addEventListener "gesturestart", ((event) =>
+    )
+    canvas.addEventListener "touchmove", @touchmoveEventListener, false
+    
+    @gesturestartEventListener = ((event) =>
       # Disable browser zoom
       event.preventDefault()
-    ), false
-    canvas.addEventListener "gesturechange", ((event) =>
+    )
+    canvas.addEventListener "gesturestart", @gesturestartEventListener, false
+    
+    @gesturechangeEventListener = ((event) =>
       # Disable browser zoom
       event.preventDefault()
-    ), false
-    canvas.addEventListener "contextmenu", ((event) ->
+    )
+    canvas.addEventListener "gesturechange", @gesturechangeEventListener, false
+    
+    @contextmenuEventListener = ((event) ->
       # suppress context menu for Mac-Firefox
       event.preventDefault()
-    ), false
-    canvas.addEventListener "keydown", ((event) =>
+    )
+    canvas.addEventListener "contextmenu", @contextmenuEventListener, false
+    
+    @keydownEventListener = ((event) =>
       @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
 
       # supress backspace override
@@ -297,15 +343,17 @@ class WorldMorph extends FrameMorph
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
         @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
-    ), false
-    #
-    canvas.addEventListener "keyup", ((event) =>
+    )
+    canvas.addEventListener "keydown", @keydownEventListener, false
+
+    @keyupEventListener = ((event) =>
       # dispatch to keyboard receiver
       if @keyboardEventsReceiver
         if @keyboardEventsReceiver.processKeyUp
           @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
-    ), false
+    )
+    canvas.addEventListener "keyup", @keyupEventListener, false
 
     # This method also handles keypresses from a special
     # external keypad which is used to
@@ -323,7 +371,8 @@ class WorldMorph extends FrameMorph
     # the "00" key of such keypads - see
     # note below.
     doublePressOfZeroKeypadKey: null
-    canvas.addEventListener "keypress", ((event) =>
+    
+    @keypressEventListener = ((event) =>
 
       # This if block adapted from:
       # http://stackoverflow.com/a/16033129
@@ -358,18 +407,23 @@ class WorldMorph extends FrameMorph
       @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
 
-    ), false
+    )
+    canvas.addEventListener "keypress", @keypressEventListener, false
 
     # Safari, Chrome
-    canvas.addEventListener "mousewheel", ((event) =>
+    
+    @mousewheelEventListener = ((event) =>
       @hand.processMouseScroll event
       event.preventDefault()
-    ), false
+    )
+    canvas.addEventListener "mousewheel", @mousewheelEventListener, false
     # Firefox
-    canvas.addEventListener "DOMMouseScroll", ((event) =>
+    
+    @DOMMouseScrollEventListener = ((event) =>
       @hand.processMouseScroll event
       event.preventDefault()
-    ), false
+    )
+    canvas.addEventListener "DOMMouseScroll", @DOMMouseScrollEventListener, false
 
     # in theory there should be no scroll event on the page
     # window.addEventListener "scroll", ((event) =>
@@ -387,7 +441,8 @@ class WorldMorph extends FrameMorph
     # local memory. So the OS clipboard wouldn't be used, but at least there would
     # be some copy/paste working. Also one would need to intercept the copy/paste
     # key combinations manually instead of from the copy/paste events.
-    document.body.addEventListener "copy", ((event) =>
+    
+    @copyEventListener = ((event) =>
       if @caret
         selectedText = @caret.target.selection()
         if event.clipboardData
@@ -398,9 +453,10 @@ class WorldMorph extends FrameMorph
           event.returnValue = false
           setStatus = window.clipboardData.setData "Text", selectedText
 
-    ), false
+    )
+    document.body.addEventListener "copy", @copyEventListener, false
 
-    document.body.addEventListener "paste", ((event) =>
+    @pasteEventListener = ((event) =>
       if @caret
         if event.clipboardData
           # Look for access to data if types array is missing
@@ -416,23 +472,30 @@ class WorldMorph extends FrameMorph
         
         # Needs a few msec to excute paste
         window.setTimeout ( => (@caret.insert text)), 50, true
-    ), false
+    )
+    document.body.addEventListener "paste", @pasteEventListener, false
 
     #console.log "binding with mousetrap"
     Mousetrap.bind ["command+k", "ctrl+k"], (e) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
       false
 
-    window.addEventListener "dragover", ((event) ->
+    @dragoverEventListener = ((event) ->
       event.preventDefault()
-    ), false
-    window.addEventListener "drop", ((event) =>
+    )
+    window.addEventListener "dragover", @dragoverEventListener, false
+    
+    @dropEventListener = ((event) =>
       @hand.processDrop event
       event.preventDefault()
-    ), false
-    window.addEventListener "resize", (=>
+    )
+    window.addEventListener "drop", @dropEventListener, false
+    
+    @resizeEventListener = (=>
       @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-    ), false
+    )
+    window.addEventListener "resize", @resizeEventListener, false
+    
     window.onbeforeunload = (evt) ->
       e = evt or window.event
       msg = "Are you sure you want to leave?"
@@ -442,6 +505,29 @@ class WorldMorph extends FrameMorph
       #
       # For Safari / chrome
       msg
+  
+  removeEventListeners: ->
+    canvas = @worldCanvas
+    canvas.removeEventListener 'dblclick', @dblclickEventListener
+    canvas.removeEventListener 'mousedown', @mousedownEventListener
+    canvas.removeEventListener 'touchstart', @touchstartEventListener
+    canvas.removeEventListener 'mouseup', @mouseupEventListener
+    canvas.removeEventListener 'touchend', @touchendEventListener
+    canvas.removeEventListener 'mousemove', @mousemoveEventListener
+    canvas.removeEventListener 'touchmove', @touchmoveEventListener
+    canvas.removeEventListener 'gesturestart', @gesturestartEventListener
+    canvas.removeEventListener 'gesturechange', @gesturechangeEventListener
+    canvas.removeEventListener 'contextmenu', @contextmenuEventListener
+    canvas.removeEventListener 'keydown', @keydownEventListener
+    canvas.removeEventListener 'keyup', @keyupEventListener
+    canvas.removeEventListener 'keypress', @keypressEventListener
+    canvas.removeEventListener 'mousewheel', @mousewheelEventListener
+    canvas.removeEventListener 'DOMMouseScroll', @DOMMouseScrollEventListener
+    canvas.removeEventListener 'copy', @copyEventListener
+    canvas.removeEventListener 'paste', @pasteEventListener
+    canvas.removeEventListener 'dragover', @dragoverEventListener
+    canvas.removeEventListener 'drop', @dropEventListener
+    canvas.removeEventListener 'resize', @resizeEventListener
   
   mouseDownLeft: ->
     noOperation
