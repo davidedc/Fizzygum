@@ -231,7 +231,7 @@ class SystemTestsRecorderAndPlayer
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage
 
-  replayEvents: () ->
+  replayEvents: ->
    lastPlayedEventTime = 0
    console.log "events: " + @eventQueue
    for queuedEvent in @eventQueue
