@@ -529,30 +529,20 @@ class WorldMorph extends FrameMorph
       else
         menu.addItem "standard settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
       menu.addLine()
-    menu.addItem "run system tests",  (->@runSystemTests()), "runs all the system tests"
-    menu.addItem "start test rec",  (->@startTestRecording()), "start recording a test"
-    menu.addItem "stop test rec",  (->@stopTestRecording()), "stop recording the test"
-    menu.addItem "play test",  (->@startTestPlaying()), "start playing the test"
-    menu.addItem "show test source",  (->@showTestSource()), "opens a window with the source of the latest test"
-    menu.addLine()
+    
+    if SystemTestsRecorderAndPlayer?
+      menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runSystemTests()), "runs all the system tests"
+      menu.addItem "start test rec",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
+      menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
+      menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
+      menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
+      menu.addLine()
     if @isDevMode
       menu.addItem "user mode...", (->@toggleDevMode()), "disable developers'\ncontext menus"
     else
       menu.addItem "development mode...", (->@toggleDevMode())
     menu.addItem "about Zombie Kernel...", (->@about())
     menu
-
-  startTestRecording: ->
-    @systemTestsRecorderAndPlayer.startTestRecording()
-
-  stopTestRecording: ->
-    @systemTestsRecorderAndPlayer.stopTestRecording()
-
-  startTestPlaying: ->
-    @systemTestsRecorderAndPlayer.startTestPlaying()
-
-  showTestSource: ->
-    @systemTestsRecorderAndPlayer.showTestSource()
   
   userCreateMorph: ->
     create = (aMorph) =>
