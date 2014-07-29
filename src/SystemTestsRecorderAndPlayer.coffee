@@ -50,6 +50,7 @@ class SystemTestsRecorderAndPlayer
   replayingASystemTest: false
   lastRecordedEventTime: null
   handMorph: null
+  worldMorph: null
   collectedImages: [] # array of SystemTestsReferenceImage
   collectedFailureImages: [] # array of SystemTestsReferenceImage
   testName: ''
