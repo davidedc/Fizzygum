@@ -78,10 +78,15 @@ class SystemTestsRecorderAndPlayer
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
+    @worldMorph.removeEventListeners()
     @replayEvents()
 
-  stopPlaying: ->
+  # gonna use this in a callback so need
+  # to make this one a double-arrow
+  stopTestPlaying: =>
+    console.log "wrapping up the playing of the test"
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    @worldMorph.initEventListeners()
 
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
@@ -226,7 +231,8 @@ class SystemTestsRecorderAndPlayer
    console.log "events: " + @eventQueue
    for queuedEvent in @eventQueue
       lastPlayedEventTime += queuedEvent.time
-      @scheduleEvent(queuedEvent, lastPlayedEventTime)
+      @scheduleEvent queuedEvent, lastPlayedEventTime
+   setTimeout @stopTestPlaying, lastPlayedEventTime + 100
 
   scheduleEvent: (queuedEvent, lastPlayedEventTime) ->
     if window[queuedEvent.type]?
