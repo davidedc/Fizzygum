@@ -32,7 +32,7 @@ class SystemTestsReferenceImage
     @fileName = @imageName + "-systemInfoHash" + @hashOfSystemInfo + "-dataHash" + @hashOfData
 
   createJSContent: ->
-  	  return "if (SystemTestsRecorderAndPlayer.loadedImages." + @imageName + ' === null) { ' + "SystemTestsRecorderAndPlayer.loadedImages." + @imageName + ' = []; } ' + "SystemTestsRecorderAndPlayer.loadedImages." + @imageName + '.push(' + JSON.stringify(@) + ');'
+  	  return "if (!SystemTestsRecorderAndPlayer.loadedImages.hasOwnProperty('" + @imageName + "')) { " + "SystemTestsRecorderAndPlayer.loadedImages." + @imageName + ' = []; } ' + "SystemTestsRecorderAndPlayer.loadedImages." + @imageName + '.push(' + JSON.stringify(@) + ');'
 
   addToZipAsJS: (zip) ->
   	zip.file(
