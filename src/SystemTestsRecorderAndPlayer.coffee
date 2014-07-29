@@ -46,8 +46,10 @@
 
 class SystemTestsRecorderAndPlayer
   eventQueue: []
-  recordingASystemTest: false
-  replayingASystemTest: false
+  @RECORDING: 0
+  @PLAYING: 1
+  @IDLE: 2
+  @state: 2
   lastRecordedEventTime: null
   handMorph: null
   worldMorph: null
@@ -63,8 +65,7 @@ class SystemTestsRecorderAndPlayer
     @worldMorph.destroyAll()
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
-    @recordingASystemTest = true
-    @replayingASystemTest = false
+    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
 
     systemTestEvent = {}
     systemTestEvent.type = "systemInfo"
@@ -73,34 +74,33 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
 
   stopTestRecording: ->
-    @recordingASystemTest = false
+    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
 
   startTestPlaying: ->
-    @recordingASystemTest = false
-    @replayingASystemTest = true
+    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
     @replayEvents()
 
   stopPlaying: ->
-    @replayingASystemTest = false
+    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
 
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
 
   addMouseMoveEvent: (pageX, pageY) ->
-    return if not @recordingASystemTest
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseMove pageX, pageY, @
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
 
   addMouseDownEvent: (button, ctrlKey) ->
-    return if not @recordingASystemTest
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseDown button, ctrlKey, @
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
   addMouseUpEvent: () ->
-    return if not @recordingASystemTest
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseUp @
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
@@ -117,7 +117,7 @@ class SystemTestsRecorderAndPlayer
     @collectedImages.push takenScreenshot
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
-    if not @recordingASystemTest
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
       return systemTestEvent
 
   # a lenghty method because there
