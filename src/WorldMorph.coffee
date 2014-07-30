@@ -598,7 +598,7 @@ class WorldMorph extends FrameMorph
         menu.addItem "standard settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if SystemTestsRecorderAndPlayer?
+    if window.location.href.indexOf("worldWithSystemTestHarness") != -1
       menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runSystemTests()), "runs all the system tests"
       menu.addItem "start test rec",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
       menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"

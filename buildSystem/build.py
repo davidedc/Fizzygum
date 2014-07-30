@@ -62,7 +62,7 @@ STRING_BLOCK = \
 
 DIRECTORY_WITH_TEST_FILES = "src/tests/"
 FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
-OUTPUT_FILE_WITH_TEST_INCLUDES = "build/indexWithTests.html"
+OUTPUT_FILE_WITH_TEST_INCLUDES = "build/worldWithSystemTestHarness.html"
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
