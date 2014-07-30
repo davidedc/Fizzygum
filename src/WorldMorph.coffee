@@ -33,6 +33,7 @@ class WorldMorph extends FrameMorph
   dragoverEventListener: null
   dropEventListener: null
   resizeEventListener: null
+  otherTasksToBeRunOnStep: []
 
   # these variables shouldn't be static to the WorldMorph, because
   # in pure theory you could have multiple worlds in the same
@@ -167,9 +168,15 @@ class WorldMorph extends FrameMorph
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
+    @runOtherTasksStepFunction()
     @runChildrensStepFunction()
     @updateBroken()
   
+  runOtherTasksStepFunction : ->
+    for task in @otherTasksToBeRunOnStep
+      #console.log "running a task: " + task
+      task()
+
   stretchWorldToFillEntirePage: ->
     pos = getDocumentPositionOf(@worldCanvas)
     clientHeight = window.innerHeight

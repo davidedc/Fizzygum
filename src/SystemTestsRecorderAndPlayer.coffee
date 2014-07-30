@@ -57,6 +57,10 @@ class SystemTestsRecorderAndPlayer
   collectedFailureImages: [] # array of SystemTestsReferenceImage
   testName: ''
   @loadedImages: {}
+  ongoingTestPlayingTask: null
+  lastPlayedEventTime: 0
+  indexOfTaskBeingPlayed: 0
+
 
   constructor: (@worldMorph, @handMorph) ->
 
@@ -74,16 +78,14 @@ class SystemTestsRecorderAndPlayer
   stopTestRecording: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
 
-  startTestPlaying: ->
-    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
-    @worldMorph.removeEventListeners()
-    @replayEvents()
 
   # gonna use this in a callback so need
   # to make this one a double-arrow
-  stopTestPlaying: =>
+  stopTestPlaying: ->
     console.log "wrapping up the playing of the test"
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    indexOfTask = @worldMorph.otherTasksToBeRunOnStep.indexOf(@ongoingTestPlayingTask)
+    @worldMorph.otherTasksToBeRunOnStep.splice(indexOfTask, 1)
     @worldMorph.initEventListeners()
 
   showTestSource: ->
@@ -232,19 +234,27 @@ class SystemTestsRecorderAndPlayer
    @collectedFailureImages.push obtainedImage
 
   replayEvents: ->
-   lastPlayedEventTime = 0
-   console.log "events: " + @eventQueue
-   for queuedEvent in @eventQueue
-      lastPlayedEventTime += queuedEvent.time
-      @scheduleEvent queuedEvent, lastPlayedEventTime
-   setTimeout @stopTestPlaying, lastPlayedEventTime + 100
+   timeNow = (new Date()).getTime()
+   queuedEvent = @eventQueue[@indexOfTaskBeingPlayed]
+   # console.log "examining event: " + queuedEvent.type + " at: " + queuedEvent.time +
+   #   " time now: " + timeNow + " we are at: " + (timeNow - @lastPlayedEventTime)
+   timeOfNextItem = queuedEvent.time or 0
+   if timeNow - @lastPlayedEventTime >= timeOfNextItem
+     console.log "running event: " + queuedEvent.type + " " + @indexOfTaskBeingPlayed + " / " + @eventQueue.length
+     if queuedEvent.type != "systemInfo"
+       window[queuedEvent.type].replayFunction.call @,@,queuedEvent
+     @lastPlayedEventTime = timeNow
+     @indexOfTaskBeingPlayed++
+     if @indexOfTaskBeingPlayed == @eventQueue.length
+       console.log "stopping the test player"
+       @stopTestPlaying()
 
-  scheduleEvent: (queuedEvent, lastPlayedEventTime) ->
-    if window[queuedEvent.type]?
-      if window[queuedEvent.type].replayFunction?
-        callback = =>  window[queuedEvent.type].replayFunction.call @,@,queuedEvent
-        setTimeout callback, lastPlayedEventTime
-        #console.log "scheduling " + queuedEvent.type + "event for " + lastPlayedEventTime
+  startTestPlaying: ->
+    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
+    @worldMorph.removeEventListeners()
+    @ongoingTestPlayingTask = (=> @replayEvents())
+    @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
+
 
   testFileContentCreator: (data) ->
     # these here below is just one string
