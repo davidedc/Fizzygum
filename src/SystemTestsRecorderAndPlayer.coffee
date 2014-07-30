@@ -69,12 +69,6 @@ class SystemTestsRecorderAndPlayer
     @lastRecordedEventTime = new Date().getTime()
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
 
-    systemTestEvent = {}
-    systemTestEvent.type = "systemInfo"
-    systemTestEvent.time = 0
-    systemTestEvent.SystemTestsInfo = new SystemTestsSystemInfo()
-    @eventQueue.push systemTestEvent
-
   stopTestRecording: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
 
@@ -241,8 +235,7 @@ class SystemTestsRecorderAndPlayer
    timeOfNextItem = queuedEvent.time or 0
    if timeNow - @lastPlayedEventTime >= timeOfNextItem
      console.log "running event: " + queuedEvent.type + " " + @indexOfTaskBeingPlayed + " / " + @eventQueue.length
-     if queuedEvent.type != "systemInfo"
-       window[queuedEvent.type].replayFunction.call @,@,queuedEvent
+     window[queuedEvent.type].replayFunction.call @,@,queuedEvent
      @lastPlayedEventTime = timeNow
      @indexOfTaskBeingPlayed++
      if @indexOfTaskBeingPlayed == @eventQueue.length
@@ -269,18 +262,20 @@ class SystemTestsRecorderAndPlayer
           type: "systemInfo"
           ... all the remaining test data...
     ###
-    "
+    """
   var SystemTest_#{@testName};
 
   SystemTest_#{@testName} = (function() {
     function SystemTest_#{@testName}() {}
 
+    SystemTest_#{@testName}.systemInfo = #{JSON.stringify(new SystemTestsSystemInfo(), null, 4)};
+    
     SystemTest_#{@testName}.testData = #{data};
 
     return SystemTest_#{@testName};
 
   })();
-    "
+    """
 
   saveFailedScreenshots: ->
     zip = new JSZip()
