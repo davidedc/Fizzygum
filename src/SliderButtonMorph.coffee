@@ -53,7 +53,7 @@ class SliderButtonMorph extends CircleBoxMorph
     context = @image.getContext("2d")
     w = @width()
     h = @height()
-    console.log "sliderbuttonmorph - h: " + h + " w: " + w
+    # console.log "sliderbuttonmorph - h: " + h + " w: " + w
     context.lineJoin = "round"
     context.lineCap = "round"
     if @orientation is "vertical"
