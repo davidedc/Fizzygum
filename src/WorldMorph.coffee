@@ -29,6 +29,7 @@ class WorldMorph extends FrameMorph
   DOMMouseScrollEventListener: null
   copyEventListener: null
   pasteEventListener: null
+  keyCombosEventListener: null
   dragoverEventListener: null
   dropEventListener: null
   resizeEventListener: null
@@ -476,9 +477,11 @@ class WorldMorph extends FrameMorph
     document.body.addEventListener "paste", @pasteEventListener, false
 
     #console.log "binding with mousetrap"
-    Mousetrap.bind ["command+k", "ctrl+k"], (e) =>
+    @keyCombosEventListener = ((event) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
       false
+    )
+    Mousetrap.bind ["command+k", "ctrl+k"], @keyCombosEventListener
 
     @dragoverEventListener = ((event) ->
       event.preventDefault()
@@ -525,6 +528,7 @@ class WorldMorph extends FrameMorph
     canvas.removeEventListener 'DOMMouseScroll', @DOMMouseScrollEventListener
     canvas.removeEventListener 'copy', @copyEventListener
     canvas.removeEventListener 'paste', @pasteEventListener
+    Mousetrap.reset()
     canvas.removeEventListener 'dragover', @dragoverEventListener
     canvas.removeEventListener 'drop', @dropEventListener
     canvas.removeEventListener 'resize', @resizeEventListener
