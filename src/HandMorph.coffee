@@ -30,11 +30,12 @@ class HandMorph extends Morph
   morphAtPointer: ->
     morphs = arrayShallowCopyAndReverse(@world.allChildrenTopToBottom())
     result = null
-    morphs.forEach (m) =>
+    for m in morphs
       if m.visibleBounds().containsPoint(@bounds.origin) and
-        result is null and !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
+        !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
           result = m
+          break
     #
     if result isnt null
       return result
