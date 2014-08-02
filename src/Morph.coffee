@@ -1087,12 +1087,18 @@ class Morph extends MorphicNode
       return @hierarchyMenu()
     @userMenu() or (@parent and @parent.userMenu())
   
+  # When user right-clicks on a morph that is a child of other morphs,
+  # then it's ambiguous which of the morphs she wants to operate on.
+  # An example is right-clicking on a SpeechBubbleMorph: did she
+  # mean to operate on the BubbleMorph or did she mean to operate on
+  # the TextMorph contained in it?
+  # This menu lets her disambiguate.
   hierarchyMenu: ->
     parents = @allParents()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
-    # show all the entries of all the developers menus of all
-    # the parents.
+    # show an entry for each of the morphs in the hierarchy.
+    # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         menu.addItem each.toString().slice(0, 50), ->
