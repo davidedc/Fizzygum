@@ -769,7 +769,7 @@ class WorldMorph extends FrameMorph
       child.minimise()
   
   showAllMinimised: ->
-    @forAllChildren (child) ->
+    @forAllChildrenTopToBottom (child) ->
       child.unminimise() if child.isMinimised
   
   about: ->

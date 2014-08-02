@@ -28,7 +28,7 @@ class HandMorph extends Morph
   
   # HandMorph navigation:
   morphAtPointer: ->
-    morphs = @world.allChildren().slice(0).reverse()
+    morphs = @world.allChildrenTopToBottom().slice(0).reverse()
     result = null
     morphs.forEach (m) =>
       if m.visibleBounds().containsPoint(@bounds.origin) and
@@ -58,7 +58,7 @@ class HandMorph extends Morph
   #};
   #
   allMorphsAtPointer: ->
-    morphs = @world.allChildren()
+    morphs = @world.allChildrenTopToBottom()
     morphs.filter (m) =>
       !m.isMinimised and m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
   

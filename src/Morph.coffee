@@ -735,7 +735,7 @@ class Morph extends MorphicNode
     null
   
   morphAt: (aPoint) ->
-    morphs = @allChildren().slice(0).reverse()
+    morphs = @allChildrenTopToBottom().slice(0).reverse()
     result = null
     morphs.forEach (m) ->
       if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
@@ -769,15 +769,15 @@ class Morph extends MorphicNode
     world = @world()
     fb = @boundsIncludingChildren()
     allParents = @allParents()
-    allChildren = @allChildren()
-    morphs = world.allChildren()
+    allChildrenTopToBottom = @allChildrenTopToBottom()
+    morphs = world.allChildrenTopToBottom()
     morphs.filter (m) =>
       !m.isMinimised and
         m.isVisible and
         m isnt @ and
         m isnt world and
         not contains(allParents, m) and
-        not contains(allChildren, m) and
+        not contains(allChildrenTopToBottom, m) and
         m.boundsIncludingChildren().intersects(fb)
   
   # Morph pixel access:
@@ -866,7 +866,7 @@ class Morph extends MorphicNode
     # children correctly.
     #alert "### updating references"
     #alert "number of children: " + c.children.length
-    c.forAllChildren (child) ->
+    c.forAllChildrenTopToBottom (child) ->
       #alert ">>> updating reference of " + child
       child.updateReferences dict
     #alert ">>> updating reference of " + c
@@ -1198,7 +1198,7 @@ class Morph extends MorphicNode
   # Morph entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
-    @allChildren().filter (each) ->
+    @allChildrenTopToBottom().filter (each) ->
       each.isEditable && (each instanceof StringMorph || each instanceof TextMorph);
   
   
