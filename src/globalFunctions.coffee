@@ -1,5 +1,13 @@
 # Global Functions ////////////////////////////////////////////////////
 
+
+
+arrayShallowCopy = (anArray) ->
+  anArray.slice(0)
+
+arrayShallowCopyAndReverse = (anArray) ->
+  anArray.slice(0).reverse()
+
 # This is used for testing purposes, we hash the
 # data URL of a canvas object so to get a fingerprint
 # of the image data, and compare it with "OK" pre-recorded

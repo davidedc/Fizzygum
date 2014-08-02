@@ -661,9 +661,8 @@ class Morph extends MorphicNode
     shadow
   
   getShadow: ->
-    shadows = @children.slice(0).reverse().filter((child) ->
+    shadows = arrayShallowCopyAndReverse(@children).filter (child) ->
       child instanceof ShadowMorph
-    )
     return shadows[0]  if shadows.length
     null
   
@@ -735,7 +734,7 @@ class Morph extends MorphicNode
     null
   
   morphAt: (aPoint) ->
-    morphs = @allChildrenTopToBottom().slice(0).reverse()
+    morphs = @allChildrenBottomToTop()
     result = null
     morphs.forEach (m) ->
       if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)

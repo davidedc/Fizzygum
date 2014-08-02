@@ -48,7 +48,10 @@ class MorphicNode
     @children.forEach (child) ->
       result = result.concat(child.allChildrenTopToBottom())
     result
-  
+
+  allChildrenBottomToTop: ->
+    arrayShallowCopyAndReverse(@allChildrenTopToBottom())
+
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
   # Note that the function is run starting form the "bottom" leaf and the all the
