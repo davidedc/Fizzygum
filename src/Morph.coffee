@@ -661,7 +661,7 @@ class Morph extends MorphicNode
     shadow
   
   getShadow: ->
-    shadows = arrayShallowCopyAndReverse(@children).filter (child) ->
+    shadows = @childrenTopToBottom().filter (child) ->
       child instanceof ShadowMorph
     return shadows[0]  if shadows.length
     null

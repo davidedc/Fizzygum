@@ -4,7 +4,15 @@ class MorphicNode
   # "children" is an ordered list of the immediate
   # children of this node. First child is at the
   # back relative to other children, last child is at the
-  # top. The shadow is added as the first child, and it's
+  # top.
+  # This makes intuitive sense if you think for example
+  # at a textMorph being added to a box morph: it is
+  # added to the children list of the box morph, at the end,
+  # and it's painted on top (otherwise it wouldn't be visible).
+  # Note that when you add a morph A to a morph B, it doesn't
+  # mean that A is cointained in B. The two potentially might
+  # not even overlap.
+  # The shadow is added as the first child, and it's
   # actually a special child that gets drawn before the
   # others.
   children: null
@@ -15,7 +23,9 @@ class MorphicNode
   # MorphicNode string representation: e.g. 'a MorphicNode[3]'
   toString: ->
     "a MorphicNode" + "[" + @children.length + "]"
-  
+
+  childrenTopToBottom: ->
+    arrayShallowCopyAndReverse(@children)  
   
   # MorphicNode accessing:
   addChild: (aMorphicNode) ->
@@ -42,13 +52,21 @@ class MorphicNode
     @parent.depth() + 1
   
   # Returns all the internal AND terminal nodes in the subtree starting
-  # at this node - including this node
+  # at this node - including this node.
+  # Remember that the @children property already sorts morphs
+  # from bottom to top
+
   allChildrenBottomToTop: ->
     result = [@] # includes myself
     @children.forEach (child) ->
       result = result.concat(child.allChildrenBottomToTop())
     result
 
+  # TODO
+  # we are being a bit lazy here,
+  # we could to the visit of "allChildrenBottomToTop"
+  # in a slightly different way and we wouldn't need
+  # to copy and reverse the results here...
   allChildrenTopToBottom: ->
     arrayShallowCopyAndReverse(@allChildrenBottomToTop())
 

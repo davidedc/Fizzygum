@@ -28,7 +28,7 @@ class HandMorph extends Morph
   
   # HandMorph navigation:
   morphAtPointer: ->
-    morphs = arrayShallowCopyAndReverse(@world.allChildrenBottomToTop())
+    morphs = @world.allChildrenTopToBottom()
     result = null
     for m in morphs
       if m.visibleBounds().containsPoint(@bounds.origin) and
