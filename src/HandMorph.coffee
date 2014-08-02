@@ -31,11 +31,13 @@ class HandMorph extends Morph
     morphs = @world.allChildren().slice(0).reverse()
     result = null
     morphs.forEach (m) =>
-      result = m  if m.visibleBounds().containsPoint(@bounds.origin) and
+      if m.visibleBounds().containsPoint(@bounds.origin) and
         result is null and !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
+          result = m
     #
-    return result  if result isnt null
+    if result isnt null
+      return result
     @world
   
   #
