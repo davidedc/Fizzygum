@@ -43,28 +43,28 @@ class MorphicNode
   
   # Returns all the internal AND terminal nodes in the subtree starting
   # at this node - including this node
-  allChildrenTopToBottom: ->
+  allChildrenBottomToTop: ->
     result = [@] # includes myself
     @children.forEach (child) ->
-      result = result.concat(child.allChildrenTopToBottom())
+      result = result.concat(child.allChildrenBottomToTop())
     result
 
-  allChildrenBottomToTop: ->
-    arrayShallowCopyAndReverse(@allChildrenTopToBottom())
+  allChildrenTopToBottom: ->
+    arrayShallowCopyAndReverse(@allChildrenBottomToTop())
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
   # Note that the function is run starting form the "bottom" leaf and the all the
   # way "up" to the current node.
-  forAllChildrenTopToBottom: (aFunction) ->
+  forAllChildrenBottomToTop: (aFunction) ->
     if @children.length
       @children.forEach (child) ->
-        child.forAllChildrenTopToBottom aFunction
+        child.forAllChildrenBottomToTop aFunction
     aFunction.call null, @
   
   allLeafs: ->
     result = []
-    @allChildrenTopToBottom().forEach (element) ->
+    @allChildrenBottomToTop().forEach (element) ->
       result.push element  if !element.children.length
     #
     result

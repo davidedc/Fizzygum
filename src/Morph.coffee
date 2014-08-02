@@ -733,8 +733,12 @@ class Morph extends MorphicNode
       return @
     null
   
+  # never currently used in ZK
+  # TBD whether this is 100% correct,
+  # see "morphAtPointer" implementation in
+  # HandMorph.
   morphAt: (aPoint) ->
-    morphs = @allChildrenBottomToTop()
+    morphs = @allChildrenTopToBottom()
     result = null
     morphs.forEach (m) ->
       if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
@@ -743,9 +747,8 @@ class Morph extends MorphicNode
     result
   
   #
-  #	alternative -  more elegant and possibly more
-  #	performant - solution for morphAt.
-  #	Has some issues, commented out for now
+  #	potential alternative - solution for morphAt.
+  #	Has some issues, commented out for now...
   #
   #Morph.prototype.morphAt = function (aPoint) {
   #	return this.topMorphSuchThat(function (m) {
@@ -768,15 +771,15 @@ class Morph extends MorphicNode
     world = @world()
     fb = @boundsIncludingChildren()
     allParents = @allParents()
-    allChildrenTopToBottom = @allChildrenTopToBottom()
-    morphs = world.allChildrenTopToBottom()
+    allChildrenBottomToTop = @allChildrenBottomToTop()
+    morphs = world.allChildrenBottomToTop()
     morphs.filter (m) =>
       !m.isMinimised and
         m.isVisible and
         m isnt @ and
         m isnt world and
         not contains(allParents, m) and
-        not contains(allChildrenTopToBottom, m) and
+        not contains(allChildrenBottomToTop, m) and
         m.boundsIncludingChildren().intersects(fb)
   
   # Morph pixel access:
@@ -865,7 +868,7 @@ class Morph extends MorphicNode
     # children correctly.
     #alert "### updating references"
     #alert "number of children: " + c.children.length
-    c.forAllChildrenTopToBottom (child) ->
+    c.forAllChildrenBottomToTop (child) ->
       #alert ">>> updating reference of " + child
       child.updateReferences dict
     #alert ">>> updating reference of " + c
@@ -1197,7 +1200,7 @@ class Morph extends MorphicNode
   # Morph entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
-    @allChildrenTopToBottom().filter (each) ->
+    @allChildrenBottomToTop().filter (each) ->
       each.isEditable && (each instanceof StringMorph || each instanceof TextMorph);
   
   

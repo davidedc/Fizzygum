@@ -28,13 +28,14 @@ class HandMorph extends Morph
   
   # HandMorph navigation:
   morphAtPointer: ->
-    morphs = arrayShallowCopyAndReverse(@world.allChildrenTopToBottom())
+    morphs = arrayShallowCopyAndReverse(@world.allChildrenBottomToTop())
     result = null
     for m in morphs
       if m.visibleBounds().containsPoint(@bounds.origin) and
         !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
           result = m
+          # we found it, not need to 
           break
     #
     if result isnt null
@@ -59,7 +60,7 @@ class HandMorph extends Morph
   #};
   #
   allMorphsAtPointer: ->
-    morphs = @world.allChildrenTopToBottom()
+    morphs = @world.allChildrenBottomToTop()
     morphs.filter (m) =>
       !m.isMinimised and m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
   
