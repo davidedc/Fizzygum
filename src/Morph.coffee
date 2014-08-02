@@ -178,7 +178,7 @@ class Morph extends MorphicNode
         nxt.call @
         @nextSteps lst  
   
-  # leaving this function as step means that the morph want to do nothing
+  # leaving this function as step means that the morph wants to do nothing
   # but the children *are* traversed and their step function is invoked.
   # If a Morph wants to do nothing and wants to prevent the children to be
   # traversed, then this function should be set to null.
@@ -738,7 +738,8 @@ class Morph extends MorphicNode
     morphs = @allChildren().slice(0).reverse()
     result = null
     morphs.forEach (m) ->
-      result = m  if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
+      if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
+        result = m
     #
     result
   
@@ -1077,10 +1078,12 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
-    return @customContextMenu()  if @customContextMenu
+    if @customContextMenu
+      return @customContextMenu()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
-      return @developersMenu()  if @parent is world
+      if @parent is world
+        return @developersMenu()
       return @hierarchyMenu()
     @userMenu() or (@parent and @parent.userMenu())
   

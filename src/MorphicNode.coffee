@@ -41,7 +41,7 @@ class MorphicNode
     return 0  unless @parent
     @parent.depth() + 1
   
-  # Returns all the internal/terminal nodes in the subtree starting
+  # Returns all the internal AND terminal nodes in the subtree starting
   # at this node - including this node
   allChildren: ->
     result = [@] # includes myself
