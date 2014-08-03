@@ -137,7 +137,7 @@ class HandMorph extends Morph
     else
       morph = @morphAtPointer()
       if @world.activeMenu
-        unless contains(morph.allParents(), @world.activeMenu)
+        unless @world.activeMenu.containedInParentsOf(morph)
           # if there is a menu open and the user clicked on
           # something that is not part of the menu then
           # destroy the menu 
@@ -161,7 +161,7 @@ class HandMorph extends Morph
         if morph isnt @world.caret.target
           # user clicked on something other than what the
           # caret is attached to
-          unless contains(morph.allParents(), @world.activeMenu)
+          unless @world.activeMenu.containedInParentsOf(morph)
             # only dismiss editing if the morph the user
             # clicked on is not part of a menu.
             @world.stopEditing()  

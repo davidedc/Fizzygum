@@ -133,7 +133,22 @@ class MorphicNode
     if @parent?
       collected = collected.concat(@parent.allParentsSuchThat(predicate))
     return collected
-  
+
+  # quicker version that doesn't need us
+  # to create any intermediate arrays
+  # and lets us return as soon as
+  # we find a match
+  containedInParentsOf: (morph) ->
+    # test the morph itself
+    if morph is @
+      return true
+    examinedMorph = morph
+    while examinedMorph.parent?
+      examinedMorph = examinedMorph.parent
+      if examinedMorph is @
+        return true
+    return false
+
   # The direct children of the parent of this node. (current node not included)
   # never used in ZK
   # There is an alternative solution here below, in comment,
