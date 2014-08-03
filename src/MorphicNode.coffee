@@ -91,7 +91,8 @@ class MorphicNode
   allParents: ->
     # includes myself
     result = [@]
-    result = result.concat(@parent.allParents())  if @parent?
+    if @parent?
+      result = result.concat(@parent.allParents())
     result
   
   # The direct children of the parent of this node. (current node not included)
