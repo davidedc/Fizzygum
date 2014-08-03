@@ -186,4 +186,19 @@ class MorphicNode
     # ok none of my children nor me test positive,
     # so return null.
     return null
+
+  topmostChildSuchThat: (predicate) ->
+    # start to test from
+    # the top one (the last one in the array)
+    # and proceed to test "towards the back" i.e.
+    # testing elements of the array towards 0
+    # If you find any child that satifies, the search is
+    # over.
+    for morphNumber in [@children.length-1..0] by -1
+      morph = @children[morphNumber]
+      if predicate.call(null, morph)
+        return morph
+    # ok none of my children test positive,
+    # so return null.
+    return null
   

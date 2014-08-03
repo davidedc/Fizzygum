@@ -661,10 +661,8 @@ class Morph extends MorphicNode
     shadow
   
   getShadow: ->
-    shadows = @childrenTopToBottom().filter (child) ->
+    return @topmostChildSuchThat (child) ->
       child instanceof ShadowMorph
-    return shadows[0]  if shadows.length
-    null
   
   removeShadow: ->
     shadow = @getShadow()
@@ -731,6 +729,11 @@ class Morph extends MorphicNode
   # TBD whether this is 100% correct,
   # see "morphAtPointer" implementation in
   # HandMorph.
+  # Also there must be a quicker implementation
+  # cause there is no need to create the entire
+  # morph list. It would be sufficient to
+  # navigate the structure and just return
+  # at the first morph satisfying the test.
   morphAt: (aPoint) ->
     morphs = @allChildrenTopToBottom()
     result = null
