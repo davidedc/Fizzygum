@@ -726,12 +726,40 @@ class Morph extends MorphicNode
     owner.removeChild aMorph  if owner?
     @addChildFirst aMorph
   
+  # There is a simpler implementation that is also
+  # slower where you first collect all the children
+  # from top to bottom and then do the test on each
+  # But this more efficient - we don't need to
+  # create that entire list to start with, we just
+  # navigate through the children arrays.
   topMorphSuchThat: (predicate) ->
+    # base case - I am a leaf child, so I just test
+    # the predicate on myself and return myself
+    # if I satisfy, else I return null
+    if @children.length == 0
+      if predicate.call(null, @)
+        return @
+      else
+        return null
+    # if I have children, then start to test from
+    # the top one (the last one in the array)
+    # and proceed to test "towards the back" i.e.
+    # testing elements of the array towards 0
+    # If you find any morph satifies, the search is
+    # over.
+    for morphNumber in [@children.length-1..0] by -1
+      morph = @children[morphNumber]
+      foundMorph = morph.topMorphSuchThat(predicate)
+      if foundMorph?
+        return foundMorph
+    # now that all children are tested, test myself
     if predicate.call(null, @)
-      next = detect(@children.slice(0).reverse(), predicate)
-      return next.topMorphSuchThat(predicate)  if next
       return @
-    null
+    else
+      return null
+    # ok none of my children nor me test positive,
+    # so return null.
+    return null
   
   # never currently used in ZK
   # TBD whether this is 100% correct,

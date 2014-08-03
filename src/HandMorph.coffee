@@ -28,19 +28,14 @@ class HandMorph extends Morph
   
   # HandMorph navigation:
   morphAtPointer: ->
-    morphs = @world.allChildrenTopToBottom()
-    result = null
-    for m in morphs
-      if m.visibleBounds().containsPoint(@bounds.origin) and
+    result = @world.topMorphSuchThat (m) =>
+      m.visibleBounds().containsPoint(@bounds.origin) and
         !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
-          result = m
-          # we found it, not need to 
-          break
-    #
-    if result isnt null
+    if result?
       return result
-    @world
+    else
+      return @world
   
   #
   #    alternative -  more elegant and possibly more
