@@ -72,13 +72,14 @@ class MorphicNode
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
-  # Note that the function is run starting form the "bottom" leaf and the all the
-  # way "up" to the current node.
+  # Note that the function first runs on this node (which is the bottom-est morph)
+  # and the proceeds by visiting the "bottom" child (first one in array)
+  # and then all its children and then the second - bottomest child etc.
   forAllChildrenBottomToTop: (aFunction) ->
+    aFunction.call null, @
     if @children.length
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
-    aFunction.call null, @
   
   allLeafs: ->
     result = []
