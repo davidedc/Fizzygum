@@ -133,12 +133,11 @@ class Morph extends MorphicNode
       @parent.removeChild @
   
   destroyAll: ->
-    # this is a typical case: we need to make a copy of the children
-    # array first pecause we are iterating over an array that changes
-    # its values (and length) while we are iterating on it.
-    childrenCopy = arrayShallowCopy(@children)
-    childrenCopy.forEach (child) ->
-      child.destroy()
+    # we can't use forEach because we are iterating over
+    # an array that changes its values (and length) while
+    # we are iterating on it.
+    until @children.length == 0
+      @children[0].destroy()
 
   # Morph stepping:
   runChildrensStepFunction: ->
