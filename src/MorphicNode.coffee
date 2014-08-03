@@ -109,12 +109,13 @@ class MorphicNode
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
   
-  allLeafs: ->
-    result = []
-    @allChildrenBottomToTop().forEach (element) ->
-      result.push element  if !element.children.length
-    #
-    result
+  # not used in ZK so far
+  allLeafsBottomToTop: ->
+    if @children.length == 0
+      return [@]
+    @children.forEach (child) ->
+      result = result.concat(child.allLeafsBottomToTop())
+    return result
   
   # Return all "parent" nodes from this node up to the root (including both)
   allParents: ->
