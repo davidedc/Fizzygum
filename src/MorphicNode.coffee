@@ -62,13 +62,37 @@ class MorphicNode
       result = result.concat(child.allChildrenBottomToTop())
     result
 
-  # TODO
-  # we are being a bit lazy here,
-  # we could to the visit of "allChildrenBottomToTop"
-  # in a slightly different way and we wouldn't need
-  # to copy and reverse the results here...
+  # the easiest way here would be to just return
+  #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
+  # but that's slower.
+  # So we do the proper visit here instead.
   allChildrenTopToBottom: ->
-    arrayShallowCopyAndReverse(@allChildrenBottomToTop())
+    # base case - I am a leaf child, so I just
+    # return an array with myself
+    # note that I return an array rather than the
+    # element cause this method is always expected
+    # to return an array.
+    if @children.length == 0
+      return [@]
+
+    # if I have some children instead, then let's create
+    # an empty array where we'll concatenate the
+    # others.
+    arrayToReturn = []
+
+    # if I have children, then start from the top
+    # one (i.e. the last in the array) towards the bottom
+    # one and concatenate their respective
+    # top-to-bottom lists
+    for morphNumber in [@children.length-1..0] by -1
+      morph = @children[morphNumber]
+      arrayToReturn = arrayToReturn.concat morph.allChildrenTopToBottom
+
+    # ok, last we add ourselves to the bottom
+    # of the list since this node is at the bottom of all of
+    # its children...
+    arrayToReturn.push @
+
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
