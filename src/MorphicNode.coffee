@@ -151,6 +151,7 @@ class MorphicNode
     # now remove myself
     index = siblings.indexOf(@)
     siblings.splice(index, 1)
+    return siblings
   
   # returns the first parent (going up from this node) that is of a particular class
   # (includes this particular node)
