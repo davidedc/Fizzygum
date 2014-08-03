@@ -261,7 +261,7 @@ class Morph extends MorphicNode
   visibleBounds: ->
     # answer which part of me is not clipped by a Frame
     visible = @bounds
-    frames = @allParentsSuchThat (p) ->
+    frames = @allParentsTopToBottomSuchThat (p) ->
       p instanceof FrameMorph
     frames.forEach (f) ->
       visible = visible.intersect(f.bounds)
@@ -765,14 +765,14 @@ class Morph extends MorphicNode
     #    (cause they are already attached to me directly or indirectly)
     world = @world()
     fb = @boundsIncludingChildren()
-    allParents = @allParents()
+    allParentsTopToBottom = @allParentsTopToBottom()
     allChildrenBottomToTop = @allChildrenBottomToTop()
     morphs = world.collectAllChildrenBottomToTopSuchThat (m) =>
       !m.isMinimised and
         m.isVisible and
         m isnt @ and
         m isnt world and
-        not contains(allParents, m) and
+        not contains(allParentsTopToBottom, m) and
         not contains(allChildrenBottomToTop, m) and
         m.boundsIncludingChildren().intersects(fb)
   
@@ -1090,7 +1090,7 @@ class Morph extends MorphicNode
   # the TextMorph contained in it?
   # This menu lets her disambiguate.
   hierarchyMenu: ->
-    parents = @allParents()
+    parents = @allParentsTopToBottom()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
     # show an entry for each of the morphs in the hierarchy.

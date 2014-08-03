@@ -411,7 +411,7 @@ class HandMorph extends Morph
     #
     # determine the new mouse-over-list:
     # mouseOverNew = this.allMorphsAtPointer();
-    mouseOverNew = @morphAtPointer().allParents()
+    mouseOverNew = @morphAtPointer().allParentsTopToBottom()
     if (!@children.length) and (@mouseButton is "left")
       topMorph = @morphAtPointer()
       morph = topMorph.rootForGrab()

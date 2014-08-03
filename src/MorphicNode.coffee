@@ -119,19 +119,19 @@ class MorphicNode
     return result
   
   # Return all "parent" nodes from this node up to the root (including both)
-  allParents: ->
+  allParentsTopToBottom: ->
     # includes myself
     result = [@]
     if @parent?
-      result = result.concat(@parent.allParents())
+      result = result.concat(@parent.allParentsTopToBottom())
     result
 
-  allParentsSuchThat: (predicate) ->
+  allParentsTopToBottomSuchThat: (predicate) ->
     collected = []
     if predicate.call(null, @)
       collected = [@] # include myself
     if @parent?
-      collected = collected.concat(@parent.allParentsSuchThat(predicate))
+      collected = collected.concat(@parent.allParentsTopToBottomSuchThat(predicate))
     return collected
 
   # quicker version that doesn't need us
