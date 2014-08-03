@@ -54,9 +54,11 @@ class HandMorph extends Morph
   #	});
   #};
   #
+
+
+  # not used in ZK yet
   allMorphsAtPointer: ->
-    morphs = @world.allChildrenBottomToTop()
-    morphs.filter (m) =>
+    return @world.collectAllChildrenBottomToTopSuchThat (m) =>
       !m.isMinimised and m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
   
   

@@ -201,4 +201,11 @@ class MorphicNode
     # ok none of my children test positive,
     # so return null.
     return null
-  
+
+  collectAllChildrenBottomToTopSuchThat: (predicate) ->
+    collected = []
+    if predicate.call(null, @)
+      collected = [@] # include myself
+    @children.forEach (child) ->
+      collected = collected.concat(child.collectFromAllChildrenBottomToTopSuchThat(predicate))
+    return collected
