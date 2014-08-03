@@ -24,6 +24,7 @@ class MorphicNode
   toString: ->
     "a MorphicNode" + "[" + @children.length + "]"
 
+  # currently unused in ZK
   childrenTopToBottom: ->
     arrayShallowCopyAndReverse(@children)  
   
