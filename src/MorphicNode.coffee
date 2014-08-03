@@ -135,10 +135,22 @@ class MorphicNode
     return collected
   
   # The direct children of the parent of this node. (current node not included)
+  # never used in ZK
+  # There is an alternative solution here below, in comment,
+  # but I believe to be slower because it requires applying a function to
+  # all the children. My version below just required an array copy, then
+  # finding an element and splicing it out. I didn't test it so I don't
+  # even know whether it works, but gut feeling...
+  #  siblings: ->
+  #    return []  unless @parent
+  #    @parent.children.filter (child) =>
+  #      child isnt @
   siblings: ->
     return []  unless @parent
-    @parent.children.filter (child) =>
-      child isnt @
+    siblings = arrayShallowCopy @parent.children
+    # now remove myself
+    index = siblings.indexOf(@)
+    siblings.splice(index, 1)
   
   # returns the first parent (going up from this node) that is of a particular class
   # (includes this particular node)
