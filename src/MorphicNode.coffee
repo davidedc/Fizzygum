@@ -99,6 +99,10 @@ class MorphicNode
   # Note that the function first runs on this node (which is the bottom-est morph)
   # and the proceeds by visiting the "bottom" child (first one in array)
   # and then all its children and then the second - bottomest child etc.
+  # Also note that there is a more elegant implementation where
+  # we just use @allChildrenBottomToTop() but that would mean to create
+  # all the intermediary arrays with also all the unneeded node elements,
+  # there is not need.
   forAllChildrenBottomToTop: (aFunction) ->
     aFunction.call null, @
     if @children.length
