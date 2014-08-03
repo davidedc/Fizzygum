@@ -1,5 +1,9 @@
 # WorkspaceMorph //////////////////////////////////////////////////////
 
+# just an experiment to see how a "close" button at the top left of
+# any window would look like. Unclear why I called it something
+# so important given that this looks like a temporary experiment.
+
 class WorkspaceMorph extends BoxMorph
 
   # panes:
