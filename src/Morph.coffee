@@ -136,7 +136,7 @@ class Morph extends MorphicNode
     # this is a typical case: we need to make a copy of the children
     # array first pecause we are iterating over an array that changes
     # its values (and length) while we are iterating on it.
-    childrenCopy = @children.filter (x) -> true
+    childrenCopy = arrayShallowCopy(@children)
     childrenCopy.forEach (child) ->
       child.destroy()
 
