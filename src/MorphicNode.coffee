@@ -117,13 +117,39 @@ class MorphicNode
     @children.forEach (child) ->
       result = result.concat(child.allLeafsBottomToTop())
     return result
+
+  # Return all "parent" nodes from the root up to this node (including both)
+  allParentsBottomToTop: ->
+    if @parent?
+      someParents = @parent.allParentsBottomToTop()
+      someParents.push @
+      return someParents
+    else
+      return [@]
   
   # Return all "parent" nodes from this node up to the root (including both)
+  # Implementation commented-out below works but it's probably
+  # slower than the one given, because concat is slower than pushing just
+  # an array element, since concat does a shallow copy of both parts of
+  # the array...
+  #   allParentsTopToBottom: ->
+  #    # includes myself
+  #    result = [@]
+  #    if @parent?
+  #      result = result.concat(@parent.allParentsTopToBottom())
+  #    result
+
   allParentsTopToBottom: ->
-    # includes myself
-    result = [@]
+    return @allParentsBottomToTop().reverse()
+
+  # this should be quicker than allParentsTopToBottomSuchThat
+  # cause there are no concats making shallow copies.
+  allParentsBottomToTopSuchThat: (predicate) ->
+    result = []
     if @parent?
-      result = result.concat(@parent.allParentsTopToBottom())
+      result = @parent.allParentsBottomToTopSuchThat(predicate)
+    if predicate.call(null, @)
+      result.push @
     result
 
   allParentsTopToBottomSuchThat: (predicate) ->
