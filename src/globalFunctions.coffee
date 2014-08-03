@@ -3,10 +3,10 @@
 
 
 arrayShallowCopy = (anArray) ->
-  anArray.slice(0)
+  anArray.concat()
 
 arrayShallowCopyAndReverse = (anArray) ->
-  anArray.slice(0).reverse()
+  anArray.concat().reverse()
 
 # This is used for testing purposes, we hash the
 # data URL of a canvas object so to get a fingerprint
