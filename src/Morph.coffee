@@ -261,9 +261,8 @@ class Morph extends MorphicNode
   visibleBounds: ->
     # answer which part of me is not clipped by a Frame
     visible = @bounds
-    frames = @allParents().filter((p) ->
+    frames = @allParentsSuchThat (p) ->
       p instanceof FrameMorph
-    )
     frames.forEach (f) ->
       visible = visible.intersect(f.bounds)
     #

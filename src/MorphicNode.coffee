@@ -125,6 +125,14 @@ class MorphicNode
     if @parent?
       result = result.concat(@parent.allParents())
     result
+
+  allParentsSuchThat: (predicate) ->
+    collected = []
+    if predicate.call(null, @)
+      collected = [@] # include myself
+    if @parent?
+      collected = collected.concat(@parent.allParentsSuchThat(predicate))
+    return collected
   
   # The direct children of the parent of this node. (current node not included)
   siblings: ->
