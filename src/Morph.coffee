@@ -767,8 +767,7 @@ class Morph extends MorphicNode
     fb = @boundsIncludingChildren()
     allParents = @allParents()
     allChildrenBottomToTop = @allChildrenBottomToTop()
-    morphs = world.allChildrenBottomToTop()
-    morphs.filter (m) =>
+    morphs = world.collectAllChildrenBottomToTopSuchThat (m) =>
       !m.isMinimised and
         m.isVisible and
         m isnt @ and
