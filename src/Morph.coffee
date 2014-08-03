@@ -1194,7 +1194,7 @@ class Morph extends MorphicNode
   # Morph entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
-    @allChildrenBottomToTop().filter (each) ->
+    @collectAllChildrenBottomToTopSuchThat (each) ->
       each.isEditable && (each instanceof StringMorph || each instanceof TextMorph);
   
   
