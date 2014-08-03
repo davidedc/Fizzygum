@@ -215,5 +215,5 @@ class MorphicNode
     if predicate.call(null, @)
       collected = [@] # include myself
     @children.forEach (child) ->
-      collected = collected.concat(child.collectFromAllChildrenBottomToTopSuchThat(predicate))
+      collected = collected.concat(child.collectAllChildrenBottomToTopSuchThat(predicate))
     return collected
