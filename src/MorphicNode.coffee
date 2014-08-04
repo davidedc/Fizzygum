@@ -162,6 +162,7 @@ class MorphicNode
 
   # quicker version that doesn't need us
   # to create any intermediate arrays
+  # but rather just loops up the chain
   # and lets us return as soon as
   # we find a match
   containedInParentsOf: (morph) ->
