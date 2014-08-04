@@ -44,13 +44,6 @@ class FrameMorph extends Morph
     return @bounds.merge(shadow.bounds)  if shadow isnt null
     @bounds
   
-  # This was in the original Morphic.js, but
-  # it would cause the frame (or scrollframe) not to paint its
-  # contents when "pic..." command is invoked.
-  #fullImage: ->
-  #  # use only for shadows
-  #  @image
-  
   recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless (!@isMinimised and @isVisible)
 
