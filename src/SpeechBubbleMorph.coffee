@@ -34,7 +34,7 @@ class SpeechBubbleMorph extends BoxMorph
     @addShadow new Point(2, 2), 80
     @keepWithin world
     world.add @
-    @changed()
+    @fullChanged()
     world.hand.destroyTemporaries()
     world.hand.temporaries.push @
     if isClickable
