@@ -1,4 +1,4 @@
-# 
+#
 
 
 class SystemTestsEventScreenshot extends SystemTestsEvent
