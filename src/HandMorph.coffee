@@ -136,7 +136,7 @@ class HandMorph extends Morph
       @mouseButton = null
     else
       morph = @morphAtPointer()
-      if @world.activeMenu
+      if @world.activeMenu?
         unless @world.activeMenu.containedInParentsOf(morph)
           # if there is a menu open and the user clicked on
           # something that is not part of the menu then
@@ -144,10 +144,10 @@ class HandMorph extends Morph
           @world.activeMenu.destroy()
         else
           clearInterval @touchHoldTimeout
-      if @world.activeHandle
+      if @world.activeHandle?
         if morph isnt @world.activeHandle
           @world.activeHandle.destroy()    
-      if @world.caret
+      if @world.caret?
         # there is a caret on the screen
         # depending on what the user is clicking on,
         # we might need to close an ongoing edit
