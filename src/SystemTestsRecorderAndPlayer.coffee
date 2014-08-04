@@ -65,6 +65,8 @@ class SystemTestsRecorderAndPlayer
   constructor: (@worldMorph, @handMorph) ->
 
   startTestRecording: (@testName) ->
+    if not @testName?
+      @testName = prompt("Please enter a test name", "test1")
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING

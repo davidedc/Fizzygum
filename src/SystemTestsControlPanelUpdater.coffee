@@ -47,10 +47,6 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.styleFloat = 'left';
     theCanvasDiv.style.cssFloat = 'left';
 
-    startTestRecording = ->
-      testName = prompt("Please enter a test name", "test1")
-      window.world.systemTestsRecorderAndPlayer.startTestRecording(testName)
-
     @addLink "command+n, ctrl+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
     @addLink "command+d, ctrl+d: delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
     @addLink "command+c, ctrl+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
