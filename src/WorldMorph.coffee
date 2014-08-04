@@ -459,7 +459,7 @@ class WorldMorph extends FrameMorph
           text = window.clipboardData.getData("Text")
           #url = window.clipboardData.getData("URL")
         
-        # Needs a few msec to excute paste
+        # Needs a few msec to execute paste
         window.setTimeout ( => (@caret.insert text)), 50, true
     document.body.addEventListener "paste", @pasteEventListener, false
 
