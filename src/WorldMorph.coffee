@@ -29,7 +29,16 @@ class WorldMorph extends FrameMorph
   DOMMouseScrollEventListener: null
   copyEventListener: null
   pasteEventListener: null
-  keyCombosEventListener: null
+
+  keyComboStartRecordingTestEventListener: null
+  keyComboDeleteAllMorphsEventListener: null
+  keyComboTakeScreenshotEventListener: null
+  keyComboStopTestRecordingEventListener: null
+  keyComboReplayTestEventListener: null
+  keyComboSaveTestEventListener: null
+  keyComboTakeScreenshotEventListener: null
+  keyComboSaveFailedScreenshotsEventListener: null
+
   dragoverEventListener: null
   dropEventListener: null
   resizeEventListener: null
@@ -463,11 +472,43 @@ class WorldMorph extends FrameMorph
         window.setTimeout ( => (@caret.insert text)), 50, true
     document.body.addEventListener "paste", @pasteEventListener, false
 
-    #console.log "binding with mousetrap"
-    @keyCombosEventListener = (event) =>
+    #console.log "binding via mousetrap"
+
+    @keyComboStartRecordingTestEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.startTestRecording()
+      false
+    Mousetrap.bind ["command+n", "ctrl+n"], @keyComboStartRecordingTestEventListener
+
+    @keyComboDeleteAllMorphsEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.deleteAllMorphs()
+      false
+    Mousetrap.bind ["command+d", "ctrl+d"], @keyComboDeleteAllMorphsEventListener
+
+    @keyComboTakeScreenshotEventListener = (event) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
       false
-    Mousetrap.bind ["command+k", "ctrl+k"], @keyCombosEventListener
+    Mousetrap.bind ["command+c", "ctrl+c"], @keyComboTakeScreenshotEventListener
+
+    @keyComboStopTestRecordingEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.stopTestRecording()
+      false
+    Mousetrap.bind ["command+t", "ctrl+t"], @keyComboStopTestRecordingEventListener
+
+    @keyComboReplayTestEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.startTestPlaying()
+      false
+    Mousetrap.bind ["command+p", "ctrl+p"], @keyComboReplayTestEventListener
+
+    @keyComboSaveTestEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.saveTest()
+      false
+    Mousetrap.bind ["command+s", "ctrl+s"], @keyComboSaveTestEventListener
+
+    @keyComboSaveFailedScreenshotsEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.saveFailedScreenshots()
+      false
+    Mousetrap.bind ["command+f", "ctrl+f"], @keyComboSaveFailedScreenshotsEventListener
+
 
     @dragoverEventListener = (event) ->
       event.preventDefault()
