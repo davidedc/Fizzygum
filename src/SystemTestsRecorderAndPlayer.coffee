@@ -60,6 +60,12 @@ class SystemTestsRecorderAndPlayer
   ongoingTestPlayingTask: null
   lastPlayedEventTime: 0
   indexOfTaskBeingPlayed: 0
+  # this is a special place where the
+  # "pic..." command places the image
+  # data of a morph.
+  # the test player will wait for this data
+  # before doing the comparison.
+  imageDataOfAParticularMorph: null
 
 
   constructor: (@worldMorph, @handMorph) ->
@@ -113,11 +119,11 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
-  takeScreenshot: ->
+  takeScreenshot: (whichMorph = @worldMorph) ->
     console.log "taking screenshot"
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
-    systemTestEvent = new SystemTestsEventScreenshot imageName, @
-    imageData = @worldMorph.fullImageData()
+    systemTestEvent = new SystemTestsEventScreenshot imageName, @, whichMorph != @worldMorph
+    imageData = whichMorph.fullImageData()
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
     unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
       SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = []
@@ -198,8 +204,13 @@ class SystemTestsRecorderAndPlayer
 
     expectedImage.src = expected.imageData
 
-  compareScreenshots: (testNameWithImageNumber) ->
-   screenshotObtained = @worldMorph.fullImageData()
+  compareScreenshots: (testNameWithImageNumber, screenshotTakenOfAParticularMorph = false) ->
+   if screenshotTakenOfAParticularMorph
+     screenshotObtained = @imageDataOfAParticularMorph
+     @imageDataOfAParticularMorph = null
+   else
+     screenshotObtained = @worldMorph.fullImageData()
+   
    console.log "trying to match screenshot: " + testNameWithImageNumber
    console.log "length of obtained: " + screenshotObtained.length
 
@@ -235,6 +246,21 @@ class SystemTestsRecorderAndPlayer
    # console.log "examining event: " + queuedEvent.type + " at: " + queuedEvent.time +
    #   " time now: " + timeNow + " we are at: " + (timeNow - @lastPlayedEventTime)
    timeOfNextItem = queuedEvent.time or 0
+   # for the screenshot, the replay is going
+   # to consist in comparing the image data.
+   # in case the screenshot is made of the entire world
+   # then the comparison can happen now.
+   # in case the screenshot is made of a particular
+   # morph then we want to wait that the world
+   # has taken that screenshot image data and put
+   # it in here.
+   # search for imageDataOfAParticularMorph everywhere
+   # to see where the image data is created and
+   # put there.
+   if queuedEvent.type == "SystemTestsEventScreenshot" and queuedEvent.screenshotTakenOfAParticularMorph
+     if not @imageDataOfAParticularMorph?
+       # no image data of morph, so just wait
+       return
    if timeNow - @lastPlayedEventTime >= timeOfNextItem
      console.log "running event: " + queuedEvent.type + " " + @indexOfTaskBeingPlayed + " / " + @eventQueue.length
      window[queuedEvent.type].replayFunction.call @,@,queuedEvent
