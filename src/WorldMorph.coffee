@@ -30,6 +30,10 @@ class WorldMorph extends FrameMorph
   copyEventListener: null
   pasteEventListener: null
 
+  inputDOMElementForVirtualKeyboardKeydownEventListener: null
+  inputDOMElementForVirtualKeyboardKeyupEventListener: null
+  inputDOMElementForVirtualKeyboardKeypressEventListener: null
+
   keyComboStartRecordingTestEventListener: null
   keyComboDeleteAllMorphsEventListener: null
   keyComboTakeScreenshotEventListener: null
@@ -264,7 +268,7 @@ class WorldMorph extends FrameMorph
     @inputDOMElementForVirtualKeyboard.autocapitalize = "none" # iOS specific
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
-    @inputDOMElementForVirtualKeyboard.addEventListener "keydown", ((event) =>
+    @inputDOMElementForVirtualKeyboardKeydownEventListener = (event) =>
 
       @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
       #
@@ -277,18 +281,26 @@ class WorldMorph extends FrameMorph
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
         @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
-    ), false
-    @inputDOMElementForVirtualKeyboard.addEventListener "keyup", ((event) =>
+
+    @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
+      @inputDOMElementForVirtualKeyboardKeydownEventListener, false
+
+    @inputDOMElementForVirtualKeyboardKeyupEventListener = (event) =>
       # dispatch to keyboard receiver
       if @keyboardEventsReceiver
         if @keyboardEventsReceiver.processKeyUp
           @keyboardEventsReceiver.processKeyUp event  
       event.preventDefault()
-    ), false
-    @inputDOMElementForVirtualKeyboard.addEventListener "keypress", ((event) =>
+
+    @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
+      @inputDOMElementForVirtualKeyboardKeyupEventListener, false
+
+    @inputDOMElementForVirtualKeyboardKeypressEventListener = (event) =>
       @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
       event.preventDefault()
-    ), false
+
+    @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
+      @inputDOMElementForVirtualKeyboardKeypressEventListener, false
   
   initEventListeners: ->
     canvas = @worldCanvas
