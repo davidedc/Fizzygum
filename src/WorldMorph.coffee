@@ -293,7 +293,7 @@ class WorldMorph extends FrameMorph
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
         event.preventDefault()  
 
-      # supress tab override and make sure tab gets
+      # suppress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
         @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
@@ -385,11 +385,11 @@ class WorldMorph extends FrameMorph
     @keydownEventListener = (event) =>
       @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
 
-      # supress backspace override
+      # suppress backspace override
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
         event.preventDefault()
 
-      # supress tab override and make sure tab gets
+      # suppress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
         @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
