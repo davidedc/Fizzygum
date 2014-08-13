@@ -305,6 +305,9 @@ class WorldMorph extends FrameMorph
     @inputDOMElementForVirtualKeyboardKeyupEventListener = (event) =>
       # dispatch to keyboard receiver
       if @keyboardEventsReceiver
+        # so far the caret is the only keyboard
+        # event handler and it has no keyup
+        # handler
         if @keyboardEventsReceiver.processKeyUp
           @keyboardEventsReceiver.processKeyUp event  
       event.preventDefault()
@@ -384,6 +387,9 @@ class WorldMorph extends FrameMorph
     @keyupEventListener = (event) =>
       # dispatch to keyboard receiver
       if @keyboardEventsReceiver
+        # so far the caret is the only keyboard
+        # event handler and it has no keyup
+        # handler
         if @keyboardEventsReceiver.processKeyUp
           @keyboardEventsReceiver.processKeyUp event    
       event.preventDefault()
