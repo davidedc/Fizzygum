@@ -47,13 +47,13 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.styleFloat = 'left';
     theCanvasDiv.style.cssFloat = 'left';
 
-    @addLink "command+n, ctrl+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
-    @addLink "command+d, ctrl+d: delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
-    @addLink "command+c, ctrl+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
-    @addLink "command+t, ctrl+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
-    @addLink "command+p, ctrl+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
-    @addLink "command+s, ctrl+s: save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
-    @addLink "command+f, ctrl+f: save failed screenshots test", (-> window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots())
+    @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
+    @addLink "alt+d: delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
+    @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
+    @addLink "alt+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
+    @addLink "alt+s: save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
+    @addLink "alt+f: save failed screenshots test", (-> window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots())
 
 
 

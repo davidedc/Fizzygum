@@ -477,37 +477,37 @@ class WorldMorph extends FrameMorph
     @keyComboStartRecordingTestEventListener = (event) =>
       @systemTestsRecorderAndPlayer.startTestRecording()
       false
-    Mousetrap.bind ["command+n", "ctrl+n"], @keyComboStartRecordingTestEventListener
+    Mousetrap.bind ["alt+n"], @keyComboStartRecordingTestEventListener
 
     @keyComboDeleteAllMorphsEventListener = (event) =>
       @systemTestsRecorderAndPlayer.deleteAllMorphs()
       false
-    Mousetrap.bind ["command+d", "ctrl+d"], @keyComboDeleteAllMorphsEventListener
+    Mousetrap.bind ["alt+d"], @keyComboDeleteAllMorphsEventListener
 
     @keyComboTakeScreenshotEventListener = (event) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
       false
-    Mousetrap.bind ["command+c", "ctrl+c"], @keyComboTakeScreenshotEventListener
+    Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
 
     @keyComboStopTestRecordingEventListener = (event) =>
       @systemTestsRecorderAndPlayer.stopTestRecording()
       false
-    Mousetrap.bind ["command+t", "ctrl+t"], @keyComboStopTestRecordingEventListener
+    Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
 
     @keyComboReplayTestEventListener = (event) =>
       @systemTestsRecorderAndPlayer.startTestPlaying()
       false
-    Mousetrap.bind ["command+p", "ctrl+p"], @keyComboReplayTestEventListener
+    Mousetrap.bind ["alt+p"], @keyComboReplayTestEventListener
 
     @keyComboSaveTestEventListener = (event) =>
       @systemTestsRecorderAndPlayer.saveTest()
       false
-    Mousetrap.bind ["command+s", "ctrl+s"], @keyComboSaveTestEventListener
+    Mousetrap.bind ["alt+s"], @keyComboSaveTestEventListener
 
     @keyComboSaveFailedScreenshotsEventListener = (event) =>
       @systemTestsRecorderAndPlayer.saveFailedScreenshots()
       false
-    Mousetrap.bind ["command+f", "ctrl+f"], @keyComboSaveFailedScreenshotsEventListener
+    Mousetrap.bind ["alt+f"], @keyComboSaveFailedScreenshotsEventListener
 
 
     @dragoverEventListener = (event) ->
