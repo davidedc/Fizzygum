@@ -25,66 +25,61 @@ class CaretMorph extends BlinkerMorph
     @gotoSlot @slot
   
   # CaretMorph event processing:
-  processKeyPress: (event) ->
+  processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
     if @keyDownEventUsed
       @keyDownEventUsed = false
       return null
-    if (event.keyCode is 40) or event.charCode is 40
+    if charCode is 40
       @insert "("
       return null
-    if (event.keyCode is 37) or event.charCode is 37
+    if charCode is 37
       @insert "%"
       return null
-    if event.keyCode # Opera doesn't support charCode
-      if event.ctrlKey
-        @ctrl event.keyCode
-      else if event.metaKey
-        @cmd event.keyCode
-      else
-        @insert String.fromCharCode(event.keyCode), event.shiftKey
-    else if event.charCode # all other browsers
-      if event.ctrlKey
-        @ctrl event.charCode
-      else if event.metaKey
-        @cmd event.keyCode
-      else
-        @insert String.fromCharCode(event.charCode), event.shiftKey
+    if ctrlKey
+      @ctrl charCode
+    # in Chrome/OSX cmd-a and cmd-z
+    # don't trigger a keypress so this
+    # function invocation here does
+    # nothing.
+    else if metaKey
+      @cmd charCode
+    else
+      @insert symbol, shiftKey
     # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", event
+    @target.escalateEvent "reactToKeystroke", charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
   
-  processKeyDown: (event) ->
+  processKeyDown: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     # this.inspectKeyEvent(event);
-    shift = event.shiftKey
     @keyDownEventUsed = false
-    if event.ctrlKey
-      @ctrl event.keyCode
+    if ctrlKey
+      @ctrl scanCode
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", event
+      @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
       return
-    else if event.metaKey
-      @cmd event.keyCode
+    else if metaKey
+      @cmd scanCode
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", event
+      @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
       return
-    switch event.keyCode
+    switch scanCode
       when 37
-        @goLeft(shift)
+        @goLeft(shiftKey)
         @keyDownEventUsed = true
       when 39
-        @goRight(shift)
+        @goRight(shiftKey)
         @keyDownEventUsed = true
       when 38
-        @goUp(shift)
+        @goUp(shiftKey)
         @keyDownEventUsed = true
       when 40
-        @goDown(shift)
+        @goDown(shiftKey)
         @keyDownEventUsed = true
       when 36
-        @goHome(shift)
+        @goHome(shiftKey)
         @keyDownEventUsed = true
       when 35
-        @goEnd(shift)
+        @goEnd(shiftKey)
         @keyDownEventUsed = true
       when 46
         @deleteRight()
@@ -107,7 +102,7 @@ class CaretMorph extends BlinkerMorph
       else
     # this.inspectKeyEvent(event);
     # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", event
+    @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
   
   
   # CaretMorph navigation - simple version
@@ -222,43 +217,59 @@ class CaretMorph extends BlinkerMorph
 
     @gotoSlot 0
   
-  insert: (aChar, shiftKey) ->
-    if aChar is "\t"
+  insert: (symbol, shiftKey) ->
+    if symbol is "\t"
       @target.escalateEvent 'reactToEdit', @target
       if shiftKey
         return @target.backTab(@target);
       return @target.tab(@target)
-    if not @target.isNumeric or not isNaN(parseFloat(aChar)) or contains(["-", "."], aChar)
+    if not @target.isNumeric or not isNaN(parseFloat(symbol)) or contains(["-", "."], symbol)
       if @target.selection() isnt ""
         @gotoSlot @target.selectionStartSlot()
         @target.deleteSelection()
       text = @target.text
-      text = text.slice(0, @slot) + aChar + text.slice(@slot)
+      text = text.slice(0, @slot) + symbol + text.slice(@slot)
       @target.text = text
       @target.updateRendering()
       @target.changed()
-      @goRight false, aChar.length
+      @goRight false, symbol.length
   
-  ctrl: (aChar) ->
-    if (aChar is 97) or (aChar is 65)
+  ctrl: (scanCodeOrCharCode) ->
+    # ctrl-a apparently can come from either
+    # keypress or keydown
+    # 64 is for keydown
+    # 97 is for keypress
+    # in Chrome on OSX there is no keypress
+    if (scanCodeOrCharCode is 97) or (scanCodeOrCharCode is 65)
       @target.selectAll()
-    else if aChar is 90
+    # ctrl-z arrives both via keypress and
+    # keydown but 90 here matches the keydown only
+    else if scanCodeOrCharCode is 90
       @undo()
-    else if aChar is 123
+    # unclear which keyboard needs ctrl
+    # to be pressed to give a keypressed
+    # event for {}[]@
+    # but this is what this catches
+    else if scanCodeOrCharCode is 123
       @insert "{"
-    else if aChar is 125
+    else if scanCodeOrCharCode is 125
       @insert "}"
-    else if aChar is 91
+    else if scanCodeOrCharCode is 91
       @insert "["
-    else if aChar is 93
+    else if scanCodeOrCharCode is 93
       @insert "]"
-    else if aChar is 64
+    else if scanCodeOrCharCode is 64
       @insert "@"
   
-  cmd: (aChar) ->
-    if aChar is 65
+  # these two arrive only from
+  # keypressed, at least in Chrome/OSX
+  # 65 and 90 are both scan codes.
+  cmd: (scanCode) ->
+    # CMD-A
+    if scanCode is 65
       @target.selectAll()
-    else if aChar is 90
+    # CMD-Z
+    else if scanCode is 90
       @undo()
   
   deleteRight: ->

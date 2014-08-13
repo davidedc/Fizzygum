@@ -334,7 +334,78 @@ class WorldMorph extends FrameMorph
   processMouseMove: (pageX, pageY) ->
     @systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
     @hand.processMouseMove  event.pageX, event.pageY
-  
+
+  # event.type must be keypress
+  getChar: (event) ->
+    unless event.which?
+      String.fromCharCode event.keyCode # IE
+    else if event.which isnt 0 and event.charCode isnt 0
+      String.fromCharCode event.which # the rest
+    else
+      null # special key
+
+  processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    if @keyboardEventsReceiver
+      @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
+
+    # suppress backspace override
+    if event? and scanCode is 8
+      event.preventDefault()
+
+    # suppress tab override and make sure tab gets
+    # received by all browsers
+    if event? and scanCode is 9
+      if @keyboardEventsReceiver
+        @keyboardEventsReceiver.processKeyPress scanCode, "\t", shiftKey, ctrlKey, altKey, metaKey
+      event.preventDefault()
+
+  processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    # dispatch to keyboard receiver
+    if @keyboardEventsReceiver
+      # so far the caret is the only keyboard
+      # event handler and it has no keyup
+      # handler
+      if @keyboardEventsReceiver.processKeyUp
+        @keyboardEventsReceiver.processKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey    
+    if event?
+      event.preventDefault()
+
+  processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+    # This if block adapted from:
+    # http://stackoverflow.com/a/16033129
+    # it rejects the
+    # characters from the special
+    # test-command-triggering external
+    # keypad. Also there is a "00" key
+    # in such keypads which is implemented
+    # buy just a double-press of the zero.
+    # We manage that case - if that key is
+    # pressed twice we understand that it's
+    # that particular key. Managing this
+    # special case within Zombie Kernel
+    # is not best, but there aren't any
+    # good alternatives.
+    if String.fromCharCode(event.which) == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
+      unless @doublePressOfZeroKeypadKey?
+        @doublePressOfZeroKeypadKey = 1
+        setTimeout (=>
+          if @doublePressOfZeroKeypadKey is 1
+            console.log "single keypress"
+          @doublePressOfZeroKeypadKey = null
+          event.keyCode = 0
+          return false
+        ), 300
+      else
+        @doublePressOfZeroKeypadKey = null
+        console.log "double keypress"
+        event.keyCode = 0
+      return false
+
+    if @keyboardEventsReceiver
+      @keyboardEventsReceiver.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    if event?
+      event.preventDefault()
+
   initEventListeners: ->
     canvas = @worldCanvas
 
@@ -383,28 +454,11 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "contextmenu", @contextmenuEventListener, false
     
     @keydownEventListener = (event) =>
-      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
-
-      # suppress backspace override
-      if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
-        event.preventDefault()
-
-      # suppress tab override and make sure tab gets
-      # received by all browsers
-      if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
-        event.preventDefault()
+      @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keydown", @keydownEventListener, false
 
     @keyupEventListener = (event) =>
-      # dispatch to keyboard receiver
-      if @keyboardEventsReceiver
-        # so far the caret is the only keyboard
-        # event handler and it has no keyup
-        # handler
-        if @keyboardEventsReceiver.processKeyUp
-          @keyboardEventsReceiver.processKeyUp event    
-      event.preventDefault()
+      @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keyup", @keyupEventListener, false
 
     # This method also handles keypresses from a special
@@ -425,38 +479,7 @@ class WorldMorph extends FrameMorph
     doublePressOfZeroKeypadKey: null
     
     @keypressEventListener = (event) =>
-      # This if block adapted from:
-      # http://stackoverflow.com/a/16033129
-      # it rejects the
-      # characters from the special
-      # test-command-triggering external
-      # keypad. Also there is a "00" key
-      # in such keypads which is implemented
-      # buy just a double-press of the zero.
-      # We manage that case - if that key is
-      # pressed twice we understand that it's
-      # that particular key. Managing this
-      # special case within Zombie Kernel
-      # is not best, but there aren't any
-      # good alternatives.
-      if String.fromCharCode(event.which) == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
-        unless @doublePressOfZeroKeypadKey?
-          @doublePressOfZeroKeypadKey = 1
-          setTimeout (=>
-            if @doublePressOfZeroKeypadKey is 1
-              console.log "single keypress"
-            @doublePressOfZeroKeypadKey = null
-            event.keyCode = 0
-            return false
-          ), 300
-        else
-          @doublePressOfZeroKeypadKey = null
-          console.log "double keypress"
-          event.keyCode = 0
-        return false
-
-      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
-      event.preventDefault()
+      @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keypress", @keypressEventListener, false
 
     # Safari, Chrome
