@@ -161,10 +161,17 @@ class HandMorph extends Morph
         if morph isnt @world.caret.target
           # user clicked on something other than what the
           # caret is attached to
-          unless @world.activeMenu.containedInParentsOf(morph)
-            # only dismiss editing if the morph the user
-            # clicked on is not part of a menu.
-            @world.stopEditing()  
+          if @world.activeMenu?
+            unless @world.activeMenu.containedInParentsOf(morph)
+              # only dismiss editing if the morph the user
+              # clicked on is not part of a menu.
+              @world.stopEditing()
+          # there is no menu at all, in which case
+          # we know there was an editing operation going
+          # on that we need to stop
+          else
+            @world.stopEditing()
+
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
       if button is 2 or ctrlKey
         @mouseButton = "right"
