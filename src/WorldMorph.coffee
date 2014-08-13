@@ -321,6 +321,19 @@ class WorldMorph extends FrameMorph
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
+
+  processMouseDown: (button, ctrlKey) ->
+    @systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
+    @hand.processMouseDown event.button, event.ctrlKey
+
+  processMouseUp: (button) ->
+    event.preventDefault()
+    @systemTestsRecorderAndPlayer.addMouseUpEvent()
+    @hand.processMouseUp event.button
+
+  processMouseMove: (pageX, pageY) ->
+    @systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
+    @hand.processMouseMove  event.pageX, event.pageY
   
   initEventListeners: ->
     canvas = @worldCanvas
@@ -331,7 +344,7 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
-      @hand.processMouseDown event.button, event.ctrlKey
+      @processMouseDown event.button, event.ctrlKey
     canvas.addEventListener "mousedown", @mousedownEventListener, false
 
     @touchstartEventListener = (event) =>
@@ -339,8 +352,7 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchstart", @touchstartEventListener , false
     
     @mouseupEventListener = (event) =>
-      event.preventDefault()
-      @hand.processMouseUp event.button
+      @processMouseUp event.button
     canvas.addEventListener "mouseup", @mouseupEventListener, false
     
     @touchendEventListener = (event) =>
@@ -348,7 +360,7 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      @hand.processMouseMove  event.pageX, event.pageY
+      @processMouseMove  event.pageX, event.pageY
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>

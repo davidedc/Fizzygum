@@ -127,8 +127,6 @@ class HandMorph extends Morph
   # event object.
 
   processMouseDown: (button, ctrlKey) ->
-    @world.systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
-
     @destroyTemporaries()
     @morphToGrab = null
     if @children.length
@@ -225,8 +223,6 @@ class HandMorph extends Morph
    # note that the button param is not used,
    # but adding it for consistency...
    processMouseUp: (button) ->
-    @world.systemTestsRecorderAndPlayer.addMouseUpEvent()
-
     morph = @morphAtPointer()
     @destroyTemporaries()
     if @children.length
@@ -408,9 +404,7 @@ class HandMorph extends Morph
     Morph::trackChanges = true
     @fullChanged()
 
-  processMouseMove: (pageX, pageY) ->
-    @world.systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
-    
+  processMouseMove: (pageX, pageY) ->    
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
