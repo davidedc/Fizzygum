@@ -22,6 +22,15 @@ class WorldMorph extends FrameMorph
   gesturestartEventListener: null
   gesturechangeEventListener: null
   contextmenuEventListener: null
+  # Note how there can be two handlers for
+  # keyboard events.
+  # This one is attached
+  # to the canvas and reaches the currently
+  # blinking caret if there is one.
+  # See below for the other potential
+  # handler. See "initVirtualKeyboard"
+  # method to see where and when this input and
+  # these handlers are set up.
   keydownEventListener: null
   keyupEventListener: null
   keypressEventListener: null
@@ -30,6 +39,11 @@ class WorldMorph extends FrameMorph
   copyEventListener: null
   pasteEventListener: null
 
+  # Note how there can be two handlers
+  # for keyboard events. This one is
+  # attached to a hidden
+  # "input" div which keeps track of the
+  # text that is being input.
   inputDOMElementForVirtualKeyboardKeydownEventListener: null
   inputDOMElementForVirtualKeyboardKeyupEventListener: null
   inputDOMElementForVirtualKeyboardKeypressEventListener: null
@@ -271,11 +285,14 @@ class WorldMorph extends FrameMorph
     @inputDOMElementForVirtualKeyboardKeydownEventListener = (event) =>
 
       @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
-      #
-      # supress backspace override
+
+      # Default in several browsers
+      # is for the backspace button to trigger
+      # the "back button", so we prevent that
+      # default here.
       if event.keyIdentifier is "U+0008" or event.keyIdentifier is "Backspace"
         event.preventDefault()  
-      #
+
       # supress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
