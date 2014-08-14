@@ -49,6 +49,8 @@ class SystemTestsControlPanelUpdater
 
     @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
     @addLink "alt+d: delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
+    @addLink "alt+e: tie animations to test step", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber())
+    @addLink "alt+u: untie animation to test step", (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
     @addLink "alt+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())

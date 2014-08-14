@@ -61,6 +61,7 @@ class SystemTestsRecorderAndPlayer
   ongoingTestPlayingTask: null
   lastPlayedEventTime: 0
   indexOfQueuedEventBeingPlayed: 0
+  animationsTiedToTestCommandNumber: false
   # this is a special place where the
   # "pic..." command places the image
   # data of a morph.
@@ -130,6 +131,20 @@ class SystemTestsRecorderAndPlayer
 
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
+
+  untieAnimationsFromTestCommandNumber: ->
+    @animationsTiedToTestCommandNumber = false
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventUntieAnimationsFromTestCommandNumber @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
+  tieAnimationsToTestCommandNumber: ->
+    @animationsTiedToTestCommandNumber = true
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventTieAnimationsToTestCommandNumber @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
   addMouseMoveEvent: (pageX, pageY) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING

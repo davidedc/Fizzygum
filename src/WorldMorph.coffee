@@ -50,6 +50,8 @@ class WorldMorph extends FrameMorph
 
   keyComboStartRecordingTestEventListener: null
   keyComboDeleteAllMorphsEventListener: null
+  keyComboTieAnimationsToTestCommandNumber: null
+  keyComboUntieAnimationsFromTestCommandNumber: null
   keyComboTakeScreenshotEventListener: null
   keyComboStopTestRecordingEventListener: null
   keyComboReplayTestEventListener: null
@@ -571,6 +573,16 @@ class WorldMorph extends FrameMorph
       @systemTestsRecorderAndPlayer.deleteAllMorphs()
       false
     Mousetrap.bind ["alt+d"], @keyComboDeleteAllMorphsEventListener
+
+    @keyComboTieAnimationsToTestCommandNumber = (event) =>
+      @systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()
+      false
+    Mousetrap.bind ["alt+e"], @keyComboTieAnimationsToTestCommandNumber
+
+    @keyComboUntieAnimationsFromTestCommandNumber = (event) =>
+      @systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber()
+      false
+    Mousetrap.bind ["alt+u"], @keyComboUntieAnimationsFromTestCommandNumber
 
     @keyComboTakeScreenshotEventListener = (event) =>
       @systemTestsRecorderAndPlayer.takeScreenshot()
