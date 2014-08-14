@@ -56,6 +56,7 @@ class SystemTestsRecorderAndPlayer
   collectedImages: [] # array of SystemTestsReferenceImage
   collectedFailureImages: [] # array of SystemTestsReferenceImage
   testName: ''
+  testDescription: 'no description'
   @loadedImages: {}
   ongoingTestPlayingTask: null
   lastPlayedEventTime: 0
@@ -70,9 +71,12 @@ class SystemTestsRecorderAndPlayer
 
   constructor: (@worldMorph, @handMorph) ->
 
-  startTestRecording: (@testName) ->
+  startTestRecording: (@testName, @testDescription) ->
     if not @testName?
       @testName = prompt("Please enter a test name", "test1")
+    if not @testDescription?
+      @testDescription = prompt("Please enter a test description", "no description")
+
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
@@ -332,6 +336,8 @@ class SystemTestsRecorderAndPlayer
 
   SystemTest_#{@testName} = (function() {
     function SystemTest_#{@testName}() {}
+
+    SystemTest_#{@testName}.description = "#{@testDescription}";
 
     SystemTest_#{@testName}.systemInfo = #{JSON.stringify(new SystemTestsSystemInfo(), null, 4)};
     
