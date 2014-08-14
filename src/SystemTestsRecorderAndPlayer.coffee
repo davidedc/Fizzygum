@@ -89,6 +89,9 @@ class SystemTestsRecorderAndPlayer
     delete window["SystemTest_#{@testName}"]
   
   startTestRecording: (@testName, @testDescription) ->
+
+    # if test name not provided, then
+    # prompt the user for it
     if not @testName?
       @testName = prompt("Please enter a test name", "test1")
     if not @testDescription?
@@ -272,9 +275,11 @@ class SystemTestsRecorderAndPlayer
 
   compareScreenshots: (testNameWithImageNumber, screenshotTakenOfAParticularMorph = false) ->
    if screenshotTakenOfAParticularMorph
+     console.log "comparing pic of a particular morph"
      screenshotObtained = @imageDataOfAParticularMorph
      @imageDataOfAParticularMorph = null
    else
+     console.log "comparing pic of whole desktop"
      screenshotObtained = @worldMorph.fullImageData()
    
    console.log "trying to match screenshot: " + testNameWithImageNumber
@@ -349,7 +354,8 @@ class SystemTestsRecorderAndPlayer
     # includes the testName and data variables
     # in the right places.
     # This is the equivalent of the following
-    # coffeescript content:
+    # coffeescript content (you can check
+    # on coffeescript.org):
     ###
       class SystemTest_SimpleMenuTest
         @testData = [
@@ -357,6 +363,12 @@ class SystemTestsRecorderAndPlayer
           ... all the remaining test data...
     ###
     """
+  // This system test is automatically
+  // created.
+  // This test (and related reference images)
+  // can be copied in the /src/tests folder
+  // to make them available in the testing
+  // environment.
   var SystemTest_#{@testName};
 
   SystemTest_#{@testName} = (function() {
