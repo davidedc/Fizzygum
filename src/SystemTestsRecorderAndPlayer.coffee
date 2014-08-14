@@ -89,6 +89,7 @@ class SystemTestsRecorderAndPlayer
     indexOfTask = @worldMorph.otherTasksToBeRunOnStep.indexOf(@ongoingTestPlayingTask)
     @worldMorph.otherTasksToBeRunOnStep.splice(indexOfTask, 1)
     @worldMorph.initEventListeners()
+    @indexOfQueuedEventBeingPlayed = 0
 
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
