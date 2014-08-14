@@ -59,7 +59,7 @@ class SystemTestsRecorderAndPlayer
   @loadedImages: {}
   ongoingTestPlayingTask: null
   lastPlayedEventTime: 0
-  indexOfTaskBeingPlayed: 0
+  indexOfQueuedEventBeingPlayed: 0
   # this is a special place where the
   # "pic..." command places the image
   # data of a morph.
@@ -273,7 +273,7 @@ class SystemTestsRecorderAndPlayer
 
   replayEvents: ->
    timeNow = (new Date()).getTime()
-   queuedEvent = @eventQueue[@indexOfTaskBeingPlayed]
+   queuedEvent = @eventQueue[@indexOfQueuedEventBeingPlayed]
    # console.log "examining event: " + queuedEvent.type + " at: " + queuedEvent.time +
    #   " time now: " + timeNow + " we are at: " + (timeNow - @lastPlayedEventTime)
    timeOfNextItem = queuedEvent.time or 0
@@ -293,11 +293,11 @@ class SystemTestsRecorderAndPlayer
        # no image data of morph, so just wait
        return
    if timeNow - @lastPlayedEventTime >= timeOfNextItem
-     console.log "running event: " + queuedEvent.type + " " + @indexOfTaskBeingPlayed + " / " + @eventQueue.length
+     console.log "running event: " + queuedEvent.type + " " + @indexOfQueuedEventBeingPlayed + " / " + @eventQueue.length
      window[queuedEvent.type].replayFunction.call @,@,queuedEvent
      @lastPlayedEventTime = timeNow
-     @indexOfTaskBeingPlayed++
-     if @indexOfTaskBeingPlayed == @eventQueue.length
+     @indexOfQueuedEventBeingPlayed++
+     if @indexOfQueuedEventBeingPlayed == @eventQueue.length
        console.log "stopping the test player"
        @stopTestPlaying()
 
