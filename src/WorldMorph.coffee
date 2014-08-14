@@ -345,6 +345,7 @@ class WorldMorph extends FrameMorph
       null # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    @systemTestsRecorderAndPlayer.addKeyDownEvent scanCode, shiftKey, ctrlKey, altKey, metaKey
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
@@ -360,6 +361,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    @systemTestsRecorderAndPlayer.addKeyUpEvent scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     if @keyboardEventsReceiver
       # so far the caret is the only keyboard

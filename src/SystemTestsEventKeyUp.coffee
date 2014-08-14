@@ -2,13 +2,18 @@
 
 
 class SystemTestsEventKeyUp extends SystemTestsEvent
-  button: null
+  scanCode: null
+  shiftKey: null
   ctrlKey: null
+  altKey: null
+  metaKey: null
+
   @replayFunction: (systemTestsRecorderAndPlayer, queuedEvent) ->
-    systemTestsRecorderAndPlayer.worldMorph.processKeyup(queuedEvent.button, queuedEvent.ctrlKey)
+    console.log "replaying key"
+    systemTestsRecorderAndPlayer.worldMorph.processKeyup null, queuedEvent.scanCode, queuedEvent.shiftKey, queuedEvent.ctrlKey, queuedEvent.altKey, queuedEvent.metaKey
 
 
-  constructor: (@button, @ctrlKey, systemTestsRecorderAndPlayer) ->
+  constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method

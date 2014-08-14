@@ -118,6 +118,18 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
+  addKeyDownEvent: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
+  addKeyUpEvent: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
   deleteAllMorphs: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventDeleteAllMorphs @
