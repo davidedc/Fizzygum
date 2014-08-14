@@ -71,11 +71,36 @@ class SystemTestsRecorderAndPlayer
 
   constructor: (@worldMorph, @handMorph) ->
 
+  # clear any test with the same name
+  # that might be loaded
+  # and all the images related to it
+  clearAnyDataRelatedToTest: (testName) ->
+    # we assume that no-one is going to
+    # write a tests with more than
+    # 100 reference images/screenshots
+    for imageNumber in [0...100]
+      # each of these is an array that could contain
+      # multiple screenshots for different browser/os
+      # configuration, we are clearing the variable
+      # containing the array
+      console.log "deleting SystemTest_#{@testName}_image_#{imageNumber}"
+      delete SystemTestsRecorderAndPlayer.loadedImages["SystemTest_#{@testName}_image_#{imageNumber}"]
+    console.log "deleting SystemTest_#{@testName}"
+    delete window["SystemTest_#{@testName}"]
+  
   startTestRecording: (@testName, @testDescription) ->
     if not @testName?
       @testName = prompt("Please enter a test name", "test1")
     if not @testDescription?
       @testDescription = prompt("Please enter a test description", "no description")
+
+    # if you choose the same name
+    # of a previously loaded tests,
+    # confusing things might happen such
+    # as comparison with loaded screenshots
+    # so we want to clear the data related
+    # to the chosen name
+    @clearAnyDataRelatedToTest @testName
 
     @eventQueue = []
     @lastRecordedEventTime = new Date().getTime()
