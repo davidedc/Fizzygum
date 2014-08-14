@@ -86,9 +86,14 @@ class SystemTestsRecorderAndPlayer
   stopTestPlaying: ->
     console.log "wrapping up the playing of the test"
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    
+    # There is a background interval that polls
+    # to check whether it's time/condition to play
+    # the next queued event. Remove it.
     indexOfTask = @worldMorph.otherTasksToBeRunOnStep.indexOf(@ongoingTestPlayingTask)
     @worldMorph.otherTasksToBeRunOnStep.splice(indexOfTask, 1)
     @worldMorph.initEventListeners()
+    
     @indexOfQueuedEventBeingPlayed = 0
 
   showTestSource: ->
