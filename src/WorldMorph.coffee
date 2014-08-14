@@ -412,6 +412,40 @@ class WorldMorph extends FrameMorph
     if event?
       event.preventDefault()
 
+  processCopy: (event) ->
+    @systemTestsRecorderAndPlayer.addCopyEvent
+    console.log "processing copy"
+    if @caret
+      selectedText = @caret.target.selection()
+      if event.clipboardData
+        event.preventDefault()
+        setStatus = event.clipboardData.setData("text/plain", selectedText)
+
+      if window.clipboardData
+        event.returnValue = false
+        setStatus = window.clipboardData.setData "Text", selectedText
+
+  processPaste: (event, text) ->
+    if @caret
+      if event?
+        if event.clipboardData
+          # Look for access to data if types array is missing
+          text = event.clipboardData.getData("text/plain")
+          #url = event.clipboardData.getData("text/uri-list")
+          #html = event.clipboardData.getData("text/html")
+          #custom = event.clipboardData.getData("text/xcustom")
+        # IE event is attached to the window object
+        if window.clipboardData
+          # The schema is fixed
+          text = window.clipboardData.getData("Text")
+          #url = window.clipboardData.getData("URL")
+      
+      # Needs a few msec to execute paste
+      console.log "about to insert text: " + text
+      @systemTestsRecorderAndPlayer.addPasteEvent text
+      window.setTimeout ( => (@caret.insert text)), 50, true
+
+
   initEventListeners: ->
     canvas = @worldCanvas
 
@@ -519,33 +553,11 @@ class WorldMorph extends FrameMorph
     # key combinations manually instead of from the copy/paste events.
     
     @copyEventListener = (event) =>
-      if @caret
-        selectedText = @caret.target.selection()
-        if event.clipboardData
-          event.preventDefault()
-          setStatus = event.clipboardData.setData("text/plain", selectedText)
-
-        if window.clipboardData
-          event.returnValue = false
-          setStatus = window.clipboardData.setData "Text", selectedText
+      @processCopy event
     document.body.addEventListener "copy", @copyEventListener, false
 
     @pasteEventListener = (event) =>
-      if @caret
-        if event.clipboardData
-          # Look for access to data if types array is missing
-          text = event.clipboardData.getData("text/plain")
-          #url = event.clipboardData.getData("text/uri-list")
-          #html = event.clipboardData.getData("text/html")
-          #custom = event.clipboardData.getData("text/xcustom")
-        # IE event is attached to the window object
-        if window.clipboardData
-          # The schema is fixed
-          text = window.clipboardData.getData("Text")
-          #url = window.clipboardData.getData("URL")
-        
-        # Needs a few msec to execute paste
-        window.setTimeout ( => (@caret.insert text)), 50, true
+      @processPaste event
     document.body.addEventListener "paste", @pasteEventListener, false
 
     #console.log "binding via mousetrap"

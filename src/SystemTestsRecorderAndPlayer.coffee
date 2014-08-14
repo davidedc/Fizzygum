@@ -130,6 +130,19 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
+  addCopyEvent: () ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventCopy @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
+  addPasteEvent: (clipboardText) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventPaste clipboardText, @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
+
   deleteAllMorphs: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventDeleteAllMorphs @
