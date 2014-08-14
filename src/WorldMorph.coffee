@@ -371,6 +371,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+    @systemTestsRecorderAndPlayer.addKeyPressEvent charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -385,21 +386,24 @@ class WorldMorph extends FrameMorph
     # special case within Zombie Kernel
     # is not best, but there aren't any
     # good alternatives.
-    if String.fromCharCode(event.which) == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
-      unless @doublePressOfZeroKeypadKey?
-        @doublePressOfZeroKeypadKey = 1
-        setTimeout (=>
-          if @doublePressOfZeroKeypadKey is 1
-            console.log "single keypress"
+    if event?
+      # don't manage external keypad if we are playing back
+      # the tests (i.e. when event is null)
+      if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
+        unless @doublePressOfZeroKeypadKey?
+          @doublePressOfZeroKeypadKey = 1
+          setTimeout (=>
+            if @doublePressOfZeroKeypadKey is 1
+              console.log "single keypress"
+            @doublePressOfZeroKeypadKey = null
+            event.keyCode = 0
+            return false
+          ), 300
+        else
           @doublePressOfZeroKeypadKey = null
+          console.log "double keypress"
           event.keyCode = 0
-          return false
-        ), 300
-      else
-        @doublePressOfZeroKeypadKey = null
-        console.log "double keypress"
-        event.keyCode = 0
-      return false
+        return false
 
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey

@@ -112,6 +112,12 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = systemTestEvent.timeOfCreation
 
+  addKeyPressEvent: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestEvent = new SystemTestsEventKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey, @
+    @eventQueue.push systemTestEvent
+    @lastRecordedEventTime = systemTestEvent.timeOfCreation
+
   deleteAllMorphs: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventDeleteAllMorphs @
