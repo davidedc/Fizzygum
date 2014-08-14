@@ -30,12 +30,6 @@ class CaretMorph extends BlinkerMorph
     if @keyDownEventUsed
       @keyDownEventUsed = false
       return null
-    if charCode is 40
-      @insert "("
-      return null
-    if charCode is 37
-      @insert "%"
-      return null
     if ctrlKey
       @ctrl charCode
     # in Chrome/OSX cmd-a and cmd-z
