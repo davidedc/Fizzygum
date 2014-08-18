@@ -16,10 +16,10 @@ class SystemTestsControlPanelUpdater
   # as well.
 
   SystemTestsControlPanelDiv: null
-  @SystemTestsControlPanelVisualComparisonsOutputConsoleDiv: null
+  @SystemTestsControlPanelOutputConsoleDiv: null
 
-  @addMessageToVisualComparisonsConsole: (theText) ->
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelVisualComparisonsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelVisualComparisonsOutputConsoleDiv.innerHTML + theText + "</br>";
+  @addMessageToSystemTestsConsole: (theText) ->
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML + theText + "</br>";
 
   @addMessageToTestCommentsConsole: (theText) ->
     SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML + theText + "</br>";
@@ -45,7 +45,7 @@ class SystemTestsControlPanelUpdater
     @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
-    @addOutputPanel "SystemTestsControlPanelVisualComparisonsOutputConsoleDiv"
+    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv"
     @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv"
 
     theCanvasDiv = document.getElementById('world')

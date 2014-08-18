@@ -235,11 +235,11 @@ class SystemTestsRecorderAndPlayer
       giveSuccess = =>
         message = "number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
-          SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
+          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
         errorMessage = "Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
-          SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole errorMessage
+          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
       if menuAtPointer?
         if numberOfItems != menuAtPointer.items.length
@@ -357,7 +357,7 @@ class SystemTestsRecorderAndPlayer
       message = "PASS - screenshot " + eachImage.fileName + " matched"
       console.log message
       if SystemTestsControlPanelUpdater?
-        SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
+        SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       return
    # OK none of the images we loaded matches the one we
    # just takes. Hence create a SystemTestsReferenceImage
@@ -367,7 +367,7 @@ class SystemTestsRecorderAndPlayer
    message = "FAIL - no screenshots like this one"
    console.log message
    if SystemTestsControlPanelUpdater?
-     SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
+     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage
