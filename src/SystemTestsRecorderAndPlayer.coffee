@@ -152,7 +152,6 @@ class SystemTestsRecorderAndPlayer
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = new Date().getTime()
 
-
   addMouseDownEvent: (button, ctrlKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestEvent = new SystemTestsEventMouseDown button, ctrlKey, @
@@ -202,6 +201,22 @@ class SystemTestsRecorderAndPlayer
     window[systemTestEvent.testCommand].replayFunction @, null
     @eventQueue.push systemTestEvent
     @lastRecordedEventTime = new Date().getTime()
+
+  addTestComment: ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    # note how we take the time before we prompt the
+    # user so we can show the message sooner when playing
+    # the test - i.e. the message will appear at the time
+    # the user got the prompt window rather than when she
+    # actually wrote the message...
+    # So we anticipate the message so the user can actually have
+    # the time to read it before the test moves on with the
+    # next steps.
+    @lastRecordedEventTime = new Date().getTime()
+    comment = prompt("enter comment", "your comment here")
+    systemTestEvent = new SystemTestsShowComment comment, @
+    @eventQueue.push systemTestEvent
+
 
   takeScreenshot: (whichMorph = @worldMorph) ->
     console.log "taking screenshot"
@@ -311,7 +326,7 @@ class SystemTestsRecorderAndPlayer
       message = "PASS - screenshot " + eachImage.fileName + " matched"
       console.log message
       if SystemTestsControlPanelUpdater?
-        SystemTestsControlPanelUpdater.addMessageToConsole message
+        SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
       return
    # OK none of the images we loaded matches the one we
    # just takes. Hence create a SystemTestsReferenceImage
@@ -321,7 +336,7 @@ class SystemTestsRecorderAndPlayer
    message = "FAIL - no screenshots like this one"
    console.log message
    if SystemTestsControlPanelUpdater?
-     SystemTestsControlPanelUpdater.addMessageToConsole message
+     SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage

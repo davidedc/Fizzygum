@@ -16,10 +16,13 @@ class SystemTestsControlPanelUpdater
   # as well.
 
   SystemTestsControlPanelDiv: null
-  @SystemTestsControlPanelOutputConsoleDiv: null
+  @SystemTestsControlPanelVisualComparisonsOutputConsoleDiv: null
 
-  @addMessageToConsole: (theText) ->
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML + theText + "</br>";
+  @addMessageToVisualComparisonsConsole: (theText) ->
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelVisualComparisonsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelVisualComparisonsOutputConsoleDiv.innerHTML + theText + "</br>";
+
+  @addMessageToTestCommentsConsole: (theText) ->
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML + theText + "</br>";
 
   addLink: (theText, theFunction) ->
     aTag = document.createElement("a")
@@ -30,16 +33,20 @@ class SystemTestsControlPanelUpdater
     br = document.createElement('br')
     @SystemTestsControlPanelDiv.appendChild(br);
 
+  addOutputPanel: (nameOfPanel) ->
+    SystemTestsControlPanelUpdater[nameOfPanel] = document.createElement('div')
+    SystemTestsControlPanelUpdater[nameOfPanel].id = nameOfPanel
+    SystemTestsControlPanelUpdater[nameOfPanel].style.cssText = 'height: 150px; border: 1px solid red; overflow: hidden;'
+    document.body.appendChild(SystemTestsControlPanelUpdater[nameOfPanel])
+
   constructor: ->
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
     @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv = document.createElement('div')
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.id = "SystemTestsControlPanelOutputConsole"
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.style.cssText = 'height: 300px; border: 1px solid red; overflow: hidden;'
-    document.body.appendChild(SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv)
+    @addOutputPanel "SystemTestsControlPanelVisualComparisonsOutputConsoleDiv"
+    @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv"
 
     theCanvasDiv = document.getElementById('world')
     # one of these is for IE and the other one
@@ -52,6 +59,7 @@ class SystemTestsControlPanelUpdater
     @addLink "alt+e: tie animations to test step", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber())
     @addLink "alt+u: untie animation to test step", (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
     @addLink "alt+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
     @addLink "alt+s: save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
