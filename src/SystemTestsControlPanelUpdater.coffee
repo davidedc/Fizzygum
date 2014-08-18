@@ -59,11 +59,13 @@ class SystemTestsControlPanelUpdater
     @addLink "alt+e: tie animations to test step", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber())
     @addLink "alt+u: untie animation to test step", (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
     @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
     @addLink "alt+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
     @addLink "alt+s: save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
     @addLink "alt+f: save failed screenshots test", (-> window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots())
+    
 
 
 

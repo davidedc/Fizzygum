@@ -217,6 +217,37 @@ class SystemTestsRecorderAndPlayer
     systemTestEvent = new SystemTestsShowComment comment, @
     @eventQueue.push systemTestEvent
 
+  checkNumberOfItemsInMenu: (numberOfItems) ->
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+      menuAtPointer = @handMorph.menuAtPointer()
+      console.log menuAtPointer
+      if menuAtPointer?
+        numberOfItems = menuAtPointer.items.length
+        console.log "found " + numberOfItems + " number of items "
+      else
+        console.log "was expecting a menu under the pointer"
+        numberOfItems = 0
+      systemTestEvent = new SystemTestsEventCheckNumberOfItemsInMenu numberOfItems, @
+      @eventQueue.push systemTestEvent
+      @lastRecordedEventTime = new Date().getTime()
+    else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      menuAtPointer = @handMorph.menuAtPointer()
+      giveSuccess = =>
+        message = "number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
+        if SystemTestsControlPanelUpdater?
+          SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole message
+      giveError = =>
+        errorMessage = "Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
+        if SystemTestsControlPanelUpdater?
+          SystemTestsControlPanelUpdater.addMessageToVisualComparisonsConsole errorMessage
+        @stopTestPlaying()
+      if menuAtPointer?
+        if numberOfItems != menuAtPointer.items.length
+          giveError()
+        else
+          giveSuccess()
+      else
+          giveError()
 
   takeScreenshot: (whichMorph = @worldMorph) ->
     console.log "taking screenshot"

@@ -59,6 +59,7 @@ class WorldMorph extends FrameMorph
   keyComboTakeScreenshotEventListener: null
   keyComboSaveFailedScreenshotsEventListener: null
   keyComboAddTestCommentEventListener: null
+  keyComboCheckNumberOfMenuItemsEventListener: null
 
   dragoverEventListener: null
   dropEventListener: null
@@ -614,6 +615,11 @@ class WorldMorph extends FrameMorph
       @systemTestsRecorderAndPlayer.addTestComment()
       false
     Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
+
+    @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu()
+      false
+    Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
 
     @dragoverEventListener = (event) ->
       event.preventDefault()
