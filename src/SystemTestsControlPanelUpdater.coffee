@@ -36,7 +36,7 @@ class SystemTestsControlPanelUpdater
   addOutputPanel: (nameOfPanel) ->
     SystemTestsControlPanelUpdater[nameOfPanel] = document.createElement('div')
     SystemTestsControlPanelUpdater[nameOfPanel].id = nameOfPanel
-    SystemTestsControlPanelUpdater[nameOfPanel].style.cssText = 'height: 150px; border: 1px solid red; overflow: hidden;'
+    SystemTestsControlPanelUpdater[nameOfPanel].style.cssText = 'height: 150px; border: 1px solid red; overflow: hidden; overflow-y: scroll;'
     document.body.appendChild(SystemTestsControlPanelUpdater[nameOfPanel])
 
   constructor: ->
