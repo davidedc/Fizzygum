@@ -24,14 +24,14 @@ class BlinkerMorph extends Morph
     # the tests.
     if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
       if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
-        if window.world.systemTestsRecorderAndPlayer.eventQueue.length % 2 == 0
+        if window.world.systemTestsRecorderAndPlayer.testCommandsSequence.length % 2 == 0
           @minimise()
           return
         else
           @unminimise()
           return
       if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        if window.world.systemTestsRecorderAndPlayer.indexOfQueuedEventBeingPlayed % 2 == 0
+        if window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence % 2 == 0
           @minimise()
           return
         else

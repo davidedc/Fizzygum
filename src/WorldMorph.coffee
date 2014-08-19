@@ -327,16 +327,16 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
   processMouseDown: (button, ctrlKey) ->
-    @systemTestsRecorderAndPlayer.addMouseDownEvent(button, ctrlKey)
+    @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
     @hand.processMouseDown event.button, event.ctrlKey
 
   processMouseUp: (button) ->
     event.preventDefault()
-    @systemTestsRecorderAndPlayer.addMouseUpEvent()
+    @systemTestsRecorderAndPlayer.addMouseUpCommand()
     @hand.processMouseUp event.button
 
   processMouseMove: (pageX, pageY) ->
-    @systemTestsRecorderAndPlayer.addMouseMoveEvent(pageX, pageY)
+    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY)
     @hand.processMouseMove  event.pageX, event.pageY
 
   # event.type must be keypress
@@ -349,7 +349,7 @@ class WorldMorph extends FrameMorph
       null # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyDownEvent scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @systemTestsRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
@@ -365,7 +365,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyUpEvent scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @systemTestsRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     if @keyboardEventsReceiver
       # so far the caret is the only keyboard
@@ -377,7 +377,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyPressEvent charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    @systemTestsRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -417,7 +417,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processCopy: (event) ->
-    @systemTestsRecorderAndPlayer.addCopyEvent
+    @systemTestsRecorderAndPlayer.addCopyCommand
     console.log "processing copy"
     if @caret
       selectedText = @caret.target.selection()
@@ -446,7 +446,7 @@ class WorldMorph extends FrameMorph
       
       # Needs a few msec to execute paste
       console.log "about to insert text: " + text
-      @systemTestsRecorderAndPlayer.addPasteEvent text
+      @systemTestsRecorderAndPlayer.addPasteCommand text
       window.setTimeout ( => (@caret.insert text)), 50, true
 
 

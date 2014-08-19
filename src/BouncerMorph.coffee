@@ -99,13 +99,13 @@ class BouncerMorph extends Morph
       if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
         if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
           @resetPosition()
-          for i in [0... window.world.systemTestsRecorderAndPlayer.eventQueue.length]
+          for i in [0... window.world.systemTestsRecorderAndPlayer.testCommandsSequence.length]
             @moveAccordingToBounce(true)
           @parent.changed()
           return
         if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
           @resetPosition()
-          for i in [0... window.world.systemTestsRecorderAndPlayer.indexOfQueuedEventBeingPlayed]
+          for i in [0... window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence]
             @moveAccordingToBounce(true)
           @parent.changed()
           return

@@ -3,7 +3,7 @@
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.eventQueue = SystemTestsRepo_NAMEOFTHETEST.testCommandsSequence
+# window.world.systemTestsRecorderAndPlayer.testCommandsSequence = SystemTestsRepo_NAMEOFTHETEST.testCommandsSequence
 # window.world.systemTestsRecorderAndPlayer.startTestPlaying()
 
 # How to inspect the screenshot differences:
@@ -45,12 +45,12 @@
 # to read how to load and play a test.
 
 class SystemTestsRecorderAndPlayer
-  eventQueue: []
+  testCommandsSequence: []
   @RECORDING: 0
   @PLAYING: 1
   @IDLE: 2
   @state: 2
-  lastRecordedEventTime: null
+  timeOfPreviouslyRecordedCommand: null
   handMorph: null
   worldMorph: null
   collectedImages: [] # array of SystemTestsReferenceImage
@@ -59,8 +59,8 @@ class SystemTestsRecorderAndPlayer
   testDescription: 'no description'
   @loadedImages: {}
   ongoingTestPlayingTask: null
-  lastPlayedEventTime: 0
-  indexOfQueuedEventBeingPlayed: 0
+  timeOfPreviouslyPlayedCommand: 0
+  indexOfTestCommandBeingPlayedFromSequence: 0
   animationsTiedToTestCommandNumber: false
   # this is a special place where the
   # "pic..." command places the image
@@ -106,8 +106,8 @@ class SystemTestsRecorderAndPlayer
     # to the chosen name
     @clearAnyDataRelatedToTest @testName
 
-    @eventQueue = []
-    @lastRecordedEventTime = new Date().getTime()
+    @testCommandsSequence = []
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
 
   stopTestRecording: ->
@@ -122,85 +122,85 @@ class SystemTestsRecorderAndPlayer
     
     # There is a background interval that polls
     # to check whether it's time/condition to play
-    # the next queued event. Remove it.
+    # the next queued command. Remove it.
     indexOfTask = @worldMorph.otherTasksToBeRunOnStep.indexOf(@ongoingTestPlayingTask)
     @worldMorph.otherTasksToBeRunOnStep.splice(indexOfTask, 1)
     @worldMorph.initEventListeners()
     
-    @indexOfQueuedEventBeingPlayed = 0
+    @indexOfTestCommandBeingPlayedFromSequence = 0
 
   showTestSource: ->
-    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @eventQueue, null, 4 )))
+    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @testCommandsSequence, null, 4 )))
 
   untieAnimationsFromTestCommandNumber: ->
     @animationsTiedToTestCommandNumber = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventUntieAnimationsFromTestCommandNumber @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandUntieAnimationsFromTestCommandNumber @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   tieAnimationsToTestCommandNumber: ->
     @animationsTiedToTestCommandNumber = true
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventTieAnimationsToTestCommandNumber @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandTieAnimationsToTestCommandNumber @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseMoveEvent: (pageX, pageY) ->
+  addMouseMoveCommand: (pageX, pageY) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventMouseMove pageX, pageY, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandMouseMove pageX, pageY, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseDownEvent: (button, ctrlKey) ->
+  addMouseDownCommand: (button, ctrlKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventMouseDown button, ctrlKey, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandMouseDown button, ctrlKey, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseUpEvent: ->
+  addMouseUpCommand: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventMouseUp @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandMouseUp @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addKeyPressEvent: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
+  addKeyPressCommand: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addKeyDownEvent: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  addKeyDownCommand: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addKeyUpEvent: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
+  addKeyUpCommand: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addCopyEvent: () ->
+  addCopyCommand: () ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventCopy @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandCopy @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addPasteEvent: (clipboardText) ->
+  addPasteCommand: (clipboardText) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventPaste clipboardText, @
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandPaste clipboardText, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
   deleteAllMorphs: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestEvent = new SystemTestsEventDeleteAllMorphs @
-    window[systemTestEvent.testCommand].replayFunction @, null
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    systemTestCommand = new SystemTestsCommandDeleteAllMorphs @
+    window[systemTestCommand.testCommandName].replayFunction @, null
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addTestComment: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
@@ -212,10 +212,10 @@ class SystemTestsRecorderAndPlayer
     # So we anticipate the message so the user can actually have
     # the time to read it before the test moves on with the
     # next steps.
-    @lastRecordedEventTime = new Date().getTime()
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
     comment = prompt("enter comment", "your comment here")
-    systemTestEvent = new SystemTestsShowComment comment, @
-    @eventQueue.push systemTestEvent
+    systemTestCommand = new SystemTestsCommandShowComment comment, @
+    @testCommandsSequence.push systemTestCommand
 
   checkNumberOfItemsInMenu: (numberOfItems) ->
     if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
@@ -227,9 +227,9 @@ class SystemTestsRecorderAndPlayer
       else
         console.log "was expecting a menu under the pointer"
         numberOfItems = 0
-      systemTestEvent = new SystemTestsEventCheckNumberOfItemsInMenu numberOfItems, @
-      @eventQueue.push systemTestEvent
-      @lastRecordedEventTime = new Date().getTime()
+      systemTestCommand = new SystemTestsCommandCheckNumberOfItemsInMenu numberOfItems, @
+      @testCommandsSequence.push systemTestCommand
+      @timeOfPreviouslyRecordedCommand = new Date().getTime()
     else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
       menuAtPointer = @handMorph.menuAtPointer()
       giveSuccess = =>
@@ -252,17 +252,17 @@ class SystemTestsRecorderAndPlayer
   takeScreenshot: (whichMorph = @worldMorph) ->
     console.log "taking screenshot"
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
-    systemTestEvent = new SystemTestsEventScreenshot imageName, @, whichMorph != @worldMorph
+    systemTestCommand = new SystemTestsCommandScreenshot imageName, @, whichMorph != @worldMorph
     imageData = whichMorph.fullImageData()
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
     unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
       SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = []
     SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"].push takenScreenshot
     @collectedImages.push takenScreenshot
-    @eventQueue.push systemTestEvent
-    @lastRecordedEventTime = new Date().getTime()
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-      return systemTestEvent
+      return systemTestCommand
 
   # a lenghty method because there
   # is a lot of API dancing, but the
@@ -372,12 +372,12 @@ class SystemTestsRecorderAndPlayer
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage
 
-  replayEvents: ->
+  replayTestCommands: ->
    timeNow = (new Date()).getTime()
-   queuedEvent = @eventQueue[@indexOfQueuedEventBeingPlayed]
-   # console.log "examining event: " + queuedEvent.testCommand + " at: " + queuedEvent.millisecondsSinceLastCommand +
-   #   " time now: " + timeNow + " we are at: " + (timeNow - @lastPlayedEventTime)
-   timeOfNextItem = queuedEvent.millisecondsSinceLastCommand or 0
+   queuedCommand = @testCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
+   # console.log "examining command: " + queuedCommand.testCommandName + " at: " + queuedCommand.millisecondsSincePreviousCommand +
+   #   " time now: " + timeNow + " we are at: " + (timeNow - @timeOfPreviouslyPlayedCommand)
+   timeUntilNextCommand = queuedCommand.millisecondsSincePreviousCommand or 0
    # for the screenshot, the replay is going
    # to consist in comparing the image data.
    # in case the screenshot is made of the entire world
@@ -389,23 +389,23 @@ class SystemTestsRecorderAndPlayer
    # search for imageDataOfAParticularMorph everywhere
    # to see where the image data is created and
    # put there.
-   if queuedEvent.testCommand == "SystemTestsEventScreenshot" and queuedEvent.screenshotTakenOfAParticularMorph
+   if queuedCommand.testCommandName == "SystemTestsCommandScreenshot" and queuedCommand.screenshotTakenOfAParticularMorph
      if not @imageDataOfAParticularMorph?
        # no image data of morph, so just wait
        return
-   if timeNow - @lastPlayedEventTime >= timeOfNextItem
-     console.log "running event: " + queuedEvent.testCommand + " " + @indexOfQueuedEventBeingPlayed + " / " + @eventQueue.length
-     window[queuedEvent.testCommand].replayFunction.call @,@,queuedEvent
-     @lastPlayedEventTime = timeNow
-     @indexOfQueuedEventBeingPlayed++
-     if @indexOfQueuedEventBeingPlayed == @eventQueue.length
+   if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
+     console.log "running command: " + queuedCommand.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length
+     window[queuedCommand.testCommandName].replayFunction.call @,@,queuedCommand
+     @timeOfPreviouslyPlayedCommand = timeNow
+     @indexOfTestCommandBeingPlayedFromSequence++
+     if @indexOfTestCommandBeingPlayedFromSequence == @testCommandsSequence.length
        console.log "stopping the test player"
        @stopTestPlaying()
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
     @worldMorph.removeEventListeners()
-    @ongoingTestPlayingTask = (=> @replayEvents())
+    @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
 
 
@@ -502,7 +502,7 @@ class SystemTestsRecorderAndPlayer
 
 
   saveTest: ->
-    blob = @testFileContentCreator window.world.systemTestsRecorderAndPlayer.eventQueue
+    blob = @testFileContentCreator window.world.systemTestsRecorderAndPlayer.testCommandsSequence
     zip = new JSZip()
     zip.file("SystemTest_#{@testName}.js", blob);
     
@@ -545,7 +545,7 @@ class SystemTestsRecorderAndPlayer
     console.log "System tests: " + @testsList()
     for i in @testsList()
       #console.log window[i]
-      @eventQueue = (window[i]).testCommandsSequence
+      @testCommandsSequence = (window[i]).testCommandsSequence
       # the Zombie kernel safari pop-up is painted weird, needs a refresh
       # for some unknown reason
       #@changed()

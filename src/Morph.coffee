@@ -1138,18 +1138,18 @@ class Morph extends MorphicNode
     # A) normally, just take a picture of this morph
     # and open it in a new tab.
     # B) If a test is being recorded, then the behaviour
-    # is slightly different: a system test event is
+    # is slightly different: a system test command is
     # triggered to take a screenshot of this particular
     # morph.
     # C) If a test is being played, then the screenshot of
     # the particular morph is put in a special place
-    # in the test player. The event recorded at B) is
+    # in the test player. The command recorded at B) is
     # going to replay but *waiting* for that screenshot
     # first.
     takePic = =>
       if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
         # While recording a test, just trigger for
-        # the takeScreenshot event to be recorded. 
+        # the takeScreenshot command to be recorded. 
         window.world.systemTestsRecorderAndPlayer.takeScreenshot(@)
       else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
         # While playing a test, this command puts the
@@ -1157,7 +1157,7 @@ class Morph extends MorphicNode
         # variable of the system test runner.
         # The test runner will wait for this variable
         # to contain the morph screenshot before
-        # doing the comparison as per event recorded
+        # doing the comparison as per command recorded
         # in the case above.
         window.world.systemTestsRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
       else

@@ -1,7 +1,7 @@
 #
 
 
-class SystemTestsEventScreenshot extends SystemTestsEvent
+class SystemTestsCommandScreenshot extends SystemTestsCommand
   screenShotImageName: null
   # The screenshot can be of the entire
   # world or of a particular morph (through
@@ -14,13 +14,13 @@ class SystemTestsEventScreenshot extends SystemTestsEvent
   # to provide the image data (the pic... command
   # will do it)
   screenshotTakenOfAParticularMorph: false
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedEvent) ->
-    systemTestsRecorderAndPlayer.compareScreenshots(queuedEvent.screenShotImageName, queuedEvent.screenshotTakenOfAParticularMorph)
+  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+    systemTestsRecorderAndPlayer.compareScreenshots(queuedCommand.screenShotImageName, queuedCommand.screenshotTakenOfAParticularMorph)
 
 
   constructor: (@screenShotImageName, systemTestsRecorderAndPlayer, @screenshotTakenOfAParticularMorph = false ) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
-    # replayFunction to replay the event
-    @testCommand = "SystemTestsEventScreenshot"
+    # replayFunction to replay the command
+    @testCommandName = "SystemTestsCommandScreenshot"

@@ -1,9 +1,9 @@
 # 
 
 
-class SystemTestsEventTieAnimationsToTestCommandNumber extends SystemTestsEvent
+class SystemTestsCommandTieAnimationsToTestCommandNumber extends SystemTestsCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedEvent) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
     systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()
 
 
@@ -11,5 +11,5 @@ class SystemTestsEventTieAnimationsToTestCommandNumber extends SystemTestsEvent
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
-    # replayFunction to replay the event
-    @testCommand = "SystemTestsEventTieAnimationsToTestCommandNumber"
+    # replayFunction to replay the command
+    @testCommandName = "SystemTestsCommandTieAnimationsToTestCommandNumber"
