@@ -738,7 +738,7 @@ class WorldMorph extends FrameMorph
       menu.addLine()
     
     if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-      menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runSystemTests()), "runs all the system tests"
+      menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
       menu.addItem "start test rec",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
       menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
       menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"

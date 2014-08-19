@@ -50,6 +50,8 @@ class SystemTestsRecorderAndPlayer
   @PLAYING: 1
   @IDLE: 2
   @state: 2
+  playingAllSystemTests: false
+  indexOfSystemTestBeingPlayed: 0
   timeOfPreviouslyRecordedCommand: null
   handMorph: null
   worldMorph: null
@@ -118,6 +120,7 @@ class SystemTestsRecorderAndPlayer
   # to make this one a double-arrow
   stopTestPlaying: ->
     console.log "wrapping up the playing of the test"
+    SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
     
     # There is a background interval that polls
@@ -128,6 +131,9 @@ class SystemTestsRecorderAndPlayer
     @worldMorph.initEventListeners()
     
     @indexOfTestCommandBeingPlayedFromSequence = 0
+
+    if @playingAllSystemTests
+      @runNextSystemTest()
 
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @testCommandsSequence, null, 4 )))
@@ -541,14 +547,17 @@ class SystemTestsRecorderAndPlayer
       console.log i.indexOf("SystemTest_")
       i.indexOf("SystemTest_") == 0
 
-  runSystemTests: ->
+  runNextSystemTest: ->
+    @indexOfSystemTestBeingPlayed++
+    if @indexOfSystemTestBeingPlayed >= @testsList().length
+      SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "finished all tests"
+      return
+    SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
+    @testCommandsSequence = window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
+    @startTestPlaying()
+
+  runAllSystemTests: ->
     console.log "System tests: " + @testsList()
-    for i in @testsList()
-      #console.log window[i]
-      @testCommandsSequence = (window[i]).testCommandsSequence
-      # the Zombie kernel safari pop-up is painted weird, needs a refresh
-      # for some unknown reason
-      #@changed()
-      # start from clean slate
-      #@destroyAll()
-      @startTestPlaying()
+    @playingAllSystemTests = true
+    @indexOfSystemTestBeingPlayed = -1
+    @runNextSystemTest()
