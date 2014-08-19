@@ -2,7 +2,7 @@
 
 class SystemTestsCommandDeleteAllMorphs extends SystemTestsCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.worldMorph.destroyAll()
 
   constructor: (systemTestsRecorderAndPlayer) ->

@@ -4,8 +4,8 @@
 class SystemTestsCommandCheckNumberOfItemsInMenu extends SystemTestsCommand
   numberOfItemsInMenu: 0
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu(queuedCommand.numberOfItemsInMenu)
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu(commandBeingPlayed.numberOfItemsInMenu)
 
   constructor: (@numberOfItemsInMenu, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)

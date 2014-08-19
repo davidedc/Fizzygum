@@ -4,8 +4,8 @@
 class SystemTestsCommandMouseMove extends SystemTestsCommand
   mouseX: null
   mouseY: null
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    systemTestsRecorderAndPlayer.handMorph.processMouseMove(queuedCommand.mouseX, queuedCommand.mouseY)
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    systemTestsRecorderAndPlayer.handMorph.processMouseMove(commandBeingPlayed.mouseX, commandBeingPlayed.mouseY)
 
   constructor: (@mouseX, @mouseY, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)

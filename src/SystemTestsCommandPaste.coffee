@@ -4,9 +4,9 @@
 class SystemTestsCommandPaste extends SystemTestsCommand
   clipboardText: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    console.log "test player inserting text: " + queuedCommand.clipboardText
-    systemTestsRecorderAndPlayer.worldMorph.processPaste null, queuedCommand.clipboardText
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    console.log "test player inserting text: " + commandBeingPlayed.clipboardText
+    systemTestsRecorderAndPlayer.worldMorph.processPaste null, commandBeingPlayed.clipboardText
 
 
   constructor: (@clipboardText, systemTestsRecorderAndPlayer) ->

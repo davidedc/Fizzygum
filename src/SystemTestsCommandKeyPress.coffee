@@ -9,9 +9,9 @@ class SystemTestsCommandKeyPress extends SystemTestsCommand
   altKey: null
   metaKey: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     console.log "replaying key"
-    systemTestsRecorderAndPlayer.worldMorph.processKeypress null, queuedCommand.charCode, queuedCommand.symbol, queuedCommand.shiftKey, queuedCommand.ctrlKey, queuedCommand.altKey, queuedCommand.metaKey
+    systemTestsRecorderAndPlayer.worldMorph.processKeypress null, commandBeingPlayed.charCode, commandBeingPlayed.symbol, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
 
 
   constructor: (@charCode, @symbol, @shiftKey, @ctrlKey, @altKey, @metaKey, systemTestsRecorderAndPlayer) ->

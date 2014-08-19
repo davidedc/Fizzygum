@@ -8,9 +8,9 @@ class SystemTestsCommandKeyDown extends SystemTestsCommand
   altKey: null
   metaKey: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     console.log "replaying key"
-    systemTestsRecorderAndPlayer.worldMorph.processKeydown null, queuedCommand.scanCode, queuedCommand.shiftKey, queuedCommand.ctrlKey, queuedCommand.altKey, queuedCommand.metaKey
+    systemTestsRecorderAndPlayer.worldMorph.processKeydown null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
 
 
   constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, systemTestsRecorderAndPlayer) ->

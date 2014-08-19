@@ -3,7 +3,7 @@
 
 class SystemTestsCommandTieAnimationsToTestCommandNumber extends SystemTestsCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()
 
 

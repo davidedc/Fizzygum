@@ -3,7 +3,7 @@
 
 class SystemTestsCommandUntieAnimationsFromTestCommandNumber extends SystemTestsCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber()
 
 

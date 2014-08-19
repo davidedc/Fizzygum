@@ -3,7 +3,7 @@
 
 class SystemTestsCommandCopy extends SystemTestsCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.worldMorph.processCopy null
 
   constructor: (@clipboardText, systemTestsRecorderAndPlayer) ->

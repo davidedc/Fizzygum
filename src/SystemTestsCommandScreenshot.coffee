@@ -14,8 +14,8 @@ class SystemTestsCommandScreenshot extends SystemTestsCommand
   # to provide the image data (the pic... command
   # will do it)
   screenshotTakenOfAParticularMorph: false
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    systemTestsRecorderAndPlayer.compareScreenshots(queuedCommand.screenShotImageName, queuedCommand.screenshotTakenOfAParticularMorph)
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    systemTestsRecorderAndPlayer.compareScreenshots(commandBeingPlayed.screenShotImageName, commandBeingPlayed.screenshotTakenOfAParticularMorph)
 
 
   constructor: (@screenShotImageName, systemTestsRecorderAndPlayer, @screenshotTakenOfAParticularMorph = false ) ->

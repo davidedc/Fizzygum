@@ -374,10 +374,10 @@ class SystemTestsRecorderAndPlayer
 
   replayTestCommands: ->
    timeNow = (new Date()).getTime()
-   queuedCommand = @testCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
-   # console.log "examining command: " + queuedCommand.testCommandName + " at: " + queuedCommand.millisecondsSincePreviousCommand +
+   commandToBePlayed = @testCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
+   # console.log "examining command: " + commandToBePlayed.testCommandName + " at: " + commandToBePlayed.millisecondsSincePreviousCommand +
    #   " time now: " + timeNow + " we are at: " + (timeNow - @timeOfPreviouslyPlayedCommand)
-   timeUntilNextCommand = queuedCommand.millisecondsSincePreviousCommand or 0
+   timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
    # for the screenshot, the replay is going
    # to consist in comparing the image data.
    # in case the screenshot is made of the entire world
@@ -389,13 +389,13 @@ class SystemTestsRecorderAndPlayer
    # search for imageDataOfAParticularMorph everywhere
    # to see where the image data is created and
    # put there.
-   if queuedCommand.testCommandName == "SystemTestsCommandScreenshot" and queuedCommand.screenshotTakenOfAParticularMorph
+   if commandToBePlayed.testCommandName == "SystemTestsCommandScreenshot" and commandToBePlayed.screenshotTakenOfAParticularMorph
      if not @imageDataOfAParticularMorph?
        # no image data of morph, so just wait
        return
    if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
-     console.log "running command: " + queuedCommand.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length
-     window[queuedCommand.testCommandName].replayFunction.call @,@,queuedCommand
+     console.log "running command: " + commandToBePlayed.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length
+     window[commandToBePlayed.testCommandName].replayFunction.call @,@,commandToBePlayed
      @timeOfPreviouslyPlayedCommand = timeNow
      @indexOfTestCommandBeingPlayedFromSequence++
      if @indexOfTestCommandBeingPlayedFromSequence == @testCommandsSequence.length

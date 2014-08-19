@@ -4,8 +4,8 @@
 class SystemTestsCommandShowComment extends SystemTestsCommand
   message: ""
 
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    SystemTestsControlPanelUpdater.addMessageToTestCommentsConsole queuedCommand.message
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    SystemTestsControlPanelUpdater.addMessageToTestCommentsConsole commandBeingPlayed.message
 
   constructor: (@message, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)

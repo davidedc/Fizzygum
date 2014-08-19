@@ -2,7 +2,7 @@
 
 
 class SystemTestsCommandMouseUp extends SystemTestsCommand
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.handMorph.processMouseUp()
 
   constructor: (systemTestsRecorderAndPlayer) ->

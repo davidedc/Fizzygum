@@ -4,8 +4,8 @@
 class SystemTestsCommandMouseDown extends SystemTestsCommand
   button: null
   ctrlKey: null
-  @replayFunction: (systemTestsRecorderAndPlayer, queuedCommand) ->
-    systemTestsRecorderAndPlayer.handMorph.processMouseDown(queuedCommand.button, queuedCommand.ctrlKey)
+  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+    systemTestsRecorderAndPlayer.handMorph.processMouseDown(commandBeingPlayed.button, commandBeingPlayed.ctrlKey)
 
 
   constructor: (@button, @ctrlKey, systemTestsRecorderAndPlayer) ->
