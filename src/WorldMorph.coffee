@@ -705,6 +705,25 @@ class WorldMorph extends FrameMorph
       prev.selectAll()
       prev.edit()
   
+  # There is something special that the
+  # "world" version of destroyAll does:
+  # it resets the counter used to count
+  # how many morphs exist of each Morph class.
+  # That counter is also used to determine the
+  # unique ID of a Morph. So, destroying
+  # all morphs from the world causes the
+  # counts and IDs of all the subsequent
+  # morphs to start from scratch again.
+  destroyAll: ->
+    # Check which objects end with the word Morph
+    theWordMorph = "Morph"
+    ListOfMorphs = (Object.keys(window)).filter (i) ->
+      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+    for eachMorphClass in ListOfMorphs
+      if eachMorphClass != "WorldMorph"
+        console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
+        window[eachMorphClass].instancesCounter = 0
+    super()
 
   # WorldMorph menu:
   contextMenu: ->
