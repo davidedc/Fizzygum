@@ -74,6 +74,13 @@ class Morph extends MorphicNode
   uniqueIDString: ->
     (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
 
+  @morphFromUniqueIDString: (theUniqueID) ->
+    result = world.topMorphSuchThat (m) =>
+      m.uniqueIDString() is theUniqueID
+    if not result?
+      alert "theUniqueID " + theUniqueID + " not found!"
+    return result
+
   assignUniqueID: ->
     @constructor.instancesCounter++
     @instanceNumber = @constructor.instancesCounter
