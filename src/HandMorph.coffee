@@ -43,7 +43,23 @@ class HandMorph extends Morph
         !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
     return result
-  
+
+  openContextMenuAtPointer: (morphTheMenuIsAbout) ->
+    # note that the morphs that the menu
+    # belongs to might not be under the mouse.
+    # It usually is, but in cases
+    # where a system test is playing against
+    # a world setup that has varied since the
+    # recording, this could be the case.
+
+    contextMenu = morphTheMenuIsAbout.contextMenu()
+    while (not contextMenu) and morphTheMenuIsAbout.parent
+      morphTheMenuIsAbout = morphTheMenuIsAbout.parent
+      contextMenu = morphTheMenuIsAbout.contextMenu()
+
+    if contextMenu 
+      contextMenu.popUpAtHand @world 
+
   #
   #    alternative -  more elegant and possibly more
   #	performant - solution for morphAtPointer.
@@ -134,6 +150,12 @@ class HandMorph extends Morph
   # event object.
 
   processMouseDown: (button, ctrlKey) ->
+    # if it's a left click then we are going
+    # to record this test command as a mousedown command
+    # but if it's a right click we have a more
+    # specific command for popping up the context menu.
+    if button is 0
+      @world.systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
     @destroyTemporaries()
     @morphToGrab = null
     if @children.length
@@ -185,17 +207,13 @@ class HandMorph extends Morph
         # this being a right click, pop
         # up a menu as needed. This previously
         # was handled on the following "processMouseUp"
-        # event but there is actually no
+        # event, but there is actually no
         # need to wait, as for example also on OSX
         # the contextual menus come up on the
         # pressing of the button instead of the
         # releasing.
-        context = morph
-        contextMenu = context.contextMenu()
-        while (not contextMenu) and context.parent
-          context = context.parent
-          contextMenu = context.contextMenu()
-        contextMenu.popUpAtHand @world  if contextMenu
+        @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
+        @openContextMenuAtPointer morph
       else
         @mouseButton = "left"
         actualClick = "mouseDownLeft"

@@ -164,6 +164,13 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addOpenContextMenuCommand: (context) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandOpenContextMenu context, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+
   addMouseUpCommand: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandMouseUp @

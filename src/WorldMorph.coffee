@@ -327,7 +327,14 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
   processMouseDown: (button, ctrlKey) ->
-    @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
+    # the recording of the test command (in case we are
+    # recording a test) is handled inside the function
+    # here below.
+    # This is different from the other methods similar
+    # to this one but there is a little bit of
+    # logic we apply in case there is a right-click,
+    # in which case we record a more specific test
+    # command.
     @hand.processMouseDown event.button, event.ctrlKey
 
   processMouseUp: (button) ->
