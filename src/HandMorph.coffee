@@ -182,6 +182,20 @@ class HandMorph extends Morph
         @mouseButton = "right"
         actualClick = "mouseDownRight"
         expectedClick = "mouseClickRight"
+        # this being a right click, pop
+        # up a menu as needed. This previously
+        # was handled on the following "processMouseUp"
+        # event but there is actually no
+        # need to wait, as for example also on OSX
+        # the contextual menus come up on the
+        # pressing of the button instead of the
+        # releasing.
+        context = morph
+        contextMenu = context.contextMenu()
+        while (not contextMenu) and context.parent
+          context = context.parent
+          contextMenu = context.contextMenu()
+        contextMenu.popUpAtHand @world  if contextMenu
       else
         @mouseButton = "left"
         actualClick = "mouseDownLeft"
@@ -239,13 +253,6 @@ class HandMorph extends Morph
         expectedClick = "mouseClickLeft"
       else
         expectedClick = "mouseClickRight"
-        if @mouseButton
-          context = morph
-          contextMenu = context.contextMenu()
-          while (not contextMenu) and context.parent
-            context = context.parent
-            contextMenu = context.contextMenu()
-          contextMenu.popUpAtHand @world  if contextMenu
       morph = morph.parent  until morph[expectedClick]
       morph[expectedClick] @bounds.origin
     @mouseButton = null
