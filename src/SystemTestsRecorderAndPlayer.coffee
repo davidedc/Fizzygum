@@ -70,6 +70,8 @@ class SystemTestsRecorderAndPlayer
   # the test player will wait for this data
   # before doing the comparison.
   imageDataOfAParticularMorph: null
+  lastMouseDownCommand: null
+  lastMouseUpCommand: null
 
 
   constructor: (@worldMorph, @handMorph) ->
@@ -161,6 +163,7 @@ class SystemTestsRecorderAndPlayer
   addMouseDownCommand: (button, ctrlKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandMouseDown button, ctrlKey, @
+    lastMouseDownCommand = systemTestCommand
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
@@ -170,12 +173,23 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addCommandLeftClickOnMenuItem: (labelString, occurrenceNumber) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    @removeLastMouseUpAndMouseDownCommands()
+    systemTestCommand = new SystemTestsCommandLeftClickOnMenuItem labelString, occurrenceNumber, @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addMouseUpCommand: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandMouseUp @
+    lastMouseUpCommand = systemTestCommand
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  removeLastMouseUpAndMouseDownCommands: ->
+    @testCommandsSequence.splice(@testCommandsSequence.indexOf(@lastMouseDownCommand), 1 )
+    @testCommandsSequence.splice(@testCommandsSequence.indexOf(@lastMouseUpCommand), 1 )
 
   addKeyPressCommand: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING

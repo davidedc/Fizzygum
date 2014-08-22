@@ -44,6 +44,12 @@ class HandMorph extends Morph
         (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
     return result
 
+  clickOnMenuItemWithText: (textLabelOfClickedItem, textLabelOccurrenceNumber) ->
+    itemToTrigger = @world.activeMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
+      m.labelString == textLabelOfClickedItem
+    itemToTrigger.mouseClickLeft()
+
+
   openContextMenuAtPointer: (morphTheMenuIsAbout) ->
     # note that the morphs that the menu
     # belongs to might not be under the mouse.
@@ -156,8 +162,11 @@ class HandMorph extends Morph
     # specific command for popping up the context menu.
     if button is 0
       @world.systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
+
     @destroyTemporaries()
     @morphToGrab = null
+    # check whether we are in the middle
+    # of a drag/drop operation
     if @children.length
       @drop()
       @mouseButton = null
@@ -218,6 +227,7 @@ class HandMorph extends Morph
         @mouseButton = "left"
         actualClick = "mouseDownLeft"
         expectedClick = "mouseClickLeft"
+
       @mouseDownMorph = morph
       @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
       morph = morph.parent  until morph[actualClick]
@@ -255,6 +265,10 @@ class HandMorph extends Morph
       clearInterval @touchHoldTimeout
   
   processTouchEnd: (event) ->
+    # note that the mouse down event handler
+    # that is calling this method has ALREADY
+    # added a mousdown command
+
     WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
     @processMouseUp 0 # button zero is the left button, we don't use this parameter
@@ -269,6 +283,22 @@ class HandMorph extends Morph
     else
       if @mouseButton is "left"
         expectedClick = "mouseClickLeft"
+        # let's check if the user clicked on a menu item,
+        # in which case we add a special dedicated command
+        # [TODO] you need to do some of this only if you
+        # are recording a test, it's worth saving
+        # these steps...
+        menuItemMorph = morph.parentThatIsA(MenuItemMorph)
+        if menuItemMorph
+          labelString = menuItemMorph.labelString
+          morphSpawningTheMenu = menuItemMorph.parent.parent
+          occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
+            m.labelString == labelString
+          # this method below is also going to remove
+          # the mouse down/up commands that have
+          # recently/jsut been added.
+          @world.systemTestsRecorderAndPlayer.addCommandLeftClickOnMenuItem(labelString, occurrenceNumber + 1)
+
       else
         expectedClick = "mouseClickRight"
       morph = morph.parent  until morph[expectedClick]

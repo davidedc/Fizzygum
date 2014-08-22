@@ -194,6 +194,39 @@ class MorphicNode
     index = siblings.indexOf(@)
     siblings.splice(index, 1)
     return siblings
+
+  # find how many siblings before me
+  # satisfy a property
+  # This is used when figuring out
+  # how many buttons before a particular button
+  # are labeled in the same way,
+  # in the test system.
+  # (so that we can say: automatically
+  # click on the nth button labelled "X")
+  howManySiblingsBeforeMeSuchThat: (predicate) ->
+    theCount = 0
+    for eachSibling in @parent.children
+      if eachSibling == @
+        return theCount
+      if predicate.call(null, eachSibling)
+        theCount++
+    return theCount
+
+  # find the nth child satisfying
+  # a property.
+  # This is used when finding
+  # the nth buttons of a menu
+  # having a particular label.
+  # (so that we can say: automatically
+  # click on the nth button labelled "X")
+  nthChildSuchThat: (n, predicate) ->
+    theCount = 0
+    for eachChild in @children
+      if predicate.call(null, eachChild)
+        theCount++
+        if theCount is n
+          return eachChild
+    return null
   
   # returns the first parent (going up from this node) that is of a particular class
   # (includes this particular node)
