@@ -333,13 +333,25 @@ class WorldMorph extends FrameMorph
     # This is different from the other methods similar
     # to this one but there is a little bit of
     # logic we apply in case there is a right-click,
+    # or user left or right-clicks on a menu,
     # in which case we record a more specific test
-    # command.
+    # commands.
+
+    # we might eliminate this command afterwards if
+    # we find out user is clicking on a menu item
+    # or right-clicking on a morph
+    @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
+
     @hand.processMouseDown event.button, event.ctrlKey
 
   processMouseUp: (button) ->
     event.preventDefault()
+
+    # we might eliminate this command afterwards if
+    # we find out user is clicking on a menu item
+    # or right-clicking on a morph
     @systemTestsRecorderAndPlayer.addMouseUpCommand()
+
     @hand.processMouseUp event.button
 
   processMouseMove: (pageX, pageY) ->

@@ -163,33 +163,41 @@ class SystemTestsRecorderAndPlayer
   addMouseDownCommand: (button, ctrlKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandMouseDown button, ctrlKey, @
-    lastMouseDownCommand = systemTestCommand
+    @lastMouseDownCommand = systemTestCommand
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addOpenContextMenuCommand: (context) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    @removeLastMouseUpAndMouseDownCommands()
     systemTestCommand = new SystemTestsCommandOpenContextMenu context, @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addCommandLeftClickOnMenuItem: (labelString, occurrenceNumber) ->
+  addCommandLeftOrRightClickOnMenuItem: (mouseButton, labelString, occurrenceNumber) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     @removeLastMouseUpAndMouseDownCommands()
-    systemTestCommand = new SystemTestsCommandLeftClickOnMenuItem labelString, occurrenceNumber, @
+    systemTestCommand = new SystemTestsCommandLeftOrRightClickOnMenuItem mouseButton, labelString, occurrenceNumber, @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addMouseUpCommand: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandMouseUp @
-    lastMouseUpCommand = systemTestCommand
+    @lastMouseUpCommand = systemTestCommand
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
-
+  
+  # doesn't *actually* remove the command
+  # because you do need to wait the time.
+  # because for example the bubbles pop-up
+  # after some time.
+  # You could remove the commands and note down
+  # how much was the wait on each and charge it to
+  # the next command but that would be very messy.
   removeLastMouseUpAndMouseDownCommands: ->
-    @testCommandsSequence.splice(@testCommandsSequence.indexOf(@lastMouseDownCommand), 1 )
-    @testCommandsSequence.splice(@testCommandsSequence.indexOf(@lastMouseUpCommand), 1 )
+    @lastMouseDownCommand.transformIntoDoNothingCommand()
+    @lastMouseUpCommand.transformIntoDoNothingCommand()
 
   addKeyPressCommand: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING

@@ -7,6 +7,8 @@ class SystemTestsCommandMouseDown extends SystemTestsCommand
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.handMorph.processMouseDown(commandBeingPlayed.button, commandBeingPlayed.ctrlKey)
 
+  transformIntoDoNothingCommand: ->
+    @testCommandName = "SystemTestsCommandDoNothing"
 
   constructor: (@button, @ctrlKey, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
