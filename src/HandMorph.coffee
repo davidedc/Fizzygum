@@ -275,15 +275,21 @@ class HandMorph extends Morph
       # these steps...
       menuItemMorph = morph.parentThatIsA(MenuItemMorph)
       if menuItemMorph
-        labelString = menuItemMorph.labelString
-        morphSpawningTheMenu = menuItemMorph.parent.parent
-        occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
-          m.labelString == labelString
-        # this method below is also going to remove
-        # the mouse down/up commands that have
-        # recently/jsut been added.
-        @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
-        alreadyRecordedLeftOrRightClickOnMenuItem = true
+        # we check whether the menuitem is actually part
+        # of an activeMenu. Keep in mind you could have
+        # detached a menuItem and placed it on any other
+        # morph so you need to ascertain that you'll
+        # find it in the activeMenu later on...
+        if @world.activeMenu == menuItemMorph.parent
+          labelString = menuItemMorph.labelString
+          morphSpawningTheMenu = menuItemMorph.parent.parent
+          occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
+            m.labelString == labelString
+          # this method below is also going to remove
+          # the mouse down/up commands that have
+          # recently/jsut been added.
+          @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+          alreadyRecordedLeftOrRightClickOnMenuItem = true
       if @mouseButton is "left"
         expectedClick = "mouseClickLeft"
       else
