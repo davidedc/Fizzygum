@@ -1,9 +1,9 @@
 # HandleMorph ////////////////////////////////////////////////////////
+# not to be confused with the HandMorph
+# I am a resize / move handle that can be attached to any Morph
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
-
-# I am a resize / move handle that can be attached to any Morph
 
 class HandleMorph extends Morph
 

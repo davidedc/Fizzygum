@@ -58,10 +58,21 @@ class FrameMorph extends Morph
 
     # This is why as well it's good to use FrameMorphs whenever
     # it's clear that there is a "container" case. Think
-    # for example that you could stick a big RectangleMorph
-    # (not a Frame) on the desktop and then attach a thousand
-    # CircleBoxMorphs on it. That's a nightmare scenegraph
-    # to *completely* traverse for *any* broken rectangle.
+    # for example that you could stick a small
+    # RectangleMorph (not a Frame) on the desktop and then
+    # attach a thousand
+    # CircleBoxMorphs on it.
+    # Say that the circles are all inside the rectangle,
+    # apart from four that are at the corners of the world.
+    # that's a nightmare scenegraph
+    # to *completely* traverse for *any* broken rectangle
+    # anywhere on the screen.
+    # The traversal is complete because a) Morphic doesn't
+    # assume that the rectangle clips its children and
+    # b) the bounding rectangle (which currently is not
+    # efficiently calculated anyways) is the whole screen.
+    # So the children could be anywhere and need to be all
+    # checked for damaged areas to repaint.
     # If the RectangleMorph is made into a frame, one can
     # avoid the traversal for any broken rectangle not
     # overlapping it.
@@ -114,6 +125,7 @@ class FrameMorph extends Morph
         result = result.merge(child.boundsIncludingChildren())
     result
   
+  # unused. Should it fo in the scrollframe anyways?
   keepInScrollFrame: ->
     return null  if @scrollFrame is null
     if @left() > @scrollFrame.left()
