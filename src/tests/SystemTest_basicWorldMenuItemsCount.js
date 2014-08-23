@@ -4,9 +4,9 @@
 // can be copied in the /src/tests folder
 // to make them available in the testing
 // environment.
-var SystemTest_basicWorldManuItemsCount;
+var SystemTest_basicWorldMenuItemsCount;
 
-SystemTest_basicWorldManuItemsCount = {
+SystemTest_basicWorldMenuItemsCount = {
     "timeRecorded": "2014-08-19T19:44:00.367Z",
     "description": "counts the items in the main world menu",
     "systemInfo": {
