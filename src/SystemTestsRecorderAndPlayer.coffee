@@ -102,6 +102,8 @@ class SystemTestsRecorderAndPlayer
     if not @testDescription?
       @testDescription = prompt("Please enter a test description", "no description")
 
+    @animationsTiedToTestCommandNumber = true
+
     # if you choose the same name
     # of a previously loaded tests,
     # confusing things might happen such
@@ -116,6 +118,7 @@ class SystemTestsRecorderAndPlayer
 
   stopTestRecording: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    @animationsTiedToTestCommandNumber = false
 
 
   # gonna use this in a callback so need
@@ -439,6 +442,7 @@ class SystemTestsRecorderAndPlayer
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
+    @animationsTiedToTestCommandNumber = true
     @worldMorph.removeEventListeners()
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
