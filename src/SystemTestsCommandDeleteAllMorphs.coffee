@@ -4,6 +4,9 @@ class SystemTestsCommandDeleteAllMorphs extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.worldMorph.destroyAll()
+    # some tests might change the background
+    # color of the world so let's reset it.
+    systemTestsRecorderAndPlayer.worldMorph.setColor(new Color(205, 205, 205))
 
   constructor: (systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
