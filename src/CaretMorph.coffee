@@ -1,6 +1,6 @@
 # CaretMorph /////////////////////////////////////////////////////////
 
-# I am a String/Text editing widget
+# I mark where the caret is in a String/Text while editing
 
 class CaretMorph extends BlinkerMorph
 
