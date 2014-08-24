@@ -70,7 +70,7 @@ SystemTest_moreUnpluggingOfInspectorParts = {
         },
         {
             "millisecondsSincePreviousCommand": 581,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 795,

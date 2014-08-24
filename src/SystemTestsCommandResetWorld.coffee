@@ -1,6 +1,6 @@
 # 
 
-class SystemTestsCommandDeleteAllMorphs extends SystemTestsCommand
+class SystemTestsCommandResetWorld extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.worldMorph.destroyAll()
@@ -13,4 +13,4 @@ class SystemTestsCommandDeleteAllMorphs extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandDeleteAllMorphs"
+    @testCommandName = "SystemTestsCommandResetWorld"

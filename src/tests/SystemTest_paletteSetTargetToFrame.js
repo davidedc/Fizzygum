@@ -76,7 +76,7 @@ SystemTest_paletteSetTargetToFrame = {
         },
         {
             "millisecondsSincePreviousCommand": 780,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 804,

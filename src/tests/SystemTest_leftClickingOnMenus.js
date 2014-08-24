@@ -69,7 +69,7 @@ SystemTest_leftClickingOnMenus = {
         },
         {
             "millisecondsSincePreviousCommand": 724,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 798,

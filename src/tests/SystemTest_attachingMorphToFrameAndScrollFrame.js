@@ -64,7 +64,7 @@ SystemTest_attachingMorphToFrameAndScrollFrame = {
         },
         {
             "millisecondsSincePreviousCommand": 976,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 781,

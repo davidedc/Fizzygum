@@ -58,7 +58,7 @@ SystemTest_basicWorldMenuAndBubble = {
         },
         {
             "millisecondsSincePreviousCommand": 743,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 726,

@@ -57,7 +57,7 @@ SystemTest_basicWorldMenuItemsCount = {
         },
         {
             "millisecondsSincePreviousCommand": 881,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 776,

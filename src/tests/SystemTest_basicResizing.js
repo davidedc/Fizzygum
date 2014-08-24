@@ -64,7 +64,7 @@ SystemTest_basicResizing = {
         },
         {
             "millisecondsSincePreviousCommand": 759,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 806,

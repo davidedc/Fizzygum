@@ -69,7 +69,7 @@ SystemTest_detachedMenuItemMorph = {
         },
         {
             "millisecondsSincePreviousCommand": 751,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 806,

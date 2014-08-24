@@ -55,7 +55,7 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.cssFloat = 'left';
 
     @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
-    @addLink "alt+d: delete all morphs", (-> window.world.systemTestsRecorderAndPlayer.deleteAllMorphs())
+    @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
     @addLink "alt+e: tie animations to test step", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber())
     @addLink "alt+u: untie animation to test step", (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())

@@ -88,7 +88,7 @@ SystemTest_selectedTextAndUnselectedTextHaveDifferentMenus = {
         },
         {
             "millisecondsSincePreviousCommand": 707,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 796,

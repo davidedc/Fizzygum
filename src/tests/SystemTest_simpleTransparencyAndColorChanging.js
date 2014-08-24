@@ -76,7 +76,7 @@ SystemTest_simpleTransparencyAndColorChanging = {
         },
         {
             "millisecondsSincePreviousCommand": 982,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 783,

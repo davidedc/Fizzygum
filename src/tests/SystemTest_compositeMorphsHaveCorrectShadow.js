@@ -88,7 +88,7 @@ SystemTest_compositeMorphsHaveCorrectShadow = {
         },
         {
             "millisecondsSincePreviousCommand": 882,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 803,

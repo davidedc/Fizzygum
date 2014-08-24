@@ -233,9 +233,9 @@ class SystemTestsRecorderAndPlayer
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
-  deleteAllMorphs: ->
+  resetWorld: ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandDeleteAllMorphs @
+    systemTestCommand = new SystemTestsCommandResetWorld @
     window[systemTestCommand.testCommandName].replayFunction @, null
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()

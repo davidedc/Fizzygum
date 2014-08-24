@@ -82,7 +82,7 @@ SystemTest_sierpinskiInScrollFrame = {
         },
         {
             "millisecondsSincePreviousCommand": 757,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 796,

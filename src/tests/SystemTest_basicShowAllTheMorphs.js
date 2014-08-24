@@ -63,7 +63,7 @@ SystemTest_basicShowAllTheMorphs = {
         },
         {
             "millisecondsSincePreviousCommand": 1142,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 766,

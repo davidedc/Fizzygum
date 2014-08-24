@@ -49,7 +49,7 @@ class WorldMorph extends FrameMorph
   inputDOMElementForVirtualKeyboardKeypressEventListener: null
 
   keyComboStartRecordingTestEventListener: null
-  keyComboDeleteAllMorphsEventListener: null
+  keyComboResetWorldEventListener: null
   keyComboTieAnimationsToTestCommandNumber: null
   keyComboUntieAnimationsFromTestCommandNumber: null
   keyComboTakeScreenshotEventListener: null
@@ -591,10 +591,10 @@ class WorldMorph extends FrameMorph
       false
     Mousetrap.bind ["alt+n"], @keyComboStartRecordingTestEventListener
 
-    @keyComboDeleteAllMorphsEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.deleteAllMorphs()
+    @keyComboResetWorldEventListener = (event) =>
+      @systemTestsRecorderAndPlayer.resetWorld()
       false
-    Mousetrap.bind ["alt+d"], @keyComboDeleteAllMorphsEventListener
+    Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
     @keyComboTieAnimationsToTestCommandNumber = (event) =>
       @systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()

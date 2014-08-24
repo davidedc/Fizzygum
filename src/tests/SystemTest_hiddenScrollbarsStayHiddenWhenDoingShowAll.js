@@ -76,7 +76,7 @@ SystemTest_hiddenScrollbarsStayHiddenWhenDoingShowAll = {
         },
         {
             "millisecondsSincePreviousCommand": 827,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 800,

@@ -166,7 +166,7 @@ SystemTest_unpluggingOfScrollBar = {
         },
         {
             "millisecondsSincePreviousCommand": 666,
-            "testCommandName": "SystemTestsCommandDeleteAllMorphs"
+            "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
             "mouseX": 801,
