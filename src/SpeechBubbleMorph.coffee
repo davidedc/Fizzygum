@@ -26,17 +26,21 @@ class SpeechBubbleMorph extends BoxMorph
       @color = color or new Color(230, 230, 230)
       @updateRendering()
   
-  @createBubbleHelp: (contents, morphInvokingThis) ->
-    new @(
-      localize(contents), null, null, 1).popUp morphInvokingThis.world(),
-      morphInvokingThis.rightCenter().add(new Point(-8, 0))
+  @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
+    if morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
+      new @(
+        localize(contents), null, null, 1).popUp morphInvokingThis.world(),
+        morphInvokingThis.rightCenter().add(new Point(-8, 0))
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
-    setTimeout (=>
-      if morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
-        @createBubbleHelp contents, morphInvokingThis
-      )
-      , delay
+    if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber and
+     SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+        @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
+    else
+      setTimeout (=>
+        @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
+        )
+        , delay
   
   # SpeechBubbleMorph invoking:
   popUp: (world, pos, isClickable) ->
