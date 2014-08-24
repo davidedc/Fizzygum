@@ -17,26 +17,10 @@ class BlinkerMorph extends Morph
     # when taking/comparing
     # screenshots.
     # So we check here that flag, and make the
-    # caret to appear/disappear based on the
-    # test step number, so user can control
-    # exactly whether the caret is going to be
-    # visible or invisible when recording/playing
-    # the tests.
+    # caret is always going to be visible.
     if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
       if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
-        if window.world.systemTestsRecorderAndPlayer.testCommandsSequence.length % 2 == 0
-          @minimise()
-          return
-        else
-          @unminimise()
-          return
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        if window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence % 2 == 0
-          @minimise()
-          return
-        else
-          @unminimise()
-          return
+        return
  
     # in all other cases just
     # do like usual, i.e. toggle
