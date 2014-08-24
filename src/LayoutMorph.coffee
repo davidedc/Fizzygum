@@ -37,13 +37,13 @@ class LayoutMorph extends Morph
     @updateRendering()
   
   @newColumn: ->
-    newLayoutMorph =  new LayoutMorph()
+    newLayoutMorph =  new @()
     newLayoutMorph.beColumn()
     return newLayoutMorph
 
   @newRow: ->
     debugger
-    newLayoutMorph =  new LayoutMorph()
+    newLayoutMorph =  new @()
     newLayoutMorph.beRow()
     return newLayoutMorph
 

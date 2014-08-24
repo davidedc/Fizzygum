@@ -41,104 +41,104 @@ class LayoutSpec
     @newWithFixedWidthFixedHeight(aPoint.x, aPoint.y)
 
   @newWithFixedHeight: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedHeight aNumber
    return layoutSpec
 
   @newWithFixedWidth: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    return layoutSpec
 
   @newWithFixedWidthFixedHeight: (aNumber, otherNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    layoutSpec.setFixedHeight otherNumber
    return layoutSpec
 
   @newWithFixedWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    layoutSpec.setFixedHeight otherNumber
    layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithFixedWidthProportionalHeight: (aNumber, otherNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    layoutSpec.setProportionalHeight otherNumber
    return layoutSpec
 
   @newWithFixedWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    layoutSpec.setProportionalHeight otherNumber
    layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithKeepMorphExtent: ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.useMorphWidth
    layoutSpec.useMorphHeight
    return layoutSpec
 
   @newWithMorphHeightFixedWidth: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setFixedWidth aNumber
    layoutSpec.useMorphHeight
    return layoutSpec
 
   @newWithMorphHeightProportionalWidth: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    layoutSpec.useMorphHeight()
    return layoutSpec
 
   @newWithMorphWidthFixedHeight: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.useMorphWidth()
    layoutSpec.setFixedHeight aNumber
    return layoutSpec
 
   @newWithMorphWidthProportionalHeight: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.useMorphWidth()
    layoutSpec.setProportionalHeight aNumber
    return layoutSpec
 
   # Will use all available width
   @newWithProportionalHeight: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalHeight aNumber
    return layoutSpec
 
   # Will use all available height
   @newWithProportionalWidth: (aNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    return layoutSpec
 
   @newWithProportionalWidthFixedHeight: (aNumber, otherNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    layoutSpec.setFixedHeight otherNumber
    return layoutSpec
 
   @newWithProportionalWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    layoutSpec.setFixedHeight otherNumber
    layoutSpec.setMinorDirectionPadding aSymbolOrNumber
    return layoutSpec
 
   @newWithProportionalWidthProportionalHeight: (aNumber, otherNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    layoutSpec.setProportionalHeight otherNumber
    return layoutSpec
 
   @newWithProportionalWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new LayoutSpec()
+   layoutSpec = new @()
    layoutSpec.setProportionalWidth aNumber
    layoutSpec.setProportionalHeight otherNumber
    layoutSpec.setMinorDirectionPadding aSymbolOrNumber
@@ -146,7 +146,7 @@ class LayoutSpec
 
   # Use all available space
   @newWithUseAll: ->
-   return new LayoutSpec()
+   return new @()
 
   setFixedHeight: (aNumber) ->
    # aNumber is taken as the fixed height to use.
