@@ -18,9 +18,9 @@ class BlinkerMorph extends Morph
     # screenshots.
     # So we check here that flag, and make the
     # caret is always going to be visible.
-    if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
-        return
+    if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber and
+     SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+      return
  
     # in all other cases just
     # do like usual, i.e. toggle
