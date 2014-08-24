@@ -225,7 +225,7 @@ class TriggerMorph extends Morph
   mouseEnter: ->
     @image = @highlightImage
     @changed()
-    @bubbleHelp @hint  if @hint
+    @startCountdownForBubbleHelp @hint  if @hint
   
   mouseLeave: ->
     @image = @normalImage
@@ -253,14 +253,5 @@ class TriggerMorph extends Morph
     null
   
   # TriggerMorph bubble help:
-  bubbleHelp: (contents) ->
-    @fps = 2
-    @step = =>
-      @popUpbubbleHelp contents  if @bounds.containsPoint(@world().hand.position())
-      @fps = 0
-      delete @step
-  
-  popUpbubbleHelp: (contents) ->
-    new SpeechBubbleMorph(
-      localize(contents), null, null, 1).popUp @world(),
-      @rightCenter().add(new Point(-8, 0))
+  startCountdownForBubbleHelp: (contents) ->
+    SpeechBubbleMorph.createInAWhileIfHandStillContainedInMorph @, contents

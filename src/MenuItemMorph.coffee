@@ -62,7 +62,8 @@ class MenuItemMorph extends TriggerMorph
     unless @isListItem()
       @image = @highlightImage
       @changed()
-    @bubbleHelp @hint  if @hint
+    if @hint
+      @startCountdownForBubbleHelp @hint
   
   mouseLeave: ->
     unless @isListItem()
