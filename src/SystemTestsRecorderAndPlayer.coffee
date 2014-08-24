@@ -457,6 +457,7 @@ class SystemTestsRecorderAndPlayer
     testToBeSerialised = {}
     testToBeSerialised.timeRecorded = new Date()
     testToBeSerialised.description = @testDescription
+    testToBeSerialised.orderOfPlaybackAmongAllOtherTests = "00000"
     testToBeSerialised.systemInfo = new SystemTestsSystemInfo()
     testToBeSerialised.testCommandsSequence = commands
 
