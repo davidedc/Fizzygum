@@ -199,6 +199,7 @@ class WorldMorph extends FrameMorph
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
+    #console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
     @updateBroken()
