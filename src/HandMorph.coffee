@@ -48,6 +48,16 @@ class HandMorph extends Morph
   leftOrRightClickOnMenuItemWithText: (whichMouseButtonPressed, textLabelOfClickedItem, textLabelOccurrenceNumber) ->
     itemToTrigger = @world.activeMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
       m.labelString == textLabelOfClickedItem
+
+    # these three are checks and actions that normally
+    # would happen on MouseDown event, but we
+    # removed that event as we collapsed the down and up
+    # into this colasesced higher-level event,
+    # but we still need to make these checks and actions
+    @destroyActiveMenuIfHandHasNotActionedIt itemToTrigger
+    @destroyActiveHandleIfHandHasNotActionedIt itemToTrigger
+    @stopEditingIfActionIsElsewhere itemToTrigger
+
     if whichMouseButtonPressed == "left"
       itemToTrigger.mouseClickLeft()
     else if whichMouseButtonPressed == "right"
@@ -61,6 +71,15 @@ class HandMorph extends Morph
     # where a system test is playing against
     # a world setup that has varied since the
     # recording, this could be the case.
+
+    # these three are checks and actions that normally
+    # would happen on MouseDown event, but we
+    # removed that event as we collapsed the down and up
+    # into this colasesced higher-level event,
+    # but we still need to make these checks and actions
+    @destroyActiveMenuIfHandHasNotActionedIt morphTheMenuIsAbout
+    @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
+    @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
     contextMenu = morphTheMenuIsAbout.contextMenu()
     while (not contextMenu) and morphTheMenuIsAbout.parent
@@ -159,6 +178,47 @@ class HandMorph extends Morph
   # rather than a multifaceted and sometimes browser-specific
   # event object.
 
+  destroyActiveHandleIfHandHasNotActionedIt: (actionedMorph) ->
+    if @world.activeHandle?
+      if actionedMorph isnt @world.activeHandle
+        @world.activeHandle.destroy()    
+
+  destroyActiveMenuIfHandHasNotActionedIt: (actionedMorph) ->
+    if @world.activeMenu?
+      unless @world.activeMenu.containedInParentsOf(actionedMorph)
+        # if there is a menu open and the user clicked on
+        # something that is not part of the menu then
+        # destroy the menu 
+        @world.activeMenu.destroy()
+      else
+        clearInterval @touchHoldTimeout
+
+  stopEditingIfActionIsElsewhere: (actionedMorph) ->
+    if @world.caret?
+      # there is a caret on the screen
+      # depending on what the user is clicking on,
+      # we might need to close an ongoing edit
+      # operation, which means deleting the
+      # caret and un-selecting anything that was selected.
+      # Note that we don't want to interrupt an edit
+      # if the user is invoking/clicking on anything
+      # inside a menu, because the invoked function
+      # might do something with the selection
+      # (for example doIt takes the current selection).
+      if actionedMorph isnt @world.caret.target
+        # user clicked on something other than what the
+        # caret is attached to
+        if @world.activeMenu?
+          unless @world.activeMenu.containedInParentsOf(actionedMorph)
+            # only dismiss editing if the actionedMorph the user
+            # clicked on is not part of a menu.
+            @world.stopEditing()
+        # there is no menu at all, in which case
+        # we know there was an editing operation going
+        # on that we need to stop
+        else
+          @world.stopEditing()
+
   processMouseDown: (button, ctrlKey) ->
     @destroyTemporaries()
     @morphToGrab = null
@@ -169,41 +229,9 @@ class HandMorph extends Morph
       @mouseButton = null
     else
       morph = @morphAtPointer()
-      if @world.activeMenu?
-        unless @world.activeMenu.containedInParentsOf(morph)
-          # if there is a menu open and the user clicked on
-          # something that is not part of the menu then
-          # destroy the menu 
-          @world.activeMenu.destroy()
-        else
-          clearInterval @touchHoldTimeout
-      if @world.activeHandle?
-        if morph isnt @world.activeHandle
-          @world.activeHandle.destroy()    
-      if @world.caret?
-        # there is a caret on the screen
-        # depending on what the user is clicking on,
-        # we might need to close an ongoing edit
-        # operation, which means deleting the
-        # caret and un-selecting anything that was selected.
-        # Note that we don't want to interrupt an edit
-        # if the user is invoking/clicking on anything
-        # inside a menu, because the invoked function
-        # might do something with the selection
-        # (for example doIt takes the current selection).
-        if morph isnt @world.caret.target
-          # user clicked on something other than what the
-          # caret is attached to
-          if @world.activeMenu?
-            unless @world.activeMenu.containedInParentsOf(morph)
-              # only dismiss editing if the morph the user
-              # clicked on is not part of a menu.
-              @world.stopEditing()
-          # there is no menu at all, in which case
-          # we know there was an editing operation going
-          # on that we need to stop
-          else
-            @world.stopEditing()
+      @destroyActiveMenuIfHandHasNotActionedIt morph
+      @destroyActiveHandleIfHandHasNotActionedIt morph
+      @stopEditingIfActionIsElsewhere morph
 
       @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
       if button is 2 or ctrlKey
