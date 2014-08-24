@@ -173,7 +173,7 @@ class Color
   
   # Color copying:
   copy: ->
-    new Color(@r, @g, @b, @a)
+    new @constructor(@r, @g, @b, @a)
   
   # Color comparison:
   eq: (aColor) ->
@@ -250,7 +250,7 @@ class Color
     # answer a copy of this color mixed with another color, ignore alpha
     frac1 = Math.min(Math.max(proportion, 0), 1)
     frac2 = 1 - frac1
-    new Color(
+    new @constructor(
       @r * frac1 + otherColor.r * frac2,
       @g * frac1 + otherColor.g * frac2,
       @b * frac1 + otherColor.b * frac2)
@@ -259,22 +259,22 @@ class Color
     # return an rgb-interpolated darker copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new Color(0, 0, 0)
+    @mixed fract, new @constructor(0, 0, 0)
   
   lighter: (percent) ->
     # return an rgb-interpolated lighter copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new Color(255, 255, 255)
+    @mixed fract, new @constructor(255, 255, 255)
   
   dansDarker: ->
     # return an hsv-interpolated darker copy of me, ignore alpha
     hsv = @hsv()
-    result = new Color()
+    result = new @constructor()
     vv = Math.max(hsv[2] - 0.16, 0)
     result.set_hsv hsv[0], hsv[1], vv
     result
 
   @transparent: ->
-    return new Color(0,0,0,0)
+    return new @constructor(0,0,0,0)
 

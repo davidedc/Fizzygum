@@ -13,7 +13,7 @@ class Point
   
   # Point copying:
   copy: ->
-    new Point(@x, @y)
+    new @constructor(@x, @y)
   
   # Point comparison:
   eq: (aPoint) ->
@@ -37,53 +37,53 @@ class Point
     @x <= aPoint.x and @y <= aPoint.y
   
   max: (aPoint) ->
-    new Point(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))
+    new @constructor(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))
   
   min: (aPoint) ->
-    new Point(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))
+    new @constructor(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))
   
   
   # Point conversion:
   round: ->
-    new Point(Math.round(@x), Math.round(@y))
+    new @constructor(Math.round(@x), Math.round(@y))
   
   abs: ->
-    new Point(Math.abs(@x), Math.abs(@y))
+    new @constructor(Math.abs(@x), Math.abs(@y))
   
   neg: ->
-    new Point(-@x, -@y)
+    new @constructor(-@x, -@y)
   
   mirror: ->
-    new Point(@y, @x)
+    new @constructor(@y, @x)
   
   floor: ->
-    new Point(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))
+    new @constructor(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))
   
   ceil: ->
-    new Point(Math.ceil(@x), Math.ceil(@y))
+    new @constructor(Math.ceil(@x), Math.ceil(@y))
   
   
   # Point arithmetic:
   add: (other) ->
-    return new Point(@x + other.x, @y + other.y)  if other instanceof Point
-    new Point(@x + other, @y + other)
+    return new @constructor(@x + other.x, @y + other.y)  if other instanceof Point
+    new @constructor(@x + other, @y + other)
   
   subtract: (other) ->
-    return new Point(@x - other.x, @y - other.y)  if other instanceof Point
-    new Point(@x - other, @y - other)
+    return new @constructor(@x - other.x, @y - other.y)  if other instanceof Point
+    new @constructor(@x - other, @y - other)
   
   multiplyBy: (other) ->
-    return new Point(@x * other.x, @y * other.y)  if other instanceof Point
-    new Point(@x * other, @y * other)
+    return new @constructor(@x * other.x, @y * other.y)  if other instanceof Point
+    new @constructor(@x * other, @y * other)
   
   divideBy: (other) ->
-    return new Point(@x / other.x, @y / other.y)  if other instanceof Point
-    new Point(@x / other, @y / other)
+    return new @constructor(@x / other.x, @y / other.y)  if other instanceof Point
+    new @constructor(@x / other, @y / other)
   
   floorDivideBy: (other) ->
     if other instanceof Point
-      return new Point(Math.floor(@x / other.x), Math.floor(@y / other.y))
-    new Point(Math.floor(@x / other), Math.floor(@y / other))
+      return new @constructor(Math.floor(@x / other.x), Math.floor(@y / other.y))
+    new @constructor(Math.floor(@x / other), Math.floor(@y / other))
   
   
   # Point polar coordinates:
@@ -129,18 +129,18 @@ class Point
   rotate: (direction, center) ->
     # direction must be 'right', 'left' or 'pi'
     offset = @subtract(center)
-    return new Point(-offset.y, offset.y).add(center)  if direction is "right"
-    return new Point(offset.y, -offset.y).add(center)  if direction is "left"
+    return new @constructor(-offset.y, offset.y).add(center)  if direction is "right"
+    return new @constructor(offset.y, -offset.y).add(center)  if direction is "left"
     #
     # direction === 'pi'
     center.subtract offset
   
   flip: (direction, center) ->
     # direction must be 'vertical' or 'horizontal'
-    return new Point(@x, center.y * 2 - @y)  if direction is "vertical"
+    return new @constructor(@x, center.y * 2 - @y)  if direction is "vertical"
     #
     # direction === 'horizontal'
-    new Point(center.x * 2 - @x, @y)
+    new @constructor(center.x * 2 - @x, @y)
   
   distanceAngle: (dist, angle) ->
     deg = angle
@@ -150,10 +150,10 @@ class Point
     if -90 <= deg and deg <= 90
       x = Math.sin(radians(deg)) * dist
       y = Math.sqrt((dist * dist) - (x * x))
-      return new Point(x + @x, @y - y)
+      return new @constructor(x + @x, @y - y)
     x = Math.sin(radians(180 - deg)) * dist
     y = Math.sqrt((dist * dist) - (x * x))
-    new Point(x + @x, @y + y)
+    new @constructor(x + @x, @y + y)
   
   
   # Point transforming:
@@ -164,11 +164,11 @@ class Point
     @add deltaPoint
   
   rotateBy: (angle, centerPoint) ->
-    center = centerPoint or new Point(0, 0)
+    center = centerPoint or new @constructor(0, 0)
     p = @subtract(center)
     r = p.r()
     theta = angle - p.theta()
-    new Point(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))
+    new @constructor(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))
   
   
   # Point conversion:

@@ -122,7 +122,7 @@ class InspectorMorph extends BoxMorph
       if (!isObject(@currentProperty))
         return
       world = @world()
-      inspector = new InspectorMorph @currentProperty
+      inspector = @constructor @currentProperty
       inspector.setPosition world.hand.position()
       inspector.keepWithin world
       world.add inspector
@@ -272,7 +272,7 @@ class InspectorMorph extends BoxMorph
         menu = new MenuMorph()
         menu.addItem "in new inspector...", =>
           world = @world()
-          inspector = new InspectorMorph(@currentProperty)
+          inspector = new @constructor(@currentProperty)
           inspector.setPosition world.hand.position()
           inspector.keepWithin world
           world.add inspector

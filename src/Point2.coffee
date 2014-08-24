@@ -18,7 +18,7 @@ class Point2
   
   # Point2 copying:
   copy: ->
-    new Point2(@x, @y)
+    new @constructor(@x, @y)
   
   # Point2 comparison:
   eq: (aPoint2) ->
@@ -42,34 +42,34 @@ class Point2
     @x <= aPoint2.x and @y <= aPoint2.y
   
   max: (aPoint2) ->
-    #new Point2(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))
+    #new @constructor(Math.max(@x, aPoint2.x), Math.max(@y, aPoint2.y))
     @x = Math.max(@x, aPoint2.x)
     @y = Math.max(@y, aPoint2.y)
   
   min: (aPoint2) ->
-    #new Point2(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))
+    #new @constructor(Math.min(@x, aPoint2.x), Math.min(@y, aPoint2.y))
     @x = Math.min(@x, aPoint2.x)
     @y = Math.min(@y, aPoint2.y)
   
   
   # Point2 conversion:
   round: ->
-    #new Point2(Math.round(@x), Math.round(@y))
+    #new @constructor(Math.round(@x), Math.round(@y))
     @x = Math.round(@x)
     @y = Math.round(@y)
   
   abs: ->
-    #new Point2(Math.abs(@x), Math.abs(@y))
+    #new @constructor(Math.abs(@x), Math.abs(@y))
     @x = Math.abs(@x)
     @y = Math.abs(@y)
   
   neg: ->
-    #new Point2(-@x, -@y)
+    #new @constructor(-@x, -@y)
     @x = -@x
     @y = -@y
   
   mirror: ->
-    #new Point2(@y, @x)
+    #new @constructor(@y, @x)
     # note that coffeescript would allow [@x,@y] = [@y,@x]
     # but we want to be faster here
     tmpValueForSwappingXAndY = @x
@@ -77,12 +77,12 @@ class Point2
     @y = tmpValueForSwappingXAndY 
   
   floor: ->
-    #new Point2(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))
+    #new @constructor(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))
     @x = Math.max(Math.floor(@x), 0)
     @y = Math.max(Math.floor(@y), 0)
   
   ceil: ->
-    #new Point2(Math.ceil(@x), Math.ceil(@y))
+    #new @constructor(Math.ceil(@x), Math.ceil(@y))
     @x = Math.ceil(@x)
     @y = Math.ceil(@y)
   
@@ -223,7 +223,7 @@ class Point2
     @add deltaPoint2
   
   rotateBy: (angle, centerPoint2) ->
-    center = centerPoint2 or new Point2(0, 0)
+    center = centerPoint2 or new @constructor(0, 0)
     p = @copy().subtract(center)
     r = p.r()
     theta = angle - p.theta()

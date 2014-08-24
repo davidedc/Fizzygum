@@ -17,7 +17,7 @@ class Rectangle
   
   # Rectangle copying:
   copy: ->
-    new Rectangle(@left(), @top(), @right(), @bottom())
+    new @constructor(@left(), @top(), @right(), @bottom())
   
   # Rectangle accessing - setting:
   setTo: (left, top, right, bottom) ->
@@ -115,33 +115,33 @@ class Rectangle
   # Rectangle functions:
   insetBy: (delta) ->
     # delta can be either a Point or a Number
-    result = new Rectangle()
+    result = new @constructor()
     result.origin = @origin.add(delta)
     result.corner = @corner.subtract(delta)
     result
   
   expandBy: (delta) ->
     # delta can be either a Point or a Number
-    result = new Rectangle()
+    result = new @constructor()
     result.origin = @origin.subtract(delta)
     result.corner = @corner.add(delta)
     result
   
   growBy: (delta) ->
     # delta can be either a Point or a Number
-    result = new Rectangle()
+    result = new @constructor()
     result.origin = @origin.copy()
     result.corner = @corner.add(delta)
     result
   
   intersect: (aRect) ->
-    result = new Rectangle()
+    result = new @constructor()
     result.origin = @origin.max(aRect.origin)
     result.corner = @corner.min(aRect.corner)
     result
   
   merge: (aRect) ->
-    result = new Rectangle()
+    result = new @constructor()
     result.origin = @origin.min(aRect.origin)
     result.corner = @corner.max(aRect.corner)
     result
@@ -187,13 +187,13 @@ class Rectangle
     # scale can be either a Point or a scalar
     o = @origin.multiplyBy(scale)
     c = @corner.multiplyBy(scale)
-    new Rectangle(o.x, o.y, c.x, c.y)
+    new @constructor(o.x, o.y, c.x, c.y)
   
   translateBy: (factor) ->
     # factor can be either a Point or a scalar
     o = @origin.add(factor)
     c = @corner.add(factor)
-    new Rectangle(o.x, o.y, c.x, c.y)
+    new @constructor(o.x, o.y, c.x, c.y)
   
   
   # Rectangle converting:
