@@ -199,7 +199,7 @@ class WorldMorph extends FrameMorph
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
-    #console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+    console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
     @updateBroken()
@@ -724,6 +724,12 @@ class WorldMorph extends FrameMorph
       editField.clearSelection()
       prev.selectAll()
       prev.edit()
+
+  resetWorld: ->
+    @destroyAll()
+    # some tests might change the background
+    # color of the world so let's reset it.
+    @setColor(new Color(205, 205, 205))
   
   # There is something special that the
   # "world" version of destroyAll does:
@@ -847,7 +853,6 @@ class WorldMorph extends FrameMorph
         "Singen, die Loreley getan.")
       newMorph.isEditable = true
       newMorph.maxWidth = 300
-      newMorph.updateRendering()
       create newMorph
     
     menu.addItem "speech bubble", ->

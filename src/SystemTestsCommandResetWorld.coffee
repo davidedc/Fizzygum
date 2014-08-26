@@ -3,10 +3,7 @@
 class SystemTestsCommandResetWorld extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.worldMorph.destroyAll()
-    # some tests might change the background
-    # color of the world so let's reset it.
-    systemTestsRecorderAndPlayer.worldMorph.setColor(new Color(205, 205, 205))
+    systemTestsRecorderAndPlayer.worldMorph.resetWorld()
 
   constructor: (systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
