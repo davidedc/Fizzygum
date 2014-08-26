@@ -145,11 +145,16 @@ class Morph extends MorphicNode
   #
   
   
-  # Morph string representation: e.g. 'a Morph 2 [20@45 | 130@250]'
+  # Morph string representation: e.g. 'a Morph#2 [20@45 | 130@250]'
   toString: ->
     "a " +
       @uniqueIDString() + " " +
       @bounds
+
+  # Morph string representation: e.g. 'a Morph#2'
+  toStringWithoutGeometry: ->
+    "a " +
+      @uniqueIDString()
   
   
   # Morph deleting:
@@ -1123,7 +1128,11 @@ class Morph extends MorphicNode
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
-        menu.addItem each.toString().slice(0, 50), ->
+        if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+          textLabelForMorph = each.toStringWithoutGeometry().slice(0, 50)
+        else
+          textLabelForMorph = each.toString().slice(0, 50)
+        menu.addItem textLabelForMorph, ->
           each.developersMenu().popUpAtHand @world()
     #  
     menu
