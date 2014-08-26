@@ -159,6 +159,20 @@ class WorldMorph extends FrameMorph
     @changed()
     @updateRendering()
 
+  # see roundNumericIDsToNextThousand method in
+  # Morph for an explanation of why we need this
+  # method.
+  alignIDsOfNextMorphsInSystemTests: ->
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+      # Check which objects end with the word Morph
+      theWordMorph = "Morph"
+      listOfMorphsClasses = (Object.keys(window)).filter (i) ->
+        i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+      for eachMorphClass in listOfMorphsClasses
+        console.log "bumping up ID of class: " + eachMorphClass
+        if window[eachMorphClass].roundNumericIDsToNextThousand?
+          window[eachMorphClass].roundNumericIDsToNextThousand()
+
   
   # World Morph display:
   brokenFor: (aMorph) ->

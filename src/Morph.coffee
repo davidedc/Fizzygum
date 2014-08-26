@@ -13,10 +13,14 @@ class Morph extends MorphicNode
   #    for example for hashtables
   # each subclass of Morph has its own static
   # instancesCounter which starts from zero. First object
-  # has instanceNumber of 1.
-  # instanceNumber is initialised in the constructor.
+  # has instanceNumericID of 1.
+  # instanceNumericID is initialised in the constructor.
   @instancesCounter: 0
-  instanceNumber: null
+  # see roundNumericIDsToNextThousand method for an
+  # explanation of why we need to keep this extra
+  # count
+  @lastBuiltInstanceNumericID: 0
+  instanceNumericID: 0
   
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -72,7 +76,7 @@ class Morph extends MorphicNode
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
   uniqueIDString: ->
-    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumber
+    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumericID
 
   @morphFromUniqueIDString: (theUniqueID) ->
     result = world.topMorphSuchThat (m) =>
@@ -83,8 +87,23 @@ class Morph extends MorphicNode
 
   assignUniqueID: ->
     @constructor.instancesCounter++
-    @instanceNumber = @constructor.instancesCounter
-  
+    @constructor.lastBuiltInstanceNumericID++
+    @instanceNumericID = @constructor.lastBuiltInstanceNumericID
+
+  # some test commands specify morphs via
+  # their uniqueIDString. This means that
+  # if there is one more TextMorph anywhere during
+  # the playback, for example because
+  # one new menu item is added, then
+  # all the subsequent IDs for the TextMorph will be off.
+  # In order to sort that out, we occasionally re-align
+  # the counts to the next 1000, so the next Morphs
+  # being created will all be aligned and
+  # minor discrepancies are ironed-out
+  @roundNumericIDsToNextThousand: ->
+    console.log "@roundNumericIDsToNextThousand"
+    @lastBuiltInstanceNumericID = 1000*Math.ceil(@lastBuiltInstanceNumericID/1000)
+
   constructor: ->
     super()
 
@@ -820,7 +839,7 @@ class Morph extends MorphicNode
     c = @clone(target.constructor::)
     for property of target
       # there are a couple of properties that we don't want to copy over...
-      if target.hasOwnProperty(property) and property != "instanceNumber"
+      if target.hasOwnProperty(property) and property != "instanceNumericID"
         c[property] = target[property]
         #if target.constructor.name == "SliderMorph"
         #  alert "copying property: " + property

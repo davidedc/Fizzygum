@@ -40,6 +40,7 @@ class InspectorMorph extends BoxMorph
     @buildAndConnectChildren()
 
   buildAndConnectChildren: ->
+    world.alignIDsOfNextMorphsInSystemTests()
     attribs = []
     #
     # remove existing panes
@@ -381,6 +382,8 @@ class InspectorMorph extends BoxMorph
     @buttonClose.setExtent new Point(w, h)
     Morph::trackChanges = true
     @changed()
+    world.alignIDsOfNextMorphsInSystemTests()
+
   
   setExtent: (aPoint) ->
     super aPoint

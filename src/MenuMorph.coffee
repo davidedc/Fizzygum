@@ -19,6 +19,7 @@ class MenuMorph extends BoxMorph
     # objects.
     @items = []
     console.log "menu super"
+    world.alignIDsOfNextMorphsInSystemTests()
     super()
 
     @border = null # the Box Morph constructor puts this to 2
@@ -224,6 +225,7 @@ class MenuMorph extends BoxMorph
     # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
+    world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
     # otherwise there is no visible image
