@@ -217,14 +217,21 @@ class MenuMorph extends BoxMorph
   
   popup: (world, pos) ->
     console.log "menu popup"
-    @setPosition pos
-    # avoid shadow when there is the close button,
-    # as it looks aweful because of the added extent...
-    @keepWithin world
     # keep only one active menu at a time, destroy the
     # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
+    # it's better do these movement
+    # operations after adding to the world
+    # in general, as a concept.
+    # Specifically, the @keepWithin method
+    # needs to know the extent of the morph
+    # so it must be called after the world.add
+    # method. If you call before, there is
+    # nopainting happening and the morph doesn't
+    # know its extent.
+    @setPosition pos
+    @keepWithin world
     world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
