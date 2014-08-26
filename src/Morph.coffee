@@ -106,12 +106,11 @@ class Morph extends MorphicNode
 
   constructor: ->
     super()
-
     @assignUniqueID()
 
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
-    @color = new Color(80, 80, 80)
+    @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
     # Note that we don't call @updateRendering()
     # that's because the actual extending morph will probably
@@ -302,8 +301,11 @@ class Morph extends MorphicNode
   
   # Morph accessing - simple changes:
   moveBy: (delta) ->
-    # question: why is changed() called two times?
-    # question: can't we use silentMoveBy?
+    # note that changed() is called two times
+    # because there are two areas of the screens
+    # that are dirty: the starting
+    # position and the end position.
+    # Both need to be repainted.
     @changed()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
@@ -354,16 +356,22 @@ class Morph extends MorphicNode
     bottomOff = @boundsIncludingChildren().bottom() - aMorph.bottom()
     @moveBy new Point(0, -bottomOff)  if bottomOff > 0
   
+  # the default of layoutSubmorphs
+  # is to do nothing, but things like
+  # the inspector might well want to
+  # tweak many of theor children...
+  layoutSubmorphs: ->
+    null
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
-      # question: why two "changed" invocations?
       @changed()
       @silentSetExtent aPoint
       @changed()
       @updateRendering()
+      @layoutSubmorphs()
   
   silentSetExtent: (aPoint) ->
     ext = aPoint.round()
@@ -407,6 +415,13 @@ class Morph extends MorphicNode
   #   ColorPickerMorph constructor runs, the three childredn Morphs will
   #   run their own updateRendering method, so each child will have its own
   #   canvas with their own contents.
+  #   Note that updateRendering should be called sparingly. A morph should repaint
+  #   its buffer pretty much only *after* it's been added to itf first parent and
+  #   whenever it changes dimensions. Things like changing parent and updating
+  #   the position shouldn't normally trigger an update of the buffer.
+  #   Also note that before the buffer is painted for the first time, they
+  #   might not know their extent. Typically text-related Morphs know their
+  #   extensions after they painted the text for the first time...
   # * blit: takes the local canvas and blits it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
@@ -422,6 +437,7 @@ class Morph extends MorphicNode
     if @cachedTexture
       @drawCachedTexture()
     else @drawTexture @texture  if @texture
+    @changed()
   
   drawTexture: (url) ->
     @cachedTexture = new Image()
@@ -459,7 +475,7 @@ class Morph extends MorphicNode
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle = @bounds) ->
-    return null  if @isMinimised or !@isVisible
+    return null  if @isMinimised or !@isVisible or !@image?
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
@@ -665,26 +681,11 @@ class Morph extends MorphicNode
     ctx.drawImage img, Math.round(blur - offset.x), Math.round(blur - offset.y)
     sha
   
-  shadow: (off_, a, color) ->
-    shadow = new ShadowMorph()
-    offset = off_ or new Point(7, 7)
-    alpha = a or ((if (a is 0) then 0 else 0.2))
-    fb = @boundsIncludingChildren()
-    shadow.setExtent fb.extent().add(@shadowBlur * 2)
-    if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      shadow.image = @shadowImageBlurred(offset, color)
-      shadow.alpha = alpha
-      shadow.setPosition fb.origin.add(offset).subtract(@shadowBlur)
-    else
-      shadow.image = @shadowImage(offset, color)
-      shadow.alpha = alpha
-      shadow.setPosition fb.origin.add(offset)
-    shadow
   
-  addShadow: (off_, a, color) ->
-    offset = off_ or new Point(7, 7)
-    alpha = a or ((if (a is 0) then 0 else 0.2))
-    shadow = @shadow(offset, alpha, color)
+  # shadow is added to a morph by
+  # the HandMorph while dragging
+  addShadow: (offset, alpha, color) ->
+    shadow = new ShadowMorph(@, offset, alpha, color)
     @addBack shadow
     @fullChanged()
     shadow
@@ -746,12 +747,14 @@ class Morph extends MorphicNode
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
+    aMorph.updateRendering()
   
   # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChildFirst aMorph
+    aMorph.updateRendering()
   
 
   # never currently used in ZK

@@ -13,26 +13,30 @@ class SpeechBubbleMorph extends BoxMorph
   padding: null # additional vertical pixels
   isThought: null # draw "think" bubble
   isClickable: false
+  morphInvokingThis: null
 
   constructor: (
     @contents="",
+    @morphInvokingThis,
     color,
     edge,
     border,
     borderColor,
     @padding = 0,
     @isThought = false) ->
-      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+      console.log "bubble super"
       @color = color or new Color(230, 230, 230)
-      @updateRendering()
+      super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
+      console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
+    console.log "bubble createBubbleHelpIfHandStillOnMorph"
     if morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
-      new @(
-        localize(contents), null, null, 1).popUp morphInvokingThis.world(),
-        morphInvokingThis.rightCenter().add(new Point(-8, 0))
+      theBubble = new @(localize(contents), morphInvokingThis, null, null, 1)
+      theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
+    console.log "bubble createInAWhileIfHandStillContainedInMorph"
     if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber and
      SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
@@ -43,11 +47,14 @@ class SpeechBubbleMorph extends BoxMorph
         , delay
   
   # SpeechBubbleMorph invoking:
-  popUp: (world, pos, isClickable) ->
-    @updateRendering()
+  popUp: (pos, isClickable) ->
+    console.log "bubble popup"
+    world = @morphInvokingThis.world()
     @setPosition pos.subtract(new Point(0, @height()))
-    @addShadow new Point(2, 2), 80
     @keepWithin world
+
+    @buildAndConnectChildren()
+
     world.add @
     @fullChanged()
     world.hand.destroyTemporaries()
@@ -58,12 +65,11 @@ class SpeechBubbleMorph extends BoxMorph
     else
       @isClickable = false
     
-  
-  
-  # SpeechBubbleMorph drawing:
-  updateRendering: ->
+  buildAndConnectChildren: ->
+    console.log "bubble buildAndConnectChildren"
     # re-build my contents
-    @contentsMorph.destroy()  if @contentsMorph
+    if @contentsMorph
+      @contentsMorph.destroy()
     if @contents instanceof Morph
       @contentsMorph = @contents
     else if isString(@contents)
@@ -94,13 +100,21 @@ class SpeechBubbleMorph extends BoxMorph
     @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
     #
     # draw my outline
-    super()
+    #super()
     #
     # position my contents
     @contentsMorph.setPosition @position().add(
       new Point(@padding or @edge, @border + @padding + 1))
+    #@addShadow new Point(2, 2), 80
+
+  
+  # SpeechBubbleMorph drawing:
+  updateRendering: ->
+    super()
+
   
   outlinePath: (context, radius, inset) ->
+    console.log "bubble outlinePath"
     circle = (x, y, r) ->
       context.moveTo x + r, y
       context.arc x, y, r, radians(0), radians(360)
@@ -164,7 +178,7 @@ class SpeechBubbleMorph extends BoxMorph
   #    shadow doesn't become conflicted by embedded scrolling panes
   #
   shadowImage: (off_, color) ->
-    
+    console.log "bubble shadowImage"
     # fallback for Windows Chrome-Shadow bug
     fb = undefined
     img = undefined
@@ -189,6 +203,7 @@ class SpeechBubbleMorph extends BoxMorph
     sha
 
   shadowImageBlurred: (off_, color) ->
+    console.log "bubble shadowImageBlurred"
     fb = undefined
     img = undefined
     sha = undefined
@@ -213,7 +228,9 @@ class SpeechBubbleMorph extends BoxMorph
     sha
 
   # SpeechBubbleMorph resizing
+  # invoked by HandleMorph
   layoutSubmorphs: ->
-    @removeShadow()
-    @updateRendering()
-    @addShadow new Point(2, 2), 80
+    console.log "bubble layoutSubmorphs"
+    #@removeShadow()
+    #@updateRendering()
+    #@addShadow new Point(2, 2), 80

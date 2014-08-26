@@ -54,7 +54,6 @@ class TextMorph extends StringMorph
       @shadowOffset = shadowOffset or new Point(0, 0)
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
-      @updateRendering()
   
   breakTextIntoLines: ->
     paragraphs = @text.split("\n")

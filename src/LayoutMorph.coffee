@@ -34,7 +34,6 @@ class LayoutMorph extends Morph
   constructor: ->
     super()
     @separation = new Point 0,0
-    @updateRendering()
   
   @newColumn: ->
     newLayoutMorph =  new @()

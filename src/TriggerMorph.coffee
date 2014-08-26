@@ -36,6 +36,7 @@ class TriggerMorph extends Morph
   pressColor: new Color(128, 128, 128)
   normalImage: null
   pressImage: null
+  centered: false
 
   constructor: (
       @target = null,
@@ -43,6 +44,7 @@ class TriggerMorph extends Morph
       @labelString = null,
       fontSize,
       fontStyle,
+      @centered = false,
       @environment = null,
       @hint = null,
       labelColor,
@@ -58,15 +60,34 @@ class TriggerMorph extends Morph
     super()
     #
     @color = new Color(255, 255, 255)
-    @updateRendering()
+    if @labelString?
+      @layoutSubmorphs()
   
+  layoutSubmorphs: ->
+    if not @label?
+      @createLabel()
+    if @centered
+      @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
+
+  setLabel: (@labelString) ->
+    # just recreated the label
+    # from scratch
+    if @label?
+      @label.destroy()
+      @label = null
+    @layoutSubmorphs()
+
+  alignCenter: ->
+    if !@centered
+      @centered = true
+      @layoutSubmorphs()
+
+  alignLeft: ->
+    if @centered
+      @centered = false
+      @layoutSubmorphs()
   
-  # TriggerMorph drawing:
   updateRendering: ->
-    @createBackgrounds()
-    @createLabel()  if @labelString isnt null
-  
-  createBackgrounds: ->
     ext = @extent()
     @normalImage = newCanvas(ext)
     context = @normalImage.getContext("2d")
@@ -83,14 +104,13 @@ class TriggerMorph extends Morph
     @image = @normalImage
   
   createLabel: ->
-    @label.destroy()  if @label isnt null
     # bold
     # italic
     # numeric
     # shadow offset
     # shadow color
     @label = new StringMorph(
-      @labelString,
+      @labelString or "",
       @fontSize,
       @fontStyle,
       false,
@@ -102,10 +122,8 @@ class TriggerMorph extends Morph
       @labelBold,
       @labelItalic
     )
-    @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
     @add @label
-  
-  
+    
   
   # TriggerMorph action:
   trigger: ->

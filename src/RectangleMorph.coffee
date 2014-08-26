@@ -5,5 +5,4 @@ class RectangleMorph extends Morph
     super()
     @silentSetExtent(extent) if extent?
     @color = color if color?
-    @updateRendering()
 

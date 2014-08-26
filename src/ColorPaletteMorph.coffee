@@ -9,7 +9,6 @@ class ColorPaletteMorph extends Morph
   constructor: (@target = null, sizePoint) ->
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
-    @updateRendering()
   
   updateRendering: ->
     ext = @extent()

@@ -27,7 +27,6 @@ class InspectorMorph extends BoxMorph
     @edge = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
-    @updateRendering()
     @buildAndConnectChildren()  if @target
   
   setTarget: (target) ->
@@ -57,7 +56,6 @@ class InspectorMorph extends BoxMorph
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
-    @label.updateRendering()
     @add @label
     
     # properties list. Note that this picks up ALL properties
@@ -244,7 +242,8 @@ class InspectorMorph extends BoxMorph
     #
     # properties button
     @buttonSubset = new TriggerMorph()
-    @buttonSubset.labelString = "show..."
+    @buttonSubset.setLabel "show..."
+    @buttonSubset.alignCenter()
     @buttonSubset.action = =>
       menu = new MenuMorph()
       menu.addItem "attributes", =>
@@ -270,7 +269,8 @@ class InspectorMorph extends BoxMorph
     #
     # inspect button
     @buttonInspect = new TriggerMorph()
-    @buttonInspect.labelString = "inspect..."
+    @buttonInspect.setLabel "inspect..."
+    @buttonInspect.alignCenter()
     @buttonInspect.action = =>
       if isObject(@currentProperty)
         menu = new MenuMorph()
@@ -293,7 +293,8 @@ class InspectorMorph extends BoxMorph
     #
     # edit button
     @buttonEdit = new TriggerMorph()
-    @buttonEdit.labelString = "edit..."
+    @buttonEdit.setLabel "edit..."
+    @buttonEdit.alignCenter()
     @buttonEdit.action = =>
       menu = new MenuMorph(@)
       menu.addItem "save", (->@save()), "accept changes"
@@ -307,7 +308,8 @@ class InspectorMorph extends BoxMorph
     #
     # close button
     @buttonClose = new TriggerMorph()
-    @buttonClose.labelString = "close"
+    @buttonClose.setLabel "close"
+    @buttonClose.alignCenter()
     @buttonClose.action = =>
       @destroy()
     #
@@ -334,7 +336,7 @@ class InspectorMorph extends BoxMorph
       @silentSetHeight @label.height() + 50
       @updateRendering()
       @changed()
-      @resizer.updateRendering()
+      @resizer.updatePosition()
     #
     # list
     y = @label.bottom() + 2

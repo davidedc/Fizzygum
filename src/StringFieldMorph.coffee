@@ -23,7 +23,6 @@ class StringFieldMorph extends FrameMorph
       ) ->
     super()
     @color = new Color(255, 255, 255)
-    @updateRendering()
   
   updateRendering: ->
     txt = (if @text then @string() else @defaultContents)

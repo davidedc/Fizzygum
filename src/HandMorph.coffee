@@ -136,9 +136,18 @@ class HandMorph extends Morph
     if !@children.length
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
-      aMorph.addShadow()
       aMorph.prepareToBeGrabbed @  if aMorph.prepareToBeGrabbed
       @add aMorph
+      # you must add the shadow
+      # after the morph has been added
+      # because "@add aMorph" causes
+      # the morph to be painted potentially
+      # for the first time.
+      # The shadow needs the image of the
+      # morph to make the shadow, so
+      # this is why we add the shadow after
+      # the morph has been added.
+      aMorph.addShadow()
       @changed()
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
   

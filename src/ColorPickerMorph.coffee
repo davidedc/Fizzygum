@@ -10,7 +10,6 @@ class ColorPickerMorph extends Morph
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(80, 80)
     @buildSubmorphs()
-    @updateRendering()
   
   buildSubmorphs: ->
     @destroyAll()

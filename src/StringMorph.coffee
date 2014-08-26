@@ -64,7 +64,6 @@ class StringMorph extends Morph
     # override inherited properites:
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
-    @updateRendering()
   
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
@@ -136,7 +135,7 @@ class StringMorph extends Morph
       context.fillText c, p.x + x, fontHeight(@fontSize) + y
     #
     # notify my parent of layout change
-    @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
+    # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
   
   renderWithBlanks: (context, startX, y) ->
     # create the blank form

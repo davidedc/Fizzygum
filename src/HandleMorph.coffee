@@ -21,9 +21,16 @@ class HandleMorph extends Morph
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
-    @setExtent new Point(size, size)
-    @updateRendering()
+    @silentSetExtent new Point(size, size)
+    @target.add @
+    @updatePosition()
 
+  updatePosition: ->
+    if @target
+        @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+        # todo wow, wasteful!
+        @target.changed()
+  
   
   # HandleMorph drawing:
   updateRendering: ->
@@ -32,10 +39,6 @@ class HandleMorph extends Morph
     @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)
     @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
     @image = @normalImage
-    if @target
-      @setPosition @target.bottomRight().subtract(@extent().add(@inset))
-      @target.add @
-      @target.changed()
   
   handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->
     context = aCanvas.getContext("2d")

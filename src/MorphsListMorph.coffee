@@ -18,7 +18,6 @@ class MorphsListMorph extends BoxMorph
     @edge = 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
-    @updateRendering()
     @buildAndConnectChildren()
   
   setTarget: (target) ->
@@ -39,7 +38,6 @@ class MorphsListMorph extends BoxMorph
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
-    @label.updateRendering()
     @add @label
 
     # Check which objects end with the word Morph
@@ -70,7 +68,7 @@ class MorphsListMorph extends BoxMorph
 
     # close button
     @buttonClose = new TriggerMorph()
-    @buttonClose.labelString = "close"
+    @buttonClose.setLabel "close"
     @buttonClose.action = =>
       @destroy()
 
@@ -93,10 +91,9 @@ class MorphsListMorph extends BoxMorph
     @label.setPosition new Point(x, y)
     @label.setWidth w
     if @label.height() > (@height() - 50)
-      @silentSetHeight @label.height() + 50
-      @updateRendering()
+      @setHeight @label.height() + 50
       @changed()
-      @resizer.updateRendering()
+      #@resizer.updateRendering()
 
     # morphsList
     y = @label.bottom() + 2

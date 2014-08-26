@@ -18,12 +18,17 @@ class CaretMorph extends BlinkerMorph
     super()
     ls = fontHeight(@target.fontSize)
     @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
-    @updateRendering()
-    @image.getContext("2d").font = @target.font()
     if (@target instanceof TextMorph && (@target.alignment != 'left'))
       @target.setAlignmentToLeft()
     @gotoSlot @slot
   
+  updateRendering: ->
+    super()
+    # it's be cool to do this only
+    # once but we don't want to paint stuff in
+    # the constructor...
+    @image.getContext("2d").font = @target.font()
+
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event

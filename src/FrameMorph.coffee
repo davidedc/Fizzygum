@@ -21,7 +21,6 @@ class FrameMorph extends Morph
     if @scrollFrame
       @isDraggable = false
       @noticesTransparentClick = false
-    @updateRendering()
 
   setColor: (aColor) ->
     # keep in synch the value of the container scrollFrame

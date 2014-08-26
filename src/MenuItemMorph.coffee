@@ -5,10 +5,12 @@
 class MenuItemMorph extends TriggerMorph
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
-  constructor: (target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction) ->
-    super target, action, labelString, fontSize, fontStyle, environment, hint, color, bold, italic, doubleClickAction 
+  constructor: (target, action, labelString, fontSize, fontStyle, centered, environment, hint, color, bold, italic, doubleClickAction) ->
+    console.log "menuitem constructing"
+    super target, action, labelString, fontSize, fontStyle, centered, environment, hint, color, bold, italic, doubleClickAction 
   
   createLabel: ->
+    console.log "menuitem createLabel"
     @label.destroy()  if @label isnt null
 
     if isString(@labelString)
@@ -26,14 +28,16 @@ class MenuItemMorph extends TriggerMorph
       lbl.setCenter icon.center()
       lbl.setLeft icon.right() + 4
       @label.bounds = (icon.bounds.merge(lbl.bounds))
-      @label.updateRendering()
     else # assume it's either a Morph or a Canvas
       @label = @createIcon(@labelString)
+
+    @add @label
   
+    w = @width()
     @silentSetExtent @label.extent().add(new Point(8, 0))
+    @silentSetWidth w
     np = @position().add(new Point(4, 0))
     @label.bounds = np.extent(@label.extent())
-    @add @label
   
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement
@@ -53,6 +57,7 @@ class MenuItemMorph extends TriggerMorph
     icon
 
   createLabelString: (string) ->
+    console.log "menuitem createLabelString"
     lbl = new TextMorph(string, @fontSize, @fontStyle)
     lbl.setColor @labelColor
     lbl  
