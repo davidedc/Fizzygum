@@ -10,14 +10,15 @@ class MenuMorph extends BoxMorph
   label: null
   world: null
   isListContents: false
-  closeIcon: null
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
+    console.log "menu constructor"
     # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
     # to initialise the items before calling super. We can't initialise it
     # outside the constructor because the array would be shared across instantiated
     # objects.
     @items = []
+    console.log "menu super"
     super()
 
     @border = null # the Box Morph constructor puts this to 2
@@ -82,6 +83,7 @@ class MenuMorph extends BoxMorph
     @items.unshift [0, width or 1]
   
   createLabel: ->
+    console.log "menu create label"
     @label.destroy()  if @label isnt null
     text = new TextMorph(localize(@title),
       @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
@@ -89,18 +91,19 @@ class MenuMorph extends BoxMorph
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
     text.backgroundColor = @borderColor
-    text.updateRendering()
+
     @label = new BoxMorph(3, 0)
+    @label.add text
     if WorldMorph.preferencesAndSettings.isFlat
       @label.edge = 0
     @label.color = @borderColor
     @label.borderColor = @borderColor
-    @label.setExtent text.extent().add(4)
-    @label.updateRendering()
-    @label.add text
+    @label.setExtent text.extent().add(4) # here!
     @label.text = text
+    @add @label
   
   updateRendering: ->
+    console.log "menu update rendering"
     isLine = false
     @destroyAll()
     #
@@ -129,6 +132,7 @@ class MenuMorph extends BoxMorph
     # strings, colorpickers,
     # sliders, menuItems (which are buttons)
     # and lines.
+    console.log "menu @items.length " + @items.length
     @items.forEach (tuple) =>
       isLine = false
       # string, color picker and slider
@@ -145,12 +149,14 @@ class MenuMorph extends BoxMorph
         item.setHeight tuple[1]
       # menuItem
       else
+        console.log "menu creating MenuItemMorph "
         item = new MenuItemMorph(
           @target,
           tuple[1],
           tuple[0],
           @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
           WorldMorph.preferencesAndSettings.menuFontName,
+          false,
           @environment,
           tuple[2], # bubble help hint
           tuple[3], # color
@@ -164,24 +170,10 @@ class MenuMorph extends BoxMorph
       y = y + item.height()
       y += 1  if isLine
   
+    @adjustWidthsOfMenuEntries()
     fb = @boundsIncludingChildren()
     @silentSetExtent fb.extent().add(4)
-    @adjustWidths()
   
-    unless @isListContents
-      # add a close icon only if the menu is not
-      # an embedded list
-      @closeIcon = new CloseCircleButtonMorph()
-      @closeIcon.color = new Color(255, 255, 255)
-      @add @closeIcon
-      @closeIcon.mouseClickLeft = =>
-          @destroy()
-      # close icon
-      @closeIcon.setPosition new Point(@top() - 6, @left() - 6)
-      closeIconScale = 2/3
-      handleSize = WorldMorph.preferencesAndSettings.handleSize;
-      @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)
-
     super()
   
   maxWidth: ->
@@ -202,19 +194,16 @@ class MenuMorph extends BoxMorph
   
   # makes all the elements of this menu the
   # right width.
-  adjustWidths: ->
+  adjustWidthsOfMenuEntries: ->
     w = @maxWidth()
     @children.forEach (item) =>
-      item.silentSetWidth w
+      debugger
+      item.setWidth w
       if item instanceof MenuItemMorph
         isSelected = (item.image == item.pressImage)
-        item.createBackgrounds()
+        item.layoutSubmorphs()
         if isSelected then item.image = item.pressImage          
-      else if item instanceof CloseCircleButtonMorph
-        # do nothing, close button stays its
-        # original width.
       else
-        item.updateRendering()
         if item is @label
           item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
   
@@ -226,17 +215,20 @@ class MenuMorph extends BoxMorph
     @changed()
   
   popup: (world, pos) ->
-    @updateRendering()
+    console.log "menu popup"
     @setPosition pos
     # avoid shadow when there is the close button,
     # as it looks aweful because of the added extent...
-    unless @closeIcon?
-      @addShadow new Point(2, 2), 80
     @keepWithin world
     # keep only one active menu at a time, destroy the
     # previous one.
     world.activeMenu.destroy()  if world.activeMenu
     world.add @
+    # shadow must be added after the morph
+    # has been placed somewhere because
+    # otherwise there is no visible image
+    # to base the shadow on
+    @addShadow new Point(2, 2), 80
     world.activeMenu = @
     @fullChanged()
   
@@ -246,10 +238,8 @@ class MenuMorph extends BoxMorph
   
   popUpCenteredAtHand: (world) ->
     wrrld = world or @world
-    @updateRendering()
     @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
   
   popUpCenteredInWorld: (world) ->
     wrrld = world or @world
-    @updateRendering()
     @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))

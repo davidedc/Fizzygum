@@ -10,7 +10,6 @@ class WorkspaceMorph extends BoxMorph
   morphsList: null
   buttonClose: null
   resizer: null
-  closeIcon: null
 
   constructor: (target) ->
     super()
@@ -23,7 +22,6 @@ class WorkspaceMorph extends BoxMorph
     @edge = 5
     @color = new Color(60, 60, 60)
     @borderColor = new Color(95, 95, 95)
-    @updateRendering()
     @buildAndConnectChildren()
   
   setTarget: (target) ->
@@ -44,14 +42,7 @@ class WorkspaceMorph extends BoxMorph
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)
-    @label.updateRendering()
     @add @label
-
-    @closeIcon = new CloseCircleButtonMorph()
-    @closeIcon.color = new Color(255, 255, 255)
-    @add @closeIcon
-    @closeIcon.mouseClickLeft = =>
-        @destroy()
 
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
@@ -81,7 +72,7 @@ class WorkspaceMorph extends BoxMorph
 
     # close button
     @buttonClose = new TriggerMorph()
-    @buttonClose.labelString = "close"
+    @buttonClose.setLabel "close"
     @buttonClose.action = =>
       @destroy()
 
@@ -103,19 +94,13 @@ class WorkspaceMorph extends BoxMorph
     r = @right() - @edge
     w = r - x
 
-    # close icon
-    @closeIcon.setPosition new Point(x, y)
-    closeIconScale = 2/3
-    @closeIcon.setExtent new Point(handleSize * closeIconScale, handleSize * closeIconScale)
-
     # label
-    @label.setPosition new Point(x + handleSize * closeIconScale + @edge, y - @edge/2)
+    @label.setPosition new Point(x + handleSize * 2/3 + @edge, y - @edge/2)
     @label.setWidth w
     if @label.height() > (@height() - 50)
-      @silentSetHeight @label.height() + 50
-      @updateRendering()
+      @setHeight @label.height() + 50
       @changed()
-      @resizer.updateRendering()
+      #@resizer.updateRendering()
 
     # morphsList
     y = @label.bottom() + @edge/2
