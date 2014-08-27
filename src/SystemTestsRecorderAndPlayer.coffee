@@ -66,7 +66,7 @@ class SystemTestsRecorderAndPlayer
 
   @animationsPacingControl: false
   @alignmentOfMorphIDsMechanism: false
-  @morphsGeometryInfoInLabels: true
+  @hidingOfMorphsGeometryInfoInLabels: false
 
   # this is a special place where the
   # "pic..." command places the image
@@ -172,17 +172,17 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  turnOnMorphsGeometryInfoInLabels: ->
-    @constructor.morphsGeometryInfoInLabels = true
+  turnOnHidingOfMorphsGeometryInfoInLabels: ->
+    @constructor.hidingOfMorphsGeometryInfoInLabels = true
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnMorphsGeometryInfoInLabels @
+    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsGeometryInfoInLabels @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  turnOffMorphsGeometryInfoInLabels: ->
-    @constructor.morphsGeometryInfoInLabels = false
+  turnOffHidingOfMorphsGeometryInfoInLabels: ->
+    @constructor.hidingOfMorphsGeometryInfoInLabels = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffMorphsGeometryInfoInLabels @
+    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 

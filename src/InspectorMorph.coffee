@@ -50,7 +50,7 @@ class InspectorMorph extends BoxMorph
     @children = []
     #
     # label
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and !SystemTestsRecorderAndPlayer.morphsGeometryInfoInLabels
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
       @label = new TextMorph(@target.toStringWithoutGeometry())
     else
       @label = new TextMorph(@target.toString())

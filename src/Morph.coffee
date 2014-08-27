@@ -1131,7 +1131,7 @@ class Morph extends MorphicNode
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
-        if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and !SystemTestsRecorderAndPlayer.morphsGeometryInfoInLabels
+        if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
           textLabelForMorph = each.toStringWithoutGeometry().slice(0, 50)
         else
           textLabelForMorph = each.toString().slice(0, 50)
