@@ -37,7 +37,7 @@ class SpeechBubbleMorph extends BoxMorph
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     console.log "bubble createInAWhileIfHandStillContainedInMorph"
-    if window.world.systemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber and
+    if SystemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber and
      SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
     else

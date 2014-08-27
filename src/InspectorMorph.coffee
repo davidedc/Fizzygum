@@ -39,7 +39,8 @@ class InspectorMorph extends BoxMorph
     @buildAndConnectChildren()
 
   buildAndConnectChildren: ->
-    world.alignIDsOfNextMorphsInSystemTests()
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
     attribs = []
     #
     # remove existing panes
@@ -49,7 +50,7 @@ class InspectorMorph extends BoxMorph
     @children = []
     #
     # label
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and !SystemTestsRecorderAndPlayer.morphsGeometryInfoInLabels
       @label = new TextMorph(@target.toStringWithoutGeometry())
     else
       @label = new TextMorph(@target.toString())
@@ -387,7 +388,8 @@ class InspectorMorph extends BoxMorph
     @buttonClose.setExtent new Point(w, h)
     Morph::trackChanges = true
     @changed()
-    world.alignIDsOfNextMorphsInSystemTests()
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
 
   
   setExtent: (aPoint) ->

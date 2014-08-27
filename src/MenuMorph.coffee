@@ -19,7 +19,8 @@ class MenuMorph extends BoxMorph
     # objects.
     @items = []
     console.log "menu super"
-    world.alignIDsOfNextMorphsInSystemTests()
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
     super()
 
     @border = null # the Box Morph constructor puts this to 2
@@ -198,7 +199,6 @@ class MenuMorph extends BoxMorph
   adjustWidthsOfMenuEntries: ->
     w = @maxWidth()
     @children.forEach (item) =>
-      debugger
       item.setWidth w
       if item instanceof MenuItemMorph
         isSelected = (item.image == item.pressImage)
@@ -232,7 +232,8 @@ class MenuMorph extends BoxMorph
     # know its extent.
     @setPosition pos
     @keepWithin world
-    world.alignIDsOfNextMorphsInSystemTests()
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
     # otherwise there is no visible image

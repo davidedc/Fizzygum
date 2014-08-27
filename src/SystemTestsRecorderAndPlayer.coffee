@@ -63,7 +63,11 @@ class SystemTestsRecorderAndPlayer
   ongoingTestPlayingTask: null
   timeOfPreviouslyPlayedCommand: 0
   indexOfTestCommandBeingPlayedFromSequence: 0
-  animationsTiedToTestCommandNumber: false
+
+  @animationsTiedToTestCommandNumber: false
+  @alignmentOfMorphIDsMechanism: false
+  @morphsGeometryInfoInLabels: true
+
   # this is a special place where the
   # "pic..." command places the image
   # data of a morph.
@@ -102,8 +106,6 @@ class SystemTestsRecorderAndPlayer
     if not @testDescription?
       @testDescription = prompt("Please enter a test description", "no description")
 
-    @animationsTiedToTestCommandNumber = true
-
     # if you choose the same name
     # of a previously loaded tests,
     # confusing things might happen such
@@ -118,7 +120,6 @@ class SystemTestsRecorderAndPlayer
 
   stopTestRecording: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
-    @animationsTiedToTestCommandNumber = false
 
 
   # gonna use this in a callback so need
@@ -143,19 +144,48 @@ class SystemTestsRecorderAndPlayer
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @testCommandsSequence, null, 4 )))
 
+  tieAnimationsToTestCommandNumber: ->
+    @constructor.animationsTiedToTestCommandNumber = true
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTieAnimationsToTestCommandNumber @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
   untieAnimationsFromTestCommandNumber: ->
-    @animationsTiedToTestCommandNumber = false
+    @constructor.animationsTiedToTestCommandNumber = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandUntieAnimationsFromTestCommandNumber @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  tieAnimationsToTestCommandNumber: ->
-    @animationsTiedToTestCommandNumber = true
+  turnOnAlignmentOfMorphIDsMechanism: ->
+    @constructor.alignmentOfMorphIDsMechanism = true
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTieAnimationsToTestCommandNumber @
+    systemTestCommand = new SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOffAlignmentOfMorphIDsMechanism: ->
+    @constructor.alignmentOfMorphIDsMechanism = false
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOffAlignmentOfMorphIDsMechanism @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOnMorphsGeometryInfoInLabels: ->
+    @constructor.morphsGeometryInfoInLabels = true
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOnMorphsGeometryInfoInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOffMorphsGeometryInfoInLabels: ->
+    @constructor.morphsGeometryInfoInLabels = false
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOffMorphsGeometryInfoInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
 
   addMouseMoveCommand: (pageX, pageY) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
@@ -442,7 +472,7 @@ class SystemTestsRecorderAndPlayer
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
-    @animationsTiedToTestCommandNumber = true
+    @constructor.animationsTiedToTestCommandNumber = true
     @worldMorph.removeEventListeners()
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
