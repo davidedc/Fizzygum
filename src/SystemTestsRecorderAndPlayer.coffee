@@ -67,6 +67,8 @@ class SystemTestsRecorderAndPlayer
   @animationsPacingControl: false
   @alignmentOfMorphIDsMechanism: false
   @hidingOfMorphsGeometryInfoInLabels: false
+  @hidingOfMorphsNumberIDInLabels: false
+  @hidingOfMorphsContentExtractInLabels: false
 
   # this is a special place where the
   # "pic..." command places the image
@@ -183,6 +185,34 @@ class SystemTestsRecorderAndPlayer
     @constructor.hidingOfMorphsGeometryInfoInLabels = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOnHidingOfMorphsContentExtractInLabels: ->
+    @constructor.hidingOfMorphsContentExtractInLabels = true
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsContentExtractInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOffHidingOfMorphsContentExtractInLabels: ->
+    @constructor.hidingOfMorphsContentExtractInLabels = false
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsContentExtractInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOnHidingOfMorphsNumberIDInLabels: ->
+    @constructor.hidingOfMorphsNumberIDInLabels = true
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsNumberIDInLabels @
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  turnOffHidingOfMorphsNumberIDInLabels: ->
+    @constructor.hidingOfMorphsNumberIDInLabels = false
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
