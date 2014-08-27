@@ -351,7 +351,41 @@ class SystemTestsRecorderAndPlayer
     console.log "taking screenshot"
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestCommand = new SystemTestsCommandScreenshot imageName, @, whichMorph != @worldMorph
-    imageData = whichMorph.fullImageData()
+
+    # the way we take a picture here is different
+    # than the way we usually take a picture.
+    # Usually we ask the morph and submorphs to
+    # paint themselves anew into a new canvas.
+    # This is different: we take the area of the
+    # screen *as it is* and we crop the part of
+    # interest where the extent of our selected
+    # morph is. This means that the morph might
+    # be occluded by other things.
+    # The advantage here is that we capture
+    # the screen absolutely as is, without
+    # causing any repaints. If streaks are on the
+    # screen due to bad painting, we capture them
+    # exactly as the user sees them.
+    if whichMorph == @worldMorph
+      imageData = world.worldCanvas.toDataURL("image/png")
+    else
+      debugger
+      fullExtentOfMorph = whichMorph.boundsIncludingChildren()
+      destCanvas = newCanvas fullExtentOfMorph.extent()
+      destCtx = destCanvas.getContext '2d'
+      destCtx.drawImage world.worldCanvas,
+        fullExtentOfMorph.topLeft().x,
+        fullExtentOfMorph.topLeft().y,
+        fullExtentOfMorph.width(),
+        fullExtentOfMorph.height(),
+        0,
+        0,
+        fullExtentOfMorph.width(),
+        fullExtentOfMorph.height(),
+      debugger
+
+      imageData = destCanvas.toDataURL "image/png"
+
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
     unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
       SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = []
