@@ -85,7 +85,7 @@ class SliderMorph extends CircleBoxMorph
   # SliderMorph menu:
   developersMenu: ->
     menu = super()
-    menu.addItem "show value...", (->@showValue()), "display a dialog box\nshowing the selected number"
+    menu.addItem "show value", (->@showValue()), "display a dialog box\nshowing the selected number"
     menu.addItem "floor...", (->
       @prompt menu.title + "\nfloor:",
         @setStart,

@@ -207,7 +207,7 @@ class TriggerMorph extends Morph
         # i.e.
         #   menu = new MenuMorph(@, "Morphic")
         #   [...]
-        #   menu.addItem "hide all...", (->@minimiseAll())
+        #   menu.addItem "hide all", (->@minimiseAll())
         # as you see the target is not a function (@)
         # but the action is "(->@minimiseAll())"
         @action.call @target

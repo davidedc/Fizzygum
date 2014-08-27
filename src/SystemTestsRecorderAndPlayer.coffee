@@ -71,7 +71,7 @@ class SystemTestsRecorderAndPlayer
   @hidingOfMorphsContentExtractInLabels: false
 
   # this is a special place where the
-  # "pic..." command places the image
+  # "take pic" command places the image
   # data of a morph.
   # the test player will wait for this data
   # before doing the comparison.

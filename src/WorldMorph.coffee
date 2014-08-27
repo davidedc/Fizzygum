@@ -775,14 +775,14 @@ class WorldMorph extends FrameMorph
     if @isDevMode
       menu.addItem "demo...", (->@userCreateMorph()), "sample morphs"
       menu.addLine()
-      menu.addItem "hide all...", (->@minimiseAll())
-      menu.addItem "delete all...", (->@destroyAll())
-      menu.addItem "show all...", (->@showAllMinimised())
-      menu.addItem "move all inside...", (->@keepAllSubmorphsWithin()), "keep all submorphs\nwithin and visible"
-      menu.addItem "inspect...", (->@inspect()), "open a window on\nall properties"
+      menu.addItem "show all", (->@showAllMinimised())
+      menu.addItem "hide all", (->@minimiseAll())
+      menu.addItem "delete all", (->@destroyAll())
+      menu.addItem "move all inside", (->@keepAllSubmorphsWithin()), "keep all submorphs\nwithin and visible"
+      menu.addItem "inspect", (->@inspect()), "open a window on\nall properties"
       menu.addLine()
       menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
-      menu.addItem "fill page...", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
+      menu.addItem "fit whole page", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
       menu.addItem "color...", (->
         @pickColor menu.title + "\ncolor:", @setColor, @, @color
       ), "choose the World's\nbackground color"

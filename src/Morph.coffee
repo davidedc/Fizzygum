@@ -1182,8 +1182,8 @@ class Morph extends MorphicNode
     ), "make a copy\nand pick it up"
     menu.addItem "pick up", (->@pickUp()), "disattach and put \ninto the hand"
     menu.addItem "attach...", (->@attach()), "stick this morph\nto another one"
-    menu.addItem "move...", (->@move()), "show a handle\nwhich can be dragged\nto move this morph"
-    menu.addItem "inspect...", (->@inspect()), "open a window\non all properties"
+    menu.addItem "move", (->@move()), "show a handle\nwhich can be dragged\nto move this morph"
+    menu.addItem "inspect", (->@inspect()), "open a window\non all properties"
 
     # A) normally, just take a picture of this morph
     # and open it in a new tab.
@@ -1214,7 +1214,7 @@ class Morph extends MorphicNode
         # no system tests recording/playing ongoing,
         # just open new tab with image of morph.
         window.open @fullImageData()
-    menu.addItem "pic...", takePic, "open a new window\nwith a picture of this morph"
+    menu.addItem "take pic", takePic, "open a new window\nwith a picture of this morph"
 
     menu.addLine()
     if @isDraggable

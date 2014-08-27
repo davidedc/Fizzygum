@@ -267,7 +267,7 @@ class InspectorMorph extends BoxMorph
     #
     # inspect button
     @buttonInspect = new TriggerMorph()
-    @buttonInspect.setLabel "inspect..."
+    @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
     @buttonInspect.action = =>
       if isObject(@currentProperty)
@@ -299,7 +299,7 @@ class InspectorMorph extends BoxMorph
       menu.addLine()
       menu.addItem "add property...", (->@addProperty())
       menu.addItem "rename...", (->@renameProperty())
-      menu.addItem "remove...", (->@removeProperty())
+      menu.addItem "remove", (->@removeProperty())
       menu.popUpAtHand @world()
     #
     @add @buttonEdit
