@@ -793,19 +793,25 @@ class WorldMorph extends FrameMorph
       menu.addLine()
     
     if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-      menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
-      menu.addItem "start test rec",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
-      menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
-      menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
-      menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
-      menu.addLine()
+      menu.addItem "system tests...",  (->@popUpSystemTestsMenu()), ""
     if @isDevMode
       menu.addItem "switch to user mode", (->@toggleDevMode()), "disable developers'\ncontext menus"
     else
       menu.addItem "switch to dev mode", (->@toggleDevMode())
     menu.addItem "about Zombie Kernel...", (->@about())
     menu
-  
+
+  popUpSystemTestsMenu: ->
+    create = (aMorph) =>
+      aMorph.isDraggable = true
+      aMorph.pickUp @
+    menu = new MenuMorph(@, "system tests")
+    menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
+    menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
+    menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
+    menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
+    menu.popUpAtHand @
+
   popUpDemoMenu: ->
     create = (aMorph) =>
       aMorph.isDraggable = true
