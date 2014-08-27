@@ -33,6 +33,33 @@ class SystemTestsControlPanelUpdater
     br = document.createElement('br')
     @SystemTestsControlPanelDiv.appendChild(br);
 
+  addOnOffSwitchLink: (theText, onShortcut, offShortcut, onAction, offAction) ->
+    #aLittleDiv = document.createElement("div")
+    
+    aLittleSpan = document.createElement("span")
+    aLittleSpan.innerHTML = theText + " "
+
+    aLittleSpacerSpan = document.createElement("span")
+    aLittleSpacerSpan.innerHTML = " "
+
+    onLinkElement = document.createElement("a")
+    onLinkElement.setAttribute "href", "#"
+    onLinkElement.innerHTML = "on:"+onShortcut
+    onLinkElement.onclick = onAction
+
+    offLinkElement = document.createElement("a")
+    offLinkElement.setAttribute "href", "#"
+    offLinkElement.innerHTML = "off:"+offShortcut
+    offLinkElement.onclick = offAction
+
+    @SystemTestsControlPanelDiv.appendChild aLittleSpan
+    @SystemTestsControlPanelDiv.appendChild onLinkElement
+    @SystemTestsControlPanelDiv.appendChild aLittleSpacerSpan
+    @SystemTestsControlPanelDiv.appendChild offLinkElement
+
+    br = document.createElement('br')
+    @SystemTestsControlPanelDiv.appendChild(br);
+
   addOutputPanel: (nameOfPanel) ->
     SystemTestsControlPanelUpdater[nameOfPanel] = document.createElement('div')
     SystemTestsControlPanelUpdater[nameOfPanel].id = nameOfPanel
@@ -56,8 +83,7 @@ class SystemTestsControlPanelUpdater
 
     @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
     @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
-    @addLink "alt+e: tie animations to test step", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber())
-    @addLink "alt+u: untie animation to test step", (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
+    @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()), (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
     @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
     @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
