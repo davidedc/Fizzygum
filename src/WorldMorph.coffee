@@ -783,10 +783,6 @@ class WorldMorph extends FrameMorph
       menu.addLine()
       menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
       menu.addItem "fill page...", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
-      if WorldMorph.preferencesAndSettings.useBlurredShadows
-        menu.addItem "sharp shadows...", (->WorldMorph.preferencesAndSettings.toggleBlurredShadows()), "sharp drop shadows\nuse for old browsers"
-      else
-        menu.addItem "blurred shadows...", (->WorldMorph.preferencesAndSettings.toggleBlurredShadows()), "blurry shades,\n use for new browsers"
       menu.addItem "color...", (->
         @pickColor menu.title + "\ncolor:", @setColor, @, @color
       ), "choose the World's\nbackground color"
