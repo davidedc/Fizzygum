@@ -773,7 +773,7 @@ class WorldMorph extends FrameMorph
     else
       menu = new MenuMorph(@, "Morphic")
     if @isDevMode
-      menu.addItem "demo...", (->@userCreateMorph()), "sample morphs"
+      menu.addItem "demo...", (->@popUpDemoMenu()), "sample morphs"
       menu.addLine()
       menu.addItem "show all", (->@showAllMinimised())
       menu.addItem "hide all", (->@minimiseAll())
@@ -806,7 +806,7 @@ class WorldMorph extends FrameMorph
     menu.addItem "about Zombie Kernel...", (->@about())
     menu
   
-  userCreateMorph: ->
+  popUpDemoMenu: ->
     create = (aMorph) =>
       aMorph.isDraggable = true
       aMorph.pickUp @

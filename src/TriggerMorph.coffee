@@ -215,9 +215,9 @@ class TriggerMorph extends Morph
         # case 4
         # console.log "action invokation case 4"
         # when instead of writing this (case 3):
-        #    menu.addItem "demo...", (->@userCreateMorph()), "sample morphs"
+        #    menu.addItem "demo...", (->@popUpDemoMenu()), "sample morphs"
         # you write:
-        #    menu.addItem "demo...", "userCreateMorph", "sample morphs"
+        #    menu.addItem "demo...", "popUpDemoMenu", "sample morphs"
         # so it's like above but the action is a strind instead of
         # a function. Note that this version sould be used sparingly
         # because it's semantically less correct to identify a
