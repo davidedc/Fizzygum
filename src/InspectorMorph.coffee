@@ -50,10 +50,7 @@ class InspectorMorph extends BoxMorph
     @children = []
     #
     # label
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
-      @label = new TextMorph(@target.toStringWithoutGeometry())
-    else
-      @label = new TextMorph(@target.toString())
+    @label = new TextMorph(@target.toString())
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color(255, 255, 255)

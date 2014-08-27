@@ -151,10 +151,10 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  untieAnimationsFromTestCommandNumber: ->
+  turnOffAnimationsPacingControl: ->
     @constructor.animationsPacingControl = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandUntieAnimationsFromTestCommandNumber @
+    systemTestCommand = new SystemTestsCommandTurnOffAnimationsPacingControl @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 

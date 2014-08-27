@@ -76,7 +76,10 @@ class Morph extends MorphicNode
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
   uniqueIDString: ->
-    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0]) + "#" + @instanceNumericID
+    @morphClassString() + "#" + @instanceNumericID
+
+  morphClassString: ->
+    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
 
   @morphFromUniqueIDString: (theUniqueID) ->
     result = world.topMorphSuchThat (m) =>
@@ -102,6 +105,10 @@ class Morph extends MorphicNode
   # minor discrepancies are ironed-out
   @roundNumericIDsToNextThousand: ->
     console.log "@roundNumericIDsToNextThousand"
+    # this if is because zero and multiples of 1000
+    # don't go up to 1000
+    if @lastBuiltInstanceNumericID %1000 == 0
+      @lastBuiltInstanceNumericID++
     @lastBuiltInstanceNumericID = 1000*Math.ceil(@lastBuiltInstanceNumericID/1000)
 
   constructor: ->
@@ -146,9 +153,17 @@ class Morph extends MorphicNode
   
   # Morph string representation: e.g. 'a Morph#2 [20@45 | 130@250]'
   toString: ->
-    "a " +
-      @uniqueIDString() + " " +
-      @bounds
+    firstPart = "a "
+
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
+      firstPart = firstPart + @morphClassString()
+    else
+      firstPart = firstPart + @uniqueIDString()
+
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
+      return firstPart
+    else
+      return firstPart + " " + @bounds
 
   # Morph string representation: e.g. 'a Morph#2'
   toStringWithoutGeometry: ->
@@ -1131,10 +1146,7 @@ class Morph extends MorphicNode
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
-        if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
-          textLabelForMorph = each.toStringWithoutGeometry().slice(0, 50)
-        else
-          textLabelForMorph = each.toString().slice(0, 50)
+        textLabelForMorph = each.toString().slice(0, 50)
         menu.addItem textLabelForMorph, ->
           each.developersMenu().popUpAtHand @world()
     #  

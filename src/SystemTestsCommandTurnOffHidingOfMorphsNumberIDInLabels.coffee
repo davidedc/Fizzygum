@@ -1,10 +1,10 @@
 # 
 
 
-class SystemTestsCommandTurnOffAnimationsPacingControl extends SystemTestsCommand
+class SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl()
+    systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
 
 
   constructor: (systemTestsRecorderAndPlayer) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandTurnOffAnimationsPacingControl extends SystemTestsComman
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandTurnOffAnimationsPacingControl"
+    @testCommandName = "SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels"

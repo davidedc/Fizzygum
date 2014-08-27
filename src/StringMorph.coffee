@@ -68,7 +68,10 @@ class StringMorph extends Morph
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
     firstPart = super()
-    return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
+      return firstPart
+    else
+      return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
   
   password: (letter, length) ->
     ans = ""
