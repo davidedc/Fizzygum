@@ -12575,7 +12575,7 @@ SystemTest_basicShowAllTheMorphs = {
         },
         {
             "millisecondsSincePreviousCommand": 1303,
-            "testCommandName": "SystemTestsCommandTieAnimationsToTestCommandNumber"
+            "testCommandName": "SystemTestsCommandTurnOnAnimationsPacingControl"
         },
         {
             "screenShotImageName": "SystemTest_basicShowAllTheMorphs_image_1",

@@ -1,10 +1,10 @@
 # 
 
 
-class SystemTestsCommandTieAnimationsToTestCommandNumber extends SystemTestsCommand
+class SystemTestsCommandTurnOnAnimationsPacingControl extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()
+    systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()
 
 
   constructor: (systemTestsRecorderAndPlayer) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandTieAnimationsToTestCommandNumber extends SystemTestsComm
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandTieAnimationsToTestCommandNumber"
+    @testCommandName = "SystemTestsCommandTurnOnAnimationsPacingControl"

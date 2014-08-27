@@ -83,7 +83,7 @@ class SystemTestsControlPanelUpdater
 
     @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
     @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
-    @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()), (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
+    @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()), (-> window.world.systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber())
     @addOnOffSwitchLink "periodically align Morph IDs", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
     @addOnOffSwitchLink "show Morph geometry in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffMorphsGeometryInfoInLabels())
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())

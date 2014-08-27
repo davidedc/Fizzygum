@@ -64,7 +64,7 @@ class SystemTestsRecorderAndPlayer
   timeOfPreviouslyPlayedCommand: 0
   indexOfTestCommandBeingPlayedFromSequence: 0
 
-  @animationsTiedToTestCommandNumber: false
+  @animationsPacingControl: false
   @alignmentOfMorphIDsMechanism: false
   @morphsGeometryInfoInLabels: true
 
@@ -144,15 +144,15 @@ class SystemTestsRecorderAndPlayer
   showTestSource: ->
     window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @testCommandsSequence, null, 4 )))
 
-  tieAnimationsToTestCommandNumber: ->
-    @constructor.animationsTiedToTestCommandNumber = true
+  turnOnAnimationsPacingControl: ->
+    @constructor.animationsPacingControl = true
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTieAnimationsToTestCommandNumber @
+    systemTestCommand = new SystemTestsCommandTurnOnAnimationsPacingControl @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   untieAnimationsFromTestCommandNumber: ->
-    @constructor.animationsTiedToTestCommandNumber = false
+    @constructor.animationsPacingControl = false
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandUntieAnimationsFromTestCommandNumber @
     @testCommandsSequence.push systemTestCommand
@@ -472,7 +472,7 @@ class SystemTestsRecorderAndPlayer
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
-    @constructor.animationsTiedToTestCommandNumber = true
+    @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask

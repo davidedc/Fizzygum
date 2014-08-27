@@ -94,9 +94,9 @@ class BouncerMorph extends Morph
       # So we check here that flag, and make the
       # animation is exactly controlled
       # by the test step count only.
-      #console.log "SystemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber: " + SystemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
+      #console.log "SystemTestsRecorderAndPlayer.animationsPacingControl: " + SystemTestsRecorderAndPlayer.animationsPacingControl
       #console.log "state: " + SystemTestsRecorderAndPlayer.state
-      if SystemTestsRecorderAndPlayer.animationsTiedToTestCommandNumber
+      if SystemTestsRecorderAndPlayer.animationsPacingControl
         if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
           @resetPosition()
           for i in [0... window.world.systemTestsRecorderAndPlayer.testCommandsSequence.length]

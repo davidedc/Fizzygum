@@ -50,7 +50,7 @@ class WorldMorph extends FrameMorph
 
   keyComboStartRecordingTestEventListener: null
   keyComboResetWorldEventListener: null
-  keyComboTieAnimationsToTestCommandNumber: null
+  keyComboTurnOnAnimationsPacingControl: null
   keyComboUntieAnimationsFromTestCommandNumber: null
   keyComboTakeScreenshotEventListener: null
   keyComboStopTestRecordingEventListener: null
@@ -610,10 +610,10 @@ class WorldMorph extends FrameMorph
       false
     Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
-    @keyComboTieAnimationsToTestCommandNumber = (event) =>
-      @systemTestsRecorderAndPlayer.tieAnimationsToTestCommandNumber()
+    @keyComboTurnOnAnimationsPacingControl = (event) =>
+      @systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()
       false
-    Mousetrap.bind ["alt+e"], @keyComboTieAnimationsToTestCommandNumber
+    Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
 
     @keyComboUntieAnimationsFromTestCommandNumber = (event) =>
       @systemTestsRecorderAndPlayer.untieAnimationsFromTestCommandNumber()
