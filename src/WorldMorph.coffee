@@ -800,9 +800,9 @@ class WorldMorph extends FrameMorph
       menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
       menu.addLine()
     if @isDevMode
-      menu.addItem "user mode...", (->@toggleDevMode()), "disable developers'\ncontext menus"
+      menu.addItem "switch to user mode", (->@toggleDevMode()), "disable developers'\ncontext menus"
     else
-      menu.addItem "development mode...", (->@toggleDevMode())
+      menu.addItem "switch to dev mode", (->@toggleDevMode())
     menu.addItem "about Zombie Kernel...", (->@about())
     menu
   
