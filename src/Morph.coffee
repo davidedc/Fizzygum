@@ -173,6 +173,11 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+    # todo there is something to be figured out here
+    # cause in theory ALL the morphs in here are not
+    # visible, not just the parent... but it kind of
+    # seems overkill...
+    @visible = false
     if @parent?
       @fullChanged()
       @parent.removeChild @
@@ -184,6 +189,7 @@ class Morph extends MorphicNode
     # we are iterating on it.
     until @children.length == 0
       @children[0].destroy()
+    return null
 
   # Morph stepping:
   runChildrensStepFunction: ->

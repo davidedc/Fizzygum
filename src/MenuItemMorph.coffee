@@ -75,7 +75,7 @@ class MenuItemMorph extends TriggerMorph
     unless @isListItem()
       @image = @normalImage
       @changed()
-    @world().hand.destroyTemporaries()  if @hint
+    world.hand.destroyTemporaries()  if @hint
   
   mouseDownLeft: (pos) ->
     if @isListItem()

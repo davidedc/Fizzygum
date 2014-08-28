@@ -31,7 +31,11 @@ class SpeechBubbleMorph extends BoxMorph
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
     console.log "bubble createBubbleHelpIfHandStillOnMorph"
-    if morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
+    # let's check that the item that the
+    # bubble is about is still actually there
+    # and the mouse is still over it, otherwise
+    # do nothing.
+    if morphInvokingThis.world()? and morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
       theBubble = new @(localize(contents), morphInvokingThis, null, null, 1)
       theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
 

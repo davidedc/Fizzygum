@@ -1,3 +1,17 @@
+# Morphic node class only cares about the
+# parent/child connection between
+# morphs. It's good to connect/disconnect
+# morphs and to find parents or children
+# who satisfy particular properties.
+# OUT OF SCOPE:
+# It's important to note that this layer
+# knows nothing about visibility, targets,
+# image buffers, dirty rectangles, events.
+# Please no invokations to changed or fullChanged
+# or updateRendering in here, and no
+# touching of any of the out-of-scope properties
+# mentioned.
+
 class MorphicNode
 
   parent: null
@@ -40,6 +54,7 @@ class MorphicNode
   removeChild: (aMorphicNode) ->
     idx = @children.indexOf(aMorphicNode)
     @children.splice idx, 1  if idx isnt -1
+    aMorphicNode.parent = null
   
   
   # MorphicNode functions:

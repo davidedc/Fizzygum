@@ -217,7 +217,7 @@ class MenuMorph extends BoxMorph
 
   itemSelected: ->
     unless @isListContents
-      @root().unfocusMenu @
+      world.unfocusMenu @
       @destroy()
   
   popup: (world, pos) ->
