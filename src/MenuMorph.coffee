@@ -219,7 +219,9 @@ class MenuMorph extends BoxMorph
     console.log "menu popup"
     # keep only one active menu at a time, destroy the
     # previous one.
-    world.activeMenu.destroy()  if world.activeMenu
+    if world.activeMenu
+      world.activeMenu.destroy()
+      world.activeMenu = null
     world.add @
     # it's better do these movement
     # operations after adding to the world

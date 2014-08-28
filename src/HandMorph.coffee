@@ -199,6 +199,7 @@ class HandMorph extends Morph
         # something that is not part of the menu then
         # destroy the menu 
         @world.activeMenu.destroy()
+        @world.activeMenu = null
       else
         clearInterval @touchHoldTimeout
 
