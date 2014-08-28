@@ -290,8 +290,8 @@ class Morph extends MorphicNode
   boundsIncludingChildren: ->
     result = @bounds
     @children.forEach (child) ->
-      result = result.merge(child.boundsIncludingChildren())  if !child.isMinimised and child.isVisible
-    #
+      if !child.isMinimised and child.isVisible
+        result = result.merge(child.boundsIncludingChildren())
     result
   
   boundsIncludingChildrenNoShadow: ->
