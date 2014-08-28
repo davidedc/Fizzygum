@@ -86,7 +86,8 @@ class MenuMorph extends BoxMorph
   
   createLabel: ->
     console.log "menu create label"
-    @label.destroy()  if @label isnt null
+    if @label isnt null
+      @label = @label.destroy()
     text = new TextMorph(localize(@title),
       @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
       WorldMorph.preferencesAndSettings.menuFontName, true, false, "center")
@@ -220,8 +221,7 @@ class MenuMorph extends BoxMorph
     # keep only one active menu at a time, destroy the
     # previous one.
     if world.activeMenu
-      world.activeMenu.destroy()
-      world.activeMenu = null
+      world.activeMenu = world.activeMenu.destroy()
     world.add @
     # it's better do these movement
     # operations after adding to the world

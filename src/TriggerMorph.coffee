@@ -73,8 +73,7 @@ class TriggerMorph extends Morph
     # just recreated the label
     # from scratch
     if @label?
-      @label.destroy()
-      @label = null
+      @label = @label.destroy()
     @layoutSubmorphs()
 
   alignCenter: ->

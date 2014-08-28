@@ -47,7 +47,8 @@ class ListMorph extends ScrollFrameMorph
     # need the step function to react to mouse drag.
   
   buildListContents: ->
-    @listContents.destroy()  if @listContents
+    if @listContents
+      @listContents = @listContents.destroy()
     @listContents = new MenuMorph(@select, null, @)
     @elements = ["(empty)"]  if !@elements.length
     @elements.forEach (element) =>

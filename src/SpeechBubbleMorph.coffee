@@ -69,7 +69,7 @@ class SpeechBubbleMorph extends BoxMorph
     console.log "bubble buildAndConnectChildren"
     # re-build my contents
     if @contentsMorph
-      @contentsMorph.destroy()
+      @contentsMorph = @contentsMorph.destroy()
     if @contents instanceof Morph
       @contentsMorph = @contents
     else if isString(@contents)

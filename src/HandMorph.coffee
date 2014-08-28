@@ -190,7 +190,7 @@ class HandMorph extends Morph
   destroyActiveHandleIfHandHasNotActionedIt: (actionedMorph) ->
     if @world.activeHandle?
       if actionedMorph isnt @world.activeHandle
-        @world.activeHandle.destroy()    
+        @world.activeHandle = @world.activeHandle.destroy()    
 
   destroyActiveMenuIfHandHasNotActionedIt: (actionedMorph) ->
     if @world.activeMenu?
@@ -198,8 +198,7 @@ class HandMorph extends Morph
         # if there is a menu open and the user clicked on
         # something that is not part of the menu then
         # destroy the menu 
-        @world.activeMenu.destroy()
-        @world.activeMenu = null
+        @world.activeMenu = @world.activeMenu.destroy()
       else
         clearInterval @touchHoldTimeout
 
@@ -493,7 +492,7 @@ class HandMorph extends Morph
     #
     @temporaries.forEach (morph) =>
       unless morph.isClickable and morph.bounds.containsPoint(@position())
-        morph.destroy()
+        morph = morph.destroy()
         @temporaries.splice @temporaries.indexOf(morph), 1
   
   

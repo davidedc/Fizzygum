@@ -1004,7 +1004,7 @@ class WorldMorph extends FrameMorph
       # if there was one.
       @lastEditedText = @caret.target
       @lastEditedText.clearSelection()  if @lastEditedText
-      @caret.destroy()
+      @caret = @caret.destroy()
 
     # create the new Caret
     @caret = new CaretMorph(aStringMorphOrTextMorph)
@@ -1037,8 +1037,7 @@ class WorldMorph extends FrameMorph
       @lastEditedText = @caret.target
       @lastEditedText.clearSelection()
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
-      @caret.destroy()
-      @caret = null
+      @caret = @caret.destroy()
     # the only place where the @keyboardEventsReceiver is unset
     # (and the hidden input is removed)
     @keyboardEventsReceiver = null

@@ -176,6 +176,7 @@ class Morph extends MorphicNode
     if @parent isnt null
       @fullChanged()
       @parent.removeChild @
+    return null
   
   destroyAll: ->
     # we can't use forEach because we are iterating over
