@@ -759,6 +759,14 @@ class Morph extends MorphicNode
   
   # attaches submorph ontop
   add: (aMorph) ->
+    # the morph that is being
+    # attached might be attached to
+    # a clipping morph. So we
+    # need to do a "changed" here
+    # to make sure that anything that
+    # is outside the clipping Morph gets
+    # painted over.
+    aMorph.changed()
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
