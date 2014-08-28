@@ -88,10 +88,10 @@ class MenuItemMorph extends TriggerMorph
     @escalateEvent "mouseMove"  if @isListItem()
   
   mouseClickLeft: ->
-    unless @isListItem()
-      @parent.destroy()
-      @root().activeMenu = null
     @trigger()
+    # this might now destroy the
+    # menu this morph is in
+    @parent.itemSelected()
   
   isListItem: ->
     return @parent.isListContents  if @parent

@@ -215,6 +215,12 @@ class MenuMorph extends BoxMorph
       item.image = item.normalImage  if item instanceof MenuItemMorph
     #
     @changed()
+
+  itemSelected: ->
+    unless @isListContents
+      debugger
+      @root().unfocusMenu @
+      @destroy()
   
   popup: (world, pos) ->
     console.log "menu popup"

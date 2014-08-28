@@ -766,6 +766,16 @@ class WorldMorph extends FrameMorph
     super()
 
   # WorldMorph menu:
+  unfocusMenu: (menuToBeUnfocuses) ->
+    # there might be another menu
+    # being spawned already has a
+    # menu entry was selected so
+    # let's check before setting
+    # that there is no active menu
+    if @activeMenu == menuToBeUnfocuses
+      @activeMenu = null
+
+
   contextMenu: ->
     if @isDevMode
       menu = new MenuMorph(
