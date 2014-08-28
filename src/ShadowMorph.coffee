@@ -14,7 +14,7 @@ class ShadowMorph extends Morph
     @color = color or new Color(0, 0, 0)
  
   updateRendering: ->
-    console.log "shadow morph update rendering"
+    # console.log "shadow morph update rendering"
     fb = @targetMorph.boundsIncludingChildren()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat

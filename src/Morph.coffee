@@ -767,8 +767,18 @@ class Morph extends MorphicNode
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
-    @addChildFirst aMorph
     aMorph.updateRendering()
+    # this is a curious instance where
+    # we first update the rendering and then
+    # we add the morph. This is because
+    # the rendering depends on the
+    # full extent including children of
+    # the morph we are attaching the shadow
+    # to. So if we add the shadow we are going
+    # to influence those measurements and
+    # make our life very difficult for
+    # ourselves.
+    @addChildFirst aMorph
   
 
   # never currently used in ZK
