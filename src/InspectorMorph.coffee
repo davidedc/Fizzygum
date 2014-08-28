@@ -375,6 +375,7 @@ class InspectorMorph extends BoxMorph
     # edit button
     x = @buttonInspect.right() + @edge
     @buttonEdit.setPosition new Point(x, y)
+    #@buttonEdit.setPosition new Point(x, y + 20)
     @buttonEdit.setExtent new Point(w, h)
     #
     # close button
