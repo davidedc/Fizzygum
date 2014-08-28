@@ -1196,7 +1196,8 @@ class Morph extends MorphicNode
     menu.addItem "resize...", (->@resize()), "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
     menu.addLine()
     menu.addItem "duplicate", (->
-      @fullCopy().pickUp @world()
+      aFullCopy = @fullCopy()
+      aFullCopy.pickUp @world()
     ), "make a copy\nand pick it up"
     menu.addItem "pick up", (->@pickUp()), "disattach and put \ninto the hand"
     menu.addItem "attach...", (->@attach()), "stick this morph\nto another one"

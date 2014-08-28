@@ -8,7 +8,6 @@ class MenuMorph extends BoxMorph
   fontSize: null
   items: null
   label: null
-  world: null
   isListContents: false
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
@@ -250,13 +249,13 @@ class MenuMorph extends BoxMorph
     @fullChanged()
   
   popUpAtHand: (world) ->
-    wrrld = world or @world
+    wrrld = world or @world()
     @popup wrrld, wrrld.hand.position()
   
   popUpCenteredAtHand: (world) ->
-    wrrld = world or @world
+    wrrld = world or @world()
     @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
   
   popUpCenteredInWorld: (world) ->
-    wrrld = world or @world
+    wrrld = world or @world()
     @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
