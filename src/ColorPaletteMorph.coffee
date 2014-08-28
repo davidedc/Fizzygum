@@ -37,7 +37,7 @@ class ColorPaletteMorph extends Morph
     @updateTarget()
   
   updateTarget: ->
-    if @target instanceof Morph and @choice isnt null
+    if @target instanceof Morph and @choice?
       if @target[@targetSetter] instanceof Function
         @target[@targetSetter] @choice
       else

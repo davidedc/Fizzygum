@@ -22,7 +22,7 @@ class HandMorph extends Morph
     @bounds = new Rectangle()
   
   changed: ->
-    if @world isnt null
+    if @world?
       b = @boundsIncludingChildren()
       @world.broken.push @boundsIncludingChildren().spread()  unless b.extent().eq(new Point())
   

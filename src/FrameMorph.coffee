@@ -38,9 +38,13 @@ class FrameMorph extends Morph
       @scrollFrame.alpha = @calculateAlphaScaled(alpha)
     super(alpha)
   
+  # frames clip at their boundaries
+  # so there is no need to do a deep
+  # traversal to find the bounds.
   boundsIncludingChildren: ->
     shadow = @getShadow()
-    return @bounds.merge(shadow.bounds)  if shadow isnt null
+    if shadow?
+      return @bounds.merge(shadow.bounds)
     @bounds
   
   recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->

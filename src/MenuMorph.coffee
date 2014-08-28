@@ -86,7 +86,7 @@ class MenuMorph extends BoxMorph
   
   createLabel: ->
     console.log "menu create label"
-    if @label isnt null
+    if @label?
       @label = @label.destroy()
     text = new TextMorph(localize(@title),
       @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,

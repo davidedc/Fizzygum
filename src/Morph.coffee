@@ -173,7 +173,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
-    if @parent isnt null
+    if @parent?
       @fullChanged()
       @parent.removeChild @
     return null
@@ -711,7 +711,7 @@ class Morph extends MorphicNode
   
   removeShadow: ->
     shadow = @getShadow()
-    if shadow isnt null
+    if shadow?
       @fullChanged()
       @removeChild shadow
   
@@ -987,7 +987,7 @@ class Morph extends MorphicNode
     world.hand.grab @
   
   isPickedUp: ->
-    @parentThatIsA(HandMorph) isnt null
+    @parentThatIsA(HandMorph)?
   
   situation: ->
     # answer a dictionary specifying where I am right now, so

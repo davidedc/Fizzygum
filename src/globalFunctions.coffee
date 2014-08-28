@@ -141,7 +141,7 @@ getDocumentPositionOf = (aDOMelement) ->
     y: aDOMelement.offsetTop
 
   offsetParent = aDOMelement.offsetParent
-  while offsetParent isnt null
+  while offsetParent?
     pos.x += offsetParent.offsetLeft
     pos.y += offsetParent.offsetTop
     if offsetParent isnt document.body and offsetParent isnt document.documentElement
