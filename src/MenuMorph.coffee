@@ -218,7 +218,6 @@ class MenuMorph extends BoxMorph
 
   itemSelected: ->
     unless @isListContents
-      debugger
       @root().unfocusMenu @
       @destroy()
   
