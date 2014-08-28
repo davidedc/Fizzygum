@@ -299,8 +299,7 @@ class Morph extends MorphicNode
     result = @bounds
     @children.forEach (child) ->
       if (child not instanceof ShadowMorph) and (!child.isMinimised) and (child.isVisible)
-        result = result.merge(child.boundsIncludingChildren())
-    #
+        result = result.merge(child.boundsIncludingChildrenNoShadow())
     result
   
   visibleBounds: ->
