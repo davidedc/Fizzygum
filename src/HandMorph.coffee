@@ -87,7 +87,7 @@ class HandMorph extends Morph
       contextMenu = morphTheMenuIsAbout.contextMenu()
 
     if contextMenu 
-      contextMenu.popUpAtHand @world 
+      contextMenu.popUpAtHand() 
 
   #
   #    alternative -  more elegant and possibly more

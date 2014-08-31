@@ -175,7 +175,7 @@ class SliderMorph extends CircleBoxMorph
     if choices.length is 1
       @target = choices[0]
       @setTargetSetter()
-    else menu.popUpAtHand @world()  if choices.length
+    else menu.popUpAtHand()  if choices.length
   
   setTargetSetter: ->
     choices = @target.numericalSetters()
@@ -186,7 +186,7 @@ class SliderMorph extends CircleBoxMorph
     #
     if choices.length is 1
       @action = choices[0]
-    else menu.popUpAtHand @world()  if choices.length
+    else menu.popUpAtHand()  if choices.length
   
   numericalSetters: ->
     # for context menu demo purposes

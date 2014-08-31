@@ -213,7 +213,7 @@ class WorldMorph extends FrameMorph
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
-    console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+    # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
     @updateBroken()
@@ -814,18 +814,18 @@ class WorldMorph extends FrameMorph
   popUpSystemTestsMenu: ->
     create = (aMorph) =>
       aMorph.isDraggable = true
-      aMorph.pickUp @
+      aMorph.pickUp()
     menu = new MenuMorph(@, "system tests")
     menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
     menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
     menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
     menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
-    menu.popUpAtHand @
+    menu.popUpAtHand()
 
   popUpDemoMenu: ->
     create = (aMorph) =>
       aMorph.isDraggable = true
-      aMorph.pickUp @
+      aMorph.pickUp()
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
       create new RectangleMorph()
@@ -965,12 +965,12 @@ class WorldMorph extends FrameMorph
         menu.addItem morph.toString(), ->
           create morph
     
-    menu.popUpAtHand @
+    menu.popUpAtHand()
 
   layoutTestsMenu: ->
     create = (aMorph) =>
       aMorph.isDraggable = true
-      aMorph.pickUp @
+      aMorph.pickUp()
     menu = new MenuMorph(@, "Layout tests")
     menu.addItem "test1", ->
       LayoutMorph.test1()
@@ -980,7 +980,7 @@ class WorldMorph extends FrameMorph
       LayoutMorph.test3()
     menu.addItem "test4", ->
       LayoutMorph.test4()
-    menu.popUpAtHand @
+    menu.popUpAtHand()
     
   
   toggleDevMode: ->

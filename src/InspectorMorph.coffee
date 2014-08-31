@@ -261,7 +261,7 @@ class InspectorMorph extends BoxMorph
         @markOwnershipOfProperties = not @markOwnershipOfProperties
         @buildAndConnectChildren()
       ), "highlight\nownership of properties"
-      menu.popUpAtHand @world()
+      menu.popUpAtHand()
     #
     @add @buttonSubset
     #
@@ -283,7 +283,7 @@ class InspectorMorph extends BoxMorph
         menu.addItem "here...", =>
           @setTarget @currentProperty
         #
-        menu.popUpAtHand @world()
+        menu.popUpAtHand()
       else
         @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
     #
@@ -300,7 +300,7 @@ class InspectorMorph extends BoxMorph
       menu.addItem "add property...", (->@addProperty())
       menu.addItem "rename...", (->@renameProperty())
       menu.addItem "remove", (->@removeProperty())
-      menu.popUpAtHand @world()
+      menu.popUpAtHand()
     #
     @add @buttonEdit
     #

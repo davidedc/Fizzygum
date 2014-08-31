@@ -248,9 +248,8 @@ class MenuMorph extends BoxMorph
     world.activeMenu = @
     @fullChanged()
   
-  popUpAtHand: (world) ->
-    wrrld = world or @world()
-    @popup wrrld, wrrld.hand.position()
+  popUpAtHand: ->
+    @popup world, world.hand.position()
   
   popUpCenteredAtHand: (world) ->
     wrrld = world or @world()

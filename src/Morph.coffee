@@ -995,8 +995,7 @@ class Morph extends MorphicNode
         return false  
     @acceptsDrops
   
-  pickUp: (wrrld) ->
-    world = wrrld or @world()
+  pickUp: ->
     @setPosition world.hand.position().subtract(@extent().floorDivideBy(2))
     world.hand.grab @
   
@@ -1113,7 +1112,7 @@ class Morph extends MorphicNode
       null
     #
     menu.isDraggable = true
-    menu.popUpAtHand @world()
+    menu.popUpAtHand()
     entryField.text.edit()
   
   pickColor: (msg, callback, environment, defaultContents) ->
@@ -1128,7 +1127,7 @@ class Morph extends MorphicNode
       null
     #
     menu.isDraggable = true
-    menu.popUpAtHand @world()
+    menu.popUpAtHand()
 
   inspect: (anotherObject) ->
     inspectee = @
@@ -1172,7 +1171,7 @@ class Morph extends MorphicNode
       if each.developersMenu and (each isnt world)
         textLabelForMorph = each.toString().slice(0, 50)
         menu.addItem textLabelForMorph, ->
-          each.developersMenu().popUpAtHand @world()
+          each.developersMenu().popUpAtHand()
     #  
     menu
   
@@ -1185,7 +1184,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", ->
-        userMenu.popUpAtHand @world()
+        userMenu.popUpAtHand()
       #
       menu.addLine()
     menu.addItem "color...", (->
@@ -1203,7 +1202,7 @@ class Morph extends MorphicNode
     menu.addLine()
     menu.addItem "duplicate", (->
       aFullCopy = @fullCopy()
-      aFullCopy.pickUp @world()
+      aFullCopy.pickUp()
     ), "make a copy\nand pick it up"
     menu.addItem "pick up", (->@pickUp()), "disattach and put \ninto the hand"
     menu.addItem "attach...", (->@attach()), "stick this morph\nto another one"
@@ -1251,7 +1250,7 @@ class Morph extends MorphicNode
     unless @ instanceof WorldMorph
       menu.addLine()
       menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand @world()
+        world.contextMenu().popUpAtHand()
       ), "show the\nWorld's menu"
     menu
   
@@ -1282,7 +1281,7 @@ class Morph extends MorphicNode
         each.add @
         @isDraggable = false
     #
-    menu.popUpAtHand @world()  if choices.length
+    menu.popUpAtHand()  if choices.length
   
   toggleIsDraggable: ->
     # for context menu demo purposes
