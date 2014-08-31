@@ -338,8 +338,12 @@ class HandMorph extends Morph
             # up a menu as needed.
             @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
           @openContextMenuAtPointer morph
-      morph = morph.parent  until morph[expectedClick]
-      morph[expectedClick] @bounds.origin
+      until morph[expectedClick]
+        morph = morph.parent
+        if not morph?
+          break
+      if morph?
+        morph[expectedClick] @bounds.origin
     @mouseButton = null
 
   processDoubleClick: ->
