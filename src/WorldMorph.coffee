@@ -762,7 +762,10 @@ class WorldMorph extends FrameMorph
     for eachMorphClass in ListOfMorphs
       if eachMorphClass != "WorldMorph"
         console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
-        window[eachMorphClass].instancesCounter = 0
+        # the actual count is in another variable "instancesCounter"
+        # but all labels are built using instanceNumericID
+        # which is set based on lastBuiltInstanceNumericID
+        window[eachMorphClass].lastBuiltInstanceNumericID = 0
     super()
 
   # WorldMorph menu:
