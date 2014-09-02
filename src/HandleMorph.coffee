@@ -22,7 +22,8 @@ class HandleMorph extends Morph
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
     @silentSetExtent new Point(size, size)
-    @target.add @
+    if @target
+      @target.add @
     @updatePosition()
 
   updatePosition: ->

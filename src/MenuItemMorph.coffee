@@ -91,7 +91,11 @@ class MenuItemMorph extends TriggerMorph
     @trigger()
     # this might now destroy the
     # menu this morph is in
-    @parent.itemSelected()
+    # The menu item might be detached
+    # from the menu so check existence of
+    # method
+    if @parent.itemSelected
+      @parent.itemSelected()
   
   isListItem: ->
     return @parent.isListContents  if @parent
