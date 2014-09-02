@@ -331,11 +331,11 @@ class SystemTestsRecorderAndPlayer
     else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
       menuAtPointer = @handMorph.menuAtPointer()
       giveSuccess = =>
-        message = "number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
+        message = "PASS Number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
-        errorMessage = "Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
+        errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
