@@ -51,6 +51,9 @@ import re
 import os
 import ntpath
 
+# to find the multiple js test files
+# recursively in the src/tests folder
+import fnmatch
 
 # GLOBALS
 FINAL_OUTPUT_FILE = 'build/delete_me/zombie-kernel.coffee'
@@ -130,7 +133,13 @@ def visit(filename, nodes, inclusion_order):
 def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # create a list with the test files
     # src/tests/
-    filenames = sorted(glob(testsDirectory + "*.js"))
+    # filenames = sorted(glob(testsDirectory + "*.js"))
+
+    filenames = []
+    for root, dirnames, fileNMS in os.walk(testsDirectory):
+      for filename in fnmatch.filter(fileNMS, '*.js'):
+          filenames.append(os.path.join(filename))
+    filenames = sorted(filenames)
 
     # create the string with the js inclusions for each
     # test

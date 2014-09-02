@@ -17,4 +17,11 @@ cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js build/js/libs/
 
 # copy the test files
 mkdir build/js/tests/
-cp src/tests/*.js build/js/tests
+
+# the tests files are copied from a directory
+# structure so it's cleaner, but they
+# are copied recursively ignoring the directory
+# structure they come from, so a simple cp
+# doesn't cut it, we need the find below
+#cp src/tests/*.js build/js/tests
+find src/tests/ -iname '*.js' -exec cp \{\} ./build/js/tests \;
