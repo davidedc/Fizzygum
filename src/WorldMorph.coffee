@@ -766,7 +766,15 @@ class WorldMorph extends FrameMorph
         # but all labels are built using instanceNumericID
         # which is set based on lastBuiltInstanceNumericID
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
+
+    window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl()
+    window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
+    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
+    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
+    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
+
     super()
+
 
   # WorldMorph menu:
   unfocusMenu: (menuToBeUnfocuses) ->
