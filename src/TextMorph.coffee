@@ -325,8 +325,10 @@ class TextMorph extends StringMorph
   # TextMorph evaluation:
   evaluationMenu: ->
     menu = @hierarchyMenu()
-    menu.prependLine()
-    menu.prependItem "select all", "selectAllAndEdit"
+
+    if @text.length > 0
+      menu.prependLine()
+      menu.prependItem "select all", "selectAllAndEdit"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
