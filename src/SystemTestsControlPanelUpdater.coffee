@@ -81,7 +81,14 @@ class SystemTestsControlPanelUpdater
     theCanvasDiv.style.styleFloat = 'left';
     theCanvasDiv.style.cssFloat = 'left';
 
-    @addLink "alt+n: start test recording", (-> window.world.systemTestsRecorderAndPlayer.startTestRecording())
+    # The spirit of these links is that it would
+    # be really inconvenient to trigger
+    # these commands using menus during the test.
+    # For example it would be inconvenient to stop
+    # the tests recording by selecting the command
+    # via e menu: a bunch of mouse actions would be
+    # recorded, exposing as well to the risk of the
+    # menu items changing.
     @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
     @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
     @addOnOffSwitchLink "periodically align Morph IDs", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
@@ -95,9 +102,6 @@ class SystemTestsControlPanelUpdater
     @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
     @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
-    @addLink "alt+p: replay recorded test", (-> window.world.systemTestsRecorderAndPlayer.startTestPlaying())
-    @addLink "alt+s: save recorded test", (-> window.world.systemTestsRecorderAndPlayer.saveTest())
-    @addLink "alt+f: save failed screenshots test", (-> window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots())
     
 
 

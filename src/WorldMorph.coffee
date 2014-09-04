@@ -48,16 +48,12 @@ class WorldMorph extends FrameMorph
   inputDOMElementForVirtualKeyboardKeyupEventListener: null
   inputDOMElementForVirtualKeyboardKeypressEventListener: null
 
-  keyComboStartRecordingTestEventListener: null
   keyComboResetWorldEventListener: null
   keyComboTurnOnAnimationsPacingControl: null
   keyComboTurnOffAnimationsPacingControl: null
   keyComboTakeScreenshotEventListener: null
   keyComboStopTestRecordingEventListener: null
-  keyComboReplayTestEventListener: null
-  keyComboSaveTestEventListener: null
   keyComboTakeScreenshotEventListener: null
-  keyComboSaveFailedScreenshotsEventListener: null
   keyComboAddTestCommentEventListener: null
   keyComboCheckNumberOfMenuItemsEventListener: null
 
@@ -600,11 +596,6 @@ class WorldMorph extends FrameMorph
 
     #console.log "binding via mousetrap"
 
-    @keyComboStartRecordingTestEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.startTestRecording()
-      false
-    Mousetrap.bind ["alt+n"], @keyComboStartRecordingTestEventListener
-
     @keyComboResetWorldEventListener = (event) =>
       @systemTestsRecorderAndPlayer.resetWorld()
       false
@@ -629,21 +620,6 @@ class WorldMorph extends FrameMorph
       @systemTestsRecorderAndPlayer.stopTestRecording()
       false
     Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
-
-    @keyComboReplayTestEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.startTestPlaying()
-      false
-    Mousetrap.bind ["alt+p"], @keyComboReplayTestEventListener
-
-    @keyComboSaveTestEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.saveTest()
-      false
-    Mousetrap.bind ["alt+s"], @keyComboSaveTestEventListener
-
-    @keyComboSaveFailedScreenshotsEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.saveFailedScreenshots()
-      false
-    Mousetrap.bind ["alt+f"], @keyComboSaveFailedScreenshotsEventListener
 
     @keyComboAddTestCommentEventListener = (event) =>
       @systemTestsRecorderAndPlayer.addTestComment()
@@ -827,10 +803,15 @@ class WorldMorph extends FrameMorph
       aMorph.isDraggable = true
       aMorph.pickUp()
     menu = new MenuMorph(@, "system tests")
+
     menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
-    menu.addItem "stop test rec",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
-    menu.addItem "play test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
+    menu.addItem "start test recording",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
+    menu.addItem "stop test recording",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
+    menu.addItem "(re)play recorded test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
     menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
+    menu.addItem "save recorded test",  (->@systemTestsRecorderAndPlayer.saveTest()), "save the recorded test"
+    menu.addItem "save failed screenshots test",  (->@systemTestsRecorderAndPlayer.saveFailedScreenshots()), "save failed screenshots test"
+
     menu.popUpAtHand()
 
   popUpDemoMenu: ->
