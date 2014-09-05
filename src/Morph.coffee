@@ -1,5 +1,14 @@
 # Morph //////////////////////////////////////////////////////////////
 
+# A Morph (from the Greek "shape" or "form") is an interactive
+# graphical object. General information on the Morphic system
+# can be found at http://minnow.cc.gatech.edu/squeak/30. 
+
+# Morphs exist in a tree, rooted at a World or at the Hand.
+# The morphs owns submorphs. Morphs are drawn recursively;
+# if a Morph has no owner it never gets drawn
+# (but note that there are other ways to hide a Morph).
+
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
 
