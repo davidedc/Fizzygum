@@ -853,6 +853,9 @@ class WorldMorph extends FrameMorph
       newMorph.isEditable = true
       create newMorph
     
+    # this is "The Lorelei" poem (From German).
+    # see translation here:
+    # http://poemsintranslation.blogspot.co.uk/2009/11/heinrich-heine-lorelei-from-german.html
     menu.addItem "text", ->
       newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
         "traurig bin, ein Märchen aus uralten Zeiten, das " +
