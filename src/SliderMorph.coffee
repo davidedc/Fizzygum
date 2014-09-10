@@ -163,30 +163,37 @@ class SliderMorph extends CircleBoxMorph
     @updateRendering()
     @changed()
   
+  # todo: there is code identical to this in Morph.coffee
   setTarget: ->
-    choices = @overlappedMorphs()
-    menu = new MenuMorph(@, "choose target:")
-    choices.push @world()
-    choices.forEach (each) =>
-      menu.addItem each.toString().slice(0, 50), =>
-        @target = each
-        @setTargetSetter()
-    #
-    if choices.length is 1
-      @target = choices[0]
-      @setTargetSetter()
-    else menu.popUpAtHand()  if choices.length
+    # get rid of any previous temporary
+    # active menu because it's meant to be
+    # out of view anyways, otherwise we show
+    # its submorphs in the setTarget options
+    # which is most probably not wanted.
+    if world.activeMenu
+      world.activeMenu = world.activeMenu.destroy()
+    choices = @plausibleTargetAndDestinationMorphs()
+    if choices.length > 0
+      menu = new MenuMorph(@, "choose target:")
+      #choices.push @world()
+      choices.forEach (each) =>
+        menu.addItem each.toString().slice(0, 50), =>
+          @setTargetSetter(each)
+    else
+      menu = new MenuMorph(@, "no targets available")
+    menu.popUpAtHand()
   
-  setTargetSetter: ->
-    choices = @target.numericalSetters()
+  setTargetSetter: (theTarget) ->
+    choices = theTarget.numericalSetters()
     menu = new MenuMorph(@, "choose target property:")
     choices.forEach (each) =>
       menu.addItem each, =>
+        @target = theTarget
         @action = each
-    #
-    if choices.length is 1
-      @action = choices[0]
-    else menu.popUpAtHand()  if choices.length
+    if choices.length == 0
+      menu = new MenuMorph(@, "no target properties available")
+    menu.popUpAtHand()
+
   
   numericalSetters: ->
     # for context menu demo purposes

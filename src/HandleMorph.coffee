@@ -145,12 +145,30 @@ class HandleMorph extends Morph
     
   # HandleMorph menu:
   attach: ->
-    choices = @overlappedMorphs()
+    # get rid of any previous temporary
+    # active menu because it's meant to be
+    # out of view anyways, otherwise we show
+    # its submorphs in the "attach to..." options
+    # which is most probably not wanted.
+    if world.activeMenu
+      world.activeMenu = world.activeMenu.destroy()
+    choices = @plausibleTargetAndDestinationMorphs()
     menu = new MenuMorph(@, "choose target:")
-    choices.forEach (each) =>
-      menu.addItem each.toString().slice(0, 50), ->
-        @isDraggable = false
-        @target = each
-        @updateRendering()
-        @noticesTransparentClick = true
+    if choices.length > 0
+      choices.forEach (each) =>
+        menu.addItem each.toString().slice(0, 50), ->
+          @isDraggable = false
+          @target = each
+          @updateRendering()
+          @noticesTransparentClick = true
+    else
+      # the ideal would be to not show the
+      # "attach" menu entry at all but for the
+      # time being it's quite costly to
+      # find the eligible morphs to attach
+      # to, so for now let's just calculate
+      # this list if the user invokes the
+      # command, and if there are no good
+      # morphs then show some kind of message.
+      menu = new MenuMorph(@, "no morphs to attach to")
     menu.popUpAtHand()  if choices.length

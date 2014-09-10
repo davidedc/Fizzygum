@@ -838,13 +838,13 @@ class Morph extends MorphicNode
   # - to determine which morphs you can attach a morph to
   # - for a SliderMorph's "set target" so you can change properties of another Morph
   # - by the HandleMorph when you attach it to some other morph
-  overlappedMorphs: ->
+  plausibleTargetAndDestinationMorphs: ->
     # find all morphs in the world that intersect me,
-    # excluding myself and the World
-    # and any of my parents
-    #    (cause I'm already attached to them directly or indirectly)
+    # excluding myself
     # or any of my children
-    #    (cause they are already attached to me directly or indirectly)
+    # (cause it's usually odd to attach a Morph
+    # to one of its submorphs or for it to
+    # control the properties of one of its submorphs)
     world = @world()
     fb = @boundsIncludingChildren()
     allParentsTopToBottom = @allParentsTopToBottom()
@@ -853,11 +853,11 @@ class Morph extends MorphicNode
       !m.isMinimised and
         m.isVisible and
         m isnt @ and
-        m isnt world and
-        not contains(allParentsTopToBottom, m) and
+        # m isnt world and
+        # not contains(allParentsTopToBottom, m) and
         not contains(allChildrenBottomToTop, m) and
         m.boundsIncludingChildren().intersects(fb)
-  
+
   # Morph pixel access:
   getPixelColor: (aPoint) ->
     point = aPoint.subtract(@bounds.origin)
@@ -1283,14 +1283,39 @@ class Morph extends MorphicNode
     @changed()
   
   attach: ->
-    choices = @overlappedMorphs()
-    menu = new MenuMorph(@, "choose new parent:")
+    # get rid of any previous temporary
+    # active menu because it's meant to be
+    # out of view anyways, otherwise we show
+    # its overlapping morphs in the options
+    # which is most probably not wanted.
+    if world.activeMenu
+      world.activeMenu = world.activeMenu.destroy()
+    choices = @plausibleTargetAndDestinationMorphs()
+
+    # my direct parent might be in the
+    # options which is silly, leave that one out
+    choicesExcludingParent = []
     choices.forEach (each) =>
-      menu.addItem each.toString().slice(0, 50), =>
-        each.add @
-        @isDraggable = false
-    #
-    menu.popUpAtHand()  if choices.length
+      if each != @parent
+        choicesExcludingParent.push each
+
+    if choicesExcludingParent.length > 0
+      menu = new MenuMorph(@, "choose new parent:")
+      choicesExcludingParent.forEach (each) =>
+        menu.addItem each.toString().slice(0, 50), =>
+          each.add @
+          @isDraggable = false
+    else
+      # the ideal would be to not show the
+      # "attach" menu entry at all but for the
+      # time being it's quite costly to
+      # find the eligible morphs to attach
+      # to, so for now let's just calculate
+      # this list if the user invokes the
+      # command, and if there are no good
+      # morphs then show some kind of message.
+      menu = new MenuMorph(@, "no morphs to attach to")
+    menu.popUpAtHand()
   
   toggleIsDraggable: ->
     # for context menu demo purposes
