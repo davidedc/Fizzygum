@@ -100,6 +100,8 @@ class SystemTestsControlPanelUpdater
 
     @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
     @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
+    @addLink "alt+a: check menu entries (in order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
+    @addLink "alt+z: check menu entries (any order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
     @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
     

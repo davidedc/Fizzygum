@@ -315,6 +315,83 @@ class SystemTestsRecorderAndPlayer
     systemTestCommand = new SystemTestsCommandShowComment comment, @
     @testCommandsSequence.push systemTestCommand
 
+  checkStringsOfItemsInMenuOrderImportant: (stringOfItemsInMenuInOriginalOrder) ->
+    @checkStringsOfItemsInMenu(stringOfItemsInMenuInOriginalOrder, true)
+
+  checkStringsOfItemsInMenuOrderUnimportant: (stringOfItemsInMenuInOriginalOrder) ->
+    @checkStringsOfItemsInMenu(stringOfItemsInMenuInOriginalOrder, false)
+
+  checkStringsOfItemsInMenu: (stringOfItemsInMenuInOriginalOrder, orderMatters) ->
+    console.log "checkStringsOfItemsInMenu"
+    menuAtPointer = @handMorph.menuAtPointer()
+    console.log menuAtPointer
+
+    stringOfItemsInCurrentMenuInOriginalOrder = []
+
+    if menuAtPointer?
+      for eachMenuItem in menuAtPointer.items
+        stringOfItemsInCurrentMenuInOriginalOrder.push eachMenuItem[0]
+    else
+      console.log "FAIL was expecting a menu under the pointer"
+      if SystemTestsControlPanelUpdater?
+        SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
+      @stopTestPlaying()
+
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+      if orderMatters
+        systemTestCommand = new SystemTestsCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
+      else
+        systemTestCommand = new SystemTestsCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
+
+      @testCommandsSequence.push systemTestCommand
+      @timeOfPreviouslyRecordedCommand = new Date().getTime()
+    else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      giveSuccess = =>
+        if orderMatters
+          message = "PASS Strings in menu are same and in same order"
+        else
+          message = "PASS Strings in menu are same (not considering order)"
+        if SystemTestsControlPanelUpdater?
+          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
+      giveError = =>
+        if orderMatters
+          errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+        else
+          errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+        if SystemTestsControlPanelUpdater?
+          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
+        @stopTestPlaying()
+      
+      menuListIsSame = true
+
+      # the reason why we make a copy here is the following:
+      # if you kept the original array then this could happen:
+      # you record a test and then you play it back and then you save it
+      # the array is always the same and could get mutated during the play
+      # (because it could be sorted). So when you save the test, you
+      # save the ordered array instead of the original.
+      copyOfstringOfItemsInMenuInOriginalOrder = arrayShallowCopy(stringOfItemsInMenuInOriginalOrder)
+
+      # if the order doesn't matter then we need to
+      # sort the strings first so we compare regardless
+      # of the original order
+      if !orderMatters
+        stringOfItemsInCurrentMenuInOriginalOrder.sort()
+        copyOfstringOfItemsInMenuInOriginalOrder.sort()
+
+      if stringOfItemsInCurrentMenuInOriginalOrder.length == copyOfstringOfItemsInMenuInOriginalOrder.length
+        for itemNumber in [0...copyOfstringOfItemsInMenuInOriginalOrder.length]
+          if copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] != stringOfItemsInCurrentMenuInOriginalOrder[itemNumber]
+            menuListIsSame = false
+            console.log copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] + " != " + stringOfItemsInCurrentMenuInOriginalOrder[itemNumber] + " at " + itemNumber
+      else
+        menuListIsSame = false
+
+      if menuListIsSame
+        giveSuccess()
+      else
+        giveError()
+
   checkNumberOfItemsInMenu: (numberOfItems) ->
     if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
       menuAtPointer = @handMorph.menuAtPointer()
