@@ -84,6 +84,27 @@ class Morph extends MorphicNode
   image: null
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
+
+  ##########################################################
+  # These two methods are for mixins
+  ##########################################################
+  # adds class properties
+  @augmentWith: (obj) ->
+    for key, value of obj when key not in MixedClassKeywords
+      @[key] = value
+    obj.onceAddedClassProperties?.apply(@)
+    this
+
+  # adds instance properties
+  @addInstanceProperties: (obj) ->
+    for key, value of obj when key not in MixedClassKeywords
+      # Assign properties to the prototype
+      @::[key] = value
+    obj.included?.apply(@)
+    this
+  ################# end of mixins methods ##################
+
+
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID
 

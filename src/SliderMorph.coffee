@@ -4,8 +4,10 @@
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
+# REQUIRES ControllerMixin
 
 class SliderMorph extends CircleBoxMorph
+  @augmentWith ControllerMixin
 
   target: null
   action: null
@@ -163,25 +165,7 @@ class SliderMorph extends CircleBoxMorph
     @updateRendering()
     @changed()
   
-  # todo: there is code identical to this in Morph.coffee
-  setTarget: ->
-    # get rid of any previous temporary
-    # active menu because it's meant to be
-    # out of view anyways, otherwise we show
-    # its submorphs in the setTarget options
-    # which is most probably not wanted.
-    if world.activeMenu
-      world.activeMenu = world.activeMenu.destroy()
-    choices = @plausibleTargetAndDestinationMorphs()
-    if choices.length > 0
-      menu = new MenuMorph(@, "choose target:")
-      #choices.push @world()
-      choices.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), =>
-          @setTargetSetter(each)
-    else
-      menu = new MenuMorph(@, "no targets available")
-    menu.popUpAtHand()
+  # setTarget: -> taken form the ControllerMixin
   
   setTargetSetter: (theTarget) ->
     choices = theTarget.numericalSetters()

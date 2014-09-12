@@ -1,6 +1,12 @@
 # Global Functions ////////////////////////////////////////////////////
 
 
+# This is used for mixins: MixedClassKeywords is used
+# to protect some methods so the are not copied to object,
+# because they have special meaning
+# (this comment from a stackOverflow answer from clyde
+# here: http://stackoverflow.com/a/8728164/1318347 )
+MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
 arrayShallowCopy = (anArray) ->
   anArray.concat()
