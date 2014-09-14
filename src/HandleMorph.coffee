@@ -152,7 +152,7 @@ class HandleMorph extends Morph
     # which is most probably not wanted.
     if world.activeMenu
       world.activeMenu = world.activeMenu.destroy()
-    choices = @plausibleTargetAndDestinationMorphs()
+    choices = world.plausibleTargetAndDestinationMorphs(@)
     menu = new MenuMorph(@, "choose target:")
     if choices.length > 0
       choices.forEach (each) =>

@@ -37,6 +37,39 @@ class FrameMorph extends Morph
     if @scrollFrame
       @scrollFrame.alpha = @calculateAlphaScaled(alpha)
     super(alpha)
+
+  # used for example:
+  # - to determine which morphs you can attach a morph to
+  # - for a SliderMorph's "set target" so you can change properties of another Morph
+  # - by the HandleMorph when you attach it to some other morph
+  # Note that this method has a slightly different
+  # version in Morph (because it doesn't clip)
+  plausibleTargetAndDestinationMorphs: (theMorph) ->
+    # find if I intersect theMorph,
+    # then check my children recursively
+    # exclude me if I'm a child of theMorph
+    # (cause it's usually odd to attach a Morph
+    # to one of its submorphs or for it to
+    # control the properties of one of its submorphs)
+    result = []
+    if !@isMinimised and
+        @isVisible and
+        !theMorph.containedInParentsOf(@) and
+        @bounds.intersects(theMorph.bounds)
+      result = [@]
+
+    # Since the FrameMorph clips its children
+    # at its boundary, hence we need
+    # to check that we don't consider overlaps with
+    # morphs contained in this frame that are clipped and
+    # hence *actually* not overlapping with theMorph.
+    # So continue checking the children only if the
+    # frame itself actually overlaps.
+    if @bounds.intersects(theMorph.bounds)
+      @children.forEach (child) ->
+        result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
+
+    return result
   
   # frames clip at their boundaries
   # so there is no need to do a deep

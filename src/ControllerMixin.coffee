@@ -25,7 +25,7 @@ ControllerMixin =
         # which is most probably not wanted.
         if world.activeMenu
           world.activeMenu = world.activeMenu.destroy()
-        choices = @plausibleTargetAndDestinationMorphs()
+        choices = world.plausibleTargetAndDestinationMorphs(@)
         if choices.length > 0
           menu = new MenuMorph(@, "choose target:")
           #choices.push @world()

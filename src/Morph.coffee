@@ -323,6 +323,36 @@ class Morph extends MorphicNode
   
   height: ->
     @bounds.height()
+
+
+  # used for example:
+  # - to determine which morphs you can attach a morph to
+  # - for a SliderMorph's "set target" so you can change properties of another Morph
+  # - by the HandleMorph when you attach it to some other morph
+  # Note that this method has a slightly different
+  # version in FrameMorph (because it clips, so we need
+  # to check that we don't consider overlaps with
+  # morphs contained in a frame that are clipped and
+  # hence *actually* not overlapping).
+  plausibleTargetAndDestinationMorphs: (theMorph) ->
+    # find if I intersect theMorph,
+    # then check my children recursively
+    # exclude me if I'm a child of theMorph
+    # (cause it's usually odd to attach a Morph
+    # to one of its submorphs or for it to
+    # control the properties of one of its submorphs)
+    result = []
+    if !@isMinimised and
+        @isVisible and
+        !theMorph.containedInParentsOf(@) and
+        @bounds.intersects(theMorph.bounds)
+      result = [@]
+
+    @children.forEach (child) ->
+      result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
+
+    return result
+
   
   boundsIncludingChildren: ->
     result = @bounds
@@ -855,30 +885,6 @@ class Morph extends MorphicNode
   #};
   #
   
-  # used for example:
-  # - to determine which morphs you can attach a morph to
-  # - for a SliderMorph's "set target" so you can change properties of another Morph
-  # - by the HandleMorph when you attach it to some other morph
-  plausibleTargetAndDestinationMorphs: ->
-    # find all morphs in the world that intersect me,
-    # excluding myself
-    # or any of my children
-    # (cause it's usually odd to attach a Morph
-    # to one of its submorphs or for it to
-    # control the properties of one of its submorphs)
-    world = @world()
-    fb = @boundsIncludingChildren()
-    allParentsTopToBottom = @allParentsTopToBottom()
-    allChildrenBottomToTop = @allChildrenBottomToTop()
-    morphs = world.collectAllChildrenBottomToTopSuchThat (m) =>
-      !m.isMinimised and
-        m.isVisible and
-        m isnt @ and
-        # m isnt world and
-        # not contains(allParentsTopToBottom, m) and
-        not contains(allChildrenBottomToTop, m) and
-        m.boundsIncludingChildren().intersects(fb)
-
   # Morph pixel access:
   getPixelColor: (aPoint) ->
     point = aPoint.subtract(@bounds.origin)
@@ -1311,7 +1317,7 @@ class Morph extends MorphicNode
     # which is most probably not wanted.
     if world.activeMenu
       world.activeMenu = world.activeMenu.destroy()
-    choices = @plausibleTargetAndDestinationMorphs()
+    choices = world.plausibleTargetAndDestinationMorphs(@)
 
     # my direct parent might be in the
     # options which is silly, leave that one out
