@@ -26,6 +26,9 @@ class GroundVal
     @addMyselfToMorphsValsList valName
     @id = @valName + @ownerMorph.id
 
+  addMyselfToMorphsValsList: (valName) ->
+    @ownerMorph.allValsInMorphByName[valName] = @
+
   stainValCalculatedFromParent: (stainingArgVal) ->
     # note that staining argument here could
     # be a child argument, as it might directly or

@@ -42,10 +42,6 @@ class BasicCalculatedVal extends GroundVal
     @arguments.setup_AddAllLocalArgVals @localInputVals
 
 
-  addMyselfToMorphsValsList: (valName) ->
-    @ownerMorph.allValsInMorphByName[valName] = @
-
-
   checkAndPropagateChangeBasedOnArgChange: () ->
     # we can check these with a counter, DON'T do
     # something like Object.keys(obj).length because it's
