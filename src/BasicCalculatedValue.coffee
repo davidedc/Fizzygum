@@ -21,7 +21,7 @@ class BasicCalculatedVal extends GroundVal
   # this val might be referenced by parent Morph or
   # children Morphs dynamically so they way to find this
   # val might be through the name as a string
-  constructor: (@valName, @functionToRecalculate, @localValsArgs) ->
+  constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph) ->
     @id = @valName + @ownerMorph.id
     @addMyselfToMorphsValsList valName
     
@@ -40,6 +40,8 @@ class BasicCalculatedVal extends GroundVal
 
     @arguments = new Args(@)
     @arguments.setup_AddAllLocalArgVals @localInputVals
+    @arguments.setup_AddAllParentArgNames parentArgsNames
+    @arguments.setup_AddAllChildrenArgNames childrenArgsNames
 
 
   checkAndPropagateChangeBasedOnArgChange: () ->

@@ -28,6 +28,7 @@ class Args
   calculatedDirectlyOfIndirectlyFromParentByIdCount: 0
 
   countOfDamaged: 0
+  morphContainingTheseArgs: null
 
   # just some flags to keep track of which
   # args might have changed. Again, we might
@@ -35,10 +36,10 @@ class Args
   # recalculate them
   argsMaybeChangedSinceLastCalculationById: {}
 
-  costructor: (@valContainingTheseArgs) ->
+  constructor: (@valContainingTheseArgs) ->
     @morphContainingTheseArgs = @valContainingTheseArgs.ownerMorph
     @id = @valContainingTheseArgs.id
-    argById[@id] = @
+    @argById[@id] = @
 
 
   ################################################
