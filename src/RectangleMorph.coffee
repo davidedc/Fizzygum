@@ -14,6 +14,7 @@ class RectangleMorph extends Morph
 
   count: 1
   countVal: null
+  countOfRectangleKids: null
 
   constructor: (extent, color) ->
     super()
@@ -23,4 +24,21 @@ class RectangleMorph extends Morph
     countValContent = {"content": @count, "signature": hashCode(@count + "")}
     @countVal = new GroundVal("countVal", countValContent, @)
 
+    countOfRectangleKidsContent = {"content": 0, "signature": hashCode(0 + "")}
+
+    functionToRecalculate = (argById, localArgByName, parentArgByName, childrenArgByName, childrenArgByNameCount) ->
+        theCount = 0
+        for allCounts of childrenArgByName["countVal"]
+            theCount++
+
+        console.log "recalculating the number of rectangles to: " + theCount
+
+        return {
+            "content": theCount,
+            "signature": hashCode(theCount + "")
+            }
+
+    #constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph)
+    debugger
+    @countOfRectangleKids = new BasicCalculatedVal("countOfRectangleKids", functionToRecalculate, [], [], ["countVal"], @)
 

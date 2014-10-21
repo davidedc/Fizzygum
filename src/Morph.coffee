@@ -115,6 +115,7 @@ class Morph extends MorphicNode
 
 
   connectValuesToAddedChild: (theChild) ->
+    console.log "connectValuesToAddedChild"
     # we have a data structure that contains,
     # for each child valName, all vals of this
     # morph that depend on it. Go through
