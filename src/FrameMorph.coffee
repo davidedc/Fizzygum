@@ -24,7 +24,7 @@ class FrameMorph extends Morph
 
   setColor: (aColor) ->
     # keep in synch the value of the container scrollFrame
-    # if there is one. Note that the container srollFrame
+    # if there is one. Note that the container scrollFrame
     # is actually not painted.
     if @scrollFrame
       @scrollFrame.color = aColor
@@ -32,7 +32,7 @@ class FrameMorph extends Morph
 
   setAlphaScaled: (alpha) ->
     # keep in synch the value of the container scrollFrame
-    # if there is one. Note that the container srollFrame
+    # if there is one. Note that the container scrollFrame
     # is actually not painted.
     if @scrollFrame
       @scrollFrame.alpha = @calculateAlphaScaled(alpha)
@@ -145,6 +145,7 @@ class FrameMorph extends Morph
   
   # FrameMorph scrolling optimization:
   moveBy: (delta) ->
+    #console.log "moving all morphs in the frame"
     @changed()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
@@ -161,9 +162,10 @@ class FrameMorph extends Morph
         result = result.merge(child.boundsIncludingChildren())
     result
   
-  # unused. Should it fo in the scrollframe anyways?
+  # Should it be in the scrollframe rather than in Frame?
   keepInScrollFrame: ->
-    return null  if @scrollFrame is null
+    if !@scrollFrame?
+      return null
     if @left() > @scrollFrame.left()
       @moveBy new Point(@scrollFrame.left() - @left(), 0)
     if @right() < @scrollFrame.right()
@@ -174,7 +176,8 @@ class FrameMorph extends Morph
       @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)
   
   adjustBounds: ->
-    return null  if @scrollFrame is null
+    if !@scrollFrame?
+      return null
     subBounds = @submorphBounds()
     if subBounds and (not @scrollFrame.isTextLineWrapping)
       newBounds = subBounds.expandBy(@scrollFrame.padding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)
