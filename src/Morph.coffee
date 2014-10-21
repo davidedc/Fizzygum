@@ -104,6 +104,72 @@ class Morph extends MorphicNode
     this
   ################# end of mixins methods ##################
 
+  ##########################################################
+  # Reactive Values start
+  ##########################################################
+
+  # contains all the reactive vals
+  allValsInMorphByName: {}
+  morphValsDependingOnChildrenVals: {}
+  morphValsDirectlyDependingOnParentVals: {}
+
+
+  connectValuesToAddedChild: (theChild) ->
+    # we have a data structure that contains,
+    # for each child valName, all vals of this
+    # morph that depend on it. Go through
+    # all child val names, find the
+    # actual val in the child, and connect all
+    # to the vals in this morph that depend on it.
+    for nameOfChildrenVar, morphValsDependingOnChildrenVals in \
+        @morphValsDependingOnChildrenVals
+      childVal = theChild.allValsInMorphByName[ nameOfChildrenVar ]
+      if childVal?
+        for valDependingOnChildrenVal in morphValsDependingOnChildrenVals
+          valDependingOnChildrenVal.args.connectToChildVal childVal
+
+    # we have a data structure that contains,
+    # for each parent (me) valName, all vals of the child
+    # morph that depend on it. Go through
+    # all parent (me) val names, find the
+    # actual val in the parent (me), and connect it
+    # to the vals in the child morph that depend on it.
+    for nameOfParentVar, morphValsDirectlyDependingOnParentVals in \
+        theChild.morphValsDirectlyDependingOnParentVals
+      parentVal = @allValsInMorphByName[ nameOfParentVar ]
+      if parentVal?
+        for valDependingOnParentVal in morphValsDirectlyDependingOnParentVals
+          valDependingOnParentVal.args.connectToParentVal parentVal
+
+  disconnectValuesFromRemovedChild: (theChild) ->
+    # we have a data structure that contains,
+    # for each child valName, all vals of this
+    # morph that depend on it. Go through
+    # all child val names, find the
+    # actual val in the child, and DISconnect it
+    # FROM the vals in this morph that depended on it.
+    for nameOfChildrenVar, morphValsDependingOnChildrenVals in \
+        @morphValsDependingOnChildrenVals
+      for valDependingOnChildrenVal in morphValsDependingOnChildrenVals
+        childArg = valDependingOnChildrenVal.args.argById[theChild.id]
+        if childArg?
+          childArg.disconnectChildArg()
+
+    # we have a data structure that contains,
+    # for each parent (me) valName, all vals of the child
+    # morph that depend on it. Go through
+    # all parent (me) val names, find the
+    # actual val in the parent (me), and connect it
+    # to the vals in the child morph that depend on it.
+    for nameOfParentVar, morphValsDirectlyDependingOnParentVals in \
+        theChild.morphValsDirectlyDependingOnParentVals
+      for valDependingOnParentVal in morphValsDirectlyDependingOnParentVals
+        parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
+        if parentArg?
+          parentArg.disconnectParentArg()
+
+
+  ############## end of reactive values ##########################
 
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID

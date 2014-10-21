@@ -46,6 +46,7 @@ class MorphicNode
   addChild: (aMorphicNode) ->
     @children.push aMorphicNode
     aMorphicNode.parent = @
+    @connectValuesToAddedChild aMorphicNode
   
   addChildFirst: (aMorphicNode) ->
     @children.splice 0, null, aMorphicNode
@@ -55,6 +56,7 @@ class MorphicNode
     idx = @children.indexOf(aMorphicNode)
     @children.splice idx, 1  if idx isnt -1
     aMorphicNode.parent = null
+    @disconnectValuesFromRemovedChild aMorphicNode
   
   
   # MorphicNode functions:
