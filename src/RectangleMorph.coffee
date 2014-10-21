@@ -9,9 +9,18 @@
 # and versatile, so for example there is no case where the children
 # are painted over the border, which would look bad.
 
+
 class RectangleMorph extends Morph
+
+  count: 1
+  countVal: null
+
   constructor: (extent, color) ->
     super()
     @silentSetExtent(extent) if extent?
     @color = color if color?
+
+    countValContent = {"content": @count, "signature": hashCode(@count + "")}
+    @countVal = new GroundVal("countVal", countValContent, @)
+
 
