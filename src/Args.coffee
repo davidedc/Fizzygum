@@ -34,7 +34,7 @@ class Args
   # args might have changed. Again, we might
   # not know for sure because we don't necessarily
   # recalculate them
-  argsMaybeChangedSinceLastCalculationById: {}
+  argsMaybeChangedSinceLastCalculationById: null
 
   constructor: (@valContainingTheseArgs) ->
     @argById = {}
@@ -43,6 +43,7 @@ class Args
     @childrenArgByNameCount = {}
     @localArgByName = {}
     @calculatedDirectlyOfIndirectlyFromParentById = {}
+    @argsMaybeChangedSinceLastCalculationById = {}
 
     @morphContainingTheseArgs = @valContainingTheseArgs.ownerMorph
 
