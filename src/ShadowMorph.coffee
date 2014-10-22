@@ -7,7 +7,7 @@ class ShadowMorph extends Morph
   color: null
 
   constructor: (@targetMorph, offset, alpha, color) ->
-    console.log "creating shadow morph"
+    # console.log "creating shadow morph"
     super()
     @offset = offset or new Point(7, 7)
     @alpha = alpha or ((if (alpha is 0) then 0 else 0.2))
@@ -23,5 +23,5 @@ class ShadowMorph extends Morph
     else
       @image = @targetMorph.shadowImage(@offset, @color)
       @setPosition fb.origin.add(@offset)
-    console.log "shadow morph update rendering EXIT"
+    # console.log "shadow morph update rendering EXIT"
   

@@ -24,13 +24,13 @@ class SpeechBubbleMorph extends BoxMorph
     borderColor,
     @padding = 0,
     @isThought = false) ->
-      console.log "bubble super"
+      # console.log "bubble super"
       @color = color or new Color(230, 230, 230)
       super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
       console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
-    console.log "bubble createBubbleHelpIfHandStillOnMorph"
+    # console.log "bubble createBubbleHelpIfHandStillOnMorph"
     # let's check that the item that the
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
@@ -40,7 +40,7 @@ class SpeechBubbleMorph extends BoxMorph
       theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
-    console.log "bubble createInAWhileIfHandStillContainedInMorph"
+    # console.log "bubble createInAWhileIfHandStillContainedInMorph"
     if SystemTestsRecorderAndPlayer.animationsPacingControl and
      SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
@@ -52,7 +52,7 @@ class SpeechBubbleMorph extends BoxMorph
   
   # SpeechBubbleMorph invoking:
   popUp: (pos, isClickable) ->
-    console.log "bubble popup"
+    # console.log "bubble popup"
     world = @morphInvokingThis.world()
     @setPosition pos.subtract(new Point(0, @height()))
     @keepWithin world
@@ -70,7 +70,7 @@ class SpeechBubbleMorph extends BoxMorph
       @isClickable = false
     
   buildAndConnectChildren: ->
-    console.log "bubble buildAndConnectChildren"
+    # console.log "bubble buildAndConnectChildren"
     # re-build my contents
     if @contentsMorph
       @contentsMorph = @contentsMorph.destroy()
@@ -118,7 +118,7 @@ class SpeechBubbleMorph extends BoxMorph
 
   
   outlinePath: (context, radius, inset) ->
-    console.log "bubble outlinePath"
+    # console.log "bubble outlinePath"
     circle = (x, y, r) ->
       context.moveTo x + r, y
       context.arc x, y, r, radians(0), radians(360)
@@ -182,7 +182,7 @@ class SpeechBubbleMorph extends BoxMorph
   #    shadow doesn't become conflicted by embedded scrolling panes
   #
   shadowImage: (off_, color) ->
-    console.log "bubble shadowImage"
+    # console.log "bubble shadowImage"
     # fallback for Windows Chrome-Shadow bug
     fb = undefined
     img = undefined
@@ -207,7 +207,7 @@ class SpeechBubbleMorph extends BoxMorph
     sha
 
   shadowImageBlurred: (off_, color) ->
-    console.log "bubble shadowImageBlurred"
+    # console.log "bubble shadowImageBlurred"
     fb = undefined
     img = undefined
     sha = undefined
@@ -234,7 +234,7 @@ class SpeechBubbleMorph extends BoxMorph
   # SpeechBubbleMorph resizing
   # invoked by HandleMorph
   layoutSubmorphs: ->
-    console.log "bubble layoutSubmorphs"
+    # console.log "bubble layoutSubmorphs"
     #@removeShadow()
     #@updateRendering()
     #@addShadow new Point(2, 2), 80

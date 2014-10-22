@@ -11,13 +11,13 @@ class MenuMorph extends BoxMorph
   isListContents: false
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
-    console.log "menu constructor"
+    # console.log "menu constructor"
     # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
     # to initialise the items before calling super. We can't initialise it
     # outside the constructor because the array would be shared across instantiated
     # objects.
     @items = []
-    console.log "menu super"
+    # console.log "menu super"
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     super()
@@ -84,7 +84,7 @@ class MenuMorph extends BoxMorph
     @items.unshift [0, width or 1]
   
   createLabel: ->
-    console.log "menu create label"
+    # console.log "menu create label"
     if @label?
       @label = @label.destroy()
     text = new TextMorph(localize(@title),
@@ -105,7 +105,7 @@ class MenuMorph extends BoxMorph
     @add @label
   
   updateRendering: ->
-    console.log "menu update rendering"
+    # console.log "menu update rendering"
     isLine = false
     @destroyAll()
     #
@@ -134,7 +134,7 @@ class MenuMorph extends BoxMorph
     # strings, colorpickers,
     # sliders, menuItems (which are buttons)
     # and lines.
-    console.log "menu @items.length " + @items.length
+    # console.log "menu @items.length " + @items.length
     @items.forEach (tuple) =>
       isLine = false
       # string, color picker and slider
@@ -151,7 +151,7 @@ class MenuMorph extends BoxMorph
         item.setHeight tuple[1]
       # menuItem
       else
-        console.log "menu creating MenuItemMorph "
+        # console.log "menu creating MenuItemMorph "
         item = new MenuItemMorph(
           @target,
           tuple[1],
@@ -221,7 +221,7 @@ class MenuMorph extends BoxMorph
       @destroy()
   
   popup: (world, pos) ->
-    console.log "menu popup"
+    # console.log "menu popup"
     # keep only one active menu at a time, destroy the
     # previous one.
     if world.activeMenu

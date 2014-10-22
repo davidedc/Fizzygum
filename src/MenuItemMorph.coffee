@@ -6,11 +6,11 @@ class MenuItemMorph extends TriggerMorph
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
   constructor: (target, action, labelString, fontSize, fontStyle, centered, environment, hint, color, bold, italic, doubleClickAction) ->
-    console.log "menuitem constructing"
+    #console.log "menuitem constructing"
     super target, action, labelString, fontSize, fontStyle, centered, environment, hint, color, bold, italic, doubleClickAction 
   
   createLabel: ->
-    console.log "menuitem createLabel"
+    # console.log "menuitem createLabel"
     if @label?
       @label = @label.destroy()
 
@@ -58,7 +58,7 @@ class MenuItemMorph extends TriggerMorph
     icon
 
   createLabelString: (string) ->
-    console.log "menuitem createLabelString"
+    # console.log "menuitem createLabelString"
     lbl = new TextMorph(string, @fontSize, @fontStyle)
     lbl.setColor @labelColor
     lbl  
