@@ -133,6 +133,10 @@ class Args
   # This is called by childAdded on the new parent of the childMorph
   # that has just been added
   connectToChildVal: (valDependingOnChildrenVal, childVal) ->
+
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "connecting " + valDependingOnChildrenVal.valName + " in morph "+ valDependingOnChildrenVal.ownerMorph.uniqueIDString() + " to receive input from " + childVal.valName + " in morph "+ childVal.ownerMorph.uniqueIDString()
+
     # check whether you are reconnecting
     # an arg that was temporarily
     # disconnected
@@ -147,7 +151,7 @@ class Args
     @childrenArgByNameCount[childVal.valName]++
     if childVal.directlyOrIndirectlyDependsOnAParentVal
       @valContainingTheseArgs.stainValCalculatedFromParent(childVal)
-    argumentToBeConnected.valContainingThisArg.argMightHaveChanged(argumentToBeConnected)
+    argumentToBeConnected.args.argFromChildMightHaveChanged childVal
 
   # connects a val depending on a parent val to a parent val.
   # This is called by childAdded on the childMorph that has just
@@ -167,20 +171,28 @@ class Args
   ################################################
 
   argFromChildMightHaveChanged: (childValThatMightHaveChanged) ->
+
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "marking child value " + childValThatMightHaveChanged.valName + " in morph "+ childValThatMightHaveChanged.ownerMorph.uniqueIDString() + " as \"might have changed\" "
+
+
     arg = @argById[childValThatMightHaveChanged.id]
-    if !arg?  or  @holdOffFromPropagatingChanges then return
+    if  !arg?  or  @holdOffFromPropagatingChanges then return
+    if arg.markedForRemoval then return
     # the unique identifier of a val is given by
     # its name as a string and the id of the Morph it belongs to
     if arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent == @morphContainingTheseArgs
-      arg.checkArgBasedOnSignature()
+      arg.checkBasedOnSignature()
     else if arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent != @morphContainingTheseArgs
       # argsMaybeChangedSinceLastCalculation contains kid and kid not child anymore
       arg.break()
     else if !arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent == @morphContainingTheseArgs
       # argsMaybeChangedSinceLastCalculation not contains kid and kid is now child
+      # ???
       add the data structures and mark it as dirty and signature undefined
     else if !arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent != @morphContainingTheseArgs
       # argsMaybeChangedSinceLastCalculation not contains kid and not child
+      # ???
       this should never happen
     if !@valContainingTheseArgs.directlyOrIndirectlyDependsOnAParentVal
       @valContainingTheseArgs.checkAndPropagateChangeBasedOnArgChange()
@@ -221,7 +233,8 @@ class Args
     @holdOffFromPropagatingChanges = true
 
     oneOrMoreArgsHaveActuallyChanged = false
-    for maybeModifiedArg of @args.argsMaybeChangedSinceLastCalculation
+    for maybeModifiedArgId of @argsMaybeChangedSinceLastCalculationById
+      maybeModifiedArg = @argById[maybeModifiedArgId]
       # check that the child arg we are going to fetch
       # is still a in a child relationship with
       # this morph. If not, this check will remove the
@@ -232,6 +245,11 @@ class Args
       # reference to the Val object, which is the one
       # we pass to the "functionToRecalculate", we
       # don't need to put the fetched val anywhere.
+
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "fetching potentially changed input: " + maybeModifiedArg.id
+
+      debugger
       maybeModifiedArg.fetchVal()
       # the argument has actually changed since last
       # recalculation

@@ -33,6 +33,8 @@ class PreferencesAndSettings
   rasterizeSVGs: null
   isFlat: null
 
+  printoutsReactiveValuesCode: true
+
   constructor: ->
     @useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
     @setMouseInputMode()

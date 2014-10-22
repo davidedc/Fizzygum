@@ -25,9 +25,59 @@ class GroundVal
   args: null
 
   constructor: (@valName, @lastCalculatedValContent, @ownerMorph) ->
+
+    # only do the printout if we are building GroundVal and not
+    # any of its subclasses
+    if @constructor.name == "GroundVal" and
+        WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+
+      if !@lastCalculatedValContent?
+        contentOfLastCalculatedVal = null
+      else
+        contentOfLastCalculatedVal = @lastCalculatedValContent
+
+      console.log "building GroundVal named " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " with content: " + contentOfLastCalculatedVal
+
     @addMyselfToMorphsValsList valName
     @id = @valName + @ownerMorph.uniqueIDString()
     @localValsAffectedByChangeOfThisVal = []
+
+
+  checkAndPropagateChangeBasedOnArgChange: () ->
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "checking if " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " has any damaged inputs..."
+
+    # we can check these with a counter, DON'T do
+    # something like Object.keys(obj).length because it's
+    # unnecessary overhead.
+    # Note here that there is no propagation in case:
+    #  a) there is a change but we already notified our
+    #     change to the connected vals
+    #  b) there is no change and we never notified
+    #     any change to the connected vals
+    if @args.countOfDamaged > 0
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "... " + @valName  + " in morph "+ @ownerMorph.uniqueIDString() + " has some damaged inputs but it's already broken so nothing to do"
+      if @lastCalculatedValContentMaybeOutdated == false
+        if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+          console.log "... " + @valName  + " in morph "+ @ownerMorph.uniqueIDString() + " has some damaged inputs"
+        @lastCalculatedValContentMaybeOutdated = true
+        @notifyDependentParentOrLocalValsOfPotentialChange()
+    else # there are NO damanged args
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "... " + @valName  + " in morph "+ @ownerMorph.uniqueIDString() + " has NO damaged inputs"
+      @heal()
+
+
+  heal: ->
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "... now healing " + @id
+
+    if @lastCalculatedValContentMaybeOutdated
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "... " + @id + "'s last calculated value was marked as broken, notifying dep values of this being healed"
+      @lastCalculatedValContentMaybeOutdated = false
+      @notifyDependentParentOrLocalValsOfPotentialChange()
 
 
   addMyselfToMorphsValsList: (valName) ->
@@ -80,7 +130,8 @@ class GroundVal
     if @ownerMorph.parent?
       v = @ownerMorph.parent.morphValsDependingOnChildrenVals[@valName]
       for k of v
-        k.argFromChildMightHaveChanged @
+        #k.argFromChildMightHaveChanged @
+        k.argMightHaveChanged @
 
   # no logic for recalculation needed
   # fetchVal is an apt name because it doesn't necessarily

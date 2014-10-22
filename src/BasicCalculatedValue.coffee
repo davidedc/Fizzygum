@@ -23,6 +23,12 @@ class BasicCalculatedVal extends GroundVal
   # val might be through the name as a string
   constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph) ->
     super(@valName, null, @ownerMorph)
+
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      collectionOfChildrenValuesNames = ""
+      for eachName in childrenArgsNames
+        collectionOfChildrenValuesNames = collectionOfChildrenValuesNames + ", " + eachName
+      console.log "building BasicCalculatedVal named " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " depending on children variables: " + collectionOfChildrenValuesNames
     
     # we don't mark immediately this value as
     # depending on parent, the reason is that there might be
@@ -42,24 +48,6 @@ class BasicCalculatedVal extends GroundVal
     @args.setup_AddAllParentArgNames parentArgsNames
     @args.setup_AddAllChildrenArgNames childrenArgsNames
 
-
-  checkAndPropagateChangeBasedOnArgChange: () ->
-    # we can check these with a counter, DON'T do
-    # something like Object.keys(obj).length because it's
-    # unnecessary overhead.
-    # Note here that there is no propagation in case:
-    #  a) there is a change but we already notified our
-    #     change to the connected vals
-    #  b) there is no change and we never notified
-    #     any change to the connected vals
-    if @args.countOfDamaged > 0
-      if @lastCalculatedValContentMaybeOutdated == false
-        @lastCalculatedValContentMaybeOutdated = true
-        @notifyDependentParentOrLocalValsOfPotentialChange()
-    else # there are NO damanged args
-      if @lastCalculatedValContentMaybeOutdated
-        @lastCalculatedValContentMaybeOutdated = false
-        @notifyDependentParentOrLocalValsOfPotentialChange()
 
   # Given that this Val if a pure function depending
   # on some args, we want to know at all times
@@ -100,29 +88,29 @@ class BasicCalculatedVal extends GroundVal
   # We just need to keep track of which args might
   # need recalculation and which ones are surely the
   # same as the version we used for our last calculation.
-  argMightHaveChanged: (changedArgVal) ->
-    changedArg = @args.argById[changedArgVal.id]
-    if changedArg.markedForRemoval or @holdOffFromPropagatingChanges then return
-    changedArg.checkBasedOnSignature()
-    if !@directlyOrIndirectlyDependsOnAParentVal
-      @checkAndPropagateChangeBasedOnArgChange()
+  #argMightHaveChanged: (changedArgVal) ->
+  #
+  #  if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+  #    console.log "marking argument " + changedArgVal.valName + " connected to morph " + changedArgVal.ownerMorph.uniqueIDString() + " as \"might have changed\" "
+  #
+  #  changedArg = @args.argById[changedArgVal.id]
+  #  if changedArg.markedForRemoval or @holdOffFromPropagatingChanges then return
+  #  changedArg.checkBasedOnSignature()
+  #  if !@directlyOrIndirectlyDependsOnAParentVal
+  #    @checkAndPropagateChangeBasedOnArgChange()
 
 
 
   propagateChangeOfThisValIfNeeded: (newValContent) ->
+    debugger
     if newValContent.signature == @lastCalculatedValContent.signature
-      if @lastCalculatedValContentMaybeOutdated
-        @lastCalculatedValContentMaybeOutdated = false
+      @heal()
+    else # newValContent.signature != @lastCalculatedValContent.signature
+      if @lastCalculatedValContentMaybeOutdated == false
         notifyDependentParentOrLocalValsOfPotentialChange()
-      else # newValContent.signature != @lastCalculatedValContent.signature
-        if @lastCalculatedValContentMaybeOutdated == false
-          notifyDependentParentOrLocalValsOfPotentialChange()
-          # note that @lastCalculatedValContentMaybeOutdated
-          # remains false
-    else # all args are the same as orig vals
-      if @lastCalculatedValContentMaybeOutdated
-        @lastCalculatedValContentMaybeOutdated = false
-        notifyDependentParentOrLocalValsOfPotentialChange()
+        # note that @lastCalculatedValContentMaybeOutdated
+        # remains false because we are sure of this value
+        # as we just calculated
 
   # this method is called either by the user/system
   # because it's time to get the val, or it's
@@ -146,7 +134,7 @@ class BasicCalculatedVal extends GroundVal
     oneOrMoreArgsHaveActuallyChanged = oneOrMoreArgsHaveActuallyChanged or @args.fetchAllArgsDirectlyOrIndirectlyCalculatedFromParent()
     oneOrMoreArgsHaveActuallyChanged = oneOrMoreArgsHaveActuallyChanged or @args.fetchAllRemainingArgsNeedingRecalculation()
 
-    if oneOrMoreArgsHaveActuallyChanged
+    if oneOrMoreArgsHaveActuallyChanged      
       # functionToRecalculate must always return
       # an object with a calculated default signature
       # in the .signature property
@@ -159,9 +147,9 @@ class BasicCalculatedVal extends GroundVal
           @args.childrenArgByNameCount
 
       @signature = newValContent.signature
+      @lastCalculatedValContent = newValContent
       if !@directlyOrIndirectlyDependsOnAParentVal
         @propagateChangeOfThisValIfNeeded newValContent
-      @lastCalculatedValContent = newValContent
     return @lastCalculatedValContent
       
     

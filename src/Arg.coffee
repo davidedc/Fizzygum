@@ -55,6 +55,9 @@ class Arg
     @id = @valWrappedByThisArg.id
     @args.argById[@id] = @
 
+  fetchVal: () ->
+    @valWrappedByThisArg.fetchVal()
+
   ################################################
   #  signature checking / calculation
   ################################################
@@ -67,8 +70,14 @@ class Arg
     if @args.customSignatureMethod?
       theValSignature = @args.customSignatureMethod valWrappedByThisArg
     else
-      theValSignature = valWrappedByThisArg.signature
+      theValSignature = @valWrappedByThisArg.lastCalculatedValContent.signature
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "fetching default signature of argument: " + @id + " : " + theValSignature
     theValSignature = theValSignature + @markedForRemoval
+
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "calculated signature of argument: " + @id + " : " + theValSignature
+
     return theValSignature
 
   semanticallyChangedSinceLastValCalculation: () ->
@@ -78,6 +87,10 @@ class Arg
       return false
 
   checkBasedOnSignature: () ->
+
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      console.log "checking signature of argument: " + @id
+
     # the unique identifier of a val is given by
     # its name as a string and the id of the Morph it
     # belongs to. For localVals this is ever so slightly
@@ -89,12 +102,17 @@ class Arg
     # this is the case where a child has been added:
     # the arg wasn't there before
     if signatureOfArgUsedInLastCalculation == undefined
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "argument: " + @id + " is undefined, breaking and returning "
+      @break()
       return undefined
 
     # if the arg which has maybe changed doesn't know
     # its val then we just mark the arg as broken
     # and we do nothing else
     if @valWrappedByThisArg.lastCalculatedValContentMaybeOutdated
+      if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+        console.log "argument: " + @id + " is broken on its own anyways, breaking this arg"
       @break()
     else
       # if the val that asserts change claims that its val
@@ -108,20 +126,30 @@ class Arg
       # more tolerant of changes (which means less invalidation which
       # means less recalculations which means fewer invalidations further
       # on).
-      if @semanticallyChangedSinceLastValCalculation
+      if @semanticallyChangedSinceLastValCalculation()
         # argsMaybeChangedSinceLastCalculation is an object, we add
         # a property to it for each dirty arg, so we delete
         # such property when we verify it's actually healthy.
+        if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+          console.log "argument: " + @id + " has equal signature to one used for last calculation, healing"
         @heal()
       else
+        if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+          console.log "argument: " + @id + " has different signature to one used for last calculation, breaking"
         @break()
 
   updateSignature: () ->
+    oldSig = @signatureAtLastCalculation
     newSig = @getSignatureOrCustomSignatureOfWrappedVal()
     signatureChanged = false
-    if newSig == @signatureAtLastCalculation
-    	signatureChanged = true
+    if newSig != oldSig
+        signatureChanged = true
     @signatureAtLastCalculation = newSig
+    if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+      if signatureChanged
+      	console.log "checked signature of argument: " + @id + " and it changed was: " + oldSig + " now is: " + newSig
+      else
+      	console.log "checked signature of argument: " + @id + " and it didn't change was: " + oldSig + " now is: " + newSig
     return signatureChanged
 
   updateSignatureAndHeal: () ->
@@ -134,13 +162,13 @@ class Arg
   #  breaking / healing
   ################################################
 
-  heal: (changedArgVal) ->
+  heal: () ->
     @maybeChangedSinceLastCalculation = false
     delete @args.argsMaybeChangedSinceLastCalculationById[@id]
     @args.countOfDamaged--
 
-  break: (changedArgVal) ->
-    @maybeChangedSinceLastCalculation = false
+  break: () ->
+    @maybeChangedSinceLastCalculation = true
     @args.argsMaybeChangedSinceLastCalculationById[@id] = true
     @args.countOfDamaged++
 
@@ -202,7 +230,7 @@ class Arg
   turnIntoArgDirectlyOrIndirectlyDependingOnParent: () ->
     @args.calculatedDirectlyOfIndirectlyFromParentById[@valWrappedByThisArg.id] = true
     if !@args.calculatedDirectlyOfIndirectlyFromParentById[@valWrappedByThisArg.id]?
-    	@args.calculatedDirectlyOfIndirectlyFromParentByIdCount++
+        @args.calculatedDirectlyOfIndirectlyFromParentByIdCount++
     @valContainingThisArg.directlyOrIndirectlyDependsOnAParentVal = true
     @directlyOrIndirectlyCalculatedFromParent = true
 
@@ -225,7 +253,7 @@ class Arg
     # this changes @directlyOrIndirectlyDependsOnAParentVal if there are no
     # more args depending on parent vals
     if @args.calculatedDirectlyOfIndirectlyFromParentById[@valWrappedByThisArg.id]?
-    	@args.calculatedDirectlyOfIndirectlyFromParentByIdCount--
+        @args.calculatedDirectlyOfIndirectlyFromParentByIdCount--
     delete @args.calculatedDirectlyOfIndirectlyFromParentById[@valWrappedByThisArg.id]
     @directlyOrIndirectlyCalculatedFromParent = false
 
