@@ -39,6 +39,6 @@ class RectangleMorph extends Morph
             }
 
     #constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph)
-    debugger
+    #debugger
     @countOfRectangleKids = new BasicCalculatedVal("countOfRectangleKids", functionToRecalculate, [], [], ["countVal"], @)
 

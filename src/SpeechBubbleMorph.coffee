@@ -27,7 +27,7 @@ class SpeechBubbleMorph extends BoxMorph
       # console.log "bubble super"
       @color = color or new Color(230, 230, 230)
       super edge or 6, border or ((if (border is 0) then 0 else 1)), borderColor or new Color(140, 140, 140)
-      console.log @color
+      # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
     # console.log "bubble createBubbleHelpIfHandStillOnMorph"

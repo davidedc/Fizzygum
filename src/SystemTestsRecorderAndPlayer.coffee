@@ -446,7 +446,7 @@ class SystemTestsRecorderAndPlayer
     if whichMorph == @worldMorph
       imageData = world.worldCanvas.toDataURL("image/png")
     else
-      debugger
+      #debugger
       fullExtentOfMorph = whichMorph.boundsIncludingChildren()
       destCanvas = newCanvas fullExtentOfMorph.extent()
       destCtx = destCanvas.getContext '2d'
@@ -459,7 +459,7 @@ class SystemTestsRecorderAndPlayer
         0,
         fullExtentOfMorph.width(),
         fullExtentOfMorph.height(),
-      debugger
+      #debugger
 
       imageData = destCanvas.toDataURL "image/png"
 

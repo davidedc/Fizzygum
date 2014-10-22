@@ -103,7 +103,7 @@ class Args
   # to connect the actual values in the morph's
   # childAdded and childRemoved methods
   setup_AddAllChildrenArgNames: (childrenArgsNames) ->
-    debugger
+    #debugger
     for eachVar in childrenArgsNames
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar] ?= {}
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar][@valContainingTheseArgs.valName] = @valContainingTheseArgs
@@ -135,8 +135,8 @@ class Args
     # check whether you are reconnecting
     # an arg that was temporarily
     # disconnected
-    if @morphContainingTheseArgs.constructor.name == "RectangleMorph"
-      debugger
+    #if @morphContainingTheseArgs.constructor.name == "RectangleMorph"
+    #  debugger
     argumentToBeConnected = @tryToReconnectDisconnectedArgFirst childVal
     argumentToBeConnected ?= new Arg childVal, valDependingOnChildrenVal
     argumentToBeConnected.fromChild = true
