@@ -47,11 +47,13 @@ class Arg
   # "OK our last calculation actually holds"
   # information WITHOUT triggering a recalculation.
   @signatureAtLastCalculation: ""
+  @id: ""
 
   constructor: (@valWrappedByThisArg, @valContainingThisArg) ->
     @morphContainingThisArg = @valContainingThisArg.ownerMorph
     @args = @valContainingThisArg.args
-
+    @id = @valWrappedByThisArg.id
+    @args.argById[@id] = @
 
   ################################################
   #  signature checking / calculation
@@ -175,6 +177,7 @@ class Arg
       @args.countOfDamaged--
 
 
+
   ################################################
   #  disconnection
   ################################################
@@ -206,7 +209,7 @@ class Arg
     for cv in @valContainingThisArg.localValsAffectedByChangeOfThisVal
       cv.stainValCalculatedFromParent @valContainingThisArg
     if @ownerMorph.parent?
-      v = @morphContainingThisArg.parent.valsDependingOnChildrenVal[@valName]
+      v = @morphContainingThisArg.parent.morphValsDependingOnChildrenVals[@valName]
       for k in v
         k.stainValCalculatedFromParent @valContainingThisArg
 
@@ -235,6 +238,6 @@ class Arg
       for cv in @valContainingThisArg.localValsAffectedByChangeOfThisVal
         cv.unstainValCalculatedFromParent @valContainingThisArg
       if @valContainingThisArg.ownerMorph.parent?
-        v = @morphContainingThisArg.parent.valsDependingOnChildrenVal[@valContainingThisArg.valName]
+        v = @morphContainingThisArg.parent.morphValsDependingOnChildrenVals[@valContainingThisArg.valName]
         for k in v
           k.unstainValCalculatedFromParent @valContainingThisArg

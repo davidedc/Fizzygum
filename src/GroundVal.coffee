@@ -7,24 +7,28 @@
 # change of any other Val.
 class GroundVal
   
-  directlyOrIndirectlyDependsOnAParentVal = false
+  directlyOrIndirectlyDependsOnAParentVal: false
 
   # we use "lastCalculatedValContent" here just as a matter of
   # uniformity. The cached val of a GroundVal
   # is always up to date, it's always good for use.
-  lastCalculatedValContent = null
+  lastCalculatedValContent: null
 
   # always false for GroundVals, because there is never
   # a recalculation to be done here, the val is always
   # exactly known
-  lastCalculatedValContentMaybeOutdated = false
+  lastCalculatedValContentMaybeOutdated: false
   # these vals are affected by change of this
   # val
-  localValsAffectedByChangeOfThisVal = []
+  localValsAffectedByChangeOfThisVal: null
+
+  args: null
 
   constructor: (@valName, @lastCalculatedValContent, @ownerMorph) ->
     @addMyselfToMorphsValsList valName
-    @id = @valName + @ownerMorph.id
+    @id = @valName + @ownerMorph.uniqueIDString()
+    @localValsAffectedByChangeOfThisVal = []
+
 
   addMyselfToMorphsValsList: (valName) ->
     @ownerMorph.allValsInMorphByName[valName] = @
@@ -74,8 +78,8 @@ class GroundVal
     for cv in @localValsAffectedByChangeOfThisVal
       cv.argMightHaveChanged @
     if @ownerMorph.parent?
-      v = @ownerMorph.parent.valsDependingOnChildrenVal[@valName]
-      for k in v
+      v = @ownerMorph.parent.morphValsDependingOnChildrenVals[@valName]
+      for k of v
         k.argFromChildMightHaveChanged @
 
   # no logic for recalculation needed

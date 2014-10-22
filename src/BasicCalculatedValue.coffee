@@ -22,8 +22,7 @@ class BasicCalculatedVal extends GroundVal
   # children Morphs dynamically so they way to find this
   # val might be through the name as a string
   constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph) ->
-    @id = @valName + @ownerMorph.id
-    @addMyselfToMorphsValsList valName
+    super(@valName, null, @ownerMorph)
     
     # we don't mark immediately this value as
     # depending on parent, the reason is that there might be
@@ -38,10 +37,10 @@ class BasicCalculatedVal extends GroundVal
     # get the changes from the parent values itself...
     #@directlyOrIndirectlyDependsOnAParentVal = true
 
-    @arguments = new Args(@)
-    @arguments.setup_AddAllLocalArgVals @localInputVals
-    @arguments.setup_AddAllParentArgNames parentArgsNames
-    @arguments.setup_AddAllChildrenArgNames childrenArgsNames
+    @args = new Args(@)
+    @args.setup_AddAllLocalArgVals @localInputVals
+    @args.setup_AddAllParentArgNames parentArgsNames
+    @args.setup_AddAllChildrenArgNames childrenArgsNames
 
 
   checkAndPropagateChangeBasedOnArgChange: () ->
@@ -102,9 +101,9 @@ class BasicCalculatedVal extends GroundVal
   # need recalculation and which ones are surely the
   # same as the version we used for our last calculation.
   argMightHaveChanged: (changedArgVal) ->
-    changedArg = @args.argById changedArgVal.id
+    changedArg = @args.argById[changedArgVal.id]
     if changedArg.markedForRemoval or @holdOffFromPropagatingChanges then return
-    changedArgVal.checkBasedOnSignature()
+    changedArg.checkBasedOnSignature()
     if !@directlyOrIndirectlyDependsOnAParentVal
       @checkAndPropagateChangeBasedOnArgChange()
 

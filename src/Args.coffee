@@ -15,16 +15,16 @@ class Args
   # not the case for children Args as
   # onviously you may have many children and hence
   # many arguments)
-  argById: {}
-  parentArgByName: {}
-  childrenArgByName: {}
+  argById: null
+  parentArgByName: null
+  childrenArgByName: null
   # we want to group together all children
   # values under the same name
   # so we keep this count separate
   # rather than counting navigating the keys
-  childrenArgByNameCount: {}
-  localArgByName: {}
-  calculatedDirectlyOfIndirectlyFromParentById: {}
+  childrenArgByNameCount: null
+  localArgByName: null
+  calculatedDirectlyOfIndirectlyFromParentById: null
   calculatedDirectlyOfIndirectlyFromParentByIdCount: 0
 
   countOfDamaged: 0
@@ -37,9 +37,14 @@ class Args
   argsMaybeChangedSinceLastCalculationById: {}
 
   constructor: (@valContainingTheseArgs) ->
+    @argById = {}
+    @parentArgByName = {}
+    @childrenArgByName = {}
+    @childrenArgByNameCount = {}
+    @localArgByName = {}
+    @calculatedDirectlyOfIndirectlyFromParentById = {}
+
     @morphContainingTheseArgs = @valContainingTheseArgs.ownerMorph
-    @id = @valContainingTheseArgs.id
-    @argById[@id] = @
 
 
   ################################################
@@ -72,7 +77,7 @@ class Args
       # easier because those links are static, they are done
       # at construction time once and for all
       each.localValsAffectedByChangeOfThisVal.push @valContainingTheseArgs
-      newArg = new Arg localInputVals @valContainingTheseArgs
+      newArg = new Arg localInputVals, @valContainingTheseArgs
       newArg.fromLocal = true
       @localArgByName[localInputVals.valueName] = newArg
 
@@ -98,6 +103,7 @@ class Args
   # to connect the actual values in the morph's
   # childAdded and childRemoved methods
   setup_AddAllChildrenArgNames: (childrenArgsNames) ->
+    debugger
     for eachVar in childrenArgsNames
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar] ?= {}
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar][@valContainingTheseArgs.valName] = @valContainingTheseArgs
@@ -117,7 +123,7 @@ class Args
     existingArg = @argById[parentOrChildVal.id]
     if existingArg?
       existingArg.markedForRemoval = false
-      existingArg.morphContainingThisArg.argMightHaveChanged(parentOrChildVal)
+      existingArg.valContainingThisArg.argMightHaveChanged(parentOrChildVal)
       return existingArg
     return null
 
@@ -125,29 +131,32 @@ class Args
   # connects a val depending on a children val to a child val.
   # This is called by childAdded on the new parent of the childMorph
   # that has just been added
-  connectToChildVal: (childVal) ->
+  connectToChildVal: (valDependingOnChildrenVal, childVal) ->
     # check whether you are reconnecting
     # an arg that was temporarily
     # disconnected
-    argumentToBeConnected = tryToReconnectDisconnectedArgFirst childVal
-    argumentToBeConnected ?= new Arg childVal @
+    if @morphContainingTheseArgs.constructor.name == "RectangleMorph"
+      debugger
+    argumentToBeConnected = @tryToReconnectDisconnectedArgFirst childVal
+    argumentToBeConnected ?= new Arg childVal, valDependingOnChildrenVal
     argumentToBeConnected.fromChild = true
-    argumentToBeConnected.setAsMaybeChangedSinceLastCalculation()
+    @childrenArgByName[childVal.valName] ?= {}
     @childrenArgByName[childVal.valName][childVal.id] = argumentToBeConnected
     @childrenArgByNameCount[childVal.valName]?= 0
     @childrenArgByNameCount[childVal.valName]++
     if childVal.directlyOrIndirectlyDependsOnAParentVal
       @valContainingTheseArgs.stainValCalculatedFromParent(childVal)
+    argumentToBeConnected.valContainingThisArg.argMightHaveChanged(argumentToBeConnected)
 
   # connects a val depending on a parent val to a parent val.
   # This is called by childAdded on the childMorph that has just
   # been added
-  connectToParentVal: (parentVal) ->
+  connectToParentVal: (valDependingOnParentVal, parentVal) ->
     # check whether you are reconnecting
     # an arg that was temporarily
     # disconnected
-    argumentToBeConnected = tryToReconnectDisconnectedArgFirst childVal
-    argumentToBeConnected ?= new Arg childVal @
+    argumentToBeConnected = @tryToReconnectDisconnectedArgFirst childVal
+    argumentToBeConnected ?= new Arg childVal, valDependingOnParentVal
     argumentToBeConnected.directlyCalculatedFromParent = true
     argumentToBeConnected.turnIntoArgDirectlyOrIndirectlyDependingOnParent()
 

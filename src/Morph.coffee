@@ -84,6 +84,10 @@ class Morph extends MorphicNode
   image: null
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
+  # contains all the reactive vals
+  allValsInMorphByName: null
+  morphValsDependingOnChildrenVals: null
+  morphValsDirectlyDependingOnParentVals: null
 
   ##########################################################
   # These two methods are for mixins
@@ -108,26 +112,22 @@ class Morph extends MorphicNode
   # Reactive Values start
   ##########################################################
 
-  # contains all the reactive vals
-  allValsInMorphByName: {}
-  morphValsDependingOnChildrenVals: {}
-  morphValsDirectlyDependingOnParentVals: {}
-
 
   connectValuesToAddedChild: (theChild) ->
-    console.log "connectValuesToAddedChild"
+    if theChild.constructor.name == "RectangleMorph"
+      debugger
     # we have a data structure that contains,
     # for each child valName, all vals of this
     # morph that depend on it. Go through
     # all child val names, find the
     # actual val in the child, and connect all
     # to the vals in this morph that depend on it.
-    for nameOfChildrenVar, morphValsDependingOnChildrenVals in \
+    for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
         @morphValsDependingOnChildrenVals
       childVal = theChild.allValsInMorphByName[ nameOfChildrenVar ]
       if childVal?
-        for valDependingOnChildrenVal in morphValsDependingOnChildrenVals
-          valDependingOnChildrenVal.args.connectToChildVal childVal
+        for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
+          valDependingOnChildrenVal.args.connectToChildVal valDependingOnChildrenVal, childVal
 
     # we have a data structure that contains,
     # for each parent (me) valName, all vals of the child
@@ -135,12 +135,12 @@ class Morph extends MorphicNode
     # all parent (me) val names, find the
     # actual val in the parent (me), and connect it
     # to the vals in the child morph that depend on it.
-    for nameOfParentVar, morphValsDirectlyDependingOnParentVals in \
+    for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
         theChild.morphValsDirectlyDependingOnParentVals
       parentVal = @allValsInMorphByName[ nameOfParentVar ]
       if parentVal?
-        for valDependingOnParentVal in morphValsDirectlyDependingOnParentVals
-          valDependingOnParentVal.args.connectToParentVal parentVal
+        for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
+          valDependingOnParentVal.args.connectToParentVal valDependingOnParentVal, parentVal
 
   disconnectValuesFromRemovedChild: (theChild) ->
     # we have a data structure that contains,
@@ -149,9 +149,9 @@ class Morph extends MorphicNode
     # all child val names, find the
     # actual val in the child, and DISconnect it
     # FROM the vals in this morph that depended on it.
-    for nameOfChildrenVar, morphValsDependingOnChildrenVals in \
+    for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
         @morphValsDependingOnChildrenVals
-      for valDependingOnChildrenVal in morphValsDependingOnChildrenVals
+      for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
         childArg = valDependingOnChildrenVal.args.argById[theChild.id]
         if childArg?
           childArg.disconnectChildArg()
@@ -162,9 +162,9 @@ class Morph extends MorphicNode
     # all parent (me) val names, find the
     # actual val in the parent (me), and connect it
     # to the vals in the child morph that depend on it.
-    for nameOfParentVar, morphValsDirectlyDependingOnParentVals in \
+    for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
         theChild.morphValsDirectlyDependingOnParentVals
-      for valDependingOnParentVal in morphValsDirectlyDependingOnParentVals
+      for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
         parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
         if parentArg?
           parentArg.disconnectParentArg()
@@ -221,6 +221,11 @@ class Morph extends MorphicNode
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
     # morph to draw itself.
+
+    @allValsInMorphByName = {}
+    @morphValsDependingOnChildrenVals = {}
+    @morphValsDirectlyDependingOnParentVals = {}
+
 
   
   #
