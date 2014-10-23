@@ -896,7 +896,11 @@ class Morph extends MorphicNode
     return root.world  if root instanceof HandMorph
     null
   
-  # attaches submorph ontop
+  # attaches submorph on top
+  # ??? TODO you should handle the case of Morph
+  #     being added to itself and the case of
+  # ??? TODO a Morph being added to one of its
+  #     children
   add: (aMorph) ->
     # the morph that is being
     # attached might be attached to
