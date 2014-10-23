@@ -4,6 +4,9 @@
 # any of them has changed since the last calculation of the
 # Val, or which ones directly or indirectly depend on a Parent
 # Val.
+
+# REQUIRES ProfilerData
+
 class Args
   # some accessors gere to get to the
   # actual arguments. You can get to all

@@ -1,6 +1,8 @@
 # just a draft, it's not meant to compile or work
 # just yet, we are just assembling things
 
+# REQUIRES ProfilerData
+
 class BasicCalculatedVal extends GroundVal
   # sometimes we know that the cached val
   # might be out of date but we don't want to
@@ -23,6 +25,8 @@ class BasicCalculatedVal extends GroundVal
   # val might be through the name as a string
   constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph) ->
     super(@valName, null, @ownerMorph)
+
+    ProfilerData.reactiveValues_createdBasicCalculatedValues++
 
     if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
       collectionOfChildrenValuesNames = ""

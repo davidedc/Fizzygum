@@ -5,6 +5,9 @@
 # calculated from anything: it's actually
 # changeable as is. It doesn't react to the
 # change of any other Val.
+
+# REQUIRES ProfilerData
+
 class GroundVal
   
   directlyOrIndirectlyDependsOnAParentVal: false
@@ -26,10 +29,12 @@ class GroundVal
 
   constructor: (@valName, @lastCalculatedValContent, @ownerMorph) ->
 
-    # only do the printout if we are building GroundVal and not
+    # stuff to do only if we are building GroundVal and not
     # any of its subclasses
     if @constructor.name == "GroundVal" and
         WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
+
+      ProfilerData.reactiveValues_createdGroundVals++
 
       if !@lastCalculatedValContent?
         contentOfLastCalculatedVal = null

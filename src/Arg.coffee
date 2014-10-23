@@ -9,6 +9,9 @@
 # can't put it in the input arg val, we need to
 # put this Arg which lives in the context of this
 # Val).
+
+# REQUIRES ProfilerData
+
 class Arg
   valWrappedByThisArg: null
   maybeChangedSinceLastCalculation: true
