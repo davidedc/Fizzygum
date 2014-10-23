@@ -41,7 +41,7 @@ class LayoutMorph extends Morph
     return newLayoutMorph
 
   @newRow: ->
-    debugger
+    #debugger
     newLayoutMorph =  new @()
     newLayoutMorph.beRow()
     return newLayoutMorph
@@ -88,7 +88,7 @@ class LayoutMorph extends Morph
   # Compute a new layout based on the given layout bounds
   layoutSubmorphs: ->
     console.log "layoutSubmorphs in LayoutMorph"
-    debugger
+    #debugger
     if @children.length == 0
       @layoutNeeded = false
       return @
@@ -119,7 +119,7 @@ class LayoutMorph extends Morph
     sumOfWidths = 0
     @children.forEach (child) =>
       if child.layoutSpec?
-        debugger
+        #debugger
         theWidth = child.layoutSpec.widthFor availableForPropWidth
         sumOfWidths += theWidth
         widths.push theWidth
@@ -146,7 +146,7 @@ class LayoutMorph extends Morph
       # self flag: #jmvVer2.
       # should extent be set in m's coordinate system? what if its scale is not 1?
       m.setPosition(new Point(l,t))
-      debugger
+      #debugger
       m.setExtent(new Point(Math.min(w,boundsForLayout.width()),h))
       if w>0
         l = Math.min(l + w + xSep, boundsRight)
