@@ -89,6 +89,13 @@ class Arg
     else
       return false
 
+  # an Argument of this value has notified its change
+  # but we want to check, based on either its default
+  # signature or a custom signature, wether its
+  # value changed from when we calculated this value
+  # the last time. Following this check, we might
+  # "heal"/break the value and potentially
+  # propagate the change
   checkBasedOnSignature: () ->
 
     if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
@@ -128,7 +135,10 @@ class Arg
       # notion of equivalency of the args that lets us be
       # more tolerant of changes (which means less invalidation which
       # means less recalculations which means fewer invalidations further
-      # on).
+      # on). An example of such "wider" equivalency is for the HSV color
+      # values if we need to convert them to RGB. Every HSV value
+      # with V set to zero is equivalent in this respect because it
+      # always means black.
       if @semanticallyChangedSinceLastValCalculation()
         # argsMaybeChangedSinceLastCalculation is an object, we add
         # a property to it for each dirty arg, so we delete
@@ -140,6 +150,7 @@ class Arg
         if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
           console.log "argument: " + @id + " has different signature to one used for last calculation, breaking"
         @break()
+
 
   updateSignature: () ->
     oldSig = @signatureAtLastCalculation
@@ -169,11 +180,21 @@ class Arg
     @maybeChangedSinceLastCalculation = false
     delete @args.argsMaybeChangedSinceLastCalculationById[@id]
     @args.countOfDamaged--
+    # check implications of argument being healed: it
+    # might be that this means that the value heals as
+    # well and propagates healing
+    if !@valContainingThisArg.directlyOrIndirectlyDependsOnAParentVal
+      @valContainingThisArg.checkAndPropagateChangeBasedOnArgChange()
 
   break: () ->
     @maybeChangedSinceLastCalculation = true
     @args.argsMaybeChangedSinceLastCalculationById[@id] = true
     @args.countOfDamaged++
+    # check implications of argument being broken: it
+    # might be that this means that the value breaks as
+    # well and propagates damage
+    if !@valContainingThisArg.directlyOrIndirectlyDependsOnAParentVal
+      @valContainingThisArg.checkAndPropagateChangeBasedOnArgChange()
 
 
   ################################################

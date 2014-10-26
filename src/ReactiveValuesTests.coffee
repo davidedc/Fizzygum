@@ -29,6 +29,9 @@ class ReactiveValuesTests
     secondReactValRect.setPosition new Point(40, 40)
     world.add secondReactValRect
 
+    if firstReactValRect.countOfDirectRectangleChildren.lastCalculatedValContentMaybeOutdated != true
+      console.log "ERROR firstReactValRect.countOfDirectRectangleChildren should be dirty and it isn't"
+
     # now attach the second rectangle to the first
     firstReactValRect.add secondReactValRect
 
