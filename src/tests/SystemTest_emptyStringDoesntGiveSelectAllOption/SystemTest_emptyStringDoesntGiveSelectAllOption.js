@@ -2230,7 +2230,7 @@ SystemTest_emptyStringDoesntGiveSelectAllOption = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#159",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#165",
             "millisecondsSincePreviousCommand": 1,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },
@@ -2787,7 +2787,7 @@ SystemTest_emptyStringDoesntGiveSelectAllOption = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#159",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#165",
             "millisecondsSincePreviousCommand": 1,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },

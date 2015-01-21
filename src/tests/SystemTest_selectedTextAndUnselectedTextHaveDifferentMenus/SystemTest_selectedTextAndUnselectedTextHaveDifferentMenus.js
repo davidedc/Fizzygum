@@ -2128,7 +2128,7 @@ SystemTest_selectedTextAndUnselectedTextHaveDifferentMenus = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#8092",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#8098",
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },
@@ -2418,7 +2418,7 @@ SystemTest_selectedTextAndUnselectedTextHaveDifferentMenus = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#8092",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#8098",
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },

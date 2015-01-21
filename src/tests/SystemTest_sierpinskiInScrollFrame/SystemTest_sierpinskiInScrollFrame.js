@@ -4130,7 +4130,7 @@ SystemTest_sierpinskiInScrollFrame = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#14068",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#14074",
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },
@@ -4282,7 +4282,7 @@ SystemTest_sierpinskiInScrollFrame = {
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#14068",
+            "morphToOpenContextMenuAgainst_UniqueIDString": "TextMorph#14074",
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandOpenContextMenu"
         },
