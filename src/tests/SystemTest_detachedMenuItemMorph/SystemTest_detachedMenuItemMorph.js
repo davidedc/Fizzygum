@@ -7,18 +7,18 @@
 var SystemTest_detachedMenuItemMorph;
 
 SystemTest_detachedMenuItemMorph = {
-    "timeRecorded": "2014-09-02T09:54:54.581Z",
+    "timeRecorded": "2015-01-21T16:45:19.461Z",
     "description": "no description",
     "testGroup": "00: current tests / 00: unused / 00: unused",
     "systemInfo": {
-        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.94 Safari/537.36",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36",
         "screenWidth": 1280,
         "screenHeight": 800,
         "screenColorDepth": 24,
         "screenPixelRatio": 2,
         "appCodeName": "Mozilla",
         "appName": "Netscape",
-        "appVersion": "5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.94 Safari/537.36",
+        "appVersion": "5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36",
         "cookieEnabled": true,
         "platform": "MacIntel",
         "SystemTestsHarnessVersionMajor": 0,
@@ -27,472 +27,674 @@ SystemTest_detachedMenuItemMorph = {
     },
     "testCommandsSequence": [
         {
-            "mouseX": 687,
-            "mouseY": 223,
-            "millisecondsSincePreviousCommand": 80,
+            "mouseX": 778,
+            "mouseY": 184,
+            "millisecondsSincePreviousCommand": 34,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 687,
-            "mouseY": 221,
-            "millisecondsSincePreviousCommand": 87,
+            "mouseX": 779,
+            "mouseY": 180,
+            "millisecondsSincePreviousCommand": 165,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 693,
-            "mouseY": 209,
-            "millisecondsSincePreviousCommand": 14,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 711,
-            "mouseY": 183,
+            "mouseX": 790,
+            "mouseY": 162,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 732,
-            "mouseY": 151,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "millisecondsSincePreviousCommand": 741,
+            "testCommandName": "SystemTestsCommandTurnOffAnimationsPacingControl"
         },
         {
-            "mouseX": 756,
-            "mouseY": 117,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "millisecondsSincePreviousCommand": 0,
+            "testCommandName": "SystemTestsCommandTurnOffAlignmentOfMorphIDsMechanism"
         },
         {
-            "mouseX": 769,
-            "mouseY": 94,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "millisecondsSincePreviousCommand": 0,
+            "testCommandName": "SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels"
         },
         {
-            "mouseX": 781,
-            "mouseY": 77,
-            "millisecondsSincePreviousCommand": 20,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "millisecondsSincePreviousCommand": 0,
+            "testCommandName": "SystemTestsCommandTurnOffHidingOfMorphsContentExtractInLabels"
         },
         {
-            "mouseX": 792,
-            "mouseY": 62,
-            "millisecondsSincePreviousCommand": 14,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "millisecondsSincePreviousCommand": 0,
+            "testCommandName": "SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels"
         },
         {
-            "mouseX": 799,
-            "mouseY": 53,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 802,
-            "mouseY": 49,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 804,
-            "mouseY": 46,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 805,
-            "mouseY": 44,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 806,
-            "mouseY": 43,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 807,
-            "mouseY": 42,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 807,
-            "mouseY": 41,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "millisecondsSincePreviousCommand": 560,
+            "millisecondsSincePreviousCommand": 738,
             "testCommandName": "SystemTestsCommandResetWorld"
         },
         {
-            "mouseX": 805,
-            "mouseY": 35,
-            "millisecondsSincePreviousCommand": 270,
+            "millisecondsSincePreviousCommand": 2537,
+            "testCommandName": "SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism"
+        },
+        {
+            "millisecondsSincePreviousCommand": 2793,
+            "testCommandName": "SystemTestsCommandTurnOnHidingOfMorphsGeometryInfoInLabels"
+        },
+        {
+            "mouseX": 807,
+            "mouseY": 139,
+            "millisecondsSincePreviousCommand": 1574,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 791,
-            "mouseY": 39,
+            "mouseX": 784,
+            "mouseY": 139,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 762,
+            "mouseY": 139,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 764,
-            "mouseY": 52,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 735,
-            "mouseY": 64,
-            "millisecondsSincePreviousCommand": 17,
+            "mouseX": 737,
+            "mouseY": 139,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "mouseX": 711,
-            "mouseY": 77,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 672,
-            "mouseY": 96,
+            "mouseY": 139,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 639,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 607,
-            "mouseY": 129,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 567,
-            "mouseY": 146,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 519,
-            "mouseY": 164,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 464,
-            "mouseY": 178,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 404,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 362,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 330,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 302,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 301,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 200,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 285,
-            "mouseY": 181,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 268,
-            "mouseY": 174,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 252,
-            "mouseY": 165,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 225,
-            "mouseY": 152,
+            "mouseX": 694,
+            "mouseY": 139,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 190,
-            "mouseY": 133,
+            "mouseX": 683,
+            "mouseY": 139,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 168,
-            "mouseY": 121,
+            "mouseX": 674,
+            "mouseY": 139,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 146,
+            "mouseX": 659,
+            "mouseY": 139,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 652,
+            "mouseY": 139,
+            "millisecondsSincePreviousCommand": 243,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 634,
+            "mouseY": 140,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 609,
+            "mouseY": 140,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 540,
+            "mouseY": 140,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 444,
+            "mouseY": 134,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 322,
+            "mouseY": 119,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 235,
             "mouseY": 108,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 128,
+            "mouseX": 165,
             "mouseY": 98,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 112,
+            "mouseX": 129,
+            "mouseY": 92,
+            "millisecondsSincePreviousCommand": 32,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 109,
             "mouseY": 89,
+            "millisecondsSincePreviousCommand": 2,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 96,
+            "mouseY": 85,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 101,
-            "mouseY": 82,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 89,
-            "mouseY": 76,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 82,
-            "mouseY": 73,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 77,
-            "mouseY": 70,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 75,
-            "mouseY": 68,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 74,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 65,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 64,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 63,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 63,
-            "millisecondsSincePreviousCommand": 21,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 62,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "button": 2,
-            "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 550,
-            "testCommandName": "SystemTestsCommandDoNothing"
-        },
-        {
-            "millisecondsSincePreviousCommand": 7,
-            "testCommandName": "SystemTestsCommandDoNothing"
-        },
-        {
-            "morphToOpenContextMenuAgainst_UniqueIDString": "WorldMorph#1",
-            "millisecondsSincePreviousCommand": 0,
-            "testCommandName": "SystemTestsCommandOpenContextMenu"
-        },
-        {
-            "mouseX": 73,
-            "mouseY": 64,
-            "millisecondsSincePreviousCommand": 412,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 76,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 79,
-            "mouseY": 70,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 81,
-            "mouseY": 72,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 82,
-            "mouseY": 74,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 84,
-            "mouseY": 75,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 85,
-            "mouseY": 76,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 86,
-            "mouseY": 78,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 86,
-            "mouseY": 79,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 87,
-            "mouseY": 79,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 87,
-            "mouseY": 80,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 88,
-            "mouseY": 81,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 89,
-            "mouseY": 83,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 90,
+            "mouseX": 92,
             "mouseY": 84,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 91,
-            "mouseY": 85,
-            "millisecondsSincePreviousCommand": 18,
+            "mouseX": 93,
+            "mouseY": 82,
+            "millisecondsSincePreviousCommand": 275,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 92,
-            "mouseY": 86,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 92,
-            "mouseY": 87,
+            "mouseX": 104,
+            "mouseY": 73,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 93,
-            "mouseY": 88,
-            "millisecondsSincePreviousCommand": 25,
+            "mouseX": 115,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 93,
-            "mouseY": 89,
-            "millisecondsSincePreviousCommand": 22,
+            "mouseX": 121,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 94,
-            "mouseY": 89,
-            "millisecondsSincePreviousCommand": 63,
+            "mouseX": 128,
+            "mouseY": 59,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 94,
-            "mouseY": 90,
-            "millisecondsSincePreviousCommand": 9,
+            "mouseX": 131,
+            "mouseY": 56,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 95,
-            "mouseY": 91,
+            "mouseX": 133,
+            "mouseY": 56,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 135,
+            "mouseY": 55,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 54,
+            "millisecondsSincePreviousCommand": 34,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 53,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 52,
+            "millisecondsSincePreviousCommand": 23,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 51,
             "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 135,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 81,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 133,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 131,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 129,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 127,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 126,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 124,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 122,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 121,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 120,
+            "mouseY": 51,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 119,
+            "mouseY": 52,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 119,
+            "mouseY": 53,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 116,
+            "mouseY": 55,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "button": 2,
             "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 539,
+            "millisecondsSincePreviousCommand": 961,
+            "testCommandName": "SystemTestsCommandDoNothing"
+        },
+        {
+            "millisecondsSincePreviousCommand": 15,
+            "testCommandName": "SystemTestsCommandDoNothing"
+        },
+        {
+            "morphToOpenContextMenuAgainst_UniqueIDString": "WorldMorph#1",
+            "millisecondsSincePreviousCommand": 4,
+            "testCommandName": "SystemTestsCommandOpenContextMenu"
+        },
+        {
+            "mouseX": 117,
+            "mouseY": 55,
+            "millisecondsSincePreviousCommand": 536,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 122,
+            "mouseY": 57,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 124,
+            "mouseY": 59,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 126,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 128,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 129,
+            "mouseY": 61,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 130,
+            "mouseY": 61,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 131,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 131,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 132,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 39,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 133,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 25,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 133,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 134,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 135,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 135,
+            "mouseY": 64,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 64,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 137,
+            "mouseY": 64,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 138,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 139,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 140,
+            "mouseY": 66,
+            "millisecondsSincePreviousCommand": 31,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 140,
+            "mouseY": 66,
+            "millisecondsSincePreviousCommand": 32,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 140,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 141,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 23,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 142,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 63,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 142,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 143,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 95,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 144,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 153,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 144,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 49,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 145,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 80,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 145,
+            "mouseY": 70,
+            "millisecondsSincePreviousCommand": 25,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 146,
+            "mouseY": 70,
+            "millisecondsSincePreviousCommand": 87,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 147,
+            "mouseY": 70,
+            "millisecondsSincePreviousCommand": 136,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 147,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 33,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 148,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 149,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 150,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 150,
+            "mouseY": 72,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 151,
+            "mouseY": 72,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 151,
+            "mouseY": 73,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 152,
+            "mouseY": 73,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 152,
+            "mouseY": 73,
+            "millisecondsSincePreviousCommand": 37,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 153,
+            "mouseY": 73,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 153,
+            "mouseY": 74,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 74,
+            "millisecondsSincePreviousCommand": 32,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 75,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 76,
+            "millisecondsSincePreviousCommand": 37,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 77,
+            "millisecondsSincePreviousCommand": 40,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 77,
+            "millisecondsSincePreviousCommand": 40,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 78,
+            "millisecondsSincePreviousCommand": 40,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 155,
+            "mouseY": 78,
+            "millisecondsSincePreviousCommand": 25,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 155,
+            "mouseY": 79,
+            "millisecondsSincePreviousCommand": 33,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 155,
+            "mouseY": 80,
+            "millisecondsSincePreviousCommand": 70,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 155,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 66,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 155,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 56,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "button": 2,
+            "ctrlKey": false,
+            "millisecondsSincePreviousCommand": 736,
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
@@ -503,412 +705,490 @@ SystemTest_detachedMenuItemMorph = {
             "whichMouseButtonPressed": "right",
             "textLabelOfClickedItem": "demo...",
             "textLabelOccurrenceNumber": 1,
-            "millisecondsSincePreviousCommand": 0,
+            "millisecondsSincePreviousCommand": 1,
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
         },
         {
-            "mouseX": 96,
-            "mouseY": 91,
-            "millisecondsSincePreviousCommand": 477,
+            "mouseX": 156,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 779,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 98,
+            "mouseX": 157,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 159,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 161,
+            "mouseY": 82,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 162,
+            "mouseY": 82,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 163,
+            "mouseY": 83,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 164,
+            "mouseY": 83,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 165,
+            "mouseY": 83,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 165,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 166,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 167,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 168,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 47,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 168,
+            "mouseY": 85,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 169,
+            "mouseY": 85,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 170,
+            "mouseY": 85,
+            "millisecondsSincePreviousCommand": 39,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 171,
+            "mouseY": 85,
+            "millisecondsSincePreviousCommand": 40,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 171,
+            "mouseY": 86,
+            "millisecondsSincePreviousCommand": 33,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 172,
+            "mouseY": 86,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 172,
+            "mouseY": 86,
+            "millisecondsSincePreviousCommand": 30,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 172,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 173,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 174,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 175,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 29,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 175,
+            "mouseY": 89,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 176,
+            "mouseY": 89,
+            "millisecondsSincePreviousCommand": 22,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 176,
+            "mouseY": 90,
+            "millisecondsSincePreviousCommand": 55,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 177,
+            "mouseY": 90,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 177,
+            "mouseY": 90,
+            "millisecondsSincePreviousCommand": 32,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 178,
+            "mouseY": 90,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 179,
+            "mouseY": 91,
+            "millisecondsSincePreviousCommand": 23,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 179,
+            "mouseY": 91,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 179,
             "mouseY": 92,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 102,
-            "mouseY": 95,
+            "mouseX": 181,
+            "mouseY": 92,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 106,
+            "mouseX": 182,
+            "mouseY": 93,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 182,
+            "mouseY": 93,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 182,
+            "mouseY": 94,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 94,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 95,
+            "millisecondsSincePreviousCommand": 22,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 184,
+            "mouseY": 95,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 184,
+            "mouseY": 96,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 185,
+            "mouseY": 96,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 185,
             "mouseY": 97,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 110,
+            "mouseX": 186,
+            "mouseY": 97,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 186,
             "mouseY": 98,
-            "millisecondsSincePreviousCommand": 21,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 111,
+            "mouseX": 187,
             "mouseY": 99,
-            "millisecondsSincePreviousCommand": 14,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 112,
-            "mouseY": 101,
-            "millisecondsSincePreviousCommand": 16,
+            "mouseX": 188,
+            "mouseY": 100,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 113,
+            "mouseX": 188,
             "mouseY": 101,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 114,
+            "mouseX": 188,
+            "mouseY": 101,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 190,
+            "mouseY": 101,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 190,
             "mouseY": 102,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 114,
-            "mouseY": 102,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 114,
+            "mouseX": 190,
             "mouseY": 103,
-            "millisecondsSincePreviousCommand": 17,
+            "millisecondsSincePreviousCommand": 37,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
+            "mouseX": 191,
             "mouseY": 103,
-            "millisecondsSincePreviousCommand": 31,
+            "millisecondsSincePreviousCommand": 34,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
-            "mouseY": 103,
-            "millisecondsSincePreviousCommand": 4,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
+            "mouseX": 191,
             "mouseY": 104,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 118,
-            "mouseY": 104,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
+            "mouseX": 191,
             "mouseY": 105,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 119,
-            "mouseY": 105,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 119,
-            "mouseY": 107,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 120,
-            "mouseY": 108,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 121,
-            "mouseY": 108,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 121,
-            "mouseY": 109,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 122,
-            "mouseY": 110,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 123,
-            "mouseY": 111,
-            "millisecondsSincePreviousCommand": 19,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 123,
-            "mouseY": 112,
-            "millisecondsSincePreviousCommand": 15,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 124,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 124,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 124,
-            "mouseY": 114,
-            "millisecondsSincePreviousCommand": 71,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 125,
-            "mouseY": 114,
-            "millisecondsSincePreviousCommand": 136,
+            "millisecondsSincePreviousCommand": 53,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "button": 0,
             "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 236,
+            "millisecondsSincePreviousCommand": 1230,
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "millisecondsSincePreviousCommand": 60,
+            "millisecondsSincePreviousCommand": 1210,
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
             "whichMouseButtonPressed": "left",
-            "textLabelOfClickedItem": "a MenuItemMorph#1 [69@77 | 133@14]",
+            "textLabelOfClickedItem": "a MenuItemMorph#1001",
             "textLabelOccurrenceNumber": 1,
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
         },
         {
-            "mouseX": 125,
-            "mouseY": 115,
-            "millisecondsSincePreviousCommand": 392,
+            "mouseX": 193,
+            "mouseY": 108,
+            "millisecondsSincePreviousCommand": 688,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 126,
-            "mouseY": 121,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 130,
-            "mouseY": 130,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 134,
-            "mouseY": 137,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 137,
-            "mouseY": 144,
+            "mouseX": 199,
+            "mouseY": 116,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 139,
-            "mouseY": 150,
+            "mouseX": 206,
+            "mouseY": 124,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 210,
+            "mouseY": 131,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 141,
-            "mouseY": 154,
-            "millisecondsSincePreviousCommand": 21,
+            "mouseX": 214,
+            "mouseY": 136,
+            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 142,
+            "mouseX": 218,
+            "mouseY": 141,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 219,
+            "mouseY": 143,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
+            "mouseY": 146,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
+            "mouseY": 149,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
+            "mouseY": 152,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
             "mouseY": 157,
-            "millisecondsSincePreviousCommand": 14,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 142,
-            "mouseY": 158,
-            "millisecondsSincePreviousCommand": 27,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 143,
-            "mouseY": 159,
-            "millisecondsSincePreviousCommand": 7,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 143,
-            "mouseY": 161,
-            "millisecondsSincePreviousCommand": 25,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 144,
-            "mouseY": 163,
-            "millisecondsSincePreviousCommand": 9,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 145,
-            "mouseY": 166,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 145,
-            "mouseY": 168,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 145,
-            "mouseY": 169,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 145,
-            "mouseY": 170,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 146,
-            "mouseY": 172,
+            "mouseX": 221,
+            "mouseY": 162,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 221,
+            "mouseY": 167,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 146,
-            "mouseY": 172,
-            "millisecondsSincePreviousCommand": 24,
+            "mouseX": 221,
+            "mouseY": 171,
+            "millisecondsSincePreviousCommand": 19,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 146,
+            "mouseX": 221,
             "mouseY": 175,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 147,
-            "mouseY": 176,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 147,
-            "mouseY": 177,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 147,
-            "mouseY": 178,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 147,
-            "mouseY": 178,
-            "millisecondsSincePreviousCommand": 20,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 148,
-            "mouseY": 178,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 148,
-            "mouseY": 179,
-            "millisecondsSincePreviousCommand": 40,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 148,
-            "mouseY": 180,
-            "millisecondsSincePreviousCommand": 64,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 148,
-            "mouseY": 181,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 148,
-            "mouseY": 182,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 148,
-            "mouseY": 183,
-            "millisecondsSincePreviousCommand": 26,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 149,
-            "mouseY": 183,
+            "mouseX": 222,
+            "mouseY": 177,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 149,
+            "mouseX": 222,
+            "mouseY": 179,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
+            "mouseY": 180,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
+            "mouseY": 182,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
+            "mouseY": 183,
+            "millisecondsSincePreviousCommand": 29,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
+            "mouseY": 183,
+            "millisecondsSincePreviousCommand": 55,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
             "mouseY": 184,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 149,
-            "mouseY": 184,
-            "millisecondsSincePreviousCommand": 36,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 149,
-            "mouseY": 185,
-            "millisecondsSincePreviousCommand": 28,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 149,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 28,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 150,
-            "mouseY": 186,
-            "millisecondsSincePreviousCommand": 74,
+            "millisecondsSincePreviousCommand": 80,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "button": 0,
             "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 26,
+            "millisecondsSincePreviousCommand": 208,
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
-            "millisecondsSincePreviousCommand": 60,
+            "millisecondsSincePreviousCommand": 56,
             "testCommandName": "SystemTestsCommandDoNothing"
         },
         {
@@ -919,271 +1199,181 @@ SystemTest_detachedMenuItemMorph = {
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
         },
         {
-            "mouseX": 150,
-            "mouseY": 183,
-            "millisecondsSincePreviousCommand": 336,
+            "mouseX": 219,
+            "mouseY": 182,
+            "millisecondsSincePreviousCommand": 372,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 150,
+            "mouseX": 214,
             "mouseY": 176,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 208,
+            "mouseY": 171,
+            "millisecondsSincePreviousCommand": 25,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 194,
+            "mouseY": 156,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 187,
+            "mouseY": 149,
+            "millisecondsSincePreviousCommand": 10,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 176,
+            "mouseY": 136,
+            "millisecondsSincePreviousCommand": 26,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 169,
+            "mouseY": 129,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 149,
-            "mouseY": 168,
+            "mouseX": 161,
+            "mouseY": 116,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 157,
+            "mouseY": 113,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 151,
+            "mouseY": 106,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "mouseX": 147,
-            "mouseY": 161,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 145,
-            "mouseY": 155,
-            "millisecondsSincePreviousCommand": 17,
+            "mouseY": 103,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "mouseX": 142,
-            "mouseY": 150,
-            "millisecondsSincePreviousCommand": 18,
+            "mouseY": 98,
+            "millisecondsSincePreviousCommand": 21,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 140,
-            "mouseY": 144,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 138,
-            "mouseY": 140,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 136,
-            "mouseY": 135,
-            "millisecondsSincePreviousCommand": 24,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 133,
-            "mouseY": 128,
-            "millisecondsSincePreviousCommand": 12,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 131,
-            "mouseY": 124,
-            "millisecondsSincePreviousCommand": 15,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 129,
-            "mouseY": 119,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 128,
-            "mouseY": 117,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 115,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 114,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 111,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 125,
-            "mouseY": 109,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 123,
-            "mouseY": 106,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 122,
-            "mouseY": 103,
-            "millisecondsSincePreviousCommand": 24,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 120,
-            "mouseY": 99,
-            "millisecondsSincePreviousCommand": 9,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 119,
+            "mouseX": 141,
             "mouseY": 97,
-            "millisecondsSincePreviousCommand": 18,
+            "millisecondsSincePreviousCommand": 19,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 117,
-            "mouseY": 94,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 93,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 92,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 90,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 89,
+            "mouseX": 139,
+            "mouseY": 95,
             "millisecondsSincePreviousCommand": 23,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
-            "mouseY": 88,
+            "mouseX": 138,
+            "mouseY": 94,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
+            "mouseX": 137,
+            "mouseY": 92,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 135,
+            "mouseY": 90,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 133,
             "mouseY": 87,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
-            "mouseY": 86,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 85,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
+            "mouseX": 130,
             "mouseY": 84,
-            "millisecondsSincePreviousCommand": 17,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
-            "mouseY": 82,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 115,
+            "mouseX": 129,
             "mouseY": 81,
-            "millisecondsSincePreviousCommand": 18,
+            "millisecondsSincePreviousCommand": 20,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
-            "mouseY": 80,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 115,
+            "mouseX": 125,
             "mouseY": 79,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 115,
-            "mouseY": 78,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
+            "mouseX": 124,
+            "mouseY": 77,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 122,
             "mouseY": 76,
-            "millisecondsSincePreviousCommand": 17,
+            "millisecondsSincePreviousCommand": 22,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
-            "mouseY": 74,
-            "millisecondsSincePreviousCommand": 17,
+            "mouseX": 122,
+            "mouseY": 76,
+            "millisecondsSincePreviousCommand": 19,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 115,
-            "mouseY": 73,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 115,
-            "mouseY": 73,
+            "mouseX": 122,
+            "mouseY": 75,
             "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
+            "mouseX": 121,
+            "mouseY": 75,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 120,
+            "mouseY": 74,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 120,
+            "mouseY": 73,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 119,
             "mouseY": 72,
-            "millisecondsSincePreviousCommand": 40,
+            "millisecondsSincePreviousCommand": 18,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 116,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 33,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 117,
+            "mouseX": 118,
             "mouseY": 71,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
@@ -1191,124 +1381,192 @@ SystemTest_detachedMenuItemMorph = {
         {
             "mouseX": 117,
             "mouseY": 70,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 117,
-            "mouseY": 69,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 69,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 68,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 45,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "button": 0,
-            "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 48,
-            "testCommandName": "SystemTestsCommandMouseDown"
-        },
-        {
-            "millisecondsSincePreviousCommand": 109,
-            "testCommandName": "SystemTestsCommandMouseUp"
-        },
-        {
-            "mouseX": 117,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 212,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 112,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 108,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 19,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 104,
-            "mouseY": 67,
             "millisecondsSincePreviousCommand": 15,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 100,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 25,
+            "mouseX": 117,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 22,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 98,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 10,
+            "mouseX": 117,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 14,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 96,
+            "mouseX": 117,
             "mouseY": 67,
+            "millisecondsSincePreviousCommand": 24,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 116,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 116,
+            "mouseY": 66,
             "millisecondsSincePreviousCommand": 16,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 94,
-            "mouseY": 67,
+            "mouseX": 116,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 115,
+            "mouseY": 65,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 93,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 17,
+            "mouseX": 115,
+            "mouseY": 64,
+            "millisecondsSincePreviousCommand": 19,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 92,
-            "mouseY": 67,
+            "mouseX": 114,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 114,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 27,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 114,
+            "mouseY": 61,
             "millisecondsSincePreviousCommand": 32,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 92,
-            "mouseY": 68,
+            "mouseX": 114,
+            "mouseY": 60,
             "millisecondsSincePreviousCommand": 32,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "button": 0,
             "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 1043,
+            "millisecondsSincePreviousCommand": 897,
             "testCommandName": "SystemTestsCommandMouseDown"
         },
         {
-            "millisecondsSincePreviousCommand": 87,
+            "millisecondsSincePreviousCommand": 208,
             "testCommandName": "SystemTestsCommandMouseUp"
+        },
+        {
+            "mouseX": 120,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 570,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 136,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 158,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 20,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 188,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 14,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 218,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 245,
+            "mouseY": 70,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 270,
+            "mouseY": 74,
+            "millisecondsSincePreviousCommand": 20,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 292,
+            "mouseY": 80,
+            "millisecondsSincePreviousCommand": 14,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 318,
+            "mouseY": 88,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 340,
+            "mouseY": 97,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 361,
+            "mouseY": 108,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 373,
+            "mouseY": 114,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 386,
+            "mouseY": 121,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 392,
+            "mouseY": 125,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 397,
+            "mouseY": 129,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 399,
+            "mouseY": 131,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 400,
+            "mouseY": 133,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "scanCode": 18,
@@ -1316,7 +1574,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 1000,
+            "millisecondsSincePreviousCommand": 2074,
             "testCommandName": "SystemTestsCommandKeyDown"
         },
         {
@@ -1325,7 +1583,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 217,
+            "millisecondsSincePreviousCommand": 345,
             "testCommandName": "SystemTestsCommandKeyDown"
         },
         {
@@ -1340,7 +1598,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 92,
+            "millisecondsSincePreviousCommand": 113,
             "testCommandName": "SystemTestsCommandKeyUp"
         },
         {
@@ -1349,479 +1607,543 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": false,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 88,
+            "millisecondsSincePreviousCommand": 72,
             "testCommandName": "SystemTestsCommandKeyUp"
         },
         {
-            "mouseX": 93,
-            "mouseY": 68,
-            "millisecondsSincePreviousCommand": 363,
+            "mouseX": 398,
+            "mouseY": 133,
+            "millisecondsSincePreviousCommand": 194,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 98,
-            "mouseY": 69,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 102,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 24,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 106,
-            "mouseY": 72,
-            "millisecondsSincePreviousCommand": 11,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 109,
-            "mouseY": 74,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 112,
-            "mouseY": 76,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 113,
-            "mouseY": 78,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 114,
-            "mouseY": 79,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 115,
-            "mouseY": 80,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 81,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 116,
-            "mouseY": 82,
-            "millisecondsSincePreviousCommand": 1,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 117,
-            "mouseY": 83,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 117,
-            "mouseY": 84,
-            "millisecondsSincePreviousCommand": 23,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 84,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 85,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 118,
-            "mouseY": 86,
-            "millisecondsSincePreviousCommand": 23,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 119,
-            "mouseY": 86,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 119,
-            "mouseY": 87,
+            "mouseX": 391,
+            "mouseY": 130,
             "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 120,
-            "mouseY": 88,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 120,
-            "mouseY": 89,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 121,
-            "mouseY": 91,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 122,
-            "mouseY": 92,
-            "millisecondsSincePreviousCommand": 22,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 122,
-            "mouseY": 94,
-            "millisecondsSincePreviousCommand": 12,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 123,
-            "mouseY": 95,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 124,
-            "mouseY": 97,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 125,
-            "mouseY": 98,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 125,
-            "mouseY": 99,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 125,
-            "mouseY": 100,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 101,
-            "millisecondsSincePreviousCommand": 21,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 102,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 103,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 126,
-            "mouseY": 104,
-            "millisecondsSincePreviousCommand": 40,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 104,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 105,
-            "millisecondsSincePreviousCommand": 39,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 105,
-            "millisecondsSincePreviousCommand": 64,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 106,
-            "millisecondsSincePreviousCommand": 48,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 107,
-            "millisecondsSincePreviousCommand": 56,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 107,
-            "millisecondsSincePreviousCommand": 32,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 127,
-            "mouseY": 108,
-            "millisecondsSincePreviousCommand": 40,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "button": 0,
-            "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 83,
-            "testCommandName": "SystemTestsCommandDoNothing"
-        },
-        {
-            "millisecondsSincePreviousCommand": 69,
-            "testCommandName": "SystemTestsCommandDoNothing"
-        },
-        {
-            "whichMouseButtonPressed": "left",
-            "textLabelOfClickedItem": "box",
-            "textLabelOccurrenceNumber": 1,
-            "millisecondsSincePreviousCommand": 1,
-            "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
-        },
-        {
-            "mouseX": 130,
-            "mouseY": 106,
-            "millisecondsSincePreviousCommand": 211,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 144,
-            "mouseY": 94,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 174,
-            "mouseY": 76,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 190,
-            "mouseY": 68,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 208,
-            "mouseY": 62,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 222,
-            "mouseY": 57,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 229,
-            "mouseY": 55,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 232,
-            "mouseY": 55,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 233,
-            "mouseY": 55,
-            "millisecondsSincePreviousCommand": 27,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 55,
-            "millisecondsSincePreviousCommand": 6,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 56,
-            "millisecondsSincePreviousCommand": 130,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 58,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 63,
-            "millisecondsSincePreviousCommand": 46,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 65,
-            "millisecondsSincePreviousCommand": 5,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 67,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 68,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 69,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 69,
-            "millisecondsSincePreviousCommand": 33,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 70,
-            "millisecondsSincePreviousCommand": 48,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 234,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 114,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "button": 0,
-            "ctrlKey": false,
-            "millisecondsSincePreviousCommand": 175,
-            "testCommandName": "SystemTestsCommandMouseDown"
-        },
-        {
-            "millisecondsSincePreviousCommand": 79,
-            "testCommandName": "SystemTestsCommandMouseUp"
-        },
-        {
-            "mouseX": 235,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 232,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 242,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 258,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 289,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 319,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 345,
-            "mouseY": 71,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 361,
-            "mouseY": 73,
-            "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
             "mouseX": 376,
-            "mouseY": 77,
+            "mouseY": 125,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 387,
-            "mouseY": 81,
+            "mouseX": 360,
+            "mouseY": 119,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 340,
+            "mouseY": 112,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 325,
+            "mouseY": 105,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 400,
-            "mouseY": 89,
+            "mouseX": 309,
+            "mouseY": 99,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 410,
+            "mouseX": 298,
             "mouseY": 96,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 417,
-            "mouseY": 100,
+            "mouseX": 291,
+            "mouseY": 93,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 286,
+            "mouseY": 92,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 424,
-            "mouseY": 104,
+            "mouseX": 283,
+            "mouseY": 91,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 427,
-            "mouseY": 106,
+            "mouseX": 279,
+            "mouseY": 89,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 274,
+            "mouseY": 88,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
         },
         {
-            "mouseX": 428,
-            "mouseY": 106,
+            "mouseX": 267,
+            "mouseY": 86,
             "millisecondsSincePreviousCommand": 17,
             "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 254,
+            "mouseY": 82,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 239,
+            "mouseY": 78,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 222,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 209,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 196,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 190,
+            "mouseY": 61,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 178,
+            "mouseY": 59,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 176,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 174,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 172,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 170,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 167,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 164,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 162,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 159,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 156,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 153,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "button": 0,
+            "ctrlKey": false,
+            "millisecondsSincePreviousCommand": 382,
+            "testCommandName": "SystemTestsCommandMouseDown"
+        },
+        {
+            "millisecondsSincePreviousCommand": 72,
+            "testCommandName": "SystemTestsCommandMouseUp"
+        },
+        {
+            "mouseX": 154,
+            "mouseY": 58,
+            "millisecondsSincePreviousCommand": 594,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 157,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 162,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 167,
+            "mouseY": 66,
+            "millisecondsSincePreviousCommand": 23,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 170,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 11,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 174,
+            "mouseY": 72,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 177,
+            "mouseY": 75,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 178,
+            "mouseY": 75,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 178,
+            "mouseY": 76,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 179,
+            "mouseY": 77,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 180,
+            "mouseY": 78,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 180,
+            "mouseY": 80,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 181,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 182,
+            "mouseY": 83,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 182,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 20,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 84,
+            "millisecondsSincePreviousCommand": 15,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 85,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 86,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 20,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 183,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 39,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 184,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 88,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "button": 0,
+            "ctrlKey": false,
+            "millisecondsSincePreviousCommand": 256,
+            "testCommandName": "SystemTestsCommandDoNothing"
+        },
+        {
+            "millisecondsSincePreviousCommand": 56,
+            "testCommandName": "SystemTestsCommandDoNothing"
+        },
+        {
+            "whichMouseButtonPressed": "left",
+            "textLabelOfClickedItem": "rectangle",
+            "textLabelOccurrenceNumber": 1,
+            "millisecondsSincePreviousCommand": 0,
+            "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
+        },
+        {
+            "mouseX": 185,
+            "mouseY": 87,
+            "millisecondsSincePreviousCommand": 494,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 189,
+            "mouseY": 86,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 194,
+            "mouseY": 83,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 197,
+            "mouseY": 81,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 201,
+            "mouseY": 79,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 204,
+            "mouseY": 77,
+            "millisecondsSincePreviousCommand": 40,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 205,
+            "mouseY": 76,
+            "millisecondsSincePreviousCommand": 25,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 207,
+            "mouseY": 75,
+            "millisecondsSincePreviousCommand": 2,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 209,
+            "mouseY": 74,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 211,
+            "mouseY": 72,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 213,
+            "mouseY": 71,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 215,
+            "mouseY": 70,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 216,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 217,
+            "mouseY": 69,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 217,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 218,
+            "mouseY": 68,
+            "millisecondsSincePreviousCommand": 27,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 219,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 16,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
+            "mouseY": 67,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 220,
+            "mouseY": 66,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 221,
+            "mouseY": 66,
+            "millisecondsSincePreviousCommand": 19,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 221,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 21,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 23,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 65,
+            "millisecondsSincePreviousCommand": 18,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 64,
+            "millisecondsSincePreviousCommand": 108,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 63,
+            "millisecondsSincePreviousCommand": 17,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 62,
+            "millisecondsSincePreviousCommand": 35,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 61,
+            "millisecondsSincePreviousCommand": 15,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "mouseX": 223,
+            "mouseY": 60,
+            "millisecondsSincePreviousCommand": 30,
+            "testCommandName": "SystemTestsCommandMouseMove"
+        },
+        {
+            "button": 0,
+            "ctrlKey": false,
+            "millisecondsSincePreviousCommand": 1027,
+            "testCommandName": "SystemTestsCommandMouseDown"
+        },
+        {
+            "millisecondsSincePreviousCommand": 48,
+            "testCommandName": "SystemTestsCommandMouseUp"
         },
         {
             "scanCode": 18,
@@ -1829,7 +2151,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 191,
+            "millisecondsSincePreviousCommand": 440,
             "testCommandName": "SystemTestsCommandKeyDown"
         },
         {
@@ -1838,7 +2160,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 536,
+            "millisecondsSincePreviousCommand": 800,
             "testCommandName": "SystemTestsCommandKeyDown"
         },
         {
@@ -1853,7 +2175,7 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": true,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 114,
+            "millisecondsSincePreviousCommand": 178,
             "testCommandName": "SystemTestsCommandKeyUp"
         },
         {
@@ -1862,236 +2184,26 @@ SystemTest_detachedMenuItemMorph = {
             "ctrlKey": false,
             "altKey": false,
             "metaKey": false,
-            "millisecondsSincePreviousCommand": 112,
+            "millisecondsSincePreviousCommand": 81,
             "testCommandName": "SystemTestsCommandKeyUp"
         },
         {
-            "mouseX": 431,
-            "mouseY": 106,
-            "millisecondsSincePreviousCommand": 334,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "scanCode": 18,
+            "shiftKey": false,
+            "ctrlKey": false,
+            "altKey": true,
+            "metaKey": false,
+            "millisecondsSincePreviousCommand": 1351,
+            "testCommandName": "SystemTestsCommandKeyDown"
         },
         {
-            "mouseX": 440,
-            "mouseY": 106,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 455,
-            "mouseY": 103,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 492,
-            "mouseY": 97,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 547,
-            "mouseY": 92,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 608,
-            "mouseY": 90,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 661,
-            "mouseY": 90,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 693,
-            "mouseY": 100,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 717,
-            "mouseY": 113,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 735,
-            "mouseY": 126,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 744,
-            "mouseY": 135,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 755,
-            "mouseY": 144,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 759,
-            "mouseY": 149,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 763,
-            "mouseY": 153,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 765,
-            "mouseY": 155,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 767,
-            "mouseY": 158,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 768,
-            "mouseY": 159,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 770,
-            "mouseY": 160,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 775,
-            "mouseY": 163,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 782,
-            "mouseY": 166,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 788,
-            "mouseY": 169,
-            "millisecondsSincePreviousCommand": 16,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 793,
-            "mouseY": 172,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 797,
-            "mouseY": 173,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 798,
-            "mouseY": 175,
-            "millisecondsSincePreviousCommand": 18,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 799,
-            "mouseY": 175,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 799,
-            "mouseY": 176,
-            "millisecondsSincePreviousCommand": 46,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 799,
-            "mouseY": 177,
-            "millisecondsSincePreviousCommand": 72,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 799,
-            "mouseY": 178,
-            "millisecondsSincePreviousCommand": 44,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 800,
-            "mouseY": 178,
-            "millisecondsSincePreviousCommand": 4,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 801,
-            "mouseY": 179,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 801,
-            "mouseY": 180,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 803,
-            "mouseY": 181,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 803,
-            "mouseY": 182,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 804,
-            "mouseY": 183,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 804,
-            "mouseY": 184,
-            "millisecondsSincePreviousCommand": 26,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 805,
-            "mouseY": 184,
-            "millisecondsSincePreviousCommand": 26,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 806,
-            "mouseY": 185,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
-        },
-        {
-            "mouseX": 807,
-            "mouseY": 187,
-            "millisecondsSincePreviousCommand": 17,
-            "testCommandName": "SystemTestsCommandMouseMove"
+            "scanCode": 84,
+            "shiftKey": false,
+            "ctrlKey": false,
+            "altKey": true,
+            "metaKey": false,
+            "millisecondsSincePreviousCommand": 280,
+            "testCommandName": "SystemTestsCommandKeyDown"
         }
     ]
 };
