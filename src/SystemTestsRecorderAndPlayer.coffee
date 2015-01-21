@@ -538,7 +538,7 @@ class SystemTestsRecorderAndPlayer
         console.log "equalPixels: " + equalPixels
         console.log "differentPixels: " + differentPixels
         subtractionCanvasContext.putImageData subtractionImageData, 0, 0
-        andThen subtractionCanvas
+        andThen subtractionCanvas, expected
 
       obtainedImage.src = obtained.imageData
 
@@ -657,6 +657,7 @@ class SystemTestsRecorderAndPlayer
   saveFailedScreenshots: ->
     zip = new JSZip()
     
+    # debugger
     # save all the images, each as a .png and .js file
     # the png is for quick browsing, while the js contains
     # the pixel data and the metadata of which configuration
@@ -693,16 +694,16 @@ class SystemTestsRecorderAndPlayer
       # the subtractScreenshots needs to create some Images and
       # load them with data from base64 string. The operation
       # of loading the data is asynchronous...
-      @subtractScreenshots failedImage, aGoodImage, (subtractionCanvas) ->
+      @subtractScreenshots failedImage, aGoodImage, (subtractionCanvas, failedImage) ->
+        console.log "zipping diff file:" + "diff-"+failedImage.imageName+".png"
         zip.file("diff-"+failedImage.imageName+".png", subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
 
     # OK the images are all put in the zip
     # asynchronously. So, in theory what we should do is to
     # check that we have all the image packed
     # and then save the zip. In practice we just wait
-    # a second (which is well beyond what we
-    # expect all the images to take to be packed)
-    # and then save it.
+    # some time (200ms for each image)
+    # and then save the zip.
     setTimeout \
       =>
         console.log "saving failed screenshots"
@@ -718,7 +719,7 @@ class SystemTestsRecorderAndPlayer
           console.log "not safari"
           content = zip.generate({type:"blob"})
           saveAs(content, "SystemTest_#{@testName}_failedScreenshots.zip")        
-      , 1000 
+      , (@collectedFailureImages.length+1) * 200 
 
 
 
