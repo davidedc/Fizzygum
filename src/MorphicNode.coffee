@@ -183,6 +183,14 @@ class MorphicNode
   # and lets us return as soon as
   # we find a match
   containedInParentsOf: (morph) ->
+    if !morph?
+      # this happens when in a test, you select
+      # a menu entry that doesn't exist.
+      # so it's a good thing that we block the test
+      # and let the user navigate through the world
+      # to find the state of affairs that caused
+      # the problem.
+      debugger
     # test the morph itself
     if morph is @
       return true
