@@ -355,21 +355,21 @@ class WorldMorph extends FrameMorph
     # or right-clicking on a morph
     @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
 
-    @hand.processMouseDown event.button, event.ctrlKey
+    @hand.processMouseDown button, ctrlKey
 
   processMouseUp: (button) ->
-    event.preventDefault()
+    # event.preventDefault()
 
     # we might eliminate this command afterwards if
     # we find out user is clicking on a menu item
     # or right-clicking on a morph
     @systemTestsRecorderAndPlayer.addMouseUpCommand()
 
-    @hand.processMouseUp event.button
+    @hand.processMouseUp button
 
   processMouseMove: (pageX, pageY) ->
     @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY)
-    @hand.processMouseMove  event.pageX, event.pageY
+    @hand.processMouseMove  pageX, pageY
 
   # event.type must be keypress
   getChar: (event) ->
