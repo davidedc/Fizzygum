@@ -3,7 +3,8 @@
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.testCommandsSequence = SystemTestsRepo_NAMEOFTHETEST.testCommandsSequence
+# window.world.systemTestsRecorderAndPlayer.testCommandsSequence = NAMEOFTHETEST.testCommandsSequence
+# (e.g. window.world.systemTestsRecorderAndPlayer.testCommandsSequence = SystemTest_attachRectangleToPartsOfInspector.testCommandsSequence )
 # window.world.systemTestsRecorderAndPlayer.startTestPlaying()
 
 # How to inspect the screenshot differences:
