@@ -231,19 +231,28 @@ class ScrollFrameMorph extends FrameMorph
     @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
     @adjustScrollBars()  
   
-  # ScrollFrameMorph scrolling by editing text:
-  scrollCaretIntoView: (morph) ->
-    txt = morph.target
+  # ScrollFrameMorph scrolling when editing text
+  # so to bring the caret fully into view.
+  scrollCaretIntoView: (caretMorph) ->
+    txt = caretMorph.target
     offset = txt.position().subtract(@contents.position())
     ft = @top() + @padding
     fb = @bottom() - @padding
-    @contents.setExtent txt.extent().add(offset).add(@padding)
-    if morph.top() < ft
-      @contents.setTop @contents.top() + ft - morph.top()
-      morph.setTop ft
-    else if morph.bottom() > fb
-      @contents.setBottom @contents.bottom() + fb - morph.bottom()
-      morph.setBottom fb
+    fl = @left() + @padding
+    fr = @right() - @padding
+    @contents.adjustBounds()
+    if caretMorph.top() < ft
+      @contents.setTop @contents.top() + ft - caretMorph.top()
+      caretMorph.setTop ft
+    else if caretMorph.bottom() > fb
+      @contents.setBottom @contents.bottom() + fb - caretMorph.bottom()
+      caretMorph.setBottom fb
+    if caretMorph.left() < fl
+      @contents.setLeft @contents.left() + fl - caretMorph.left()
+      caretMorph.setLeft fl
+    else if caretMorph.right() > fr
+      @contents.setRight @contents.right() + fr - caretMorph.right()
+      caretMorph.setRight fr
     @adjustScrollBars()
 
   # ScrollFrameMorph events:
