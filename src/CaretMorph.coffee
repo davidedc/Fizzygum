@@ -24,7 +24,7 @@ class CaretMorph extends BlinkerMorph
   
   updateRendering: ->
     super()
-    # it's be cool to do this only
+    # it'd be cool to do this only
     # once but we don't want to paint stuff in
     # the constructor...
     @image.getContext("2d").font = @target.font()
