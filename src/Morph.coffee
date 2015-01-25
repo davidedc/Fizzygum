@@ -989,10 +989,9 @@ class Morph extends MorphicNode
   clone: (target) ->
     #alert "cloning a " + target.constructor.name
     if typeof target is "object"
-      Clone = ->
-      Clone:: = target
       # note that the constructor method is not run!
-      theClone = new Clone()
+      theClone = Object.create(target.constructor.prototype)
+      #console.log "theClone class:" + theClone.constructor.name
       theClone.assignUniqueID()
       #theClone.constructor()
       return theClone
@@ -1068,14 +1067,10 @@ class Morph extends MorphicNode
   
   # if the constructor of the object you are copying performs
   # some complex building and connecting of the elements,
-  # then you probably need to override this method. For example
-  # in the inspectorMorph the constructor invokes a
-  # "buildAndConnectChildren" function which attached callbacks
-  # to the list so that the "detail" pane shows the content.
-  # Since those connections are inside callbacks rather than
-  # in properties of the inspector, those are not copied, so
-  # the inspector needs to override this function so it
-  # also calls buildAndConnectChildren
+  # and there are some callbacks around,
+  # then maybe you could need to override this method.
+  # The inspectorMorph needed to override this method
+  # until extensive refactoring was performed.
   updateReferences: (dict) ->
     #
     #	Update intra-morph references within a composite morph that has
@@ -1518,8 +1513,9 @@ class Morph extends MorphicNode
   # Morph events:
   escalateEvent: (functionName, arg) ->
     handler = @parent
-    handler = handler.parent  while not handler[functionName] and handler.parent?
-    handler[functionName] arg  if handler[functionName]
+    if handler?
+      handler = handler.parent  while not handler[functionName] and handler.parent?
+      handler[functionName] arg  if handler[functionName]
   
   
   # Morph eval. Used by the Inspector and the TextMorph.

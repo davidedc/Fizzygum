@@ -34,10 +34,6 @@ class InspectorMorph extends BoxMorph
     @currentProperty = null
     @buildAndConnectChildren()
   
-  updateReferences: (dict) ->
-    super(dict)
-    @buildAndConnectChildren()
-
   buildAndConnectChildren: ->
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -221,10 +217,10 @@ class InspectorMorph extends BoxMorph
     @add @work
     #
     # properties button
-    @buttonSubset = new TriggerMorph()
+    @buttonSubset = new TriggerMorph(@)
     @buttonSubset.setLabel "show..."
     @buttonSubset.alignCenter()
-    @buttonSubset.action = =>
+    @buttonSubset.action = ->
       menu = new MenuMorph()
       menu.addItem "attributes", =>
         @showing = "attributes"
@@ -248,10 +244,10 @@ class InspectorMorph extends BoxMorph
     @add @buttonSubset
     #
     # inspect button
-    @buttonInspect = new TriggerMorph()
+    @buttonInspect = new TriggerMorph(@)
     @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
-    @buttonInspect.action = =>
+    @buttonInspect.action = ->
       if isObject(@currentProperty)
         menu = new MenuMorph()
         menu.addItem "in new inspector...", =>
@@ -272,10 +268,10 @@ class InspectorMorph extends BoxMorph
     @add @buttonInspect
     #
     # edit button
-    @buttonEdit = new TriggerMorph()
+    @buttonEdit = new TriggerMorph(@)
     @buttonEdit.setLabel "edit..."
     @buttonEdit.alignCenter()
-    @buttonEdit.action = =>
+    @buttonEdit.action = ->
       menu = new MenuMorph(@)
       menu.addItem "save", (->@save()), "accept changes"
       menu.addLine()
@@ -287,10 +283,10 @@ class InspectorMorph extends BoxMorph
     @add @buttonEdit
     #
     # close button
-    @buttonClose = new TriggerMorph()
+    @buttonClose = new TriggerMorph(@)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
-    @buttonClose.action = =>
+    @buttonClose.action = ->
       @destroy()
     #
     @add @buttonClose
