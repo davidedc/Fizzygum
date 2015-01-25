@@ -4,14 +4,14 @@
 # All menu items and buttons are TriggerMorphs.
 # The handling of the triggering is not
 # trivial, as the concepts of
-# environment, target and action
+# dataSourceMorphForTarget, target and action
 # are used - see comments.
 
 class TriggerMorph extends Morph
 
   target: null
   action: null
-  environment: null
+  dataSourceMorphForTarget: null
   label: null
   labelString: null
   labelColor: null
@@ -45,7 +45,7 @@ class TriggerMorph extends Morph
       fontSize,
       fontStyle,
       @centered = false,
-      @environment = null,
+      @dataSourceMorphForTarget = null,
       @hint = null,
       labelColor,
       @labelBold = false,
@@ -59,6 +59,7 @@ class TriggerMorph extends Morph
     #
     super()
     #
+    #@color = new Color(255, 152, 152)
     @color = new Color(255, 255, 255)
     if @labelString?
       @layoutSubmorphs()
@@ -126,136 +127,7 @@ class TriggerMorph extends Morph
   
   # TriggerMorph action:
   trigger: ->
-
-    # Here is the pseudocode for the
-    # four cases. The four cases are
-    # further explained later
-    # with example.
-    #
-    #	If target is a function:
-    #   use it as callback, i.e.
-    #	  execute target as callback function passing the action as argument
-    #	  (in the environment as optionally specified) (see case 1 below).
-    #
-    #	  If the action is a function too, then it's evaluated, so the
-    #   callback is passed the result returned from the action.
-    #   (see case 2 below)
-    #
-    #	  As second argument pass
-    #   myself, so I can be modified to reflect status changes, e.g.
-    #   inside a list box
-    #
-    #	else if (target is not a function):
-    #
-    #		if action is a function:
-    #		execute the action with target as environment (can be null)
-    #		for lambdafied (inline) actions
-    #
-    #		else if action is a String:
-    #		treat it as function property of target and execute it
-    #		for selector-like actions
-    #	
-    if typeof @target is "function"
-      if typeof @action is "function"
-        # case 1
-        # console.log "action invokation case 1"
-        # Examples:
-        #    -color picker morph "Ok" and "Cancel" buttons obtained by String -> color...
-        #    -transparency picker morph "Ok" and "Cancel" buttons obtained by String -> transparency...
-        #    - ...
-        # Let's take the first case of the color:
-        #    menu.addItem "color...", (->
-        #        @pickColor menu.title + "\ncolor:", @setColor, @, @color
-        #      ), "choose another color \nfor this morph"
-        #    [...]
-        #    addItem: (labelString,action,hint,color,bold = false,italic = false, doubleClickAction)...
-        #    [...]
-        #    @pickColor menu.title + "\ncolor:", @setColor, @, @color
-        #    [...]
-        #    menu.addItem "Ok", ->
-        #      colorPicker.getChoice()
-        #    [...]
-        #    pickColor: (msg, callback, environment, defaultContents) ->
-        #       menu = new MenuMorph(callback or null, msg or "", environment or null)
-        #    [...]
-        #     MenuMorph constructor: (@target, @title = null, @environment = null, @fontSize = null) ...
-        #
-        # i.e. in this case:
-        #
-        #  this.action =
-        #    function () {
-        #          return colorPicker.getChoice();
-        #    }
-        #
-        # ...and...
-        #
-        #  this.target = 
-        #    function (aColor) {
-        #      if (aColor) {
-        #        if (!this.color.eq(aColor)) {
-        #          this.color = aColor;
-        #          this.changed();
-        #          return this.updateRendering();
-        #        }
-        #      }
-        #    }
-        #
-        # ...and...
-        #
-        # this.environment =
-        #   StringMorph {fontSize: 48, fontStyle: "serif", isBold: false, isItalic: false, isNumeric: false…}
-
-        # a menu is created where the target is the callback function "setColor"
-        # which means that "Ok" invokes the callback (setColor) with the
-        # result of getChoice (which just returns the selected color).
-        debugger
-        # so in the case above this calls setColor on the string, passing
-        # the return of the colorPicker.getChoice()
-        @target.call @environment, @action.call(), @
-      else
-        # case 2
-        # console.log "action invokation case 2"
-        # case of selecting any entry from the
-        # inspector menu pane on the left
-        # that pane is a ListMorph, which builds a MenuMorph
-        # like so:
-        #   @list = new ListMorph((if @ ...
-        #   [...]
-        #   @list.action = (selected) => ...shows the content in the pane etc.
-        #   [...] in the ListMorph:
-        #   @listContents = new MenuMorph(@select, null, @)
-        #   [...]
-        #   @listContents.addItem @labelGetter(element), element, null, color, bold, italic, @doubleClickAction
-        # so here the  target is "@select" and the action is the selected element as a string
-        # and the environment is the ListMorph
-        debugger
-        @target.call @environment, @action, @
-    else
-      if typeof @action is "function"
-        # case 3
-        # console.log "action invokation case 3"
-        # case of all the menu entries from
-        # the world menu
-        # i.e.
-        #   menu = new MenuMorph(@, "Morphic")
-        #   [...]
-        #   menu.addItem "hide all", (->@minimiseAll())
-        # as you see the target is not a function (@)
-        # but the action is "(->@minimiseAll())"
-        @action.call @target
-      else # assume it's a String
-        # case 4
-        # console.log "action invokation case 4"
-        # this is a "shorthand" case for case 3 above
-        # when instead of writing this:
-        #    menu.addItem "demo...", (->@popUpDemoMenu()), "sample morphs"
-        # you write:
-        #    menu.addItem "demo...", "popUpDemoMenu", "sample morphs"
-        # so it's like above but the action is a string instead of
-        # a function. Note that this version should be used sparingly
-        # because it's semantically less correct to identify a
-        # function as a string.
-        @target[@action]()
+    @action.call @target, @dataSourceMorphForTarget
 
   triggerDoubleClick: ->
     # same as trigger() but use doubleClickAction instead of action property
@@ -263,9 +135,9 @@ class TriggerMorph extends Morph
     return  unless @doubleClickAction
     if typeof @target is "function"
       if typeof @doubleClickAction is "function"
-        @target.call @environment, @doubleClickAction.call(), this
+        @target.call @dataSourceMorphForTarget, @doubleClickAction.call(), this
       else
-        @target.call @environment, @doubleClickAction, this
+        @target.call @dataSourceMorphForTarget, @doubleClickAction, this
     else
       if typeof @doubleClickAction is "function"
         @doubleClickAction.call @target

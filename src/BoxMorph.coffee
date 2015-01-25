@@ -52,10 +52,10 @@ class BoxMorph extends Morph
   developersMenu: ->
     menu = super()
     menu.addLine()
+
     menu.addItem "border width...", (->
       @prompt menu.title + "\nborder\nwidth:",
         @setBorderWidth,
-        @,
         @border.toString(),
         null,
         0,
@@ -63,12 +63,11 @@ class BoxMorph extends Morph
         true
     ), "set the border's\nline size"
     menu.addItem "border color...", (->
-      @pickColor menu.title + "\nborder color:", @setBorderColor, @, @borderColor
+      @pickColor menu.title + "\nborder color:", @setBorderColor, @borderColor
     ), "set the border's\nline color"
     menu.addItem "corner size...", (->
       @prompt menu.title + "\ncorner\nsize:",
         @setCornerSize,
-        @,
         @edge.toString(),
         null,
         0,
@@ -77,7 +76,12 @@ class BoxMorph extends Morph
     ), "set the corner's\nradius"
     menu
   
-  setBorderWidth: (size) ->
+  setBorderWidth: (sizeOrMorphGivingSize) ->
+    if sizeOrMorphGivingSize.getValue?
+      size = sizeOrMorphGivingSize.getValue()
+    else
+      size = sizeOrMorphGivingSize
+
     # for context menu demo purposes
     if typeof size is "number"
       @border = Math.max(size, 0)
@@ -87,14 +91,24 @@ class BoxMorph extends Morph
     @updateRendering()
     @changed()
   
-  setBorderColor: (color) ->
-    # for context menu demo purposes
-    if color
-      @borderColor = color
+
+  setBorderColor: (aColorOrAMorphGivingAColor) ->
+    if aColorOrAMorphGivingAColor.getColor?
+      aColor = aColorOrAMorphGivingAColor.getColor()
+    else
+      aColor = aColorOrAMorphGivingAColor
+
+    if aColor
+      @borderColor = aColor
       @updateRendering()
       @changed()
   
-  setCornerSize: (size) ->
+  setCornerSize: (sizeOrMorphGivingSize) ->
+    if sizeOrMorphGivingSize.getValue?
+      size = sizeOrMorphGivingSize.getValue()
+    else
+      size = sizeOrMorphGivingSize
+
     # for context menu demo purposes
     if typeof size is "number"
       @edge = Math.max(size, 0)

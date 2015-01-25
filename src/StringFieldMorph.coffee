@@ -25,7 +25,7 @@ class StringFieldMorph extends FrameMorph
     @color = new Color(255, 255, 255)
   
   updateRendering: ->
-    txt = (if @text then @string() else @defaultContents)
+    txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()
     #
@@ -40,7 +40,7 @@ class StringFieldMorph extends FrameMorph
     super()
     @add @text
   
-  string: ->
+  getValue: ->
     @text.text
   
   mouseClickLeft: (pos)->

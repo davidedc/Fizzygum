@@ -26,7 +26,7 @@ class ColorPickerMorph extends Morph
     @feedback.setPosition new Point(x, y)
     @add @feedback
   
-  getChoice: ->
+  getColor: ->
     @feedback.color
   
   rootForGrab: ->

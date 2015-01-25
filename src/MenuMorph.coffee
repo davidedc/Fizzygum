@@ -154,8 +154,8 @@ class MenuMorph extends BoxMorph
         # console.log "menu creating MenuItemMorph "
         item = new MenuItemMorph(
           @target,
-          tuple[1],
-          tuple[0],
+          tuple[1], # action
+          tuple[0], # target
           @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
           WorldMorph.preferencesAndSettings.menuFontName,
           false,
@@ -166,6 +166,8 @@ class MenuMorph extends BoxMorph
           tuple[5], # italic
           tuple[6]  # doubleclick action
           )
+        if !@environment?
+          item.dataSourceMorphForTarget = item
       y += 1  if isLine
       item.setPosition new Point(x, y)
       @add item

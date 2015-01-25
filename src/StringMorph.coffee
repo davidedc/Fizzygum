@@ -219,7 +219,7 @@ class StringMorph extends Morph
     menu.addItem "edit", (->@edit())
     menu.addItem "font size...", (->
       @prompt menu.title + "\nfont\nsize:",
-        @setFontSize, @, @fontSize.toString(), null, 6, 500, true
+        @setFontSize, @fontSize.toString(), null, 6, 500, true
     ), "set this String's\nfont point size"
     menu.addItem "serif", (->@setSerif())  if @fontStyle isnt "serif"
     menu.addItem "sans-serif", (->@setSansSerif())  if @fontStyle isnt "sans-serif"
@@ -290,7 +290,12 @@ class StringMorph extends Morph
     @updateRendering()
     @changed()
   
-  setFontSize: (size) ->
+  setFontSize: (sizeOrMorphGivingSize) ->
+    if sizeOrMorphGivingSize.getValue?
+      size = sizeOrMorphGivingSize.getValue()
+    else
+      size = sizeOrMorphGivingSize
+
     # for context menu demo purposes
     if typeof size is "number"
       @fontSize = Math.round(Math.min(Math.max(size, 4), 500))

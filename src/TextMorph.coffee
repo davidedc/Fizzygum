@@ -289,7 +289,7 @@ class TextMorph extends StringMorph
     menu.addItem "edit", (->@edit())
     menu.addItem "font size...", (->
       @prompt menu.title + "\nfont\nsize:",
-        @setFontSize, @, @fontSize.toString(), null, 6, 100, true
+        @setFontSize, @fontSize.toString(), null, 6, 100, true
     ), "set this Text's\nfont point size"
     menu.addItem "align left", (->@setAlignmentToLeft())  if @alignment isnt "left"
     menu.addItem "align right", (->@setAlignmentToRight())  if @alignment isnt "right"
@@ -328,15 +328,15 @@ class TextMorph extends StringMorph
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependItem "select all", "selectAllAndEdit"
+      menu.prependItem "select all", (->@selectAllAndEdit())
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependItem "inspect it", "inspectIt", "evaluate the\nselected expression\nand inspect the result"
-      menu.prependItem "show it", "showIt", "evaluate the\nselected expression\nand show the result"
-      menu.prependItem "do it", "doIt", "evaluate the\nselected expression"
+      menu.prependItem "inspect it", (->@inspectIt()), "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show it", (->@showIt()), "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do it", (->@doIt()), "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->

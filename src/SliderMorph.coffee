@@ -91,7 +91,6 @@ class SliderMorph extends CircleBoxMorph
     menu.addItem "floor...", (->
       @prompt menu.title + "\nfloor:",
         @setStart,
-        @,
         @start.toString(),
         null,
         0,
@@ -101,7 +100,6 @@ class SliderMorph extends CircleBoxMorph
     menu.addItem "ceiling...", (->
       @prompt menu.title + "\nceiling:",
         @setStop,
-        @,
         @stop.toString(),
         null,
         @start + @size,
@@ -111,7 +109,6 @@ class SliderMorph extends CircleBoxMorph
     menu.addItem "button size...", (->
       @prompt menu.title + "\nbutton size:",
         @setSize,
-        @,
         @size.toString(),
         null,
         1,
@@ -129,7 +126,13 @@ class SliderMorph extends CircleBoxMorph
     # for context menu demo purposes
     @start = Math.max(num, @stop)
   
-  setStart: (num) ->
+  setStart: (numOrMorphGivingNum) ->
+
+    if numOrMorphGivingNum.getValue?
+      num = numOrMorphGivingNum.getValue()
+    else
+      num = numOrMorphGivingNum
+
     # for context menu demo purposes
     if typeof num is "number"
       @start = Math.min(Math.max(num, 0), @stop - @size)
@@ -141,7 +144,13 @@ class SliderMorph extends CircleBoxMorph
     @updateRendering()
     @changed()
   
-  setStop: (num) ->
+  setStop: (numOrMorphGivingNum) ->
+
+    if numOrMorphGivingNum.getValue?
+      num = numOrMorphGivingNum.getValue()
+    else
+      num = numOrMorphGivingNum
+
     # for context menu demo purposes
     if typeof num is "number"
       @stop = Math.max(num, @start + @size)
@@ -153,12 +162,17 @@ class SliderMorph extends CircleBoxMorph
     @updateRendering()
     @changed()
   
-  setSize: (num) ->
-    # for context menu demo purposes
-    if typeof num is "number"
-      @size = Math.min(Math.max(num, 1), @stop - @start)
+  setSize: (sizeOrMorphGivingSize) ->
+    if sizeOrMorphGivingSize.getValue?
+      size = sizeOrMorphGivingSize.getValue()
     else
-      newSize = parseFloat(num)
+      size = sizeOrMorphGivingSize
+
+    # for context menu demo purposes
+    if typeof size is "number"
+      @size = Math.min(Math.max(size, 1), @stop - @start)
+    else
+      newSize = parseFloat(size)
       @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
     @value = Math.min(@value, @stop - @size)
     @updateTarget()

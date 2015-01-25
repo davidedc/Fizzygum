@@ -793,7 +793,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
       menu.addItem "fit whole page", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
       menu.addItem "color...", (->
-        @pickColor menu.title + "\ncolor:", @setColor, @, @color
+        @pickColor menu.title + "\ncolor:", @setColor, @color
       ), "choose the World's\nbackground color"
       if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
         menu.addItem "touch screen settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "bigger menu fonts\nand sliders"

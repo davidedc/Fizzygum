@@ -9,9 +9,10 @@ class ListMorph extends ScrollFrameMorph
   selected: null # actual element currently selected
   active: null # menu item representing the selected element
   action: null
+  target: null
   doubleClickAction: null
 
-  constructor: (@elements = [], labelGetter, @format = [], @doubleClickAction = null) ->
+  constructor: (@target, @action, @elements = [], labelGetter, @format = [], @doubleClickAction = null) ->
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -32,6 +33,7 @@ class ListMorph extends ScrollFrameMorph
     #    An example of how to use fomats can be found in the InspectorMorph's
     #    "markOwnProperties" mechanism.
     #
+    #debugger
     super()
     @contents.acceptsDrops = false
     @color = new Color(255, 255, 255)
@@ -49,7 +51,7 @@ class ListMorph extends ScrollFrameMorph
   buildListContents: ->
     if @listContents
       @listContents = @listContents.destroy()
-    @listContents = new MenuMorph(@select, null, @)
+    @listContents = new MenuMorph(@, null, null)
     @elements = ["(empty)"]  if !@elements.length
     @elements.forEach (element) =>
       color = null
@@ -64,10 +66,14 @@ class ListMorph extends ScrollFrameMorph
           else # assume it's a color
             color = pair[0]
       #
-      # label string
-      # action
-      # hint
-      @listContents.addItem @labelGetter(element), element, null, color, bold, italic, @doubleClickAction
+      #labelString,
+      #action,
+      #hint,
+      #color,
+      #bold = false,
+      #italic = false,
+      #doubleClickAction # optional, when used as list contents
+      @listContents.addItem @labelGetter(element), @select, null, color, bold, italic, @doubleClickAction
     #
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
@@ -77,7 +83,8 @@ class ListMorph extends ScrollFrameMorph
   select: (item, trigger) ->
     @selected = item
     @active = trigger
-    @action.call null, item  if @action
+    if @action
+      @action.call @target, item.labelString
   
   setExtent: (aPoint) ->
     lb = @listContents.bounds

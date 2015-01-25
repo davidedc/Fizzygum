@@ -549,7 +549,11 @@ class Morph extends MorphicNode
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
-  setColor: (aColor) ->
+  setColor: (aColorOrAMorphGivingAColor) ->
+    if aColorOrAMorphGivingAColor.getColor?
+      aColor = aColorOrAMorphGivingAColor.getColor()
+    else
+      aColor = aColorOrAMorphGivingAColor
     if aColor
       unless @color.eq(aColor)
         @color = aColor
@@ -1180,11 +1184,10 @@ class Morph extends MorphicNode
     m.addItem "Ok"
     m.isDraggable = true
     m.popUpCenteredAtHand @world()
-  
-  prompt: (msg, callback, environment, defaultContents, width, floorNum,
+
+  prompt: (msg, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
     isNumeric = true  if ceilingNum
-    menu = new MenuMorph(callback or null, msg or "", environment or null)
     entryField = new StringFieldMorph(
       defaultContents or "",
       width or 100,
@@ -1193,6 +1196,7 @@ class Morph extends MorphicNode
       false,
       false,
       isNumeric)
+    menu = new MenuMorph(@, msg or "", entryField)
     menu.items.push entryField
     if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
       slider = new SliderMorph(
@@ -1224,8 +1228,7 @@ class Morph extends MorphicNode
           entryField.text.changed()
       menu.items.push slider
     menu.addLine 2
-    menu.addItem "Ok", ->
-      entryField.string()
+    menu.addItem "Ok", callback
     #
     menu.addItem "Cancel", ->
       null
@@ -1234,13 +1237,12 @@ class Morph extends MorphicNode
     menu.popUpAtHand()
     entryField.text.edit()
   
-  pickColor: (msg, callback, environment, defaultContents) ->
-    menu = new MenuMorph(callback or null, msg or "", environment or null)
+  pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph(defaultContents)
+    menu = new MenuMorph(@, msg or "", colorPicker)
     menu.items.push colorPicker
     menu.addLine 2
-    menu.addItem "Ok", ->
-      colorPicker.getChoice()
+    menu.addItem "Ok", callback
     #
     menu.addItem "Cancel", ->
       null
@@ -1307,11 +1309,12 @@ class Morph extends MorphicNode
       #
       menu.addLine()
     menu.addItem "color...", (->
-      @pickColor menu.title + "\ncolor:", @setColor, @, @color
+      @pickColor menu.title + "\ncolor:", @setColor, @color
     ), "choose another color \nfor this morph"
+
     menu.addItem "transparency...", (->
       @prompt menu.title + "\nalpha\nvalue:",
-        @setAlphaScaled, @, (@alpha * 100).toString(),
+        @setAlphaScaled, (@alpha * 100).toString(),
         null,
         1,
         100,
@@ -1388,9 +1391,14 @@ class Morph extends MorphicNode
         unscaled = newAlpha / 100
         return Math.min(Math.max(unscaled, 0.1), 1)
 
-  setAlphaScaled: (alpha) ->
-    @alpha = @calculateAlphaScaled(alpha)
-    @changed()
+  setAlphaScaled: (alphaOrMorphGivingAlpha) ->
+    if alphaOrMorphGivingAlpha.getValue?
+      alpha = alphaOrMorphGivingAlpha.getValue()
+    else
+      alpha = alphaOrMorphGivingAlpha
+    if alpha
+      @alpha = @calculateAlphaScaled(alpha)
+      @changed()
   
   attach: ->
     # get rid of any previous temporary

@@ -128,7 +128,7 @@ class InspectorMorph extends BoxMorph
       world.add inspector
       inspector.changed()
 
-    @list = new ListMorph((if @target instanceof Array then attribs else attribs.sort()), null,(
+    @list = new ListMorph(@, InspectorMorph.prototype.selectionFromList, (if @target instanceof Array then attribs else attribs.sort()), null,(
       if @markOwnershipOfProperties
         [
           # give color criteria from the most general to the most specific
@@ -176,24 +176,6 @@ class InspectorMorph extends BoxMorph
       else null
     ),doubleClickAction)
 
-    @list.action = (selected) =>
-      if (selected == undefined) then return
-      val = @target[selected]
-      # this is for finding the static variables
-      if val is undefined
-        val = @target.constructor[selected]
-      @currentProperty = val
-      if val is null
-        txt = "NULL"
-      else if isString(val)
-        txt = val
-      else
-        txt = val.toString()
-      cnts = new TextMorph(txt)
-      cnts.isEditable = true
-      cnts.enableSelecting()
-      cnts.setReceiver @target
-      @detail.setContents cnts
     #
     @list.hBar.alpha = 0.6
     @list.vBar.alpha = 0.6
@@ -318,6 +300,25 @@ class InspectorMorph extends BoxMorph
     #
     # update layout
     @layoutSubmorphs()
+
+  selectionFromList: (selected) =>
+    if (selected == undefined) then return
+    val = @target[selected]
+    # this is for finding the static variables
+    if val is undefined
+      val = @target.constructor[selected]
+    @currentProperty = val
+    if val is null
+      txt = "NULL"
+    else if isString(val)
+      txt = val
+    else
+      txt = val.toString()
+    cnts = new TextMorph(txt)
+    cnts.isEditable = true
+    cnts.enableSelecting()
+    cnts.setReceiver @target
+    @detail.setContents cnts
   
   layoutSubmorphs: ->
     console.log "fixing the layout of the inspector"
@@ -398,11 +399,11 @@ class InspectorMorph extends BoxMorph
   #InspectorMorph editing ops:
   save: ->
     txt = @detail.contents.children[0].text.toString()
-    prop = @list.selected
+    propertyName = @list.selected.labelString
     try
       #
-      # this.target[prop] = evaluate(txt);
-      @target.evaluateString "this." + prop + " = " + txt
+      # this.target[propertyName] = evaluate(txt);
+      @target.evaluateString "this." + propertyName + " = " + txt
       if @target.updateRendering
         @target.changed()
         @target.updateRendering()
@@ -412,18 +413,22 @@ class InspectorMorph extends BoxMorph
   
   addProperty: ->
     @prompt "new property name:", ((prop) =>
-      if prop
+      if prop?
+        if prop.getValue?
+          prop = prop.getValue()
         @target[prop] = null
         @buildAndConnectChildren()
         if @target.updateRendering
           @target.changed()
           @target.updateRendering()
           @target.changed()
-    ), @, "property" # Chrome cannot handle empty strings (others do)
+    ), "property" # Chrome cannot handle empty strings (others do)
   
   renameProperty: ->
-    propertyName = @list.selected
+    propertyName = @list.selected.labelString
     @prompt "property name:", ((prop) =>
+      if prop.getValue?
+        prop = prop.getValue()
       try
         delete (@target[propertyName])
         @target[prop] = @currentProperty
@@ -434,12 +439,12 @@ class InspectorMorph extends BoxMorph
         @target.changed()
         @target.updateRendering()
         @target.changed()
-    ), @, propertyName
+    ), propertyName
   
   removeProperty: ->
-    prop = @list.selected
+    propertyName = @list.selected.labelString
     try
-      delete (@target[prop])
+      delete (@target[propertyName])
       #
       @currentProperty = null
       @buildAndConnectChildren()
