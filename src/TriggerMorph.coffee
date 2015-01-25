@@ -159,8 +159,11 @@ class TriggerMorph extends Morph
       if typeof @action is "function"
         # case 1
         # console.log "action invokation case 1"
-        # Example: color morph "Ok" and "Cancel" buttons
-        # I.e.:
+        # Examples:
+        #    -color picker morph "Ok" and "Cancel" buttons obtained by String -> color...
+        #    -transparency picker morph "Ok" and "Cancel" buttons obtained by String -> transparency...
+        #    - ...
+        # Let's take the first case of the color:
         #    menu.addItem "color...", (->
         #        @pickColor menu.title + "\ncolor:", @setColor, @, @color
         #      ), "choose another color \nfor this morph"
@@ -176,10 +179,38 @@ class TriggerMorph extends Morph
         #       menu = new MenuMorph(callback or null, msg or "", environment or null)
         #    [...]
         #     MenuMorph constructor: (@target, @title = null, @environment = null, @fontSize = null) ...
-        # i.e. a menu is created where the target is the
-        # callback function "setColor"
+        #
+        # i.e. in this case:
+        #
+        #  this.action =
+        #    function () {
+        #          return colorPicker.getChoice();
+        #    }
+        #
+        # ...and...
+        #
+        #  this.target = 
+        #    function (aColor) {
+        #      if (aColor) {
+        #        if (!this.color.eq(aColor)) {
+        #          this.color = aColor;
+        #          this.changed();
+        #          return this.updateRendering();
+        #        }
+        #      }
+        #    }
+        #
+        # ...and...
+        #
+        # this.environment =
+        #   StringMorph {fontSize: 48, fontStyle: "serif", isBold: false, isItalic: false, isNumeric: false…}
+
+        # a menu is created where the target is the callback function "setColor"
         # which means that "Ok" invokes the callback (setColor) with the
         # result of getChoice (which just returns the selected color).
+        debugger
+        # so in the case above this calls setColor on the string, passing
+        # the return of the colorPicker.getChoice()
         @target.call @environment, @action.call(), @
       else
         # case 2
@@ -195,7 +226,9 @@ class TriggerMorph extends Morph
         #   @listContents = new MenuMorph(@select, null, @)
         #   [...]
         #   @listContents.addItem @labelGetter(element), element, null, color, bold, italic, @doubleClickAction
-        # so here the  target is "@select" and the action is "element"
+        # so here the  target is "@select" and the action is the selected element as a string
+        # and the environment is the ListMorph
+        debugger
         @target.call @environment, @action, @
     else
       if typeof @action is "function"
@@ -213,12 +246,13 @@ class TriggerMorph extends Morph
       else # assume it's a String
         # case 4
         # console.log "action invokation case 4"
-        # when instead of writing this (case 3):
+        # this is a "shorthand" case for case 3 above
+        # when instead of writing this:
         #    menu.addItem "demo...", (->@popUpDemoMenu()), "sample morphs"
         # you write:
         #    menu.addItem "demo...", "popUpDemoMenu", "sample morphs"
-        # so it's like above but the action is a strind instead of
-        # a function. Note that this version sould be used sparingly
+        # so it's like above but the action is a string instead of
+        # a function. Note that this version should be used sparingly
         # because it's semantically less correct to identify a
         # function as a string.
         @target[@action]()

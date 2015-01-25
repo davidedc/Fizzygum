@@ -994,8 +994,12 @@ class Morph extends MorphicNode
       return theClone
     target
 
+  # returns a shallow copy of target.
+  # Shallow copy keeps references to original objects, arrays or functions
+  # within the new object, so the “copy” is still linked to the original
+  # object. In other words, they will be pointing to the same memory
+  # location. String and Numbers are duplicated instead.
   shallowCopy: (target) ->
-    # answer a shallow copy of target
     c = @clone(target.constructor::)
     for property of target
       # there are a couple of properties that we don't want to copy over...
@@ -1014,9 +1018,11 @@ class Morph extends MorphicNode
   
   copyRecordingReferences: (dict) ->
     # copies a Morph, its properties and its submorphs. Properties
-    # are shallow-copied, so for example values are actually copied,
-    # but arrays are not deep-copied.
-    # Also builds a correspndence of the morph and its submorphs to their
+    # are shallow-copied, so for example Numbers and Strings
+    # are actually duplicated,
+    # but arrays objects and functions are not deep-copied i.e.
+    # just the references are copied.
+    # Also builds a correspondence of the morph and its submorphs to their
     # respective clones.
 
     c = @copy()
