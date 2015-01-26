@@ -116,7 +116,7 @@ class MenuMorph extends BoxMorph
     @color = new Color(255, 255, 255)
     @borderColor = new Color(60, 60, 60)
     @silentSetExtent new Point(0, 0)
-    y = 2
+    y = @top() + 2
     x = @left() + 4
 
 
@@ -171,11 +171,13 @@ class MenuMorph extends BoxMorph
       y += 1  if isLine
       item.setPosition new Point(x, y)
       @add item
+      #console.log "item added: " + item.bounds
       y = y + item.height()
       y += 1  if isLine
   
     @adjustWidthsOfMenuEntries()
     fb = @boundsIncludingChildren()
+    #console.log "fb: " + fb
     @silentSetExtent fb.extent().add(4)
   
     super()
