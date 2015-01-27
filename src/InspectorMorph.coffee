@@ -305,9 +305,9 @@ class InspectorMorph extends BoxMorph
       val = @target.constructor[selected]
     @currentProperty = val
     if val is null
-      txt = "NULL"
+      txt = "null"
     else if isString(val)
-      txt = val
+      txt = '"'+val+'"'
     else
       txt = val.toString()
     cnts = new TextMorph(txt)
