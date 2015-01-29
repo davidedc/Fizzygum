@@ -96,7 +96,7 @@ class ScrollFrameMorph extends FrameMorph
     # So here we avoid that by actually checking what the scrollbar is
     # attached to.
     if @hBar.target == @ 
-      if @contents.width() > @width() + WorldMorph.preferencesAndSettings.scrollBarSize
+      if @contents.width() >= @width() + 1
         @hBar.show()
         @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
@@ -114,7 +114,7 @@ class ScrollFrameMorph extends FrameMorph
 
     # see comment on equivalent if line above.
     if @vBar.target == @ 
-      if @contents.height() > @height() + @scrollBarSize
+      if @contents.height() >= @height() + 1
         @vBar.show()
         @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
         # we check whether the bar has been detached. If it's still
@@ -133,19 +133,20 @@ class ScrollFrameMorph extends FrameMorph
   addContents: (aMorph) ->
     @contents.add aMorph
     @contents.adjustBounds()
+    @adjustScrollBars()
   
-  setContents: (aMorph) ->
+  setContents: (aMorph, extraPadding) ->
     @contents.destroyAll()
     #
     @contents.children = []
-    aMorph.setPosition @position().add(@padding + 2)
+    aMorph.setPosition @position().add(@padding + extraPadding)
     @addContents aMorph
   
   setExtent: (aPoint) ->
     @contents.setPosition @position().copy()  if @isTextLineWrapping
     super aPoint
     @contents.adjustBounds()
-  
+    @adjustScrollBars()
   
   # ScrollFrameMorph scrolling by dragging:
   scrollX: (steps) ->
@@ -199,6 +200,7 @@ class ScrollFrameMorph extends FrameMorph
             @scrollX Math.round(deltaX)
             deltaY = deltaY * friction
             @scrollY Math.round(deltaY)
+      @contents.adjustBounds()
       @adjustScrollBars()
   
   startAutoScrolling: ->
@@ -229,6 +231,7 @@ class ScrollFrameMorph extends FrameMorph
     @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
     area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
     @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
+    @contents.adjustBounds()
     @adjustScrollBars()  
   
   # ScrollFrameMorph scrolling when editing text
@@ -253,12 +256,14 @@ class ScrollFrameMorph extends FrameMorph
     else if caretMorph.right() > fr
       @contents.setRight @contents.right() + fr - caretMorph.right()
       caretMorph.setRight fr
+    @contents.adjustBounds()
     @adjustScrollBars()
 
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
     @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount  if y
     @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  if x
+    @contents.adjustBounds()
     @adjustScrollBars()
   
   

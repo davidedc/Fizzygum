@@ -198,7 +198,7 @@ class InspectorMorph extends BoxMorph
     ctrl.isEditable = true
     ctrl.enableSelecting()
     ctrl.setReceiver @target
-    @detail.setContents ctrl
+    @detail.setContents ctrl, 2
     @add @detail
     #
     # work ('evaluation') pane
@@ -213,7 +213,7 @@ class InspectorMorph extends BoxMorph
     ev.isEditable = true
     ev.enableSelecting()
     ev.setReceiver @target
-    @work.setContents ev
+    @work.setContents ev, 2
     @add @work
     #
     # properties button
@@ -314,7 +314,7 @@ class InspectorMorph extends BoxMorph
     cnts.isEditable = true
     cnts.enableSelecting()
     cnts.setReceiver @target
-    @detail.setContents cnts
+    @detail.setContents cnts, 2
   
   layoutSubmorphs: ->
     console.log "fixing the layout of the inspector"

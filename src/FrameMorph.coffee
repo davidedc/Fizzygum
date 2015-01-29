@@ -84,7 +84,9 @@ class FrameMorph extends Morph
     return null  unless (!@isMinimised and @isVisible)
 
     # a FrameMorph has the special property that all of its children
-    # are actually inside its boundary. This allows
+    # are actually inside its boundary.
+    # Note that this is not true for the ScrollFrameMorph
+    # for example. This allows
     # us to avoid the further traversal of potentially
     # many many morphs if we see that the rectangle we
     # want to blit is outside its frame.

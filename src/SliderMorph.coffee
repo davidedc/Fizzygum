@@ -42,8 +42,10 @@ class SliderMorph extends CircleBoxMorph
     @size / @rangeSize()
   
   unitSize: ->
-    return (@height() - @button.height()) / @rangeSize()  if @orientation is "vertical"
-    (@width() - @button.width()) / @rangeSize()
+    if @orientation is "vertical"
+      return (@height() - @button.height()) / @rangeSize()
+    else
+      return (@width() - @button.width()) / @rangeSize()
   
   updateRendering: ->
     super()
