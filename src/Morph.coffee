@@ -1096,8 +1096,10 @@ class Morph extends MorphicNode
   # Morph dragging and dropping /////////////////////////////////////////
   
   rootForGrab: ->
-    return @parent.rootForGrab()  if @ instanceof ShadowMorph
-    return @parent  if @parent instanceof ScrollFrameMorph
+    if @ instanceof ShadowMorph
+      return @parent.rootForGrab()
+    if @parent instanceof ScrollFrameMorph
+      return @parent
     if @parent is null or
       @parent instanceof WorldMorph or
       @parent instanceof FrameMorph or
