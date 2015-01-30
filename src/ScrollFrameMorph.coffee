@@ -31,9 +31,7 @@ class ScrollFrameMorph extends FrameMorph
     # contained frame
     @color = @contents.color
     @alpha = @contents.alpha
-    # the scrollFrame is a container, it redirects most
-    # commands to the "contained" frame
-    @updateRendering = @contents.updateRendering
+    
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
