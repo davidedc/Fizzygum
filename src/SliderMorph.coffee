@@ -215,7 +215,7 @@ class SliderMorph extends CircleBoxMorph
     # is and update the scrollbar. As soon as the mouse is unpressed
     # then the step function is set to null to save cycles.
     @step = =>
-      if world.hand.mouseButton
+      if world.hand.mouseButton and @isVisible
         mousePos = world.hand.bounds.origin
         if @orientation is "vertical"
           newX = @button.bounds.origin.x

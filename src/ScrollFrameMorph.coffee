@@ -50,8 +50,12 @@ class ScrollFrameMorph extends FrameMorph
 
     @hBar.action = (num, target) =>
       target.contents.setPosition new Point(target.left() - num, target.contents.position().y)
+      target.contents.adjustBounds()
+      target.adjustScrollBars()
     @vBar.action = (num, target) =>
       target.contents.setPosition new Point(target.contents.position().x, target.top() - num)
+      target.contents.adjustBounds()
+      target.adjustScrollBars()
     @adjustScrollBars()
 
   setColor: (aColor) ->
@@ -182,10 +186,12 @@ class ScrollFrameMorph extends FrameMorph
         (!world.hand.children.length) and
         (@bounds.containsPoint(world.hand.position()))
           newPos = world.hand.bounds.origin
-          deltaX = newPos.x - oldPos.x
-          @scrollX deltaX  if deltaX isnt 0
-          deltaY = newPos.y - oldPos.y
-          @scrollY deltaY  if deltaY isnt 0
+          if @hBar.isVisible
+            deltaX = newPos.x - oldPos.x
+            @scrollX deltaX  if deltaX isnt 0
+          if @vBar.isVisible
+            deltaY = newPos.y - oldPos.y
+            @scrollY deltaY  if deltaY isnt 0
           oldPos = newPos
       else
         unless @hasVelocity
@@ -194,10 +200,13 @@ class ScrollFrameMorph extends FrameMorph
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
           else
-            deltaX = deltaX * friction
-            @scrollX Math.round(deltaX)
-            deltaY = deltaY * friction
-            @scrollY Math.round(deltaY)
+            if @hBar.isVisible
+              deltaX = deltaX * friction
+              @scrollX Math.round(deltaX)
+            if @vBar.isVisible
+              deltaY = deltaY * friction
+              @scrollY Math.round(deltaY)
+      console.log "adjusting..."
       @contents.adjustBounds()
       @adjustScrollBars()
   
