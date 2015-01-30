@@ -1110,8 +1110,7 @@ class Morph extends MorphicNode
   wantsDropOf: (aMorph) ->
     # default is to answer the general flag - change for my heirs
     if (aMorph instanceof HandleMorph) or
-      (aMorph instanceof MenuMorph) or
-      (aMorph instanceof InspectorMorph)
+      (aMorph instanceof MenuMorph)
         return false  
     @acceptsDrops
   
