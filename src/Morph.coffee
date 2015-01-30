@@ -1417,8 +1417,17 @@ class Morph extends MorphicNode
       menu = new MenuMorph(@, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
         menu.addItem each.toString().slice(0, 50), =>
+          # this is what happens when "each" is
+          # selected: we attach the selected morph
           each.add @
-          @isDraggable = false
+          if each instanceof FrameMorph
+            each.adjustBounds()
+          else
+            # you expect Morphs attached
+            # inside a FrameMorph
+            # to be draggable out of it
+            # (as opposed to the content of a ScrollFrameMorph)
+            @isDraggable = false
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
