@@ -21,7 +21,6 @@ class SliderButtonMorph extends CircleBoxMorph
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   pressColor: new Color(80, 80, 160)
   is3D: false
-  hasMiddleDip: true
 
   constructor: (orientation) ->
     @color = new Color(80, 80, 80)
@@ -33,98 +32,16 @@ class SliderButtonMorph extends CircleBoxMorph
   updateRendering: ->
     colorBak = @color.copy()
     super()
-    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
-      @drawEdges()
     @normalImage = @image
     @color = @highlightColor.copy()
     super()
-    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
-      @drawEdges()
     @highlightImage = @image
     @color = @pressColor.copy()
     super()
-    if @is3D or !WorldMorph.preferencesAndSettings.isFlat
-      @drawEdges()
     @pressImage = @image
     @color = colorBak
     @image = @normalImage
-  
-  drawEdges: ->
-    context = @image.getContext("2d")
-    w = @width()
-    h = @height()
-    # console.log "sliderbuttonmorph - h: " + h + " w: " + w
-    context.lineJoin = "round"
-    context.lineCap = "round"
-    if @orientation is "vertical"
-      context.lineWidth = w / 3
-      gradient = context.createLinearGradient(0, 0, context.lineWidth, 0)
-      gradient.addColorStop 0, "white"
-      gradient.addColorStop 1, @color.toString()
-      context.strokeStyle = gradient
-      context.beginPath()
-      # Had to change these 0.8 and 0.9 coefficients
-      # they were originally both 0.5, which caused
-      # any "square" slider button to be a degenerate
-      # line of zero length. Chrome and Safari optimise
-      # that by not drawing it, which was making it
-      # look different from Firefox.
-      context.moveTo context.lineWidth * 0.8, w / 2
-      context.lineTo context.lineWidth * 0.9, h - w / 2
-      context.stroke()
-      gradient = context.createLinearGradient(w - context.lineWidth, 0, w, 0)
-      gradient.addColorStop 0, @color.toString()
-      gradient.addColorStop 1, "black"
-      context.strokeStyle = gradient
-      context.beginPath()
-      context.moveTo w - context.lineWidth * 0.8, w / 2
-      context.lineTo w - context.lineWidth * 0.9, h - w / 2
-      context.stroke()
-      if @hasMiddleDip
-        gradient = context.createLinearGradient(
-          context.lineWidth, 0, w - context.lineWidth, 0)
-        radius = w / 4
-        gradient.addColorStop 0, "black"
-        gradient.addColorStop 0.35, @color.toString()
-        gradient.addColorStop 0.65, @color.toString()
-        gradient.addColorStop 1, "white"
-        context.fillStyle = gradient
-        context.beginPath()
-        context.arc w / 2, h / 2, radius, radians(0), radians(360), false
-        context.closePath()
-        context.fill()
-    else if @orientation is "horizontal"
-      context.lineWidth = h / 3
-      gradient = context.createLinearGradient(0, 0, 0, context.lineWidth)
-      gradient.addColorStop 0, "white"
-      gradient.addColorStop 1, @color.toString()
-      context.strokeStyle = gradient
-      context.beginPath()
-      context.moveTo h / 2, context.lineWidth * 0.8
-      context.lineTo w - h / 2, context.lineWidth * 0.9
-      context.stroke()
-      gradient = context.createLinearGradient(0, h - context.lineWidth, 0, h)
-      gradient.addColorStop 0, @color.toString()
-      gradient.addColorStop 1, "black"
-      context.strokeStyle = gradient
-      context.beginPath()
-      context.moveTo h / 2, h - context.lineWidth * 0.8
-      context.lineTo w - h / 2, h - context.lineWidth * 0.9
-      context.stroke()
-      if @hasMiddleDip
-        gradient = context.createLinearGradient(
-          0, context.lineWidth, 0, h - context.lineWidth)
-        radius = h / 4
-        gradient.addColorStop 0, "black"
-        gradient.addColorStop 0.35, @color.toString()
-        gradient.addColorStop 0.65, @color.toString()
-        gradient.addColorStop 1, "white"
-        context.fillStyle = gradient
-        context.beginPath()
-        context.arc @width() / 2, @height() / 2, radius, radians(0), radians(360), false
-        context.closePath()
-        context.fill()
-  
+    
   
   #SliderButtonMorph events:
   mouseEnter: ->

@@ -172,9 +172,6 @@ class InspectorMorph extends BoxMorph
       else null
     ),doubleClickAction)
 
-    #
-    @list.hBar.alpha = 0.6
-    @list.vBar.alpha = 0.6
     # we know that the content of this list in this pane is not going to need the
     # step function, so we disable that from here by setting it to null, which
     # prevents the recursion to children. We could have disabled that from the
@@ -192,8 +189,6 @@ class InspectorMorph extends BoxMorph
     @detail.contents.acceptsDrops = false
     @detail.isTextLineWrapping = true
     @detail.color = new Color(255, 255, 255)
-    @detail.hBar.alpha = 0.6
-    @detail.vBar.alpha = 0.6
     ctrl = new TextMorph("")
     ctrl.isEditable = true
     ctrl.enableSelecting()
@@ -207,8 +202,6 @@ class InspectorMorph extends BoxMorph
     @work.contents.acceptsDrops = false
     @work.isTextLineWrapping = true
     @work.color = new Color(255, 255, 255)
-    @work.hBar.alpha = 0.6
-    @work.vBar.alpha = 0.6
     ev = new TextMorph("")
     ev.isEditable = true
     ev.enableSelecting()

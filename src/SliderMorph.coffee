@@ -22,12 +22,13 @@ class SliderMorph extends CircleBoxMorph
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
     @button = new SliderButtonMorph()
     @button.isDraggable = false
-    @button.color = new Color(200, 200, 200)
-    @button.highlightColor = new Color(210, 210, 255)
-    @button.pressColor = new Color(180, 180, 255)
+    @button.color = new Color(0, 0, 0)
+    @button.highlightColor = new Color(110, 110, 110)
+    @button.pressColor = new Color(100, 100, 100)
+    @button.alpha = 0.4
     super orientation # if null, then a vertical one will be created
     @add @button
-    @alpha = 0.3
+    @alpha = 0.1
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
   

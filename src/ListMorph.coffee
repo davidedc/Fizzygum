@@ -37,8 +37,6 @@ class ListMorph extends ScrollFrameMorph
     super()
     @contents.acceptsDrops = false
     @color = new Color(255, 255, 255)
-    @hBar.alpha = 0.6
-    @vBar.alpha = 0.6
     @labelGetter = labelGetter or (element) ->
         return element  if isString(element)
         return element.toSource()  if element.toSource

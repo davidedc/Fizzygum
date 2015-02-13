@@ -1988,7 +1988,7 @@ SystemTest_unpluggingOfInspectorScrollBar = {
         },
         {
             "whichMouseButtonPressed": "left",
-            "textLabelOfClickedItem": "a SliderMorph#2 [187@189 | 12@127]",
+            "textLabelOfClickedItem": "a SliderMorph#2 [189@189 | 10@129]",
             "textLabelOccurrenceNumber": 1,
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"
@@ -4133,7 +4133,7 @@ SystemTest_unpluggingOfInspectorScrollBar = {
         },
         {
             "whichMouseButtonPressed": "left",
-            "textLabelOfClickedItem": "a SliderMorph#2 [576@116 | 12@127]",
+            "textLabelOfClickedItem": "a SliderMorph#2 [577@115 | 10@129]",
             "textLabelOccurrenceNumber": 1,
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"

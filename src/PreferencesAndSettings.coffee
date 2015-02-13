@@ -60,7 +60,7 @@ class PreferencesAndSettings
     @prompterFontSize = 12
     @prompterSliderSize = 10
     @handleSize = 15
-    @scrollBarSize = 12
+    @scrollBarSize = 10
     @mouseScrollAmount = 40
     @useSliderForInput = false
     @useVirtualKeyboard = true
