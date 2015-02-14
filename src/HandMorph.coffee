@@ -512,10 +512,21 @@ class HandMorph extends Morph
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
     @setPosition pos
-    #
-    # determine the new mouse-over-list:
-    # mouseOverNew = this.allMorphsAtPointer();
+
+    # determine the new mouse-over-list.
+    # Spacial multiplexing
+    # (search "multiplexing" for the other parts of
+    # code where this matters)
+    # There are two interpretations of what this
+    # list should be:
+    #   1) all morphs "pierced through" by the pointer
+    #   2) all morphs parents of the topmost morph under the pointer
+    # 2 is what is used in Cuis
+    
+    # commented-out implementation of 1):
+    # mouseOverNew = @allMorphsAtPointer().reverse()
     mouseOverNew = @morphAtPointer().allParentsTopToBottom()
+
     if (!@children.length) and (@mouseButton is "left")
       topMorph = @morphAtPointer()
       morph = topMorph.rootForGrab()

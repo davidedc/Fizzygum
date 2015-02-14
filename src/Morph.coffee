@@ -1263,6 +1263,21 @@ class Morph extends MorphicNode
   # Morph menus ////////////////////////////////////////////////////////////////
   
   contextMenu: ->
+    # Spacial multiplexing
+    # (search "multiplexing" for the other parts of
+    # code where this matters)
+    # There are two interpretations of what this
+    # list should be:
+    #   1) all morphs "pierced through" by the pointer
+    #   2) all morphs parents of the topmost morph under the pointer
+    # 2 is what is used in Cuis
+    
+    # commented-out addendum for the implementation of 1):
+    #show the normal menu in case there is text selected,
+    #otherwise show the spacial multiplexing list
+    #if !@world().caret
+    #  if @world().hand.allMorphsAtPointer().length > 2
+    #    return @hierarchyMenu()
     if @customContextMenu
       return @customContextMenu()
     world = (if @world instanceof Function then @world() else (@root() or @world))
@@ -1279,6 +1294,16 @@ class Morph extends MorphicNode
   # the TextMorph contained in it?
   # This menu lets her disambiguate.
   hierarchyMenu: ->
+    # Spacial multiplexing
+    # (search "multiplexing" for the other parts of
+    # code where this matters)
+    # There are two interpretations of what this
+    # list should be:
+    #   1) all morphs "pierced through" by the pointer
+    #   2) all morphs parents of the topmost morph under the pointer
+    # 2 is what is used in Cuis
+    # commented-out addendum for the implementation of 1):
+    # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
     world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(@, null)
