@@ -939,7 +939,7 @@ class Morph extends MorphicNode
 
   # never currently used in ZK
   # TBD whether this is 100% correct,
-  # see "morphAtPointer" implementation in
+  # see "topMorphUnderPointer" implementation in
   # HandMorph.
   # Also there must be a quicker implementation
   # cause there is no need to create the entire

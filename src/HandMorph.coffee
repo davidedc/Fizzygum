@@ -28,7 +28,7 @@ class HandMorph extends Morph
   
   
   # HandMorph navigation:
-  morphAtPointer: ->
+  topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@bounds.origin) and
         !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
@@ -91,10 +91,10 @@ class HandMorph extends Morph
 
   #
   #    alternative -  more elegant and possibly more
-  #	performant - solution for morphAtPointer.
+  #	performant - solution for topMorphUnderPointer.
   #	Has some issues, commented out for now
   #
-  #HandMorph.prototype.morphAtPointer = function () {
+  #HandMorph.prototype.topMorphUnderPointer = function () {
   #	var myself = this;
   #	return this.world.topMorphSuchThat(function (m) {
   #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
@@ -126,7 +126,7 @@ class HandMorph extends Morph
   #		reactToDropOf(droppedMorph, handMorph) -> newParent
   #
   dropTargetFor: (aMorph) ->
-    target = @morphAtPointer()
+    target = @topMorphUnderPointer()
     target = target.parent  until target.wantsDropOf(aMorph)
     target
   
@@ -237,7 +237,7 @@ class HandMorph extends Morph
       @drop()
       @mouseButton = null
     else
-      morph = @morphAtPointer()
+      morph = @topMorphUnderPointer()
       @destroyActiveMenuIfHandHasNotActionedIt morph
       @destroyActiveHandleIfHandHasNotActionedIt morph
       @stopEditingIfActionIsElsewhere morph
@@ -300,7 +300,7 @@ class HandMorph extends Morph
    # note that the button param is not used,
    # but adding it for consistency...
    processMouseUp: (button) ->
-    morph = @morphAtPointer()
+    morph = @topMorphUnderPointer()
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     if @children.length
@@ -347,7 +347,7 @@ class HandMorph extends Morph
     @mouseButton = null
 
   processDoubleClick: ->
-    morph = @morphAtPointer()
+    morph = @topMorphUnderPointer()
     @destroyTemporaries()
     if @children.length isnt 0
       @drop()
@@ -357,7 +357,7 @@ class HandMorph extends Morph
     @mouseButton = null
   
   processMouseScroll: (event) ->
-    morph = @morphAtPointer()
+    morph = @topMorphUnderPointer()
     morph = morph.parent  while morph and not morph.mouseScroll
 
     morph.mouseScroll (event.detail / -3) or ((if Object.prototype.hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
@@ -390,7 +390,7 @@ class HandMorph extends Morph
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
     url = (if event.dataTransfer then event.dataTransfer.getData("URL") else null)
     txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
-    targetDrop = @morphAtPointer()
+    targetDrop = @topMorphUnderPointer()
     img = new Image()
 
     readSVG = (aFile) ->
@@ -525,10 +525,10 @@ class HandMorph extends Morph
     
     # commented-out implementation of 1):
     # mouseOverNew = @allMorphsAtPointer().reverse()
-    mouseOverNew = @morphAtPointer().allParentsTopToBottom()
+    mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
 
     if (!@children.length) and (@mouseButton is "left")
-      topMorph = @morphAtPointer()
+      topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
       #
