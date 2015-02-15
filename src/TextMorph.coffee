@@ -289,6 +289,7 @@ class TextMorph extends StringMorph
     menu.addItem "align left", (->@setAlignmentToLeft())  if @alignment isnt "left"
     menu.addItem "align right", (->@setAlignmentToRight())  if @alignment isnt "right"
     menu.addItem "align center", (->@setAlignmentToCenter())  if @alignment isnt "center"
+    menu.addItem "run contents", (->@doContents())
     menu
   
   setAlignmentToLeft: ->
@@ -337,7 +338,13 @@ class TextMorph extends StringMorph
   doSelection: ->
     @receiver.evaluateString @selection()
     @edit()
-  
+
+  doContents: ->
+    if @receiver?
+      @receiver.evaluateString @text
+    else
+      @evaluateString @text
+
   showSelection: ->
     result = @receiver.evaluateString(@selection())
     if result? then @inform result

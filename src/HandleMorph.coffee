@@ -101,9 +101,15 @@ class HandleMorph extends Morph
       context.closePath()
       context.stroke()
   
+
+  # implement dummy methods in here
+  # so the handle catches the clicks and
+  # prevents the parent to do anything.
+  mouseClickLeft: ->
+  mouseUpLeft: ->
+  mouseDownLeft: ->
   
   # HandleMorph stepping:
-
   mouseDownLeft: (pos) ->
     world = @root()
     offset = pos.subtract(@bounds.origin)

@@ -1012,7 +1012,7 @@ class WorldMorph extends FrameMorph
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable
     # then there is nothing to do
-    return null  unless aStringMorphOrTextMorph.isEditable
+    # return null  unless aStringMorphOrTextMorph.isEditable
 
     # there is only one caret in the World, so destroy
     # the previous one if there was one.

@@ -216,7 +216,10 @@ class StringMorph extends Morph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", (->@edit())
+    menu.addItem "edit", (->
+      debugger
+      @edit()
+    )
     menu.addItem "font size...", (->
       @prompt menu.title + "\nfont\nsize:",
         @setFontSize, @fontSize.toString(), null, 6, 500, true
@@ -321,6 +324,9 @@ class StringMorph extends Morph
   # StringMorph editing:
   edit: ->
     @root().edit @
+
+  editViaMenu: ->
+    @root().editViaMenu @
   
   selection: ->
     start = Math.min(@startMark, @endMark)

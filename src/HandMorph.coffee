@@ -8,6 +8,11 @@ class HandMorph extends Morph
 
   world: null
   mouseButton: null
+  # used for example to check that
+  # mouseDown and mouseUp happen on the
+  # same Morph (otherwise clicks happen for
+  # example when resizing a button via the
+  # handle)
   mouseDownMorph: null
   morphToGrab: null
   grabOrigin: null
@@ -343,7 +348,8 @@ class HandMorph extends Morph
         if not morph?
           break
       if morph?
-        morph[expectedClick] @bounds.origin
+        if morph == @mouseDownMorph
+          morph[expectedClick] @bounds.origin
     @mouseButton = null
 
   processDoubleClick: ->
