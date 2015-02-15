@@ -1390,11 +1390,6 @@ class Morph extends MorphicNode
       menu.addItem "unlock", (->@toggleIsDraggable()), "make this morph\nmovable"
     menu.addItem "hide", (->@minimise())
     menu.addItem "delete", (->@destroy())
-    unless @ instanceof WorldMorph
-      menu.addLine()
-      menu.addItem "World...", (->
-        world.contextMenu().popUpAtHand()
-      ), "show the\nWorld's menu"
     menu
   
   userMenu: ->

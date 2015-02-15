@@ -213,7 +213,7 @@ class HandMorph extends Morph
       # if the user is invoking/clicking on anything
       # inside a menu, because the invoked function
       # might do something with the selection
-      # (for example doIt takes the current selection).
+      # (for example doSelection takes the current selection).
       if actionedMorph isnt @world.caret.target
         # user clicked on something other than what the
         # caret is attached to

@@ -4466,7 +4466,7 @@ SystemTest_sierpinskiInScrollFrame = {
         },
         {
             "whichMouseButtonPressed": "left",
-            "textLabelOfClickedItem": "do it",
+            "textLabelOfClickedItem": "do selection",
             "textLabelOccurrenceNumber": 1,
             "millisecondsSincePreviousCommand": 0,
             "testCommandName": "SystemTestsCommandLeftOrRightClickOnMenuItem"

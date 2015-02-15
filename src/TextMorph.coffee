@@ -286,25 +286,9 @@ class TextMorph extends StringMorph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", (->@edit())
-    menu.addItem "font size...", (->
-      @prompt menu.title + "\nfont\nsize:",
-        @setFontSize, @fontSize.toString(), null, 6, 100, true
-    ), "set this Text's\nfont point size"
     menu.addItem "align left", (->@setAlignmentToLeft())  if @alignment isnt "left"
     menu.addItem "align right", (->@setAlignmentToRight())  if @alignment isnt "right"
     menu.addItem "align center", (->@setAlignmentToCenter())  if @alignment isnt "center"
-    menu.addLine()
-    menu.addItem "serif", (->@setSerif())  if @fontStyle isnt "serif"
-    menu.addItem "sans-serif", (->@setSansSerif())  if @fontStyle isnt "sans-serif"
-    if @isBold
-      menu.addItem "normal weight", (->@toggleWeight())
-    else
-      menu.addItem "bold", (->@toggleWeight())
-    if @isItalic
-      menu.addItem "normal style", (->@toggleItalic())
-    else
-      menu.addItem "italic", (->@toggleItalic())
     menu
   
   setAlignmentToLeft: ->
@@ -334,9 +318,9 @@ class TextMorph extends StringMorph
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependItem "inspect it", (->@inspectIt()), "evaluate the\nselected expression\nand inspect the result"
-      menu.prependItem "show it", (->@showIt()), "evaluate the\nselected expression\nand show the result"
-      menu.prependItem "do it", (->@doIt()), "evaluate the\nselected expression"
+      menu.prependItem "inspect selection", (->@inspectSelection()), "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show selection", (->@showSelection()), "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do selection", (->@doSelection()), "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
@@ -344,21 +328,21 @@ class TextMorph extends StringMorph
     @selectAll()
    
   # this is set by the inspector. It tells the TextMorph
-  # that any following doIt/showIt/inspectIt action needs to be
+  # that any following doSelection/showSelection/inspectSelection action needs to be
   # done apropos a particural obj
   setReceiver: (obj) ->
     @receiver = obj
     @customContextMenu = @evaluationMenu
   
-  doIt: ->
+  doSelection: ->
     @receiver.evaluateString @selection()
     @edit()
   
-  showIt: ->
+  showSelection: ->
     result = @receiver.evaluateString(@selection())
     if result? then @inform result
   
-  inspectIt: ->
+  inspectSelection: ->
     # evaluateString is a pimped-up eval in
     # the Morph class.
     result = @receiver.evaluateString(@selection())
