@@ -26,13 +26,13 @@ class BoxMorph extends Morph
     @outlinePath context, Math.max(@edge - @border, 0), @border
     context.closePath()
     context.fill()
-    if @border > 0
-      context.lineWidth = @border
-      context.strokeStyle = @borderColor.toString()
-      context.beginPath()
-      @outlinePath context, @edge, @border / 2
-      context.closePath()
-      context.stroke()
+    #if @border > 0
+    #  context.lineWidth = @border
+    #  context.strokeStyle = @borderColor.toString()
+    #  context.beginPath()
+    #  @outlinePath context, @edge, @border / 2
+    #  context.closePath()
+    #  context.stroke()
   
   outlinePath: (context, radius, inset) ->
     offset = radius + inset

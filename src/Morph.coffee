@@ -76,7 +76,7 @@ class Morph extends MorphicNode
   fps: 0
   customContextMenu: null
   trackChanges: true
-  shadowBlur: 4
+  shadowBlur: 10
   # note that image contains only the CURRENT morph, not the composition of this
   # morph with all of the submorphs. I.e. for an inspector, this will only
   # contain the background of the window pane. Not any of its contents.

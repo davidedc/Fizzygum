@@ -60,6 +60,7 @@ class SpeechBubbleMorph extends BoxMorph
     @buildAndConnectChildren()
 
     world.add @
+    @addShadow new Point(2, 2), 80
     @fullChanged()
     world.hand.destroyTemporaries()
     world.hand.temporaries.push @
@@ -109,7 +110,6 @@ class SpeechBubbleMorph extends BoxMorph
     # position my contents
     @contentsMorph.setPosition @position().add(
       new Point(@padding or @edge, @border + @padding + 1))
-    #@addShadow new Point(2, 2), 80
 
   
   # SpeechBubbleMorph drawing:
