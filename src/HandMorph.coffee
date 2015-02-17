@@ -516,7 +516,7 @@ class HandMorph extends Morph
   processMouseMove: (pageX, pageY) ->    
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
-    pos = new Point(pageX - posInDocument.x * pixelRatio, pageY - posInDocument.y * pixelRatio)
+    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
     @setPosition pos
 
     # determine the new mouse-over-list.

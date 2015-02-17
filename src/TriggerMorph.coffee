@@ -89,16 +89,19 @@ class TriggerMorph extends Morph
   
   updateRendering: ->
     ext = @extent()
-    @normalImage = newCanvas(ext)
+    @normalImage = newCanvas(ext.scaleBy pixelRatio)
     context = @normalImage.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     context.fillStyle = @color.toString()
     context.fillRect 0, 0, ext.x, ext.y
-    @highlightImage = newCanvas(ext)
+    @highlightImage = newCanvas(ext.scaleBy pixelRatio)
     context = @highlightImage.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     context.fillStyle = @highlightColor.toString()
     context.fillRect 0, 0, ext.x, ext.y
-    @pressImage = newCanvas(ext)
+    @pressImage = newCanvas(ext.scaleBy pixelRatio)
     context = @pressImage.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     context.fillStyle = @pressColor.toString()
     context.fillRect 0, 0, ext.x, ext.y
     @image = @normalImage

@@ -11,6 +11,8 @@
 		<script type="text/javascript">			
 
 			var	worldCanvas, world, hi, hint1, hint2, pixelRatio;
+			// retina and high-dpi displays have something like
+			// 2 here
 			pixelRatio = 1;
 
 			window.onload = function () {
@@ -105,8 +107,6 @@
 		is created without a second parameter of with
 		second parameter = true, in which case the
 		world will fill the entire page-->
-
-		<!-- <canvas id="world" tabindex="1" style="position: fixed; top: 0;left: 0;"> -->
 
 		<canvas id="world" tabindex="1">
 			<p>Your browser doesn't support canvas.</p>

@@ -35,14 +35,17 @@ class HandleMorph extends Morph
   
   # HandleMorph drawing:
   updateRendering: ->
-    @normalImage = newCanvas(@extent())
-    @highlightImage = newCanvas(@extent())
-    @handleMorphRenderingHelper @normalImage, @color, new Color(100, 100, 100)
-    @handleMorphRenderingHelper @highlightImage, new Color(100, 100, 255), new Color(255, 255, 255)
+    @normalImage = newCanvas(@extent().scaleBy pixelRatio)
+    normalImageContext = @normalImage.getContext("2d")
+    normalImageContext.scale pixelRatio, pixelRatio
+    @highlightImage = newCanvas(@extent().scaleBy pixelRatio)
+    highlightImageContext = @highlightImage.getContext("2d")
+    highlightImageContext.scale pixelRatio, pixelRatio
+    @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
+    @handleMorphRenderingHelper highlightImageContext, new Color(100, 100, 255), new Color(255, 255, 255)
     @image = @normalImage
   
-  handleMorphRenderingHelper: (aCanvas, color, shadowColor) ->
-    context = aCanvas.getContext("2d")
+  handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
     context.lineCap = "round"
     context.strokeStyle = color.toString()

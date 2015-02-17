@@ -661,7 +661,7 @@ class Morph extends MorphicNode
         Math.round(w),
         Math.round(h)
 
-      if false
+      if @world().showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
@@ -962,7 +962,7 @@ class Morph extends MorphicNode
   getPixelColor: (aPoint) ->
     point = aPoint.subtract(@bounds.origin)
     context = @image.getContext("2d")
-    data = context.getImageData(point.x, point.y, 1, 1)
+    data = context.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
     new Color(data.data[0], data.data[1], data.data[2], data.data[3])
   
   isTransparentAt: (aPoint) ->

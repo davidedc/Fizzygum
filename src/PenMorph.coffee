@@ -49,8 +49,9 @@ class PenMorph extends Morph
     if @isWarped
       @wantsRedraw = true
       return
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     len = @width() / 2
     start = @center().subtract(@bounds.origin)
 

@@ -136,8 +136,8 @@ class TextMorph extends StringMorph
       @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))
     else
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
-    @image.width = @width()
-    @image.height = @height()
+    @image.width = @width() * pixelRatio
+    @image.height = @height() * pixelRatio
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to

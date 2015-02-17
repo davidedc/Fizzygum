@@ -20,8 +20,9 @@ class CircleBoxMorph extends Morph
   
   updateRendering: ->
     @autoOrientation()  if @autoOrient
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     if @orientation is "vertical"
       radius = @width() / 2
       x = @center().x

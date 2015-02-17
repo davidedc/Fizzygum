@@ -7,8 +7,9 @@ class GrayPaletteMorph extends ColorPaletteMorph
   
   updateRendering: ->
     ext = @extent()
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     @choice = new Color()
     gradient = context.createLinearGradient(0, 0, ext.x, ext.y)
     gradient.addColorStop 0, "black"

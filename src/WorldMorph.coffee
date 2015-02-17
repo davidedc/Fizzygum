@@ -70,7 +70,7 @@ class WorldMorph extends FrameMorph
   # (but anyways, it was global before, so it's not any worse than before)
   @preferencesAndSettings: null
   @currentTime: null
-  @showRedraws: false
+  showRedraws: false
   systemTestsRecorderAndPlayer: null
 
   # this is the actual reference to the canvas
@@ -149,7 +149,10 @@ class WorldMorph extends FrameMorph
 
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
       @stretchWorldToFillEntirePage()
-    @bounds = new Rectangle(0, 0, @worldCanvas.width, @worldCanvas.height)
+
+    # @worldCanvas.width and height here are in phisical pixels
+    # so we want to bring them back to logical pixels
+    @bounds = new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
 
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)

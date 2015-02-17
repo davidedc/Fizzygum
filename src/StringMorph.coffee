@@ -147,9 +147,8 @@ class StringMorph extends Morph
       context.drawImage blank, Math.round(x), 0
       x += space
     space = context.measureText(" ").width
-    blank = newCanvas(new Point(space, @height()))
+    blank = newCanvas(new Point(space, @height()).scaleBy pixelRatio)
     ctx = blank.getContext("2d")
-    ctx.scale(pixelRatio, pixelRatio);
     words = @text.split(" ")
     x = startX or 0
     isFirst = true
@@ -186,6 +185,7 @@ class StringMorph extends Morph
     idx = 0
     charX = 0
     context = @image.getContext("2d")
+
     while aPoint.x - @left() > charX
       charX += context.measureText(text[idx]).width
       idx += 1
@@ -219,7 +219,6 @@ class StringMorph extends Morph
     menu = super()
     menu.addLine()
     menu.addItem "edit", (->
-      debugger
       @edit()
     )
     menu.addItem "font size...", (->

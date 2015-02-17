@@ -27,7 +27,8 @@ class CaretMorph extends BlinkerMorph
     # it'd be cool to do this only
     # once but we don't want to paint stuff in
     # the constructor...
-    @image.getContext("2d").font = @target.font()
+    context = @image.getContext("2d")
+    context.font = @target.font()
 
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->

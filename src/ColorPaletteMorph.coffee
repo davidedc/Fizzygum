@@ -14,8 +14,9 @@ class ColorPaletteMorph extends Morph
   
   updateRendering: ->
     ext = @extent()
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     @choice = new Color()
     for x in [0..ext.x]
       h = 360 * x / ext.x

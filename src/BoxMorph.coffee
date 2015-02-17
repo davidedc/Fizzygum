@@ -16,8 +16,9 @@ class BoxMorph extends Morph
   
   # BoxMorph drawing:
   updateRendering: ->
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     if (@edge is 0) and (@border is 0)
       super()
       return null

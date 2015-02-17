@@ -193,17 +193,19 @@ class SpeechBubbleMorph extends BoxMorph
     clr = color or new Color(0, 0, 0)
     fb = @extent()
     img = @image
-    outline = newCanvas(fb)
+    outline = newCanvas(fb.scaleBy pixelRatio)
     ctx = outline.getContext("2d")
+    #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage img, 0, 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, -offset.x, -offset.y
-    sha = newCanvas(fb)
+    ctx.drawImage img, -offset.x * pixelRatio, -offset.y * pixelRatio
+    sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
+    #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage outline, 0, 0
     ctx.globalCompositeOperation = "source-atop"
     ctx.fillStyle = clr.toString()
-    ctx.fillRect 0, 0, fb.x, fb.y
+    ctx.fillRect 0, 0, fb.x * pixelRatio, fb.y * pixelRatio
     sha
 
   shadowImageBlurred: (off_, color) ->
@@ -217,18 +219,19 @@ class SpeechBubbleMorph extends BoxMorph
     clr = color or new Color(0, 0, 0)
     fb = @extent().add(blur * 2)
     img = @image
-    sha = newCanvas(fb)
+    sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
-    ctx.shadowOffsetX = offset.x
-    ctx.shadowOffsetY = offset.y
-    ctx.shadowBlur = blur
+    #ctx.scale pixelRatio, pixelRatio
+    ctx.shadowOffsetX = offset.x * pixelRatio
+    ctx.shadowOffsetY = offset.y * pixelRatio
+    ctx.shadowBlur = blur * pixelRatio
     ctx.shadowColor = clr.toString()
-    ctx.drawImage img, blur - offset.x, blur - offset.y
+    ctx.drawImage img, (blur - offset.x) * pixelRatio, (blur - offset.y) * pixelRatio
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     ctx.shadowBlur = 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, blur - offset.x, blur - offset.y
+    ctx.drawImage img, (blur - offset.x) * pixelRatio, (blur - offset.y) * pixelRatio
     sha
 
   # SpeechBubbleMorph resizing
