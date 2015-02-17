@@ -193,7 +193,7 @@ class WorldMorph extends FrameMorph
     # and the interesting one in FrameMorph which 
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
-    # and it'd not attached to the WorldMorph.
+    # and it's not attached to the WorldMorph.
     @hand.recursivelyBlit aCanvas, aRect
   
   updateBroken: ->
