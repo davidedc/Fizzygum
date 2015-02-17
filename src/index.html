@@ -10,10 +10,17 @@
 
 		<script type="text/javascript">			
 
-			var	worldCanvas, world, hi, hint1, hint2;
+			var	worldCanvas, world, hi, hint1, hint2, pixelRatio;
+			pixelRatio = 1;
 
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
+
+			    worldCanvas.width = 800 * pixelRatio;
+			    worldCanvas.height = 600 * pixelRatio;
+			    worldCanvas.style.width = "800px";
+			    worldCanvas.style.height = "600px";				
+
 				// Add "false" as second parameter below
 				// to fit the world in canvas as per dimensions
 				// specified in the canvas element. Fill entire
@@ -98,7 +105,10 @@
 		is created without a second parameter of with
 		second parameter = true, in which case the
 		world will fill the entire page-->
-		<canvas id="world" tabindex="1" width="800" height="600">
+
+		<!-- <canvas id="world" tabindex="1" style="position: fixed; top: 0;left: 0;"> -->
+
+		<canvas id="world" tabindex="1">
 			<p>Your browser doesn't support canvas.</p>
 		</canvas>
 	</body>

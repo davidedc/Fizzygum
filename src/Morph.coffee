@@ -588,8 +588,9 @@ class Morph extends MorphicNode
 
   updateRendering: ->
     # initialize my surface property
-    @image = newCanvas(@extent())
+    @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     context.fillStyle = @color.toString()
     context.fillRect 0, 0, @width(), @height()
     if @cachedTexture
@@ -642,12 +643,12 @@ class Morph extends MorphicNode
       src = area.copy().translateBy(delta).round()
       context = aCanvas.getContext("2d")
       context.globalAlpha = @alpha
-      sl = src.left()
-      st = src.top()
-      al = area.left()
-      at = area.top()
-      w = Math.min(src.width(), @image.width - sl)
-      h = Math.min(src.height(), @image.height - st)
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @image.width * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @image.height * pixelRatio - st)
       return null  if w < 1 or h < 1
 
       context.drawImage @image,
@@ -660,7 +661,7 @@ class Morph extends MorphicNode
         Math.round(w),
         Math.round(h)
 
-      if WorldMorph.showRedraws
+      if false
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
@@ -758,26 +759,13 @@ class Morph extends MorphicNode
   
   # Morph full image:
   
-  # This function is not used and is probably
-  # not needed. After a couple of tweaks, the
-  # "fullImage" method below seems to work well
-  # in all situations, wherease before both the
-  # "fullImageClassic" and "fullImage" methods
-  # were needed to cover different cases.
-  fullImageClassic: ->
-    # why doesn't this work for all Morphs?
-    fb = @boundsIncludingChildren()
-    img = newCanvas(fb.extent())
-    @recursivelyBlit img, fb
-    img.globalAlpha = @alpha
-    img
-
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Zombie-Kernel/issues/160
   fullImage: ->
     boundsIncludingChildren = @boundsIncludingChildren()
-    img = newCanvas(boundsIncludingChildren.extent())
+    img = newCanvas(boundsIncludingChildren.extent().scaleBy pixelRatio)
     ctx = img.getContext("2d")
+    # ctx.scale pixelRatio, pixelRatio
     # we are going to draw this morph and its children into "img".
     # note that the children are not necessarily geometrically
     # contained in the morph (in which case it would be ok to
@@ -786,7 +774,7 @@ class Morph extends MorphicNode
     # Hence we have to translate the context
     # so that the origin of the entire boundsIncludingChildren is at the
     # very top-left of the "img" canvas.
-    ctx.translate -boundsIncludingChildren.origin.x , -boundsIncludingChildren.origin.y
+    ctx.translate -boundsIncludingChildren.origin.x * pixelRatio , -boundsIncludingChildren.origin.y * pixelRatio
     @recursivelyBlit img, boundsIncludingChildren
     img
 
@@ -806,37 +794,41 @@ class Morph extends MorphicNode
     clr = color or new Color(0, 0, 0)
     fb = @boundsIncludingChildren().extent()
     img = @fullImage()
-    outline = newCanvas(fb)
+    outline = newCanvas(fb.scaleBy pixelRatio)
     ctx = outline.getContext("2d")
+    ctx.scale pixelRatio, pixelRatio
     ctx.drawImage img, 0, 0
     ctx.globalCompositeOperation = "destination-out"
     ctx.drawImage img, Math.round(-offset.x), Math.round(-offset.y)
-    sha = newCanvas(fb)
+    sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
+    ctx.scale pixelRatio, pixelRatio
     ctx.drawImage outline, 0, 0
     ctx.globalCompositeOperation = "source-atop"
     ctx.fillStyle = clr.toString()
     ctx.fillRect 0, 0, fb.x, fb.y
     sha
   
+  # the one used right now
   shadowImageBlurred: (off_, color) ->
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
     fb = @boundsIncludingChildren().extent().add(blur * 2)
     img = @fullImage()
-    sha = newCanvas(fb)
+    sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
-    ctx.shadowOffsetX = offset.x
-    ctx.shadowOffsetY = offset.y
-    ctx.shadowBlur = blur
+    #ctx.scale pixelRatio, pixelRatio
+    ctx.shadowOffsetX = offset.x * pixelRatio
+    ctx.shadowOffsetY = offset.y * pixelRatio
+    ctx.shadowBlur = blur * pixelRatio
     ctx.shadowColor = clr.toString()
-    ctx.drawImage img, Math.round(blur - offset.x), Math.round(blur - offset.y)
+    ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     ctx.shadowBlur = 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round(blur - offset.x), Math.round(blur - offset.y)
+    ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
     sha
   
   
@@ -978,7 +970,7 @@ class Morph extends MorphicNode
       return false  if @texture
       point = aPoint.subtract(@bounds.origin)
       context = @image.getContext("2d")
-      data = context.getImageData(Math.floor(point.x), Math.floor(point.y), 1, 1)
+      data = context.getImageData(Math.floor(point.x)*pixelRatio, Math.floor(point.y)*pixelRatio, 1, 1)
       # check the 4th byte - the Alpha (RGBA)
       return data.data[3] is 0
     false
@@ -1572,9 +1564,11 @@ class Morph extends MorphicNode
     fb = @boundsIncludingChildren()
     otherFb = otherMorph.boundsIncludingChildren()
     oRect = fb.intersect(otherFb)
-    oImg = newCanvas(oRect.extent())
+    oImg = newCanvas(oRect.extent().scaleBy pixelRatio)
     ctx = oImg.getContext("2d")
-    return newCanvas(new Point(1, 1))  if oRect.width() < 1 or oRect.height() < 1
+    ctx.scale pixelRatio, pixelRatio
+    if oRect.width() < 1 or oRect.height() < 1
+      return newCanvas((new Point(1, 1)).scaleBy pixelRatio)
     ctx.drawImage @fullImage(),
       Math.round(oRect.origin.x - fb.origin.x),
       Math.round(oRect.origin.y - fb.origin.y)

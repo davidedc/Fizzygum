@@ -59,6 +59,7 @@ class TextMorph extends StringMorph
     paragraphs = @text.split("\n")
     canvas = newCanvas()
     context = canvas.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     currentLine = ""
     slot = 0
     context.font = @font()
@@ -141,6 +142,7 @@ class TextMorph extends StringMorph
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
+    context.scale pixelRatio, pixelRatio
     context.font = @font()
     context.textAlign = "left"
     context.textBaseline = "bottom"

@@ -99,12 +99,13 @@ class StringMorph extends Morph
     width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
-    @image.width = width
-    @image.height = @height()
+    @image.width = width * pixelRatio
+    @image.height = @height() * pixelRatio
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
+    context.scale pixelRatio, pixelRatio
     context.font = @font()
     context.textAlign = "left"
     context.textBaseline = "bottom"
@@ -148,6 +149,7 @@ class StringMorph extends Morph
     space = context.measureText(" ").width
     blank = newCanvas(new Point(space, @height()))
     ctx = blank.getContext("2d")
+    ctx.scale(pixelRatio, pixelRatio);
     words = @text.split(" ")
     x = startX or 0
     isFirst = true
