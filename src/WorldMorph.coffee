@@ -188,9 +188,15 @@ class WorldMorph extends FrameMorph
   # The blit function is defined in Morph and is not overriden by
   # any morph.
   recursivelyBlit: (aCanvas, aRect) ->
-    # invokes the Morph's recursivelyBlit, which has only two implementations:
-    # the default one by Morph which just invokes the blit of all children
-    # and the interesting one in FrameMorph which 
+    # invokes the Morph's recursivelyBlit, which has only three implementations:
+    #  * the default one by Morph which just invokes the blit of all children
+    #  * the interesting one in FrameMorph which a) narrows the dirty
+    #    rectangle (intersecting it with its border
+    #    since the FrameMorph clips at its border) and b) stops recursion on all
+    #    the children that are outside such intersection.
+    #  * this implementation which just takes into account that the hand
+    #    (which could contain a Morph being dragged)
+    #    is painted on top of everything.
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
