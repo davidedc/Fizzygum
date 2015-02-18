@@ -647,8 +647,8 @@ class Morph extends MorphicNode
       st = src.top() * pixelRatio
       al = area.left() * pixelRatio
       at = area.top() * pixelRatio
-      w = Math.min(src.width() * pixelRatio, @image.width * pixelRatio - sl)
-      h = Math.min(src.height() * pixelRatio, @image.height * pixelRatio - st)
+      w = Math.min(src.width() * pixelRatio, @image.width - sl)
+      h = Math.min(src.height() * pixelRatio, @image.height - st)
       return null  if w < 1 or h < 1
 
       context.drawImage @image,
@@ -796,17 +796,17 @@ class Morph extends MorphicNode
     img = @fullImage()
     outline = newCanvas(fb.scaleBy pixelRatio)
     ctx = outline.getContext("2d")
-    ctx.scale pixelRatio, pixelRatio
+    #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage img, 0, 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round(-offset.x), Math.round(-offset.y)
+    ctx.drawImage img, Math.round(-offset.x) * pixelRatio, Math.round(-offset.y) * pixelRatio
     sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
-    ctx.scale pixelRatio, pixelRatio
+    #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage outline, 0, 0
     ctx.globalCompositeOperation = "source-atop"
     ctx.fillStyle = clr.toString()
-    ctx.fillRect 0, 0, fb.x, fb.y
+    ctx.fillRect 0, 0, fb.x * pixelRatio, fb.y * pixelRatio
     sha
   
   # the one used right now

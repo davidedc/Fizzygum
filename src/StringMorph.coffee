@@ -91,6 +91,7 @@ class StringMorph extends Morph
     # initialize my surface property
     @image = newCanvas()
     context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
     context.font = @font()
     context.textAlign = "left"
     context.textBaseline = "bottom"
