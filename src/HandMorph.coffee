@@ -29,7 +29,8 @@ class HandMorph extends Morph
   changed: ->
     if @world?
       b = @boundsIncludingChildren()
-      @world.broken.push @boundsIncludingChildren().spread()  unless b.extent().eq(new Point())
+      if !b.extent().eq(new Point())
+        @world.broken.push @boundsIncludingChildren().spread()
   
   
   # HandMorph navigation:

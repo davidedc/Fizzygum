@@ -102,7 +102,6 @@ class MenuMorph extends BoxMorph
     @label.borderColor = @borderColor
     @label.setExtent text.extent().add(4) # here!
     @label.text = text
-    @add @label
   
   updateRendering: ->
     # console.log "menu update rendering"
@@ -230,17 +229,14 @@ class MenuMorph extends BoxMorph
     # previous one.
     if world.activeMenu
       world.activeMenu = world.activeMenu.destroy()
+    @setPosition pos
     world.add @
-    # it's better do these movement
-    # operations after adding to the world
-    # in general, as a concept.
-    # Specifically, the @keepWithin method
+    # the @keepWithin method
     # needs to know the extent of the morph
     # so it must be called after the world.add
     # method. If you call before, there is
     # nopainting happening and the morph doesn't
     # know its extent.
-    @setPosition pos
     @keepWithin world
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

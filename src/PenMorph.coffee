@@ -34,7 +34,10 @@ class PenMorph extends Morph
   changed: ->
     if @isWarped is false
       w = @root()
-      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
+      # unless we are the main desktop, then if the morph has no parent
+      # don't add the broken rect since the morph is not visible
+      if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
+        w.broken.push @visibleBounds().spread()
       @parent.childChanged @  if @parent
   
   
@@ -116,7 +119,9 @@ class PenMorph extends Morph
       context.moveTo from.x, from.y
       context.lineTo to.x, to.y
       context.stroke()
-      if @isWarped is false
+      # unless we are the main desktop, then if the morph has no parent
+      # don't add the broken rect since the morph is not visible
+      if @isWarped is false and (@ instanceof WorldMorph or @parent?)
         @world().broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()
   
   

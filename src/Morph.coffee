@@ -661,7 +661,7 @@ class Morph extends MorphicNode
         Math.round(w),
         Math.round(h)
 
-      if @world().showRedraws
+      if world.showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
@@ -870,13 +870,19 @@ class Morph extends MorphicNode
   changed: ->
     if @trackChanges
       w = @root()
-      w.broken.push @visibleBounds().spread()  if w instanceof WorldMorph
+      # unless we are the main desktop, then if the morph has no parent
+      # don't add the broken rect since the morph is not visible
+      if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
+        w.broken.push @visibleBounds().spread()
     @parent.childChanged @  if @parent
   
   fullChanged: ->
     if @trackChanges
       w = @root()
-      w.broken.push @boundsIncludingChildren().spread()  if w instanceof WorldMorph
+      # unless we are the main desktop, then if the morph has no parent
+      # don't add the broken rect since the morph is not visible
+      if w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?))
+        w.broken.push @boundsIncludingChildren().spread()
   
   childChanged: ->
     # react to a  change in one of my children,
