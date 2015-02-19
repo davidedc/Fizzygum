@@ -138,10 +138,11 @@ class ScrollFrameMorph extends FrameMorph
     @adjustScrollBars()
   
   setContents: (aMorph, extraPadding) ->
+    @extraPadding = extraPadding
     @contents.destroyAll()
     #
     @contents.children = []
-    aMorph.setPosition @position().add(@padding + extraPadding)
+    aMorph.setPosition @position().add(@padding + @extraPadding)
     @addContents aMorph
   
   setExtent: (aPoint) ->

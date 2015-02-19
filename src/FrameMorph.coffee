@@ -11,6 +11,7 @@
 class FrameMorph extends Morph
 
   @scrollFrame: null
+  extraPadding: 0
 
   # if this frame belongs to a scrollFrame, then
   # the @scrollFrame points to it
@@ -179,20 +180,33 @@ class FrameMorph extends Morph
   adjustBounds: ->
     if !@scrollFrame?
       return null
+
+    # if FrameMorph is of type isTextLineWrapping
+    # it means that you don't want the TextMorph to
+    # extend indefinitely as you are typing. Rather,
+    # the width will be constrained and the text will
+    # wrap.
+    if @scrollFrame.isTextLineWrapping
+      debugger
+      @children.forEach (morph) =>
+        if morph instanceof TextMorph
+          totalPadding =  2*(@scrollFrame.extraPadding + @scrollFrame.padding)
+          # this re-layouts the text to fit the width.
+          # The new height of the TextMorph will then be used
+          # to redraw the vertical slider.
+          morph.setWidth @width() - totalPadding
+          morph.maxWidth = @width() - totalPadding
+          @setHeight Math.max(morph.height(), @scrollFrame.height() - totalPadding)
+
     subBounds = @submorphBounds()
-    if subBounds and (not @scrollFrame.isTextLineWrapping)
-      newBounds = subBounds.expandBy(@scrollFrame.padding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)
+    if subBounds
+      newBounds = subBounds.expandBy(@scrollFrame.padding + @scrollFrame.extraPadding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)
     else
       newBounds = @scrollFrame.bounds.copy()
     unless @bounds.eq(newBounds)
       @bounds = newBounds
       @updateRendering()
       @keepInScrollFrame()
-    if @scrollFrame.isTextLineWrapping
-      @children.forEach (morph) =>
-        if morph instanceof TextMorph
-          morph.setWidth @width()
-          @setHeight Math.max(morph.height(), @scrollFrame.height())
     @scrollFrame.adjustScrollBars()
   
   
