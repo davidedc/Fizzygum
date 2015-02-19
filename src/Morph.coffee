@@ -633,7 +633,7 @@ class Morph extends MorphicNode
   # eventually invokes blit.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  blit: (aCanvas, clippingRectangle = @bounds) ->
+  blit: (aCanvas, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible or !@image?
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
