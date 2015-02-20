@@ -4,6 +4,7 @@
 # REQUIRES globalFunctions
 # REQUIRES PreferencesAndSettings
 # REQUIRES Color
+# REQUIRES ProfilingDataCollector
 
 # The WorldMorph takes over the canvas on the page
 class WorldMorph extends FrameMorph
@@ -204,6 +205,7 @@ class WorldMorph extends FrameMorph
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
+    ProfilingDataCollector.profileBrokenRects @broken.length
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Morphs are traversed
