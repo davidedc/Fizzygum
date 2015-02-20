@@ -10,7 +10,7 @@
 
 class FrameMorph extends Morph
 
-  @scrollFrame: null
+  scrollFrame: null
   extraPadding: 0
 
   # if this frame belongs to a scrollFrame, then
