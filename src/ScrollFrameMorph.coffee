@@ -51,11 +51,9 @@ class ScrollFrameMorph extends FrameMorph
     @hBar.action = (num, target) =>
       target.contents.setPosition new Point(target.left() - num, target.contents.position().y)
       target.contents.adjustBounds()
-      target.adjustScrollBars()
     @vBar.action = (num, target) =>
       target.contents.setPosition new Point(target.contents.position().x, target.top() - num)
       target.contents.adjustBounds()
-      target.adjustScrollBars()
     @adjustScrollBars()
 
   setColor: (aColor) ->
