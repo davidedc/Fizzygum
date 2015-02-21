@@ -56,16 +56,16 @@ import ntpath
 import fnmatch
 
 # GLOBALS
-FINAL_OUTPUT_FILE = 'build/delete_me/zombie-kernel.coffee'
+FINAL_OUTPUT_FILE = '../Zombie-Kernel-builds/latest/delete_me/zombie-kernel.coffee'
 
 STRING_BLOCK = \
 """  @coffeeScriptSourceOfThisClass: '''
 %s  '''
 """
 
-DIRECTORY_WITH_TEST_FILES = "src/tests/"
+DIRECTORY_WITH_TEST_FILES = "../Zombie-Kernel-tests/tests/"
 FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
-OUTPUT_FILE_WITH_TEST_INCLUDES = "build/worldWithSystemTestHarness.html"
+OUTPUT_FILE_WITH_TEST_INCLUDES = "../Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html"
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
