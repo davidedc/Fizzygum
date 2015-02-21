@@ -9,7 +9,7 @@ It's "live" in the sense that it allows direct interaction/inspection with/of al
 
 Play with it
 -------------------
-Try it [here](http://davidedc.github.io/Zombie-Kernel/build/)
+Try it [here](http://davidedc.github.io/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html)
 
 Download it / build it
 -------------------
@@ -17,7 +17,8 @@ Install npm. Then install coffeescript. Run the "build_it_please.sh" script. No 
 
 The docs
 -------------------
-[Here](http://davidedc.github.io/Zombie-Kernel/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
+[Here](http://davidedc.github.io/Zombie-Kernel-builds/latest/other-support-files/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
+
 
 Hack it
 ---------------------------------------------
