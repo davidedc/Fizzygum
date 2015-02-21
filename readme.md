@@ -15,14 +15,14 @@ Download it / build it
 -------------------
 Install npm. Then install coffeescript. Run the "build_it_please.sh" script. No server needed, just drag "index.html" from the "build" directory into any browser and right click to open a system menu. The "demo" section has some elements that you can play with.
 
-The docs
+Docs
 -------------------
 [Here](http://davidedc.github.io/Zombie-Kernel-builds/other-support-files/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
 
 
-Hack it
+Build it / Hack it
 ---------------------------------------------
-If you make changes to any of the coffeescript .coffee files in the src directory, just run the script "build_it_please.sh", which will rebuild everything.
+TBD
 
 Standing on the shoulders of giants
 -----------------------------------
