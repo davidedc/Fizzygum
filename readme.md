@@ -17,7 +17,7 @@ Install npm. Then install coffeescript. Run the "build_it_please.sh" script. No 
 
 The docs
 -------------------
-[Here](http://davidedc.github.io/Zombie-Kernel-builds/latest/other-support-files/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
+[Here](http://davidedc.github.io/Zombie-Kernel-builds/other-support-files/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
 
 
 Hack it
