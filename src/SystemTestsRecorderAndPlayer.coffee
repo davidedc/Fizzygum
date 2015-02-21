@@ -447,20 +447,24 @@ class SystemTestsRecorderAndPlayer
     if whichMorph == @worldMorph
       imageData = world.worldCanvas.toDataURL("image/png")
     else
-      #debugger
+      # you can take the sceen copy for a single Morph
+      # only while recording (or playing) a test by
+      # choosing the "take pic" action... which otherwise
+      # would usually open a new tab with the picture
+      # of the "painted" morph (not sceen-copied, see
+      # explanation of the differene here above)
       fullExtentOfMorph = whichMorph.boundsIncludingChildren()
-      destCanvas = newCanvas fullExtentOfMorph.extent()
+      destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
       destCtx = destCanvas.getContext '2d'
       destCtx.drawImage world.worldCanvas,
-        fullExtentOfMorph.topLeft().x,
-        fullExtentOfMorph.topLeft().y,
-        fullExtentOfMorph.width(),
-        fullExtentOfMorph.height(),
+        fullExtentOfMorph.topLeft().x * pixelRatio,
+        fullExtentOfMorph.topLeft().y * pixelRatio,
+        fullExtentOfMorph.width() * pixelRatio,
+        fullExtentOfMorph.height() * pixelRatio,
         0,
         0,
-        fullExtentOfMorph.width(),
-        fullExtentOfMorph.height(),
-      #debugger
+        fullExtentOfMorph.width() * pixelRatio,
+        fullExtentOfMorph.height() * pixelRatio,
 
       imageData = destCanvas.toDataURL "image/png"
 
