@@ -65,7 +65,8 @@ cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js ../Zombie-Kernel-builds/l
 # are copied recursively ignoring the directory
 # structure they come from, so a simple cp
 # doesn't cut it, we need the find below
-#cp src/tests/*.js ../Zombie-Kernel-builds/latest/js/tests
-find ../Zombie-Kernel-tests/tests/ -iname '*.js' -exec cp \{\} ../Zombie-Kernel-builds/latest/js/tests \;
+mkdir ../Zombie-Kernel-builds/latest/js/tests/assets
+cp -r ../Zombie-Kernel-tests/tests/* ../Zombie-Kernel-builds/latest/js/tests/assets
+find ../Zombie-Kernel-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Zombie-Kernel-builds/latest/js/tests \;
 
 rm -rdf ../Zombie-Kernel-builds/latest/delete_me

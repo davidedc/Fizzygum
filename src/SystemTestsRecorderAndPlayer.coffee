@@ -712,7 +712,6 @@ class SystemTestsRecorderAndPlayer
       =>
         console.log "saving failed screenshots"
         if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
-          console.log "safari"
           # Safari can't save blobs nicely with a nice
           # file name, see
           # http://stuk.github.io/jszip/documentation/howto/write_zip.html
@@ -775,9 +774,23 @@ class SystemTestsRecorderAndPlayer
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in SystemTestsRecorderAndPlayer.testsAssetsManifest
-          if eachAssetInManifest.slice(0, pureImageName.length) == pureImageName          
+          if eachAssetInManifest.indexOf(pureImageName) != -1         
             script = document.createElement('script')
-            script.src = "js/tests/"+ eachAssetInManifest + ".js"
+            ###
+            systemInfo = new SystemTestsSystemInfo()
+            # some devices have non-integer pixel ratios so
+            # let's handle the dot there.
+            pixelRatioString = (""+pixelRatio).replace(/\.+/g, "_")
+            alert "js/tests/assets/" +
+              systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              "devicePixelRatio_" + pixelRatioString + "/" +
+              eachAssetInManifest +
+              ".js"
+            ###
+            script.src = "js/tests/assets/"+ eachAssetInManifest + ".js"
             document.head.appendChild script
 
     setTimeout \

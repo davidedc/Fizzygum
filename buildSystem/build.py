@@ -142,15 +142,21 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     filenames2 = []
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
+          # the way to differentiate between files: the asset files contain a hash
+          # in the filename that we can use to filter them in/out.
+          # note that this is not a normal regexp but rather a unix bash regexp
+          # as explained here:
+          # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
           filenames2.append(os.path.join(filename))
           print("%s" % (filename))
     filenames2 = sorted(filenames2)
 
-    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsManifest')) { SystemTestsRecorderAndPlayer.testsManifest = []; }"
+    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsManifest')) {" + "\n"
+    manifest = manifest + " SystemTestsRecorderAndPlayer.testsManifest = []; }" + "\n"
 
     for filename in filenames2:
-        manifest = manifest + "SystemTestsRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');"
+        manifest = manifest + "SystemTestsRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
@@ -161,17 +167,23 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # which only includes the test steps and not the
     # assets, so it's one js file for each test
     filenames2 = []
+    print("Tests assets ----------------------------")
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
+          # the way to differentiate between files: the asset files contain a hash
+          # in the filename that we can use to filter them in/out.
+          # note that this is not a normal regexp but rather a unix bash regexp
+          # as explained here:
+          # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
-          filenames2.append(os.path.join(filename))
-          print("%s" % (filename))
+          filenames2.append(os.path.join(root,filename).replace("../Zombie-Kernel-tests/tests/",""))
+          print("%s" % (os.path.join(root,filename)))
     filenames2 = sorted(filenames2)
 
-    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) { SystemTestsRecorderAndPlayer.testsAssetsManifest = []; }"
+    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) {\nSystemTestsRecorderAndPlayer.testsAssetsManifest = []; }\n"
 
     for filename in filenames2:
-        manifest = manifest + "SystemTestsRecorderAndPlayer.testsAssetsManifest.push('"+ntpath.basename(filename)+"');"
+        manifest = manifest + "SystemTestsRecorderAndPlayer.testsAssetsManifest.push('"+filename+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:
