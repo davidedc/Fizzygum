@@ -184,7 +184,8 @@ class WorldMorph extends FrameMorph
       rect.intersects fb
   
   
-  # all fullDraws result into actual blittings of images done
+  # recursivelyBlit results into actual blittings of pices of
+  # morphs done
   # by the blit function.
   # The blit function is defined in Morph and is not overriden by
   # any morph.
