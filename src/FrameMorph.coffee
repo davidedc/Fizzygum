@@ -187,7 +187,6 @@ class FrameMorph extends Morph
     # the width will be constrained and the text will
     # wrap.
     if @scrollFrame.isTextLineWrapping
-      debugger
       @children.forEach (morph) =>
         if morph instanceof TextMorph
           totalPadding =  2*(@scrollFrame.extraPadding + @scrollFrame.padding)

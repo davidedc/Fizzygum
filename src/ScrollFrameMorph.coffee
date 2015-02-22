@@ -205,7 +205,7 @@ class ScrollFrameMorph extends FrameMorph
             if @vBar.isVisible
               deltaY = deltaY * friction
               @scrollY Math.round(deltaY)
-      console.log "adjusting..."
+      #console.log "adjusting..."
       @contents.adjustBounds()
       @adjustScrollBars()
   
