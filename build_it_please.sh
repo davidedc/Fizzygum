@@ -43,6 +43,9 @@ if [ ! -d ../Zombie-Kernel-builds/latest/delete_me ]; then
   mkdir ../Zombie-Kernel-builds/latest/delete_me
 fi
 
+# copy the test files
+mkdir ../Zombie-Kernel-builds/latest/js/tests/
+
 
 # generate the zombie-kernel coffee file in the delete_me directory
 python ./buildSystem/build.py
@@ -56,9 +59,6 @@ cp src/index.html ../Zombie-Kernel-builds/latest/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver\ submodule/FileSaver.js ../Zombie-Kernel-builds/latest/js/libs/
 cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js ../Zombie-Kernel-builds/latest/js/libs/
-
-# copy the test files
-mkdir ../Zombie-Kernel-builds/latest/js/tests/
 
 # the tests files are copied from a directory
 # structure so it's cleaner, but they

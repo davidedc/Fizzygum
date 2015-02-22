@@ -760,21 +760,44 @@ class SystemTestsRecorderAndPlayer
       content = zip.generate({type:"blob"})
       saveAs(content, "SystemTest_#{@testName}.zip")    
 
+  loadTest: (testNumber, andThenDoThis)->
+    script = document.createElement('script')
+    script.src = "js/tests/"+@testsList()[testNumber] + ".js"
+
+    script.onload = =>
+      @loadImagesOfTest andThenDoThis
+
+    document.head.appendChild script
+
+  loadImagesOfTest: (andThenDoThis)->
+
+    for eachCommand in window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
+      if eachCommand.screenShotImageName?
+        pureImageName = eachCommand.screenShotImageName
+        for eachAssetInManifest in SystemTestsRecorderAndPlayer.testsAssetsManifest
+          if eachAssetInManifest.slice(0, pureImageName.length) == pureImageName          
+            script = document.createElement('script')
+            script.src = "js/tests/"+ eachAssetInManifest + ".js"
+            document.head.appendChild script
+
+    setTimeout \
+      =>
+        andThenDoThis()
+      , 1000
+
+
   testsList: ->
-    # Check which objects have the right name start
-    console.log Object.keys(window)
-    (Object.keys(window)).filter (i) ->
-      console.log i.indexOf("SystemTest_")
-      i.indexOf("SystemTest_") == 0
+    return SystemTestsRecorderAndPlayer.testsManifest
 
   runNextSystemTest: ->
     @indexOfSystemTestBeingPlayed++
     if @indexOfSystemTestBeingPlayed >= @testsList().length
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "finished all tests"
       return
-    SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
-    @testCommandsSequence = window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
-    @startTestPlaying()
+    @loadTest @indexOfSystemTestBeingPlayed, =>
+      SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
+      @testCommandsSequence = window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
+      @startTestPlaying()
 
   runAllSystemTests: ->
     console.log "System tests: " + @testsList()

@@ -135,6 +135,50 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # src/tests/
     # filenames = sorted(glob(testsDirectory + "*.js"))
 
+
+    # creating the manifest for the tests ------------------------------------
+    # which only includes the test steps and not the
+    # assets, so it's one js file for each test
+    filenames2 = []
+    for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
+      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
+          filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
+          filenames2.append(os.path.join(filename))
+          print("%s" % (filename))
+    filenames2 = sorted(filenames2)
+
+    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsManifest')) { SystemTestsRecorderAndPlayer.testsManifest = []; }"
+
+    for filename in filenames2:
+        manifest = manifest + "SystemTestsRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');"
+
+    # 'build/indexWithTests.html'
+    with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
+        f.write(manifest)
+    # -------------------------------------------------------------------------
+
+    # creating the manifest for the tests ASSETS ------------------------------------
+    # which only includes the test steps and not the
+    # assets, so it's one js file for each test
+    filenames2 = []
+    for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
+      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
+          filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
+          filenames2.append(os.path.join(filename))
+          print("%s" % (filename))
+    filenames2 = sorted(filenames2)
+
+    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) { SystemTestsRecorderAndPlayer.testsAssetsManifest = []; }"
+
+    for filename in filenames2:
+        manifest = manifest + "SystemTestsRecorderAndPlayer.testsAssetsManifest.push('"+ntpath.basename(filename)+"');"
+
+    # 'build/indexWithTests.html'
+    with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:
+        f.write(manifest)
+    # -------------------------------------------------------------------------
+
+    '''
     filenames = []
     for root, dirnames, fileNMS in os.walk(testsDirectory):
       for filename in fnmatch.filter(fileNMS, '*.js'):
@@ -144,8 +188,13 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # create the string with the js inclusions for each
     # test
     target = ""
+    target = target + '<script type="text/javascript" src="js/tests/testsManifest.js"></script>'
     for filename in filenames:
         target = target + '<script type="text/javascript" src="js/tests/'+ntpath.basename(filename)+'"></script>'
+
+    '''
+    target =  '<script type="text/javascript" src="js/tests/testsManifest.js"></script>\n'
+    target =  target + '<script type="text/javascript" src="js/tests/testsAssetsManifest.js"></script>'
 
     # put the tests inclusion in the right place
 
