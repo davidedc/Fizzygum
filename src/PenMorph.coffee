@@ -22,9 +22,9 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
-    # no need to call @updateRendering() because @setExtent does it.
+    # no need to call @updateBackingStore() because @setExtent does it.
     # (should it?)
-    #@updateRendering()
+    #@updateBackingStore()
 
 
   @staticVariable: 1
@@ -42,7 +42,7 @@ class PenMorph extends Morph
   
   
   # PenMorph display:
-  updateRendering: (facing) ->
+  updateBackingStore: (facing) ->
     #
     #    my orientation can be overridden with the "facing" parameter to
     #    implement Scratch-style rotation styles
@@ -89,7 +89,7 @@ class PenMorph extends Morph
   # PenMorph access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   
@@ -146,7 +146,7 @@ class PenMorph extends Morph
     @isDown = false
   
   clear: ->
-    @parent.updateRendering()
+    @parent.updateBackingStore()
     @parent.changed()
   
   
@@ -158,7 +158,7 @@ class PenMorph extends Morph
   endWarp: ->
     @isWarped = false
     if @wantsRedraw
-      @updateRendering()
+      @updateBackingStore()
       @wantsRedraw = false
     @parent.changed()
   

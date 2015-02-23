@@ -93,7 +93,7 @@ class MorphsListMorph extends BoxMorph
     if @label.height() > (@height() - 50)
       @setHeight @label.height() + 50
       @changed()
-      #@resizer.updateRendering()
+      #@resizer.updateBackingStore()
 
     # morphsList
     y = @label.bottom() + 2

@@ -159,7 +159,7 @@ class WorldMorph extends FrameMorph
     @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
 
     @changed()
-    @updateRendering()
+    @updateBackingStore()
 
   # see roundNumericIDsToNextThousand method in
   # Morph for an explanation of why we need this
@@ -1091,11 +1091,11 @@ class WorldMorph extends FrameMorph
     slider.button.pressColor.b += 150
     slider.silentSetHeight WorldMorph.preferencesAndSettings.scrollBarSize
     slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
-    slider.updateRendering()
+    slider.updateBackingStore()
     slider.action = (num) ->
       aStringMorphOrTextMorph.changed()
       aStringMorphOrTextMorph.text = Math.round(num).toString()
-      aStringMorphOrTextMorph.updateRendering()
+      aStringMorphOrTextMorph.updateBackingStore()
       aStringMorphOrTextMorph.changed()
       aStringMorphOrTextMorph.escalateEvent(
           'reactToSliderEdit',

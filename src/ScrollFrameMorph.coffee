@@ -108,7 +108,7 @@ class ScrollFrameMorph extends FrameMorph
         @hBar.stop = @contents.width() - @width()
         @hBar.size = @width() / @contents.width() * @hBar.stop
         @hBar.value = @left() - @contents.left()
-        @hBar.updateRendering()
+        @hBar.updateBackingStore()
       else
         @hBar.hide()
 
@@ -126,7 +126,7 @@ class ScrollFrameMorph extends FrameMorph
         @vBar.stop = @contents.height() - @height()
         @vBar.size = @height() / @contents.height() * @vBar.stop
         @vBar.value = @top() - @contents.top()
-        @vBar.updateRendering()
+        @vBar.updateBackingStore()
       else
         @vBar.hide()
   

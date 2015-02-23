@@ -18,7 +18,7 @@ class CircleBoxMorph extends Morph
     else
       @orientation = "horizontal"
   
-  updateRendering: ->
+  updateBackingStore: ->
     @autoOrientation()  if @autoOrient
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
@@ -72,5 +72,5 @@ class CircleBoxMorph extends Morph
       @orientation = "vertical"
     @silentSetExtent new Point(@height(), @width())
     @setCenter center
-    @updateRendering()
+    @updateBackingStore()
     @changed()

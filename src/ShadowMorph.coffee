@@ -13,7 +13,7 @@ class ShadowMorph extends Morph
     @alpha = alpha or ((if (alpha is 0) then 0 else 0.2))
     @color = color or new Color(0, 0, 0)
  
-  updateRendering: ->
+  updateBackingStore: ->
     # console.log "shadow morph update rendering"
     fb = @targetMorph.boundsIncludingChildren()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)

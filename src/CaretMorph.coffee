@@ -22,7 +22,7 @@ class CaretMorph extends BlinkerMorph
       @target.setAlignmentToLeft()
     @gotoSlot @slot
   
-  updateRendering: ->
+  updateBackingStore: ->
     super()
     # it'd be cool to do this only
     # once but we don't want to paint stuff in
@@ -177,7 +177,7 @@ class CaretMorph extends BlinkerMorph
         @target.endMark = @slot
       else if @target.endMark isnt @slot
         @target.endMark = @slot
-        @target.updateRendering()
+        @target.updateBackingStore()
         @target.changed()
     else
       @target.clearSelection()  
@@ -210,9 +210,9 @@ class CaretMorph extends BlinkerMorph
     # needed because clearSelection runs them
     # already, but I'm leaving them here
     # until I understand better this changed
-    # vs. updateRendering semantics.
+    # vs. updateBackingStore semantics.
     @target.changed()
-    @target.updateRendering()
+    @target.updateBackingStore()
     @target.changed()
 
     @gotoSlot 0
@@ -230,7 +230,7 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
       @target.text = text
-      @target.updateRendering()
+      @target.updateBackingStore()
       @target.changed()
       @goRight false, symbol.length
   
@@ -281,7 +281,7 @@ class CaretMorph extends BlinkerMorph
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
       @target.text = text
-      @target.updateRendering()
+      @target.updateBackingStore()
   
   deleteLeft: ->
     if @target.selection()
@@ -290,14 +290,14 @@ class CaretMorph extends BlinkerMorph
     text = @target.text
     @target.changed()
     @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
-    @target.updateRendering()
+    @target.updateBackingStore()
     @goLeft()
 
   # CaretMorph destroying:
   destroy: ->
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
-      @target.updateRendering()
+      @target.updateBackingStore()
       @target.changed()
     super  
   

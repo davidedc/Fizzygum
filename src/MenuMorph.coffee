@@ -12,7 +12,7 @@ class MenuMorph extends BoxMorph
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
-    # Note that Morph does a updateRendering upon creation (TODO Why?), so we need
+    # Note that Morph does a updateBackingStore upon creation (TODO Why?), so we need
     # to initialise the items before calling super. We can't initialise it
     # outside the constructor because the array would be shared across instantiated
     # objects.
@@ -103,7 +103,7 @@ class MenuMorph extends BoxMorph
     @label.setExtent text.extent().add(4) # here!
     @label.text = text
   
-  updateRendering: ->
+  updateBackingStore: ->
     # console.log "menu update rendering"
     isLine = false
     @destroyAll()

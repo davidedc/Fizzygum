@@ -113,7 +113,7 @@ class SpeechBubbleMorph extends BoxMorph
 
   
   # SpeechBubbleMorph drawing:
-  updateRendering: ->
+  updateBackingStore: ->
     super()
 
   
@@ -239,5 +239,5 @@ class SpeechBubbleMorph extends BoxMorph
   layoutSubmorphs: ->
     # console.log "bubble layoutSubmorphs"
     #@removeShadow()
-    #@updateRendering()
+    #@updateBackingStore()
     #@addShadow new Point(2, 2), 80

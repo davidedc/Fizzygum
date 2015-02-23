@@ -75,7 +75,7 @@ class ListMorph extends ScrollFrameMorph
     #
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
-    @listContents.updateRendering()
+    @listContents.updateBackingStore()
     @addContents @listContents
   
   select: (item, trigger) ->

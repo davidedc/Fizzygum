@@ -24,7 +24,7 @@ class StringFieldMorph extends FrameMorph
     super()
     @color = new Color(255, 255, 255)
   
-  updateRendering: ->
+  updateBackingStore: ->
     txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()

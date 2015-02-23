@@ -12,7 +12,7 @@ class ColorPaletteMorph extends Morph
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
   
-  updateRendering: ->
+  updateBackingStore: ->
     ext = @extent()
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
@@ -45,7 +45,7 @@ class ColorPaletteMorph extends Morph
         @target[@targetSetter] @choice
       else
         @target[@targetSetter] = @choice
-        @target.updateRendering()
+        @target.updateBackingStore()
         @target.changed()
   
     

@@ -8,7 +8,7 @@
 # knows nothing about visibility, targets,
 # image buffers, dirty rectangles, events.
 # Please no invokations to changed or fullChanged
-# or updateRendering in here, and no
+# or updateBackingStore in here, and no
 # touching of any of the out-of-scope properties
 # mentioned.
 

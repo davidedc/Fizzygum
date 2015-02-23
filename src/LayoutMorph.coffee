@@ -359,7 +359,7 @@ class LayoutMorph extends Morph
     handle = new HandleMorph()
     handle.isDraggable = false
     handle.target = row
-    handle.updateRendering()
+    handle.updateBackingStore()
     handle.noticesTransparentClick = true
 
   @test2: ->
@@ -379,7 +379,7 @@ class LayoutMorph extends Morph
     handle = new HandleMorph()
     handle.isDraggable = false
     handle.target = row2
-    handle.updateRendering()
+    handle.updateBackingStore()
     handle.noticesTransparentClick = true
 
   @test3: ->
@@ -401,7 +401,7 @@ class LayoutMorph extends Morph
     handle = new HandleMorph()
     handle.isDraggable = false
     handle.target = row3
-    handle.updateRendering()
+    handle.updateBackingStore()
     handle.noticesTransparentClick = true
 
   @test4: ->
@@ -446,5 +446,5 @@ class LayoutMorph extends Morph
     handle = new HandleMorph()
     handle.isDraggable = false
     handle.target = row3
-    handle.updateRendering()
+    handle.updateBackingStore()
     handle.noticesTransparentClick = true #

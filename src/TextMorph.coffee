@@ -122,7 +122,7 @@ class TextMorph extends StringMorph
         slot += word.length + 1
   
   
-  updateRendering: ->
+  updateBackingStore: ->
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
@@ -208,7 +208,7 @@ class TextMorph extends StringMorph
   setExtent: (aPoint) ->
     @maxWidth = Math.max(aPoint.x, 0)
     @changed()
-    @updateRendering()
+    @updateBackingStore()
   
   # TextMorph measuring ////
 
@@ -296,17 +296,17 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @updateRendering()
+    @updateBackingStore()
     @changed()  
   
   # TextMorph evaluation:

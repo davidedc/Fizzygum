@@ -204,7 +204,7 @@ class FrameMorph extends Morph
       newBounds = @scrollFrame.bounds.copy()
     unless @bounds.eq(newBounds)
       @bounds = newBounds
-      @updateRendering()
+      @updateBackingStore()
       @keepInScrollFrame()
     @scrollFrame.adjustScrollBars()
   

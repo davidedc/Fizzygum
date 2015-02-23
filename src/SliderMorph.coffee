@@ -32,7 +32,7 @@ class SliderMorph extends CircleBoxMorph
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
   
-  # this.updateRendering();
+  # this.updateBackingStore();
   autoOrientation: ->
       noOperation
   
@@ -48,7 +48,7 @@ class SliderMorph extends CircleBoxMorph
     else
       return (@width() - @button.width()) / @rangeSize()
   
-  updateRendering: ->
+  updateBackingStore: ->
     super()
     @button.orientation = @orientation
     if @orientation is "vertical"
@@ -68,7 +68,7 @@ class SliderMorph extends CircleBoxMorph
         Math.round((@value - @start) * @unitSize()),
         @width() - @button.width())
     @button.setPosition new Point(posX, posY).add(@bounds.origin)
-    @button.updateRendering()
+    @button.updateBackingStore()
     @button.changed()
   
   updateValue: ->
@@ -144,7 +144,7 @@ class SliderMorph extends CircleBoxMorph
       @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
     @value = Math.max(@value, @start)
     @updateTarget()
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   setStop: (numOrMorphGivingNum) ->
@@ -162,7 +162,7 @@ class SliderMorph extends CircleBoxMorph
       @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
     @value = Math.min(@value, @stop)
     @updateTarget()
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   setSize: (sizeOrMorphGivingSize) ->
@@ -179,7 +179,7 @@ class SliderMorph extends CircleBoxMorph
       @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
     @value = Math.min(@value, @stop - @size)
     @updateTarget()
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   # setTarget: -> taken form the ControllerMixin

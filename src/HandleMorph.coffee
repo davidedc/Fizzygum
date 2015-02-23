@@ -34,7 +34,7 @@ class HandleMorph extends Morph
   
   
   # HandleMorph drawing:
-  updateRendering: ->
+  updateBackingStore: ->
     @normalImage = newCanvas(@extent().scaleBy pixelRatio)
     normalImageContext = @normalImage.getContext("2d")
     normalImageContext.scale pixelRatio, pixelRatio
@@ -168,7 +168,7 @@ class HandleMorph extends Morph
         menu.addItem each.toString().slice(0, 50), ->
           @isDraggable = false
           @target = each
-          @updateRendering()
+          @updateBackingStore()
           @noticesTransparentClick = true
     else
       # the ideal would be to not show the

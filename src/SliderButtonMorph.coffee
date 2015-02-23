@@ -29,7 +29,7 @@ class SliderButtonMorph extends CircleBoxMorph
   autoOrientation: ->
       noOperation
   
-  updateRendering: ->
+  updateBackingStore: ->
     colorBak = @color.copy()
     super()
     @normalImage = @image

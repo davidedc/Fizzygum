@@ -15,7 +15,7 @@ class BoxMorph extends Morph
 
   
   # BoxMorph drawing:
-  updateRendering: ->
+  updateBackingStore: ->
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
     context.scale pixelRatio, pixelRatio
@@ -89,7 +89,7 @@ class BoxMorph extends Morph
     else
       newSize = parseFloat(size)
       @border = Math.max(newSize, 0)  unless isNaN(newSize)
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
 
@@ -101,7 +101,7 @@ class BoxMorph extends Morph
 
     if aColor
       @borderColor = aColor
-      @updateRendering()
+      @updateBackingStore()
       @changed()
   
   setCornerSize: (sizeOrMorphGivingSize) ->
@@ -116,7 +116,7 @@ class BoxMorph extends Morph
     else
       newSize = parseFloat(size)
       @edge = Math.max(newSize, 0)  unless isNaN(newSize)
-    @updateRendering()
+    @updateBackingStore()
     @changed()
   
   colorSetters: ->

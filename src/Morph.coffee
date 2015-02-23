@@ -217,7 +217,7 @@ class Morph extends MorphicNode
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
-    # Note that we don't call @updateRendering()
+    # Note that we don't call @updateBackingStore()
     # that's because the actual extending morph will probably
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
@@ -524,7 +524,7 @@ class Morph extends MorphicNode
       @changed()
       @silentSetExtent aPoint
       @changed()
-      @updateRendering()
+      @updateBackingStore()
       @layoutSubmorphs()
   
   silentSetExtent: (aPoint) ->
@@ -537,7 +537,7 @@ class Morph extends MorphicNode
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
-    # do not updateRendering() just yet
+    # do not updateBackingStore() just yet
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
@@ -545,7 +545,7 @@ class Morph extends MorphicNode
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
-    # do not updateRendering() just yet
+    # do not updateBackingStore() just yet
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
@@ -558,22 +558,22 @@ class Morph extends MorphicNode
       unless @color.eq(aColor)
         @color = aColor
         @changed()
-        @updateRendering()
+        @updateBackingStore()
   
   
   # Morph displaying ###########################################################
 
   # There are three fundamental methods for rendering and displaying anything.
-  # * updateRendering: this one creates/updates the local canvas of this morph only
+  # * updateBackingStore: this one creates/updates the local canvas of this morph only
   #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
   #   contains three children Morphs (a color palette, a greyscale palette and
-  #   a feedback). The updateRendering method of ColorPickerMorph only creates
+  #   a feedback). The updateBackingStore method of ColorPickerMorph only creates
   #   a canvas for the container Morph. So that's just a canvas with a
   #   solid color. As the
   #   ColorPickerMorph constructor runs, the three childredn Morphs will
-  #   run their own updateRendering method, so each child will have its own
+  #   run their own updateBackingStore method, so each child will have its own
   #   canvas with their own contents.
-  #   Note that updateRendering should be called sparingly. A morph should repaint
+  #   Note that updateBackingStore should be called sparingly. A morph should repaint
   #   its buffer pretty much only *after* it's been added to itf first parent and
   #   whenever it changes dimensions. Things like changing parent and updating
   #   the position shouldn't normally trigger an update of the buffer.
@@ -586,7 +586,7 @@ class Morph extends MorphicNode
   # * recursivelyBlit: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
-  updateRendering: ->
+  updateBackingStore: ->
     # initialize my surface property
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
@@ -915,13 +915,13 @@ class Morph extends MorphicNode
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
-    aMorph.updateRendering()
+    aMorph.updateBackingStore()
   
   # attaches submorph underneath
   addBack: (aMorph) ->
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
-    aMorph.updateRendering()
+    aMorph.updateBackingStore()
     # this is a curious instance where
     # we first update the rendering and then
     # we add the morph. This is because
@@ -1211,14 +1211,14 @@ class Morph extends MorphicNode
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = Math.round(num).toString()
-          entryField.text.updateRendering()
+          entryField.text.updateBackingStore()
           entryField.text.changed()
           entryField.text.edit()
       else
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = num.toString()
-          entryField.text.updateRendering()
+          entryField.text.updateBackingStore()
           entryField.text.changed()
       menu.items.push slider
     menu.addLine 2
@@ -1550,7 +1550,7 @@ class Morph extends MorphicNode
   evaluateString: (code) ->
     try
       result = eval(code)
-      @updateRendering()
+      @updateBackingStore()
       @changed()
     catch err
       @inform err
