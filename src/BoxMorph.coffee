@@ -34,6 +34,7 @@ class BoxMorph extends Morph
     #  @outlinePath context, @edge, @border / 2
     #  context.closePath()
     #  context.stroke()
+    return null
   
   outlinePath: (context, radius, inset) ->
     offset = radius + inset

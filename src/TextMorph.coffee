@@ -121,14 +121,13 @@ class TextMorph extends StringMorph
           currentLine = currentLine + word + " "
         slot += word.length + 1
   
-  
-  updateBackingStore: ->
-    @image = newCanvas()
-    context = @image.getContext("2d")
+
+  calculateAndUpdateExtent: ->
+    ANimage = newCanvas()
+    context = ANimage.getContext("2d")
     context.font = @font()
     @breakTextIntoLines()
 
-    # set my extent
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
     height = @lines.length * (fontHeight(@fontSize) + shadowHeight)
@@ -136,6 +135,19 @@ class TextMorph extends StringMorph
       @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))
     else
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
+    @parent.layoutChanged()  if @parent.layoutChanged  if @parent
+  
+  updateBackingStore: ->
+    @image = newCanvas()
+    context = @image.getContext("2d")
+    context.font = @font()
+    @breakTextIntoLines()
+
+    shadowWidth = Math.abs(@shadowOffset.x)
+    shadowHeight = Math.abs(@shadowOffset.y)
+
+    @calculateAndUpdateExtent()
+
     @image.width = @width() * pixelRatio
     @image.height = @height() * pixelRatio
 

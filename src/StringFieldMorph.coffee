@@ -23,7 +23,20 @@ class StringFieldMorph extends FrameMorph
       ) ->
     super()
     @color = new Color(255, 255, 255)
-  
+
+  setWidth: (newWidth)->
+    super(newWidth)
+    @text.setWidth(newWidth)
+
+
+  calculateAndUpdateExtent: ->
+    txt = (if @text then @getValue() else @defaultContents)
+    text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
+    console.log "text morph extent: " + text.text + " : " + text.extent()
+    @setWidth(Math.max(@minWidth,text.width()))
+    console.log "string fleid morph extent: " + @extent()
+
+
   updateBackingStore: ->
     txt = (if @text then @getValue() else @defaultContents)
     @text = null

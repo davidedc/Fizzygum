@@ -24,4 +24,5 @@ class ShadowMorph extends Morph
       @image = @targetMorph.shadowImage(@offset, @color)
       @setPosition fb.origin.add(@offset)
     # console.log "shadow morph update rendering EXIT"
+    return @extent()
   

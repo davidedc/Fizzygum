@@ -169,7 +169,11 @@ class MenuMorph extends BoxMorph
           item.dataSourceMorphForTarget = item
       y += 1  if isLine
       item.setPosition new Point(x, y)
-      @add item
+      # we do a silentAdd here because we are going
+      # to update all the morphs again later in
+      # adjustWidthsOfMenuEntries
+      # (cause we need to know the maximum width first)
+      @silentAdd item
       #console.log "item added: " + item.bounds
       y = y + item.height()
       y += 1  if isLine
@@ -180,6 +184,7 @@ class MenuMorph extends BoxMorph
     @silentSetExtent fb.extent().add(4)
   
     super()
+    return @extent()
   
   maxWidth: ->
     w = 0
@@ -192,15 +197,19 @@ class MenuMorph extends BoxMorph
       else if (item instanceof StringFieldMorph) or
         (item instanceof ColorPickerMorph) or
         (item instanceof SliderMorph)
-          w = Math.max(w, item.width())  
-    #
-    w = Math.max(w, @label.width())  if @label
+          w = Math.max(w, item.width())
+      console.log "maxWidth: width of item " + item + " : " + w
+
+    if @label
+      w = Math.max(w, @label.width())
+      console.log "maxWidth: label width : " + w
     w
   
   # makes all the elements of this menu the
   # right width.
   adjustWidthsOfMenuEntries: ->
     w = @maxWidth()
+    console.log "maxwidth " + w
     @children.forEach (item) =>
       item.setWidth w
       if item instanceof MenuItemMorph
@@ -210,6 +219,7 @@ class MenuMorph extends BoxMorph
       else
         if item is @label
           item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
+      console.log "new width of " + item + " : " + item.width()
   
   
   unselectAllItems: ->

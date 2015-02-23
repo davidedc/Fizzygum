@@ -44,6 +44,7 @@ class HandleMorph extends Morph
     @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
     @handleMorphRenderingHelper highlightImageContext, new Color(100, 100, 255), new Color(255, 255, 255)
     @image = @normalImage
+    return null
   
   handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1

@@ -104,11 +104,13 @@ class ScrollFrameMorph extends FrameMorph
         # scrollframe, otherwise we don't move it.
         if @hBar.parent == @
           @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
-        @hBar.start = 0
-        @hBar.stop = @contents.width() - @width()
-        @hBar.size = @width() / @contents.width() * @hBar.stop
-        @hBar.value = @left() - @contents.left()
-        @hBar.updateRange()
+        stopValue = @contents.width() - @width()
+        @hBar.updateSpecs(
+          0, # start
+          stopValue, # stop
+          @left() - @contents.left(), # value
+          @width() / @contents.width() * stopValue # size
+        )
       else
         @hBar.hide()
 
@@ -122,11 +124,13 @@ class ScrollFrameMorph extends FrameMorph
         # scrollframe, otherwise we don't move it.
         if @vBar.parent == @
           @vBar.setPosition new Point(@right() - @vBar.width(), @top())
-        @vBar.start = 0
-        @vBar.stop = @contents.height() - @height()
-        @vBar.size = @height() / @contents.height() * @vBar.stop
-        @vBar.value = @top() - @contents.top()
-        @vBar.updateRange()
+        stopValue = @contents.height() - @height()
+        @vBar.updateSpecs(
+          0, # start
+          stopValue, # stop
+          @top() - @contents.top(), # value
+          @height() / @contents.height() * stopValue # size
+        )
       else
         @vBar.hide()
   

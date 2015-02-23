@@ -30,7 +30,6 @@ class SliderButtonMorph extends CircleBoxMorph
       noOperation
 
   updateBackingStore: ->
-
     if @parent?
       @orientation = @parent.orientation
       if @orientation is "vertical"

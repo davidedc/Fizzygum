@@ -29,12 +29,20 @@ class SliderMorph extends CircleBoxMorph
     super orientation # if null, then a vertical one will be created
     @alpha = 0.1
     @color = color or new Color(0, 0, 0)
-    @setExtent new Point(20, 100)
-    @add @button
+    @silentSetExtent new Point(20, 100)
+    @silentAdd @button
+
+  imBeingAddedTo: (newParentMorph) ->
+    @updateBackingStore()
+    @button.updateBackingStore()
+    @changed()
 
   setExtent: (a) ->
     super a
-    @updateRange()  
+    # my backing store had just been updated
+    # in the call of super, now
+    # it's the time of the button
+    @button.updateBackingStore()
   
   autoOrientation: ->
       noOperation
@@ -116,7 +124,11 @@ class SliderMorph extends CircleBoxMorph
   
   # once you set all the properties of a slider you
   # call this method so it updates itself
-  updateRange: ->
+  updateSpecs: (start, stop, value, size)->
+    if start? then @start = start
+    if stop? then @stop = stop
+    if value? then @value = value
+    if size? then @size = size
     @updateBackingStore()
     @button.updateBackingStore()
     @changed()

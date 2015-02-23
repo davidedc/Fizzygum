@@ -2,18 +2,18 @@
 
 class ColorPickerMorph extends Morph
 
+  feedback: null
   choice: null
 
   constructor: (defaultColor) ->
     @choice = defaultColor or new Color(255, 255, 255)
     super()
     @color = new Color(255, 255, 255)
-    @silentSetExtent new Point(80, 80)
+    @setExtent new Point(80, 80)
     @buildSubmorphs()
   
   buildSubmorphs: ->
     @destroyAll()
-    @children = []
     @feedback = new RectangleMorph(new Point(20, 20), @choice)
     cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))

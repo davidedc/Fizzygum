@@ -426,6 +426,15 @@ class Morph extends MorphicNode
 
     return result
 
+  ###
+  mergedBoundsOfChildren: ->
+    result = new Rectangle(0,0)
+    @children.forEach (child) ->
+      if !child.isMinimised and child.isVisible
+        result = result.merge(child.boundsIncludingChildren())
+    result
+  ###
+
   
   boundsIncludingChildren: ->
     result = @bounds
@@ -597,6 +606,7 @@ class Morph extends MorphicNode
       @drawCachedTexture()
     else @drawTexture @texture  if @texture
     @changed()
+    return null
   
   drawTexture: (url) ->
     @cachedTexture = new Image()
@@ -897,6 +907,9 @@ class Morph extends MorphicNode
     return root  if root instanceof WorldMorph
     return root.world  if root instanceof HandMorph
     null
+
+  imBeingAddedTo: (newParentMorph) ->
+    @updateBackingStore()
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
@@ -912,10 +925,24 @@ class Morph extends MorphicNode
     # is outside the clipping Morph gets
     # painted over.
     aMorph.changed()
+    @silentAdd(aMorph, true)
+    aMorph.imBeingAddedTo @
+
+  calculateAndUpdateExtent: ->
+
+  silentAdd: (aMorph, avoidExtentCalculation) ->
+    # the morph that is being
+    # attached might be attached to
+    # a clipping morph. So we
+    # need to do a "changed" here
+    # to make sure that anything that
+    # is outside the clipping Morph gets
+    # painted over.
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     @addChild aMorph
-    aMorph.updateBackingStore()
+    if !avoidExtentCalculation
+      aMorph.calculateAndUpdateExtent()
   
   # attaches submorph underneath
   addBack: (aMorph) ->
@@ -1206,7 +1233,7 @@ class Morph extends MorphicNode
       slider.button.highlightColor.b += 100
       slider.button.pressColor = slider.button.color.copy()
       slider.button.pressColor.b += 150
-      slider.setHeight WorldMorph.preferencesAndSettings.prompterSliderSize
+      slider.silentSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       if isRounded
         slider.action = (num) ->
           entryField.changed()

@@ -30,6 +30,7 @@ class ColorPaletteMorph extends Morph
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
+    return null
   
   mouseMove: (pos) ->
     @choice = @getPixelColor(pos)

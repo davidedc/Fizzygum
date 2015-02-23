@@ -29,6 +29,7 @@ class CaretMorph extends BlinkerMorph
     # the constructor...
     context = @image.getContext("2d")
     context.font = @target.font()
+    return null
 
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
