@@ -23,13 +23,7 @@ class CaretMorph extends BlinkerMorph
     @gotoSlot @slot
   
   updateBackingStore: ->
-    super()
-    # it'd be cool to do this only
-    # once but we don't want to paint stuff in
-    # the constructor...
-    context = @image.getContext("2d")
-    context.font = @target.font()
-    return null
+    return super()
 
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
