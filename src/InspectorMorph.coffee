@@ -310,6 +310,7 @@ class InspectorMorph extends BoxMorph
     @detail.setContents cnts, 2
   
   layoutSubmorphs: ->
+    debugger
     console.log "fixing the layout of the inspector"
     Morph::trackChanges = false
     #
@@ -382,7 +383,6 @@ class InspectorMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     super aPoint
-    @layoutSubmorphs()
   
   
   #InspectorMorph editing ops:

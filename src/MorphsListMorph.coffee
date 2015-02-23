@@ -116,4 +116,3 @@ class MorphsListMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     super aPoint
-    @layoutSubmorphs()

@@ -522,9 +522,8 @@ class Morph extends MorphicNode
   # the default of layoutSubmorphs
   # is to do nothing, but things like
   # the inspector might well want to
-  # tweak many of theor children...
+  # tweak many of their children...
   layoutSubmorphs: ->
-    null
   
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->

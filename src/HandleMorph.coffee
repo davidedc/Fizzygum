@@ -126,9 +126,6 @@ class HandleMorph extends Morph
           newExt = newExt.max(@minExtent)
           @target.setExtent newExt
           @setPosition @target.bottomRight().subtract(@extent().add(@inset))
-          # not all morphs provide a layoutSubmorphs, so check
-          if @target.layoutSubmorphs?
-            @target.layoutSubmorphs()
         else # type === 'move'
           @target.setPosition newPos.subtract(@target.extent()).add(@extent())
       else

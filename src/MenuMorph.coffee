@@ -214,7 +214,6 @@ class MenuMorph extends BoxMorph
       item.setWidth w
       if item instanceof MenuItemMorph
         isSelected = (item.image == item.pressImage)
-        item.layoutSubmorphs()
         if isSelected then item.image = item.pressImage          
       else
         if item is @label
