@@ -28,8 +28,30 @@ class SliderButtonMorph extends CircleBoxMorph
   
   autoOrientation: ->
       noOperation
-  
+
   updateBackingStore: ->
+
+    if @parent?
+      @orientation = @parent.orientation
+      if @orientation is "vertical"
+        bw = @parent.width() - 2
+        bh = Math.max(bw, Math.round(@parent.height() * @parent.ratio()))
+        @silentSetExtent new Point(bw, bh)
+        posX = 1
+        posY = Math.min(
+          Math.round((@parent.value - @parent.start) * @parent.unitSize()),
+          @parent.height() - @height())
+      else
+        bh = @parent.height() - 2
+        bw = Math.max(bh, Math.round(@parent.width() * @parent.ratio()))
+        @silentSetExtent new Point(bw, bh)
+        posY = 1
+        posX = Math.min(
+          Math.round((@parent.value - @parent.start) * @parent.unitSize()),
+          @parent.width() - @width())
+      @setPosition new Point(posX, posY).add(@parent.bounds.origin)
+
+
     colorBak = @color.copy()
     super()
     @normalImage = @image
@@ -41,6 +63,8 @@ class SliderButtonMorph extends CircleBoxMorph
     @pressImage = @image
     @color = colorBak
     @image = @normalImage
+    @changed()
+    return null
     
   
   #SliderButtonMorph events:

@@ -27,12 +27,15 @@ class SliderMorph extends CircleBoxMorph
     @button.pressColor = new Color(100, 100, 100)
     @button.alpha = 0.4
     super orientation # if null, then a vertical one will be created
-    @add @button
     @alpha = 0.1
     @color = color or new Color(0, 0, 0)
     @setExtent new Point(20, 100)
+    @add @button
+
+  setExtent: (a) ->
+    super a
+    @updateRange()  
   
-  # this.updateBackingStore();
   autoOrientation: ->
       noOperation
   
@@ -50,26 +53,7 @@ class SliderMorph extends CircleBoxMorph
   
   updateBackingStore: ->
     super()
-    @button.orientation = @orientation
-    if @orientation is "vertical"
-      bw = @width() - 2
-      bh = Math.max(bw, Math.round(@height() * @ratio()))
-      @button.silentSetExtent new Point(bw, bh)
-      posX = 1
-      posY = Math.min(
-        Math.round((@value - @start) * @unitSize()),
-        @height() - @button.height())
-    else
-      bh = @height() - 2
-      bw = Math.max(bh, Math.round(@width() * @ratio()))
-      @button.silentSetExtent new Point(bw, bh)
-      posY = 1
-      posX = Math.min(
-        Math.round((@value - @start) * @unitSize()),
-        @width() - @button.width())
-    @button.setPosition new Point(posX, posY).add(@bounds.origin)
-    @button.updateBackingStore()
-    @button.changed()
+    return null
   
   updateValue: ->
     if @orientation is "vertical"
@@ -128,6 +112,14 @@ class SliderMorph extends CircleBoxMorph
   userSetStart: (num) ->
     # for context menu demo purposes
     @start = Math.max(num, @stop)
+
+  
+  # once you set all the properties of a slider you
+  # call this method so it updates itself
+  updateRange: ->
+    @updateBackingStore()
+    @button.updateBackingStore()
+    @changed()
   
   setStart: (numOrMorphGivingNum) ->
 
@@ -145,6 +137,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.max(@value, @start)
     @updateTarget()
     @updateBackingStore()
+    @button.updateBackingStore()
     @changed()
   
   setStop: (numOrMorphGivingNum) ->
@@ -163,6 +156,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.min(@value, @stop)
     @updateTarget()
     @updateBackingStore()
+    @button.updateBackingStore()
     @changed()
   
   setSize: (sizeOrMorphGivingSize) ->
@@ -180,6 +174,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.min(@value, @stop - @size)
     @updateTarget()
     @updateBackingStore()
+    @button.updateBackingStore()
     @changed()
   
   # setTarget: -> taken form the ControllerMixin
