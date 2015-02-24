@@ -63,7 +63,7 @@ class ListMorph extends ScrollFrameMorph
             italic = true
           else # assume it's a color
             color = pair[0]
-      #
+
       #labelString,
       #action,
       #hint,
@@ -72,7 +72,7 @@ class ListMorph extends ScrollFrameMorph
       #italic = false,
       #doubleClickAction # optional, when used as list contents
       @listContents.addItem @labelGetter(element), @select, null, color, bold, italic, @doubleClickAction
-    #
+
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
     @listContents.updateBackingStore()

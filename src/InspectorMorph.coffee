@@ -38,7 +38,7 @@ class InspectorMorph extends BoxMorph
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     attribs = []
-    #
+
     # remove existing panes
     @destroyAll()
 
@@ -179,7 +179,7 @@ class InspectorMorph extends BoxMorph
     # in this context doesn't.
     @list.listContents.step = null
     @add @list
-    #
+
     # details pane
     @detail = new ScrollFrameMorph()
     @detail.acceptsDrops = false
@@ -192,7 +192,7 @@ class InspectorMorph extends BoxMorph
     ctrl.setReceiver @target
     @detail.setContents ctrl, 2
     @add @detail
-    #
+
     # work ('evaluation') pane
     @work = new ScrollFrameMorph()
     @work.acceptsDrops = false
@@ -205,7 +205,7 @@ class InspectorMorph extends BoxMorph
     ev.setReceiver @target
     @work.setContents ev, 2
     @add @work
-    #
+
     # properties button
     @buttonSubset = new TriggerMorph(@)
     @buttonSubset.setLabel "show..."
@@ -215,24 +215,24 @@ class InspectorMorph extends BoxMorph
       menu.addItem "attributes", =>
         @showing = "attributes"
         @buildAndConnectChildren()
-      #
+
       menu.addItem "methods", =>
         @showing = "methods"
         @buildAndConnectChildren()
-      #
+
       menu.addItem "all", =>
         @showing = "all"
         @buildAndConnectChildren()
-      #
+
       menu.addLine()
       menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
         @markOwnershipOfProperties = not @markOwnershipOfProperties
         @buildAndConnectChildren()
       ), "highlight\nownership of properties"
       menu.popUpAtHand()
-    #
+
     @add @buttonSubset
-    #
+
     # inspect button
     @buttonInspect = new TriggerMorph(@)
     @buttonInspect.setLabel "inspect"
@@ -247,16 +247,16 @@ class InspectorMorph extends BoxMorph
           inspector.keepWithin world
           world.add inspector
           inspector.changed()
-        #
+
         menu.addItem "here...", =>
           @setTarget @currentProperty
-        #
+
         menu.popUpAtHand()
       else
         @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
-    #
+
     @add @buttonInspect
-    #
+
     # edit button
     @buttonEdit = new TriggerMorph(@)
     @buttonEdit.setLabel "edit..."
@@ -269,21 +269,21 @@ class InspectorMorph extends BoxMorph
       menu.addItem "rename...", (->@renameProperty())
       menu.addItem "remove", (->@removeProperty())
       menu.popUpAtHand()
-    #
+
     @add @buttonEdit
-    #
+
     # close button
     @buttonClose = new TriggerMorph(@)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
     @buttonClose.action = ->
       @destroy()
-    #
+
     @add @buttonClose
-    #
+
     # resizer
     @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
-    #
+
     # update layout
     @layoutSubmorphs()
 
@@ -310,7 +310,7 @@ class InspectorMorph extends BoxMorph
     debugger
     console.log "fixing the layout of the inspector"
     Morph::trackChanges = false
-    #
+
     # label
     x = @left() + @edge
     y = @top() + @edge
@@ -323,7 +323,7 @@ class InspectorMorph extends BoxMorph
       @updateBackingStore()
       @changed()
       @resizer.updatePosition()
-    #
+
     # list
     y = @label.bottom() + 2
     w = Math.min(Math.floor(@width() / 3), @list.listContents.width())
@@ -332,19 +332,19 @@ class InspectorMorph extends BoxMorph
     h = b - y
     @list.setPosition new Point(x, y)
     @list.setExtent new Point(w, h)
-    #
+
     # detail
     x = @list.right() + @edge
     r = @right() - @edge
     w = r - x
     @detail.setPosition new Point(x, y)
     @detail.setExtent new Point(w, (h * 2 / 3) - @edge)
-    #
+
     # work
     y = @detail.bottom() + @edge
     @work.setPosition new Point(x, y)
     @work.setExtent new Point(w, h / 3)
-    #
+
     # properties button
     x = @list.left()
     y = @list.bottom() + @edge
@@ -352,20 +352,20 @@ class InspectorMorph extends BoxMorph
     h = WorldMorph.preferencesAndSettings.handleSize
     @buttonSubset.setPosition new Point(x, y)
     @buttonSubset.setExtent new Point(w, h)
-    #
+
     # inspect button
     x = @detail.left()
     w = @detail.width() - @edge - WorldMorph.preferencesAndSettings.handleSize
     w = w / 3 - @edge / 3
     @buttonInspect.setPosition new Point(x, y)
     @buttonInspect.setExtent new Point(w, h)
-    #
+
     # edit button
     x = @buttonInspect.right() + @edge
     @buttonEdit.setPosition new Point(x, y)
     #@buttonEdit.setPosition new Point(x, y + 20)
     @buttonEdit.setExtent new Point(w, h)
-    #
+
     # close button
     x = @buttonEdit.right() + @edge
     r = @detail.right() - @edge - WorldMorph.preferencesAndSettings.handleSize
@@ -383,8 +383,8 @@ class InspectorMorph extends BoxMorph
   save: ->
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
+
     try
-      #
       # this.target[propertyName] = evaluate(txt);
       @target.evaluateString "this." + propertyName + " = " + txt
       if @target.updateBackingStore
@@ -428,7 +428,7 @@ class InspectorMorph extends BoxMorph
     propertyName = @list.selected.labelString
     try
       delete (@target[propertyName])
-      #
+
       @currentProperty = null
       @buildAndConnectChildren()
       if @target.updateBackingStore

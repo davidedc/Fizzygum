@@ -56,9 +56,9 @@ class TriggerMorph extends Morph
     @fontSize = fontSize or WorldMorph.preferencesAndSettings.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
     @labelColor = labelColor or new Color(0, 0, 0)
-    #
+
     super()
-    #
+
     #@color = new Color(255, 152, 152)
     @color = new Color(255, 255, 255)
     if @labelString?

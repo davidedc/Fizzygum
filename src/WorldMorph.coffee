@@ -671,10 +671,10 @@ class WorldMorph extends FrameMorph
     window.onbeforeunload = (evt) ->
       e = evt or window.event
       msg = "Are you sure you want to leave?"
-      #
+
       # For IE and Firefox
       e.returnValue = msg  if e
-      #
+
       # For Safari / chrome
       msg
   
@@ -1101,7 +1101,7 @@ class WorldMorph extends FrameMorph
           'reactToSliderEdit',
           aStringMorphOrTextMorph
       )
-    #
+
     menu.items.push slider
     menu.popup @, aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   

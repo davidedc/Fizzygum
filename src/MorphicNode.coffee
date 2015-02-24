@@ -274,7 +274,7 @@ class MorphicNode
     constructors.forEach (each) =>
       if @constructor is each
         return @
-    #
+
     return null  unless @parent
     @parent.parentThatIsAnyOf constructors
 

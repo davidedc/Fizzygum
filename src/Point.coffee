@@ -131,14 +131,14 @@ class Point
     offset = @subtract(center)
     return new @constructor(-offset.y, offset.y).add(center)  if direction is "right"
     return new @constructor(offset.y, -offset.y).add(center)  if direction is "left"
-    #
+
     # direction === 'pi'
     center.subtract offset
   
   flip: (direction, center) ->
     # direction must be 'vertical' or 'horizontal'
     return new @constructor(@x, center.y * 2 - @y)  if direction is "vertical"
-    #
+
     # direction === 'horizontal'
     new @constructor(center.x * 2 - @x, @y)
   

@@ -183,7 +183,7 @@ class Point2
       @x = offset.y + center.x
       @y = -offset.y + center.y
       return
-    #
+
     # direction === 'pi'
     tmpPointForRotate = center.copy().subtract offset
     @x = tmpPointForRotate.x
@@ -194,7 +194,7 @@ class Point2
     if direction is "vertical"
       @y = center.y * 2 - @y
       return
-    #
+
     # direction === 'horizontal'
     @x = center.x * 2 - @x
   

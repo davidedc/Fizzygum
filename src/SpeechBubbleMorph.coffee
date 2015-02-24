@@ -99,14 +99,14 @@ class SpeechBubbleMorph extends BoxMorph
         true,
         "center")
     @add @contentsMorph
-    #
+
     # adjust my layout
     @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
     @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
-    #
+
     # draw my outline
     #super()
-    #
+
     # position my contents
     @contentsMorph.setPosition @position().add(
       new Point(@padding or @edge, @border + @padding + 1))
@@ -125,13 +125,13 @@ class SpeechBubbleMorph extends BoxMorph
     offset = radius + inset
     w = @width()
     h = @height()
-    #
+
     # top left:
     context.arc offset, offset, radius, radians(-180), radians(-90), false
-    #
+
     # top right:
     context.arc w - offset, offset, radius, radians(-90), radians(-0), false
-    #
+
     # bottom right:
     context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false
     unless @isThought # draw speech bubble hook
@@ -141,25 +141,25 @@ class SpeechBubbleMorph extends BoxMorph
       else # pointing left
         context.lineTo w - (radius / 2 + inset), h - inset
         context.lineTo w - (offset + radius), h - offset
-    #
+
     # bottom left:
     context.arc offset, h - offset - radius, radius, radians(90), radians(180), false
+
     if @isThought
-      #
       # close large bubble:
       context.lineTo inset, offset
-      #
+
       # draw thought bubbles:
       if @isPointingRight
-        #
+
         # tip bubble:
         rad = radius / 4
         circle rad + inset, h - rad - inset, rad
-        #
+
         # middle bubble:
         rad = radius / 3.2
         circle rad * 2 + inset, h - rad - inset * 2, rad
-        #
+
         # top bubble:
         rad = radius / 2.8
         circle rad * 3 + inset * 2, h - rad - inset * 4, rad
@@ -167,11 +167,11 @@ class SpeechBubbleMorph extends BoxMorph
         # tip bubble:
         rad = radius / 4
         circle w - (rad + inset), h - rad - inset, rad
-        #
+
         # middle bubble:
         rad = radius / 3.2
         circle w - (rad * 2 + inset), h - rad - inset * 2, rad
-        #
+
         # top bubble:
         rad = radius / 2.8
         circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad

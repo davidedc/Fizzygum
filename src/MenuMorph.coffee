@@ -223,7 +223,7 @@ class MenuMorph extends BoxMorph
   unselectAllItems: ->
     @children.forEach (item) ->
       item.image = item.normalImage  if item instanceof MenuItemMorph
-    #
+
     @changed()
 
   itemSelected: ->

@@ -163,7 +163,7 @@ class TextMorph extends StringMorph
     if @backgroundColor
       context.fillStyle = @backgroundColor.toString()
       context.fillRect 0, 0, @width(), @height()
-    #
+
     # draw the shadow, if any
     if @shadowColor
       offx = Math.max(@shadowOffset.x, 0)
@@ -182,7 +182,7 @@ class TextMorph extends StringMorph
         y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
         i++
         context.fillText line, x + offx, y + offy
-    #
+
     # now draw the actual text
     offx = Math.abs(Math.min(@shadowOffset.x, 0))
     offy = Math.abs(Math.min(@shadowOffset.y, 0))
@@ -213,7 +213,7 @@ class TextMorph extends StringMorph
       context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x, p.y + fontHeight(@fontSize)
-    #
+
     # notify my parent of layout change
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
   

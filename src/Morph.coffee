@@ -458,7 +458,7 @@ class Morph extends MorphicNode
       p instanceof FrameMorph
     frames.forEach (f) ->
       visible = visible.intersect(f.bounds)
-    #
+
     visible
   
   
@@ -473,7 +473,7 @@ class Morph extends MorphicNode
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
-    #
+
     @changed()
   
   silentMoveBy: (delta) ->
@@ -611,7 +611,7 @@ class Morph extends MorphicNode
     @cachedTexture = new Image()
     @cachedTexture.onload = =>
       @drawCachedTexture()
-    #
+
     @cachedTexture.src = @texture = url # make absolute
   
   # tiles the texture
@@ -976,7 +976,7 @@ class Morph extends MorphicNode
     morphs.forEach (m) ->
       if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
         result = m
-    #
+
     result
   
   #
@@ -1086,7 +1086,6 @@ class Morph extends MorphicNode
       child.updateReferences dict
     #alert ">>> updating reference of " + c
     c.updateReferences dict
-    #
     c
   
   # if the constructor of the object you are copying performs
@@ -1249,10 +1248,10 @@ class Morph extends MorphicNode
       menu.items.push slider
     menu.addLine 2
     menu.addItem "Ok", callback
-    #
+
     menu.addItem "Cancel", ->
       null
-    #
+
     menu.isDraggable = true
     menu.popUpAtHand()
     entryField.text.edit()
@@ -1263,10 +1262,10 @@ class Morph extends MorphicNode
     menu.items.push colorPicker
     menu.addLine 2
     menu.addItem "Ok", callback
-    #
+
     menu.addItem "Cancel", ->
       null
-    #
+
     menu.isDraggable = true
     menu.popUpAtHand()
 
@@ -1338,7 +1337,7 @@ class Morph extends MorphicNode
         textLabelForMorph = each.toString().slice(0, 50)
         menu.addItem textLabelForMorph, ->
           each.developersMenu().popUpAtHand()
-    #  
+
     menu
   
   developersMenu: ->
@@ -1351,7 +1350,7 @@ class Morph extends MorphicNode
     if userMenu
       menu.addItem "user features...", ->
         userMenu.popUpAtHand()
-      #
+
       menu.addLine()
     menu.addItem "color...", (->
       @pickColor menu.title + "\ncolor:", @setColor, @color

@@ -23,7 +23,7 @@ class StringMorph extends Morph
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   blanksColor: new Color(180, 140, 140)
-  #
+
   # Properties for text-editing
   isScrollable: true
   currentlySelecting: false
@@ -58,9 +58,9 @@ class StringMorph extends Morph
     @text = text or ((if (text is "") then "" else "StringMorph"))
     @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
     @shadowOffset = shadowOffset or new Point(0, 0)
-    #
+
     super()
-    #
+
     # override inherited properites:
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
@@ -117,7 +117,7 @@ class StringMorph extends Morph
       y = Math.max(@shadowOffset.y, 0)
       context.fillStyle = @shadowColor.toString()
       context.fillText text, x, fontHeight(@fontSize) + y
-    #
+
     # now draw the actual text
     x = Math.abs(Math.min(@shadowOffset.x, 0))
     y = Math.abs(Math.min(@shadowOffset.y, 0))
@@ -126,7 +126,7 @@ class StringMorph extends Morph
       @renderWithBlanks context, x, fontHeight(@fontSize) + y
     else
       context.fillText text, x, fontHeight(@fontSize) + y
-    #
+
     # draw the selection
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
@@ -138,7 +138,7 @@ class StringMorph extends Morph
         fontHeight(@fontSize) + y
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x + x, fontHeight(@fontSize) + y
-    #
+
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
   
@@ -156,7 +156,7 @@ class StringMorph extends Morph
     ctx.fillStyle = @blanksColor.toString()
     ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)
     ctx.fill()
-    #
+
     # render my text inserting blanks
     words.forEach (word) ->
       drawBlank()  unless isFirst

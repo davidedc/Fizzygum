@@ -419,13 +419,13 @@ class HandMorph extends Morph
         canvas = newCanvas(new Point(pic.width, pic.height))
         canvas.getContext("2d").drawImage pic, 0, 0
         targetDrop.droppedImage canvas, aFile.name
-      #
+
       frd = new FileReader()
       frd.onloadend = (e) ->
         pic.src = e.target.result
-      #
+
       frd.readAsDataURL aFile
-    #
+
     readAudio = (aFile) ->
       snd = new Audio()
       frd = new FileReader()
@@ -538,7 +538,7 @@ class HandMorph extends Morph
       topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
-      #
+
       # if a morph is marked for grabbing, just grab it
       if @morphToGrab
         if @morphToGrab.isDraggable
@@ -550,7 +550,7 @@ class HandMorph extends Morph
           morph.isDraggable = true
           @grab morph
           @grabOrigin = @morphToGrab.situation()
-        #
+
         # if the mouse has left its boundsIncludingChildren, center it
         if morph
           fb = morph.boundsIncludingChildren()
@@ -581,12 +581,12 @@ class HandMorph extends Morph
       unless contains(mouseOverNew, old)
         old.mouseLeave()  if old.mouseLeave
         old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
-    #
+
     mouseOverNew.forEach (newMorph) =>
       unless contains(@mouseOverList, newMorph)
         newMorph.mouseEnter()  if newMorph.mouseEnter
         newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
-      #
+
       # autoScrolling support:
       if @children.length
           if newMorph instanceof ScrollFrameMorph
@@ -594,5 +594,5 @@ class HandMorph extends Morph
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3
                 ).containsPoint(@bounds.origin)
                   newMorph.startAutoScrolling();
-    #
+
     @mouseOverList = mouseOverNew
