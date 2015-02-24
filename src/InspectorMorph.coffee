@@ -378,9 +378,6 @@ class InspectorMorph extends BoxMorph
       world.alignIDsOfNextMorphsInSystemTests()
 
   
-  setExtent: (aPoint) ->
-    super aPoint
-  
   
   #InspectorMorph editing ops:
   save: ->
