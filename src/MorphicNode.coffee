@@ -53,6 +53,8 @@ class MorphicNode
     aMorphicNode.parent = @
   
   removeChild: (aMorphicNode) ->
+    # remove the array element from the
+    # array
     idx = @children.indexOf(aMorphicNode)
     @children.splice idx, 1  if idx isnt -1
     aMorphicNode.parent = null

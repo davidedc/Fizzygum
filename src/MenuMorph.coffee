@@ -107,8 +107,7 @@ class MenuMorph extends BoxMorph
     # console.log "menu update rendering"
     isLine = false
     @destroyAll()
-    #
-    @children = []
+
     unless @isListContents
       @edge = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
       @border = if WorldMorph.preferencesAndSettings.isFlat then 1 else 2

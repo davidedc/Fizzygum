@@ -41,8 +41,7 @@ class StringFieldMorph extends FrameMorph
     txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()
-    #
-    @children = []
+
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     @text.isNumeric = @isNumeric # for whichever reason...
     @text.setPosition @bounds.origin.copy()

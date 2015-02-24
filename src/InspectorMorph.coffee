@@ -42,9 +42,6 @@ class InspectorMorph extends BoxMorph
     # remove existing panes
     @destroyAll()
 
-    #
-    @children = []
-    #
     # label
     @label = new TextMorph(@target.toString())
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize

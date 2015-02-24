@@ -31,8 +31,6 @@ class MorphsListMorph extends BoxMorph
     # remove existing panes
     @destroyAll()
 
-    @children = []
-
     # label
     @label = new TextMorph("Morphs List")
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
