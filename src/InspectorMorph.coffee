@@ -111,63 +111,27 @@ class InspectorMorph extends BoxMorph
       targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)
       #alert targetOwnMethods
 
+    # open a new inspector, just on objects so
+    # the idea is that you can view / change
+    # its fields
     doubleClickAction = =>
       if (!isObject(@currentProperty))
         return
       world = @world()
-      inspector = @constructor @currentProperty
+      inspector = new InspectorMorph @currentProperty
       inspector.setPosition world.hand.position()
       inspector.keepWithin world
       world.add inspector
       inspector.changed()
 
-    @list = new ListMorph(@, InspectorMorph.prototype.selectionFromList, (if @target instanceof Array then attribs else attribs.sort()), null,(
-      if @markOwnershipOfProperties
-        [
-          # give color criteria from the most general to the most specific
-          [new Color(0, 0, 180),
-            (element) =>
-              # if the element is either an enumerable property of the object
-              # or it belongs to the own methods, then it is highlighted.
-              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
-              # functions.
-              # In theory, getOwnPropertyNames should give ALL the properties but the methods
-              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-              true
-          ],
-          [new Color(255, 165, 0),
-            (element) =>
-              # if the element is either an enumerable property of the object
-              # or it belongs to the own methods, then it is highlighted.
-              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
-              # functions.
-              # In theory, getOwnPropertyNames should give ALL the properties but the methods
-              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-              element in staticProperties
-          ],
-          [new Color(0, 180, 0),
-            (element) =>
-              # if the element is either an enumerable property of the object
-              # or it belongs to the own methods, then it is highlighted.
-              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
-              # functions.
-              # In theory, getOwnPropertyNames should give ALL the properties but the methods
-              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-              (Object.prototype.hasOwnProperty.call(@target, element))
-          ],
-          [new Color(180, 0, 0),
-            (element) =>
-              # if the element is either an enumerable property of the object
-              # or it belongs to the own methods, then it is highlighted.
-              # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
-              # functions.
-              # In theory, getOwnPropertyNames should give ALL the properties but the methods
-              # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-              (element in targetOwnMethods)
-          ]
-        ]
-      else null
-    ),doubleClickAction)
+    @list = new ListMorph(
+      @, # target
+      InspectorMorph.prototype.selectionFromList, #action
+      (if @target instanceof Array then attribs else attribs.sort()), #elements
+      null, #labelGetter
+      @filterProperties(staticProperties, targetOwnMethods), #format
+      doubleClickAction #doubleClickAction
+    )
 
     # we know that the content of this list in this pane is not going to need the
     # step function, so we disable that from here by setting it to null, which
@@ -210,75 +174,28 @@ class InspectorMorph extends BoxMorph
     @buttonSubset = new TriggerMorph(@)
     @buttonSubset.setLabel "show..."
     @buttonSubset.alignCenter()
-    @buttonSubset.action = ->
-      menu = new MenuMorph()
-      menu.addItem "attributes", =>
-        @showing = "attributes"
-        @buildAndConnectChildren()
-
-      menu.addItem "methods", =>
-        @showing = "methods"
-        @buildAndConnectChildren()
-
-      menu.addItem "all", =>
-        @showing = "all"
-        @buildAndConnectChildren()
-
-      menu.addLine()
-      menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
-        @markOwnershipOfProperties = not @markOwnershipOfProperties
-        @buildAndConnectChildren()
-      ), "highlight\nownership of properties"
-      menu.popUpAtHand()
-
+    @buttonSubset.action = @openShowMenu
     @add @buttonSubset
 
     # inspect button
     @buttonInspect = new TriggerMorph(@)
     @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
-    @buttonInspect.action = ->
-      if isObject(@currentProperty)
-        menu = new MenuMorph()
-        menu.addItem "in new inspector...", =>
-          world = @world()
-          inspector = new @constructor(@currentProperty)
-          inspector.setPosition world.hand.position()
-          inspector.keepWithin world
-          world.add inspector
-          inspector.changed()
-
-        menu.addItem "here...", =>
-          @setTarget @currentProperty
-
-        menu.popUpAtHand()
-      else
-        @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
-
+    @buttonInspect.action = @openInspectorMenu
     @add @buttonInspect
 
     # edit button
     @buttonEdit = new TriggerMorph(@)
     @buttonEdit.setLabel "edit..."
     @buttonEdit.alignCenter()
-    @buttonEdit.action = ->
-      menu = new MenuMorph(@)
-      menu.addItem "save", (->@save()), "accept changes"
-      menu.addLine()
-      menu.addItem "add property...", (->@addProperty())
-      menu.addItem "rename...", (->@renameProperty())
-      menu.addItem "remove", (->@removeProperty())
-      menu.popUpAtHand()
-
+    @buttonEdit.action = @openEditMenu
     @add @buttonEdit
 
     # close button
     @buttonClose = new TriggerMorph(@)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
-    @buttonClose.action = ->
-      @destroy()
-
+    @buttonClose.action = @destroy
     @add @buttonClose
 
     # resizer
@@ -286,6 +203,103 @@ class InspectorMorph extends BoxMorph
 
     # update layout
     @layoutSubmorphs()
+
+  openShowMenu: ->
+    menu = new MenuMorph()
+    menu.addItem "attributes", =>
+      @showing = "attributes"
+      @buildAndConnectChildren()
+
+    menu.addItem "methods", =>
+      @showing = "methods"
+      @buildAndConnectChildren()
+
+    menu.addItem "all", =>
+      @showing = "all"
+      @buildAndConnectChildren()
+
+    menu.addLine()
+    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
+      @markOwnershipOfProperties = not @markOwnershipOfProperties
+      @buildAndConnectChildren()
+    ), "highlight\nownership of properties"
+    menu.popUpAtHand()
+
+  openInspectorMenu: ->
+    if isObject(@currentProperty)
+      menu = new MenuMorph()
+      menu.addItem "in new inspector...", =>
+        world = @world()
+        inspector = new @constructor(@currentProperty)
+        inspector.setPosition world.hand.position()
+        inspector.keepWithin world
+        world.add inspector
+        inspector.changed()
+
+      menu.addItem "here...", =>
+        @setTarget @currentProperty
+
+      menu.popUpAtHand()
+    else
+      @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
+
+  openEditMenu: ->
+    menu = new MenuMorph @
+    menu.addItem "save", @save, "accept changes"
+    menu.addLine()
+    menu.addItem "add property...", @addProperty
+    menu.addItem "rename...", @renameProperty
+    menu.addItem "remove", @removeProperty
+    menu.popUpAtHand()
+
+
+  filterProperties: (staticProperties, targetOwnMethods)->
+    if @markOwnershipOfProperties
+      return [
+        # give color criteria from the most general to the most specific
+        [new Color(0, 0, 180),
+          (element) =>
+            # if the element is either an enumerable property of the object
+            # or it belongs to the own methods, then it is highlighted.
+            # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+            # functions.
+            # In theory, getOwnPropertyNames should give ALL the properties but the methods
+            # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+            true
+        ],
+        [new Color(255, 165, 0),
+          (element) =>
+            # if the element is either an enumerable property of the object
+            # or it belongs to the own methods, then it is highlighted.
+            # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+            # functions.
+            # In theory, getOwnPropertyNames should give ALL the properties but the methods
+            # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+            element in staticProperties
+        ],
+        [new Color(0, 180, 0),
+          (element) =>
+            # if the element is either an enumerable property of the object
+            # or it belongs to the own methods, then it is highlighted.
+            # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+            # functions.
+            # In theory, getOwnPropertyNames should give ALL the properties but the methods
+            # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+            (Object.prototype.hasOwnProperty.call(@target, element))
+        ],
+        [new Color(180, 0, 0),
+          (element) =>
+            # if the element is either an enumerable property of the object
+            # or it belongs to the own methods, then it is highlighted.
+            # Note that hasOwnProperty doesn't pick up non-enumerable properties such as
+            # functions.
+            # In theory, getOwnPropertyNames should give ALL the properties but the methods
+            # are still not picked up, maybe because of the coffeescript construction system, I am not sure
+            (element in targetOwnMethods)
+        ]
+      ]
+    else
+      return null
 
   selectionFromList: (selected) =>
     if (selected == undefined) then return
