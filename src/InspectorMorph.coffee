@@ -39,7 +39,10 @@ class InspectorMorph extends BoxMorph
       world.alignIDsOfNextMorphsInSystemTests()
     attribs = []
 
-    # remove existing panes
+    # remove all submorhs i.e. panes and buttons
+    # THE ONES THAT ARE STILL
+    # submorphs of the inspector. If they
+    # have been peeled away, they still live
     @destroyAll()
 
     # label
@@ -323,6 +326,16 @@ class InspectorMorph extends BoxMorph
   layoutSubmorphs: ->
     debugger
     console.log "fixing the layout of the inspector"
+
+    # here we are disabling all the broken
+    # rectangles. The reason is that all the
+    # submorphs of the inspector are within the
+    # bounds of the parent Morph. This means that
+    # if only the parent morph breaks its rectangle
+    # then everything is OK.
+    # Also note that if you attach something else to its
+    # boundary in a way that sticks out, that's still
+    # going to be painted and moved OK.
     Morph::trackChanges = false
 
     # label
