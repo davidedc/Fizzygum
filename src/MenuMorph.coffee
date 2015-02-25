@@ -12,10 +12,6 @@ class MenuMorph extends BoxMorph
 
   constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
-    # Note that Morph does a updateBackingStore upon creation (TODO Why?), so we need
-    # to initialise the items before calling super. We can't initialise it
-    # outside the constructor because the array would be shared across instantiated
-    # objects.
     @items = []
     # console.log "menu super"
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
