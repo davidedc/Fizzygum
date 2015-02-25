@@ -842,6 +842,7 @@ class WorldMorph extends FrameMorph
     create = (aMorph) =>
       aMorph.isDraggable = true
       aMorph.pickUp()
+
     menu = new MenuMorph(@, "make a morph")
     menu.addItem "rectangle", ->
       create new RectangleMorph()
