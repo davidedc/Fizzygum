@@ -324,7 +324,6 @@ class InspectorMorph extends BoxMorph
     @detail.setContents cnts, 2
   
   layoutSubmorphs: ->
-    debugger
     console.log "fixing the layout of the inspector"
 
     # here we are disabling all the broken
