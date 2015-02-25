@@ -595,6 +595,16 @@ class Morph extends MorphicNode
   #   its children into a specific area of a passed canvas.
 
   updateBackingStore: ->
+    @changed()
+    @silentUpdateBackingStore()
+    # to do you might be smarter here and ask the silentUpdateBackingStore
+    # method whether a) there was any change at all and b) whethere only
+    # the buffer changed and not the bounds (in which case only one changed()
+    # is needed)
+    @changed()
+    return null
+
+  silentUpdateBackingStore: ->
     # initialize my surface property
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")
@@ -604,8 +614,6 @@ class Morph extends MorphicNode
     if @cachedTexture
       @drawCachedTexture()
     else @drawTexture @texture  if @texture
-    @changed()
-    return null
   
   drawTexture: (url) ->
     @cachedTexture = new Image()
