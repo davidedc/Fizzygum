@@ -778,9 +778,11 @@ class Morph extends MorphicNode
   
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Zombie-Kernel/issues/160
-  fullImage: ->
-    boundsIncludingChildren = @boundsIncludingChildren()
-    img = newCanvas(boundsIncludingChildren.extent().scaleBy pixelRatio)
+  fullImage: (bounds) ->
+    if !bounds?
+      bounds = @boundsIncludingChildren()
+
+    img = newCanvas(bounds.extent().scaleBy pixelRatio)
     ctx = img.getContext("2d")
     # ctx.scale pixelRatio, pixelRatio
     # we are going to draw this morph and its children into "img".
@@ -789,11 +791,15 @@ class Morph extends MorphicNode
     # translate the context so that the origin of *this* morph is
     # at the top-left of the "img" canvas).
     # Hence we have to translate the context
-    # so that the origin of the entire boundsIncludingChildren is at the
+    # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
-    ctx.translate -boundsIncludingChildren.origin.x * pixelRatio , -boundsIncludingChildren.origin.y * pixelRatio
-    @recursivelyBlit img, boundsIncludingChildren
+    ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
+    @recursivelyBlit img, bounds
     img
+
+  fullImageNoShadow: ->
+    boundsWithNoShadow = @boundsIncludingChildrenNoShadow()
+    return @fullImage(boundsWithNoShadow)
 
   fullImageData: ->
     # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."
@@ -809,7 +815,7 @@ class Morph extends MorphicNode
     # fallback for Windows Chrome-Shadow bug
     offset = off_ or new Point(7, 7)
     clr = color or new Color(0, 0, 0)
-    fb = @boundsIncludingChildren().extent()
+    fb = @boundsIncludingChildrenNoShadow().extent()
     img = @fullImage()
     outline = newCanvas(fb.scaleBy pixelRatio)
     ctx = outline.getContext("2d")
@@ -831,8 +837,8 @@ class Morph extends MorphicNode
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
-    fb = @boundsIncludingChildren().extent().add(blur * 2)
-    img = @fullImage()
+    fb = @boundsIncludingChildrenNoShadow().extent().add(blur * 2)
+    img = @fullImageNoShadow()
     sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
     #ctx.scale pixelRatio, pixelRatio
@@ -853,8 +859,16 @@ class Morph extends MorphicNode
   # the HandMorph while dragging
   addShadow: (offset, alpha, color) ->
     shadow = new ShadowMorph(@, offset, alpha, color)
-    @addBack shadow
+    @addChildFirst shadow
+    shadow.updateBackingStore()
     @fullChanged()
+    shadow
+
+  silentAddShadow: (offset, alpha, color) ->
+    shadow = new ShadowMorph(@, offset, alpha, color)
+    owner = shadow.parent
+    owner.removeChild shadow  if owner?
+    @addChildFirst shadow
     shadow
   
   getShadow: ->
@@ -951,22 +965,6 @@ class Morph extends MorphicNode
     if !avoidExtentCalculation
       aMorph.calculateAndUpdateExtent()
   
-  # attaches submorph underneath
-  addBack: (aMorph) ->
-    owner = aMorph.parent
-    owner.removeChild aMorph  if owner?
-    aMorph.updateBackingStore()
-    # this is a curious instance where
-    # we first update the rendering and then
-    # we add the morph. This is because
-    # the rendering depends on the
-    # full extent including children of
-    # the morph we are attaching the shadow
-    # to. So if we add the shadow we are going
-    # to influence those measurements and
-    # make our life very difficult for
-    # ourselves.
-    @addChildFirst aMorph
   
 
   # never currently used in ZK
@@ -1149,6 +1147,9 @@ class Morph extends MorphicNode
     @setPosition world.hand.position().subtract(@extent().floorDivideBy(2))
     world.hand.grab @
   
+  # note how this verified that
+  # at *any point* up in the
+  # morphs hierarchy there is a HandMorph
   isPickedUp: ->
     @parentThatIsA(HandMorph)?
   

@@ -15,7 +15,7 @@ class ShadowMorph extends Morph
  
   updateBackingStore: ->
     # console.log "shadow morph update rendering"
-    fb = @targetMorph.boundsIncludingChildren()
+    fb = @targetMorph.boundsIncludingChildrenNoShadow()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       @image = @targetMorph.shadowImageBlurred(@offset, @color)

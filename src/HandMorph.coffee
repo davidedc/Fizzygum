@@ -153,8 +153,15 @@ class HandMorph extends Morph
       # morph to make the shadow, so
       # this is why we add the shadow after
       # the morph has been added.
-      aMorph.addShadow()
+      #aMorph.addShadow()
+      shadow = aMorph.addShadow()
+      
+      #debugger
       @changed()
+      # this gives an occasion to the old parent
+      # morph to adjust itself e.g. the scrollmorph
+      # readjusts itself if you take some morphs
+      # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
   
   drop: ->
