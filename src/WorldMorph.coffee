@@ -823,9 +823,6 @@ class WorldMorph extends FrameMorph
     menu
 
   popUpSystemTestsMenu: ->
-    create = (aMorph) =>
-      aMorph.isDraggable = true
-      aMorph.pickUp()
     menu = new MenuMorph(@, "system tests")
 
     menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
