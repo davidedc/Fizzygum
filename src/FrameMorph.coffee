@@ -80,6 +80,12 @@ class FrameMorph extends Morph
     if shadow?
       return @bounds.merge(shadow.bounds)
     @bounds
+
+  
+  boundsIncludingChildrenNoShadow: ->
+    # answer my full bounds but ignore any shadow
+    @bounds
+
   
   recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
     return null  unless (!@isMinimised and @isVisible)

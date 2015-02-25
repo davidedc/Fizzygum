@@ -207,6 +207,7 @@ class MenuMorph extends BoxMorph
     w = @maxWidth()
     console.log "maxwidth " + w
     @children.forEach (item) =>
+      Morph::trackChanges = false
       item.setWidth w
       if item instanceof MenuItemMorph
         isSelected = (item.image == item.pressImage)
@@ -215,7 +216,8 @@ class MenuMorph extends BoxMorph
         if item is @label
           item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
       console.log "new width of " + item + " : " + item.width()
-  
+      Morph::trackChanges = true
+
   
   unselectAllItems: ->
     @children.forEach (item) ->
@@ -234,7 +236,7 @@ class MenuMorph extends BoxMorph
     # previous one.
     if world.activeMenu
       world.activeMenu = world.activeMenu.destroy()
-    @setPosition pos
+    @silentSetPosition pos
     world.add @
     # the @keepWithin method
     # needs to know the extent of the morph

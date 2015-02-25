@@ -945,7 +945,8 @@ class Morph extends MorphicNode
     # to make sure that anything that
     # is outside the clipping Morph gets
     # painted over.
-    aMorph.changed()
+    if aMorph.parent?
+      aMorph.changed()
     @silentAdd(aMorph, true)
     aMorph.imBeingAddedTo @
 

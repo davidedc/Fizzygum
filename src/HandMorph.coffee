@@ -157,7 +157,7 @@ class HandMorph extends Morph
       shadow = aMorph.addShadow()
       
       #debugger
-      @changed()
+      #@changed()
       # this gives an occasion to the old parent
       # morph to adjust itself e.g. the scrollmorph
       # readjusts itself if you take some morphs

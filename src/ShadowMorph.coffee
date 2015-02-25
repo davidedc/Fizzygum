@@ -19,7 +19,7 @@ class ShadowMorph extends Morph
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       @image = @targetMorph.shadowImageBlurred(@offset, @color)
-      @setPosition fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
+      @silentSetPosition fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
     else
       @image = @targetMorph.shadowImage(@offset, @color)
       @setPosition fb.origin.add(@offset)
