@@ -73,6 +73,7 @@ class MenuMorph extends BoxMorph
       doubleClickAction
     ]
   
+
   addLine: (width) ->
     @items.push [0, width or 1]
 

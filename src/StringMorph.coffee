@@ -64,6 +64,7 @@ class StringMorph extends Morph
     # override inherited properites:
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
+
   
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
