@@ -349,7 +349,7 @@ class InspectorMorph extends BoxMorph
       @silentSetHeight @label.height() + 50
       @updateBackingStore()
       @changed()
-      @resizer.updatePosition()
+      @resizer.silentUpdateResizerHandlePosition()
 
     # list
     y = @label.bottom() + 2

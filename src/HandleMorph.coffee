@@ -24,13 +24,17 @@ class HandleMorph extends Morph
     @silentSetExtent new Point(size, size)
     if @target
       @target.add @
-    @updatePosition()
+    @updateResizerHandlePosition()
 
-  updatePosition: ->
+  updateResizerHandlePosition: ->
     if @target
-        @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+        @silentUpdateResizerHandlePosition()
         # todo wow, wasteful!
         @target.changed()
+
+  silentUpdateResizerHandlePosition: ->
+    if @target
+        @silentSetPosition @target.bottomRight().subtract(@extent().add(@inset))
   
   
   # HandleMorph drawing:
