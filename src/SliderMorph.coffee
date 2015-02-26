@@ -68,8 +68,10 @@ class SliderMorph extends CircleBoxMorph
       relPos = @button.top() - @top()
     else
       relPos = @button.left() - @left()
-    @value = Math.round(relPos / @unitSize() + @start)
-    @updateTarget()
+    newvalue = Math.round(relPos / @unitSize() + @start)
+    if @value != newvalue
+      @value = newvalue
+      @updateTarget()
   
   updateTarget: ->
     if @action
@@ -225,6 +227,7 @@ class SliderMorph extends CircleBoxMorph
     @step = =>
       if world.hand.mouseButton and @isVisible
         mousePos = world.hand.bounds.origin
+        oldButtonPosition = @button.position()
         if @orientation is "vertical"
           newX = @button.bounds.origin.x
           newY = Math.max(
@@ -235,7 +238,9 @@ class SliderMorph extends CircleBoxMorph
           newX = Math.max(
             Math.min(mousePos.x - @offset.x,
             @right() - @button.width()), @left())
-        @button.setPosition new Point(newX, newY)
-        @updateValue()
+        newPosition = new Point(newX, newY)
+        if !oldButtonPosition.eq newPosition
+          @button.setPosition newPosition
+          @updateValue()
       else
         @step = null

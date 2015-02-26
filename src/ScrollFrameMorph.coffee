@@ -161,7 +161,19 @@ class ScrollFrameMorph extends FrameMorph
     newX = cl + steps
     newX = r - cw  if newX + cw < r
     newX = l  if newX > l
-    @contents.setLeft newX  if newX isnt cl
+    # return true if any movement of
+    # the scrollbar button is
+    # actually happening, otherwise
+    # false. We use this to figure
+    # out in some places whether
+    # we need to trigger a bunch of
+    # updates of the content and scrollbars
+    # or not.
+    if newX isnt cl
+      @contents.setLeft newX
+      return true
+    else
+      return false
   
   scrollY: (steps) ->
     ct = @contents.top()
@@ -174,9 +186,22 @@ class ScrollFrameMorph extends FrameMorph
     # prevents content to be scrolled to the frame's
     # bottom if the content is otherwise empty
     newY = t  if newY > t
-    @contents.setTop newY  if newY isnt ct
+    # return true if any movement of
+    # the scrollbar button is
+    # actually happening, otherwise
+    # false. We use this to figure
+    # out in some places whether
+    # we need to trigger a bunch of
+    # updates of the content and scrollbars
+    # or not.
+    if newY isnt ct
+      @contents.setTop newY
+      return true
+    else
+      return false
   
   mouseDownLeft: (pos) ->
+    console.log "scrollframemorphs mouseDownLeft"
     return null  unless @isScrollingByDragging
     world = @root()
     oldPos = pos
@@ -184,16 +209,21 @@ class ScrollFrameMorph extends FrameMorph
     deltaY = 0
     friction = 0.8
     @step = =>
+      scrollbarJustChanged = false
       if world.hand.mouseButton and
         (!world.hand.children.length) and
         (@bounds.containsPoint(world.hand.position()))
           newPos = world.hand.bounds.origin
           if @hBar.isVisible
             deltaX = newPos.x - oldPos.x
-            @scrollX deltaX  if deltaX isnt 0
+            if deltaX isnt 0
+              console.log "asasaas1"
+              scrollbarJustChanged = scrollbarJustChanged || @scrollX deltaX
           if @vBar.isVisible
             deltaY = newPos.y - oldPos.y
-            @scrollY deltaY  if deltaY isnt 0
+            if deltaY isnt 0
+              console.log "asasaas2"
+              scrollbarJustChanged = scrollbarJustChanged || @scrollY deltaY
           oldPos = newPos
       else
         unless @hasVelocity
@@ -204,13 +234,19 @@ class ScrollFrameMorph extends FrameMorph
           else
             if @hBar.isVisible
               deltaX = deltaX * friction
-              @scrollX Math.round(deltaX)
+              if deltaX isnt 0
+                console.log "asasaas3"
+                scrollbarJustChanged = scrollbarJustChanged || @scrollX Math.round(deltaX)
             if @vBar.isVisible
               deltaY = deltaY * friction
-              @scrollY Math.round(deltaY)
+              if deltaY isnt 0
+                console.log "asasaas4"
+                scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)
       #console.log "adjusting..."
-      @contents.adjustBounds()
-      @adjustScrollBars()
+      if scrollbarJustChanged
+        console.log "asasaas"
+        @contents.adjustBounds()
+        @adjustScrollBars()
   
   startAutoScrolling: ->
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
@@ -230,18 +266,29 @@ class ScrollFrameMorph extends FrameMorph
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->
+    console.log "autoscrolling"
     return null  if Date.now() - @autoScrollTrigger < 500
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     area = @topLeft().extent(new Point(@width(), inset))
-    @scrollY inset - (pos.y - @top())  if area.containsPoint(pos)
+    scrollbarJustChanged = false
+    if area.containsPoint(pos)
+      scrollbarJustChanged = scrollbarJustChanged ||
+        @scrollY inset - (pos.y - @top())
     area = @topLeft().extent(new Point(inset, @height()))
-    @scrollX inset - (pos.x - @left())  if area.containsPoint(pos)
+    if area.containsPoint(pos)
+      scrollbarJustChanged = scrollbarJustChanged ||
+        @scrollX inset - (pos.x - @left())
     area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
-    @scrollX -(inset - (@right() - pos.x))  if area.containsPoint(pos)
+    if area.containsPoint(pos)
+      scrollbarJustChanged = scrollbarJustChanged ||
+        @scrollX -(inset - (@right() - pos.x))
     area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
-    @scrollY -(inset - (@bottom() - pos.y))  if area.containsPoint(pos)
-    @contents.adjustBounds()
-    @adjustScrollBars()  
+    if area.containsPoint(pos)
+      scrollbarJustChanged = scrollbarJustChanged ||
+        @scrollY -(inset - (@bottom() - pos.y))
+    if scrollbarJustChanged
+      @contents.adjustBounds()
+      @adjustScrollBars()  
   
   # ScrollFrameMorph scrolling when editing text
   # so to bring the caret fully into view.
@@ -270,10 +317,14 @@ class ScrollFrameMorph extends FrameMorph
 
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
-    @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount  if y
-    @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  if x
-    @contents.adjustBounds()
-    @adjustScrollBars()
+    scrollbarJustChanged = false
+    if y
+      scrollbarJustChanged = scrollbarJustChanged || @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount
+    if x
+      scrollbarJustChanged = scrollbarJustChanged || @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  
+    if scrollbarJustChanged
+      @contents.adjustBounds()
+      @adjustScrollBars()
   
   
   developersMenu: ->
