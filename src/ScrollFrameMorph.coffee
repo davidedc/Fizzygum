@@ -200,8 +200,10 @@ class ScrollFrameMorph extends FrameMorph
     else
       return false
   
+  # sometimes you can scroll the contents of a scrollframe
+  # by dragging its contents. This is particularly
+  # useful in touch devices.
   mouseDownLeft: (pos) ->
-    console.log "scrollframemorphs mouseDownLeft"
     return null  unless @isScrollingByDragging
     world = @root()
     oldPos = pos
@@ -217,12 +219,10 @@ class ScrollFrameMorph extends FrameMorph
           if @hBar.isVisible
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
-              console.log "asasaas1"
               scrollbarJustChanged = scrollbarJustChanged || @scrollX deltaX
           if @vBar.isVisible
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
-              console.log "asasaas2"
               scrollbarJustChanged = scrollbarJustChanged || @scrollY deltaY
           oldPos = newPos
       else
@@ -235,16 +235,12 @@ class ScrollFrameMorph extends FrameMorph
             if @hBar.isVisible
               deltaX = deltaX * friction
               if deltaX isnt 0
-                console.log "asasaas3"
                 scrollbarJustChanged = scrollbarJustChanged || @scrollX Math.round(deltaX)
             if @vBar.isVisible
               deltaY = deltaY * friction
               if deltaY isnt 0
-                console.log "asasaas4"
                 scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)
-      #console.log "adjusting..."
       if scrollbarJustChanged
-        console.log "asasaas"
         @contents.adjustBounds()
         @adjustScrollBars()
   
@@ -266,7 +262,6 @@ class ScrollFrameMorph extends FrameMorph
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->
-    console.log "autoscrolling"
     return null  if Date.now() - @autoScrollTrigger < 500
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     area = @topLeft().extent(new Point(@width(), inset))
