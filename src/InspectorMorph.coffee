@@ -135,6 +135,7 @@ class InspectorMorph extends BoxMorph
       @filterProperties(staticProperties, targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
+    @list.acceptsDrops = false
 
     # we know that the content of this list in this pane is not going to need the
     # step function, so we disable that from here by setting it to null, which
