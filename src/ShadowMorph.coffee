@@ -12,17 +12,20 @@ class ShadowMorph extends Morph
     @offset = offset or new Point(7, 7)
     @alpha = alpha or ((if (alpha is 0) then 0 else 0.2))
     @color = color or new Color(0, 0, 0)
- 
-  updateBackingStore: ->
+
+  setLayoutBeforeUpdatingBackingStore: ->
     # console.log "shadow morph update rendering"
     fb = @targetMorph.boundsIncludingChildrenNoShadow()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      @image = @targetMorph.shadowImageBlurred(@offset, @color)
       @silentSetPosition fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
     else
+      @silentSetPosition fb.origin.add(@offset)
+
+  # no changes of position or extent
+  updateBackingStore: ->
+    if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
+      @image = @targetMorph.shadowImageBlurred(@offset, @color)
+    else
       @image = @targetMorph.shadowImage(@offset, @color)
-      @setPosition fb.origin.add(@offset)
-    # console.log "shadow morph update rendering EXIT"
-    return @extent()
   

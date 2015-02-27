@@ -112,9 +112,10 @@ class SpeechBubbleMorph extends BoxMorph
       new Point(@padding or @edge, @border + @padding + 1))
 
   
+  # no changes of position or extent
   # SpeechBubbleMorph drawing:
-  updateBackingStore: ->
-    super()
+  #updateBackingStore: ->
+  #  super()
 
   
   outlinePath: (context, radius, inset) ->

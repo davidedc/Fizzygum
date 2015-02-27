@@ -532,6 +532,7 @@ class Morph extends MorphicNode
       @changed()
       @silentSetExtent aPoint
       @changed()
+      @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
       @layoutSubmorphs()
   
@@ -594,6 +595,10 @@ class Morph extends MorphicNode
   # * recursivelyBlit: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
+  # this is normally invoked form setExtent
+  # and setExtent also invokes layoutSubmorphs
+  # afterwards
+  # no changes of position or extent
   updateBackingStore: ->
     @changed()
     @silentUpdateBackingStore()
@@ -860,6 +865,7 @@ class Morph extends MorphicNode
   addShadow: (offset, alpha, color) ->
     shadow = new ShadowMorph(@, offset, alpha, color)
     @addChildFirst shadow
+    shadow.setLayoutBeforeUpdatingBackingStore()
     shadow.updateBackingStore()
     @fullChanged()
     shadow
@@ -930,7 +936,9 @@ class Morph extends MorphicNode
     null
 
   imBeingAddedTo: (newParentMorph) ->
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
+    @layoutSubmorphs()
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
@@ -949,6 +957,14 @@ class Morph extends MorphicNode
       aMorph.changed()
     @silentAdd(aMorph, true)
     aMorph.imBeingAddedTo @
+
+  # this is done before the updating of the
+  # backing store in some morphs that
+  # need to figure out their whole
+  # layout before painting themselves
+  # e.g. the MenuMorph
+  setLayoutBeforeUpdatingBackingStore: ->
+
 
   calculateAndUpdateExtent: ->
 

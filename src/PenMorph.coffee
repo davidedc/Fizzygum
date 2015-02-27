@@ -42,6 +42,7 @@ class PenMorph extends Morph
   
   
   # PenMorph display:
+  # no changes of position or extent
   updateBackingStore: (facing) ->
     #
     #    my orientation can be overridden with the "facing" parameter to

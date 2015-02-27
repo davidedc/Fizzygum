@@ -18,6 +18,7 @@ class CircleBoxMorph extends Morph
     else
       @orientation = "horizontal"
   
+  # no changes of position or extent
   updateBackingStore: ->
     @autoOrientation()  if @autoOrient
     @image = newCanvas(@extent().scaleBy pixelRatio)

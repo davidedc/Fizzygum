@@ -99,8 +99,8 @@ class MenuMorph extends BoxMorph
     @label.borderColor = @borderColor
     @label.setExtent text.extent().add(4) # here!
     @label.text = text
-  
-  updateBackingStore: ->
+
+  setLayoutBeforeUpdatingBackingStore: ->
     # console.log "menu update rendering"
     isLine = false
     @destroyAll()
@@ -178,9 +178,10 @@ class MenuMorph extends BoxMorph
     fb = @boundsIncludingChildren()
     #console.log "fb: " + fb
     @silentSetExtent fb.extent().add(4)
-  
-    super()
-    return @extent()
+
+  #updateBackingStore: ->
+  #  debugger
+  #  super()
   
   maxWidth: ->
     w = 0
@@ -251,6 +252,8 @@ class MenuMorph extends BoxMorph
     # has been placed somewhere because
     # otherwise there is no visible image
     # to base the shadow on
+    # P.S. this is the thing that causes the MenuMorph buffer
+    # to be painted after the creation.
     @addShadow new Point(2, 2), 80
     world.activeMenu = @
     @fullChanged()

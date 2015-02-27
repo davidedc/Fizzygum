@@ -5,6 +5,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point(80, 10)
   
+  # no changes of position or extent
   updateBackingStore: ->
     ext = @extent()
     @image = newCanvas(@extent().scaleBy pixelRatio)

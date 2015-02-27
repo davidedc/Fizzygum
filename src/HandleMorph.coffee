@@ -38,6 +38,7 @@ class HandleMorph extends Morph
   
   
   # HandleMorph drawing:
+  # no changes of position or extent
   updateBackingStore: ->
     @normalImage = newCanvas(@extent().scaleBy pixelRatio)
     normalImageContext = @normalImage.getContext("2d")

@@ -15,6 +15,7 @@ class BoxMorph extends Morph
 
   
   # BoxMorph drawing:
+  # no changes of position of extent
   updateBackingStore: ->
     @image = newCanvas(@extent().scaleBy pixelRatio)
     context = @image.getContext("2d")

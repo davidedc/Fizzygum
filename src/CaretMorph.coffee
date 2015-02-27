@@ -22,6 +22,7 @@ class CaretMorph extends BlinkerMorph
       @target.setAlignmentToLeft()
     @gotoSlot @slot
   
+  # no changes of position or extent
   updateBackingStore: ->
     return super()
 

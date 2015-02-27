@@ -12,6 +12,7 @@ class ColorPaletteMorph extends Morph
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
   
+  # no changes of position or extent
   updateBackingStore: ->
     ext = @extent()
     @image = newCanvas(@extent().scaleBy pixelRatio)

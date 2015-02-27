@@ -87,6 +87,7 @@ class TriggerMorph extends Morph
       @centered = false
       @layoutSubmorphs()
   
+  # no changes of position or extent
   updateBackingStore: ->
     ext = @extent()
     @normalImage = newCanvas(ext.scaleBy pixelRatio)

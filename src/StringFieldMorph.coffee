@@ -41,15 +41,16 @@ class StringFieldMorph extends FrameMorph
     txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()
-
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     @text.isNumeric = @isNumeric # for whichever reason...
     @text.setPosition @bounds.origin.copy()
     @text.isEditable = @isEditable
     @text.isDraggable = false
     @text.enableSelecting()
+    
     @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
     super()
+    
     @add @text
   
   getValue: ->

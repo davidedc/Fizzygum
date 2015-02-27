@@ -34,6 +34,7 @@ class SliderMorph extends CircleBoxMorph
 
   imBeingAddedTo: (newParentMorph) ->
     @updateBackingStore()
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
     @changed()
 
@@ -42,6 +43,7 @@ class SliderMorph extends CircleBoxMorph
     # my backing store had just been updated
     # in the call of super, now
     # it's the time of the button
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
   
   autoOrientation: ->
@@ -59,9 +61,10 @@ class SliderMorph extends CircleBoxMorph
     else
       return (@width() - @button.width()) / @rangeSize()
   
-  updateBackingStore: ->
-    super()
-    return null
+  # no changes of position or extent
+  #updateBackingStore: ->
+  #  super()
+  #  return null
   
   updateValue: ->
     if @orientation is "vertical"
@@ -132,6 +135,7 @@ class SliderMorph extends CircleBoxMorph
     if value? then @value = value
     if size? then @size = size
     @updateBackingStore()
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
     @changed()
   
@@ -151,6 +155,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.max(@value, @start)
     @updateTarget()
     @updateBackingStore()
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
     @changed()
   
@@ -170,6 +175,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.min(@value, @stop)
     @updateTarget()
     @updateBackingStore()
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
     @changed()
   
@@ -188,6 +194,7 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.min(@value, @stop - @size)
     @updateTarget()
     @updateBackingStore()
+    @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
     @changed()
   
