@@ -36,8 +36,7 @@ class StringFieldMorph extends FrameMorph
     @setWidth(Math.max(@minWidth,text.width()))
     console.log "string fleid morph extent: " + @extent()
 
-
-  updateBackingStore: ->
+  setLayoutBeforeUpdatingBackingStore: ->
     txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()
@@ -46,12 +45,10 @@ class StringFieldMorph extends FrameMorph
     @text.setPosition @bounds.origin.copy()
     @text.isEditable = @isEditable
     @text.isDraggable = false
-    @text.enableSelecting()
-    
+    @text.enableSelecting()    
     @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
-    super()
-    
     @add @text
+
   
   getValue: ->
     @text.text
