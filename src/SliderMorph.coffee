@@ -33,6 +33,7 @@ class SliderMorph extends CircleBoxMorph
     @silentAdd @button
 
   imBeingAddedTo: (newParentMorph) ->
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
@@ -134,6 +135,7 @@ class SliderMorph extends CircleBoxMorph
     if stop? then @stop = stop
     if value? then @value = value
     if size? then @size = size
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
@@ -154,6 +156,7 @@ class SliderMorph extends CircleBoxMorph
       @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
     @value = Math.max(@value, @start)
     @updateTarget()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
@@ -174,6 +177,7 @@ class SliderMorph extends CircleBoxMorph
       @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
     @value = Math.min(@value, @stop)
     @updateTarget()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
@@ -193,6 +197,7 @@ class SliderMorph extends CircleBoxMorph
       @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
     @value = Math.min(@value, @stop - @size)
     @updateTarget()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()

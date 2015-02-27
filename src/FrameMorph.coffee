@@ -210,6 +210,7 @@ class FrameMorph extends Morph
       newBounds = @scrollFrame.bounds.copy()
     unless @bounds.eq(newBounds)
       @bounds = newBounds
+      @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
       @keepInScrollFrame()
     @scrollFrame.adjustScrollBars()

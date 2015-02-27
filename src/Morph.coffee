@@ -1292,6 +1292,7 @@ class Morph extends MorphicNode
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = Math.round(num).toString()
+          entryField.text.setLayoutBeforeUpdatingBackingStore()
           entryField.text.updateBackingStore()
           entryField.text.changed()
           entryField.text.edit()
@@ -1299,6 +1300,7 @@ class Morph extends MorphicNode
         slider.action = (num) ->
           entryField.changed()
           entryField.text.text = num.toString()
+          entryField.text.setLayoutBeforeUpdatingBackingStore()
           entryField.text.updateBackingStore()
           entryField.text.changed()
       menu.items.push slider
@@ -1631,6 +1633,7 @@ class Morph extends MorphicNode
   evaluateString: (code) ->
     try
       result = eval(code)
+      @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
       @changed()
     catch err

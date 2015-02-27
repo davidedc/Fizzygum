@@ -86,8 +86,8 @@ class StringMorph extends Morph
     font = font + "bold "  if @isBold
     font = font + "italic "  if @isItalic
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
-  
-  updateBackingStore: ->
+
+  calculateExtentBasedOnText: ->
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     @image = newCanvas()
@@ -98,11 +98,20 @@ class StringMorph extends Morph
     context.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    width = Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
+    return Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
+
+  setLayoutBeforeUpdatingBackingStore: ->
+    width = @calculateExtentBasedOnText()
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
-    @image.width = width * pixelRatio
-    @image.height = @height() * pixelRatio
+  
+  # no changes of position or extent
+  updateBackingStore: ->
+    text = (if @isPassword then @password("*", @text.length) else @text)
+    # initialize my surface property
+    width = @calculateExtentBasedOnText()
+    @image = newCanvas (new Point width, @height()).scaleBy pixelRatio
+    context = @image.getContext("2d")
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
@@ -263,36 +272,42 @@ class StringMorph extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
@@ -309,6 +324,7 @@ class StringMorph extends Morph
       newSize = parseFloat(size)
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
@@ -316,6 +332,7 @@ class StringMorph extends Morph
     # for context menu demo purposes
     @text = Math.round(size).toString()
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   

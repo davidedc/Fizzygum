@@ -122,7 +122,7 @@ class TextMorph extends StringMorph
         slot += word.length + 1
   
 
-  calculateAndUpdateExtent: ->
+  setLayoutBeforeUpdatingBackingStore: ->
     ANimage = newCanvas()
     context = ANimage.getContext("2d")
     context.font = @font()
@@ -137,16 +137,15 @@ class TextMorph extends StringMorph
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
   
+  # no changes of position or extent
   updateBackingStore: ->
     @image = newCanvas()
     context = @image.getContext("2d")
     context.font = @font()
-    @breakTextIntoLines()
 
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
 
-    @calculateAndUpdateExtent()
 
     @image.width = @width() * pixelRatio
     @image.height = @height() * pixelRatio
@@ -214,12 +213,11 @@ class TextMorph extends StringMorph
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x, p.y + fontHeight(@fontSize)
 
-    # notify my parent of layout change
-    @parent.layoutChanged()  if @parent.layoutChanged  if @parent
   
   setExtent: (aPoint) ->
     @maxWidth = Math.max(aPoint.x, 0)
     @changed()
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
   
   # TextMorph measuring ////
@@ -308,16 +306,19 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
+    @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @changed()  
   

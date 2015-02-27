@@ -56,4 +56,5 @@ ContainerMixin =
     unless @bounds.eq(newBounds)
       @bounds = newBounds
       @changed()
+      @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()

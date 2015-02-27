@@ -347,6 +347,7 @@ class InspectorMorph extends BoxMorph
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @silentSetHeight @label.height() + 50
+      @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
       @changed()
       @resizer.silentUpdateResizerHandlePosition()
@@ -414,10 +415,10 @@ class InspectorMorph extends BoxMorph
     try
       # this.target[propertyName] = evaluate(txt);
       @target.evaluateString "this." + propertyName + " = " + txt
-      if @target.updateBackingStore
-        @target.changed()
-        @target.updateBackingStore()
-        @target.changed()
+      @target.changed()
+      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.updateBackingStore()
+      @target.changed()
     catch err
       @inform err
   
@@ -428,10 +429,10 @@ class InspectorMorph extends BoxMorph
           prop = prop.getValue()
         @target[prop] = null
         @buildAndConnectChildren()
-        if @target.updateBackingStore
-          @target.changed()
-          @target.updateBackingStore()
-          @target.changed()
+        @target.changed()
+        @target.setLayoutBeforeUpdatingBackingStore()
+        @target.updateBackingStore()
+        @target.changed()
     ), "property" # Chrome cannot handle empty strings (others do)
   
   renameProperty: ->
@@ -445,10 +446,10 @@ class InspectorMorph extends BoxMorph
       catch err
         @inform err
       @buildAndConnectChildren()
-      if @target.updateBackingStore
-        @target.changed()
-        @target.updateBackingStore()
-        @target.changed()
+      @target.changed()
+      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.updateBackingStore()
+      @target.changed()
     ), propertyName
   
   removeProperty: ->
@@ -458,9 +459,9 @@ class InspectorMorph extends BoxMorph
 
       @currentProperty = null
       @buildAndConnectChildren()
-      if @target.updateBackingStore
-        @target.changed()
-        @target.updateBackingStore()
-        @target.changed()
+      @target.changed()
+      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.updateBackingStore()
+      @target.changed()
     catch err
       @inform err

@@ -47,6 +47,7 @@ class ColorPaletteMorph extends Morph
         @target[@targetSetter] @choice
       else
         @target[@targetSetter] = @choice
+        @target.setLayoutBeforeUpdatingBackingStore()
         @target.updateBackingStore()
         @target.changed()
   

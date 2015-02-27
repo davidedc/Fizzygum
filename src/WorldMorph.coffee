@@ -1089,10 +1089,12 @@ class WorldMorph extends FrameMorph
     slider.button.pressColor.b += 150
     slider.silentSetHeight WorldMorph.preferencesAndSettings.scrollBarSize
     slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
+    slider.setLayoutBeforeUpdatingBackingStore()
     slider.updateBackingStore()
     slider.action = (num) ->
       aStringMorphOrTextMorph.changed()
       aStringMorphOrTextMorph.text = Math.round(num).toString()
+      aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackingStore()
       aStringMorphOrTextMorph.updateBackingStore()
       aStringMorphOrTextMorph.changed()
       aStringMorphOrTextMorph.escalateEvent(

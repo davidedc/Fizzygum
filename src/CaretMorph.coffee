@@ -173,6 +173,7 @@ class CaretMorph extends BlinkerMorph
         @target.endMark = @slot
       else if @target.endMark isnt @slot
         @target.endMark = @slot
+        @target.setLayoutBeforeUpdatingBackingStore()
         @target.updateBackingStore()
         @target.changed()
     else
@@ -208,6 +209,7 @@ class CaretMorph extends BlinkerMorph
     # until I understand better this changed
     # vs. updateBackingStore semantics.
     @target.changed()
+    @target.setLayoutBeforeUpdatingBackingStore()
     @target.updateBackingStore()
     @target.changed()
 
@@ -226,6 +228,7 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
       @target.text = text
+      @target.setLayoutBeforeUpdatingBackingStore()
       @target.updateBackingStore()
       @target.changed()
       @goRight false, symbol.length
@@ -277,6 +280,7 @@ class CaretMorph extends BlinkerMorph
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
       @target.text = text
+      @target.setLayoutBeforeUpdatingBackingStore()
       @target.updateBackingStore()
   
   deleteLeft: ->
@@ -286,6 +290,7 @@ class CaretMorph extends BlinkerMorph
     text = @target.text
     @target.changed()
     @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
+    @target.setLayoutBeforeUpdatingBackingStore()
     @target.updateBackingStore()
     @goLeft()
 
@@ -293,6 +298,7 @@ class CaretMorph extends BlinkerMorph
   destroy: ->
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
+      @target.setLayoutBeforeUpdatingBackingStore()
       @target.updateBackingStore()
       @target.changed()
     super  
