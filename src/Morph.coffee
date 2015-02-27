@@ -812,6 +812,36 @@ class Morph extends MorphicNode
     # the default, but leaving it here for clarity.
     @fullImage().toDataURL("image/png")
 
+  # the way we take a picture here is different
+  # than the way we usually take a picture.
+  # Usually we ask the morph and submorphs to
+  # paint themselves anew into a new canvas.
+  # This is different: we take the area of the
+  # screen *as it is* and we crop the part of
+  # interest where the extent of our selected
+  # morph is. This means that the morph might
+  # be occluded by other things.
+  # The advantage here is that we capture
+  # the screen absolutely as is, without
+  # causing any repaints. If streaks are on the
+  # screen due to bad painting, we capture them
+  # exactly as the user sees them.
+  asItAppearsOnScreen: ->
+    fullExtentOfMorph = @boundsIncludingChildren()
+    destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
+    destCtx = destCanvas.getContext '2d'
+    destCtx.drawImage world.worldCanvas,
+      fullExtentOfMorph.topLeft().x * pixelRatio,
+      fullExtentOfMorph.topLeft().y * pixelRatio,
+      fullExtentOfMorph.width() * pixelRatio,
+      fullExtentOfMorph.height() * pixelRatio,
+      0,
+      0,
+      fullExtentOfMorph.width() * pixelRatio,
+      fullExtentOfMorph.height() * pixelRatio,
+
+    return destCanvas.toDataURL "image/png"
+
   fullImageHashCode: ->
     return hashCode(@fullImageData())
   

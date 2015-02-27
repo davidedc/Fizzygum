@@ -430,43 +430,7 @@ class SystemTestsRecorderAndPlayer
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestCommand = new SystemTestsCommandScreenshot imageName, @, whichMorph != @worldMorph
 
-    # the way we take a picture here is different
-    # than the way we usually take a picture.
-    # Usually we ask the morph and submorphs to
-    # paint themselves anew into a new canvas.
-    # This is different: we take the area of the
-    # screen *as it is* and we crop the part of
-    # interest where the extent of our selected
-    # morph is. This means that the morph might
-    # be occluded by other things.
-    # The advantage here is that we capture
-    # the screen absolutely as is, without
-    # causing any repaints. If streaks are on the
-    # screen due to bad painting, we capture them
-    # exactly as the user sees them.
-    if whichMorph == @worldMorph
-      imageData = world.worldCanvas.toDataURL("image/png")
-    else
-      # you can take the sceen copy for a single Morph
-      # only while recording (or playing) a test by
-      # choosing the "take pic" action... which otherwise
-      # would usually open a new tab with the picture
-      # of the "painted" morph (not sceen-copied, see
-      # explanation of the differene here above)
-      fullExtentOfMorph = whichMorph.boundsIncludingChildren()
-      destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
-      destCtx = destCanvas.getContext '2d'
-      destCtx.drawImage world.worldCanvas,
-        fullExtentOfMorph.topLeft().x * pixelRatio,
-        fullExtentOfMorph.topLeft().y * pixelRatio,
-        fullExtentOfMorph.width() * pixelRatio,
-        fullExtentOfMorph.height() * pixelRatio,
-        0,
-        0,
-        fullExtentOfMorph.width() * pixelRatio,
-        fullExtentOfMorph.height() * pixelRatio,
-
-      imageData = destCanvas.toDataURL "image/png"
+    imageData = whichMorph.asItAppearsOnScreen()
 
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
     unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
@@ -551,11 +515,13 @@ class SystemTestsRecorderAndPlayer
   compareScreenshots: (testNameWithImageNumber, screenshotTakenOfAParticularMorph = false) ->
    if screenshotTakenOfAParticularMorph
      console.log "comparing pic of a particular morph"
+     # todo this seems broken, this image data is not
+     # actually fetched anywhere?
      screenshotObtained = @imageDataOfAParticularMorph
      @imageDataOfAParticularMorph = null
    else
      console.log "comparing pic of whole desktop"
-     screenshotObtained = @worldMorph.fullImageData()
+     screenshotObtained = @worldMorph.asItAppearsOnScreen()
    
    console.log "trying to match screenshot: " + testNameWithImageNumber
    console.log "length of obtained: " + screenshotObtained.length
