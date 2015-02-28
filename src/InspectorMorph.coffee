@@ -148,6 +148,12 @@ class InspectorMorph extends BoxMorph
     @list.listContents.step = null
     @add @list
 
+    # we add a Morph alignment here because adjusting IDs whenever
+    # we add or remove methods is a pain...
+    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
+
+
     # details pane
     @detail = new ScrollFrameMorph()
     @detail.acceptsDrops = false
