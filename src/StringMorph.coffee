@@ -14,8 +14,6 @@ class StringMorph extends Morph
   isEditable: false
   isNumeric: null
   isPassword: false
-  shadowOffset: null
-  shadowColor: null
   isShowingBlanks: false
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
@@ -49,15 +47,12 @@ class StringMorph extends Morph
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
-      shadowOffset,
-      @shadowColor,
       color,
       fontName
       ) ->
     # additional properties:
     @text = text or ((if (text is "") then "" else "StringMorph"))
     @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
-    @shadowOffset = shadowOffset or new Point(0, 0)
 
     super()
 
@@ -98,12 +93,12 @@ class StringMorph extends Morph
     context.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    return Math.max(context.measureText(text).width + Math.abs(@shadowOffset.x), 1)
+    return Math.max(context.measureText(text).width, 1)
 
   setLayoutBeforeUpdatingBackingStore: ->
     width = @calculateExtentBasedOnText()
     @bounds.corner = @bounds.origin.add(new Point(
-      width, fontHeight(@fontSize) + Math.abs(@shadowOffset.y)))
+      width, fontHeight(@fontSize)))
   
   # no changes of position or extent
   updateBackingStore: ->
@@ -121,21 +116,11 @@ class StringMorph extends Morph
     context.textAlign = "left"
     context.textBaseline = "bottom"
 
-    # first draw the shadow, if any
-    if @shadowColor
-      x = Math.max(@shadowOffset.x, 0)
-      y = Math.max(@shadowOffset.y, 0)
-      context.fillStyle = @shadowColor.toString()
-      context.fillText text, x, fontHeight(@fontSize) + y
-
-    # now draw the actual text
-    x = Math.abs(Math.min(@shadowOffset.x, 0))
-    y = Math.abs(Math.min(@shadowOffset.y, 0))
     context.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks context, x, fontHeight(@fontSize) + y
+      @renderWithBlanks context, 0, fontHeight(@fontSize)
     else
-      context.fillText text, x, fontHeight(@fontSize) + y
+      context.fillText text, 0, fontHeight(@fontSize)
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -144,10 +129,10 @@ class StringMorph extends Morph
       p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, context.measureText(c).width + 1 + x,
-        fontHeight(@fontSize) + y
+      context.fillRect p.x, p.y, context.measureText(c).width + 1,
+        fontHeight(@fontSize)
       context.fillStyle = @markedTextColor.toString()
-      context.fillText c, p.x + x, fontHeight(@fontSize) + y
+      context.fillText c, p.x, fontHeight(@fontSize)
 
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent

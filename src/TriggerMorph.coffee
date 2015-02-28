@@ -117,14 +117,10 @@ class TriggerMorph extends Morph
       @labelString or "",
       @fontSize,
       @fontStyle,
-      false,
-      false,
-      false,
-      null,
-      null,
-      @labelColor,
       @labelBold,
-      @labelItalic
+      @labelItalic,
+      false,
+      @labelColor      
     )
     @add @label
     
