@@ -64,7 +64,6 @@ class SliderButtonMorph extends CircleBoxMorph
     @color = colorBak
     @image = @normalImage
     @changed()
-    return null
     
   
   #SliderButtonMorph events:

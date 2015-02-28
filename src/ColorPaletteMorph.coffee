@@ -14,16 +14,16 @@ class ColorPaletteMorph extends Morph
   
   # no changes of position or extent
   updateBackingStore: ->
-    ext = @extent()
-    @image = newCanvas(@extent().scaleBy pixelRatio)
+    extent = @extent()
+    @image = newCanvas(extent.scaleBy pixelRatio)
     context = @image.getContext("2d")
     context.scale pixelRatio, pixelRatio
     @choice = new Color()
-    for x in [0..ext.x]
-      h = 360 * x / ext.x
+    for x in [0..extent.x]
+      h = 360 * x / extent.x
       y = 0
-      for y in [0..ext.y]
-        l = 100 - (y / ext.y * 100)
+      for y in [0..extent.y]
+        l = 100 - (y / extent.y * 100)
         # see link below for alternatives on how to set a single
         # pixel color.
         # You should really be using putImageData of the whole buffer
@@ -31,7 +31,6 @@ class ColorPaletteMorph extends Morph
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
-    return null
   
   mouseMove: (pos) ->
     @choice = @getPixelColor(pos)

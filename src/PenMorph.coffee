@@ -85,7 +85,6 @@ class PenMorph extends Morph
     context.stroke()
     context.fill()
     @wantsRedraw = false
-    return null
   
   
   # PenMorph access:

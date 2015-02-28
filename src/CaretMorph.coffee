@@ -22,10 +22,6 @@ class CaretMorph extends BlinkerMorph
       @target.setAlignmentToLeft()
     @gotoSlot @slot
   
-  # no changes of position or extent
-  updateBackingStore: ->
-    return super()
-
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event

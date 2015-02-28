@@ -607,7 +607,6 @@ class Morph extends MorphicNode
     # the buffer changed and not the bounds (in which case only one changed()
     # is needed)
     @changed()
-    return null
 
   silentUpdateBackingStore: ->
     # initialize my surface property

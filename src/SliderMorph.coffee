@@ -61,12 +61,7 @@ class SliderMorph extends CircleBoxMorph
       return (@height() - @button.height()) / @rangeSize()
     else
       return (@width() - @button.width()) / @rangeSize()
-  
-  # no changes of position or extent
-  #updateBackingStore: ->
-  #  super()
-  #  return null
-  
+    
   updateValue: ->
     if @orientation is "vertical"
       relPos = @button.top() - @top()

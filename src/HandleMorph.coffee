@@ -40,16 +40,16 @@ class HandleMorph extends Morph
   # HandleMorph drawing:
   # no changes of position or extent
   updateBackingStore: ->
-    @normalImage = newCanvas(@extent().scaleBy pixelRatio)
+    extent = @extent()
+    @normalImage = newCanvas(extent.scaleBy pixelRatio)
     normalImageContext = @normalImage.getContext("2d")
     normalImageContext.scale pixelRatio, pixelRatio
-    @highlightImage = newCanvas(@extent().scaleBy pixelRatio)
+    @highlightImage = newCanvas(extent.scaleBy pixelRatio)
     highlightImageContext = @highlightImage.getContext("2d")
     highlightImageContext.scale pixelRatio, pixelRatio
     @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
     @handleMorphRenderingHelper highlightImageContext, new Color(100, 100, 255), new Color(255, 255, 255)
     @image = @normalImage
-    return null
   
   handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1

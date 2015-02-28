@@ -49,7 +49,6 @@ class CircleBoxMorph extends Morph
     ext = rect.extent()
     if ext.x > 0 and ext.y > 0
       context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()
-    return null
   
   
   # CircleBoxMorph menu:

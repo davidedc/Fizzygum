@@ -89,22 +89,22 @@ class TriggerMorph extends Morph
   
   # no changes of position or extent
   updateBackingStore: ->
-    ext = @extent()
-    @normalImage = newCanvas(ext.scaleBy pixelRatio)
+    extent = @extent()
+    @normalImage = newCanvas(extent.scaleBy pixelRatio)
     context = @normalImage.getContext("2d")
     context.scale pixelRatio, pixelRatio
     context.fillStyle = @color.toString()
-    context.fillRect 0, 0, ext.x, ext.y
-    @highlightImage = newCanvas(ext.scaleBy pixelRatio)
+    context.fillRect 0, 0, extent.x, extent.y
+    @highlightImage = newCanvas(extent.scaleBy pixelRatio)
     context = @highlightImage.getContext("2d")
     context.scale pixelRatio, pixelRatio
     context.fillStyle = @highlightColor.toString()
-    context.fillRect 0, 0, ext.x, ext.y
-    @pressImage = newCanvas(ext.scaleBy pixelRatio)
+    context.fillRect 0, 0, extent.x, extent.y
+    @pressImage = newCanvas(extent.scaleBy pixelRatio)
     context = @pressImage.getContext("2d")
     context.scale pixelRatio, pixelRatio
     context.fillStyle = @pressColor.toString()
-    context.fillRect 0, 0, ext.x, ext.y
+    context.fillRect 0, 0, extent.x, extent.y
     @image = @normalImage
   
   createLabel: ->

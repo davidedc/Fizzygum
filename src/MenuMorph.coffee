@@ -178,10 +178,6 @@ class MenuMorph extends BoxMorph
     fb = @boundsIncludingChildren()
     #console.log "fb: " + fb
     @silentSetExtent fb.extent().add(4)
-
-  #updateBackingStore: ->
-  #  debugger
-  #  super()
   
   maxWidth: ->
     w = 0
