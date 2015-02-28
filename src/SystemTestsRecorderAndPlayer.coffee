@@ -451,7 +451,7 @@ class SystemTestsRecorderAndPlayer
   # are different.
   # So it neatly highlights where the differences
   # are.
-  subtractScreenshots: (expected, obtained, andThen) ->
+  subtractScreenshots: (expected, obtained, diffNumber, andThen) ->
     console.log "subtractScreenshots"
     expectedCanvas = document.createElement "canvas"
     expectedImage = new Image
@@ -506,7 +506,8 @@ class SystemTestsRecorderAndPlayer
         console.log "equalPixels: " + equalPixels
         console.log "differentPixels: " + differentPixels
         subtractionCanvasContext.putImageData subtractionImageData, 0, 0
-        andThen subtractionCanvas, expected
+        errorRatio = Math.floor((differentPixels/(equalPixels+differentPixels))*100)
+        andThen subtractionCanvas, expected, errorRatio, diffNumber
 
       obtainedImage.src = obtained.imageData
 
@@ -529,7 +530,7 @@ class SystemTestsRecorderAndPlayer
    # There can be multiple files for the same image, since
    # the images vary according to OS and Browser, so for
    # each image of each test there is an array of candidates
-   # to be checked. If any of them mathes in terms of pixel data,
+   # to be checked. If any of them matches in terms of pixel data,
    # then fine, otherwise complain...
    for eachImage in SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
      console.log "length of obtained: " + eachImage.imageData.length
@@ -540,7 +541,7 @@ class SystemTestsRecorderAndPlayer
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       return
    # OK none of the images we loaded matches the one we
-   # just takes. Hence create a SystemTestsReferenceImage
+   # just took. Hence create a SystemTestsReferenceImage
    # that we can let the user download - it will contain
    # the image actually obtained (rather than the one
    # we should have seen)
@@ -655,18 +656,49 @@ class SystemTestsRecorderAndPlayer
     # (remember, there can be more than one
     # good screenshot, we pick the first one
     # we find)
+    renamerScript = ""
+    systemInfo = new SystemTestsSystemInfo()
+    pixelRatioString = (""+pixelRatio).replace(/\.+/g, "_")
+
     for i in [0...@collectedFailureImages.length]
       failedImage = @collectedFailureImages[i]
+
       aGoodImageName = (failedImage).imageName.replace("obtained-", "")
+      filenameForScript = aGoodImageName.replace(/_image_.*/g, "")
+      renamerScript += "rm " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+              systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              "devicePixelRatio_" + pixelRatioString + "/" +
+              aGoodImageName + "*\n"
+      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+              systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              "devicePixelRatio_" + pixelRatioString + "/\n\n"
+
       setOfGoodImages = SystemTestsRecorderAndPlayer.loadedImages[aGoodImageName]
-      aGoodImage = setOfGoodImages[0]
-      # note the asynchronous operation here - this is because
-      # the subtractScreenshots needs to create some Images and
-      # load them with data from base64 string. The operation
-      # of loading the data is asynchronous...
-      @subtractScreenshots failedImage, aGoodImage, (subtractionCanvas, failedImage) ->
-        console.log "zipping diff file:" + "diff-"+failedImage.imageName+".png"
-        zip.file("diff-"+failedImage.imageName+".png", subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
+      diffNumber = 0
+      for eachGoodImage in setOfGoodImages
+        diffNumber++
+        # note the asynchronous operation here - this is because
+        # the subtractScreenshots needs to create some Images and
+        # load them with data from base64 string. The operation
+        # of loading the data is asynchronous...
+        @subtractScreenshots failedImage, eachGoodImage, diffNumber, (subtractionCanvas, failedImage, errorRatio, diffNumber) ->
+          console.log "zipping diff file:" + "diff-"+failedImage.imageName+".png"
+          zip.file(
+            "diff-"+
+            failedImage.imageName +
+            "-errorPerc-" +
+            errorRatio+
+            "-diffNumber-"+
+            diffNumber+
+            ".png"
+          , subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
+    zip.file("replace_all_images.sh", renamerScript);
 
     # OK the images are all put in the zip
     # asynchronously. So, in theory what we should do is to
