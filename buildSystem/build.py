@@ -174,7 +174,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # which only includes the test steps and not the
     # assets, so it's one js file for each test
     filenames2 = []
-    print("Tests assets ----------------------------")
+    #print("Tests assets ----------------------------")
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
           # the way to differentiate between files: the asset files contain a hash
@@ -184,7 +184,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
           filenames2.append(os.path.join(root,filename).replace("../Zombie-Kernel-tests/tests/",""))
-          print("%s" % (os.path.join(root,filename)))
+          #print("%s" % (os.path.join(root,filename)))
     filenames2 = sorted(filenames2)
 
     manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) {\nSystemTestsRecorderAndPlayer.testsAssetsManifest = []; }\n"
