@@ -1,14 +1,13 @@
-#| FrameMorph //////////////////////////////////////////////////////////
+#| CanvasMorph //////////////////////////////////////////////////////////
 #| 
 #| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
-#| 
 #| and event handling. 
-#| 
-#| It's a good idea to use me whenever it's clear that there is a  
+#| Also I always use a canvas to retain my graphical representation and respond
+#| to the HTML5 commands.
 #| 
 #| "container"/"contained" scenario going on.
 
-class FrameMorph extends Morph
+class CanvasMorph extends FrameMorph
 
   scrollFrame: null
   extraPadding: 0
@@ -38,6 +37,17 @@ class FrameMorph extends Morph
     if @scrollFrame
       @scrollFrame.alpha = @calculateAlphaScaled(alpha)
     super(alpha)
+
+  silentUpdateBackingStore: ->
+    # initialize my surface property
+    @image = newCanvas(@extent().scaleBy pixelRatio)
+    context = @image.getContext("2d")
+    context.scale pixelRatio, pixelRatio
+    context.fillStyle = @color.toString()
+    context.fillRect 0, 0, @width(), @height()
+    if @cachedTexture
+      @drawCachedTexture()
+    else @drawTexture @texture  if @texture
 
   # used for example:
   # - to determine which morphs you can attach a morph to
@@ -71,6 +81,20 @@ class FrameMorph extends Morph
         result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
 
     return result
+
+  # Morph pen trails:
+  penTrails: ->
+    # answer my pen trails canvas. default is to answer my image
+    # The implication is that by default every Morph in the system
+    # (including the World) is able to act as turtle canvas and can
+    # display pen trails.
+    # BUT also this means that pen trails will be lost whenever
+    # the trail's morph (the pen's parent) performs a "drawNew()"
+    # operation. If you want to create your own pen trails canvas,
+    # you may wish to modify its **penTrails()** property, so that
+    # it keeps a separate offscreen canvas for pen trails
+    # (and doesn't lose these on redraw).
+    @image
   
   # frames clip at their boundaries
   # so there is no need to do a deep
@@ -149,13 +173,7 @@ class FrameMorph extends Morph
         child.recursivelyBlit aCanvas, clippingRectangle
       else
         child.recursivelyBlit aCanvas, dirtyPartOfFrame
-
-  isTransparentAt: ->
-    return false
   
-  silentUpdateBackingStore: ->
-    console.log 'frame morph doing nothing with the backing store'
-
   # This method only paints this very morph's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by recursivelyBlit, which
@@ -163,7 +181,7 @@ class FrameMorph extends Morph
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle) ->
-    return null  if @isMinimised or !@isVisible
+    return null  if @isMinimised or !@isVisible or !@image?
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
@@ -176,36 +194,29 @@ class FrameMorph extends Morph
       st = src.top() * pixelRatio
       al = area.left() * pixelRatio
       at = area.top() * pixelRatio
-      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
-      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      w = Math.min(src.width() * pixelRatio, @image.width - sl)
+      h = Math.min(src.height() * pixelRatio, @image.height - st)
       return null  if w < 1 or h < 1
 
-      # initialize my surface property
-      #@image = newCanvas(@extent().scaleBy pixelRatio)
-      #context = @image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
-      context.save
-      context.fillStyle = @color.toString()
-      context.fillRect  Math.round(al),
-          Math.round(at),
-          Math.round(w),
-          Math.round(h)
-      context.restore
+      context.drawImage @image,
+        Math.round(sl),
+        Math.round(st),
+        Math.round(w),
+        Math.round(h),
+        Math.round(al),
+        Math.round(at),
+        Math.round(w),
+        Math.round(h)
 
       if world.showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
-
-        context.save
         context.globalAlpha = 0.5
         context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect  Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
-        context.restore
-  
+        context.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));
+
+
   # FrameMorph scrolling optimization:
   moveBy: (delta) ->
     #console.log "moving all morphs in the frame"
@@ -270,8 +281,9 @@ class FrameMorph extends Morph
       @keepInScrollFrame()
     @scrollFrame.adjustScrollBars()
   
+  imBeingAddedTo: (newParentMorph) ->
   
-  # FrameMorph dragging & dropping of contents:
+  # dragging & dropping of contents:
   reactToDropOf: ->
     @adjustBounds()
   
@@ -279,7 +291,7 @@ class FrameMorph extends Morph
     @adjustBounds()
   
     
-  # FrameMorph menus:
+  # menus:
   developersMenu: ->
     menu = super()
     if @children.length

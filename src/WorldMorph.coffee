@@ -865,6 +865,11 @@ class WorldMorph extends FrameMorph
       newMorph.contents.adjustBounds()
       newMorph.setExtent new Point(350, 250)
       create newMorph
+
+    menu.addItem "canvas", ->
+      newMorph = new CanvasMorph()
+      newMorph.setExtent new Point(350, 250)
+      create newMorph
     
     menu.addItem "handle", ->
       create new HandleMorph()
