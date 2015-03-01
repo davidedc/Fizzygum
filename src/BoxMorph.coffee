@@ -13,21 +13,113 @@ class BoxMorph extends Morph
     @borderColor = borderColor or new Color()
     super()
 
+  isTransparentAt: (aPoint) ->
+    thisMorphPosition = @position()
+    radius = Math.max(@edge - @border, 0)
+    if (aPoint.x - thisMorphPosition.x > radius and aPoint.x - thisMorphPosition.x < @width() - radius) or
+      (aPoint.y - thisMorphPosition.y > radius and aPoint.y - thisMorphPosition.y < @height() - radius)
+        return false
+
+    relativePoint = new Point(aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y)
+
+    # top left corner
+    if relativePoint.x < radius and relativePoint.y < radius
+      if relativePoint.distanceTo(new Point radius,radius) < radius
+        return false
+
+    # top right corner
+    if relativePoint.x > @width() - radius and relativePoint.y < radius
+      if relativePoint.distanceTo(new Point @width() - radius,radius) < radius
+        return false
+
+    # bottom left corner
+    if relativePoint.x < radius and relativePoint.y > @height() - radius
+      if relativePoint.distanceTo(new Point radius, @height() - radius) < radius
+        return false
+
+    # bottom right corner
+    if relativePoint.x > @width() - radius and relativePoint.y > @height() - radius
+      if relativePoint.distanceTo(new Point @width() - radius, @height() - radius) < radius
+        return false
+
+
+    return true
   
-  # BoxMorph drawing:
-  # no changes of position of extent
-  updateBackingStore: ->
-    @image = newCanvas(@extent().scaleBy pixelRatio)
-    context = @image.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    if (@edge is 0) and (@border is 0)
-      super()
-      return null
-    context.fillStyle = @color.toString()
-    context.beginPath()
-    @outlinePath context, Math.max(@edge - @border, 0), @border
-    context.closePath()
-    context.fill()
+  silentUpdateBackingStore: ->
+    console.log 'BoxMorph doing nothing with the backing store'
+
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    debugger
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
+    if area.isNotEmpty()
+      delta = @position().neg()
+      src = area.copy().translateBy(delta).round()
+      context = aCanvas.getContext("2d")
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      return null  if w < 1 or h < 1
+
+      # initialize my surface property
+      #@image = newCanvas(@extent().scaleBy pixelRatio)
+      #context = @image.getContext("2d")
+      #context.scale pixelRatio, pixelRatio
+
+      context.save()
+
+      # clip out the dirty rectangle as we are
+      # going to paint the whole of the box
+      context.beginPath()
+      context.moveTo(Math.round(al), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at))
+      context.closePath()
+      context.clip()
+
+      context.globalAlpha = @alpha
+
+      context.scale pixelRatio, pixelRatio
+      morphPosition = @position()
+      context.translate morphPosition.x, morphPosition.y
+      context.fillStyle = @color.toString()
+      
+      context.beginPath()
+      @outlinePath context, Math.max(@edge - @border, 0), @border
+      context.closePath()
+      context.fill()
+
+      context.restore()
+
+      ###
+      if world.showRedraws
+        randomR = Math.round(Math.random()*255)
+        randomG = Math.round(Math.random()*255)
+        randomB = Math.round(Math.random()*255)
+
+        context.save()
+        context.globalAlpha = 0.5
+        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        context.fillRect  Math.round(al),
+            Math.round(at),
+            Math.round(w),
+            Math.round(h)
+        context.restore()
+      ###
+
   
   outlinePath: (context, radius, inset) ->
     offset = radius + inset
