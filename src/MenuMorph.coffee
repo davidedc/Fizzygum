@@ -191,18 +191,18 @@ class MenuMorph extends BoxMorph
         (item instanceof ColorPickerMorph) or
         (item instanceof SliderMorph)
           w = Math.max(w, item.width())
-      console.log "maxWidth: width of item " + item + " : " + w
+      #console.log "maxWidth: width of item " + item + " : " + w
 
     if @label
       w = Math.max(w, @label.width())
-      console.log "maxWidth: label width : " + w
+      #console.log "maxWidth: label width : " + w
     w
   
   # makes all the elements of this menu the
   # right width.
   adjustWidthsOfMenuEntries: ->
     w = @maxWidth()
-    console.log "maxwidth " + w
+    #console.log "maxwidth " + w
     @children.forEach (item) =>
       Morph::trackChanges = false
       item.setWidth w
@@ -212,7 +212,7 @@ class MenuMorph extends BoxMorph
       else
         if item is @label
           item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
-      console.log "new width of " + item + " : " + item.width()
+      #console.log "new width of " + item + " : " + item.width()
       Morph::trackChanges = true
 
   
