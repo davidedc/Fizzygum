@@ -184,27 +184,27 @@ class FrameMorph extends Morph
       #@image = newCanvas(@extent().scaleBy pixelRatio)
       #context = @image.getContext("2d")
       #context.scale pixelRatio, pixelRatio
-      context.save
+      context.save()
       context.fillStyle = @color.toString()
       context.fillRect  Math.round(al),
           Math.round(at),
           Math.round(w),
           Math.round(h)
-      context.restore
+      context.restore()
 
       if world.showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
 
-        context.save
+        context.save()
         context.globalAlpha = 0.5
         context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
         context.fillRect  Math.round(al),
             Math.round(at),
             Math.round(w),
             Math.round(h)
-        context.restore
+        context.restore()
   
   # FrameMorph scrolling optimization:
   moveBy: (delta) ->
