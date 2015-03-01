@@ -506,7 +506,8 @@ class SystemTestsRecorderAndPlayer
         console.log "equalPixels: " + equalPixels
         console.log "differentPixels: " + differentPixels
         subtractionCanvasContext.putImageData subtractionImageData, 0, 0
-        errorRatio = Math.floor((differentPixels/(equalPixels+differentPixels))*100)
+        #errorRatio = Math.ceil((differentPixels/(equalPixels+differentPixels))*1000)
+        errorRatio = differentPixels
         andThen subtractionCanvas, expected, errorRatio, diffNumber
 
       obtainedImage.src = obtained.imageData
@@ -692,7 +693,7 @@ class SystemTestsRecorderAndPlayer
           zip.file(
             "diff-"+
             failedImage.imageName +
-            "-errorPerc-" +
+            "-error-" +
             errorRatio+
             "-diffNumber-"+
             diffNumber+
