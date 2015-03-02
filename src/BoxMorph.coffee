@@ -14,36 +14,38 @@ class BoxMorph extends Morph
     super()
 
   isTransparentAt: (aPoint) ->
+    # first quickly check if the point is even
+    # within the bounding box
+    if !@bounds.containsPoint aPoint
+      return true
+ 
     thisMorphPosition = @position()
     radius = Math.max(@edge - @border, 0)
-    if (aPoint.x - thisMorphPosition.x > radius and aPoint.x - thisMorphPosition.x < @width() - radius) or
-      (aPoint.y - thisMorphPosition.y > radius and aPoint.y - thisMorphPosition.y < @height() - radius)
-        return false
-
+ 
     relativePoint = new Point(aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y)
 
     # top left corner
     if relativePoint.x < radius and relativePoint.y < radius
-      if relativePoint.distanceTo(new Point radius,radius) < radius
-        return false
+      if relativePoint.distanceTo(new Point radius,radius) > radius
+        return true
 
     # top right corner
-    if relativePoint.x > @width() - radius and relativePoint.y < radius
-      if relativePoint.distanceTo(new Point @width() - radius,radius) < radius
-        return false
+    else if relativePoint.x > @width() - radius and relativePoint.y < radius
+      if relativePoint.distanceTo(new Point @width() - radius,radius) > radius
+        return true
 
     # bottom left corner
-    if relativePoint.x < radius and relativePoint.y > @height() - radius
-      if relativePoint.distanceTo(new Point radius, @height() - radius) < radius
-        return false
+    else if relativePoint.x < radius and relativePoint.y > @height() - radius
+      if relativePoint.distanceTo(new Point radius, @height() - radius) > radius
+        return true
 
     # bottom right corner
-    if relativePoint.x > @width() - radius and relativePoint.y > @height() - radius
-      if relativePoint.distanceTo(new Point @width() - radius, @height() - radius) < radius
-        return false
+    else if relativePoint.x > @width() - radius and relativePoint.y > @height() - radius
+      if relativePoint.distanceTo(new Point @width() - radius, @height() - radius) > radius
+        return true
 
 
-    return true
+    return false
   
   silentUpdateBackingStore: ->
     console.log 'BoxMorph doing nothing with the backing store'
@@ -56,7 +58,6 @@ class BoxMorph extends Morph
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    debugger
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
