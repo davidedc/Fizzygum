@@ -406,3 +406,6 @@ class StringMorph extends Morph
     # re-establish the original definition of the method
     @mouseDownLeft = StringMorph::mouseDownLeft
     delete @mouseMove
+
+
+  

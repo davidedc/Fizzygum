@@ -9,7 +9,9 @@
 # and versatile, so for example there is no case where the children
 # are painted over the border, which would look bad.
 
+
 class RectangleMorph extends Morph
+
   constructor: (extent, color) ->
     super()
     @silentSetExtent(extent) if extent?

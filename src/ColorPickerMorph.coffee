@@ -11,7 +11,7 @@ class ColorPickerMorph extends Morph
     @color = new Color(255, 255, 255)
     @setExtent new Point(80, 80)
     @buildSubmorphs()
-  
+
   buildSubmorphs: ->
     @destroyAll()
     @feedback = new RectangleMorph(new Point(20, 20), @choice)

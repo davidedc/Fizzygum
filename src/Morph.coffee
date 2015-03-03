@@ -638,15 +638,6 @@ class Morph extends MorphicNode
     @changed()
   
   
-  #
-  #Morph.prototype.drawCachedTexture = function () {
-  #    var context = this.image.getContext('2d'),
-  #        pattern = context.createPattern(this.cachedTexture, 'repeat');
-  #	context.fillStyle = pattern;
-  #    context.fillRect(0, 0, this.image.width, this.image.height);
-  #    this.changed();
-  #};
-  #
   
   # This method only paints this very morph's "image",
   # it doesn't descend the children
