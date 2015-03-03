@@ -111,7 +111,7 @@ class SpeechBubbleMorph extends BoxMorph
     @contentsMorph.setPosition @position().add(
       new Point(@padding or @edge, @border + @padding + 1))
 
-  
+
   outlinePath: (context, radius, inset) ->
     # console.log "bubble outlinePath"
     circle = (x, y, r) ->
@@ -171,11 +171,3 @@ class SpeechBubbleMorph extends BoxMorph
         rad = radius / 2.8
         circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
 
-
-  # SpeechBubbleMorph resizing
-  # invoked by HandleMorph
-  layoutSubmorphs: ->
-    # console.log "bubble layoutSubmorphs"
-    #@removeShadow()
-    #@updateBackingStore()
-    #@addShadow new Point(2, 2), 80
