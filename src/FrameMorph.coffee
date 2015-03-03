@@ -150,61 +150,6 @@ class FrameMorph extends Morph
       else
         child.recursivelyBlit aCanvas, dirtyPartOfFrame
 
-  isTransparentAt: ->
-    return false
-  
-  silentUpdateBackingStore: ->
-    console.log 'frame morph doing nothing with the backing store'
-
-  # This method only paints this very morph's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyBlit, which
-  # eventually invokes blit.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  blit: (aCanvas, clippingRectangle) ->
-    return null  if @isMinimised or !@isVisible
-    area = clippingRectangle.intersect(@bounds).round()
-    # test whether anything that we are going to be drawing
-    # is visible (i.e. within the clippingRectangle)
-    if area.isNotEmpty()
-      delta = @position().neg()
-      src = area.copy().translateBy(delta).round()
-      context = aCanvas.getContext("2d")
-      context.globalAlpha = @alpha
-      sl = src.left() * pixelRatio
-      st = src.top() * pixelRatio
-      al = area.left() * pixelRatio
-      at = area.top() * pixelRatio
-      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
-      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
-      return null  if w < 1 or h < 1
-
-      # initialize my surface property
-      #@image = newCanvas(@extent().scaleBy pixelRatio)
-      #context = @image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
-      context.save()
-      context.fillStyle = @color.toString()
-      context.fillRect  Math.round(al),
-          Math.round(at),
-          Math.round(w),
-          Math.round(h)
-      context.restore()
-
-      if world.showRedraws
-        randomR = Math.round(Math.random()*255)
-        randomG = Math.round(Math.random()*255)
-        randomB = Math.round(Math.random()*255)
-
-        context.save()
-        context.globalAlpha = 0.5
-        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect  Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
-        context.restore()
   
   # FrameMorph scrolling optimization:
   moveBy: (delta) ->
