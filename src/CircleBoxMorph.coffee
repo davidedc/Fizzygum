@@ -1,8 +1,10 @@
 # CircleBoxMorph //////////////////////////////////////////////////////
 
 # I can be used for sliders
+# REQUIRES BackingStoreMixin
 
 class CircleBoxMorph extends Morph
+  @augmentWith BackingStoreMixin
 
   orientation: null
   autoOrient: true
@@ -38,6 +40,8 @@ class CircleBoxMorph extends Morph
       center2 = new Point(@right() - radius, y)
       rect = @bounds.origin.add(
         new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
+
+    # draw the two circles and then the rectangle connecting them
     points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
     points.forEach (center) =>
       context.fillStyle = @color.toString()

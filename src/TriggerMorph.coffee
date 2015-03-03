@@ -6,8 +6,10 @@
 # trivial, as the concepts of
 # dataSourceMorphForTarget, target and action
 # are used - see comments.
+# REQUIRES BackingStoreMixin
 
 class TriggerMorph extends Morph
+  @augmentWith BackingStoreMixin
 
   target: null
   action: null

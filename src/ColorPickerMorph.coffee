@@ -2,29 +2,44 @@
 
 class ColorPickerMorph extends Morph
 
+  # pattern: all the children should be declared here
+  # the reason is that when you duplicate a morph
+  # , the duplicated morph needs to have the handles
+  # that will be duplicated. If you don't list them
+  # here, then they need to be initialised in the
+  # constructor. But actually they might not be
+  # initialised in the constructor if a "lazy initialisation"
+  # approach is taken. So it's good practice
+  # to list them here so they can be duplicated either way.
   feedback: null
   choice: null
+  colorPalette: null
+  grayPalette: null
 
   constructor: (defaultColor) ->
     @choice = defaultColor or new Color(255, 255, 255)
     super()
     @color = new Color(255, 255, 255)
     @setExtent new Point(80, 80)
+
+  setLayoutBeforeUpdatingBackingStore: ->
     @buildSubmorphs()
 
   buildSubmorphs: ->
     @destroyAll()
     @feedback = new RectangleMorph(new Point(20, 20), @choice)
-    cpal = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
-    gpal = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
-    cpal.setPosition @bounds.origin
-    @add cpal
-    gpal.setPosition cpal.bottomLeft()
-    @add gpal
-    x = (gpal.left() + Math.floor((gpal.width() - @feedback.width()) / 2))
-    y = gpal.bottom() + Math.floor((@bottom() - gpal.bottom() - @feedback.height()) / 2)
+    @colorPalette = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
+    @grayPalette = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
+    @colorPalette.setPosition @bounds.origin
+    @add @colorPalette
+    @grayPalette.setPosition @colorPalette.bottomLeft()
+    @add @grayPalette
+    x = (@grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2))
+    y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
     @feedback.setPosition new Point(x, y)
     @add @feedback
+
+  imBeingAddedTo: (newParentMorph) ->
   
   getColor: ->
     @feedback.color

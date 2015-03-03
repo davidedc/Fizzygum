@@ -4,8 +4,10 @@
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
+# REQUIRES BackingStoreMixin
 
 class HandleMorph extends Morph
+  @augmentWith BackingStoreMixin
 
   target: null
   minExtent: null

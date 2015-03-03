@@ -2,8 +2,10 @@
 
 # A StringMorph is a single line of text. It can only be left-aligned.
 # REQUIRES WorldMorph
+# REQUIRES BackingStoreMixin
 
 class StringMorph extends Morph
+  @augmentWith BackingStoreMixin
 
   text: null
   fontSize: null

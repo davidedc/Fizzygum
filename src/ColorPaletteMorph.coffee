@@ -1,8 +1,10 @@
 # ColorPaletteMorph ///////////////////////////////////////////////////
 # REQUIRES ControllerMixin
+# REQUIRES BackingStoreMixin
 
 class ColorPaletteMorph extends Morph
   @augmentWith ControllerMixin
+  @augmentWith BackingStoreMixin
 
   target: null
   targetSetter: "color"
