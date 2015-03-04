@@ -947,7 +947,6 @@ class Morph extends MorphicNode
   imBeingAddedTo: (newParentMorph) ->
     @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
-    @layoutSubmorphs()
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
