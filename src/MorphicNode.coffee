@@ -266,6 +266,17 @@ class MorphicNode
     return @ if @ instanceof constructor
     return null  unless @parent
     @parent.parentThatIsA constructor
+
+  # checks whether the morph is a child,
+  # directly or indirectly, of a specified
+  # supposed ancestor morph
+  # this is currently unused
+  isADescendantOf: (theSupposedAncestorMorph) ->
+    if @ == theSupposedAncestorMorph
+      return true
+    if !@parent?
+      return false
+    return @parent.isADescendantOf theSupposedAncestorMorph
   
   # returns the first parent (going up from this node) that belongs to a set
   # of classes. (includes this particular node).
