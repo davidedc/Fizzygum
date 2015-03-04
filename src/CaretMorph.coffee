@@ -276,16 +276,17 @@ class CaretMorph extends BlinkerMorph
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
       @target.text = text
-      @target.setLayoutBeforeUpdatingBackingStore()
-      @target.updateBackingStore()
+    @target.setLayoutBeforeUpdatingBackingStore()
+    @target.updateBackingStore()
   
   deleteLeft: ->
     if @target.selection()
       @gotoSlot @target.selectionStartSlot()
-      return @target.deleteSelection()
-    text = @target.text
-    @target.changed()
-    @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
+      @target.deleteSelection()
+    else
+      text = @target.text
+      @target.changed()
+      @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
     @target.setLayoutBeforeUpdatingBackingStore()
     @target.updateBackingStore()
     @goLeft()
