@@ -345,67 +345,78 @@ class InspectorMorph extends BoxMorph
     Morph::trackChanges = false
 
     # label
-    x = @left() + @edge
-    y = @top() + @edge
-    r = @right() - @edge
-    w = r - x
-    @label.setPosition new Point(x, y)
-    @label.setWidth w
-    if @label.height() > (@height() - 50)
-      @silentSetHeight @label.height() + 50
-      @setLayoutBeforeUpdatingBackingStore()
-      @updateBackingStore()
-      @changed()
-      @resizer.silentUpdateResizerHandlePosition()
+    labelLeft = @left() + @edge
+    labelTop = @top() + @edge
+    labelRight = @right() - @edge
+    labelWidth = labelRight - labelLeft
+    if @label.parent == @
+      @label.setPosition new Point(labelLeft, labelTop)
+      @label.setWidth labelWidth
+      if @label.height() > (@height() - 50)
+        @silentSetHeight @label.height() + 50
+        @setLayoutBeforeUpdatingBackingStore()
+        @updateBackingStore()
+        @changed()
+        @resizer.silentUpdateResizerHandlePosition()
 
     # list
-    y = @label.bottom() + 2
-    w = Math.min(Math.floor(@width() / 3), @list.listContents.width())
-    w -= @edge
+    labelBottom = labelTop + @label.height() + 2
+    listWidth = Math.floor(@width() / 3)
+    listWidth -= @edge
     b = @bottom() - (2 * @edge) - WorldMorph.preferencesAndSettings.handleSize
-    h = b - y
-    @list.setPosition new Point(x, y)
-    @list.setExtent new Point(w, h)
+    listHeight = b - labelBottom
+    listBottom = labelBottom + listHeight
+    if @list.parent == @
+      @list.setPosition new Point(labelLeft, labelBottom)
+      @list.setExtent new Point(listWidth, listHeight)
 
     # detail
-    x = @list.right() + @edge
-    r = @right() - @edge
-    w = r - x
-    @detail.setPosition new Point(x, y)
-    @detail.setExtent new Point(w, (h * 2 / 3) - @edge)
+    detailLeft = labelLeft + listWidth + @edge
+    detailRight = @right() - @edge
+    detailWidth = detailRight - detailLeft
+    if @detail.parent == @
+      @detail.setPosition new Point(detailLeft, labelBottom)
+      @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @edge)
 
     # work
-    y = @detail.bottom() + @edge
-    @work.setPosition new Point(x, y)
-    @work.setExtent new Point(w, h / 3)
+    workTop = labelBottom + (listHeight * 2 / 3)
+    if @work.parent == @
+      @work.setPosition new Point(detailLeft, workTop)
+      @work.setExtent new Point(detailWidth, listHeight / 3)
 
     # properties button
-    x = @list.left()
-    y = @list.bottom() + @edge
-    w = @list.width()
-    h = WorldMorph.preferencesAndSettings.handleSize
-    @buttonSubset.setPosition new Point(x, y)
-    @buttonSubset.setExtent new Point(w, h)
+    propertiesLeft = labelLeft
+    propertiesTop = listBottom + @edge
+    propertiesWidth = listWidth
+    propertiesHeight = WorldMorph.preferencesAndSettings.handleSize
+    if @buttonSubset.parent == @
+      @buttonSubset.setPosition new Point(propertiesLeft, propertiesTop)
+      @buttonSubset.setExtent new Point(propertiesWidth, propertiesHeight)
 
     # inspect button
-    x = @detail.left()
-    w = @detail.width() - @edge - WorldMorph.preferencesAndSettings.handleSize
-    w = w / 3 - @edge / 3
-    @buttonInspect.setPosition new Point(x, y)
-    @buttonInspect.setExtent new Point(w, h)
+    inspectLeft = detailLeft
+    inspectWidth = detailWidth - @edge - WorldMorph.preferencesAndSettings.handleSize
+    inspectWidth = inspectWidth / 3 - @edge / 3
+    inspectRight = inspectLeft + inspectWidth
+    if @buttonInspect.parent == @
+      @buttonInspect.setPosition new Point(inspectLeft, propertiesTop)
+      @buttonInspect.setExtent new Point(inspectWidth, propertiesHeight)
 
     # edit button
-    x = @buttonInspect.right() + @edge
-    @buttonEdit.setPosition new Point(x, y)
-    #@buttonEdit.setPosition new Point(x, y + 20)
-    @buttonEdit.setExtent new Point(w, h)
+    editLeft = inspectRight + @edge
+    editRight = editLeft + inspectWidth
+    if @buttonEdit.parent == @
+      @buttonEdit.setPosition new Point(editLeft, propertiesTop)
+      @buttonEdit.setExtent new Point(inspectWidth, propertiesHeight)
 
     # close button
-    x = @buttonEdit.right() + @edge
-    r = @detail.right() - @edge - WorldMorph.preferencesAndSettings.handleSize
-    w = r - x
-    @buttonClose.setPosition new Point(x, y)
-    @buttonClose.setExtent new Point(w, h)
+    closeLeft = editRight + @edge
+    closeRight = detailRight - @edge - WorldMorph.preferencesAndSettings.handleSize
+    closeWidth = closeRight - closeLeft
+    if @buttonClose.parent == @
+      @buttonClose.setPosition new Point(closeLeft, propertiesTop)
+      @buttonClose.setExtent new Point(closeWidth, propertiesHeight)
+
     Morph::trackChanges = true
     @changed()
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
