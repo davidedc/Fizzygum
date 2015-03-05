@@ -1505,8 +1505,9 @@ class Morph extends MorphicNode
           # this is what happens when "each" is
           # selected: we attach the selected morph
           each.add @
-          if each instanceof FrameMorph
-            each.adjustBounds()
+          if each instanceof ScrollFrameMorph
+            each.adjustContentsBounds()
+            each.adjustScrollBars()
           else
             # you expect Morphs attached
             # inside a FrameMorph

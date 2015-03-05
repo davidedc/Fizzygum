@@ -50,10 +50,12 @@ class ScrollFrameMorph extends FrameMorph
 
     @hBar.action = (num, target) =>
       target.contents.setPosition new Point(target.left() - num, target.contents.position().y)
-      target.contents.adjustBounds()
+      target.adjustContentsBounds()
+      target.adjustScrollBars()
     @vBar.action = (num, target) =>
       target.contents.setPosition new Point(target.contents.position().x, target.top() - num)
-      target.contents.adjustBounds()
+      target.adjustContentsBounds()
+      target.adjustScrollBars()
     @adjustScrollBars()
 
   setColor: (aColor) ->
@@ -136,7 +138,7 @@ class ScrollFrameMorph extends FrameMorph
   
   addContents: (aMorph) ->
     @contents.add aMorph
-    @contents.adjustBounds()
+    @adjustContentsBounds()
     @adjustScrollBars()
   
   setContents: (aMorph, extraPadding) ->
@@ -149,8 +151,58 @@ class ScrollFrameMorph extends FrameMorph
   setExtent: (aPoint) ->
     @contents.setPosition @position().copy()  if @isTextLineWrapping
     super aPoint
-    @contents.adjustBounds()
+    @contents.setExtent(aPoint)
+    @adjustContentsBounds()
     @adjustScrollBars()
+
+
+  reactToDropOf: ->
+    @adjustContentsBounds()
+    @adjustScrollBars()
+  
+  reactToGrabOf: ->
+    @adjustContentsBounds()
+    @adjustScrollBars()
+
+  adjustContentsBounds: (aPoint) ->
+    # if FrameMorph is of type isTextLineWrapping
+    # it means that you don't want the TextMorph to
+    # extend indefinitely as you are typing. Rather,
+    # the width will be constrained and the text will
+    # wrap.
+    if @isTextLineWrapping
+      @contents.children.forEach (morph) =>
+        if morph instanceof TextMorph
+          totalPadding =  2*(@extraPadding + @padding)
+          # this re-layouts the text to fit the width.
+          # The new height of the TextMorph will then be used
+          # to redraw the vertical slider.
+          morph.maxWidth = 0
+          morph.setWidth @contents.width() - totalPadding
+          morph.maxWidth = @contents.width() - totalPadding
+          @contents.setHeight Math.max(morph.height(), @height() - totalPadding)
+
+    subBounds = @contents.submorphBounds()
+    if subBounds
+      newBounds = subBounds.expandBy(@padding + @extraPadding).growBy(@growth).merge(@bounds)
+    else
+      newBounds = @bounds.copy()
+
+    unless @contents.bounds.eq(newBounds)
+      @contents.bounds = newBounds
+      @contents.setLayoutBeforeUpdatingBackingStore()
+      @contents.updateBackingStore()
+      @keepContentsInScrollFrame()
+
+  keepContentsInScrollFrame: ->
+    if @contents.left() > @left()
+      @contents.moveBy new Point(@left() - @contents.left(), 0)
+    if @contents.right() < @right()
+      @contents.moveBy new Point(@right() - @contents.right(), 0)  
+    if @contents.top() > @top()
+      @contents.moveBy new Point(0, @top() - @contents.top())  
+    if @contents.bottom() < @bottom()
+      @contents.moveBy 0, new Point(@bottom() - @contents.bottom(), 0)
   
   # ScrollFrameMorph scrolling by dragging:
   scrollX: (steps) ->
@@ -241,7 +293,7 @@ class ScrollFrameMorph extends FrameMorph
               if deltaY isnt 0
                 scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)
       if scrollbarJustChanged
-        @contents.adjustBounds()
+        @adjustContentsBounds()
         @adjustScrollBars()
   
   startAutoScrolling: ->
@@ -282,7 +334,7 @@ class ScrollFrameMorph extends FrameMorph
       scrollbarJustChanged = scrollbarJustChanged ||
         @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
-      @contents.adjustBounds()
+      @adjustContentsBounds()
       @adjustScrollBars()  
   
   # ScrollFrameMorph scrolling when editing text
@@ -294,7 +346,7 @@ class ScrollFrameMorph extends FrameMorph
     fb = @bottom() - @padding
     fl = @left() + @padding
     fr = @right() - @padding
-    @contents.adjustBounds()
+    @adjustContentsBounds()
     if caretMorph.top() < ft
       @contents.setTop @contents.top() + ft - caretMorph.top()
       caretMorph.setTop ft
@@ -307,7 +359,7 @@ class ScrollFrameMorph extends FrameMorph
     else if caretMorph.right() > fr
       @contents.setRight @contents.right() + fr - caretMorph.right()
       caretMorph.setRight fr
-    @contents.adjustBounds()
+    @adjustContentsBounds()
     @adjustScrollBars()
 
   # ScrollFrameMorph events:
@@ -318,7 +370,7 @@ class ScrollFrameMorph extends FrameMorph
     if x
       scrollbarJustChanged = scrollbarJustChanged || @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  
     if scrollbarJustChanged
-      @contents.adjustBounds()
+      @adjustContentsBounds()
       @adjustScrollBars()
   
   

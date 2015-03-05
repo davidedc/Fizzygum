@@ -865,7 +865,8 @@ class WorldMorph extends FrameMorph
     menu.addItem "scroll frame", ->
       newMorph = new ScrollFrameMorph()
       newMorph.contents.acceptsDrops = true
-      newMorph.contents.adjustBounds()
+      newMorph.adjustContentsBounds()
+      newMorph.adjustScrollBars()
       newMorph.setExtent new Point(350, 250)
       create newMorph
 

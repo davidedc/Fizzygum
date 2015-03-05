@@ -236,59 +236,8 @@ class CanvasMorph extends FrameMorph
         result = result.merge(child.boundsIncludingChildren())
     result
   
-  # Should it be in the scrollframe rather than in Frame?
-  keepInScrollFrame: ->
-    if !@scrollFrame?
-      return null
-    if @left() > @scrollFrame.left()
-      @moveBy new Point(@scrollFrame.left() - @left(), 0)
-    if @right() < @scrollFrame.right()
-      @moveBy new Point(@scrollFrame.right() - @right(), 0)  
-    if @top() > @scrollFrame.top()
-      @moveBy new Point(0, @scrollFrame.top() - @top())  
-    if @bottom() < @scrollFrame.bottom()
-      @moveBy 0, new Point(@scrollFrame.bottom() - @bottom(), 0)
-  
-  adjustBounds: ->
-    if !@scrollFrame?
-      return null
-
-    # if FrameMorph is of type isTextLineWrapping
-    # it means that you don't want the TextMorph to
-    # extend indefinitely as you are typing. Rather,
-    # the width will be constrained and the text will
-    # wrap.
-    if @scrollFrame.isTextLineWrapping
-      @children.forEach (morph) =>
-        if morph instanceof TextMorph
-          totalPadding =  2*(@scrollFrame.extraPadding + @scrollFrame.padding)
-          # this re-layouts the text to fit the width.
-          # The new height of the TextMorph will then be used
-          # to redraw the vertical slider.
-          morph.setWidth @width() - totalPadding
-          morph.maxWidth = @width() - totalPadding
-          @setHeight Math.max(morph.height(), @scrollFrame.height() - totalPadding)
-
-    subBounds = @submorphBounds()
-    if subBounds
-      newBounds = subBounds.expandBy(@scrollFrame.padding + @scrollFrame.extraPadding).growBy(@scrollFrame.growth).merge(@scrollFrame.bounds)
-    else
-      newBounds = @scrollFrame.bounds.copy()
-    unless @bounds.eq(newBounds)
-      @bounds = newBounds
-      @setLayoutBeforeUpdatingBackingStore()
-      @updateBackingStore()
-      @keepInScrollFrame()
-    @scrollFrame.adjustScrollBars()
   
   imBeingAddedTo: (newParentMorph) ->
-  
-  # dragging & dropping of contents:
-  reactToDropOf: ->
-    @adjustBounds()
-  
-  reactToGrabOf: ->
-    @adjustBounds()
   
     
   # menus:
