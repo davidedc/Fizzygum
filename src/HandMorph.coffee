@@ -304,7 +304,7 @@ class HandMorph extends Morph
   processTouchEnd: (event) ->
     # note that the mouse down event handler
     # that is calling this method has ALREADY
-    # added a mousdown command
+    # added a mousedown command
 
     WorldMorph.preferencesAndSettings.isTouchDevice = true
     clearInterval @touchHoldTimeout
