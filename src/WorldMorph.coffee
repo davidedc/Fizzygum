@@ -728,16 +728,19 @@ class WorldMorph extends FrameMorph
   nextTab: (editField) ->
     next = @nextEntryField(editField)
     if next
-      editField.clearSelection()
-      next.selectAll()
-      next.edit()
+      @switchTextFieldFocus editField, next
   
   previousTab: (editField) ->
     prev = @previousEntryField(editField)
     if prev
-      editField.clearSelection()
-      prev.selectAll()
-      prev.edit()
+      @switchTextFieldFocus editField, prev
+
+  switchTextFieldFocus: (current, next) ->
+    current.clearSelection()
+    next.bringToForegroud()
+    next.selectAll()
+    next.edit()
+
 
   resetWorld: ->
     @destroyAll()
