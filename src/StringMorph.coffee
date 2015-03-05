@@ -374,6 +374,7 @@ class StringMorph extends Morph
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
+    super()
     caret = @root().caret;
     if @isEditable
       @edit()  unless @currentlySelecting

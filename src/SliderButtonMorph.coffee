@@ -81,6 +81,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @escalateEvent "mouseDownLeft", pos
   
   mouseClickLeft: ->
+    super()
     @image = @highlightImage
     @changed()
   

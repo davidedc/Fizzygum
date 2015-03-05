@@ -125,6 +125,7 @@ class HandleMorph extends Morph
     world = @root()
     offset = pos.subtract(@bounds.origin)
     return null  unless @target
+    @target.bringToForegroud()
     @step = =>
       if world.hand.mouseButton
         newPos = world.hand.bounds.origin.copy().subtract(offset)

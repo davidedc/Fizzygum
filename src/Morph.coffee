@@ -1151,6 +1151,21 @@ class Morph extends MorphicNode
       @isDraggable is true
         return @  
     @parent.rootForGrab()
+
+  rootForFocus: ->
+    if @ instanceof ShadowMorph
+      return @parent.rootForFocus()
+    if @parent is null or
+      @parent instanceof WorldMorph
+        return @  
+    @parent.rootForFocus()
+
+  bringToForegroud: ->
+    @rootForFocus()?.moveAsLastChild()
+    @rootForFocus()?.fullChanged()
+
+  mouseClickLeft: ->
+    @bringToForegroud()
   
   wantsDropOf: (aMorph) ->
     # default is to answer the general flag - change for my heirs

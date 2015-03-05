@@ -90,7 +90,7 @@ class MenuItemMorph extends TriggerMorph
     @escalateEvent "mouseMove"  if @isListItem()
   
   mouseClickLeft: ->
-    @trigger()
+    super()
     # this might now destroy the
     # menu this morph is in
     # The menu item might be detached

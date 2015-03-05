@@ -51,6 +51,20 @@ class MorphicNode
   addChildFirst: (aMorphicNode) ->
     @children.splice 0, null, aMorphicNode
     aMorphicNode.parent = @
+
+  moveAsLastChild: ->
+    return unless @parent
+    idx = @parent.children.indexOf(@)
+    # check if already last child
+    # i.e. topmost
+    if idx == @parent.children.length - 1
+      return
+    @parent.children.splice idx, 1  if idx isnt -1
+    @parent.children.push @
+    # whoever invoked this should probably
+    # do a fullChanged() we don't do it
+    # here because it seems like a lower-level
+    # function calling a higher-level one.
   
   removeChild: (aMorphicNode) ->
     # remove the array element from the

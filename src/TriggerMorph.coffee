@@ -162,6 +162,7 @@ class TriggerMorph extends Morph
     @changed()
   
   mouseClickLeft: ->
+    super()
     @image = @highlightImage
     @changed()
     @trigger()
