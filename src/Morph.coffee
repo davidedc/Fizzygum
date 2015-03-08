@@ -1046,12 +1046,33 @@ class Morph extends MorphicNode
   # returns a shallow copy of target.
   # Shallow copy keeps references to original objects, arrays or functions
   # within the new object, so the “copy” is still linked to the original
-  # object. In other words, they will be pointing to the same memory
-  # location. String and Numbers are duplicated instead.
+  # object. In other words, duplicated objects, arrays or
+  # functions will be pointing to the same location of the original.
+  # string and numbers are duplicated instead, they don't point
+  # to the original.
   shallowCopy: (target) ->
     c = @clone(target.constructor::)
+    # now we proceed to shallow - copy almost all the properties
+    # note that you most probably want to adjust these, as for example
+    # properties such as "parent" don't make much
+    # sense as shallow copies... being the child of the same parent for
+    # example requires the "children" array in the parent to be better
+    # adjusted - a simple shallow copy doesn't cut it...
+    # Notice however that a shallow copy works well for objects such
+    # as Points, Rectangles and Colors. You'd think that if the color
+    # of a copied morph just points to the same exact Color object
+    # of the original, it would mean that
+    # whenever the color of the original changes, so does the color of
+    # the copy - but that's not the case: all changes of those
+    # objects in Zombie Kernel are copy-on-modify, meaning that whenever
+    # the color of the original changes, the original color object will
+    # remain intact.
+    # However, this is what we do here: we do a shallow copy - things
+    # are adjusted by other methods if desired.
     for property of target
-      # there are a couple of properties that we don't want to copy over...
+      # the "instanceNumericID" property must be
+      # always be unique to avoid huge confusion, so
+      # we don't want to copy that one over...
       if target.hasOwnProperty(property) and property != "instanceNumericID"
         c[property] = target[property]
         #if target.constructor.name == "SliderMorph"
@@ -1120,9 +1141,10 @@ class Morph extends MorphicNode
     #	Update intra-morph references within a composite morph that has
     #	been copied. For example, if a button refers to morph X in the
     #	orginal composite then the copy of that button in the new composite
-    #	should refer to the copy of X in new composite, not the original X.
+    #	should refer to *THE COPY OF* X in new composite, not the original X.
     # This is done via scanning all the properties of the object and
-    # checking whether any of those has a mapping. If so, then it is
+    # checking whether any of those are objects that
+    # appear in the mapping contained in "dict". If so, then it is
     # replaced with its mapping.
     #	
     #alert "updateReferences of " + @toString()
