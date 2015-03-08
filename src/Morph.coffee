@@ -1062,7 +1062,6 @@ class Morph extends MorphicNode
     c = @shallowCopy(@)
     c.parent = null
     c.children = []
-    c.bounds = @bounds.copy()
     c
   
   copyRecordingReferences: (dict) ->
