@@ -5,7 +5,7 @@ class ListMorph extends ScrollFrameMorph
   elements: null
   labelGetter: null
   format: null
-  listContents: null
+  listContents: null # a MenuMorph with the contents of the list
   selected: null # actual element currently selected
   active: null # menu item representing the selected element
   action: null
@@ -41,12 +41,13 @@ class ListMorph extends ScrollFrameMorph
         return element  if isString(element)
         return element.toSource()  if element.toSource
         element.toString()
-    @buildListContents()
+    @buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of null because the scrollbars (inherited from scrollframe)
     # need the step function to react to mouse drag.
   
-  buildListContents: ->
+  # builds the list contents
+  buildAndConnectChildren: ->
     if @listContents
       @listContents = @listContents.destroy()
     @listContents = new MenuMorph(@, null, null)
