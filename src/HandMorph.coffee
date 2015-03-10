@@ -551,6 +551,8 @@ class HandMorph extends Morph
         if @morphToGrab.isDraggable
           morph = @morphToGrab
           @grab morph
+        # templates create a copy of
+        # themselves when dragged
         else if @morphToGrab.isTemplate
           morph = @morphToGrab.fullCopy()
           morph.isTemplate = false

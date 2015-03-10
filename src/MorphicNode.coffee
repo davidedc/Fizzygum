@@ -130,13 +130,20 @@ class MorphicNode
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
   # starting at this node - including this node.
-  # Note that the function first runs on this node (which is the bottom-est morph)
-  # and the proceeds by visiting the "bottom" child (first one in array)
-  # and then all its children and then the second - bottomest child etc.
+  # Note that the function first runs on this node
+  # (which is, when painted, the very bottom-est morph of them all)
+  # and the proceeds by visiting the first child
+  # which is the most "bottom" of the children
+  # (i.e. when painted, the first child in the "children" array
+  # and its children are painted just above the parent node)
+  # and then recursively depht-first all its children
+  # and then the second - bottomest child and children etc.
   # Also note that there is a more elegant implementation where
   # we just use @allChildrenBottomToTop() but that would mean to create
   # all the intermediary arrays with also all the unneeded node elements,
   # there is not need.
+  # This is the simplest and cheapest way to visit all Morphs in
+  # a tree of morphs.
   forAllChildrenBottomToTop: (aFunction) ->
     aFunction.call null, @
     if @children.length

@@ -70,6 +70,10 @@ class Morph extends MorphicNode
   isVisible: true
 
   isDraggable: false
+  # if a morph is a "template" it means that
+  # when you drag it, it creates a copy of itself.
+  # it's a nice shortcut instead of doing
+  # right click and then "duplicate..."
   isTemplate: false
   acceptsDrops: false
   noticesTransparentClick: false
