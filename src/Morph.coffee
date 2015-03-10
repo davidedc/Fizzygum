@@ -1110,29 +1110,6 @@ class Morph extends MorphicNode
       c.add m.copyRecordingReferences(dict)
     c
   
-  fullCopy: ->
-    #
-    #	Produce a copy of me with my entire tree of submorphs. Morphs
-    #	mentioned more than once are all directed to a single new copy.
-    #	Other properties are also *shallow* copied, so you must override
-    #	to deep copy Arrays and (complex) Objects
-    #	
-    #alert "doing a full copy"
-    dict = {}
-    c = @copyRecordingReferences(dict)
-    # note that child.updateReferences is invoked
-    # from the bottom up, i.e. from the leaf children up to the
-    # parents. This is important because it means that each
-    # child can properly fix the connections between the "mapped"
-    # children correctly.
-    #alert "### updating references"
-    #alert "number of children: " + c.children.length
-    c.forAllChildrenBottomToTop (child) ->
-      #alert ">>> updating reference of " + child
-      child.updateReferences dict
-    #alert ">>> updating reference of " + c
-    c.updateReferences dict
-    c
   
   # if the constructor of the object you are copying performs
   # some complex building and connecting of the elements,
@@ -1162,6 +1139,29 @@ class Morph extends MorphicNode
           #  alert "!! updating property: " + property + " to: " + dict[(@[property]).uniqueIDString()]
           @[property] = dict[(@[property]).uniqueIDString()]
   
+  fullCopy: ->
+    #
+    # Produce a copy of me with my entire tree of submorphs. Morphs
+    # mentioned more than once are all directed to a single new copy.
+    # Other properties are also *shallow* copied, so you must override
+    # to deep copy Arrays and (complex) Objects
+    # 
+    #alert "doing a full copy"
+    dict = {}
+    c = @copyRecordingReferences(dict)
+    # note that child.updateReferences is invoked
+    # from the bottom up, i.e. from the leaf children up to the
+    # parents. This is important because it means that each
+    # child can properly fix the connections between the "mapped"
+    # children correctly.
+    #alert "### updating references"
+    #alert "number of children: " + c.children.length
+    c.forAllChildrenBottomToTop (child) ->
+      #alert ">>> updating reference of " + child
+      child.updateReferences dict
+    #alert ">>> updating reference of " + c
+    c.updateReferences dict
+    c
   
   # Morph dragging and dropping /////////////////////////////////////////
   
