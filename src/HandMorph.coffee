@@ -521,7 +521,7 @@ class HandMorph extends Morph
     Morph::trackChanges = true
     @fullChanged()
 
-  processMouseMove: (pageX, pageY) ->    
+  processMouseMove: (pageX, pageY) ->
     #startProcessMouseMove = new Date().getTime()
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
