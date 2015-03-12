@@ -298,10 +298,10 @@ class TextMorph extends StringMorph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "align left", (->@setAlignmentToLeft())  if @alignment isnt "left"
-    menu.addItem "align right", (->@setAlignmentToRight())  if @alignment isnt "right"
-    menu.addItem "align center", (->@setAlignmentToCenter())  if @alignment isnt "center"
-    menu.addItem "run contents", (->@doContents())
+    menu.addItem "align left", @, "setAlignmentToLeft"  if @alignment isnt "left"
+    menu.addItem "align right", @, "setAlignmentToRight"  if @alignment isnt "right"
+    menu.addItem "align center", @, "setAlignmentToCenter"  if @alignment isnt "center"
+    menu.addItem "run contents", @, "doContents"
     menu
   
   setAlignmentToLeft: ->
@@ -328,15 +328,15 @@ class TextMorph extends StringMorph
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependItem "select all", (->@selectAllAndEdit())
+      menu.prependItem "select all", @, "selectAllAndEdit"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependItem "inspect selection", (->@inspectSelection()), "evaluate the\nselected expression\nand inspect the result"
-      menu.prependItem "show selection", (->@showSelection()), "evaluate the\nselected expression\nand show the result"
-      menu.prependItem "do selection", (->@doSelection()), "evaluate the\nselected expression"
+      menu.prependItem "inspect selection", @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependItem "show selection", @, "showSelection", "evaluate the\nselected expression\nand show the result"
+      menu.prependItem "do selection", @, "doSelection", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->

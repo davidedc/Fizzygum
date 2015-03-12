@@ -67,8 +67,7 @@ class MorphsListMorph extends BoxMorph
     # close button
     @buttonClose = new TriggerMorph(@)
     @buttonClose.setLabel "close"
-    @buttonClose.action = =>
-      @destroy()
+    @buttonClose.action = "destroy"
 
     @add @buttonClose
 

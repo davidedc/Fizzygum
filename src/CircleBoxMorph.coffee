@@ -63,9 +63,9 @@ class CircleBoxMorph extends Morph
     # boxmorph was automatically chanding the orientation
     # when resized, following the main direction.
     if @orientation is "vertical"
-      menu.addItem "make horizontal", (->@toggleOrientation()), "toggle the\norientation"
+      menu.addItem "make horizontal", @, "toggleOrientation", "toggle the\norientation"
     else
-      menu.addItem "make vertical", (->@toggleOrientation()), "toggle the\norientation"
+      menu.addItem "make vertical", @, "toggleOrientation", "toggle the\norientation"
     menu
   
   toggleOrientation: ->

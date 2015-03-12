@@ -797,199 +797,197 @@ class WorldMorph extends FrameMorph
     else
       menu = new MenuMorph(@, "Morphic")
     if @isDevMode
-      menu.addItem "demo...", (->@popUpDemoMenu()), "sample morphs"
+      menu.addItem "demo...", @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
-      menu.addItem "show all", (->@showAllMinimised())
-      menu.addItem "hide all", (->@minimiseAll())
-      menu.addItem "delete all", (->@destroyAll())
-      menu.addItem "move all inside", (->@keepAllSubmorphsWithin()), "keep all submorphs\nwithin and visible"
-      menu.addItem "inspect", (->@inspect()), "open a window on\nall properties"
+      menu.addItem "show all", @, "showAllMinimised"
+      menu.addItem "hide all", @, "minimiseAll"
+      menu.addItem "delete all", @, "destroyAll"
+      menu.addItem "move all inside", @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addItem "inspect", @, "inspect", "open a window on\nall properties"
       menu.addLine()
-      menu.addItem "restore display", (->@changed()), "redraw the\nscreen once"
-      menu.addItem "fit whole page", (->@stretchWorldToFillEntirePage()), "let the World automatically\nadjust to browser resizings"
-      menu.addItem "color...", (->
-        @pickColor menu.title + "\ncolor:", @setColor, @color
-      ), "choose the World's\nbackground color"
+      menu.addItem "restore display", @, "changed", "redraw the\nscreen once"
+      menu.addItem "fit whole page", @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
+      menu.addItem "color...", @, "popUpColorSetter", "choose the World's\nbackground color"
       if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addItem "touch screen settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "bigger menu fonts\nand sliders"
+        menu.addItem "touch screen settings", @, (->WorldMorph.preferencesAndSettings.toggleInputMode()), "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
+        menu.addItem "standard settings", @, (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
       menu.addLine()
     
     if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-      menu.addItem "system tests...",  (->@popUpSystemTestsMenu()), ""
+      menu.addItem "system tests...", @, "popUpSystemTestsMenu", ""
     if @isDevMode
-      menu.addItem "switch to user mode", (->@toggleDevMode()), "disable developers'\ncontext menus"
+      menu.addItem "switch to user mode", @, "toggleDevMode", "disable developers'\ncontext menus"
     else
-      menu.addItem "switch to dev mode", (->@toggleDevMode())
-    menu.addItem "about Zombie Kernel...", (->@about())
+      menu.addItem "switch to dev mode", @, "toggleDevMode"
+    menu.addItem "about Zombie Kernel...", @, "about"
     menu
 
   popUpSystemTestsMenu: ->
     menu = new MenuMorph(@, "system tests")
 
-    menu.addItem "run system tests",  (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
-    menu.addItem "start test recording",  (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
-    menu.addItem "stop test recording",  (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
-    menu.addItem "(re)play recorded test",  (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
-    menu.addItem "show test source",  (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
-    menu.addItem "save recorded test",  (->@systemTestsRecorderAndPlayer.saveTest()), "save the recorded test"
-    menu.addItem "save failed screenshots test",  (->@systemTestsRecorderAndPlayer.saveFailedScreenshots()), "save failed screenshots test"
+    menu.addItem "run system tests", @, (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
+    menu.addItem "start test recording", @, (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
+    menu.addItem "stop test recording", @, (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
+    menu.addItem "(re)play recorded test", @, (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
+    menu.addItem "show test source", @, (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
+    menu.addItem "save recorded test", @, (->@systemTestsRecorderAndPlayer.saveTest()), "save the recorded test"
+    menu.addItem "save failed screenshots test", @, (->@systemTestsRecorderAndPlayer.saveFailedScreenshots()), "save failed screenshots test"
 
     menu.popUpAtHand()
 
+  create: (aMorph) ->
+    aMorph.isDraggable = true
+    aMorph.pickUp()
+
+  createNewRectangleMorph: ->
+    @create new RectangleMorph()
+  createNewBoxMorph: ->
+    @create new BoxMorph()
+  createNewCircleBoxMorph: ->
+    @create new CircleBoxMorph()
+  createNewSliderMorph: ->
+    @create new SliderMorph()
+  createNewFrameMorph: ->
+    newMorph = new FrameMorph()
+    newMorph.setExtent new Point(350, 250)
+    @create newMorph
+  createNewScrollFrameMorph: ->
+    newMorph = new ScrollFrameMorph()
+    newMorph.contents.acceptsDrops = true
+    newMorph.adjustContentsBounds()
+    newMorph.adjustScrollBars()
+    newMorph.setExtent new Point(350, 250)
+    @create newMorph
+  createNewCanvas: ->
+    newMorph = new CanvasMorph()
+    newMorph.setExtent new Point(350, 250)
+    @create newMorph
+  createNewHandle: ->
+    @create new HandleMorph()
+  createNewString: ->
+    newMorph = new StringMorph("Hello, World!")
+    newMorph.isEditable = true
+    @create newMorph
+  createNewText: ->
+    newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
+      "traurig bin, ein Märchen aus uralten Zeiten, das " +
+      "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
+      "und es dunkelt, und ruhig fließt der Rhein; der " +
+      "Gipfel des Berges funkelt im Abendsonnenschein. " +
+      "Die schönste Jungfrau sitzet dort oben wunderbar, " +
+      "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " +
+      "goldenes Haar, sie kämmt es mit goldenem Kamme, " +
+      "und singt ein Lied dabei; das hat eine wundersame, " +
+      "gewalt'ge Melodei. Den Schiffer im kleinen " +
+      "Schiffe, ergreift es mit wildem Weh; er schaut " +
+      "nicht die Felsenriffe, er schaut nur hinauf in " +
+      "die Höh'. Ich glaube, die Wellen verschlingen " +
+      "am Ende Schiffer und Kahn, und das hat mit ihrem " +
+      "Singen, die Loreley getan.")
+    newMorph.isEditable = true
+    newMorph.maxWidth = 300
+    @create newMorph
+  createNewSpeechBubbleMorph: ->
+    newMorph = new SpeechBubbleMorph("Hello, World!")
+    @create newMorph
+  createNewGrayPaletteMorph: ->
+    @create new GrayPaletteMorph()
+  createNewColorPaletteMorph: ->
+    @create new ColorPaletteMorph()
+  createNewColorPickerMorph: ->
+    @create new ColorPickerMorph()
+  createNewSensorDemo: ->
+    newMorph = new MouseSensorMorph()
+    newMorph.setColor new Color(230, 200, 100)
+    newMorph.edge = 35
+    newMorph.border = 15
+    newMorph.borderColor = new Color(200, 100, 50)
+    newMorph.alpha = 0.2
+    newMorph.setExtent new Point(100, 100)
+    @create newMorph
+  createNewAnimationDemo: ->
+    foo = new BouncerMorph()
+    foo.setPosition new Point(50, 20)
+    foo.setExtent new Point(300, 200)
+    foo.alpha = 0.9
+    foo.speed = 3
+    bar = new BouncerMorph()
+    bar.setColor new Color(50, 50, 50)
+    bar.setPosition new Point(80, 80)
+    bar.setExtent new Point(80, 250)
+    bar.type = "horizontal"
+    bar.direction = "right"
+    bar.alpha = 0.9
+    bar.speed = 5
+    baz = new BouncerMorph()
+    baz.setColor new Color(20, 20, 20)
+    baz.setPosition new Point(90, 140)
+    baz.setExtent new Point(40, 30)
+    baz.type = "horizontal"
+    baz.direction = "right"
+    baz.speed = 3
+    garply = new BouncerMorph()
+    garply.setColor new Color(200, 20, 20)
+    garply.setPosition new Point(90, 140)
+    garply.setExtent new Point(20, 20)
+    garply.type = "vertical"
+    garply.direction = "up"
+    garply.speed = 8
+    fred = new BouncerMorph()
+    fred.setColor new Color(20, 200, 20)
+    fred.setPosition new Point(120, 140)
+    fred.setExtent new Point(20, 20)
+    fred.type = "vertical"
+    fred.direction = "down"
+    fred.speed = 4
+    bar.add garply
+    bar.add baz
+    foo.add fred
+    foo.add bar
+    @create foo
+  createNewPenMorph: ->
+    @create new PenMorph()
+  viewAll: ->
+    newMorph = new MorphsListMorph()
+    @create newMorph
+  closingWindow: ->
+    newMorph = new WorkspaceMorph()
+    @create newMorph
+
+
   popUpDemoMenu: ->
-    create = (aMorph) =>
-      aMorph.isDraggable = true
-      aMorph.pickUp()
-
     menu = new MenuMorph(@, "make a morph")
-    menu.addItem "rectangle", ->
-      create new RectangleMorph()
-    
-    menu.addItem "box", ->
-      create new BoxMorph()
-    
-    menu.addItem "circle box", ->
-      create new CircleBoxMorph()
-    
+    menu.addItem "rectangle", @, "createNewRectangleMorph"
+    menu.addItem "box", @, "createNewBoxMorph"
+    menu.addItem "circle box", @, "createNewCircleBoxMorph"
     menu.addLine()
-    menu.addItem "slider", ->
-      create new SliderMorph()
-    
-    menu.addItem "frame", ->
-      newMorph = new FrameMorph()
-      newMorph.setExtent new Point(350, 250)
-      create newMorph
-    
-    menu.addItem "scroll frame", ->
-      newMorph = new ScrollFrameMorph()
-      newMorph.contents.acceptsDrops = true
-      newMorph.adjustContentsBounds()
-      newMorph.adjustScrollBars()
-      newMorph.setExtent new Point(350, 250)
-      create newMorph
-
-    menu.addItem "canvas", ->
-      newMorph = new CanvasMorph()
-      newMorph.setExtent new Point(350, 250)
-      create newMorph
-    
-    menu.addItem "handle", ->
-      create new HandleMorph()
-    
+    menu.addItem "slider", @, "createNewSliderMorph"
+    menu.addItem "frame", @, "createNewFrameMorph"
+    menu.addItem "scroll frame", @, "createNewScrollFrameMorph"
+    menu.addItem "canvas", @, "createNewCanvas"
+    menu.addItem "handle", @, "createNewHandle"
     menu.addLine()
-    menu.addItem "string", ->
-      newMorph = new StringMorph("Hello, World!")
-      newMorph.isEditable = true
-      create newMorph
-    
+    menu.addItem "string", @, "createNewString"
     # this is "The Lorelei" poem (From German).
     # see translation here:
     # http://poemsintranslation.blogspot.co.uk/2009/11/heinrich-heine-lorelei-from-german.html
-    menu.addItem "text", ->
-      newMorph = new TextMorph("Ich weiß nicht, was soll es bedeuten, dass ich so " +
-        "traurig bin, ein Märchen aus uralten Zeiten, das " +
-        "kommt mir nicht aus dem Sinn. Die Luft ist kühl " +
-        "und es dunkelt, und ruhig fließt der Rhein; der " +
-        "Gipfel des Berges funkelt im Abendsonnenschein. " +
-        "Die schönste Jungfrau sitzet dort oben wunderbar, " +
-        "ihr gold'nes Geschmeide blitzet, sie kämmt ihr " +
-        "goldenes Haar, sie kämmt es mit goldenem Kamme, " +
-        "und singt ein Lied dabei; das hat eine wundersame, " +
-        "gewalt'ge Melodei. Den Schiffer im kleinen " +
-        "Schiffe, ergreift es mit wildem Weh; er schaut " +
-        "nicht die Felsenriffe, er schaut nur hinauf in " +
-        "die Höh'. Ich glaube, die Wellen verschlingen " +
-        "am Ende Schiffer und Kahn, und das hat mit ihrem " +
-        "Singen, die Loreley getan.")
-      newMorph.isEditable = true
-      newMorph.maxWidth = 300
-      create newMorph
-    
-    menu.addItem "speech bubble", ->
-      newMorph = new SpeechBubbleMorph("Hello, World!")
-      create newMorph
-    
+    menu.addItem "text", @, "createNewText"
+    menu.addItem "speech bubble", @, "createNewSpeechBubbleMorph"
     menu.addLine()
-    menu.addItem "gray scale palette", ->
-      create new GrayPaletteMorph()
-    
-    menu.addItem "color palette", ->
-      create new ColorPaletteMorph()
-    
-    menu.addItem "color picker", ->
-      create new ColorPickerMorph()
-    
+    menu.addItem "gray scale palette", @, "createNewGrayPaletteMorph"
+    menu.addItem "color palette", @, "createNewColorPaletteMorph"
+    menu.addItem "color picker", @, "createNewColorPickerMorph"
     menu.addLine()
-    menu.addItem "sensor demo", ->
-      newMorph = new MouseSensorMorph()
-      newMorph.setColor new Color(230, 200, 100)
-      newMorph.edge = 35
-      newMorph.border = 15
-      newMorph.borderColor = new Color(200, 100, 50)
-      newMorph.alpha = 0.2
-      newMorph.setExtent new Point(100, 100)
-      create newMorph
-    
-    menu.addItem "animation demo", ->
-      foo = new BouncerMorph()
-      foo.setPosition new Point(50, 20)
-      foo.setExtent new Point(300, 200)
-      foo.alpha = 0.9
-      foo.speed = 3
-      bar = new BouncerMorph()
-      bar.setColor new Color(50, 50, 50)
-      bar.setPosition new Point(80, 80)
-      bar.setExtent new Point(80, 250)
-      bar.type = "horizontal"
-      bar.direction = "right"
-      bar.alpha = 0.9
-      bar.speed = 5
-      baz = new BouncerMorph()
-      baz.setColor new Color(20, 20, 20)
-      baz.setPosition new Point(90, 140)
-      baz.setExtent new Point(40, 30)
-      baz.type = "horizontal"
-      baz.direction = "right"
-      baz.speed = 3
-      garply = new BouncerMorph()
-      garply.setColor new Color(200, 20, 20)
-      garply.setPosition new Point(90, 140)
-      garply.setExtent new Point(20, 20)
-      garply.type = "vertical"
-      garply.direction = "up"
-      garply.speed = 8
-      fred = new BouncerMorph()
-      fred.setColor new Color(20, 200, 20)
-      fred.setPosition new Point(120, 140)
-      fred.setExtent new Point(20, 20)
-      fred.type = "vertical"
-      fred.direction = "down"
-      fred.speed = 4
-      bar.add garply
-      bar.add baz
-      foo.add fred
-      foo.add bar
-      create foo
-    
-    menu.addItem "pen", ->
-      create new PenMorph()
+    menu.addItem "sensor demo", @, "createNewSensorDemo"
+    menu.addItem "animation demo", @, "createNewAnimationDemo"
+    menu.addItem "pen", @, "createNewPenMorph"
+      
     menu.addLine()
-    menu.addItem "Layout tests", (->@layoutTestsMenu()), "sample morphs"
+    menu.addItem "Layout tests", @, "layoutTestsMenu", "sample morphs"
     menu.addLine()
-    menu.addItem "view all...", ->
-      newMorph = new MorphsListMorph()
-      create newMorph
-    menu.addItem "closing window", ->
-      newMorph = new WorkspaceMorph()
-      create newMorph
-
-    if @customMorphs
-      menu.addLine()
-      @customMorphs().forEach (morph) ->
-        menu.addItem morph.toString(), ->
-          create morph
+    menu.addItem "view all...", @, "viewAll"
+    menu.addItem "closing window", @, "closingWindow"
     
     menu.popUpAtHand()
 
@@ -998,14 +996,10 @@ class WorldMorph extends FrameMorph
       aMorph.isDraggable = true
       aMorph.pickUp()
     menu = new MenuMorph(@, "Layout tests")
-    menu.addItem "test1", ->
-      LayoutMorph.test1()
-    menu.addItem "test2", ->
-      LayoutMorph.test2()
-    menu.addItem "test3", ->
-      LayoutMorph.test3()
-    menu.addItem "test4", ->
-      LayoutMorph.test4()
+    menu.addItem "test1", LayoutMorph, "test1"
+    menu.addItem "test2", LayoutMorph, "test2"
+    menu.addItem "test3", LayoutMorph, "test3"
+    menu.addItem "test4", LayoutMorph, "test4"
     menu.popUpAtHand()
     
   
@@ -1083,9 +1077,9 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboard = null
     @worldCanvas.focus()
   
-  slide: (aStringMorphOrTextMorph) ->
+  slide: (@aStringMorphOrTextMorph) ->
     # display a slider for numeric text entries
-    val = parseFloat(aStringMorphOrTextMorph.text)
+    val = parseFloat(@aStringMorphOrTextMorph.text)
     val = 0  if isNaN(val)
     menu = new MenuMorph()
     slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")
@@ -1100,18 +1094,18 @@ class WorldMorph extends FrameMorph
     slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
     slider.setLayoutBeforeUpdatingBackingStore()
     slider.updateBackingStore()
-    slider.action = (num) ->
-      aStringMorphOrTextMorph.changed()
-      aStringMorphOrTextMorph.text = Math.round(num).toString()
-      aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackingStore()
-      aStringMorphOrTextMorph.updateBackingStore()
-      aStringMorphOrTextMorph.changed()
-      aStringMorphOrTextMorph.escalateEvent(
-          'reactToSliderEdit',
-          aStringMorphOrTextMorph
-      )
-
+    slider.action = "reactToSlide"
     menu.items.push slider
-    menu.popup @, aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
+    menu.popup @, @aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   
+  reactToSlide: (num) ->
+    @aStringMorphOrTextMorph.changed()
+    @aStringMorphOrTextMorph.text = Math.round(num).toString()
+    @aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackingStore()
+    @aStringMorphOrTextMorph.updateBackingStore()
+    @aStringMorphOrTextMorph.changed()
+    @aStringMorphOrTextMorph.escalateEvent(
+        'reactToSliderEdit',
+        @aStringMorphOrTextMorph
+    )
   

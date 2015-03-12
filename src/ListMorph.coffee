@@ -72,7 +72,17 @@ class ListMorph extends ScrollFrameMorph
       #bold = false,
       #italic = false,
       #doubleClickAction # optional, when used as list contents
-      @listContents.addItem @labelGetter(element), @select, null, color, bold, italic, @doubleClickAction
+
+      @listContents.addItem(
+        @labelGetter(element), # labelString
+        @, # target
+        "select", # action
+        null, # hint
+        color, # color
+        bold, # bold
+        italic, # italic
+        @doubleClickAction # doubleClickAction
+      )
 
     @listContents.setPosition @contents.position()
     @listContents.isListContents = true
@@ -84,7 +94,12 @@ class ListMorph extends ScrollFrameMorph
     @selected = item
     @active = trigger
     if @action
-      @action.call @target, item.labelString
+      if typeof @action is "function"
+        console.log "listmorph selection invoked with function"
+        debugger
+        @action.call @target, item.labelString
+      else # assume it's a String
+        @target[@action].call @target, item.labelString
   
   setExtent: (aPoint) ->
     lb = @listContents.bounds

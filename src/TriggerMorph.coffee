@@ -14,6 +14,7 @@ class TriggerMorph extends Morph
   target: null
   action: null
   dataSourceMorphForTarget: null
+  morphEnv: null
   label: null
   labelString: null
   labelColor: null
@@ -48,6 +49,7 @@ class TriggerMorph extends Morph
       fontStyle,
       @centered = false,
       @dataSourceMorphForTarget = null,
+      @morphEnv,
       @hint = null,
       labelColor,
       @labelBold = false,
@@ -129,7 +131,13 @@ class TriggerMorph extends Morph
   
   # TriggerMorph action:
   trigger: ->
-    @action.call @target, @dataSourceMorphForTarget
+    if @action
+      if typeof @action is "function"
+        console.log "trigger invoked with function"
+        debugger
+        @action.call @target, @dataSourceMorphForTarget
+      else # assume it's a String
+        @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv
 
   triggerDoubleClick: ->
     # same as trigger() but use doubleClickAction instead of action property

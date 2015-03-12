@@ -134,14 +134,24 @@ class BoxMorph extends Morph
     context.arc w - offset, h - offset, radius, radians(0), radians(90), false
     # bottom left:
     context.arc offset, h - offset, radius, radians(90), radians(180), false
-  
+
+  cornerSizePopout: (menuItem)->
+    @prompt menuItem.parent.title + "\ncorner\nsize:",
+      @,
+      "setCornerSize",
+      @edge.toString(),
+      null,
+      0,
+      100,
+      true
+
   
   # BoxMorph menus:
   developersMenu: ->
     menu = super()
     menu.addLine()
 
-    menu.addItem "border width...", (->
+    menu.addItem "border width...", @, (->
       @prompt menu.title + "\nborder\nwidth:",
         @setBorderWidth,
         @border.toString(),
@@ -150,18 +160,10 @@ class BoxMorph extends Morph
         100,
         true
     ), "set the border's\nline size"
-    menu.addItem "border color...", (->
+    menu.addItem "border color...", @, (->
       @pickColor menu.title + "\nborder color:", @setBorderColor, @borderColor
     ), "set the border's\nline color"
-    menu.addItem "corner size...", (->
-      @prompt menu.title + "\ncorner\nsize:",
-        @setCornerSize,
-        @edge.toString(),
-        null,
-        0,
-        100,
-        true
-    ), "set the corner's\nradius"
+    menu.addItem "corner size...", @, "cornerSizePopout", "set the corner's\nradius"
     menu
   
   setBorderWidth: (sizeOrMorphGivingSize) ->
@@ -191,9 +193,9 @@ class BoxMorph extends Morph
       @updateBackingStore()
       @changed()
   
-  setCornerSize: (sizeOrMorphGivingSize) ->
-    if sizeOrMorphGivingSize.getValue?
-      size = sizeOrMorphGivingSize.getValue()
+  setCornerSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+    if morphGivingSize?.getValue?
+      size = morphGivingSize.getValue()
     else
       size = sizeOrMorphGivingSize
 

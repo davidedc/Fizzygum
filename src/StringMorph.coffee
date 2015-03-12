@@ -7,7 +7,7 @@
 class StringMorph extends Morph
   @augmentWith BackingStoreMixin
 
-  text: null
+  text: ""
   fontSize: null
   fontName: null
   fontStyle: null
@@ -43,7 +43,7 @@ class StringMorph extends Morph
   markedBackgoundColor: new Color(60, 60, 120)
 
   constructor: (
-      text,
+      text = "",
       @fontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,
@@ -212,39 +212,41 @@ class StringMorph extends Morph
     # answer my corrected fontSize
     @height() / 1.2
     
+  fontSizePopup: (menuItem)->
+    @prompt menuItem.parent.title + "\nfont\nsize:",
+      @,
+      "setFontSize",
+      @fontSize.toString(),
+      null, 6, 500, true
+
   # StringMorph menus:
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", (->
-      @edit()
-    )
-    menu.addItem "font size...", (->
-      @prompt menu.title + "\nfont\nsize:",
-        @setFontSize, @fontSize.toString(), null, 6, 500, true
-    ), "set this String's\nfont point size"
-    menu.addItem "serif", (->@setSerif())  if @fontStyle isnt "serif"
-    menu.addItem "sans-serif", (->@setSansSerif())  if @fontStyle isnt "sans-serif"
+    menu.addItem "edit", @, "edit"
+    menu.addItem "font size...", @, "fontSizePopup", "set this String's\nfont point size"
+    menu.addItem "serif", @, "setSerif"  if @fontStyle isnt "serif"
+    menu.addItem "sans-serif", @, "setSansSerif"  if @fontStyle isnt "sans-serif"
 
     if @isBold
-      menu.addItem "normal weight", (->@toggleWeight())
+      menu.addItem "normal weight", @, "toggleWeight"
     else
-      menu.addItem "bold", (->@toggleWeight())
+      menu.addItem "bold", @, "toggleWeight"
 
     if @isItalic
-      menu.addItem "normal style", (->@toggleItalic())
+      menu.addItem "normal style", @, "toggleItalic"
     else
-      menu.addItem "italic", (->@toggleItalic())
+      menu.addItem "italic", @, "toggleItalic"
 
     if @isShowingBlanks
-      menu.addItem "hide blanks", (->@toggleShowBlanks())
+      menu.addItem "hide blanks", @, "toggleShowBlanks"
     else
-      menu.addItem "show blanks", (->@toggleShowBlanks())
+      menu.addItem "show blanks", @, "toggleShowBlanks"
 
     if @isPassword
-      menu.addItem "show characters", (->@toggleIsPassword())
+      menu.addItem "show characters", @, "toggleIsPassword"
     else
-      menu.addItem "hide characters", (->@toggleIsPassword())
+      menu.addItem "hide characters", @, "toggleIsPassword"
 
     menu
   
@@ -298,9 +300,9 @@ class StringMorph extends Morph
     @updateBackingStore()
     @changed()
   
-  setFontSize: (sizeOrMorphGivingSize) ->
-    if sizeOrMorphGivingSize.getValue?
-      size = sizeOrMorphGivingSize.getValue()
+  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+    if morphGivingSize?.getValue?
+      size = morphGivingSize.getValue()
     else
       size = sizeOrMorphGivingSize
 

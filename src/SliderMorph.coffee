@@ -35,8 +35,12 @@ class SliderMorph extends CircleBoxMorph
   imBeingAddedTo: (newParentMorph) ->
     @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
-    @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    # might happen in phase of deserialisation that
+    # the button reference here is still a string
+    # so skip in that case
+    if @button? and @button instanceof SliderButtonMorph
+      @button.setLayoutBeforeUpdatingBackingStore()
+      @button.updateBackingStore()
     @changed()
 
   setExtent: (a) ->
@@ -75,16 +79,18 @@ class SliderMorph extends CircleBoxMorph
   updateTarget: ->
     if @action
       if typeof @action is "function"
+        console.log "scrollbar invoked with function"
+        debugger
         @action.call @target, @value, @target
       else # assume it's a String
-        @target[@action] @value
+        @target[@action].call @target, @value
     
   
   # SliderMorph menu:
   developersMenu: ->
     menu = super()
-    menu.addItem "show value", (->@showValue()), "display a dialog box\nshowing the selected number"
-    menu.addItem "floor...", (->
+    menu.addItem "show value", @, "showValue", "display a dialog box\nshowing the selected number"
+    menu.addItem "floor...", @, (->
       @prompt menu.title + "\nfloor:",
         @setStart,
         @start.toString(),
@@ -93,7 +99,7 @@ class SliderMorph extends CircleBoxMorph
         @stop - @size,
         true
     ), "set the minimum value\nwhich can be selected"
-    menu.addItem "ceiling...", (->
+    menu.addItem "ceiling...", @, (->
       @prompt menu.title + "\nceiling:",
         @setStop,
         @stop.toString(),
@@ -102,7 +108,7 @@ class SliderMorph extends CircleBoxMorph
         @size * 100,
         true
     ), "set the maximum value\nwhich can be selected"
-    menu.addItem "button size...", (->
+    menu.addItem "button size...", @, (->
       @prompt menu.title + "\nbutton size:",
         @setSize,
         @size.toString(),
@@ -112,7 +118,7 @@ class SliderMorph extends CircleBoxMorph
         true
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
-    menu.addItem "set target", (->@setTarget()), "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+    menu.addItem "set target", @, "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
     menu
   
   showValue: ->
@@ -204,7 +210,7 @@ class SliderMorph extends CircleBoxMorph
     choices = theTarget.numericalSetters()
     menu = new MenuMorph(@, "choose target property:")
     choices.forEach (each) =>
-      menu.addItem each, =>
+      menu.addItem each, @, =>
         @target = theTarget
         @action = each
     if choices.length == 0

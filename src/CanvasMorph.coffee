@@ -22,13 +22,13 @@ class CanvasMorph extends FrameMorph
       @isDraggable = false
       @noticesTransparentClick = false
 
-  setColor: (aColor) ->
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+    aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
     # keep in synch the value of the container scrollFrame
     # if there is one. Note that the container scrollFrame
     # is actually not painted.
     if @scrollFrame
       @scrollFrame.color = aColor
-    super(aColor)
 
   setAlphaScaled: (alpha) ->
     # keep in synch the value of the container scrollFrame
@@ -245,7 +245,7 @@ class CanvasMorph extends FrameMorph
     menu = super()
     if @children.length
       menu.addLine()
-      menu.addItem "move all inside", (->@keepAllSubmorphsWithin()), "keep all submorphs\nwithin and visible"
+      menu.addItem "move all inside", @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
     menu
   
   keepAllSubmorphsWithin: ->

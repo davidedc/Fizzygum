@@ -48,23 +48,30 @@ class ScrollFrameMorph extends FrameMorph
     @vBar.target = @
     @add @vBar
 
-    @hBar.action = (num, target) =>
-      target.contents.setPosition new Point(target.left() - num, target.contents.position().y)
-      target.adjustContentsBounds()
-      target.adjustScrollBars()
-    @vBar.action = (num, target) =>
-      target.contents.setPosition new Point(target.contents.position().x, target.top() - num)
-      target.adjustContentsBounds()
-      target.adjustScrollBars()
+    @hBar.target = @
+    @hBar.action = "adjustContentsBasedOnHBar"
+    @vBar.target = @
+    @vBar.action = "adjustContentsBasedOnVBar"
+
     @adjustScrollBars()
 
-  setColor: (aColor) ->
-    # update the color of the scrollFrame - note
-    # that we are never going to paint the scrollFrame
-    # we are updating the color so that its value is the same as the
-    # contained frame
-    @color = aColor
-    @contents.setColor(aColor)
+  adjustContentsBasedOnHBar: (num) ->
+    @contents.setPosition new Point(@left() - num, @contents.position().y)
+    @adjustContentsBounds()
+    @adjustScrollBars()
+
+  adjustContentsBasedOnVBar: (num) ->
+    @contents.setPosition new Point(@contents.position().x, @top() - num)
+    @adjustContentsBounds()
+    @adjustScrollBars()
+
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+    aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
+    # keep in synch the value of the container scrollFrame
+    # if there is one. Note that the container scrollFrame
+    # is actually not painted.
+    if @scrollFrame
+      @scrollFrame.color = aColor
 
   setAlphaScaled: (alpha) ->
     # update the alpha of the scrollFrame - note
@@ -377,9 +384,9 @@ class ScrollFrameMorph extends FrameMorph
   developersMenu: ->
     menu = super()
     if @isTextLineWrapping
-      menu.addItem "auto line wrap off...", (->@toggleTextLineWrapping()), "turn automatic\nline wrapping\noff"
+      menu.addItem "auto line wrap off...", @, "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
     else
-      menu.addItem "auto line wrap on...", (->@toggleTextLineWrapping()), "enable automatic\nline wrapping"
+      menu.addItem "auto line wrap on...", @, "toggleTextLineWrapping", "enable automatic\nline wrapping"
     menu
   
   toggleTextLineWrapping: ->

@@ -562,9 +562,9 @@ class Morph extends MorphicNode
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
-  setColor: (aColorOrAMorphGivingAColor) ->
-    if aColorOrAMorphGivingAColor.getColor?
-      aColor = aColorOrAMorphGivingAColor.getColor()
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+    if morphGivingColor?.getColor?
+      aColor = morphGivingColor.getColor()
     else
       aColor = aColorOrAMorphGivingAColor
     if aColor
@@ -572,6 +572,7 @@ class Morph extends MorphicNode
         @color = aColor
         @changed()
         @updateBackingStore()
+    return aColor
   
   
   # Morph displaying ###########################################################
@@ -1269,10 +1270,10 @@ class Morph extends MorphicNode
     m.isDraggable = true
     m.popUpCenteredAtHand @world()
 
-  prompt: (msg, callback, defaultContents, width, floorNum,
+  prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
     isNumeric = true  if ceilingNum
-    entryField = new StringFieldMorph(
+    @tempPromptEntryField = new StringFieldMorph(
       defaultContents or "",
       width or 100,
       WorldMorph.preferencesAndSettings.prompterFontSize,
@@ -1280,8 +1281,8 @@ class Morph extends MorphicNode
       false,
       false,
       isNumeric)
-    menu = new MenuMorph(@, msg or "", entryField)
-    menu.items.push entryField
+    menu = new MenuMorph(target, msg or "", @tempPromptEntryField)
+    menu.items.push @tempPromptEntryField
     if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
       slider = new SliderMorph(
         floorNum or 0,
@@ -1297,49 +1298,52 @@ class Morph extends MorphicNode
       slider.button.pressColor = slider.button.color.copy()
       slider.button.pressColor.b += 150
       slider.silentSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
+      slider.target = @
       if isRounded
-        slider.action = (num) ->
-          entryField.changed()
-          entryField.text.text = Math.round(num).toString()
-          entryField.text.setLayoutBeforeUpdatingBackingStore()
-          entryField.text.updateBackingStore()
-          entryField.text.changed()
-          entryField.text.edit()
+        slider.action = "reactToSliderAction1"
       else
-        slider.action = (num) ->
-          entryField.changed()
-          entryField.text.text = num.toString()
-          entryField.text.setLayoutBeforeUpdatingBackingStore()
-          entryField.text.updateBackingStore()
-          entryField.text.changed()
+        slider.action = "reactToSliderAction2"
       menu.items.push slider
     menu.addLine 2
-    menu.addItem "Ok", callback
+    menu.addItem "Ok", target, callback
 
-    menu.addItem "Cancel", ->
+    menu.addItem "Cancel", @, ->
       null
 
     menu.isDraggable = true
     menu.popUpAtHand()
-    entryField.text.edit()
+    @tempPromptEntryField.text.edit()
+
+  reactToSliderAction1: (num) ->
+    @tempPromptEntryField.changed()
+    @tempPromptEntryField.text.text = Math.round(num).toString()
+    @tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    @tempPromptEntryField.text.updateBackingStore()
+    @tempPromptEntryField.text.changed()
+    @tempPromptEntryField.text.edit()
+
+  reactToSliderAction2: (num) ->
+    @tempPromptEntryField.changed()
+    @tempPromptEntryField.text.text = num.toString()
+    @tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    @tempPromptEntryField.text.updateBackingStore()
+    @tempPromptEntryField.text.changed()
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph(defaultContents)
     menu = new MenuMorph(@, msg or "", colorPicker)
     menu.items.push colorPicker
     menu.addLine 2
-    menu.addItem "Ok", callback
+    menu.addItem "Ok", @, callback
 
-    menu.addItem "Cancel", ->
+    menu.addItem "Cancel", @, ->
       null
 
     menu.isDraggable = true
     menu.popUpAtHand()
 
   inspect: (anotherObject) ->
-    inspectee = @
-    inspectee = anotherObject  if anotherObject
-    @spawnInspector inspectee
+    @spawnInspector @
 
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
@@ -1402,11 +1406,30 @@ class Morph extends MorphicNode
     parents.forEach (each) ->
       if each.developersMenu and (each isnt world)
         textLabelForMorph = each.toString().slice(0, 50)
-        menu.addItem textLabelForMorph, ->
-          each.developersMenu().popUpAtHand()
+        menu.addItem textLabelForMorph, each, "popupDeveloperMenu"
 
     menu
-  
+
+  popupDeveloperMenu: ->
+    @developersMenu().popUpAtHand()
+
+  duplicateMenuAction: ->
+    aFullCopy = @fullCopy()
+    aFullCopy.pickUp()
+
+  popUpColorSetter: ->
+    @pickColor "color:", "setColor", "color"
+
+  transparencyPopout: (menuItem)->
+    @prompt menuItem.parent.title + "\nalpha\nvalue:",
+      @,
+      "setAlphaScaled",
+      (@alpha * 100).toString(),
+      null,
+      1,
+      100,
+      true
+
   developersMenu: ->
     # 'name' is not an official property of a function, hence:
     world = (if @world instanceof Function then @world() else (@root() or @world))
@@ -1415,32 +1438,20 @@ class Morph extends MorphicNode
       @,
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
-      menu.addItem "user features...", ->
+      menu.addItem "user features...", @, ->
         userMenu.popUpAtHand()
 
       menu.addLine()
-    menu.addItem "color...", (->
-      @pickColor menu.title + "\ncolor:", @setColor, @color
-    ), "choose another color \nfor this morph"
+    menu.addItem "color...", @, "popUpColorSetter" , "choose another color \nfor this morph"
 
-    menu.addItem "transparency...", (->
-      @prompt menu.title + "\nalpha\nvalue:",
-        @setAlphaScaled, (@alpha * 100).toString(),
-        null,
-        1,
-        100,
-        true
-    ), "set this morph's\nalpha value"
-    menu.addItem "resize...", (->@resize()), "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
+    menu.addItem "transparency...", @, "transparencyPopout", "set this morph's\nalpha value"
+    menu.addItem "resize...", @, "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
     menu.addLine()
-    menu.addItem "duplicate", (->
-      aFullCopy = @fullCopy()
-      aFullCopy.pickUp()
-    ), "make a copy\nand pick it up"
-    menu.addItem "pick up", (->@pickUp()), "disattach and put \ninto the hand"
-    menu.addItem "attach...", (->@attach()), "stick this morph\nto another one"
-    menu.addItem "move", (->@move()), "show a handle\nwhich can be dragged\nto move this morph"
-    menu.addItem "inspect", (->@inspect()), "open a window\non all properties"
+    menu.addItem "duplicate", @, "duplicateMenuAction" , "make a copy\nand pick it up"
+    menu.addItem "pick up", @, "pickUp", "disattach and put \ninto the hand"
+    menu.addItem "attach...", @, "attach", "stick this morph\nto another one"
+    menu.addItem "move", @, "move", "show a handle\nwhich can be dragged\nto move this morph"
+    menu.addItem "inspect", @, "inspect", "open a window\non all properties"
 
     # A) normally, just take a picture of this morph
     # and open it in a new tab.
@@ -1471,15 +1482,15 @@ class Morph extends MorphicNode
         # no system tests recording/playing ongoing,
         # just open new tab with image of morph.
         window.open @fullImageData()
-    menu.addItem "take pic", takePic, "open a new window\nwith a picture of this morph"
+    menu.addItem "take pic", @, "takePic", "open a new window\nwith a picture of this morph"
 
     menu.addLine()
     if @isDraggable
-      menu.addItem "lock", (->@toggleIsDraggable()), "make this morph\nunmovable"
+      menu.addItem "lock", @, "toggleIsDraggable", "make this morph\nunmovable"
     else
-      menu.addItem "unlock", (->@toggleIsDraggable()), "make this morph\nmovable"
-    menu.addItem "hide", (->@minimise())
-    menu.addItem "delete", (->@destroy())
+      menu.addItem "unlock", @, "toggleIsDraggable", "make this morph\nmovable"
+    menu.addItem "hide", @, "minimise"
+    menu.addItem "delete", @, "destroy"
     menu
   
   userMenu: ->
@@ -1497,15 +1508,30 @@ class Morph extends MorphicNode
         unscaled = newAlpha / 100
         return Math.min(Math.max(unscaled, 0.1), 1)
 
-  setAlphaScaled: (alphaOrMorphGivingAlpha) ->
-    if alphaOrMorphGivingAlpha.getValue?
-      alpha = alphaOrMorphGivingAlpha.getValue()
+  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
+    if morphGivingAlpha?.getValue?
+      alpha = morphGivingAlpha.getValue()
     else
       alpha = alphaOrMorphGivingAlpha
+
     if alpha
       @alpha = @calculateAlphaScaled(alpha)
       @changed()
   
+  newParentChoice: (ignored, theMorphToBeAttached) ->
+    # this is what happens when "each" is
+    # selected: we attach the selected morph
+    @add theMorphToBeAttached
+    if @ instanceof ScrollFrameMorph
+      @adjustContentsBounds()
+      @adjustScrollBars()
+    else
+      # you expect Morphs attached
+      # inside a FrameMorph
+      # to be draggable out of it
+      # (as opposed to the content of a ScrollFrameMorph)
+      theMorphToBeAttached.isDraggable = false
+
   attach: ->
     # get rid of any previous temporary
     # active menu because it's meant to be
@@ -1526,19 +1552,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph(@, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), =>
-          # this is what happens when "each" is
-          # selected: we attach the selected morph
-          each.add @
-          if each instanceof ScrollFrameMorph
-            each.adjustContentsBounds()
-            each.adjustScrollBars()
-          else
-            # you expect Morphs attached
-            # inside a FrameMorph
-            # to be draggable out of it
-            # (as opposed to the content of a ScrollFrameMorph)
-            @isDraggable = false
+        menu.addItem each.toString().slice(0, 50), each, "newParentChoice"
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

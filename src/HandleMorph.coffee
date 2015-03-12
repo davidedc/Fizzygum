@@ -171,7 +171,7 @@ class HandleMorph extends Morph
     menu = new MenuMorph(@, "choose target:")
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), ->
+        menu.addItem each.toString().slice(0, 50), @, ->
           @isDraggable = false
           @target = each
           @updateBackingStore()

@@ -27,6 +27,7 @@ class MenuMorph extends BoxMorph
   
   addItem: (
       labelString,
+      target,
       action,
       hint,
       color,
@@ -41,6 +42,7 @@ class MenuMorph extends BoxMorph
     #     * a tuple of format: [icon, string]
     @items.push [
       localize(labelString or "close"),
+      target,
       action or nop,
       hint,
       color,
@@ -51,6 +53,7 @@ class MenuMorph extends BoxMorph
 
   prependItem: (
       labelString,
+      target,
       action,
       hint,
       color,
@@ -65,6 +68,7 @@ class MenuMorph extends BoxMorph
     #     * a tuple of format: [icon, string]
     @items.unshift [
       localize(labelString or "close"),
+      target,
       action or nop,
       hint,
       color,
@@ -148,21 +152,26 @@ class MenuMorph extends BoxMorph
       else
         # console.log "menu creating MenuItemMorph "
         item = new MenuItemMorph(
-          @target,
-          tuple[1], # action
-          tuple[0], # target
+          tuple[1], # target
+          tuple[2], # action
+          tuple[0], # label
           @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
           WorldMorph.preferencesAndSettings.menuFontName,
           false,
-          @environment,
-          tuple[2], # bubble help hint
-          tuple[3], # color
-          tuple[4], # bold
-          tuple[5], # italic
-          tuple[6]  # doubleclick action
+          @target, # environment
+          @environment, # environment2
+          tuple[3], # bubble help hint
+          tuple[4], # color
+          tuple[5], # bold
+          tuple[6], # italic
+          tuple[7]  # doubleclick action
           )
         if !@environment?
           item.dataSourceMorphForTarget = item
+          item.morphEnv = @target
+        #if tuple[1] == null
+        #  debugger
+        #  item.environment = item
       y += 1  if isLine
       item.setPosition new Point(x, y)
       # we do a silentAdd here because we are going

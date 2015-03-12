@@ -129,7 +129,7 @@ class InspectorMorph extends BoxMorph
 
     @list = new ListMorph(
       @, # target
-      InspectorMorph.prototype.selectionFromList, #action
+      "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
       null, #labelGetter
       @filterProperties(staticProperties, targetOwnMethods), #format
@@ -184,28 +184,28 @@ class InspectorMorph extends BoxMorph
     @buttonSubset = new TriggerMorph(@)
     @buttonSubset.setLabel "show..."
     @buttonSubset.alignCenter()
-    @buttonSubset.action = @openShowMenu
+    @buttonSubset.action = "openShowMenu"
     @add @buttonSubset
 
     # inspect button
     @buttonInspect = new TriggerMorph(@)
     @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
-    @buttonInspect.action = @openInspectorMenu
+    @buttonInspect.action = "openInspectorMenu"
     @add @buttonInspect
 
     # edit button
     @buttonEdit = new TriggerMorph(@)
     @buttonEdit.setLabel "edit..."
     @buttonEdit.alignCenter()
-    @buttonEdit.action = @openEditMenu
+    @buttonEdit.action = "openEditMenu"
     @add @buttonEdit
 
     # close button
     @buttonClose = new TriggerMorph(@)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
-    @buttonClose.action = @destroy
+    @buttonClose.action = "destroy"
     @add @buttonClose
 
     # resizer
@@ -216,20 +216,20 @@ class InspectorMorph extends BoxMorph
 
   openShowMenu: ->
     menu = new MenuMorph()
-    menu.addItem "attributes", =>
+    menu.addItem "attributes", @, =>
       @showing = "attributes"
       @buildAndConnectChildren()
 
-    menu.addItem "methods", =>
+    menu.addItem "methods", @, =>
       @showing = "methods"
       @buildAndConnectChildren()
 
-    menu.addItem "all", =>
+    menu.addItem "all", @, =>
       @showing = "all"
       @buildAndConnectChildren()
 
     menu.addLine()
-    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), (=>
+    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), @, (=>
       @markOwnershipOfProperties = not @markOwnershipOfProperties
       @buildAndConnectChildren()
     ), "highlight\nownership of properties"
@@ -238,7 +238,7 @@ class InspectorMorph extends BoxMorph
   openInspectorMenu: ->
     if isObject(@currentProperty)
       menu = new MenuMorph()
-      menu.addItem "in new inspector...", =>
+      menu.addItem "in new inspector...", @, =>
         world = @world()
         inspector = new @constructor(@currentProperty)
         inspector.setPosition world.hand.position()
@@ -246,7 +246,7 @@ class InspectorMorph extends BoxMorph
         world.add inspector
         inspector.changed()
 
-      menu.addItem "here...", =>
+      menu.addItem "here...", @, =>
         @setTarget @currentProperty
 
       menu.popUpAtHand()
@@ -255,11 +255,11 @@ class InspectorMorph extends BoxMorph
 
   openEditMenu: ->
     menu = new MenuMorph @
-    menu.addItem "save", @save, "accept changes"
+    menu.addItem "save", @, "save", "accept changes"
     menu.addLine()
-    menu.addItem "add property...", @addProperty
-    menu.addItem "rename...", @renameProperty
-    menu.addItem "remove", @removeProperty
+    menu.addItem "add property...", @, "addPropertyPopout"
+    menu.addItem "rename...", @, "renamePropertyPopout"
+    menu.addItem "remove", @, "removeProperty"
     menu.popUpAtHand()
 
 
@@ -438,36 +438,41 @@ class InspectorMorph extends BoxMorph
       @target.changed()
     catch err
       @inform err
-  
-  addProperty: ->
-    @prompt "new property name:", ((prop) =>
-      if prop?
-        if prop.getValue?
-          prop = prop.getValue()
-        @target[prop] = null
-        @buildAndConnectChildren()
-        @target.changed()
-        @target.setLayoutBeforeUpdatingBackingStore()
-        @target.updateBackingStore()
-        @target.changed()
-    ), "property" # Chrome cannot handle empty strings (others do)
-  
-  renameProperty: ->
-    propertyName = @list.selected.labelString
-    @prompt "property name:", ((prop) =>
+
+  addProperty: (ignoringThis, morphWithProperty) ->
+    prop = morphWithProperty.text.text
+    if prop?
       if prop.getValue?
         prop = prop.getValue()
-      try
-        delete (@target[propertyName])
-        @target[prop] = @currentProperty
-      catch err
-        @inform err
+      @target[prop] = null
       @buildAndConnectChildren()
       @target.changed()
       @target.setLayoutBeforeUpdatingBackingStore()
       @target.updateBackingStore()
       @target.changed()
-    ), propertyName
+  
+  addPropertyPopout: ->
+    @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
+
+  renameProperty: (ignoringThis, morphWithProperty) ->
+    propertyName = @list.selected.labelString
+    prop = morphWithProperty.text.text
+    if prop.getValue?
+      prop = prop.getValue()
+    try
+      delete (@target[propertyName])
+      @target[prop] = @currentProperty
+    catch err
+      @inform err
+    @buildAndConnectChildren()
+    @target.changed()
+    @target.setLayoutBeforeUpdatingBackingStore()
+    @target.updateBackingStore()
+    @target.changed()
+  
+  renamePropertyPopout: ->
+    propertyName = @list.selected.labelString
+    @prompt "property name:", @, "renameProperty", propertyName
   
   removeProperty: ->
     propertyName = @list.selected.labelString
