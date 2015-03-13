@@ -21,7 +21,6 @@ class WorkspaceMorph extends BoxMorph
     @border = 1
     @edge = 5
     @color = new Color(60, 60, 60)
-    @borderColor = new Color(95, 95, 95)
     @buildAndConnectChildren()
   
   setTarget: (target) ->

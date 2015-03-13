@@ -2,12 +2,11 @@
 
 # for demo and debuggin purposes only, to be removed later
 class MouseSensorMorph extends BoxMorph
-  constructor: (edge, border, borderColor) ->
+  constructor: (edge, border) ->
     super
     @edge = edge or 4
     @border = border or 2
     @color = new Color(255, 255, 255)
-    @borderColor = borderColor or new Color()
     @isTouched = false
     @upStep = 0.05
     @downStep = 0.02

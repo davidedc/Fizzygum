@@ -1292,7 +1292,7 @@ class Morph extends MorphicNode
         "horizontal")
       slider.alpha = 1
       slider.color = new Color(225, 225, 225)
-      slider.button.color = menu.borderColor
+      slider.button.color = new Color 60,60,60
       slider.button.highlightColor = slider.button.color.copy()
       slider.button.highlightColor.b += 100
       slider.button.pressColor = slider.button.color.copy()

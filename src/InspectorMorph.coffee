@@ -26,7 +26,6 @@ class InspectorMorph extends BoxMorph
     @border = 1
     @edge = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
     @color = new Color(60, 60, 60)
-    @borderColor = new Color(95, 95, 95)
     @buildAndConnectChildren()  if @target
   
   setTarget: (target) ->

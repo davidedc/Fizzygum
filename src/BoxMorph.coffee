@@ -6,11 +6,9 @@ class BoxMorph extends Morph
 
   edge: null
   border: null
-  borderColor: null
 
-  constructor: (@edge = 4, border, borderColor) ->
+  constructor: (@edge = 4, border) ->
     @border = border or ((if (border is 0) then 0 else 2))
-    @borderColor = borderColor or new Color()
     super()
 
   isTransparentAt: (aPoint) ->
@@ -160,9 +158,6 @@ class BoxMorph extends Morph
         100,
         true
     ), "set the border's\nline size"
-    menu.addItem "border color...", @, (->
-      @pickColor menu.title + "\nborder color:", @setBorderColor, @borderColor
-    ), "set the border's\nline color"
     menu.addItem "corner size...", @, "cornerSizePopout", "set the corner's\nradius"
     menu
   
@@ -181,17 +176,6 @@ class BoxMorph extends Morph
     @updateBackingStore()
     @changed()
   
-
-  setBorderColor: (aColorOrAMorphGivingAColor) ->
-    if aColorOrAMorphGivingAColor.getColor?
-      aColor = aColorOrAMorphGivingAColor.getColor()
-    else
-      aColor = aColorOrAMorphGivingAColor
-
-    if aColor
-      @borderColor = aColor
-      @updateBackingStore()
-      @changed()
   
   setCornerSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
@@ -210,7 +194,7 @@ class BoxMorph extends Morph
   
   colorSetters: ->
     # for context menu demo purposes
-    ["color", "borderColor"]
+    ["color"]
   
   numericalSetters: ->
     # for context menu demo purposes

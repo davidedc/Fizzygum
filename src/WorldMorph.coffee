@@ -902,7 +902,6 @@ class WorldMorph extends FrameMorph
     newMorph.setColor new Color(230, 200, 100)
     newMorph.edge = 35
     newMorph.border = 15
-    newMorph.borderColor = new Color(200, 100, 50)
     newMorph.alpha = 0.2
     newMorph.setExtent new Point(100, 100)
     @create newMorph
@@ -1085,7 +1084,7 @@ class WorldMorph extends FrameMorph
     slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")
     slider.alpha = 1
     slider.color = new Color(225, 225, 225)
-    slider.button.color = menu.borderColor
+    slider.button.color = new Color 60,60,60
     slider.button.highlightColor = slider.button.color.copy()
     slider.button.highlightColor.b += 100
     slider.button.pressColor = slider.button.color.copy()

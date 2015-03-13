@@ -93,14 +93,13 @@ class MenuMorph extends BoxMorph
       WorldMorph.preferencesAndSettings.menuFontName, true, false, "center")
     text.alignment = "center"
     text.color = new Color(255, 255, 255)
-    text.backgroundColor = @borderColor
+    text.backgroundColor = new Color 60,60,60
 
     @label = new BoxMorph(3, 0)
     @label.add text
     if WorldMorph.preferencesAndSettings.isFlat
       @label.edge = 0
-    @label.color = @borderColor
-    @label.borderColor = @borderColor
+    @label.color = new Color 60,60,60
     @label.setExtent text.extent().add(4) # here!
     @label.text = text
 
@@ -113,7 +112,6 @@ class MenuMorph extends BoxMorph
       @edge = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
       @border = if WorldMorph.preferencesAndSettings.isFlat then 1 else 2
     @color = new Color(255, 255, 255)
-    @borderColor = new Color(60, 60, 60)
     @silentSetExtent new Point(0, 0)
     y = @top() + 2
     x = @left() + 4
@@ -146,7 +144,7 @@ class MenuMorph extends BoxMorph
       else if tuple[0] is 0
         isLine = true
         item = new Morph()
-        item.color = @borderColor
+        item.color = new Color 60,60,60
         item.setHeight tuple[1]
       # menuItem
       else
