@@ -61,14 +61,17 @@ class ColorPaletteMorph extends Morph
     menu
   
   # setTarget: -> taken form the ControllerMixin
-  
-  setTargetSetter: (theTarget) ->
+
+  swapTargetsTHISNAMEISRANDOM: (ignored, ignored2, theTarget, each) ->
+    @target = theTarget
+    @targetSetter = each
+
+  setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.colorSetters()
     menu = new MenuMorph(@, "choose target property:")
     choices.forEach (each) =>
-      menu.addItem each, @, =>
-        @target = theTarget
-        @targetSetter = each
+      menu.addItem each, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
+
     if choices.length == 0
       menu = new MenuMorph(@, "no target properties available")
     menu.popUpAtHand()

@@ -21,6 +21,8 @@ class TriggerMorph extends Morph
   labelBold: null
   labelItalic: null
   doubleClickAction: null
+  argumentToAction1: null
+  argumentToAction2: null
   hint: null
   fontSize: null
   fontStyle: null
@@ -53,8 +55,11 @@ class TriggerMorph extends Morph
       @hint = null,
       labelColor,
       @labelBold = false,
-      @labelItalic = false
-      @doubleClickAction = null) ->
+      @labelItalic = false,
+      @doubleClickAction = null,
+      @argumentToAction1 = null,
+      @argumentToAction2 = null
+      ) ->
 
     # additional properties:
     @fontSize = fontSize or WorldMorph.preferencesAndSettings.menuFontSize
@@ -137,7 +142,7 @@ class TriggerMorph extends Morph
         debugger
         @action.call @target, @dataSourceMorphForTarget
       else # assume it's a String
-        @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv
+        @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
 
   triggerDoubleClick: ->
     # same as trigger() but use doubleClickAction instead of action property

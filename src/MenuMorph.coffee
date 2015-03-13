@@ -33,7 +33,9 @@ class MenuMorph extends BoxMorph
       color,
       bold = false,
       italic = false,
-      doubleClickAction # optional, when used as list contents
+      doubleClickAction, # optional, when used as list contents
+      argumentToAction1,
+      argumentToAction2
       ) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
@@ -43,12 +45,14 @@ class MenuMorph extends BoxMorph
     @items.push [
       localize(labelString or "close"),
       target,
-      action or nop,
+      action,
       hint,
       color,
       bold,
       italic,
-      doubleClickAction
+      doubleClickAction,
+      argumentToAction1,
+      argumentToAction2
     ]
 
   prependItem: (
@@ -59,7 +63,9 @@ class MenuMorph extends BoxMorph
       color,
       bold = false,
       italic = false,
-      doubleClickAction # optional, when used as list contents
+      doubleClickAction, # optional, when used as list contents
+      argumentToAction1,
+      argumentToAction2
       ) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
@@ -69,12 +75,14 @@ class MenuMorph extends BoxMorph
     @items.unshift [
       localize(labelString or "close"),
       target,
-      action or nop,
+      action,
       hint,
       color,
       bold,
       italic,
-      doubleClickAction
+      doubleClickAction,
+      argumentToAction1,
+      argumentToAction2
     ]
   
 
@@ -162,7 +170,9 @@ class MenuMorph extends BoxMorph
           tuple[4], # color
           tuple[5], # bold
           tuple[6], # italic
-          tuple[7]  # doubleclick action
+          tuple[7],  # doubleclick action
+          tuple[8],  # argument to action 1
+          tuple[9]  # argument to action 2
           )
         if !@environment?
           item.dataSourceMorphForTarget = item

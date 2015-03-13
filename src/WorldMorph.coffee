@@ -809,9 +809,9 @@ class WorldMorph extends FrameMorph
       menu.addItem "fit whole page", @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
       menu.addItem "color...", @, "popUpColorSetter", "choose the World's\nbackground color"
       if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addItem "touch screen settings", @, (->WorldMorph.preferencesAndSettings.toggleInputMode()), "bigger menu fonts\nand sliders"
+        menu.addItem "touch screen settings", WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", @, (->WorldMorph.preferencesAndSettings.toggleInputMode()), "smaller menu fonts\nand sliders"
+        menu.addItem "standard settings", WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
     if window.location.href.indexOf("worldWithSystemTestHarness") != -1
@@ -826,13 +826,13 @@ class WorldMorph extends FrameMorph
   popUpSystemTestsMenu: ->
     menu = new MenuMorph(@, "system tests")
 
-    menu.addItem "run system tests", @, (->@systemTestsRecorderAndPlayer.runAllSystemTests()), "runs all the system tests"
-    menu.addItem "start test recording", @, (->@systemTestsRecorderAndPlayer.startTestRecording()), "start recording a test"
-    menu.addItem "stop test recording", @, (->@systemTestsRecorderAndPlayer.stopTestRecording()), "stop recording the test"
-    menu.addItem "(re)play recorded test", @, (->@systemTestsRecorderAndPlayer.startTestPlaying()), "start playing the test"
-    menu.addItem "show test source", @, (->@systemTestsRecorderAndPlayer.showTestSource()), "opens a window with the source of the latest test"
-    menu.addItem "save recorded test", @, (->@systemTestsRecorderAndPlayer.saveTest()), "save the recorded test"
-    menu.addItem "save failed screenshots test", @, (->@systemTestsRecorderAndPlayer.saveFailedScreenshots()), "save failed screenshots test"
+    menu.addItem "run system tests", @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addItem "start test recording", @systemTestsRecorderAndPlayer, "startTestRecording", "start recording a test"
+    menu.addItem "stop test recording", @systemTestsRecorderAndPlayer, "stopTestRecording", "stop recording the test"
+    menu.addItem "(re)play recorded test", @systemTestsRecorderAndPlayer, "startTestPlaying", "start playing the test"
+    menu.addItem "show test source", @systemTestsRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
+    menu.addItem "save recorded test", @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
+    menu.addItem "save failed screenshots test", @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots test"
 
     menu.popUpAtHand()
 

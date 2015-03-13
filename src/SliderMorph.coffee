@@ -205,14 +205,16 @@ class SliderMorph extends CircleBoxMorph
     @changed()
   
   # setTarget: -> taken form the ControllerMixin
+
+  swapTargetsTHISNAMEISRANDOM: (ignored, ignored2, theTarget, each) ->
+    @target = theTarget
+    @action = each
   
-  setTargetSetter: (theTarget) ->
+  setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.numericalSetters()
     menu = new MenuMorph(@, "choose target property:")
     choices.forEach (each) =>
-      menu.addItem each, @, =>
-        @target = theTarget
-        @action = each
+      menu.addItem each, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
     if choices.length == 0
       menu = new MenuMorph(@, "no target properties available")
     menu.popUpAtHand()
