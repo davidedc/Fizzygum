@@ -99,6 +99,7 @@ class Morph extends MorphicNode
   ##
 
 
+  ###
   connectValuesToAddedChild: (theChild) ->
     #if theChild.constructor.name == "RectangleMorph"
     #  debugger
@@ -155,6 +156,7 @@ class Morph extends MorphicNode
         parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
         if parentArg?
           parentArg.disconnectParentArg()
+  ###
 
 
   ## ------------ end of reactive values ----------------------
