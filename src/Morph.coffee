@@ -11,8 +11,11 @@
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES globalFunctions
+# REQUIRES DeepCopierMixin
 
 class Morph extends MorphicNode
+
+  @augmentWith DeepCopierMixin
 
   # we want to keep track of how many instances we have
   # of each Morph for a few reasons:
@@ -1018,135 +1021,27 @@ class Morph extends MorphicNode
     new Color(data.data[0], data.data[1], data.data[2], data.data[3])
   
   
-  # Morph duplicating ////////////////////////////////////////////////////
 
-  # creates a new instance of target's type
-  clone: (target) ->
-    #alert "cloning a " + target.constructor.name
-    if typeof target is "object"
-      # note that the constructor method is not run!
-      theClone = Object.create(target.constructor.prototype)
-      #console.log "theClone class:" + theClone.constructor.name
-      theClone.assignUniqueID()
-      #theClone.constructor()
-      return theClone
-    target
+  ### not currently used
+  completelyRepaint: ()->
+    allMorphsInStructure = @allChildrenBottomToTop()
+    for eachMorph in allMorphsInStructure
+      if eachMorph.updateBackingStore?
+        eachMorph.updateBackingStore()
+        eachMorph.changed()
+  ###
 
-  # returns a shallow copy of target.
-  # Shallow copy keeps references to original objects, arrays or functions
-  # within the new object, so the “copy” is still linked to the original
-  # object. In other words, duplicated objects, arrays or
-  # functions will be pointing to the same location of the original.
-  # string and numbers are duplicated instead, they don't point
-  # to the original.
-  shallowCopy: (target) ->
-    c = @clone(target.constructor::)
-    # now we proceed to shallow - copy almost all the properties
-    # note that you most probably want to adjust these, as for example
-    # properties such as "parent" don't make much
-    # sense as shallow copies... being the child of the same parent for
-    # example requires the "children" array in the parent to be better
-    # adjusted - a simple shallow copy doesn't cut it...
-    # Notice however that a shallow copy works well for objects such
-    # as Points, Rectangles and Colors. You'd think that if the color
-    # of a copied morph just points to the same exact Color object
-    # of the original, it would mean that
-    # whenever the color of the original changes, so does the color of
-    # the copy - but that's not the case: all changes of those
-    # objects in Zombie Kernel are copy-on-modify, meaning that whenever
-    # the color of the original changes, the original color object will
-    # remain intact.
-    # However, this is what we do here: we do a shallow copy - things
-    # are adjusted by other methods if desired.
-    for property of target
+  duplicateMenuAction: ->
+    aFullCopy = @fullCopy()
+    aFullCopy.pickUp()
+
+  fullCopy: ()->
+    allMorphsInStructure = @allChildrenBottomToTop()
+    return @deepCopy [], [], allMorphsInStructure
+
       # the "instanceNumericID" property must be
       # always be unique to avoid huge confusion, so
       # we don't want to copy that one over...
-      if target.hasOwnProperty(property) and property != "instanceNumericID"
-        c[property] = target[property]
-        #if target.constructor.name == "SliderMorph"
-        #  alert "copying property: " + property
-    c
-  
-  copy: ->
-    c = @shallowCopy(@)
-    c.parent = null
-    c.children = []
-    c
-  
-  copyRecordingReferences: (dict) ->
-    # copies a Morph, its properties and its submorphs. Properties
-    # are shallow-copied, so for example Numbers and Strings
-    # are actually duplicated,
-    # but arrays objects and functions are not deep-copied i.e.
-    # just the references are copied.
-    # Also builds a correspondence of the morph and its submorphs to their
-    # respective clones.
-
-    c = @copy()
-    # "dict" maps the correspondences from this object to the
-    # copy one. So dict[propertyOfThisObject] = propertyOfCopyObject
-    dict[@uniqueIDString()] = c
-    @children.forEach (m) ->
-      # the result of this loop is that all the children of this
-      # object are (recursively) copied and attached to the copy of this
-      # object. dict will contain all the mappings between the
-      # children of this object and the copied children.
-      c.add m.copyRecordingReferences(dict)
-    c
-  
-  
-  # if the constructor of the object you are copying performs
-  # some complex building and connecting of the elements,
-  # and there are some callbacks around,
-  # then maybe you could need to override this method.
-  # The inspectorMorph needed to override this method
-  # until extensive refactoring was performed.
-  updateReferences: (dict) ->
-    #
-    #	Update intra-morph references within a composite morph that has
-    #	been copied. For example, if a button refers to morph X in the
-    #	orginal composite then the copy of that button in the new composite
-    #	should refer to *THE COPY OF* X in new composite, not the original X.
-    # This is done via scanning all the properties of the object and
-    # checking whether any of those are objects that
-    # appear in the mapping contained in "dict". If so, then it is
-    # replaced with its mapping.
-    #	
-    #alert "updateReferences of " + @toString()
-    for property of @
-      if @[property]?
-        #if property == "button"
-        #  alert "!! property: " + property + " is morph: " + (@[property]).isMorph
-        #  alert "dict[property]: " + dict[(@[property]).uniqueIDString()]
-        if (@[property]).isMorph and dict[(@[property]).uniqueIDString()]
-          #if property == "button"
-          #  alert "!! updating property: " + property + " to: " + dict[(@[property]).uniqueIDString()]
-          @[property] = dict[(@[property]).uniqueIDString()]
-  
-  fullCopy: ->
-    #
-    # Produce a copy of me with my entire tree of submorphs. Morphs
-    # mentioned more than once are all directed to a single new copy.
-    # Other properties are also *shallow* copied, so you must override
-    # to deep copy Arrays and (complex) Objects
-    # 
-    #alert "doing a full copy"
-    dict = {}
-    c = @copyRecordingReferences(dict)
-    # note that child.updateReferences is invoked
-    # from the bottom up, i.e. from the leaf children up to the
-    # parents. This is important because it means that each
-    # child can properly fix the connections between the "mapped"
-    # children correctly.
-    #alert "### updating references"
-    #alert "number of children: " + c.children.length
-    c.forAllChildrenBottomToTop (child) ->
-      #alert ">>> updating reference of " + child
-      child.updateReferences dict
-    #alert ">>> updating reference of " + c
-    c.updateReferences dict
-    c
   
   # Morph dragging and dropping /////////////////////////////////////////
   
@@ -1397,9 +1292,6 @@ class Morph extends MorphicNode
   popupDeveloperMenu: ->
     @developersMenu().popUpAtHand()
 
-  duplicateMenuAction: ->
-    aFullCopy = @fullCopy()
-    aFullCopy.pickUp()
 
   popUpColorSetter: ->
     @pickColor "color:", "setColor", "color"

@@ -1,6 +1,10 @@
 # Colors //////////////////////////////////////////////////////////////
 
+# REQUIRES DeepCopierMixin
+
 class Color
+
+  @augmentWith DeepCopierMixin
 
   # This "colourNamesValues" data
   # structure is only used to create

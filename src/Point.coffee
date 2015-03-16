@@ -1,6 +1,10 @@
 # Points //////////////////////////////////////////////////////////////
 
+# REQUIRES DeepCopierMixin
+
 class Point
+
+  @augmentWith DeepCopierMixin
 
   x: null
   y: null

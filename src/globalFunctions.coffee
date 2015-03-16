@@ -9,6 +9,37 @@
 MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
 
+HTMLCanvasElement.prototype.deepCopy = (objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
+  if (haveIBeenCopiedAlready >= 0)
+    return objectClones[haveIBeenCopiedAlready]
+
+  objOriginalsClonedAlready.push @
+  cloneOfMe = newCanvas new Point(@width, @height)
+
+  ctx = cloneOfMe.getContext("2d")
+  ctx.drawImage @, 0, 0
+
+  objectClones.push  cloneOfMe
+  return cloneOfMe
+
+Array.prototype.deepCopy = (objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
+  if (haveIBeenCopiedAlready >= 0)
+    return objectClones[haveIBeenCopiedAlready]
+
+  objOriginalsClonedAlready.push @
+  cloneOfMe = []
+  objectClones.push  cloneOfMe
+  for i in [0... @.length]
+    if !@[i]?
+        cloneOfMe[i] = null
+    else if typeof @[i] == 'object'
+      cloneOfMe[i] = @[i].deepCopy objOriginalsClonedAlready, objectClones, allMorphsInStructure
+    else
+      cloneOfMe[i] = @[i]
+  return cloneOfMe
+
 ##########################################################
 # These two methods are for mixins
 ##########################################################

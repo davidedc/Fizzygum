@@ -1,6 +1,10 @@
 # Rectangles //////////////////////////////////////////////////////////
 
+# REQUIRES DeepCopierMixin
+
 class Rectangle
+
+  @augmentWith DeepCopierMixin
 
   origin: null
   corner: null
