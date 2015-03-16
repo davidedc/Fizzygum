@@ -8,6 +8,27 @@
 # here: http://stackoverflow.com/a/8728164/1318347 )
 MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
+
+##########################################################
+# These two methods are for mixins
+##########################################################
+# adds klass properties
+Object.prototype.augmentWith = (obj) ->
+  for key, value of obj when key not in MixedClassKeywords
+    @[key] = value
+  obj.onceAddedClassProperties?.apply(@)
+  this
+
+# adds instance properties
+Object.prototype.addInstanceProperties= (obj) ->
+  for key, value of obj when key not in MixedClassKeywords
+    # Assign properties to the prototype
+    @::[key] = value
+  obj.included?.apply(@)
+  this
+################# end of mixins methods ##################
+
+
 arrayShallowCopy = (anArray) ->
   anArray.concat()
 
