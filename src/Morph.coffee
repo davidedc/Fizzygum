@@ -112,9 +112,10 @@ class Morph extends MorphicNode
     this
   ################# end of mixins methods ##################
 
-  ##########################################################
+
+  ##
   # Reactive Values start
-  ##########################################################
+  ##
 
 
   connectValuesToAddedChild: (theChild) ->
@@ -175,7 +176,7 @@ class Morph extends MorphicNode
           parentArg.disconnectParentArg()
 
 
-  ############## end of reactive values ##########################
+  ## ------------ end of reactive values ----------------------
 
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID
@@ -575,7 +576,7 @@ class Morph extends MorphicNode
     return aColor
   
   
-  # Morph displaying ###########################################################
+  # Morph displaying ---------------------------------------------------------
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateBackingStore: this one creates/updates the local canvas of this morph only
