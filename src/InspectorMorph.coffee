@@ -310,7 +310,7 @@ class InspectorMorph extends BoxMorph
     else
       return null
 
-  selectionFromList: (selected) =>
+  selectionFromList: (selected) ->
     if (selected == undefined) then return
     val = @target[selected]
     # this is for finding the static variables
