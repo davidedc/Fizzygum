@@ -39,7 +39,7 @@ class SliderMorph extends CircleBoxMorph
   imBeingAddedTo: (newParentMorph) ->
     @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
-    # might happen in phase of deserialisation that
+    # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
     if @button? and @button instanceof SliderButtonMorph
