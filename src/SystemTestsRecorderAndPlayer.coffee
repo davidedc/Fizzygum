@@ -100,7 +100,7 @@ class SystemTestsRecorderAndPlayer
     console.log "deleting SystemTest_#{@testName}"
     delete window["SystemTest_#{@testName}"]
   
-  startTestRecording: (@testName, @testDescription) ->
+  startTestRecording: (ignored, ingnored2, @testName, @testDescription) ->
 
     # if test name not provided, then
     # prompt the user for it
@@ -598,9 +598,9 @@ class SystemTestsRecorderAndPlayer
     # includes the testName and commands
     # in the right places.
 
-    testToBeSerialised = {}
-    testToBeSerialised.timeRecorded = new Date()
-    testToBeSerialised.description = @testDescription
+    testToBeSerialized = {}
+    testToBeSerialized.timeRecorded = new Date()
+    testToBeSerialized.description = @testDescription
     # A string that can be used to group
     # tests together, imagine for example they
     # could be visualised in a tree structure of
@@ -610,9 +610,9 @@ class SystemTestsRecorderAndPlayer
     # "topical" tests that we just want run
     # quickly cause they are about stuff
     # we are working on right now.
-    testToBeSerialised.testGroup = "00: current tests / 00: unused / 00: unused"
-    testToBeSerialised.systemInfo = new SystemTestsSystemInfo()
-    testToBeSerialised.testCommandsSequence = commands
+    testToBeSerialized.testGroup = "00: current tests / 00: unused / 00: unused"
+    testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
+    testToBeSerialized.testCommandsSequence = commands
 
     """
   // This system test is automatically
@@ -623,7 +623,7 @@ class SystemTestsRecorderAndPlayer
   // environment.
   var SystemTest_#{@testName};
 
-  SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialised, null, 4)};
+  SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialized, null, 4)};
     """
 
   saveFailedScreenshots: ->
