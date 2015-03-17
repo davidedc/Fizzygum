@@ -5,6 +5,9 @@
 # so important given that this looks like a temporary experiment.
 
 class WorkspaceMorph extends BoxMorph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   # panes:
   morphsList: null

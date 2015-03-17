@@ -1,6 +1,9 @@
 # MenuMorph ///////////////////////////////////////////////////////////
 
 class MenuMorph extends BoxMorph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   target: null
   title: null
@@ -281,3 +284,4 @@ class MenuMorph extends BoxMorph
   popUpCenteredInWorld: (world) ->
     wrrld = world or @world()
     @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
+

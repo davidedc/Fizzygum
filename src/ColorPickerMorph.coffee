@@ -1,6 +1,9 @@
 # ColorPickerMorph ///////////////////////////////////////////////////
 
 class ColorPickerMorph extends Morph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   # pattern: all the children should be declared here
   # the reason is that when you duplicate a morph

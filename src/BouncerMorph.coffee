@@ -4,6 +4,9 @@
 # Bounces vertically or horizontally within the parent
 
 class BouncerMorph extends Morph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   isStopped: false
   type: null

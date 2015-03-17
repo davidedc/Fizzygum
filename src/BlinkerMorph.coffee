@@ -3,6 +3,9 @@
 # can be used for text caret
 
 class BlinkerMorph extends Morph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   constructor: (@fps = 2) ->
     super()

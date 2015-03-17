@@ -25,6 +25,9 @@
 #Same goes for proportionalHeight and fixedHeight
 
 class LayoutSpec
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   morph: null
   minorDirectionPadding: 0.5

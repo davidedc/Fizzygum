@@ -3,6 +3,9 @@
 # I automatically determine my bounds
 
 class MenuItemMorph extends TriggerMorph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
   constructor: (target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2) ->

@@ -27,6 +27,9 @@
 
 
 class TextMorph extends StringMorph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
 
   words: []
   lines: []

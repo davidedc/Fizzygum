@@ -2,6 +2,10 @@
 
 # for demo and debuggin purposes only, to be removed later
 class MouseSensorMorph extends BoxMorph
+  # this is so we can create objects from the object class name 
+  # (for the deserialization process)
+  namedClasses[@name] = @prototype
+
   constructor: (edge, border) ->
     super
     @edge = edge or 4

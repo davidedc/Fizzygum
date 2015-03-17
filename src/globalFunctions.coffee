@@ -8,6 +8,9 @@
 # here: http://stackoverflow.com/a/8728164/1318347 )
 MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
+# this is so we can create objects from the object klass name 
+# (for the deserialization process)
+namedClasses = {}
 
 HTMLCanvasElement.prototype.deepCopy = (objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
