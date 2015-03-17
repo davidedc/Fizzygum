@@ -1124,7 +1124,7 @@ class Morph extends MorphicNode
           eachArrayElement = createdObjects[i][j]
           clonedMorphs[i][j] = createdObjects[i][j]
           if typeof eachArrayElement is "string"
-            if eachArrayElement.indexOf "$" == 0
+            if (eachArrayElement.indexOf "$") == 0
               referenceNumberAsString = eachArrayElement.substring(1)
               referenceNumber = parseInt referenceNumberAsString
               clonedMorphs[i][j] = clonedMorphs[referenceNumber]
