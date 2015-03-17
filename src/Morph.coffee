@@ -1025,6 +1025,9 @@ class Morph extends MorphicNode
   
   
 
+  # Duplication and Serialization /////////////////////////////////////////
+
+
   ### not currently used
   completelyRepaint: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
@@ -1040,11 +1043,95 @@ class Morph extends MorphicNode
 
   fullCopy: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
-    return @deepCopy [], [], allMorphsInStructure
+    return @deepCopy false, [], [], allMorphsInStructure
 
-      # the "instanceNumericID" property must be
-      # always be unique to avoid huge confusion, so
-      # we don't want to copy that one over...
+  serialize: ()->
+    allMorphsInStructure = @allChildrenBottomToTop()
+    arr1 = []
+    arr2 = []
+    @deepCopy true, arr1, arr2, allMorphsInStructure
+    totalJSON = ""
+
+    for element in arr2
+      try
+        console.log JSON.stringify(element) + "\n// --------------------------- \n"
+      catch e
+        debugger
+
+      totalJSON = totalJSON + JSON.stringify(element) + "\n// --------------------------- \n"
+    return totalJSON
+
+
+  # Deserialization /////////////////////////////////////////
+
+
+  deserialize: (serializationString) ->
+    # this is to ingnore all the comment strings
+    # that might be there for reading purposes
+    objectsSerializations = serializationString.split(/^\/\/.*$/gm)
+    # the serialization ends with a comment so
+    # last element is empty, pop it
+    objectsSerializations.pop()
+
+    createdObjects = []
+    for eachSerialization in objectsSerializations
+      createdObjects.push JSON.parse eachSerialization
+
+    clonedMorphs = []
+    for eachObject in createdObjects
+      # note that the constructor method is not run!
+      #console.log "cloning:" + eachMorph.className
+      #console.log "with:" + namedClasses[eachMorph.className]
+      if eachObject.className == "Canvas"
+        theClone = newCanvas new Point eachObject.width, eachObject.height
+        ctx = theClone.getContext("2d");
+
+        image = new Image();
+        image.src = eachObject.data
+        # if something doesn't get painted here,
+        # it might be because the allocation of the image
+        # would actually be asynchronous, in theory
+        # you'd have to do the drawImage in a callback
+        # on onLoad of the image...
+        ctx.drawImage(image, 0, 0)
+
+      else if eachObject.constructor != Array
+        theClone = Object.create(namedClasses[eachObject.className])
+        if theClone.assignUniqueID?
+          theClone.assignUniqueID()
+      else
+        theClone = []
+      clonedMorphs.push theClone
+      #theClone.constructor()
+
+    for i in [0... clonedMorphs.length]
+      eachClonedMorph = clonedMorphs[i]
+      if eachClonedMorph.constructor == HTMLCanvasElement
+        # do nothing
+      else if eachClonedMorph.constructor != Array
+        for property of createdObjects[i]
+          # also includes the "parent" property
+          if createdObjects[i].hasOwnProperty property
+            console.log "looking at property: " + property
+            clonedMorphs[i][property] = createdObjects[i][property]
+            if typeof clonedMorphs[i][property] is "string"
+              if (clonedMorphs[i][property].indexOf "$") == 0
+                referenceNumberAsString = clonedMorphs[i][property].substring(1)
+                referenceNumber = parseInt referenceNumberAsString
+                clonedMorphs[i][property] = clonedMorphs[referenceNumber]
+      else
+        for j in [0... createdObjects[i].length]
+          eachArrayElement = createdObjects[i][j]
+          clonedMorphs[i][j] = createdObjects[i][j]
+          if typeof eachArrayElement is "string"
+            if eachArrayElement.indexOf "$" == 0
+              referenceNumberAsString = eachArrayElement.substring(1)
+              referenceNumber = parseInt referenceNumberAsString
+              clonedMorphs[i][j] = clonedMorphs[referenceNumber]
+
+
+    return clonedMorphs[0]
+
   
   # Morph dragging and dropping /////////////////////////////////////////
   

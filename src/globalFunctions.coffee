@@ -12,35 +12,61 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # (for the deserialization process)
 namedClasses = {}
 
-HTMLCanvasElement.prototype.deepCopy = (objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+
+HTMLCanvasElement.prototype.deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
   if (haveIBeenCopiedAlready >= 0)
-    return objectClones[haveIBeenCopiedAlready]
+    if doSerialize
+      return "$" + haveIBeenCopiedAlready
+    else
+      return objectClones[haveIBeenCopiedAlready]
 
+  positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
   cloneOfMe = newCanvas new Point(@width, @height)
 
   ctx = cloneOfMe.getContext("2d")
   ctx.drawImage @, 0, 0
 
-  objectClones.push  cloneOfMe
+  if doSerialize
+    cloneOfMe = {}
+
+  objectClones.push cloneOfMe
+
+  if doSerialize
+    cloneOfMe.className = "Canvas"
+    cloneOfMe.width = @width
+    cloneOfMe.height = @height
+    cloneOfMe.data = @toDataURL()
+    return "$" + positionInObjClonesArray
+
+
   return cloneOfMe
 
-Array.prototype.deepCopy = (objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
+Array.prototype.deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
   if (haveIBeenCopiedAlready >= 0)
-    return objectClones[haveIBeenCopiedAlready]
+    if doSerialize
+      return "$" + haveIBeenCopiedAlready
+    else
+      return objectClones[haveIBeenCopiedAlready]
 
+  positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
   cloneOfMe = []
   objectClones.push  cloneOfMe
+
   for i in [0... @.length]
     if !@[i]?
         cloneOfMe[i] = null
     else if typeof @[i] == 'object'
-      cloneOfMe[i] = @[i].deepCopy objOriginalsClonedAlready, objectClones, allMorphsInStructure
+      cloneOfMe[i] = @[i].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
     else
       cloneOfMe[i] = @[i]
+
+  if doSerialize
+    return "$" + positionInObjClonesArray
+
   return cloneOfMe
 
 ##########################################################

@@ -11,15 +11,22 @@ DeepCopierMixin =
   # instance properties to follow:
   onceAddedClassProperties: ->
     @addInstanceProperties
-      deepCopy: (objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
+      deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
         if (haveIBeenCopiedAlready >= 0)
-          return objectClones[haveIBeenCopiedAlready]
+          if doSerialize
+            return "$" + haveIBeenCopiedAlready
+          else
+            return objectClones[haveIBeenCopiedAlready]
         if (@ instanceof Morph) and (allMorphsInStructure.indexOf(@) < 0)
-          return @
+          if doSerialize
+            return "$EXTERNAL" + @uniqueIDString()
+          else
+            return @
      
+        positionInObjClonesArray = objOriginalsClonedAlready.length
         objOriginalsClonedAlready.push @
-        cloneOfMe = @createPristineObjOfSameTypeAsThisOne()
+        cloneOfMe = @createPristineObjOfSameTypeAsThisOne(doSerialize)
         objectClones.push  cloneOfMe
 
         for property of @
@@ -32,10 +39,14 @@ DeepCopierMixin =
             if !@[property]?
               cloneOfMe[property] = null
             else if typeof @[property] == 'object'
-              cloneOfMe[property] = @[property].deepCopy objOriginalsClonedAlready, objectClones, allMorphsInStructure
+              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
             else
               if property != "instanceNumericID"
                 cloneOfMe[property] = @[property]
+
+        if doSerialize
+          return "$" + positionInObjClonesArray
+
 
         return cloneOfMe
 
@@ -49,12 +60,14 @@ DeepCopierMixin =
       #   3) this new object is not a copy
       #      of the original object. It just has the
       #      same type.
-      createPristineObjOfSameTypeAsThisOne: ->
+      createPristineObjOfSameTypeAsThisOne: (addClassNameFieldIfObjectNotArray)->
         #alert "cloning a " + @constructor.name
         if typeof @ is "object"
           # note that this case ALSO handles arrays
           # since they test positive as typeof "object"
           theClone = Object.create(@constructor.prototype)
+          if addClassNameFieldIfObjectNotArray
+            theClone.className = @constructor.name
           #console.log "theClone class:" + theClone.constructor.name
 
           # although we don't run the constructor,
