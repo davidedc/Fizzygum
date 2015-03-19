@@ -1396,6 +1396,25 @@ class Morph extends MorphicNode
       100,
       true
 
+  testMenu: (ignored,targetMorph)->
+    debugger
+    menu = new MenuMorph(targetMorph, null)
+    menu.addItem "serialise morph to memory", targetMorph, "serialiseToMemory"
+    menu.addItem "deserialize from memory and attach to world", targetMorph, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addItem "deserialize from memory and attach to hand", targetMorph, "deserialiseFromMemoryAndAttachToHand"
+    menu.popUpAtHand()
+
+  serialiseToMemory: ->
+    world.lastSerializationString = @serialize()
+
+  deserialiseFromMemoryAndAttachToHand: ->
+    derezzedObject = world.deserialize world.lastSerializationString
+    derezzedObject.pickUp()
+
+  deserialiseFromMemoryAndAttachToWorld: ->
+    derezzedObject = world.deserialize world.lastSerializationString
+    world.add derezzedObject
+
   developersMenu: ->
     # 'name' is not an official property of a function, hence:
     world = (if @world instanceof Function then @world() else (@root() or @world))
@@ -1449,6 +1468,8 @@ class Morph extends MorphicNode
         # just open new tab with image of morph.
         window.open @fullImageData()
     menu.addItem "take pic", @, "takePic", "open a new window\nwith a picture of this morph"
+
+    menu.addItem "test menu", @, "testMenu", "debugging and testing operations"
 
     menu.addLine()
     if @isDraggable

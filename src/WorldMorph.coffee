@@ -43,6 +43,13 @@ class WorldMorph extends FrameMorph
   copyEventListener: null
   pasteEventListener: null
 
+  # the string for the last serialised morph
+  # is kept in here, to make serialization
+  # and deserialization tests easier.
+  # The alternative would be to refresh and
+  # re-start the tests from where they left...
+  lastSerializationString: ""
+
   # Note how there can be two handlers
   # for keyboard events. This one is
   # attached to a hidden
@@ -807,6 +814,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "delete all", @, "destroyAll"
       menu.addItem "move all inside", @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addItem "inspect", @, "inspect", "open a window on\nall properties"
+      menu.addItem "test menu", @, "testMenu", "debugging and testing operations"
       menu.addLine()
       menu.addItem "restore display", @, "changed", "redraw the\nscreen once"
       menu.addItem "fit whole page", @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
