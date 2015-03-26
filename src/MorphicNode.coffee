@@ -79,6 +79,15 @@ class MorphicNode
   root: ->
     return @parent.root() if @parent?
     @
+
+
+  isAttachedAnywhereToWorld: ->
+    theRoot = @root()
+    if theRoot == world or theRoot == world.hand
+      return true
+    else
+      return false
+
   
   # currently unused
   depth: ->
