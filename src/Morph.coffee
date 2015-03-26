@@ -881,8 +881,7 @@ class Morph extends MorphicNode
   # shadow is added to a morph by
   # the HandMorph while dragging
   addShadow: (offset, alpha, color) ->
-    shadow = new ShadowMorph(@, offset, alpha, color)
-    @addChildFirst shadow
+    shadow = @silentAddShadow offset, alpha, color
     shadow.setLayoutBeforeUpdatingBackingStore()
     shadow.updateBackingStore()
     @fullChanged()
@@ -890,8 +889,6 @@ class Morph extends MorphicNode
 
   silentAddShadow: (offset, alpha, color) ->
     shadow = new ShadowMorph(@, offset, alpha, color)
-    owner = shadow.parent
-    owner.removeChild shadow  if owner?
     @addChildFirst shadow
     shadow
   

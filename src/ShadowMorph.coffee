@@ -10,12 +10,11 @@ class ShadowMorph extends Morph
   alpha: 0
   color: null
 
-  constructor: (@targetMorph, offset, alpha, color) ->
+  # alpha should be between zero (transparent)
+  # and one (fully opaque)
+  constructor: (@targetMorph, @offset = new Point(7, 7), @alpha = 0.2, @color = new Color(0, 0, 0)) ->
     # console.log "creating shadow morph"
     super()
-    @offset = offset or new Point(7, 7)
-    @alpha = alpha or ((if (alpha is 0) then 0 else 0.2))
-    @color = color or new Color(0, 0, 0)
 
   setLayoutBeforeUpdatingBackingStore: ->
     # console.log "shadow morph update rendering"

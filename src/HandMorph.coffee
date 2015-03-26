@@ -156,8 +156,13 @@ class HandMorph extends Morph
       # morph to make the shadow, so
       # this is why we add the shadow after
       # the morph has been added.
-      #aMorph.addShadow()
-      shadow = aMorph.addShadow()
+      # Note that Morphs can specify the look
+      # (i.e. offset blur and color)
+      # of their shadow (e.g. Menus have a particular one
+      # so they all seem to float at a particular heght)
+      # but here when we grab morphs we
+      # specify a particular look for the shadow.
+      aMorph.addShadow(new Point(7,7),0.2)
       
       #debugger
       @changed()

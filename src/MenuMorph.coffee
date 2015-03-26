@@ -270,9 +270,14 @@ class MenuMorph extends BoxMorph
     # to base the shadow on
     # P.S. this is the thing that causes the MenuMorph buffer
     # to be painted after the creation.
-    @addShadow new Point(2, 2), 80
     world.activeMenu = @
+    @addShadow()
     @fullChanged()
+
+  # shadow is added to a morph by
+  # the HandMorph while dragging
+  addShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
+    super offset, alpha, color
   
   popUpAtHand: ->
     @popup world, world.hand.position()
