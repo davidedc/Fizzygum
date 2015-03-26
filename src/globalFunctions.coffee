@@ -60,6 +60,9 @@ Array.prototype.deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones
     if !@[i]?
         cloneOfMe[i] = null
     else if typeof @[i] == 'object'
+      if !@[i].deepCopy?
+        # this should never happen
+        debugger
       cloneOfMe[i] = @[i].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
     else
       cloneOfMe[i] = @[i]
