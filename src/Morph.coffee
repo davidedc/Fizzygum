@@ -327,6 +327,8 @@ class Morph extends MorphicNode
         nxt.call(@)
       @step()
       @children.forEach (child) ->
+        if !child.runChildrensStepFunction?
+          debugger
         child.runChildrensStepFunction()
 
   # not used within Zombie Kernel yet.
