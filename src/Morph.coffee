@@ -99,10 +99,22 @@ class Morph extends MorphicNode
   morphValsDependingOnChildrenVals: null
   morphValsDirectlyDependingOnParentVals: null
 
+  isMarkedForDestruction: false
 
   ##
   # Reactive Values start
   ##
+
+  markForDestruction: ->
+    world.markedForDestruction.push @
+    @isMarkedForDestruction = true
+
+  anyParentMarkedForDestruction: ->
+    if @isMarkedForDestruction
+      return true
+    else if @parent?
+      return @parent.anyParentMarkedForDestruction() 
+    return false
 
 
   ###

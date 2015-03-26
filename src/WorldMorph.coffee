@@ -118,6 +118,7 @@ class WorldMorph extends FrameMorph
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
+  markedForDestruction: []
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -185,6 +186,10 @@ class WorldMorph extends FrameMorph
         if window[eachMorphClass].roundNumericIDsToNextThousand?
           window[eachMorphClass].roundNumericIDsToNextThousand()
 
+  destroyMorphsMarkedForDestruction: ->
+    for eachMorph in @markedForDestruction
+      eachMorph.destroy()
+    @markedForDestruction = []
   
   # World Morph display:
   brokenFor: (aMorph) ->
