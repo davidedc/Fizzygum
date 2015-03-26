@@ -345,6 +345,14 @@ class TextMorph extends StringMorph
   selectAllAndEdit: ->
     @edit()
     @selectAll()
+
+  # TODO this can be done more
+  # abstractly, bypassing the
+  # actual selection and doSelection...
+  selectAllAndDoit: ->
+    @edit()
+    @selectAll()
+    @doSelection()
    
   # this is set by the inspector. It tells the TextMorph
   # that any following doSelection/showSelection/inspectSelection action needs to be
