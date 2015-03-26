@@ -61,7 +61,7 @@ class HandMorph extends Morph
     # these three are checks and actions that normally
     # would happen on MouseDown event, but we
     # removed that event as we collapsed the down and up
-    # into this colasesced higher-level event,
+    # into this coalesced higher-level event,
     # but we still need to make these checks and actions
     @destroyActiveMenuIfHandHasNotActionedIt itemToTrigger
     @destroyActiveHandleIfHandHasNotActionedIt itemToTrigger
