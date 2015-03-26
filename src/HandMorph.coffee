@@ -55,7 +55,8 @@ class HandMorph extends Morph
     return result
 
   leftOrRightClickOnMenuItemWithText: (whichMouseButtonPressed, textLabelOfClickedItem, textLabelOccurrenceNumber) ->
-    itemToTrigger = @world.activeMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
+    mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
+    itemToTrigger = mostRecentlyCreatedMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
       m.labelString == textLabelOfClickedItem
 
     # these three are checks and actions that normally
@@ -63,14 +64,18 @@ class HandMorph extends Morph
     # removed that event as we collapsed the down and up
     # into this coalesced higher-level event,
     # but we still need to make these checks and actions
-    @destroyActiveMenuIfHandHasNotActionedIt itemToTrigger
     @destroyActiveHandleIfHandHasNotActionedIt itemToTrigger
     @stopEditingIfActionIsElsewhere itemToTrigger
 
+    world.freshlyCreatedMenus = []
     if whichMouseButtonPressed == "left"
       itemToTrigger.mouseClickLeft()
     else if whichMouseButtonPressed == "right"
       @openContextMenuAtPointer itemToTrigger.children[0]
+
+    if whichMouseButtonPressed == "left"
+      expectedClick = "mouseClickLeft"
+    @cleanupMenuMorphs(expectedClick, itemToTrigger)
 
 
   openContextMenuAtPointer: (morphTheMenuIsAbout) ->
@@ -86,7 +91,6 @@ class HandMorph extends Morph
     # removed that event as we collapsed the down and up
     # into this colasesced higher-level event,
     # but we still need to make these checks and actions
-    @destroyActiveMenuIfHandHasNotActionedIt morphTheMenuIsAbout
     @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
@@ -96,7 +100,7 @@ class HandMorph extends Morph
       contextMenu = morphTheMenuIsAbout.contextMenu()
 
     if contextMenu 
-      contextMenu.popUpAtHand() 
+      contextMenu.popUpAtHand(morphTheMenuIsAbout.firstContainerMenu()) 
 
   #
   #    alternative -  more elegant and possibly more
@@ -179,7 +183,28 @@ class HandMorph extends Morph
       @changed()
       target.add morphToDrop
       morphToDrop.changed()
-      morphToDrop.removeShadow()
+
+      doRemoveShadow = true
+      if (morphToDrop instanceof MenuMorph)
+        console.log "dropping menu morph which with pinned status: " + morphToDrop.isPinned()
+        if (morphToDrop.isPinned())
+          doRemoveShadow = true
+        else
+          doRemoveShadow = false
+      else
+        doRemoveShadow = true
+
+      if doRemoveShadow
+        morphToDrop.removeShadow()
+      else
+        # TODO adding of the shadow
+        # is not really legit because it
+        # ignores the original color and opacity
+        # of the shadow...
+        shadow = morphToDrop.getShadow()
+        if !shadow?
+          morphToDrop.addShadow()
+
       @children = []
       @setExtent new Point()
       morphToDrop.justDropped @  if morphToDrop.justDropped
@@ -213,16 +238,6 @@ class HandMorph extends Morph
       if actionedMorph isnt @world.activeHandle
         @world.activeHandle = @world.activeHandle.destroy()    
 
-  destroyActiveMenuIfHandHasNotActionedIt: (actionedMorph) ->
-    if @world.activeMenu?
-      unless @world.activeMenu.containedInParentsOf(actionedMorph)
-        # if there is a menu open and the user clicked on
-        # something that is not part of the menu then
-        # destroy the menu 
-        @world.activeMenu = @world.activeMenu.destroy()
-      else
-        clearInterval @touchHoldTimeout
-
   stopEditingIfActionIsElsewhere: (actionedMorph) ->
     if @world.caret?
       # there is a caret on the screen
@@ -238,8 +253,9 @@ class HandMorph extends Morph
       if actionedMorph isnt @world.caret.target
         # user clicked on something other than what the
         # caret is attached to
-        if @world.activeMenu?
-          unless @world.activeMenu.containedInParentsOf(actionedMorph)
+        mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
+        if mostRecentlyCreatedMenu?
+          unless mostRecentlyCreatedMenu.containedInParentsOf(actionedMorph)
             # only dismiss editing if the actionedMorph the user
             # clicked on is not part of a menu.
             @world.stopEditing()
@@ -259,7 +275,6 @@ class HandMorph extends Morph
       @mouseButton = null
     else
       morph = @topMorphUnderPointer()
-      @destroyActiveMenuIfHandHasNotActionedIt morph
       @destroyActiveHandleIfHandHasNotActionedIt morph
       @stopEditingIfActionIsElsewhere morph
 
@@ -321,9 +336,11 @@ class HandMorph extends Morph
    # note that the button param is not used,
    # but adding it for consistency...
    processMouseUp: (button) ->
+    actionAlreadyProcessed = false
     morph = @topMorphUnderPointer()
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
+    world.freshlyCreatedMenus = []
     if @children.length
       @drop()
     else
@@ -339,7 +356,8 @@ class HandMorph extends Morph
         # detached a menuItem and placed it on any other
         # morph so you need to ascertain that you'll
         # find it in the activeMenu later on...
-        if @world.activeMenu == menuItemMorph.parent
+        mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
+        if mostRecentlyCreatedMenu == menuItemMorph.parent
           labelString = menuItemMorph.labelString
           morphSpawningTheMenu = menuItemMorph.parent.parent
           occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
@@ -349,6 +367,12 @@ class HandMorph extends Morph
           # recently/jsut been added.
           @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
           alreadyRecordedLeftOrRightClickOnMenuItem = true
+
+      # TODO check if there is any other
+      # possibility other than mouseButton being "left"
+      # or "right". If it can only be one of those
+      # that you can simplify this nested if below
+      # and avoid using actionAlreadyProcessed
       if @mouseButton is "left"
         expectedClick = "mouseClickLeft"
       else
@@ -359,14 +383,72 @@ class HandMorph extends Morph
             # up a menu as needed.
             @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
           @openContextMenuAtPointer morph
-      until morph[expectedClick]
-        morph = morph.parent
-        if not morph?
-          break
-      if morph?
-        if morph == @mouseDownMorph
-          morph[expectedClick] @bounds.origin
+          actionAlreadyProcessed = true
+
+      if !actionAlreadyProcessed
+        # trigger the action
+        until morph[expectedClick]
+          morph = morph.parent
+          if not morph?
+            break
+        if morph?
+          if morph == @mouseDownMorph
+            morph[expectedClick] @bounds.origin
+
+      @cleanupMenuMorphs(expectedClick, morph)
     @mouseButton = null
+
+  cleanupMenuMorphs: (expectedClick, morph)->
+
+    world.hierarchyOfClickedMorphs = []
+
+    # not that all the actions due to the clicked
+    # morphs have been performed, now we can destroy
+    # morphs queued up for destruction
+    # which might include menus...
+    # if we destroyed menus earlier, the
+    # actions that come from the click
+    # might be mangled, e.g. adding a menu
+    # to a destroyed menu, etc.
+    world.destroyMorphsMarkedForDestruction()
+
+    # remove menus that have requested
+    # to be removed when a click happens outside
+    # of their bounds OR the bounds of their
+    # children
+    #if expectedClick == "mouseClickLeft"
+    # collect all morphs up the hierarchy of
+    # the one the user clicked on.
+    # (including the one the user clicked on)
+    world.hierarchyOfClickedMorphs = [morph]
+    ascendingMorphs = morph
+    while ascendingMorphs.parent?
+      ascendingMorphs = ascendingMorphs.parent
+      world.hierarchyOfClickedMorphs.push ascendingMorphs
+    
+    # go through the morphs that wanted a notification
+    # in case there is a click outside of them or any
+    # of their children morphs.
+    # Check which ones are not in the hierarchy of the clicked morphs
+    # and call their callback.
+    console.log "morphs wanting to be notified: " + world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
+    console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedMorphs
+    
+
+
+    # here we do a shallow copy of world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
+    # because we might remove elements of the array while we
+    # iterate on it (as we destroy menus that want to be destroyed
+    # when the user clicks outside of them or their children)
+    # so we need to do a shallow copy to avoid to mangle the for loop
+    morphsDetectingClickOutsideMeOrAnyOfMeChildren = arrayShallowCopy world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
+    for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
+      if (world.hierarchyOfClickedMorphs.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren) < 0
+        # skip the freshly created menus as otherwise we might
+        # destroy them immediately
+        if (world.freshlyCreatedMenus.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren) < 0
+          if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
+            eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: ->
     morph = @topMorphUnderPointer()

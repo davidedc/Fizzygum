@@ -69,7 +69,8 @@ class CanvasMorph extends FrameMorph
     if !@isMinimised and
         @isVisible and
         !theMorph.containedInParentsOf(@) and
-        @bounds.intersects(theMorph.bounds)
+        @bounds.intersects(theMorph.bounds) and
+        !@anyParentMarkedForDestruction()
       result = [@]
 
     # Since the FrameMorph clips its children
@@ -248,7 +249,7 @@ class CanvasMorph extends FrameMorph
     menu = super()
     if @children.length
       menu.addLine()
-      menu.addItem "move all inside", @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
     menu
   
   keepAllSubmorphsWithin: ->

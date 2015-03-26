@@ -46,8 +46,10 @@ class TriggerMorph extends Morph
   normalImage: null
   pressImage: null
   centered: false
+  closesUnpinnedMenus: true
 
   constructor: (
+      @closesUnpinnedMenus = true,
       @target = null,
       @action = null,
       @labelString = null,
@@ -182,6 +184,8 @@ class TriggerMorph extends Morph
     super()
     @image = @highlightImage
     @changed()
+    if @closesUnpinnedMenus
+      @propagateKillMenus()
     @trigger()
 
   mouseDoubleClick: ->

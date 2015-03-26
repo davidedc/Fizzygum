@@ -8,9 +8,9 @@ class MenuItemMorph extends TriggerMorph
   namedClasses[@name] = @prototype
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
-  constructor: (target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2) ->
+  constructor: (closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2) ->
     #console.log "menuitem constructing"
-    super target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2 
+    super closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2 
   
   createLabel: ->
     # console.log "menuitem createLabel"
@@ -92,15 +92,6 @@ class MenuItemMorph extends TriggerMorph
   mouseMove: ->
     @escalateEvent "mouseMove"  if @isListItem()
   
-  mouseClickLeft: ->
-    super()
-    # this might now destroy the
-    # menu this morph is in
-    # The menu item might be detached
-    # from the menu so check existence of
-    # method
-    if @parent.itemSelected
-      @parent.itemSelected()
   
   isListItem: ->
     return @parent.isListContents  if @parent

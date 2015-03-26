@@ -99,7 +99,9 @@ class Morph extends MorphicNode
   morphValsDependingOnChildrenVals: null
   morphValsDirectlyDependingOnParentVals: null
 
+  clickOutsideMeOrAnyOfMeChildrenCallback: [null]
   isMarkedForDestruction: false
+
 
   ##
   # Reactive Values start
@@ -287,6 +289,12 @@ class Morph extends MorphicNode
     # visible, not just the parent... but it kind of
     # seems overkill...
     @visible = false
+
+    # remove callback when user clicks outside
+    # me or any of my children
+    console.log "****** destroying morph"
+    @onClickOutsideMeOrAnyOfMeChildren null
+
     if @parent?
       @fullChanged()
       @parent.removeChild @
@@ -426,7 +434,8 @@ class Morph extends MorphicNode
     if !@isMinimised and
         @isVisible and
         !theMorph.containedInParentsOf(@) and
-        @bounds.intersects(theMorph.bounds)
+        @bounds.intersects(theMorph.bounds) and
+        !@anyParentMarkedForDestruction()
       result = [@]
 
     @children.forEach (child) ->
@@ -641,7 +650,7 @@ class Morph extends MorphicNode
     return false
   
   silentUpdateBackingStore: ->
-    console.log 'frame morph doing nothing with the backing store'
+    #console.log 'frame morph doing nothing with the backing store'
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -933,8 +942,8 @@ class Morph extends MorphicNode
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
-      if w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?))
-        w.broken.push @boundsIncludingChildren().spread()
+      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
+        world.broken.push @boundsIncludingChildren().spread()
   
   childChanged: ->
     # react to a  change in one of my children,
@@ -992,6 +1001,7 @@ class Morph extends MorphicNode
     # painted over.
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
+    aMorph.isMarkedForDestruction = false
     @addChild aMorph
     if !avoidExtentCalculation
       aMorph.calculateAndUpdateExtent()
@@ -1054,7 +1064,13 @@ class Morph extends MorphicNode
 
   fullCopy: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
-    return @deepCopy false, [], [], allMorphsInStructure
+    copiedMorph = @deepCopy false, [], [], allMorphsInStructure
+    if copiedMorph instanceof MenuMorph
+      copiedMorph.onClickOutsideMeOrAnyOfMeChildren(null)
+      copiedMorph.killThisMenuIfClickOnDescendantsTriggers = false
+      copiedMorph.killThisMenuIfClickOtsideDescendants = false
+
+    return copiedMorph
 
   serialize: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
@@ -1158,6 +1174,22 @@ class Morph extends MorphicNode
         return @  
     @parent.rootForGrab()
 
+  firstContainerMenu: ->
+    scanningMorphs = @
+    while scanningMorphs.parent?
+      scanningMorphs = scanningMorphs.parent
+      if scanningMorphs instanceof MenuMorph
+        if !scanningMorphs.isMarkedForDestruction
+          return scanningMorphs
+    return scanningMorphs
+
+    if @ instanceof ShadowMorph
+      return @parent.rootForFocus()
+    if @parent is null or
+      @parent instanceof WorldMorph
+        return @  
+    @parent.rootForFocus()
+
   rootForFocus: ->
     if @ instanceof ShadowMorph
       return @parent.rootForFocus()
@@ -1170,9 +1202,24 @@ class Morph extends MorphicNode
     @rootForFocus()?.moveAsLastChild()
     @rootForFocus()?.fullChanged()
 
+  propagateKillMenus: ->
+    if @parent?
+      @parent.propagateKillMenus()
+
   mouseClickLeft: ->
     @bringToForegroud()
-  
+
+  onClickOutsideMeOrAnyOfMeChildren: (functionName, arg1, arg2, arg3)->
+    if functionName?
+      @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
+      if (world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @) < 0
+        world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.push @
+    else
+      console.log "****** onClickOutsideMeOrAnyOfMeChildren removing element"
+      index = world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @
+      if index >= 0
+        world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.splice index, 1
+
   wantsDropOf: (aMorph) ->
     # default is to answer the general flag - change for my heirs
     if (aMorph instanceof HandleMorph) or
@@ -1235,7 +1282,7 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph(@, text)
+    m = new MenuMorph(false, @, true, true, text)
     m.isDraggable = true
     m.popUpCenteredAtHand @world()
   
@@ -1245,7 +1292,7 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph(@, text)
+    m = new MenuMorph(false, @, true, true, text)
     m.addItem "Ok"
     m.isDraggable = true
     m.popUpCenteredAtHand @world()
@@ -1253,7 +1300,7 @@ class Morph extends MorphicNode
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
     isNumeric = true  if ceilingNum
-    @tempPromptEntryField = new StringFieldMorph(
+    tempPromptEntryField = new StringFieldMorph(
       defaultContents or "",
       width or 100,
       WorldMorph.preferencesAndSettings.prompterFontSize,
@@ -1261,8 +1308,9 @@ class Morph extends MorphicNode
       false,
       false,
       isNumeric)
-    menu = new MenuMorph(target, msg or "", @tempPromptEntryField)
-    menu.items.push @tempPromptEntryField
+    menu = new MenuMorph(false, target, true, true, msg or "", tempPromptEntryField)
+    menu.tempPromptEntryField = tempPromptEntryField
+    menu.items.push tempPromptEntryField
     if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
       slider = new SliderMorph(
         floorNum or 0,
@@ -1279,48 +1327,49 @@ class Morph extends MorphicNode
       slider.button.pressColor.b += 150
       slider.silentSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       slider.target = @
+      slider.argumentToAction = menu
       if isRounded
         slider.action = "reactToSliderAction1"
       else
         slider.action = "reactToSliderAction2"
       menu.items.push slider
     menu.addLine 2
-    menu.addItem "Ok", target, callback
+    menu.addItem "Ok", true, target, callback
 
-    menu.addItem "Cancel", @, ->
+    menu.addItem "Cancel", true, @, ->
       null
 
     menu.isDraggable = true
-    menu.popUpAtHand()
-    @tempPromptEntryField.text.edit()
+    menu.popUpAtHand(@firstContainerMenu())
+    tempPromptEntryField.text.edit()
 
-  reactToSliderAction1: (num) ->
-    @tempPromptEntryField.changed()
-    @tempPromptEntryField.text.text = Math.round(num).toString()
-    @tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
-    @tempPromptEntryField.text.updateBackingStore()
-    @tempPromptEntryField.text.changed()
-    @tempPromptEntryField.text.edit()
+  reactToSliderAction1: (num, theMenu) ->
+    theMenu.tempPromptEntryField.changed()
+    theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
+    theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    theMenu.tempPromptEntryField.text.updateBackingStore()
+    theMenu.tempPromptEntryField.text.changed()
+    theMenu.tempPromptEntryField.text.edit()
 
-  reactToSliderAction2: (num) ->
-    @tempPromptEntryField.changed()
-    @tempPromptEntryField.text.text = num.toString()
-    @tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
-    @tempPromptEntryField.text.updateBackingStore()
-    @tempPromptEntryField.text.changed()
+  reactToSliderAction2: (num, theMenu) ->
+    theMenu.tempPromptEntryField.changed()
+    theMenu.tempPromptEntryField.text.text = num.toString()
+    theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    theMenu.tempPromptEntryField.text.updateBackingStore()
+    theMenu.tempPromptEntryField.text.changed()
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph(defaultContents)
-    menu = new MenuMorph(@, msg or "", colorPicker)
+    menu = new MenuMorph(false, @, true, true, msg or "", colorPicker)
     menu.items.push colorPicker
     menu.addLine 2
-    menu.addItem "Ok", @, callback
+    menu.addItem "Ok", true, @, callback
 
-    menu.addItem "Cancel", @, ->
+    menu.addItem "Cancel", true, @, ->
       null
 
     menu.isDraggable = true
-    menu.popUpAtHand()
+    menu.popUpAtHand(@firstContainerMenu())
 
   inspect: (anotherObject) ->
     @spawnInspector @
@@ -1380,18 +1429,18 @@ class Morph extends MorphicNode
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
     world = (if @world instanceof Function then @world() else (@root() or @world))
-    menu = new MenuMorph(@, null)
+    menu = new MenuMorph(false, @, true, true, null)
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
-      if each.developersMenu and (each isnt world)
+      if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice(0, 50)
-        menu.addItem textLabelForMorph, each, "popupDeveloperMenu"
+        menu.addItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu"
 
     menu
 
-  popupDeveloperMenu: ->
-    @developersMenu().popUpAtHand()
+  popupDeveloperMenu: (morphTriggeringThis)->
+    @developersMenu().popUpAtHand(morphTriggeringThis.firstContainerMenu())
 
 
   popUpColorSetter: ->
@@ -1408,12 +1457,11 @@ class Morph extends MorphicNode
       true
 
   testMenu: (ignored,targetMorph)->
-    debugger
-    menu = new MenuMorph(targetMorph, null)
-    menu.addItem "serialise morph to memory", targetMorph, "serialiseToMemory"
-    menu.addItem "deserialize from memory and attach to world", targetMorph, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addItem "deserialize from memory and attach to hand", targetMorph, "deserialiseFromMemoryAndAttachToHand"
-    menu.popUpAtHand()
+    menu = new MenuMorph(false, targetMorph, true, true, null)
+    menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
+    menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
+    menu.popUpAtHand(@firstContainerMenu())
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
@@ -1430,24 +1478,26 @@ class Morph extends MorphicNode
     # 'name' is not an official property of a function, hence:
     world = (if @world instanceof Function then @world() else (@root() or @world))
     userMenu = @userMenu() or (@parent and @parent.userMenu())
-    menu = new MenuMorph(
+    menu = new MenuMorph(false, 
       @,
+      true,
+      true,
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
-      menu.addItem "user features...", @, ->
-        userMenu.popUpAtHand()
+      menu.addItem "user features...", true, @, ->
+        userMenu.popUpAtHand(@firstContainerMenu())
 
       menu.addLine()
-    menu.addItem "color...", @, "popUpColorSetter" , "choose another color \nfor this morph"
+    menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
 
-    menu.addItem "transparency...", @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize...", @, "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
+    menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+    menu.addItem "resize...", true, @, "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
     menu.addLine()
-    menu.addItem "duplicate", @, "duplicateMenuAction" , "make a copy\nand pick it up"
-    menu.addItem "pick up", @, "pickUp", "disattach and put \ninto the hand"
-    menu.addItem "attach...", @, "attach", "stick this morph\nto another one"
-    menu.addItem "move", @, "move", "show a handle\nwhich can be dragged\nto move this morph"
-    menu.addItem "inspect", @, "inspect", "open a window\non all properties"
+    menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+    menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+    menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
+    menu.addItem "move", true, @, "move", "show a handle\nwhich can be dragged\nto move this morph"
+    menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
 
     # A) normally, just take a picture of this morph
     # and open it in a new tab.
@@ -1478,17 +1528,17 @@ class Morph extends MorphicNode
         # no system tests recording/playing ongoing,
         # just open new tab with image of morph.
         window.open @fullImageData()
-    menu.addItem "take pic", @, "takePic", "open a new window\nwith a picture of this morph"
+    menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
 
-    menu.addItem "test menu", @, "testMenu", "debugging and testing operations"
+    menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
     menu.addLine()
     if @isDraggable
-      menu.addItem "lock", @, "toggleIsDraggable", "make this morph\nunmovable"
+      menu.addItem "lock", true, @, "toggleIsDraggable", "make this morph\nunmovable"
     else
-      menu.addItem "unlock", @, "toggleIsDraggable", "make this morph\nmovable"
-    menu.addItem "hide", @, "minimise"
-    menu.addItem "delete", @, "destroy"
+      menu.addItem "unlock", true, @, "toggleIsDraggable", "make this morph\nmovable"
+    menu.addItem "hide", true, @, "minimise"
+    menu.addItem "delete", true, @, "destroy"
     menu
   
   userMenu: ->
@@ -1531,13 +1581,6 @@ class Morph extends MorphicNode
       theMorphToBeAttached.isDraggable = false
 
   attach: ->
-    # get rid of any previous temporary
-    # active menu because it's meant to be
-    # out of view anyways, otherwise we show
-    # its overlapping morphs in the options
-    # which is most probably not wanted.
-    if world.activeMenu
-      world.activeMenu = world.activeMenu.destroy()
     choices = world.plausibleTargetAndDestinationMorphs(@)
 
     # my direct parent might be in the
@@ -1548,9 +1591,9 @@ class Morph extends MorphicNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph(@, "choose new parent:")
+      menu = new MenuMorph(false, @, true, true, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), each, "newParentChoice"
+        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice"
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -1560,8 +1603,8 @@ class Morph extends MorphicNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph(@, "no morphs to attach to")
-    menu.popUpAtHand()
+      menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
+    menu.popUpAtHand(@firstContainerMenu())
   
   toggleIsDraggable: ->
     # for context menu demo purposes

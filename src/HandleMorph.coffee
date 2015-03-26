@@ -164,18 +164,11 @@ class HandleMorph extends Morph
     
   # HandleMorph menu:
   attach: ->
-    # get rid of any previous temporary
-    # active menu because it's meant to be
-    # out of view anyways, otherwise we show
-    # its submorphs in the "attach to..." options
-    # which is most probably not wanted.
-    if world.activeMenu
-      world.activeMenu = world.activeMenu.destroy()
     choices = world.plausibleTargetAndDestinationMorphs(@)
-    menu = new MenuMorph(@, "choose target:")
+    menu = new MenuMorph(false, @, true, true, "choose target:")
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), @, ->
+        menu.addItem each.toString().slice(0, 50) + " ➜", false, @, ->
           @isDraggable = false
           @target = each
           @updateBackingStore()
@@ -189,5 +182,5 @@ class HandleMorph extends Morph
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph(@, "no morphs to attach to")
-    menu.popUpAtHand()  if choices.length
+      menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
+    menu.popUpAtHand(@firstContainerMenu())  if choices.length

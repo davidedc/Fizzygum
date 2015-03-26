@@ -12,24 +12,57 @@ class MenuMorph extends BoxMorph
   items: null
   label: null
   isListContents: false
+  killThisMenuIfClickOnDescendantsTriggers: true
+  killThisMenuIfClickOtsideDescendants: true
+  tempPromptEntryField: null
 
-  constructor: (@target, @title = null, @environment = null, @fontSize = null) ->
+  constructor: (@isListContents = false, @target, @killThisMenuIfClickOtsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
     @items = []
     # console.log "menu super"
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+    if !@isListContents
+      if @killThisMenuIfClickOtsideDescendants
+        @onClickOutsideMeOrAnyOfMeChildren("destroy")
+    @isDraggable = true
     super()
 
     @border = null # the Box Morph constructor puts this to 2
+    if !@isListContents
+      world.freshlyCreatedMenus.push @
+      world.openMenus.push @
     # important not to traverse all the children for stepping through, because
     # there could be a lot of entries for example in the inspector the number
     # of properties of an object - there could be a 100 of those and we don't
     # want to traverse them all. Setting step to null (as opposed to nop)
-    # achieves that.
+    # achieves that.      
+
+  propagateKillMenus: ->
+    if @killThisMenuIfClickOnDescendantsTriggers
+      if @parent?
+        @parent.propagateKillMenus()
+      @markForDestruction()
+
+  isPinned: ->
+    return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOtsideDescendants)
+
+  pin: ->
+    @killThisMenuIfClickOnDescendantsTriggers = false
+    @killThisMenuIfClickOtsideDescendants = false
+    @onClickOutsideMeOrAnyOfMeChildren null
+    world.add @
+
+  # StringMorph menus:
+  developersMenu: ->
+    menu = super()
+    menu.addLine()
+    menu.addItem "pin", false, @, "pin"
+    menu
   
   addItem: (
       labelString,
+      closesUnpinnedMenus = true,
       target,
       action,
       hint,
@@ -47,6 +80,7 @@ class MenuMorph extends BoxMorph
     #     * a tuple of format: [icon, string]
     @items.push [
       localize(labelString or "close"),
+      closesUnpinnedMenus,
       target,
       action,
       hint,
@@ -60,6 +94,7 @@ class MenuMorph extends BoxMorph
 
   prependItem: (
       labelString,
+      closesUnpinnedMenus,
       target,
       action,
       hint,
@@ -77,6 +112,7 @@ class MenuMorph extends BoxMorph
     #     * a tuple of format: [icon, string]
     @items.unshift [
       localize(labelString or "close"),
+      closesUnpinnedMenus,
       target,
       action,
       hint,
@@ -161,21 +197,22 @@ class MenuMorph extends BoxMorph
       else
         # console.log "menu creating MenuItemMorph "
         item = new MenuItemMorph(
-          tuple[1], # target
-          tuple[2], # action
+          tuple[1], # closes unpinned menus
+          tuple[2], # target
+          tuple[3], # action
           tuple[0], # label
           @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
           WorldMorph.preferencesAndSettings.menuFontName,
           false,
           @target, # environment
           @environment, # environment2
-          tuple[3], # bubble help hint
-          tuple[4], # color
-          tuple[5], # bold
-          tuple[6], # italic
-          tuple[7],  # doubleclick action
-          tuple[8],  # argument to action 1
-          tuple[9]  # argument to action 2
+          tuple[4], # bubble help hint
+          tuple[5], # color
+          tuple[6], # bold
+          tuple[7], # italic
+          tuple[8],  # doubleclick action
+          tuple[9],  # argument to action 1
+          tuple[10]  # argument to action 2
           )
         if !@environment?
           item.dataSourceMorphForTarget = item
@@ -242,22 +279,25 @@ class MenuMorph extends BoxMorph
 
     @changed()
 
+  destroy: ->
+    super()
+    if !@isListContents
+      index = world.openMenus.indexOf @
+      if index >= 0
+        world.openMenus.splice index, 1
+
+
   itemSelected: ->
     unless @isListContents
-      world.unfocusMenu @
       @destroy()
   
-  popup: (world, pos) ->
+  popup: (morphToAttachTo, pos) ->
     # console.log "menu popup"
-    # keep only one active menu at a time, destroy the
-    # previous one.
-    if world.activeMenu
-      world.activeMenu = world.activeMenu.destroy()
     @silentSetPosition pos
-    world.add @
+    morphToAttachTo.add @
     # the @keepWithin method
     # needs to know the extent of the morph
-    # so it must be called after the world.add
+    # so it must be called after the morphToAttachTo.add
     # method. If you call before, there is
     # nopainting happening and the morph doesn't
     # know its extent.
@@ -270,7 +310,6 @@ class MenuMorph extends BoxMorph
     # to base the shadow on
     # P.S. this is the thing that causes the MenuMorph buffer
     # to be painted after the creation.
-    world.activeMenu = @
     @addShadow()
     @fullChanged()
 
@@ -279,8 +318,10 @@ class MenuMorph extends BoxMorph
   addShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
     super offset, alpha, color
   
-  popUpAtHand: ->
-    @popup world, world.hand.position()
+  popUpAtHand: (morphToAttachTo)->
+    if !morphToAttachTo?
+      morphToAttachTo = world
+    @popup morphToAttachTo, world.hand.position()
   
   popUpCenteredAtHand: (world) ->
     wrrld = world or @world()

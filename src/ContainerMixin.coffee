@@ -19,22 +19,15 @@ ContainerMixin =
   onceAddedClassProperties: ->
     @addInstanceProperties
       setTarget: ->
-        # get rid of any previous temporary
-        # active menu because it's meant to be
-        # out of view anyways, otherwise we show
-        # its submorphs in the setTarget options
-        # which is most probably not wanted.
-        if world.activeMenu
-          world.activeMenu = world.activeMenu.destroy()
         choices = world.plausibleTargetAndDestinationMorphs(@)
         if choices.length > 0
-          menu = new MenuMorph(@, "choose target:")
+          menu = new MenuMorph(false, @, true, true, "choose target:")
           #choices.push @world()
           choices.forEach (each) =>
-            menu.addItem each.toString().slice(0, 50), @, "setTargetSetter", null, null, null, null, null,each
+            menu.addItem each.toString().slice(0, 50) + " ➜", false, @, "setTargetSetter", null, null, null, null, null,each
         else
-          menu = new MenuMorph(@, "no targets available")
-        menu.popUpAtHand()
+          menu = new MenuMorph(false, @, true, true, "no targets available")
+        menu.popUpAtHand(@firstContainerMenu())
 
   submorphBounds: ->
     result = null

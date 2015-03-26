@@ -53,7 +53,7 @@ class ListMorph extends ScrollFrameMorph
   buildAndConnectChildren: ->
     if @listContents
       @listContents = @listContents.destroy()
-    @listContents = new MenuMorph(@, null, null)
+    @listContents = new MenuMorph(true, @, false, false, null, null)
     @elements = ["(empty)"]  if !@elements.length
     @elements.forEach (element) =>
       color = null
@@ -78,6 +78,7 @@ class ListMorph extends ScrollFrameMorph
 
       @listContents.addItem(
         @labelGetter(element), # labelString
+        true,
         @, # target
         "select", # action
         null, # hint
@@ -88,7 +89,6 @@ class ListMorph extends ScrollFrameMorph
       )
 
     @listContents.setPosition @contents.position()
-    @listContents.isListContents = true
     @listContents.setLayoutBeforeUpdatingBackingStore()
     @listContents.updateBackingStore()
     @addContents @listContents

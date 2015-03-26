@@ -152,7 +152,7 @@ class BoxMorph extends Morph
     menu = super()
     menu.addLine()
 
-    menu.addItem "border width...", @, (->
+    menu.addItem "border width...", true, @, (->
       @prompt menu.title + "\nborder\nwidth:",
         @setBorderWidth,
         @border.toString(),
@@ -161,7 +161,7 @@ class BoxMorph extends Morph
         100,
         true
     ), "set the border's\nline size"
-    menu.addItem "corner size...", @, "cornerSizePopout", "set the corner's\nradius"
+    menu.addItem "corner size...", true, @, "cornerSizePopout", "set the corner's\nradius"
     menu
   
   setBorderWidth: (sizeOrMorphGivingSize) ->

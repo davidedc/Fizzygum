@@ -183,28 +183,28 @@ class InspectorMorph extends BoxMorph
     @add @work
 
     # properties button
-    @buttonSubset = new TriggerMorph(@)
+    @buttonSubset = new TriggerMorph(true, @)
     @buttonSubset.setLabel "show..."
     @buttonSubset.alignCenter()
     @buttonSubset.action = "openShowMenu"
     @add @buttonSubset
 
     # inspect button
-    @buttonInspect = new TriggerMorph(@)
+    @buttonInspect = new TriggerMorph(true, @)
     @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
     @buttonInspect.action = "openInspectorMenu"
     @add @buttonInspect
 
     # edit button
-    @buttonEdit = new TriggerMorph(@)
+    @buttonEdit = new TriggerMorph(true, @)
     @buttonEdit.setLabel "edit..."
     @buttonEdit.alignCenter()
     @buttonEdit.action = "openEditMenu"
     @add @buttonEdit
 
     # close button
-    @buttonClose = new TriggerMorph(@)
+    @buttonClose = new TriggerMorph(true, @)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
     @buttonClose.action = "destroy"
@@ -217,30 +217,30 @@ class InspectorMorph extends BoxMorph
     @layoutSubmorphs()
 
   openShowMenu: ->
-    menu = new MenuMorph()
-    menu.addItem "attributes", @, =>
+    menu = new MenuMorph(false)
+    menu.addItem "attributes", true, @, =>
       @showing = "attributes"
       @buildAndConnectChildren()
 
-    menu.addItem "methods", @, =>
+    menu.addItem "methods", true, @, =>
       @showing = "methods"
       @buildAndConnectChildren()
 
-    menu.addItem "all", @, =>
+    menu.addItem "all", true, @, =>
       @showing = "all"
       @buildAndConnectChildren()
 
     menu.addLine()
-    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), @, (=>
+    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, (=>
       @markOwnershipOfProperties = not @markOwnershipOfProperties
       @buildAndConnectChildren()
     ), "highlight\nownership of properties"
-    menu.popUpAtHand()
+    menu.popUpAtHand(@firstContainerMenu())
 
   openInspectorMenu: ->
     if isObject(@currentProperty)
-      menu = new MenuMorph()
-      menu.addItem "in new inspector...", @, =>
+      menu = new MenuMorph(false)
+      menu.addItem "in new inspector...", true, @, =>
         world = @world()
         inspector = new @constructor(@currentProperty)
         inspector.setPosition world.hand.position()
@@ -248,21 +248,21 @@ class InspectorMorph extends BoxMorph
         world.add inspector
         inspector.changed()
 
-      menu.addItem "here...", @, =>
+      menu.addItem "here...", true, @, =>
         @setTarget @currentProperty
 
-      menu.popUpAtHand()
+      menu.popUpAtHand(@firstContainerMenu())
     else
       @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
 
   openEditMenu: ->
-    menu = new MenuMorph @
-    menu.addItem "save", @, "save", "accept changes"
+    menu = new MenuMorph(false)
+    menu.addItem "save", true, @, "save", "accept changes"
     menu.addLine()
-    menu.addItem "add property...", @, "addPropertyPopout"
-    menu.addItem "rename...", @, "renamePropertyPopout"
-    menu.addItem "remove", @, "removeProperty"
-    menu.popUpAtHand()
+    menu.addItem "add property...", true, @, "addPropertyPopout"
+    menu.addItem "rename...", true, @, "renamePropertyPopout"
+    menu.addItem "remove", true, @, "removeProperty"
+    menu.popUpAtHand(@firstContainerMenu())
 
 
   filterProperties: (staticProperties, targetOwnMethods)->

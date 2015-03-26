@@ -118,7 +118,12 @@ class WorldMorph extends FrameMorph
   @KEYPAD_0_mappedToThaiKeyboard_Q: "ย"
   @KEYPAD_DOT_mappedToThaiKeyboard_R: "พ"
 
+  morphsDetectingClickOutsideMeOrAnyOfMeChildren: []
+  hierarchyOfClickedMorphs: []
   markedForDestruction: []
+  freshlyCreatedMenus: []
+  openMenus: []
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -155,7 +160,6 @@ class WorldMorph extends FrameMorph
     @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
-    @activeMenu = null
     @activeHandle = null
     @inputDOMElementForVirtualKeyboard = null
 
@@ -171,6 +175,27 @@ class WorldMorph extends FrameMorph
 
     @changed()
     @updateBackingStore()
+
+  mostRecentlyCreatedMenu: ->
+    mostRecentMenu = null
+    mostRecentMenuID = -1
+
+    # we have to check which menus
+    # are actually open, because
+    # the destroy() function used
+    # everywhere is not recursive and
+    # that's where we update the @openMenus
+    # array so we have to doublecheck here
+    # note how we examine the array in reverse order
+    # because we might delete its elements
+    for i in [(@openMenus.length-1).. 0] by -1
+      if !@openMenus[i].isAttachedAnywhereToWorld()
+        @openMenus.splice i, 1
+
+    for eachMenu in @openMenus
+      if eachMenu.instanceNumericID >= mostRecentMenuID
+        mostRecentMenu = eachMenu
+    return mostRecentMenu
 
   # see roundNumericIDsToNextThousand method in
   # Morph for an explanation of why we need this
@@ -793,64 +818,52 @@ class WorldMorph extends FrameMorph
 
     super()
 
-
-  # WorldMorph menu:
-  unfocusMenu: (menuToBeUnfocuses) ->
-    # there might be another menu
-    # being spawned already has a
-    # menu entry was selected so
-    # let's check before setting
-    # that there is no active menu
-    if @activeMenu == menuToBeUnfocuses
-      @activeMenu = null
-
-
   contextMenu: ->
     if @isDevMode
-      menu = new MenuMorph(
-        @, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+      menu = new MenuMorph(false, 
+        @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuMorph(@, "Morphic")
+      menu = new MenuMorph(false, @, true, true, "Morphic")
     if @isDevMode
-      menu.addItem "demo...", @, "popUpDemoMenu", "sample morphs"
+      menu.addItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
-      menu.addItem "show all", @, "showAllMinimised"
-      menu.addItem "hide all", @, "minimiseAll"
-      menu.addItem "delete all", @, "destroyAll"
-      menu.addItem "move all inside", @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
-      menu.addItem "inspect", @, "inspect", "open a window on\nall properties"
-      menu.addItem "test menu", @, "testMenu", "debugging and testing operations"
+      menu.addItem "show all", true, @, "showAllMinimised"
+      menu.addItem "hide all", true, @, "minimiseAll"
+      menu.addItem "delete all", true, @, "destroyAll"
+      menu.addItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addItem "inspect", true, @, "inspect", "open a window on\nall properties"
+      menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
       menu.addLine()
-      menu.addItem "restore display", @, "changed", "redraw the\nscreen once"
-      menu.addItem "fit whole page", @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
-      menu.addItem "color...", @, "popUpColorSetter", "choose the World's\nbackground color"
+      menu.addItem "restore display", true, @, "changed", "redraw the\nscreen once"
+      menu.addItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
+      menu.addItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
       if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addItem "touch screen settings", WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
+        menu.addItem "touch screen settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
+        menu.addItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
     if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-      menu.addItem "system tests...", @, "popUpSystemTestsMenu", ""
+      menu.addItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
-      menu.addItem "switch to user mode", @, "toggleDevMode", "disable developers'\ncontext menus"
+      menu.addItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
-      menu.addItem "switch to dev mode", @, "toggleDevMode"
-    menu.addItem "about Zombie Kernel...", @, "about"
+      menu.addItem "switch to dev mode", true, @, "toggleDevMode"
+    menu.addItem "about Zombie Kernel...", true, @, "about"
     menu
 
   popUpSystemTestsMenu: ->
-    menu = new MenuMorph(@, "system tests")
+    menu = new MenuMorph(false, @, true, true, "system tests")
 
-    menu.addItem "run system tests", @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
-    menu.addItem "start test recording", @systemTestsRecorderAndPlayer, "startTestRecording", "start recording a test"
-    menu.addItem "stop test recording", @systemTestsRecorderAndPlayer, "stopTestRecording", "stop recording the test"
-    menu.addItem "(re)play recorded test", @systemTestsRecorderAndPlayer, "startTestPlaying", "start playing the test"
-    menu.addItem "show test source", @systemTestsRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
-    menu.addItem "save recorded test", @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
-    menu.addItem "save failed screenshots test", @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots test"
+    menu.addItem "run system tests", true, @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addItem "start test recording", true, @systemTestsRecorderAndPlayer, "startTestRecording", "start recording a test"
+    menu.addItem "stop test recording", true, @systemTestsRecorderAndPlayer, "stopTestRecording", "stop recording the test"
+    menu.addItem "(re)play recorded test", true, @systemTestsRecorderAndPlayer, "startTestPlaying", "start playing the test"
+    menu.addItem "show test source", true, @systemTestsRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
+    menu.addItem "save recorded test", true, @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
+    menu.addItem "save failed screenshots test", true, @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots test"
 
-    menu.popUpAtHand()
+    menu.popUpAtHand(@firstContainerMenu())
 
   create: (aMorph) ->
     aMorph.isDraggable = true
@@ -971,51 +984,51 @@ class WorldMorph extends FrameMorph
     @create newMorph
 
 
-  popUpDemoMenu: ->
-    menu = new MenuMorph(@, "make a morph")
-    menu.addItem "rectangle", @, "createNewRectangleMorph"
-    menu.addItem "box", @, "createNewBoxMorph"
-    menu.addItem "circle box", @, "createNewCircleBoxMorph"
+  popUpDemoMenu: (a,b,c,d) ->
+    menu = new MenuMorph(false, @, true, true, "make a morph")
+    menu.addItem "rectangle", true, @, "createNewRectangleMorph"
+    menu.addItem "box", true, @, "createNewBoxMorph"
+    menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
     menu.addLine()
-    menu.addItem "slider", @, "createNewSliderMorph"
-    menu.addItem "frame", @, "createNewFrameMorph"
-    menu.addItem "scroll frame", @, "createNewScrollFrameMorph"
-    menu.addItem "canvas", @, "createNewCanvas"
-    menu.addItem "handle", @, "createNewHandle"
+    menu.addItem "slider", true, @, "createNewSliderMorph"
+    menu.addItem "frame", true, @, "createNewFrameMorph"
+    menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
+    menu.addItem "canvas", true, @, "createNewCanvas"
+    menu.addItem "handle", true, @, "createNewHandle"
     menu.addLine()
-    menu.addItem "string", @, "createNewString"
+    menu.addItem "string", true, @, "createNewString"
     # this is "The Lorelei" poem (From German).
     # see translation here:
     # http://poemsintranslation.blogspot.co.uk/2009/11/heinrich-heine-lorelei-from-german.html
-    menu.addItem "text", @, "createNewText"
-    menu.addItem "speech bubble", @, "createNewSpeechBubbleMorph"
+    menu.addItem "text", true, @, "createNewText"
+    menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
     menu.addLine()
-    menu.addItem "gray scale palette", @, "createNewGrayPaletteMorph"
-    menu.addItem "color palette", @, "createNewColorPaletteMorph"
-    menu.addItem "color picker", @, "createNewColorPickerMorph"
+    menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+    menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
+    menu.addItem "color picker", true, @, "createNewColorPickerMorph"
     menu.addLine()
-    menu.addItem "sensor demo", @, "createNewSensorDemo"
-    menu.addItem "animation demo", @, "createNewAnimationDemo"
-    menu.addItem "pen", @, "createNewPenMorph"
+    menu.addItem "sensor demo", true, @, "createNewSensorDemo"
+    menu.addItem "animation demo", true, @, "createNewAnimationDemo"
+    menu.addItem "pen", true, @, "createNewPenMorph"
       
     menu.addLine()
-    menu.addItem "Layout tests", @, "layoutTestsMenu", "sample morphs"
+    menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
     menu.addLine()
-    menu.addItem "view all...", @, "viewAll"
-    menu.addItem "closing window", @, "closingWindow"
+    menu.addItem "view all...", true, @, "viewAll"
+    menu.addItem "closing window", true, @, "closingWindow"
     
-    menu.popUpAtHand()
+    menu.popUpAtHand(a.firstContainerMenu())
 
-  layoutTestsMenu: ->
+  layoutTestsMenu: (morphTriggeringThis) ->
     create = (aMorph) =>
       aMorph.isDraggable = true
       aMorph.pickUp()
-    menu = new MenuMorph(@, "Layout tests")
-    menu.addItem "test1", LayoutMorph, "test1"
-    menu.addItem "test2", LayoutMorph, "test2"
-    menu.addItem "test3", LayoutMorph, "test3"
-    menu.addItem "test4", LayoutMorph, "test4"
-    menu.popUpAtHand()
+    menu = new MenuMorph(false, @, true, true, "Layout tests")
+    menu.addItem "test1", true, LayoutMorph, "test1"
+    menu.addItem "test2", true, LayoutMorph, "test2"
+    menu.addItem "test3", true, LayoutMorph, "test3"
+    menu.addItem "test4", true, LayoutMorph, "test4"
+    menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
   
   toggleDevMode: ->
@@ -1096,7 +1109,7 @@ class WorldMorph extends FrameMorph
     # display a slider for numeric text entries
     val = parseFloat(@aStringMorphOrTextMorph.text)
     val = 0  if isNaN(val)
-    menu = new MenuMorph()
+    menu = new MenuMorph(false)
     slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")
     slider.alpha = 1
     slider.color = new Color(225, 225, 225)
