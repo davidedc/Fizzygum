@@ -592,7 +592,7 @@ class SystemTestsRecorderAndPlayer
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
 
 
-  testFileContentCreator: (commands) ->
+  testMetadataFileContentCreator: ->
     # these here below is just one string
     # spanning multiple lines, which
     # includes the testName and commands
@@ -612,7 +612,6 @@ class SystemTestsRecorderAndPlayer
     # we are working on right now.
     testToBeSerialized.testGroup = "00: current tests / 00: unused / 00: unused"
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
-    testToBeSerialized.testCommandsSequence = commands
 
     """
   // This system test is automatically
@@ -624,6 +623,28 @@ class SystemTestsRecorderAndPlayer
   var SystemTest_#{@testName};
 
   SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialized, null, 4)};
+    """
+
+  testCommandsFileContentCreator: (commands) ->
+    # these here below is just one string
+    # spanning multiple lines, which
+    # includes the testName and commands
+    # in the right places.
+
+    testToBeSerialized = {}
+    testToBeSerialized.testCommandsSequence = commands
+    testNameExtended = @testName + "_testCommands"
+
+    """
+  // This system test is automatically
+  // created.
+  // This test (and related reference images)
+  // can be copied in the /src/tests folder
+  // to make them available in the testing
+  // environment.
+  var SystemTest_#{testNameExtended};
+
+  SystemTest_#{testNameExtended} = #{JSON.stringify(testToBeSerialized, null, 4)};
     """
 
   saveFailedScreenshots: ->
@@ -726,9 +747,14 @@ class SystemTestsRecorderAndPlayer
 
 
   saveTest: ->
-    blob = @testFileContentCreator window.world.systemTestsRecorderAndPlayer.testCommandsSequence
     zip = new JSZip()
+
+    blob = @testMetadataFileContentCreator()
     zip.file("SystemTest_#{@testName}.js", blob);
+
+    blob = @testCommandsFileContentCreator window.world.systemTestsRecorderAndPlayer.testCommandsSequence
+    testNameExtended = @testName + "_testCommands"
+    zip.file("SystemTest_#{testNameExtended}.js", blob);
     
     # save all the images, each as a .png and .js file
     # the png is for quick browsing, while the js contains
