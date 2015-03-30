@@ -760,7 +760,7 @@ class SystemTestsRecorderAndPlayer
 
   loadTest: (testNumber, andThenDoThis)->
     script = document.createElement('script')
-    script.src = "js/tests/"+@testsList()[testNumber] + ".js"
+    script.src = "js/tests/"+@testsList()[testNumber] + "_testCommands.js"
 
     script.onload = =>
       @loadImagesOfTest andThenDoThis
@@ -769,11 +769,11 @@ class SystemTestsRecorderAndPlayer
 
   loadImagesOfTest: (andThenDoThis)->
 
-    for eachCommand in window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
+    for eachCommand in window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in SystemTestsRecorderAndPlayer.testsAssetsManifest
-          if eachAssetInManifest.indexOf(pureImageName) != -1         
+          if eachAssetInManifest.indexOf(pureImageName) != -1
             script = document.createElement('script')
             ###
             systemInfo = new SystemTestsSystemInfo()
@@ -801,18 +801,57 @@ class SystemTestsRecorderAndPlayer
   testsList: ->
     return SystemTestsRecorderAndPlayer.testsManifest
 
+  loadTestMetadata: (testNumber, andThen)->
+
+    if testNumber >= @testsList().length
+      andThen()
+      return
+
+    script = document.createElement('script')
+    script.src = "js/tests/"+@testsList()[testNumber] + ".js"
+
+    script.onload = =>
+      @loadTestMetadata(testNumber+1, andThen)
+
+    document.head.appendChild script
+
+
+  loadTestsMetadata: (andThen) ->
+    @loadTestMetadata 0, andThen
+
   runNextSystemTest: ->
     @indexOfSystemTestBeingPlayed++
     if @indexOfSystemTestBeingPlayed >= @testsList().length
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "finished all tests"
       return
+    # Here we load the test dynamically,
+    # by injecting a script that loads the js files
+    # with the data. Better this than loading
+    # all the tests data at once, we might only
+    # need a few tests rather than all of them.
     @loadTest @indexOfSystemTestBeingPlayed, =>
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
-      @testCommandsSequence = window[@testsList()[@indexOfSystemTestBeingPlayed]].testCommandsSequence
+      @testCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
       @startTestPlaying()
 
   runAllSystemTests: ->
+    # we proceed here to FIRST load all the
+    # metadata of all the tests, then
+    # one by one as needed we need the testCommands
+    # and the assets.
+
+    # First name the callback that starts the
+    # running of the tests after the metadata
+    # of all the tests is loaded.
+    actuallyRunTheTests = \
+      =>
+        @playingAllSystemTests = true
+        @indexOfSystemTestBeingPlayed = -1
+        @runNextSystemTest()
+
+    # load the metadata of all the tests
+    # and pass the callback to be run
+    # when all the metadata is loaded.
+    @loadTestsMetadata(actuallyRunTheTests)
     console.log "System tests: " + @testsList()
-    @playingAllSystemTests = true
-    @indexOfSystemTestBeingPlayed = -1
-    @runNextSystemTest()
+

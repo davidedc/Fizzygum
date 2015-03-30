@@ -148,6 +148,8 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           # as explained here:
           # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
+          if filename.endswith("_testCommands"):
+            continue
           filenames2.append(os.path.join(filename))
           print("%s" % (filename))
     filenames2 = sorted(filenames2)
