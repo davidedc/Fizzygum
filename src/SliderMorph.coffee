@@ -66,6 +66,11 @@ class SliderMorph extends CircleBoxMorph
     @size / @rangeSize()
   
   unitSize: ->
+    # might happen in phase of deserialization that
+    # the button reference here is still a string
+    # so skip in that case
+    if !(@button? and @button instanceof SliderButtonMorph)
+      return 1
     if @orientation is "vertical"
       return (@height() - @button.height()) / @rangeSize()
     else

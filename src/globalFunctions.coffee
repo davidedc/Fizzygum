@@ -72,9 +72,20 @@ Array.prototype.deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones
 
   return cloneOfMe
 
-##########################################################
+## -------------------------------------------------------
+
+getParameterByName = (name) ->
+  name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
+  regex = new RegExp('[\\?&]' + name + '=([^&#]*)')
+  results = regex.exec(location.search)
+  if results?
+    return decodeURIComponent(results[1].replace(/\+/g, ' '))
+  else
+    return ''
+
+## -------------------------------------------------------
 # These two methods are for mixins
-##########################################################
+## -------------------------------------------------------
 # adds klass properties
 Object.prototype.augmentWith = (obj) ->
   for key, value of obj when key not in MixedClassKeywords
@@ -89,7 +100,7 @@ Object.prototype.addInstanceProperties= (obj) ->
     @::[key] = value
   obj.included?.apply(@)
   this
-################# end of mixins methods ##################
+##--------------- end of mixins methods -------------------
 
 
 arrayShallowCopy = (anArray) ->

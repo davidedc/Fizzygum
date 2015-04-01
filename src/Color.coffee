@@ -177,6 +177,18 @@ class Color
   # Color string representation: e.g. 'rgba(255,165,0,1)'
   toString: ->
     "rgba(" + Math.round(@r) + "," + Math.round(@g) + "," + Math.round(@b) + "," + @a + ")"
+
+
+  prepareBeforeSerialization: ->
+    @className = @constructor.name
+    @classVersion = "0.0.1"
+    @serializerVersion = "0.0.1"
+    for property of @
+      if @[property]?
+        if typeof @[property] == 'object'
+          if !@[property].className?
+            if @[property].prepareBeforeSerialization?
+              @[property].prepareBeforeSerialization()
   
   # Color copying:
   copy: ->

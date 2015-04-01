@@ -17,6 +17,17 @@ class Point
   # Point string representation: e.g. '12@68'
   toString: ->
     Math.round(@x) + "@" + Math.round(@y)
+
+  prepareBeforeSerialization: ->
+    @className = @constructor.name
+    @classVersion = "0.0.1"
+    @serializerVersion = "0.0.1"
+    for property of @
+      if @[property]?
+        if typeof @[property] == 'object'
+          if !@[property].className?
+            if @[property].prepareBeforeSerialization?
+              @[property].prepareBeforeSerialization()
   
   # Point copying:
   copy: ->

@@ -21,6 +21,18 @@ class Rectangle
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
+
+
+  prepareBeforeSerialization: ->
+    @className = @constructor.name
+    @classVersion = "0.0.1"
+    @serializerVersion = "0.0.1"
+    for property of @
+      if @[property]?
+        if typeof @[property] == 'object'
+          if !@[property].className?
+            if @[property].prepareBeforeSerialization?
+              @[property].prepareBeforeSerialization()
   
   # Rectangle copying:
   copy: ->

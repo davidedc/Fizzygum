@@ -79,6 +79,7 @@ class SystemTestsRecorderAndPlayer
   imageDataOfAParticularMorph: null
   lastMouseDownCommand: null
   lastMouseUpCommand: null
+  selectedTestsBasedOnTags: []
 
 
   constructor: (@worldMorph, @handMorph) ->
@@ -859,6 +860,51 @@ class SystemTestsRecorderAndPlayer
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
       @testCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
       @startTestPlaying()
+
+  # Select tests based on test names, or tags, or special
+  # tag "all" to select them all.
+  #
+  # Examples to try from cosole:
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow"]);
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble"]);
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow", "bubble"]);
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["all"]);
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
+  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble", "SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
+
+  selectTestsFromTagsOrTestNames: (wantedTagsOrNamesArray) ->
+    # we proceed here to FIRST load all the
+    # metadata of all the tests, then
+    # we check the tags.
+
+    # First name the callback that doest the
+    # tags/names checks after the metadata
+    # of all the tests is loaded.
+    selectTheTestsBasedOnTags = \
+      =>
+        @selectedTestsBasedOnTags = []
+        for eachTest in @testsList()
+          for eachWantedTagOrName in wantedTagsOrNamesArray
+            # special tag/name "all" matches all the tests
+            if eachWantedTagOrName == "all"
+              if (@selectedTestsBasedOnTags.indexOf eachTest) < 0
+                @selectedTestsBasedOnTags.push eachTest
+              continue
+            if eachWantedTagOrName == eachTest
+              if (@selectedTestsBasedOnTags.indexOf eachTest) < 0
+                @selectedTestsBasedOnTags.push eachTest
+              continue
+            if (window[eachTest].tags.indexOf eachWantedTagOrName) >= 0
+              if (@selectedTestsBasedOnTags.indexOf eachTest) < 0
+                @selectedTestsBasedOnTags.push eachTest
+              continue
+
+        console.log @selectedTestsBasedOnTags
+
+    # load the metadata of all the tests
+    # and pass the callback to be run
+    # when all the metadata is loaded.
+    @loadTestsMetadata(selectTheTestsBasedOnTags)
 
   runAllSystemTests: ->
     # we proceed here to FIRST load all the
