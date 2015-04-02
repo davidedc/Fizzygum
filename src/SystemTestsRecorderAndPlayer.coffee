@@ -84,6 +84,8 @@ class SystemTestsRecorderAndPlayer
   numberOfGroups: 1
   groupToBeRun: 0
 
+  atLeastOneTestHasBeenRun: false
+  allTestsPassedSoFar: true
 
   constructor: (@worldMorph, @handMorph) ->
 
@@ -338,6 +340,8 @@ class SystemTestsRecorderAndPlayer
         stringOfItemsInCurrentMenuInOriginalOrder.push eachMenuItem[0]
     else
       console.log "FAIL was expecting a menu under the pointer"
+      @allTestsPassedSoFar = false
+      document.body.style.background = "red"
       if SystemTestsControlPanelUpdater?
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
       @stopTestPlaying()
@@ -360,8 +364,12 @@ class SystemTestsRecorderAndPlayer
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
         if orderMatters
+          @allTestsPassedSoFar = false
+          document.body.style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         else
+          @allTestsPassedSoFar = false
+          document.body.style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -417,6 +425,8 @@ class SystemTestsRecorderAndPlayer
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
+        @allTestsPassedSoFar = false
+        document.body.style.background = "red"
         errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -552,6 +562,8 @@ class SystemTestsRecorderAndPlayer
    # we should have seen)
    message = "FAIL - no screenshots like this one"
    console.log message
+   @allTestsPassedSoFar = false
+   document.body.style.background = "red"
    if SystemTestsControlPanelUpdater?
      SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
@@ -590,6 +602,7 @@ class SystemTestsRecorderAndPlayer
 
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
+    @atLeastOneTestHasBeenRun = true
     @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
     @ongoingTestPlayingTask = (=> @replayTestCommands())

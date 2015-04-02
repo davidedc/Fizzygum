@@ -198,6 +198,9 @@ class WorldMorph extends FrameMorph
   # this one contains two actions, two tests each, but only
   # the second test is run for the second group.
   # file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22bubble%22%5D%0D%0A++++%7D%2C%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22shadow%22%2C+%22SystemTest_basicResize%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+2%2C%0D%0A++++++%22groupToBeRun%22%3A+1%0D%0A++++%7D++%5D%0D%0A%7D
+  #
+  # just one simple quick test about shadows
+  #file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
 
   nextStartupAction: ->
     startupActions = JSON.parse(getParameterByName('startupActions'))
@@ -207,6 +210,10 @@ class WorldMorph extends FrameMorph
     if WorldMorph.ongoingUrlActionNumber == startupActions.actions.length
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber= 0
+      if window.location.href.indexOf("worldWithSystemTestHarness") != -1
+        if @systemTestsRecorderAndPlayer.atLeastOneTestHasBeenRun
+          if @systemTestsRecorderAndPlayer.allTestsPassedSoFar
+            document.body.style.background = "green"
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
