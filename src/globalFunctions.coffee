@@ -72,6 +72,12 @@ Array.prototype.deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones
 
   return cloneOfMe
 
+Array::chunk = (chunkSize) ->
+  array = this
+  [].concat.apply [], array.map((elem, i) ->
+    if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
+  )
+
 ## -------------------------------------------------------
 
 getParameterByName = (name) ->
@@ -81,7 +87,7 @@ getParameterByName = (name) ->
   if results?
     return decodeURIComponent(results[1].replace(/\+/g, ' '))
   else
-    return ''
+    return null
 
 ## -------------------------------------------------------
 # These two methods are for mixins

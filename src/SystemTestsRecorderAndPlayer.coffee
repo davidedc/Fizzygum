@@ -81,6 +81,9 @@ class SystemTestsRecorderAndPlayer
   lastMouseUpCommand: null
   selectedTestsBasedOnTags: []
 
+  numberOfGroups: 1
+  groupToBeRun: 0
+
 
   constructor: (@worldMorph, @handMorph) ->
 
@@ -790,13 +793,13 @@ class SystemTestsRecorderAndPlayer
     script.src = "js/tests/"+@testsList()[testNumber] + "_testCommands.js"
 
     script.onload = =>
-      @loadImagesOfTest andThenDoThis
+      @loadImagesOfTest testNumber, andThenDoThis
 
     document.head.appendChild script
 
-  loadImagesOfTest: (andThenDoThis)->
+  loadImagesOfTest: (testNumber, andThenDoThis)->
 
-    for eachCommand in window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
+    for eachCommand in window[(@testsList()[testNumber])+ "_testCommands"].testCommandsSequence
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in SystemTestsRecorderAndPlayer.testsAssetsManifest
@@ -826,16 +829,26 @@ class SystemTestsRecorderAndPlayer
 
 
   testsList: ->
-    return SystemTestsRecorderAndPlayer.testsManifest
+    preselectionBeforeSplittingGroups = null
+    if @selectedTestsBasedOnTags.length != 0
+      preselectionBeforeSplittingGroups = @selectedTestsBasedOnTags
+    else
+      preselectionBeforeSplittingGroups = SystemTestsRecorderAndPlayer.testsManifest
+
+    console.log "tests list before partitioning and picking: " + preselectionBeforeSplittingGroups
+
+    console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.floor(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+
+    return preselectionBeforeSplittingGroups.chunk(Math.floor(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
   loadTestMetadata: (testNumber, andThen)->
 
-    if testNumber >= @testsList().length
+    if testNumber >= SystemTestsRecorderAndPlayer.testsManifest.length
       andThen()
       return
 
     script = document.createElement('script')
-    script.src = "js/tests/"+@testsList()[testNumber] + ".js"
+    script.src = "js/tests/" + SystemTestsRecorderAndPlayer.testsManifest[testNumber] + ".js"
 
     script.onload = =>
       @loadTestMetadata(testNumber+1, andThen)
@@ -850,6 +863,7 @@ class SystemTestsRecorderAndPlayer
     @indexOfSystemTestBeingPlayed++
     if @indexOfSystemTestBeingPlayed >= @testsList().length
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "finished all tests"
+      world.nextStartupAction()
       return
     # Here we load the test dynamically,
     # by injecting a script that loads the js files
@@ -873,6 +887,7 @@ class SystemTestsRecorderAndPlayer
   # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble", "SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
 
   selectTestsFromTagsOrTestNames: (wantedTagsOrNamesArray) ->
+    console.log "selectTestsFromTagsOrTestNames"
     # we proceed here to FIRST load all the
     # metadata of all the tests, then
     # we check the tags.
@@ -883,7 +898,7 @@ class SystemTestsRecorderAndPlayer
     selectTheTestsBasedOnTags = \
       =>
         @selectedTestsBasedOnTags = []
-        for eachTest in @testsList()
+        for eachTest in SystemTestsRecorderAndPlayer.testsManifest
           for eachWantedTagOrName in wantedTagsOrNamesArray
             # special tag/name "all" matches all the tests
             if eachWantedTagOrName == "all"
@@ -907,6 +922,8 @@ class SystemTestsRecorderAndPlayer
     @loadTestsMetadata(selectTheTestsBasedOnTags)
 
   runAllSystemTests: ->
+    console.log "runAllSystemTests"
+
     # we proceed here to FIRST load all the
     # metadata of all the tests, then
     # one by one as needed we need the testCommands
@@ -925,5 +942,5 @@ class SystemTestsRecorderAndPlayer
     # and pass the callback to be run
     # when all the metadata is loaded.
     @loadTestsMetadata(actuallyRunTheTests)
-    console.log "System tests: " + @testsList()
+    console.log "Running system tests: " + @testsList()
 

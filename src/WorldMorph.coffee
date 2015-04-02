@@ -124,6 +124,13 @@ class WorldMorph extends FrameMorph
   freshlyCreatedMenus: []
   openMenus: []
 
+  # boot-up state machine
+  @BOOT_COMPLETE: 2
+  @EXECUTING_URL_ACTIONS: 1
+  @JUST_STARTED: 0
+  @bootState: 0
+  @ongoingUrlActionNumber: 0
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -175,6 +182,52 @@ class WorldMorph extends FrameMorph
 
     @changed()
     @updateBackingStore()
+
+  boot: ->
+    # boot-up state machine
+    console.log "booting"
+    WorldMorph.bootState = WorldMorph.JUST_STARTED
+    WorldMorph.ongoingUrlActionNumber= 0
+    startupActions = getParameterByName('startupActions');
+    console.log "startupActions: " + startupActions
+    if startupActions?
+      @nextStartupAction()
+
+  # some test urls:
+
+  # this one contains two actions, two tests each, but only
+  # the second test is run for the second group.
+  # file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22bubble%22%5D%0D%0A++++%7D%2C%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22shadow%22%2C+%22SystemTest_basicResize%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+2%2C%0D%0A++++++%22groupToBeRun%22%3A+1%0D%0A++++%7D++%5D%0D%0A%7D
+
+  nextStartupAction: ->
+    startupActions = JSON.parse(getParameterByName('startupActions'))
+
+    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
+
+    if WorldMorph.ongoingUrlActionNumber == startupActions.actions.length
+      WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
+      WorldMorph.ongoingUrlActionNumber= 0
+
+    if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
+      return
+
+    currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
+    if currentAction.name == "runTests"
+      @systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
+
+      if currentAction.numberOfGroups?
+        @systemTestsRecorderAndPlayer.numberOfGroups = currentAction.numberOfGroups
+      else
+        @systemTestsRecorderAndPlayer.numberOfGroups = 1
+      if currentAction.groupToBeRun?
+        @systemTestsRecorderAndPlayer.groupToBeRun = currentAction.groupToBeRun
+      else
+        @systemTestsRecorderAndPlayer.groupToBeRun = 0
+
+      @systemTestsRecorderAndPlayer.runAllSystemTests()
+    WorldMorph.ongoingUrlActionNumber++
+
+
 
   mostRecentlyCreatedMenu: ->
     mostRecentMenu = null
