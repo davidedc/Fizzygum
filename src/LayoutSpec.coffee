@@ -160,7 +160,7 @@ class LayoutSpec
   setFixedOrMorphHeight: (aNumber) ->
     # aNumber is taken as the fixed height to use.
     # No proportional part.
-    if fixedHeight?
+    if @fixedHeight?
       @fixedHeight = aNumber
     else
       @morph.setHeight aNumber
