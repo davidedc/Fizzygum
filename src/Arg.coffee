@@ -71,7 +71,7 @@ class Arg
   # calculation that we are going to do
   getSignatureOrCustomSignatureOfWrappedVal: () ->
     if @args.customSignatureMethod?
-      theValSignature = @args.customSignatureMethod valWrappedByThisArg
+      theValSignature = @args.customSignatureMethod @valWrappedByThisArg
     else
       theValSignature = @valWrappedByThisArg.lastCalculatedValContent.signature
       if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
@@ -209,7 +209,7 @@ class Arg
   markForRemoval: () ->
     @markedForRemoval = true
     @turnIntoArgNotDirectlyNorIndirectlyDependingOnParent()
-    @morphContainingThisArg.argMightHaveChanged(valWrappedByThisArg)
+    @morphContainingThisArg.argMightHaveChanged(@valWrappedByThisArg)
 
   unmarkForRemoval: () ->
     @markedForRemoval = false

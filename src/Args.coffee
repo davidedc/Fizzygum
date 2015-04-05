@@ -56,7 +56,7 @@ class Args
   ################################################
 
   healAll: () ->
-    for eachArg of argsMaybeChangedSinceLastCalculationById
+    for eachArg of @argsMaybeChangedSinceLastCalculationById
       eachArg.heal()
 
 
