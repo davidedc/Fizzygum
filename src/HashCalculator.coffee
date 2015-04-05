@@ -12,6 +12,7 @@ class HashCalculator
   namedClasses[@name] = @prototype
 
   @calculateHash: (theString) ->
+      hash = 0
       return hash  if theString.length is 0
 
       for i in [0...theString.length]
