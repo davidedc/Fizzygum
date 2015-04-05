@@ -174,7 +174,7 @@ class ScrollFrameMorph extends FrameMorph
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  adjustContentsBounds: (aPoint) ->
+  adjustContentsBounds: ->
     # if FrameMorph is of type isTextLineWrapping
     # it means that you don't want the TextMorph to
     # extend indefinitely as you are typing. Rather,
