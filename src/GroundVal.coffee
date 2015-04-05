@@ -106,7 +106,7 @@ class GroundVal
     unstainedArg = @args.getByVal unstainedArgVal
     # this might recursively un-stain other values
     # depending on this value
-    stainingArg.turnIntoArgNotDirectlyNorIndirectlyDependingOnParent()
+    unstainedArg.turnIntoArgNotDirectlyNorIndirectlyDependingOnParent()
 
 
   # this is the only type of val that we
