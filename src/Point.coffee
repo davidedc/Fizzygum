@@ -120,9 +120,9 @@ class Point
     tan = @y / @x
     theta = Math.atan(tan)
     if @x >= 0
-      return degrees(theta)  if @y >= 0
-      return 360 + (degrees(theta))
-    180 + degrees(theta)
+      return radiansToDegrees(theta)  if @y >= 0
+      return 360 + (radiansToDegrees(theta))
+    180 + radiansToDegrees(theta)
   
   theta: ->
     #
@@ -130,14 +130,14 @@ class Point
     #    Right is 0, down is 90
     #
     if @x is 0
-      return radians(90)  if @y >= 0
-      return radians(270)
+      return degreesToRadians(90)  if @y >= 0
+      return degreesToRadians(270)
     tan = @y / @x
     theta = Math.atan(tan)
     if @x >= 0
       return theta  if @y >= 0
-      return radians(360) + theta
-    radians(180) + theta
+      return degreesToRadians(360) + theta
+    degreesToRadians(180) + theta
   
   
   # Point functions:
@@ -166,10 +166,10 @@ class Point
       deg = deg - 360
     else deg = deg + 360  if deg < -270
     if -90 <= deg and deg <= 90
-      x = Math.sin(radians(deg)) * dist
+      x = Math.sin(degreesToRadians(deg)) * dist
       y = Math.sqrt((dist * dist) - (x * x))
       return new @constructor(x + @x, @y - y)
-    x = Math.sin(radians(180 - deg)) * dist
+    x = Math.sin(degreesToRadians(180 - deg)) * dist
     y = Math.sqrt((dist * dist) - (x * x))
     new @constructor(x + @x, @y + y)
   

@@ -155,7 +155,7 @@ class StringMorph extends Morph
     x = startX or 0
     isFirst = true
     ctx.fillStyle = @blanksColor.toString()
-    ctx.arc space / 2, blank.height / 2, space / 2, radians(0), radians(360)
+    ctx.arc space / 2, blank.height / 2, space / 2, degreesToRadians(0), degreesToRadians(360)
     ctx.fill()
 
     # render my text inserting blanks

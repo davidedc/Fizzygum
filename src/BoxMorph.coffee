@@ -128,13 +128,13 @@ class BoxMorph extends Morph
     w = @width()
     h = @height()
     # top left:
-    context.arc offset, offset, radius, radians(-180), radians(-90), false
+    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90), false
     # top right:
-    context.arc w - offset, offset, radius, radians(-90), radians(-0), false
+    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0), false
     # bottom right:
-    context.arc w - offset, h - offset, radius, radians(0), radians(90), false
+    context.arc w - offset, h - offset, radius, degreesToRadians(0), degreesToRadians(90), false
     # bottom left:
-    context.arc offset, h - offset, radius, radians(90), radians(180), false
+    context.arc offset, h - offset, radius, degreesToRadians(90), degreesToRadians(180), false
 
   cornerSizePopout: (menuItem)->
     @prompt menuItem.parent.title + "\ncorner\nsize:",

@@ -175,10 +175,10 @@ isString = (target) ->
 isObject = (target) ->
   target? and (typeof target is "object" or target instanceof Object)
 
-radians = (degrees) ->
+degreesToRadians = (degrees) ->
   degrees * Math.PI / 180
 
-degrees = (radians) ->
+radiansToDegrees = (radians) ->
   radians * 180 / Math.PI
 
 fontHeight = (height) ->

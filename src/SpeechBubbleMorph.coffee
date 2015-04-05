@@ -118,19 +118,19 @@ class SpeechBubbleMorph extends BoxMorph
     # console.log "bubble outlinePath"
     circle = (x, y, r) ->
       context.moveTo x + r, y
-      context.arc x, y, r, radians(0), radians(360)
+      context.arc x, y, r, degreesToRadians(0), degreesToRadians(360)
     offset = radius + inset
     w = @width()
     h = @height()
 
     # top left:
-    context.arc offset, offset, radius, radians(-180), radians(-90), false
+    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90), false
 
     # top right:
-    context.arc w - offset, offset, radius, radians(-90), radians(-0), false
+    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0), false
 
     # bottom right:
-    context.arc w - offset, h - offset - radius, radius, radians(0), radians(90), false
+    context.arc w - offset, h - offset - radius, radius, degreesToRadians(0), degreesToRadians(90), false
     unless @isThought # draw speech bubble hook
       if @isPointingRight
         context.lineTo offset + radius, h - offset
@@ -140,7 +140,7 @@ class SpeechBubbleMorph extends BoxMorph
         context.lineTo w - (offset + radius), h - offset
 
     # bottom left:
-    context.arc offset, h - offset - radius, radius, radians(90), radians(180), false
+    context.arc offset, h - offset - radius, radius, degreesToRadians(90), degreesToRadians(180), false
 
     if @isThought
       # close large bubble:
