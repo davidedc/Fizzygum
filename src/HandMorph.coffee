@@ -149,7 +149,7 @@ class HandMorph extends Morph
     if !@children.length
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
-      aMorph.prepareToBeGrabbed @  if aMorph.prepareToBeGrabbed
+      aMorph.prepareToBeGrabbed? @
       @add aMorph
       # you must add the shadow
       # after the morph has been added
