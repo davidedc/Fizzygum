@@ -849,7 +849,7 @@ class Morph extends MorphicNode
       0,
       0,
       fullExtentOfMorph.width() * pixelRatio,
-      fullExtentOfMorph.height() * pixelRatio,
+      fullExtentOfMorph.height() * pixelRatio
 
     return destCanvas.toDataURL "image/png"
 
