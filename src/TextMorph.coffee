@@ -49,7 +49,7 @@ class TextMorph extends StringMorph
     ) ->
 
       super(text, @fontSize, @fontStyle, @isBold, @isItalic, null, shadowOffset, @shadowColor,null,fontName)
-      # override inherited properites:
+      # override inherited properties:
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       @text = text or ((if text is "" then text else "TextMorph"))
@@ -357,7 +357,7 @@ class TextMorph extends StringMorph
    
   # this is set by the inspector. It tells the TextMorph
   # that any following doSelection/showSelection/inspectSelection action needs to be
-  # done apropos a particural obj
+  # done apropos a particular obj
   setReceiver: (obj) ->
     @receiver = obj
     @customContextMenu = @evaluationMenu

@@ -8,7 +8,7 @@
 # window.world.systemTestsRecorderAndPlayer.startTestPlaying()
 
 # How to inspect the screenshot differences:
-# after having playes a test with some failing screenshots
+# after having played a test with some failing screenshots
 # comparisons:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
 # window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots()

@@ -62,7 +62,7 @@ class StringMorph extends Morph
 
     super()
 
-    # override inherited properites:
+    # override inherited properties:
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
 
@@ -167,7 +167,7 @@ class StringMorph extends Morph
         x += context.measureText(word).width
   
   
-  # StringMorph mesuring:
+  # StringMorph measuring:
   slotCoordinates: (slot) ->
     # answer the position point of the given index ("slot")
     # where the caret should be placed

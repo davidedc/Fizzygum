@@ -179,7 +179,7 @@ _sequenceType = false
 
 ###
 loop through the f keys, f1 to f19 and add them to the map
-programatically
+programmatically
 ###
 i = 1
 while i < 20
@@ -323,7 +323,7 @@ _eventModifiers = (e) ->
 actually calls the callback function
 
 if your callback function returns false this will use the jquery
-convention - prevent default and stop propogation on the event
+convention - prevent default and stop propagation on the event
 
 @param {Function} callback
 @param {Event} e

@@ -1,4 +1,4 @@
-# A small harner to run tests around reactive values.
+# A small harness to run tests around reactive values.
 # To run these, just open console and type
 #   ReactiveValuesTests.runTests()
 
