@@ -156,7 +156,7 @@ class LayoutMorph extends Morph
 
   # this is the symmetric of the previous method
   layoutSubmorphsVerticallyIn: (boundsForLayout) ->
-    usableHeight boundsTop boundsRight t |
+    # usableHeight boundsTop boundsRight t |
     xSep = @xSeparation()
     ySep = @ySeparation()
     usableWidth = boundsForLayout.height() - ((@children.length + 1) * ySep)
