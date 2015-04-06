@@ -159,7 +159,7 @@ class LayoutMorph extends Morph
     # usableHeight boundsTop boundsRight t |
     xSep = @xSeparation()
     ySep = @ySeparation()
-    usableWidth = boundsForLayout.height() - ((@children.length + 1) * ySep)
+    usableHeight = boundsForLayout.height() - ((@children.length + 1) * ySep)
     sumOfFixed = 0
     @children.forEach (child) =>
       if child.layoutSpec?
@@ -335,11 +335,11 @@ class LayoutMorph extends Morph
 
   addMorphs: (morphs) ->
     morphs.forEach (morph) =>
-      @addMorphProportionalWidth(m,1)
+      @addMorphProportionalWidth(morph,1)
 
   addMorphsWidthProportionalTo: (morphs, widths) ->
     morphs.forEach (morph) =>
-      @addMorphProportionalWidth(m,w)
+      @addMorphProportionalWidth(morph, widths)
 
   # unclear how to translate this one for the time being
   is: (aSymbol) ->
