@@ -163,8 +163,8 @@ class Args
     # check whether you are reconnecting
     # an arg that was temporarily
     # disconnected
-    argumentToBeConnected = @tryToReconnectDisconnectedArgFirst childVal
-    argumentToBeConnected ?= new Arg childVal, valDependingOnParentVal
+    argumentToBeConnected = @tryToReconnectDisconnectedArgFirst parentVal
+    argumentToBeConnected ?= new Arg parentVal, valDependingOnParentVal
     argumentToBeConnected.directlyCalculatedFromParent = true
     argumentToBeConnected.turnIntoArgDirectlyOrIndirectlyDependingOnParent()
 
