@@ -91,7 +91,7 @@ class Arg
 
   # an Argument of this value has notified its change
   # but we want to check, based on either its default
-  # signature or a custom signature, wether its
+  # signature or a custom signature, whether its
   # value changed from when we calculated this value
   # the last time. Following this check, we might
   # "heal"/break the value and potentially
@@ -104,7 +104,7 @@ class Arg
     # the unique identifier of a val is given by
     # its name as a string and the id of the Morph it
     # belongs to. For localVals this is ever so slightly
-    # inneficient as you could always index them through
+    # inefficient as you could always index them through
     # an integer, which would be faster, but probably
     # the improvement would be "in the noise".
     signatureOfArgUsedInLastCalculation =
@@ -202,7 +202,7 @@ class Arg
   ################################################
 
   # we don't completely destroy the argument
-  # (lieke removeFromArgs does)
+  # (like removeFromArgs does)
   # for the simple reason that we do need to
   # remember its signature when the value
   # was last calculated.

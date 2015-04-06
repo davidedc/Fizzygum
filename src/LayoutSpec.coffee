@@ -10,7 +10,7 @@
 # Any Morph can be given a LayoutSpec, but in order to honor it,
 # its owner must be a LayoutMorph.
 
-# A LayoutSpec specifies how a morph wants to be layed out.
+# A LayoutSpec specifies how a morph wants to be laid out.
 # It can specify either a fixed width or a fraction of some
 # available owner width. Same goes for height. If a fraction
 # is specified, a minimum extent is also possible.

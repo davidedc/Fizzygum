@@ -89,7 +89,7 @@ class HandMorph extends Morph
     # these three are checks and actions that normally
     # would happen on MouseDown event, but we
     # removed that event as we collapsed the down and up
-    # into this colasesced higher-level event,
+    # into this coalesced higher-level event,
     # but we still need to make these checks and actions
     @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
@@ -163,7 +163,7 @@ class HandMorph extends Morph
       # Note that Morphs can specify the look
       # (i.e. offset blur and color)
       # of their shadow (e.g. Menus have a particular one
-      # so they all seem to float at a particular heght)
+      # so they all seem to float at a particular height)
       # but here when we grab morphs we
       # specify a particular look for the shadow.
       aMorph.addShadow(new Point(7,7),0.2)
@@ -364,7 +364,7 @@ class HandMorph extends Morph
             m.labelString == labelString
           # this method below is also going to remove
           # the mouse down/up commands that have
-          # recently/jsut been added.
+          # recently/just been added.
           @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
           alreadyRecordedLeftOrRightClickOnMenuItem = true
 
@@ -442,13 +442,13 @@ class HandMorph extends Morph
     # when the user clicks outside of them or their children)
     # so we need to do a shallow copy to avoid to mangle the for loop
     morphsDetectingClickOutsideMeOrAnyOfMeChildren = arrayShallowCopy world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-    for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
-      if (world.hierarchyOfClickedMorphs.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren) < 0
+    for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
+      if (world.hierarchyOfClickedMorphs.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) < 0
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if (world.freshlyCreatedMenus.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren) < 0
-          if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
-            eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTehirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
+        if (world.freshlyCreatedMenus.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) < 0
+          if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
+            eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: ->
     morph = @topMorphUnderPointer()

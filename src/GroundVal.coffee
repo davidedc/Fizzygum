@@ -68,7 +68,7 @@ class GroundVal
           console.log "... " + @valName  + " in morph "+ @ownerMorph.uniqueIDString() + " has some damaged inputs and wasn't damaged so need to propagate damage"
         @lastCalculatedValContentMaybeOutdated = true
         @notifyDependentParentOrLocalValsOfPotentialChange()
-    else # there are NO damanged args
+    else # there are NO damaged args
       if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
         console.log "... " + @valName  + " in morph "+ @ownerMorph.uniqueIDString() + " has NO damaged inputs"
       @heal()

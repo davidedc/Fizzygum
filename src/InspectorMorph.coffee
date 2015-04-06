@@ -86,7 +86,7 @@ class InspectorMorph extends BoxMorph
     # format element: [color, predicate(element]
     
     staticProperties = Object.getOwnPropertyNames(@target.constructor)
-    # get rid of all the standar fuff properties that are in classes
+    # get rid of all the standard fuff properties that are in classes
     staticProperties = staticProperties.filter((prop) =>
         prop not in ["name","length","prototype","caller","__super__","arguments"]
     )

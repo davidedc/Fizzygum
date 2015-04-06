@@ -13,18 +13,18 @@ class MenuMorph extends BoxMorph
   label: null
   isListContents: false
   killThisMenuIfClickOnDescendantsTriggers: true
-  killThisMenuIfClickOtsideDescendants: true
+  killThisMenuIfClickOutsideDescendants: true
   tempPromptEntryField: null
 
-  constructor: (@isListContents = false, @target, @killThisMenuIfClickOtsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
+  constructor: (@isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
     @items = []
     # console.log "menu super"
     if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
-      if @killThisMenuIfClickOtsideDescendants
-        @onClickOutsideMeOrAnyOfMeChildren("destroy")
+      if @killThisMenuIfClickOutsideDescendants
+        @onClickOutsideMeOrAnyOfMyChildren("destroy")
     @isDraggable = true
     super()
 
@@ -45,12 +45,12 @@ class MenuMorph extends BoxMorph
       @markForDestruction()
 
   isPinned: ->
-    return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOtsideDescendants)
+    return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOutsideDescendants)
 
   pin: ->
     @killThisMenuIfClickOnDescendantsTriggers = false
-    @killThisMenuIfClickOtsideDescendants = false
-    @onClickOutsideMeOrAnyOfMeChildren null
+    @killThisMenuIfClickOutsideDescendants = false
+    @onClickOutsideMeOrAnyOfMyChildren null
     world.add @
 
   # StringMorph menus:

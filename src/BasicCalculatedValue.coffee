@@ -72,7 +72,7 @@ class BasicCalculatedVal extends GroundVal
   # There is one exception: all args
   # that depend on a parent val (directly or indirectly)
   # never notify anybody. This is because if a parent had
-  # to notify all the directlty or indirectly connected
+  # to notify all the directly or indirectly connected
   # vals, in general it could be
   # very expensive, as for example there could be 50
   # children to notify (and they might to notify other

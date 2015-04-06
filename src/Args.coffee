@@ -8,15 +8,15 @@
 # REQUIRES ProfilerData
 
 class Args
-  # some accessors gere to get to the
+  # some accessors need to get to the
   # actual arguments. You can get to all
   # of them by Id of the Value
-  # or, in the care of an argument connected
+  # or, in the case of an argument connected
   # to a parent morph, by the value name
   # (since there is only one Arg connected
   # to the parent for each value name, which is
   # not the case for children Args as
-  # onviously you may have many children and hence
+  # obviously you may have many children and hence
   # many arguments)
   argById: null
   parentArgByName: null
@@ -113,7 +113,7 @@ class Args
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar][@valContainingTheseArgs.valName] = @valContainingTheseArgs
 
   ################################################
-  #  argument connenction methods
+  #  argument connection methods
   #  these are called when Morphs are moved
   #  around so we need to connect/disconnect
   #  the arguments of each value to/from the

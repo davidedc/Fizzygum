@@ -7,7 +7,7 @@
 # It's important to note that this layer
 # knows nothing about visibility, targets,
 # image buffers, dirty rectangles, events.
-# Please no invokations to changed or fullChanged
+# Please no invocations to changed or fullChanged
 # or updateBackingStore in here, and no
 # touching of any of the out-of-scope properties
 # mentioned.
@@ -338,7 +338,7 @@ class MorphicNode
     # the top one (the last one in the array)
     # and proceed to test "towards the back" i.e.
     # testing elements of the array towards 0
-    # If you find any morph satifies, the search is
+    # If you find any morph satisfying, the search is
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
@@ -359,7 +359,7 @@ class MorphicNode
     # the top one (the last one in the array)
     # and proceed to test "towards the back" i.e.
     # testing elements of the array towards 0
-    # If you find any child that satifies, the search is
+    # If you find any child that satisfies, the search is
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]

@@ -61,7 +61,7 @@ class LayoutMorph extends Morph
     return Color.transparent()
 
   # This sets how extra space is used when doing layout.
-  # For example, a column might have extra , unneded
+  # For example, a column might have extra , un-needed
   # vertical space. #top means widgets are set close
   # to the top, and extra space is at bottom. Conversely,
   # #bottom means widgets are set close to the bottom,

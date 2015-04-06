@@ -293,7 +293,7 @@ class Morph extends MorphicNode
     # remove callback when user clicks outside
     # me or any of my children
     console.log "****** destroying morph"
-    @onClickOutsideMeOrAnyOfMeChildren null
+    @onClickOutsideMeOrAnyOfMyChildren null
 
     if @parent?
       @fullChanged()
@@ -621,7 +621,7 @@ class Morph extends MorphicNode
     @changed()
     @silentUpdateBackingStore()
     # to do you might be smarter here and ask the silentUpdateBackingStore
-    # method whether a) there was any change at all and b) whethere only
+    # method whether a) there was any change at all and b) whether only
     # the buffer changed and not the bounds (in which case only one changed()
     # is needed)
     @changed()
@@ -1066,9 +1066,9 @@ class Morph extends MorphicNode
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     if copiedMorph instanceof MenuMorph
-      copiedMorph.onClickOutsideMeOrAnyOfMeChildren(null)
+      copiedMorph.onClickOutsideMeOrAnyOfMyChildren(null)
       copiedMorph.killThisMenuIfClickOnDescendantsTriggers = false
-      copiedMorph.killThisMenuIfClickOtsideDescendants = false
+      copiedMorph.killThisMenuIfClickOutsideDescendants = false
 
     return copiedMorph
 
@@ -1093,7 +1093,7 @@ class Morph extends MorphicNode
 
 
   deserialize: (serializationString) ->
-    # this is to ingnore all the comment strings
+    # this is to ignore all the comment strings
     # that might be there for reading purposes
     objectsSerializations = serializationString.split(/^\/\/.*$/gm)
     # the serialization ends with a comment so
@@ -1209,13 +1209,13 @@ class Morph extends MorphicNode
   mouseClickLeft: ->
     @bringToForegroud()
 
-  onClickOutsideMeOrAnyOfMeChildren: (functionName, arg1, arg2, arg3)->
+  onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
       @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
       if (world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @) < 0
         world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.push @
     else
-      console.log "****** onClickOutsideMeOrAnyOfMeChildren removing element"
+      console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       index = world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @
       if index >= 0
         world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.splice index, 1
