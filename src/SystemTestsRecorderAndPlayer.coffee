@@ -339,7 +339,8 @@ class SystemTestsRecorderAndPlayer
       for eachMenuItem in menuAtPointer.items
         stringOfItemsInCurrentMenuInOriginalOrder.push eachMenuItem[0]
     else
-      console.log "FAIL was expecting a menu under the pointer"
+      errorMessage = "FAIL was expecting a menu under the pointer"
+      console.log errorMessage
       @allTestsPassedSoFar = false
       document.body.style.background = "red"
       if SystemTestsControlPanelUpdater?
