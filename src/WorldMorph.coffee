@@ -1080,9 +1080,6 @@ class WorldMorph extends FrameMorph
     menu.popUpAtHand(a.firstContainerMenu())
 
   layoutTestsMenu: (morphTriggeringThis) ->
-    create = (aMorph) =>
-      aMorph.isDraggable = true
-      aMorph.pickUp()
     menu = new MenuMorph(false, @, true, true, "Layout tests")
     menu.addItem "test1", true, LayoutMorph, "test1"
     menu.addItem "test2", true, LayoutMorph, "test2"

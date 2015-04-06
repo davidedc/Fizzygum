@@ -359,7 +359,6 @@ class HandMorph extends Morph
         mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
         if mostRecentlyCreatedMenu == menuItemMorph.parent
           labelString = menuItemMorph.labelString
-          morphSpawningTheMenu = menuItemMorph.parent.parent
           occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
             m.labelString == labelString
           # this method below is also going to remove

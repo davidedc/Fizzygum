@@ -1476,7 +1476,6 @@ class Morph extends MorphicNode
 
   developersMenu: ->
     # 'name' is not an official property of a function, hence:
-    world = (if @world instanceof Function then @world() else (@root() or @world))
     userMenu = @userMenu() or (@parent and @parent.userMenu())
     menu = new MenuMorph(false, 
       @,

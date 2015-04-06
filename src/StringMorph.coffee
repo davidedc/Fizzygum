@@ -338,9 +338,6 @@ class StringMorph extends Morph
   edit: ->
     @root().edit @
 
-  editViaMenu: ->
-    @root().editViaMenu @
-  
   selection: ->
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
