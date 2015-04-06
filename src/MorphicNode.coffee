@@ -163,6 +163,7 @@ class MorphicNode
   allLeafsBottomToTop: ->
     if @children.length == 0
       return [@]
+    result = []
     @children.forEach (child) ->
       result = result.concat(child.allLeafsBottomToTop())
     return result
