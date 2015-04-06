@@ -192,11 +192,13 @@ class Args
     else if !arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent == @morphContainingTheseArgs
       # argsMaybeChangedSinceLastCalculation not contains kid and kid is now child
       # ???
-      add the data structures and mark it as dirty and signature undefined
+      # add the data structures and mark it as dirty and signature undefined
+      nop
     else if !arg.maybeChangedSinceLastCalculation and childValThatMightHaveChanged.ownerMorph.parent != @morphContainingTheseArgs
       # argsMaybeChangedSinceLastCalculation not contains kid and not child
       # ???
-      this should never happen
+      # this should never happen
+      nop
     if !@valContainingTheseArgs.directlyOrIndirectlyDependsOnAParentVal
       @valContainingTheseArgs.checkAndPropagateChangeBasedOnArgChange()
 
