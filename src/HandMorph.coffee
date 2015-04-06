@@ -207,7 +207,7 @@ class HandMorph extends Morph
 
       @children = []
       @setExtent new Point()
-      morphToDrop.justDropped @  if morphToDrop.justDropped
+      morphToDrop.justDropped? @
       target.reactToDropOf morphToDrop, @  if target.reactToDropOf
       @dragOrigin = null
   
@@ -678,13 +678,13 @@ class HandMorph extends Morph
     #
     @mouseOverList.forEach (old) =>
       unless contains(mouseOverNew, old)
-        old.mouseLeave()  if old.mouseLeave
-        old.mouseLeaveDragging()  if old.mouseLeaveDragging and @mouseButton
+        old.mouseLeave?()
+        old.mouseLeaveDragging?()  if @mouseButton
 
     mouseOverNew.forEach (newMorph) =>
       unless contains(@mouseOverList, newMorph)
-        newMorph.mouseEnter()  if newMorph.mouseEnter
-        newMorph.mouseEnterDragging()  if newMorph.mouseEnterDragging and @mouseButton
+        newMorph.mouseEnter?()
+        newMorph.mouseEnterDragging?()  if @mouseButton
 
       # autoScrolling support:
       if @children.length

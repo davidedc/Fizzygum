@@ -356,7 +356,7 @@ class WorldMorph extends FrameMorph
       @worldCanvas.height = clientHeight
       @setHeight clientHeight
     @children.forEach (child) =>
-      child.reactToWorldResize @bounds.copy()  if child.reactToWorldResize
+      child.reactToWorldResize? @bounds.copy()
   
   
   
