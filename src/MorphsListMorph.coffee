@@ -28,7 +28,7 @@ class MorphsListMorph extends BoxMorph
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
-    attribs = []
+    @attribs = []
 
     # remove existing panes
     @destroyAll()

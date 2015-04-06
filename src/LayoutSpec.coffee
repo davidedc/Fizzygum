@@ -169,7 +169,7 @@ class LayoutSpec
   setFixedOrMorphWidth: (aNumber) ->
     # aNumber is taken as the fixed width to use.
     # No proportional part.
-    if fixedWidth?
+    if @fixedWidth?
       @fixedWidth = aNumber
     else
       @morph.setWidth aNumber

@@ -179,7 +179,7 @@ class LayoutMorph extends Morph
     usableWidth = boundsForLayout.width() - Math.max(2*xSep,0)
     boundsBottom = boundsForLayout.bottom()
     boundsLeft = boundsForLayout.left()
-    for i in [children.length-1 .. 0]
+    for i in [@children.length-1 .. 0]
       m = @children[i]
       # major direction
       h = heights[i]
