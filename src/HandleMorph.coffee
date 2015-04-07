@@ -160,6 +160,15 @@ class HandleMorph extends Morph
   mouseLeave: ->
     @image = @normalImage
     @changed()
+
+  makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
+    @isDraggable = false
+    @target = morphAttachedTo
+    @target.add @
+    @updateResizerHandlePosition()
+
+    @updateBackingStore()
+    @noticesTransparentClick = true
   
     
   # HandleMorph menu:
@@ -168,11 +177,7 @@ class HandleMorph extends Morph
     menu = new MenuMorph(false, @, true, true, "choose target:")
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50) + " ➜", false, @, ->
-          @isDraggable = false
-          @target = each
-          @updateBackingStore()
-          @noticesTransparentClick = true
+        menu.addItem each.toString().slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', null,null,null,null,null,each
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
