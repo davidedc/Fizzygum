@@ -60,6 +60,7 @@ class SystemTestsRecorderAndPlayer
   collectedFailureImages: [] # array of SystemTestsReferenceImage
   testName: ''
   testDescription: 'no description'
+  testTags: ['noTags']
   @loadedImages: {}
   ongoingTestPlayingTask: null
   timeOfPreviouslyPlayedCommand: 0
@@ -106,7 +107,7 @@ class SystemTestsRecorderAndPlayer
     console.log "deleting SystemTest_#{@testName}"
     delete window["SystemTest_#{@testName}"]
   
-  startTestRecording: (ignored, ingnored2, @testName, @testDescription) ->
+  startTestRecording: (ignored, ingnored2, @testName, @testDescription, @testTags) ->
 
     # if test name not provided, then
     # prompt the user for it
@@ -114,6 +115,10 @@ class SystemTestsRecorderAndPlayer
       @testName = prompt("Please enter a test name", "test1")
     if not @testDescription?
       @testDescription = prompt("Please enter a test description", "no description")
+    if not @testTags?
+      @testTags = prompt("Please enter test tags separated by commas", "noTags")
+      @testTags = @testTags.replace(/[ ]+/g, "")
+      @testTags = @testTags.split(",");
 
     # if you choose the same name
     # of a previously loaded tests,
@@ -629,6 +634,7 @@ class SystemTestsRecorderAndPlayer
     # quickly cause they are about stuff
     # we are working on right now.
     testToBeSerialized.testGroup = "00: current tests / 00: unused / 00: unused"
+    testToBeSerialized.tags = @testTags
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
 
     """
