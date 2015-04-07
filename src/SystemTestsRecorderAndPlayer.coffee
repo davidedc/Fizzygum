@@ -90,10 +90,7 @@ class SystemTestsRecorderAndPlayer
 
   constructor: (@worldMorph, @handMorph) ->
 
-  # clear any test with the same name
-  # that might be loaded
-  # and all the images related to it
-  clearAnyDataRelatedToTest: (testName) ->
+  clearCommandSeqAndImagesRelatedToTest: (testName) ->
     # we assume that no-one is going to
     # write a tests with more than
     # 100 reference images/screenshots
@@ -102,10 +99,21 @@ class SystemTestsRecorderAndPlayer
       # multiple screenshots for different browser/os
       # configuration, we are clearing the variable
       # containing the array
-      console.log "deleting SystemTest_#{@testName}_image_#{imageNumber}"
-      delete SystemTestsRecorderAndPlayer.loadedImages["SystemTest_#{@testName}_image_#{imageNumber}"]
-    console.log "deleting SystemTest_#{@testName}"
-    delete window["SystemTest_#{@testName}"]
+      console.log "deleting #{testName}_image_#{imageNumber}"
+      delete SystemTestsRecorderAndPlayer.loadedImages["#{testName}_image_#{imageNumber}"]
+    console.log "deleting SystemTest_#{testName}"
+    window["#{testName}" + "_testCommands"] = null
+    delete window["#{testName}" + "_testCommands"]
+
+  # clear any test with the same name
+  # that might be loaded
+  # and all the images related to it
+  clearAnyDataRelatedToTest: (testName) ->
+    # we assume that no-one is going to
+    # write a tests with more than
+    # 100 reference images/screenshots
+    @clearCommandSeqAndImagesRelatedToTest testName
+    delete window["#{testName}"]
   
   startTestRecording: (ignored, ingnored2, @testName, @testDescription, @testTags) ->
 
@@ -151,6 +159,7 @@ class SystemTestsRecorderAndPlayer
     @worldMorph.initEventListeners()
     
     @indexOfTestCommandBeingPlayedFromSequence = 0
+    @clearCommandSeqAndImagesRelatedToTest @testsList()[@indexOfSystemTestBeingPlayed]
 
     if @playingAllSystemTests
       @runNextSystemTest()
