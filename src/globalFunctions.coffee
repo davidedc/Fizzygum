@@ -99,6 +99,15 @@ fade = (eid, initOp, finalOp, TimeToFade, time) ->
   return
 
 ## -------------------------------------------------------
+# de-camelize
+# taken from https://github.com/sindresorhus/decamelize/blob/master/index.js
+
+decamelize = (str, sep) ->
+  if (typeof str) != 'string'
+    throw new TypeError('Expected a string')
+  str.replace(/([a-z\d])([A-Z])/g, '$1' + (sep or '_') + '$2').toLowerCase()
+
+## -------------------------------------------------------
 
 getParameterByName = (name) ->
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')

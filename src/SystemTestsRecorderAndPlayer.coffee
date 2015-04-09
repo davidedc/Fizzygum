@@ -646,8 +646,15 @@ class SystemTestsRecorderAndPlayer
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
+
     testName = @testsList()[@indexOfSystemTestBeingPlayed]
-    testTitleAndDescription.innerHTML =  testName + "<br><br><small>" + window["#{testName}"].description + "</small>"
+    presentableTestName = testName.replace(/SystemTest_/g, "")
+    presentableTestName = decamelize presentableTestName, " "
+    presentableTestName = presentableTestName.charAt(0).toUpperCase() + presentableTestName.slice(1)
+    presentableTestName = '"' + presentableTestName + '"'
+    testTitleAndDescription.innerHTML =  presentableTestName
+    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>(#{testName})</small>"
+    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>" + window["#{testName}"].description + "</small>"
     setTimeout \
       =>
         fade('testTitleAndDescription', 1, 0, 2000, new Date().getTime());        
