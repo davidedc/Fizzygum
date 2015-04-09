@@ -238,9 +238,9 @@ class MenuMorph extends BoxMorph
   
   maxWidth: ->
     w = 0
-    if @parent instanceof FrameMorph
-      if @parent.scrollFrame instanceof ScrollFrameMorph
-        w = @parent.scrollFrame.width()    
+    #if @parent instanceof FrameMorph
+    #  if @parent.scrollFrame instanceof ScrollFrameMorph
+    #    w = @parent.scrollFrame.width()    
     @children.forEach (item) ->
       if (item instanceof MenuItemMorph)
         w = Math.max(w, item.children[0].width() + 8)
