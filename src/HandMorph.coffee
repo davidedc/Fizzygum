@@ -40,8 +40,10 @@ class HandMorph extends Morph
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@bounds.origin) and
-        !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
-        (not m.isTransparentAt(@bounds.origin))) and (m not instanceof ShadowMorph)
+        !m.isMinimised and
+        m.isVisible and
+        (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and
+        (m not instanceof ShadowMorph)
     if result?
       return result
     else

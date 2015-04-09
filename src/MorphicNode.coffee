@@ -150,7 +150,7 @@ class MorphicNode
   # Also note that there is a more elegant implementation where
   # we just use @allChildrenBottomToTop() but that would mean to create
   # all the intermediary arrays with also all the unneeded node elements,
-  # there is not need.
+  # there is no need for that.
   # This is the simplest and cheapest way to visit all Morphs in
   # a tree of morphs.
   forAllChildrenBottomToTop: (aFunction) ->
@@ -320,12 +320,14 @@ class MorphicNode
     return null  unless @parent
     @parent.parentThatIsAnyOf constructors
 
-  # There is a simpler implementation that is also
-  # slower where you first collect all the children
-  # from top to bottom and then do the test on each
-  # But this more efficient - we don't need to
-  # create that entire list to start with, we just
-  # navigate through the children arrays.
+  # There would be another, simpler, implementation
+  # which is also slower, where you first collect all
+  # the children from top to bottom and then do the
+  # test on each. But this is more efficient - we don't
+  # need to create that entire list to start with, we
+  # just navigate through the children arrays depth-first
+  # (in reverse order though, see below)
+  # and stop at the first morph that satisfies the test.
   topMorphSuchThat: (predicate) ->
     # base case - I am a leaf child, so I just test
     # the predicate on myself and return myself
