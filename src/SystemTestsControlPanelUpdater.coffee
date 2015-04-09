@@ -104,8 +104,53 @@ class SystemTestsControlPanelUpdater
     @addLink "alt+z: check menu entries (any order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
     @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
     @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
-    
 
+
+    # add the div with the fake mouse pointer
+    mousePointerIndicator = document.createElement('div')
+    mousePointerIndicator.id = "mousePointerIndicator"
+    mousePointerIndicator.style.cssText = 'position: absolute; display:none;'
+    document.body.appendChild(mousePointerIndicator)
+    elem = document.createElement("img");
+    elem.setAttribute("src", "icons/xPointerImage.png");
+    document.getElementById("mousePointerIndicator").appendChild(elem);
+
+    # add the div highlighting the state of the
+    # left mouse button
+    leftMouseButtonIndicator = document.createElement('div')
+    leftMouseButtonIndicator.id = "leftMouseButtonIndicator"
+    leftMouseButtonIndicator.style.cssText = 'position: absolute; left: 10px; top: 45px;'
+    document.body.appendChild(leftMouseButtonIndicator)
+    elem = document.createElement("img");
+    elem.setAttribute("src", "icons/leftButtonPressed.png");
+    document.getElementById("leftMouseButtonIndicator").appendChild(elem);
+    fade('leftMouseButtonIndicator', 1, 0, 10, new Date().getTime());
+
+    # add the div highlighting the state of the
+    # right mouse button
+    rightMouseButtonIndicator = document.createElement('div')
+    rightMouseButtonIndicator.id = "rightMouseButtonIndicator"
+    rightMouseButtonIndicator.style.cssText = 'position: absolute; left: 10px; top: 45px;'
+    document.body.appendChild(rightMouseButtonIndicator)
+    elem = document.createElement("img");
+    elem.setAttribute("src", "icons/rightButtonPressed.png");
+    document.getElementById("rightMouseButtonIndicator").appendChild(elem);
+    fade('rightMouseButtonIndicator', 1, 0, 10, new Date().getTime());
+
+    # add the div highlighting the percentage progress of the test
+    testProgressIndicator = document.createElement('div')
+    testProgressIndicator.id = "testProgressIndicator"
+    testProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 10px; font-size: xx-large; font-family: sans-serif;'
+    document.body.appendChild(testProgressIndicator)
+    fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
+
+    # add the div with title and description of the test
+    testTitleAndDescription = document.createElement('div')
+    testTitleAndDescription.id = "testTitleAndDescription"
+    testTitleAndDescription.style.cssText = 'position: absolute; left: 10px; top: 10px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 700px; height: 500px; padding: 50px; color: white;'
+    document.body.appendChild(testTitleAndDescription)
+    fade('testTitleAndDescription', 1, 0, 10, new Date().getTime());
+    #testTitleAndDescription.innerHTML = "Test asdasdasdasdasdakjhdasdasdasd"
 
 
     

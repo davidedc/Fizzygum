@@ -80,6 +80,26 @@ Array::chunk = (chunkSize) ->
 
 ## -------------------------------------------------------
 
+# utility function taken from:
+# http://blog.abhranil.net/2011/11/03/simplest-javascript-fade-animation/
+
+fade = (eid, initOp, finalOp, TimeToFade, time) ->
+  if initOp == 0
+    document.getElementById(eid).style.visibility = 'visible'
+  curTick = (new Date).getTime()
+  elapsedTicks = curTick - time
+  newOp = initOp + (finalOp - initOp) * elapsedTicks / TimeToFade
+  if Math.abs(newOp - initOp) > Math.abs(finalOp - initOp)
+    document.getElementById(eid).style.opacity = finalOp
+    if finalOp == 0
+      document.getElementById(eid).style.visibility = 'hidden'
+    return
+  document.getElementById(eid).style.opacity = newOp
+  setTimeout 'fade( \'' + eid + '\',' + initOp + ',' + finalOp + ',' + TimeToFade + ',' + time + ')', TimeToFade / 100
+  return
+
+## -------------------------------------------------------
+
 getParameterByName = (name) ->
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
   regex = new RegExp('[\\?&]' + name + '=([^&#]*)')

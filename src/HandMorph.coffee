@@ -71,8 +71,21 @@ class HandMorph extends Morph
 
     world.freshlyCreatedMenus = []
     if whichMouseButtonPressed == "left"
+      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+        fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+        setTimeout \
+          =>
+            fade('leftMouseButtonIndicator', 1, 0, 500, new Date().getTime())
+          , 100
+        
       itemToTrigger.mouseClickLeft()
     else if whichMouseButtonPressed == "right"
+      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+        fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+        setTimeout \
+          =>
+            fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime())
+          , 100
       @openContextMenuAtPointer itemToTrigger.children[0]
 
     if whichMouseButtonPressed == "left"
@@ -96,6 +109,13 @@ class HandMorph extends Morph
     @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+      setTimeout \
+        =>
+          fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime())
+        , 100
+    
     contextMenu = morphTheMenuIsAbout.contextMenu()
     while (not contextMenu) and morphTheMenuIsAbout.parent
       morphTheMenuIsAbout = morphTheMenuIsAbout.parent
@@ -270,6 +290,13 @@ class HandMorph extends Morph
   processMouseDown: (button, ctrlKey) ->
     @destroyTemporaries()
     @morphToGrab = null
+
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      if button is 2 or ctrlKey
+        fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+      else
+        fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+
     # check whether we are in the middle
     # of a drag/drop operation
     if @children.length
@@ -339,6 +366,13 @@ class HandMorph extends Morph
    # but adding it for consistency...
    processMouseUp: (button) ->
     actionAlreadyProcessed = false
+
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      if button is 2
+        fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime());
+      else
+        fade('leftMouseButtonIndicator', 1, 0, 500, new Date().getTime());
+
     morph = @topMorphUnderPointer()
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
@@ -617,6 +651,12 @@ class HandMorph extends Morph
     posInDocument = getDocumentPositionOf(@world.worldCanvas)
     pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
     @setPosition pos
+
+    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      mousePointerIndicator = document.getElementById('mousePointerIndicator')
+      mousePointerIndicator.style.display = 'block'
+      mousePointerIndicator.style.left = pos.x + 'px'
+      mousePointerIndicator.style.top = pos.y + 'px'
 
     # determine the new mouse-over-list.
     # Spacial multiplexing

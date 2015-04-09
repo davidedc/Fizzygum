@@ -35,6 +35,10 @@ if [ ! -d ../Zombie-Kernel-builds/latest/js ]; then
   mkdir ../Zombie-Kernel-builds/latest/js
 fi
 
+if [ ! -d ../Zombie-Kernel-builds/latest/icons ]; then
+  mkdir ../Zombie-Kernel-builds/latest/icons
+fi
+
 if [ ! -d ../Zombie-Kernel-builds/latest/js/libs ]; then
   mkdir ../Zombie-Kernel-builds/latest/js/libs
 fi
@@ -59,6 +63,9 @@ cp src/index.html ../Zombie-Kernel-builds/latest/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver\ submodule/FileSaver.js ../Zombie-Kernel-builds/latest/js/libs/
 cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js ../Zombie-Kernel-builds/latest/js/libs/
+
+# copy aux icon files
+cp auxiliary\ files/additional-icons/*.png ../Zombie-Kernel-builds/latest/icons/
 
 # the tests files are copied from a directory
 # structure so it's cleaner, but they

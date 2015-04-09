@@ -88,6 +88,9 @@ class SystemTestsRecorderAndPlayer
   atLeastOneTestHasBeenRun: false
   allTestsPassedSoFar: true
 
+  totalTime: 0
+  millisOfTestSoFar: 0
+
   constructor: (@worldMorph, @handMorph) ->
 
   clearCommandSeqAndImagesRelatedToTest: (testName) ->
@@ -148,8 +151,15 @@ class SystemTestsRecorderAndPlayer
   # to make this one a double-arrow
   stopTestPlaying: ->
     console.log "wrapping up the playing of the test"
+    
+    fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
+
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+
+    # hide indicator of mouse pointer
+    mousePointerIndicator = document.getElementById('mousePointerIndicator')
+    mousePointerIndicator.style.display = 'none'
     
     # There is a background interval that polls
     # to check whether it's time/condition to play
@@ -607,21 +617,41 @@ class SystemTestsRecorderAndPlayer
        # no image data of morph, so just wait
        return
    if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
-     console.log "running command: " + commandToBePlayed.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length
+     @millisOfTestSoFar += timeUntilNextCommand
+     console.log "running command: " + commandToBePlayed.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @totalTime
      window[commandToBePlayed.testCommandName].replayFunction.call @,@,commandToBePlayed
+     document.getElementById('testProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @totalTime)*100) + "%" + " complete"
      @timeOfPreviouslyPlayedCommand = timeNow
      @indexOfTestCommandBeingPlayedFromSequence++
      if @indexOfTestCommandBeingPlayedFromSequence == @testCommandsSequence.length
        console.log "stopping the test player"
        @stopTestPlaying()
 
+  calculateTotalTimeOfThisTest: ->
+    totalTime = 0
+    for eachCommand in @testCommandsSequence
+      if eachCommand.millisecondsSincePreviousCommand?
+        totalTime += eachCommand.millisecondsSincePreviousCommand
+    @totalTime = totalTime
+
+
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
     @atLeastOneTestHasBeenRun = true
     @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
+    @calculateTotalTimeOfThisTest()
+    @millisOfTestSoFar = 0
+    fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
+    fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
+    testName = @testsList()[@indexOfSystemTestBeingPlayed]
+    testTitleAndDescription.innerHTML =  testName + "<br><br><small>" + window["#{testName}"].description + "</small>"
+    setTimeout \
+      =>
+        fade('testTitleAndDescription', 1, 0, 2000, new Date().getTime());        
+      , 4000
 
 
   testMetadataFileContentCreator: ->
