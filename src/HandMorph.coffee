@@ -385,23 +385,26 @@ class HandMorph extends Morph
       # [TODO] you need to do some of this only if you
       # are recording a test, it's worth saving
       # these steps...
-      menuItemMorph = morph.parentThatIsA(MenuItemMorph)
-      if menuItemMorph
-        # we check whether the menuitem is actually part
-        # of an activeMenu. Keep in mind you could have
-        # detached a menuItem and placed it on any other
-        # morph so you need to ascertain that you'll
-        # find it in the activeMenu later on...
-        mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
-        if mostRecentlyCreatedMenu == menuItemMorph.parent
-          labelString = menuItemMorph.labelString
-          occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
-            m.labelString == labelString
-          # this method below is also going to remove
-          # the mouse down/up commands that have
-          # recently/just been added.
-          @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
-          alreadyRecordedLeftOrRightClickOnMenuItem = true
+      ignored = null
+      toDestructure = morph.parentThatIsA(MenuItemMorph)
+      if toDestructure?
+        [menuItemMorph, ignored]= toDestructure
+        if menuItemMorph
+          # we check whether the menuitem is actually part
+          # of an activeMenu. Keep in mind you could have
+          # detached a menuItem and placed it on any other
+          # morph so you need to ascertain that you'll
+          # find it in the activeMenu later on...
+          mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
+          if mostRecentlyCreatedMenu == menuItemMorph.parent
+            labelString = menuItemMorph.labelString
+            occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
+              m.labelString == labelString
+            # this method below is also going to remove
+            # the mouse down/up commands that have
+            # recently/just been added.
+            @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+            alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
       # possibility other than mouseButton being "left"

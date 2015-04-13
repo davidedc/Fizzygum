@@ -292,9 +292,11 @@ class MorphicNode
   # returns the first parent (going up from this node) that is of a particular class
   # (includes this particular node)
   # This is a subcase of "parentThatIsAnyOf".
-  parentThatIsA: (constructor) ->
+  parentThatIsA: (constructors...) ->
     # including myself
-    return @ if @ instanceof constructor
+    for eachConstructor in constructors
+      if @ instanceof eachConstructor
+        return [@, eachConstructor]
     return null  unless @parent
     @parent.parentThatIsA constructor
 
@@ -309,16 +311,6 @@ class MorphicNode
       return false
     return @parent.isADescendantOf theSupposedAncestorMorph
   
-  # returns the first parent (going up from this node) that belongs to a set
-  # of classes. (includes this particular node).
-  parentThatIsAnyOf: (constructors) ->
-    # including myself
-    constructors.forEach (each) =>
-      if @constructor is each
-        return @
-
-    return null  unless @parent
-    @parent.parentThatIsAnyOf constructors
 
   # There would be another, simpler, implementation
   # which is also slower, where you first collect all
