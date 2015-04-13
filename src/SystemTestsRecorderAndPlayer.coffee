@@ -903,9 +903,9 @@ class SystemTestsRecorderAndPlayer
 
     console.log "tests list before partitioning and picking: " + preselectionBeforeSplittingGroups
 
-    console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.floor(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+    console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
-    return preselectionBeforeSplittingGroups.chunk(Math.floor(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+    return preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
   loadTestMetadata: (testNumber, andThen)->
 
