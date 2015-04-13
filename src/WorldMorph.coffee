@@ -5,6 +5,7 @@
 # REQUIRES PreferencesAndSettings
 # REQUIRES Color
 # REQUIRES ProfilingDataCollector
+# REQUIRES SystemTestsControlPanelUpdater
 
 # The WorldMorph takes over the canvas on the page
 class WorldMorph extends FrameMorph
@@ -847,6 +848,7 @@ class WorldMorph extends FrameMorph
     # some tests might change the background
     # color of the world so let's reset it.
     @setColor(new Color(205, 205, 205))
+    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.resetWorldLink)
   
   # There is something special that the
   # "world" version of destroyAll does:

@@ -5,7 +5,7 @@
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
 # window.world.systemTestsRecorderAndPlayer.testCommandsSequence = NAMEOFTHETEST.testCommandsSequence
 # (e.g. window.world.systemTestsRecorderAndPlayer.testCommandsSequence = SystemTest_attachRectangleToPartsOfInspector.testCommandsSequence )
-# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
+# window.world.systemTestsRecorderAndPlayer.startTestPlayingWithSlideIntro()
 
 # How to inspect the screenshot differences:
 # after having played a test with some failing screenshots
@@ -23,7 +23,7 @@
 # ...do the test...
 # window.world.systemTestsRecorderAndPlayer.stopTestRecording()
 # if you want to verify the test on the spot:
-# window.world.systemTestsRecorderAndPlayer.startTestPlaying()
+# window.world.systemTestsRecorderAndPlayer.startTestPlayingWithSlideIntro()
 
 # For recording screenshot data at any time -
 # can be used for screenshot comparisons during the test:
@@ -120,7 +120,6 @@ class SystemTestsRecorderAndPlayer
     delete window["#{testName}"]
   
   startTestRecording: (ignored, ingnored2, @testName, @testDescription, @testTags) ->
-
     # if test name not provided, then
     # prompt the user for it
     if not @testName?
@@ -151,6 +150,7 @@ class SystemTestsRecorderAndPlayer
   # gonna use this in a callback so need
   # to make this one a double-arrow
   stopTestPlaying: ->
+    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.stopTestRec)
     console.log "wrapping up the playing of the test"
     
     fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
@@ -180,20 +180,25 @@ class SystemTestsRecorderAndPlayer
 
   turnOnAnimationsPacingControl: ->
     @constructor.animationsPacingControl = true
+    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.tieAnimations
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOnAnimationsPacingControl @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+
   turnOffAnimationsPacingControl: ->
     @constructor.animationsPacingControl = false
+    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.tieAnimations
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffAnimationsPacingControl @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+
   turnOnAlignmentOfMorphIDsMechanism: ->
     @constructor.alignmentOfMorphIDsMechanism = true
+    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.alignMorphIDs
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism @
     @testCommandsSequence.push systemTestCommand
@@ -201,6 +206,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOffAlignmentOfMorphIDsMechanism: ->
     @constructor.alignmentOfMorphIDsMechanism = false
+    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.alignMorphIDs
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffAlignmentOfMorphIDsMechanism @
     @testCommandsSequence.push systemTestCommand
@@ -208,6 +214,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOnHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = true
+    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideGeometry
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsGeometryInfoInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -215,6 +222,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOffHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = false
+    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideGeometry
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -222,6 +230,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOnHidingOfMorphsContentExtractInLabels: ->
     @constructor.hidingOfMorphsContentExtractInLabels = true
+    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideMorphContentExtracts
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsContentExtractInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -229,6 +238,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOffHidingOfMorphsContentExtractInLabels: ->
     @constructor.hidingOfMorphsContentExtractInLabels = false
+    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideMorphContentExtracts
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsContentExtractInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -236,6 +246,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOnHidingOfMorphsNumberIDInLabels: ->
     @constructor.hidingOfMorphsNumberIDInLabels = true
+    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideMorphIDs
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsNumberIDInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -243,6 +254,7 @@ class SystemTestsRecorderAndPlayer
 
   turnOffHidingOfMorphsNumberIDInLabels: ->
     @constructor.hidingOfMorphsNumberIDInLabels = false
+    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideMorphIDs
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
     systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels @
     @testCommandsSequence.push systemTestCommand
@@ -348,9 +360,11 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
 
   checkStringsOfItemsInMenuOrderImportant: (stringOfItemsInMenuInOriginalOrder) ->
+    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkMenuEntriesInOrder)
     @checkStringsOfItemsInMenu(stringOfItemsInMenuInOriginalOrder, true)
 
   checkStringsOfItemsInMenuOrderUnimportant: (stringOfItemsInMenuInOriginalOrder) ->
+    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkMenuEntriesNotInOrder)
     @checkStringsOfItemsInMenu(stringOfItemsInMenuInOriginalOrder, false)
 
   checkStringsOfItemsInMenu: (stringOfItemsInMenuInOriginalOrder, orderMatters) ->
@@ -432,6 +446,7 @@ class SystemTestsRecorderAndPlayer
         giveError()
 
   checkNumberOfItemsInMenu: (numberOfItems) ->
+    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkNumnberOfItems)
     if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
       menuAtPointer = @handMorph.menuAtPointer()
       console.log menuAtPointer
@@ -555,6 +570,8 @@ class SystemTestsRecorderAndPlayer
     expectedImage.src = expected.imageData
 
   compareScreenshots: (testNameWithImageNumber, screenshotTakenOfAParticularMorph = false) ->
+   SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.takeScreenshot)
+
    if screenshotTakenOfAParticularMorph
      console.log "comparing pic of a particular morph"
      # todo this seems broken, this image data is not
@@ -643,7 +660,6 @@ class SystemTestsRecorderAndPlayer
         totalTime += eachCommand.millisecondsSincePreviousCommand
     @totalTime = totalTime
 
-
   startTestPlaying: ->
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
     @atLeastOneTestHasBeenRun = true
@@ -651,9 +667,16 @@ class SystemTestsRecorderAndPlayer
     @worldMorph.removeEventListeners()
     @calculateTotalTimeOfThisTest()
     @millisOfTestSoFar = 0
-    fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
+
+
+  startTestPlayingWithSlideIntro: ->
+    @startTestPlaying()
+    @setUpIntroSlide()
+
+  setUpIntroSlide: ->
+    fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
 
     testName = @testsList()[@indexOfSystemTestBeingPlayed]
@@ -950,7 +973,7 @@ class SystemTestsRecorderAndPlayer
     @loadTest @indexOfSystemTestBeingPlayed, =>
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
       @testCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
-      @startTestPlaying()
+      @startTestPlayingWithSlideIntro()
 
   # Select tests based on test names, or tags, or special
   # tag "all" to select them all.

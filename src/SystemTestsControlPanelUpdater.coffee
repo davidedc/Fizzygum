@@ -18,24 +18,77 @@ class SystemTestsControlPanelUpdater
   SystemTestsControlPanelDiv: null
   @SystemTestsControlPanelOutputConsoleDiv: null
 
+  @resetWorldLink: null
+  @tieAnimations: null
+  @alignMorphIDs: null
+  @hideGeometry: null
+  @hideMorphContentExtracts: null
+  @hideMorphIDs: null
+  @takeScreenshot: null
+  @checkNumnberOfItems: null
+  @checkMenuEntriesInOrder: null
+  @checkMenuEntriesNotInOrder: null
+  @addTestComment: null
+  @stopTestRec: null
+
+  @highlightOnLink: (theElementName) ->
+    theElement = document.getElementById(theElementName + "On")
+    if theElement?
+      theElement.style.backgroundColor = 'red'
+    theElement = document.getElementById(theElementName + "Off")
+    if theElement?
+      theElement.style.backgroundColor = 'white'
+
+  @highlightOffLink: (theElementName) ->
+    theElement = document.getElementById(theElementName + "On")
+    if theElement?
+      theElement.style.backgroundColor = 'white'
+    theElement = document.getElementById(theElementName + "Off")
+    if theElement?
+      theElement.style.backgroundColor = 'red'
+
+
   @addMessageToSystemTestsConsole: (theText) ->
     SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML + theText + "</br>";
 
   @addMessageToTestCommentsConsole: (theText) ->
     SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML + theText + "</br>";
 
+  @blinkLink: (theId) ->
+    theElement = document.getElementById(theId)
+
+    if theElement?
+        theElement.style.backgroundColor = 'red'
+        setTimeout \
+          ->
+            theElement.style.backgroundColor = 'white'
+          , 100
+        setTimeout \
+          ->
+            theElement.style.backgroundColor = 'red'
+          , 200
+        setTimeout \
+          ->
+            theElement.style.backgroundColor = 'white'
+          , 300
+
+
   addLink: (theText, theFunction) ->
     aTag = document.createElement("a")
+    linkID = theText.replace(/[^a-zA-Z0-9]/g, "")
+    aTag.id = linkID
     aTag.setAttribute "href", "#"
     aTag.innerHTML = theText
     aTag.onclick = theFunction
     @SystemTestsControlPanelDiv.appendChild aTag
     br = document.createElement('br')
-    @SystemTestsControlPanelDiv.appendChild(br);
+    @SystemTestsControlPanelDiv.appendChild(br)
+    return linkID
 
   addOnOffSwitchLink: (theText, onShortcut, offShortcut, onAction, offAction) ->
     #aLittleDiv = document.createElement("div")
     
+    linkID = theText.replace(/[^a-zA-Z0-9]/g, "")
     aLittleSpan = document.createElement("span")
     aLittleSpan.innerHTML = theText + " "
 
@@ -45,11 +98,13 @@ class SystemTestsControlPanelUpdater
     onLinkElement = document.createElement("a")
     onLinkElement.setAttribute "href", "#"
     onLinkElement.innerHTML = "on:"+onShortcut
+    onLinkElement.id = linkID + "On"
     onLinkElement.onclick = onAction
 
     offLinkElement = document.createElement("a")
     offLinkElement.setAttribute "href", "#"
     offLinkElement.innerHTML = "off:"+offShortcut
+    offLinkElement.id = linkID + "Off"
     offLinkElement.onclick = offAction
 
     @SystemTestsControlPanelDiv.appendChild aLittleSpan
@@ -59,6 +114,7 @@ class SystemTestsControlPanelUpdater
 
     br = document.createElement('br')
     @SystemTestsControlPanelDiv.appendChild(br);
+    return linkID
 
   addOutputPanel: (nameOfPanel) ->
     SystemTestsControlPanelUpdater[nameOfPanel] = document.createElement('div')
@@ -69,7 +125,7 @@ class SystemTestsControlPanelUpdater
   constructor: ->
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
-    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden;'
+    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
     @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv"
@@ -89,21 +145,21 @@ class SystemTestsControlPanelUpdater
     # via e menu: a bunch of mouse actions would be
     # recorded, exposing as well to the risk of the
     # menu items changing.
-    @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
-    @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
-    @addOnOffSwitchLink "periodically align Morph IDs", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
-    @addOnOffSwitchLink "hide Morph geometry in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
+    SystemTestsControlPanelUpdater.resetWorldLink = @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
+    SystemTestsControlPanelUpdater.tieAnimations = @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
+    SystemTestsControlPanelUpdater.alignMorphIDs = @addOnOffSwitchLink "periodically align Morph IDs", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
+    SystemTestsControlPanelUpdater.hideGeometry = @addOnOffSwitchLink "hide Morph geometry in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
 
-    @addOnOffSwitchLink "hide Morph content extract in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
+    SystemTestsControlPanelUpdater.hideMorphContentExtracts = @addOnOffSwitchLink "hide Morph content extract in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
 
-    @addOnOffSwitchLink "hide Morph number ID in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
+    SystemTestsControlPanelUpdater.hideMorphIDs = @addOnOffSwitchLink "hide Morph number ID in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
 
-    @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
-    @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
-    @addLink "alt+a: check menu entries (in order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
-    @addLink "alt+z: check menu entries (any order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
-    @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
-    @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
+    SystemTestsControlPanelUpdater.takeScreenshot = @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    SystemTestsControlPanelUpdater.checkNumnberOfItems = @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
+    SystemTestsControlPanelUpdater.checkMenuEntriesInOrder = @addLink "alt+a: check menu entries (in order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
+    SystemTestsControlPanelUpdater.checkMenuEntriesNotInOrder = @addLink "alt+z: check menu entries (any order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
+    SystemTestsControlPanelUpdater.addTestComment = @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
+    SystemTestsControlPanelUpdater.stopTestRec = @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
 
 
     # add the div with the fake mouse pointer
