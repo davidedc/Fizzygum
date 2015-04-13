@@ -655,8 +655,8 @@ class HandMorph extends Morph
     if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
       mousePointerIndicator.style.display = 'block'
-      mousePointerIndicator.style.left = pos.x + 'px'
-      mousePointerIndicator.style.top = pos.y + 'px'
+      mousePointerIndicator.style.left = (pageX - (mousePointerIndicator.clientWidth/2)) + 'px'
+      mousePointerIndicator.style.top = (pageY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
     # determine the new mouse-over-list.
     # Spacial multiplexing
