@@ -62,6 +62,7 @@ class SystemTestsRecorderAndPlayer
   testDescription: 'no description'
   testTags: ['noTags']
   @loadedImages: {}
+  @loadedImagesToBeKeptForLaterDiff: {}
   ongoingTestPlayingTask: null
   timeOfPreviouslyPlayedCommand: 0
   indexOfTestCommandBeingPlayedFromSequence: 0
@@ -572,10 +573,18 @@ class SystemTestsRecorderAndPlayer
    # each image of each test there is an array of candidates
    # to be checked. If any of them matches in terms of pixel data,
    # then fine, otherwise complain...
+   #
+   # in "loadedImagesToBeKeptForLaterDiff" we keep the images
+   # related to the failed tests. If we don't keep those
+   # in this reference, they are disposed of and garbage collected
+   # since they are quite big and they accumulate.
+   SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
    for eachImage in SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
      console.log "length of obtained: " + eachImage.imageData.length
      if eachImage.imageData == screenshotObtained
       message = "PASS - screenshot " + eachImage.fileName + " matched"
+      SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = null
+      delete SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"]
       console.log message
       if SystemTestsControlPanelUpdater?
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
@@ -720,6 +729,8 @@ class SystemTestsRecorderAndPlayer
   saveFailedScreenshots: ->
     zip = new JSZip()
     
+    SystemTestsRecorderAndPlayer.loadedImages = SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff
+
     # debugger
     # save all the images, each as a .png and .js file
     # the png is for quick browsing, while the js contains
