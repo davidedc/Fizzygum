@@ -11,6 +11,16 @@ class MenuItemMorph extends TriggerMorph
   constructor: (closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2) ->
     #console.log "menuitem constructing"
     super closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2 
+
+  getTextDescription: ->
+    if @textDescription?
+      return @textDescription + " (adhoc description of menu item)"
+    if @labelString
+      textWithoutLocationOrInstanceNo = @labelString.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
+      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+      return textWithoutLocationOrInstanceNo + " (text in button)"
+    else
+      return super()
   
   createLabel: ->
     # console.log "menuitem createLabel"

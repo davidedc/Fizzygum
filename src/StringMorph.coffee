@@ -74,6 +74,13 @@ class StringMorph extends Morph
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
+
+  getTextDescription: ->
+    if @textDescription?
+      return @textDescription + " (adhoc description of string)"
+    textWithoutLocationOrInstanceNo = @text.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
+    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+    return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
   password: (letter, length) ->
     ans = ""

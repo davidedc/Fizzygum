@@ -102,6 +102,30 @@ class Morph extends MorphicNode
   clickOutsideMeOrAnyOfMeChildrenCallback: [null]
   isMarkedForDestruction: false
 
+  textDescription: null
+
+
+
+  getTextDescription: ->
+    if @textDescription?
+      return @textDescription + "" + @constructor.name + " (adhoc description of morph)"
+    else
+      return @constructor.name + " (class name)"
+
+  identifyViaTextLabel: ->
+    myTextDescription = @getTextDescription()
+    allCandidateMorphsWithSameTextDescription = 
+      world.allChildrenTopToBottomSuchThat( (m) ->
+        m.getTextDescription() == myTextDescription
+      )
+    position = allCandidateMorphsWithSameTextDescription.indexOf @
+
+    theLenght = allCandidateMorphsWithSameTextDescription.length
+    console.log [myTextDescription, position, theLenght]
+    return [myTextDescription, position, theLenght]
+
+  setTextDescription: (@textDescription) ->
+
 
   ##
   # Reactive Values start
