@@ -1252,8 +1252,8 @@ class Morph extends MorphicNode
     @acceptsDrops
   
   pickUp: ->
-    @setPosition world.hand.position().subtract(@extent().floorDivideBy(2))
     world.hand.grab @
+    @setPosition world.hand.position().subtract(@boundsIncludingChildrenNoShadow().extent().floorDivideBy(2))
   
   # note how this verified that
   # at *any point* up in the
