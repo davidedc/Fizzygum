@@ -735,16 +735,6 @@ class SystemTestsRecorderAndPlayer
     testToBeSerialized = {}
     testToBeSerialized.timeRecorded = new Date()
     testToBeSerialized.description = @testDescription
-    # A string that can be used to group
-    # tests together, imagine for example they
-    # could be visualised in a tree structure of
-    # some sort.
-    # to begin with, it will be sorted
-    # alphabetically so at the top we put the
-    # "topical" tests that we just want run
-    # quickly cause they are about stuff
-    # we are working on right now.
-    testToBeSerialized.testGroup = "00: current tests / 00: unused / 00: unused"
     testToBeSerialized.tags = @testTags
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
 
