@@ -298,7 +298,7 @@ class MorphicNode
       if @ instanceof eachConstructor
         return [@, eachConstructor]
     return null  unless @parent
-    @parent.parentThatIsA constructor
+    @parent.parentThatIsA(constructors...)
 
   # checks whether the morph is a child,
   # directly or indirectly, of a specified
