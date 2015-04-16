@@ -57,41 +57,6 @@ class HandMorph extends Morph
         (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
     return result
 
-  leftOrRightClickOnMenuItemWithText: (whichMouseButtonPressed, textLabelOfClickedItem, textLabelOccurrenceNumber) ->
-    mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
-    itemToTrigger = mostRecentlyCreatedMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
-      m.labelString == textLabelOfClickedItem
-
-    # these three are checks and actions that normally
-    # would happen on MouseDown event, but we
-    # removed that event as we collapsed the down and up
-    # into this coalesced higher-level event,
-    # but we still need to make these checks and actions
-    @destroyActiveHandleIfHandHasNotActionedIt itemToTrigger
-    @stopEditingIfActionIsElsewhere itemToTrigger
-
-    world.freshlyCreatedMenus = []
-    if whichMouseButtonPressed == "left"
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
-        setTimeout \
-          =>
-            fade('leftMouseButtonIndicator', 1, 0, 500, new Date().getTime())
-          , 100
-        
-      itemToTrigger.mouseClickLeft()
-    else if whichMouseButtonPressed == "right"
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
-        setTimeout \
-          =>
-            fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime())
-          , 100
-      @openContextMenuAtPointer itemToTrigger.children[0]
-
-    if whichMouseButtonPressed == "left"
-      expectedClick = "mouseClickLeft"
-    @cleanupMenuMorphs(expectedClick, itemToTrigger)
 
 
   openContextMenuAtPointer: (morphTheMenuIsAbout) ->
