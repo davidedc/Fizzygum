@@ -80,6 +80,31 @@ class MorphicNode
     return @parent.root() if @parent?
     @
 
+  # returns the path of this morph in terms
+  # of children positions relative to the world.
+  # Meaning that if the morph is not attached to the
+  # world or if it's attached to the hand, then
+  # null is returned.
+  # Example: [0, 2, 1] means that this morph is
+  # at
+  #  world.children[0].children[2].children[1]
+  pathOfChildrenPositionsRelativeToWorld: (pathSoFar) ->
+    if !pathSoFar?
+      pathSoFar = 
+        actualPath: []
+        lengthOfChildrenArrays: []
+
+    if @parent?
+      pathSoFar.actualPath.push @parent.children.indexOf(@)
+      pathSoFar.lengthOfChildrenArrays.push @parent.children.length
+      @parent.pathOfChildrenPositionsRelativeToWorld(pathSoFar)
+    else
+      if @ == world
+        pathSoFar.actualPath.reverse()
+        pathSoFar.lengthOfChildrenArrays.reverse()
+        return pathSoFar
+      else
+        return null
 
   isAttachedAnywhereToWorld: ->
     theRoot = @root()
