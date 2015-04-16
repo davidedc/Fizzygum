@@ -287,6 +287,17 @@ class HandMorph extends Morph
         else
           @world.stopEditing()
 
+  pointerPositionFractionalInMorph: (theMorph) ->
+    [relativeXPos, relativeYPos] = @pointerPositionPixelsInMorph theMorph
+    fractionalXPos = relativeXPos / theMorph.bounds.width()
+    fractionalYPos = relativeYPos / theMorph.bounds.height()
+    return [fractionalXPos, fractionalYPos]
+
+  pointerPositionPixelsInMorph: (theMorph) ->
+    relativeXPos = @bounds.origin.x - theMorph.bounds.origin.x
+    relativeYPos = @bounds.origin.y - theMorph.bounds.origin.y
+    return [relativeXPos, relativeYPos]
+
   processMouseDown: (button, ctrlKey) ->
     @destroyTemporaries()
     @morphToGrab = null
