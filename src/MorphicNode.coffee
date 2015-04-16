@@ -130,23 +130,16 @@ class MorphicNode
       result = result.concat(child.allChildrenBottomToTop())
     result
 
+  allChildrenTopToBottom: ->
+    return allChildrenTopToBottomSuchThat(-> true)
+
   # the easiest way here would be to just return
   #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
   # but that's slower.
   # So we do the proper visit here instead.
-  allChildrenTopToBottom: ->
-    # base case - I am a leaf child, so I just
-    # return an array with myself
-    # note that I return an array rather than the
-    # element cause this method is always expected
-    # to return an array.
-    if @children.length == 0
-      return [@]
+  allChildrenTopToBottomSuchThat: (predicate) ->
+    collected = []
 
-    # if I have some children instead, then let's create
-    # an empty array where we'll concatenate the
-    # others.
-    arrayToReturn = []
 
     # if I have children, then start from the top
     # one (i.e. the last in the array) towards the bottom
@@ -154,12 +147,16 @@ class MorphicNode
     # top-to-bottom lists
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      arrayToReturn = arrayToReturn.concat morph.allChildrenTopToBottom
+      collected = collected.concat morph.allChildrenTopToBottomSuchThat predicate
 
-    # ok, last we add ourselves to the bottom
+    # base case: after we checked all the
+    # children, we add ourselves to the last position
     # of the list since this node is at the bottom of all of
     # its children...
-    arrayToReturn.push @
+    if predicate.call(null, @)
+      collected.push @ # include myself
+
+    return collected
 
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
