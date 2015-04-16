@@ -235,7 +235,12 @@ class WorldMorph extends FrameMorph
       @systemTestsRecorderAndPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
-
+  getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
+    allCandidateMorphsWithSameTextDescription = 
+      @allChildrenTopToBottomSuchThat( (m) ->
+        m.getTextDescription() == textDescription
+      )
+    return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
 
   mostRecentlyCreatedMenu: ->
     mostRecentMenu = null
@@ -451,6 +456,19 @@ class WorldMorph extends FrameMorph
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
+
+  getPointerAndMorphInfo:  ->
+    # we might eliminate this command afterwards if
+    # we find out user is clicking on a menu item
+    # or right-clicking on a morph
+    topMorphUnderPointer = @hand.topMorphUnderPointer()
+    absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.bounds.asArray_xywh()
+    morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
+    morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
+    pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer
+    pointerPositionPixelsInMorph = @hand.pointerPositionPixelsInMorph topMorphUnderPointer
+    pointerPositionPixelsInWorld = @hand.position()
+    return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld]
 
   processMouseDown: (button, ctrlKey) ->
     # the recording of the test command (in case we are
