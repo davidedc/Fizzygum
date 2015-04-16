@@ -739,9 +739,10 @@ class SystemTestsRecorderAndPlayer
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
 
     """
-  // This system test is automatically
+  // This Automator file is automatically
   // created.
-  // This test (and related reference images)
+  // If this is a test,
+  // this file (and related reference images)
   // can be copied in the /src/tests folder
   // to make them available in the testing
   // environment.
@@ -761,9 +762,10 @@ class SystemTestsRecorderAndPlayer
     testNameExtended = @testName + "_testCommands"
 
     """
-  // This system test is automatically
+  // This Automator file is automatically
   // created.
-  // This test (and related reference images)
+  // It this is a test,
+  // this file (and related reference images)
   // can be copied in the /src/tests folder
   // to make them available in the testing
   // environment.

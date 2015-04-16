@@ -7,12 +7,12 @@ class SystemTestsSystemInfo extends SystemInfo
   # cause we are going to make a JSON
   # out of this and these would not
   # be picked up.
-  SystemTestsHarnessVersionMajor: null
-  SystemTestsHarnessVersionMinor: null
-  SystemTestsHarnessVersionRelease: null
+  AutomatorVersionMajor: null
+  AutomatorVersionMinor: null
+  AutomatorVersionRelease: null
 
   constructor: ->
     super()
-    @SystemTestsHarnessVersionMajor = 0
-    @SystemTestsHarnessVersionMinor = 1
-    @SystemTestsHarnessVersionRelease = 0
+    @AutomatorVersionMajor = 0
+    @AutomatorVersionMinor = 1
+    @AutomatorVersionRelease = 0
