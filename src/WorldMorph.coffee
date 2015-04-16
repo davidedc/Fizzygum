@@ -17,7 +17,7 @@ class WorldMorph extends FrameMorph
   # the event listeners so we are
   # going to put them all in properties
   # here.
-  dblclickEventListener: null
+  # dblclickEventListener: null
   mousedownEventListener: null
   touchstartEventListener: null
   mouseupEventListener: null
@@ -470,6 +470,12 @@ class WorldMorph extends FrameMorph
     pointerPositionPixelsInWorld = @hand.position()
     return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld]
 
+
+  addMouseChangeCommand: (upOrDownTrueUpFalseDown, button, ctrlKey) ->
+    pointerAndMorphInfo = @getPointerAndMorphInfo()
+    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDownTrueUpFalseDown, button, ctrlKey, pointerAndMorphInfo...
+
+
   processMouseDown: (button, ctrlKey) ->
     # the recording of the test command (in case we are
     # recording a test) is handled inside the function
@@ -480,21 +486,15 @@ class WorldMorph extends FrameMorph
     # or user left or right-clicks on a menu,
     # in which case we record a more specific test
     # commands.
+    @addMouseChangeCommand false, button, ctrlKey
 
-    # we might eliminate this command afterwards if
-    # we find out user is clicking on a menu item
-    # or right-clicking on a morph
-    @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
 
     @hand.processMouseDown button, ctrlKey
 
   processMouseUp: (button) ->
     # event.preventDefault()
 
-    # we might eliminate this command afterwards if
-    # we find out user is clicking on a menu item
-    # or right-clicking on a morph
-    @systemTestsRecorderAndPlayer.addMouseUpCommand()
+    @addMouseChangeCommand true
 
     @hand.processMouseUp button
 
@@ -613,13 +613,30 @@ class WorldMorph extends FrameMorph
       window.setTimeout ( => (@caret.insert text)), 50, true
 
 
+  # note that we don't register the normal click,
+  # we figure that out independently.
   initEventListeners: ->
     canvas = @worldCanvas
 
-    @dblclickEventListener = (event) =>
-      event.preventDefault()
-      @hand.processDoubleClick event
-    canvas.addEventListener "dblclick", @dblclickEventListener, false
+    # there is indeed a "dblclick" JS event
+    # but we reproduce it internally.
+    # The reason is that we do so for "click"
+    # because we want to check that the mouse
+    # button was released in the same morph
+    # where it was pressed (cause in the DOM you'd
+    # be pressing and releasing on the same
+    # element i.e. the canvas anyways
+    # so we receive clicks even though they aren't
+    # so we have to take care of the processing
+    # ourselves).
+    # So we also do the same internal
+    # processing for dblclick.
+    # Hence, don't register this event listener
+    # below...
+    #@dblclickEventListener = (event) =>
+    #  event.preventDefault()
+    #  @hand.processDoubleClick event
+    #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
       @processMouseDown event.button, event.ctrlKey
@@ -799,7 +816,7 @@ class WorldMorph extends FrameMorph
   
   removeEventListeners: ->
     canvas = @worldCanvas
-    canvas.removeEventListener 'dblclick', @dblclickEventListener
+    # canvas.removeEventListener 'dblclick', @dblclickEventListener
     canvas.removeEventListener 'mousedown', @mousedownEventListener
     canvas.removeEventListener 'touchstart', @touchstartEventListener
     canvas.removeEventListener 'mouseup', @mouseupEventListener
@@ -829,10 +846,7 @@ class WorldMorph extends FrameMorph
   
   mouseDownRight: ->
     noOperation
-  
-  mouseClickRight: ->
-    noOperation
-  
+    
   wantsDropOf: ->
     # allow handle drops if any drops are allowed
     @acceptsDrops

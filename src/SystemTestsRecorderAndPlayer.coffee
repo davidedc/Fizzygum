@@ -278,34 +278,44 @@ class SystemTestsRecorderAndPlayer
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseDownCommand: (button, ctrlKey) ->
+  addMouseChangeCommand: (upOrDownTrueUpFalseDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandMouseDown button, ctrlKey, @
+    systemTestCommand = new SystemTestsCommandMouseButtonChange upOrDownTrueUpFalseDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
     @lastMouseDownCommand = systemTestCommand
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addMouseClickCommand: (button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandMouseClick button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
+    @lastMouseDownCommand = systemTestCommand
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  # note that we give for granted that double click
+  # is always on the left button
+  addMouseDoubleClickCommand: (ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
+    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    systemTestCommand = new SystemTestsCommandMouseDoubleClick ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
+    @lastMouseDownCommand = systemTestCommand
+    @testCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+
   addOpenContextMenuCommand: (context) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    @removeLastMouseUpAndMouseDownCommands()
+    #@removeLastMouseUpAndMouseDownCommands()
     systemTestCommand = new SystemTestsCommandOpenContextMenu context, @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addCommandLeftOrRightClickOnMenuItem: (mouseButton, labelString, occurrenceNumber) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    @removeLastMouseUpAndMouseDownCommands()
+    #@removeLastMouseUpAndMouseDownCommands()
     systemTestCommand = new SystemTestsCommandLeftOrRightClickOnMenuItem mouseButton, labelString, occurrenceNumber, @
     @testCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseUpCommand: ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandMouseUp @
-    @lastMouseUpCommand = systemTestCommand
-    @testCommandsSequence.push systemTestCommand
-    @timeOfPreviouslyRecordedCommand = new Date().getTime()
-  
   # doesn't *actually* remove the command
   # because you do need to wait the time.
   # because for example the bubbles pop-up
@@ -313,9 +323,9 @@ class SystemTestsRecorderAndPlayer
   # You could remove the commands and note down
   # how much was the wait on each and charge it to
   # the next command but that would be very messy.
-  removeLastMouseUpAndMouseDownCommands: ->
-    @lastMouseDownCommand.transformIntoDoNothingCommand()
-    @lastMouseUpCommand.transformIntoDoNothingCommand()
+  #removeLastMouseUpAndMouseDownCommands: ->
+  #  @lastMouseDownCommand.transformIntoDoNothingCommand()
+  #  @lastMouseUpCommand.transformIntoDoNothingCommand()
 
   addKeyPressCommand: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
     return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING

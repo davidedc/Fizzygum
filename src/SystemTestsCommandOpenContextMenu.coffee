@@ -5,7 +5,7 @@ class SystemTestsCommandOpenContextMenu extends SystemTestsCommand
   morphToOpenContextMenuAgainst_UniqueIDString: null
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.handMorph.openContextMenuAtPointer (Morph.morphFromUniqueIDString commandBeingPlayed.morphToOpenContextMenuAgainst_UniqueIDString)
+    #systemTestsRecorderAndPlayer.handMorph.openContextMenuAtPointer (Morph.morphFromUniqueIDString commandBeingPlayed.morphToOpenContextMenuAgainst_UniqueIDString)
 
 
   constructor: (@morphToOpenContextMenuAgainst_UniqueIDString, systemTestsRecorderAndPlayer) ->

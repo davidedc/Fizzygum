@@ -22,6 +22,7 @@ class HandMorph extends Morph
   mouseOverList: null
   temporaries: null
   touchHoldTimeout: null
+  doubleClickMorph: null
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -375,8 +376,7 @@ class HandMorph extends Morph
   
    # note that the button param is not used,
    # but adding it for consistency...
-   processMouseUp: (button) ->
-    actionAlreadyProcessed = false
+  processMouseUp: (button) ->
 
     if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
       if button is 2
@@ -396,6 +396,7 @@ class HandMorph extends Morph
       # [TODO] you need to do some of this only if you
       # are recording a test, it's worth saving
       # these steps...
+      #debugger
       ignored = null
       toDestructure = morph.parentThatIsA(MenuItemMorph)
       if toDestructure?
@@ -431,18 +432,39 @@ class HandMorph extends Morph
             # this being a right click, pop
             # up a menu as needed.
             @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
-          @openContextMenuAtPointer morph
-          actionAlreadyProcessed = true
 
-      if !actionAlreadyProcessed
-        # trigger the action
-        until morph[expectedClick]
-          morph = morph.parent
-          if not morph?
-            break
-        if morph?
-          if morph == @mouseDownMorph
-            morph[expectedClick] @bounds.origin
+      # trigger the action
+      until morph[expectedClick]
+        morph = morph.parent
+        if not morph?
+          break
+      if morph?
+        if morph == @mouseDownMorph
+
+          if expectedClick == "mouseClickLeft"
+            pointerAndMorphInfo = world.getPointerAndMorphInfo()
+            world.systemTestsRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+          else if expectedClick == "mouseClickRight"
+            pointerAndMorphInfo = world.getPointerAndMorphInfo()
+            world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+
+          morph[expectedClick] @bounds.origin
+          # also send doubleclick if the
+          # two clicks happen on the same morph
+          unless @doubleClickMorph?
+            @doubleClickMorph = morph
+            setTimeout (=>
+              if @doubleClickMorph?
+                console.log "single click"
+              @doubleClickMorph = null
+              return false
+            ), 300
+          else
+            if @doubleClickMorph == morph
+              @doubleClickMorph = null
+              console.log "double click"
+              @processDoubleClick()
+
 
       @cleanupMenuMorphs(expectedClick, morph)
     @mouseButton = null
@@ -500,6 +522,10 @@ class HandMorph extends Morph
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: ->
+
+    pointerAndMorphInfo = world.getPointerAndMorphInfo()
+    world.systemTestsRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
+
     morph = @topMorphUnderPointer()
     @destroyTemporaries()
     if @children.length isnt 0

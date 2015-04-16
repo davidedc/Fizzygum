@@ -105,6 +105,8 @@ class Morph extends MorphicNode
   textDescription: null
 
 
+  mouseClickRight: ->
+    world.hand.openContextMenuAtPointer @
 
   getTextDescription: ->
     if @textDescription?
