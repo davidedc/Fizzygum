@@ -153,6 +153,17 @@ class SystemTestsRecorderAndPlayer
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.stopTestRec)
     console.log "wrapping up the playing of the test"
     
+    # seems that if focus is on canvas
+    # then updates to DOM get coalesced so
+    # much that the highlights/flashed
+    # on the test console are super-late
+    # or completely lost. So we need to
+    # temporarily remove the tab index at
+    # the start of the test and then
+    # put it back when the test playing is
+    # complete
+    world.worldCanvas.tabIndex = "1"
+
     fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
 
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
@@ -661,6 +672,18 @@ class SystemTestsRecorderAndPlayer
     @totalTime = totalTime
 
   startTestPlaying: ->
+
+    # seems that if focus is on canvas
+    # then updates to DOM get coalesced so
+    # much that the highlights/flashed
+    # on the test console are super-late
+    # or completely lost. So we need to
+    # temporarily remove the tab index at
+    # the start of the test and then
+    # put it back when the test playing is
+    # complete
+    world.worldCanvas.tabIndex = "-1"
+
     SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
     @atLeastOneTestHasBeenRun = true
     @constructor.animationsPacingControl = true
