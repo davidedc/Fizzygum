@@ -292,12 +292,12 @@ class Morph extends MorphicNode
   toString: ->
     firstPart = "a "
 
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
       firstPart = firstPart + @morphClassString()
     else
       firstPart = firstPart + @uniqueIDString()
 
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
       return firstPart
     else
       return firstPart + " " + @bounds
@@ -1536,11 +1536,11 @@ class Morph extends MorphicNode
     # going to replay but *waiting* for that screenshot
     # first.
     takePic = =>
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         # While recording a test, just trigger for
         # the takeScreenshot command to be recorded. 
         window.world.systemTestsRecorderAndPlayer.takeScreenshot(@)
-      else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
         # While playing a test, this command puts the
         # screenshot of this morph in a special
         # variable of the system test runner.

@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandKeyDown extends SystemTestsCommand
+class AutomatorCommandKeyUp extends AutomatorCommand
   scanCode: null
   shiftKey: null
   ctrlKey: null
@@ -10,7 +10,7 @@ class SystemTestsCommandKeyDown extends SystemTestsCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     console.log "replaying key"
-    systemTestsRecorderAndPlayer.worldMorph.processKeydown null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
+    systemTestsRecorderAndPlayer.worldMorph.processKeyup null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
 
 
   constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, systemTestsRecorderAndPlayer) ->
@@ -18,4 +18,4 @@ class SystemTestsCommandKeyDown extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandKeyDown"
+    @automatorCommandName = "AutomatorCommandKeyUp"

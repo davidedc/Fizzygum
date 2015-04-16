@@ -4,8 +4,8 @@
 # possible commands.
 
 
-class SystemTestsCommand
-  testCommandName: ''
+class AutomatorCommand
+  automatorCommandName: ''
   millisecondsSincePreviousCommand: 0
 
   constructor: (systemTestsRecorderAndPlayer) ->

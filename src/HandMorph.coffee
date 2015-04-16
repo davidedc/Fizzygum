@@ -75,7 +75,7 @@ class HandMorph extends Morph
     @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
       setTimeout \
         =>
@@ -268,7 +268,7 @@ class HandMorph extends Morph
     @destroyTemporaries()
     @morphToGrab = null
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
         fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
       else
@@ -343,7 +343,7 @@ class HandMorph extends Morph
    # but adding it for consistency...
   processMouseUp: (button) ->
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
         fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime());
       else
@@ -657,7 +657,7 @@ class HandMorph extends Morph
     pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
     @setPosition pos
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
       mousePointerIndicator.style.display = 'block'
       mousePointerIndicator.style.left = (pageX - (mousePointerIndicator.clientWidth/2)) + 'px'

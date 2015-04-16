@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandMouseButtonChange extends SystemTestsCommand
+class AutomatorCommandMouseButtonChange extends AutomatorCommand
   upOrDownTrueUpFalseDown: null
   button: null
   ctrlKey: null
@@ -26,11 +26,11 @@ class SystemTestsCommandMouseButtonChange extends SystemTestsCommand
       systemTestsRecorderAndPlayer.handMorph.processMouseDown(commandBeingPlayed.button, commandBeingPlayed.ctrlKey)
 
   transformIntoDoNothingCommand: ->
-    @testCommandName = "SystemTestsCommandDoNothing"
+    @automatorCommandName = "AutomatorCommandDoNothing"
 
   constructor: (@upOrDownTrueUpFalseDown, @button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandMouseButtonChange"
+    @automatorCommandName = "AutomatorCommandMouseButtonChange"

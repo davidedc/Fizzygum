@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandLeftOrRightClickOnMenuItem extends SystemTestsCommand
+class AutomatorCommandLeftOrRightClickOnMenuItem extends AutomatorCommand
   whichMouseButtonPressed = ""
   textLabelOfClickedItem: 0
   # there might be multiple instances of
@@ -17,4 +17,4 @@ class SystemTestsCommandLeftOrRightClickOnMenuItem extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandLeftOrRightClickOnMenuItem"
+    @automatorCommandName = "AutomatorCommandLeftOrRightClickOnMenuItem"

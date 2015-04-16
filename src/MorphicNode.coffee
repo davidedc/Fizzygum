@@ -246,7 +246,7 @@ class MorphicNode
       # to find the state of affairs that caused
       # the problem.
       console.log "failed to find morph in test: " + window.world.systemTestsRecorderAndPlayer.name
-      console.log "trying to find item with text label: " +  window.world.systemTestsRecorderAndPlayer.testCommandsSequence[window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence].textLabelOfClickedItem
+      console.log "trying to find item with text label: " +  window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence[window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence].textLabelOfClickedItem
       console.log "...you can likely fix the test by correcting the label above in the test"
       debugger
     # test the morph itself

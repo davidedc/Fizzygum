@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandCopy extends SystemTestsCommand
+class AutomatorCommandCopy extends AutomatorCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     systemTestsRecorderAndPlayer.worldMorph.processCopy null
@@ -11,4 +11,4 @@ class SystemTestsCommandCopy extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandCopy"
+    @automatorCommandName = "AutomatorCommandCopy"

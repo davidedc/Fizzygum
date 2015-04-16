@@ -1,10 +1,10 @@
 # 
 
 
-class SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels extends SystemTestsCommand
+class AutomatorCommandTurnOffHidingOfMorphsContentExtractInLabels extends AutomatorCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
+    systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
 
 
   constructor: (systemTestsRecorderAndPlayer) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels extends System
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels"
+    @automatorCommandName = "AutomatorCommandTurnOffHidingOfMorphsContentExtractInLabels"

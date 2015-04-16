@@ -1,7 +1,7 @@
 #
 
 
-class SystemTestsCommandScreenshot extends SystemTestsCommand
+class AutomatorCommandScreenshot extends AutomatorCommand
   screenShotImageName: null
   # The screenshot can be of the entire
   # world or of a particular morph (through
@@ -23,4 +23,4 @@ class SystemTestsCommandScreenshot extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandScreenshot"
+    @automatorCommandName = "AutomatorCommandScreenshot"

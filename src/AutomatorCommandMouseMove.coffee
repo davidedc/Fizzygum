@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandMouseMove extends SystemTestsCommand
+class AutomatorCommandMouseMove extends AutomatorCommand
   mouseX: null
   mouseY: null
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandMouseMove extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandMouseMove"
+    @automatorCommandName = "AutomatorCommandMouseMove"

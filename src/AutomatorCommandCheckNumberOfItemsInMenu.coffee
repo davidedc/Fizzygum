@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandCheckNumberOfItemsInMenu extends SystemTestsCommand
+class AutomatorCommandCheckNumberOfItemsInMenu extends AutomatorCommand
   numberOfItemsInMenu: 0
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandCheckNumberOfItemsInMenu extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandCheckNumberOfItemsInMenu"
+    @automatorCommandName = "AutomatorCommandCheckNumberOfItemsInMenu"

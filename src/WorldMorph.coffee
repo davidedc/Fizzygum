@@ -179,7 +179,7 @@ class WorldMorph extends FrameMorph
     @bounds = new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
 
     @initEventListeners()
-    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
+    @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
 
     @changed()
     @updateBackingStore()
@@ -206,9 +206,7 @@ class WorldMorph extends FrameMorph
   nextStartupAction: ->
     startupActions = JSON.parse(getParameterByName('startupActions'))
 
-    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
-
-    if WorldMorph.ongoingUrlActionNumber == startupActions.actions.length
+    if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber= 0
       if window.location.href.indexOf("worldWithSystemTestHarness") != -1
@@ -218,6 +216,8 @@ class WorldMorph extends FrameMorph
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
+
+    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if currentAction.name == "runTests"
@@ -267,7 +267,7 @@ class WorldMorph extends FrameMorph
   # Morph for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
       # Check which objects end with the word Morph
       theWordMorph = "Morph"
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->

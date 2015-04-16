@@ -1,8 +1,7 @@
 # 
 
 
-class SystemTestsCommandMouseClick extends SystemTestsCommand
-  button: null
+class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   ctrlKey: null
   morphIdentifierViaTextLabel: null
   pointerPositionFractionalInMorph: null
@@ -12,14 +11,15 @@ class SystemTestsCommandMouseClick extends SystemTestsCommand
   morphUniqueIDString: null
   morphPathRelativeToWorld: null
 
+
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
 
   transformIntoDoNothingCommand: ->
-    @testCommandName = "SystemTestsCommandDoNothing"
+    @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, systemTestsRecorderAndPlayer) ->
+  constructor: (@ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandMouseClick"
+    @automatorCommandName = "AutomatorCommandMouseDoubleClick"

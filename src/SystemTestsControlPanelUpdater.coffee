@@ -116,20 +116,20 @@ class SystemTestsControlPanelUpdater
     @SystemTestsControlPanelDiv.appendChild(br);
     return linkID
 
-  addOutputPanel: (nameOfPanel) ->
+  addOutputPanel: (nameOfPanel, css) ->
     SystemTestsControlPanelUpdater[nameOfPanel] = document.createElement('div')
     SystemTestsControlPanelUpdater[nameOfPanel].id = nameOfPanel
-    SystemTestsControlPanelUpdater[nameOfPanel].style.cssText = 'height: 150px; border: 1px solid red; overflow: hidden; overflow-y: scroll;'
+    SystemTestsControlPanelUpdater[nameOfPanel].style.cssText = css
     document.body.appendChild(SystemTestsControlPanelUpdater[nameOfPanel])
 
   constructor: ->
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
-    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small;'
+    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small; top: 440px; left:200px; position: absolute;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
-    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv"
-    @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv"
+    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv", "height: 150px; width: 571px;border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 440px;left: 386px;"
+    @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv", "height: 128px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 592px;width: 757px;left: 200px;"
 
     theCanvasDiv = document.getElementById('world')
     # one of these is for IE and the other one
@@ -203,7 +203,7 @@ class SystemTestsControlPanelUpdater
     # add the div with title and description of the test
     testTitleAndDescription = document.createElement('div')
     testTitleAndDescription.id = "testTitleAndDescription"
-    testTitleAndDescription.style.cssText = 'position: absolute; left: 10px; top: 10px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 700px; height: 500px; padding: 50px; color: white;'
+    testTitleAndDescription.style.cssText = 'position: absolute; left: 0px; top: 0px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 860px; height: 340px; padding: 50px; color: white;'
     document.body.appendChild(testTitleAndDescription)
     fade('testTitleAndDescription', 1, 0, 10, new Date().getTime());
     #testTitleAndDescription.innerHTML = "Test asdasdasdasdasdakjhdasdasdasd"

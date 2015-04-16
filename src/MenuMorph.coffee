@@ -20,7 +20,7 @@ class MenuMorph extends BoxMorph
     # console.log "menu constructor"
     @items = []
     # console.log "menu super"
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants
@@ -302,7 +302,7 @@ class MenuMorph extends BoxMorph
     # nopainting happening and the morph doesn't
     # know its extent.
     @keepWithin world
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
