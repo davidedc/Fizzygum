@@ -2,7 +2,7 @@
 
 
 class AutomatorCommandMouseButtonChange extends AutomatorCommand
-  upOrDownTrueUpFalseDown: null
+  upOrDown: null
   button: null
   ctrlKey: null
   morphIdentifierViaTextLabel: null
@@ -12,6 +12,7 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
   absoluteBoundsOfMorphRelativeToWorld: null
   morphUniqueIDString: null
   morphPathRelativeToWorld: null
+  isPartOfListMorph: null
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
@@ -19,17 +20,32 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
     newY = (theMorph.bounds.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1]) + theMorph.bounds.origin.y
     world.hand.silentSetPosition new Point(newX, newY)
 
-    if commandBeingPlayed.upOrDownTrueUpFalseDown
+    if commandBeingPlayed.button == "left"
+      button = 0
+    else if commandBeingPlayed.button == "middle"
+      button = 1
+    else if commandBeingPlayed.button == "right"
+      button = 2
+
+    if commandBeingPlayed.upOrDown == "up"
       # the mouse up doesn't need the control key info
-      systemTestsRecorderAndPlayer.handMorph.processMouseUp(commandBeingPlayed.button)
+      systemTestsRecorderAndPlayer.handMorph.processMouseUp(button)
     else
-      systemTestsRecorderAndPlayer.handMorph.processMouseDown(commandBeingPlayed.button, commandBeingPlayed.ctrlKey)
+      systemTestsRecorderAndPlayer.handMorph.processMouseDown(button, commandBeingPlayed.ctrlKey)
 
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@upOrDownTrueUpFalseDown, @button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, systemTestsRecorderAndPlayer) ->
+  constructor: (@upOrDown, button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
+
+    if button == 0
+      @button = "left"
+    else if button == 1
+      @button = "middle"
+    else if button == 2
+      @button = "right"
+
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

@@ -273,31 +273,31 @@ class AutomatorRecorderAndPlayer
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
-  addMouseMoveCommand: (pageX, pageY) ->
+  addMouseMoveCommand: (pageX, pageY, draggingSomething) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, @
+    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, draggingSomething, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseChangeCommand: (upOrDownTrueUpFalseDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
+  addMouseChangeCommand: (upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseButtonChange upOrDownTrueUpFalseDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
+    systemTestCommand = new AutomatorCommandMouseButtonChange upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
     @lastMouseDownCommand = systemTestCommand
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseClickCommand: (button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
+  addMouseClickCommand: (button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseClick button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
+    systemTestCommand = new AutomatorCommandMouseClick button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
     @lastMouseDownCommand = systemTestCommand
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   # note that we give for granted that double click
   # is always on the left button
-  addMouseDoubleClickCommand: (ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld) ->
+  addMouseDoubleClickCommand: (ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseDoubleClick ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, @
+    systemTestCommand = new AutomatorCommandMouseDoubleClick ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
     @lastMouseDownCommand = systemTestCommand
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
@@ -749,6 +749,8 @@ class AutomatorRecorderAndPlayer
     testToBeSerialized.description = @testDescription
     testToBeSerialized.tags = @testTags
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
+    @calculateTotalTimeOfThisTest()
+    testToBeSerialized.totalTime = @totalTime
 
     """
   // This Automator file is automatically

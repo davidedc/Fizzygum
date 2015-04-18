@@ -10,6 +10,7 @@ class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   absoluteBoundsOfMorphRelativeToWorld: null
   morphUniqueIDString: null
   morphPathRelativeToWorld: null
+  isPartOfListMorph: null
 
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
@@ -17,7 +18,7 @@ class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, systemTestsRecorderAndPlayer) ->
+  constructor: (@ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method

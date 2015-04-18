@@ -468,12 +468,13 @@ class WorldMorph extends FrameMorph
     pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer
     pointerPositionPixelsInMorph = @hand.pointerPositionPixelsInMorph topMorphUnderPointer
     pointerPositionPixelsInWorld = @hand.position()
-    return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld]
+    isPartOfListMorph = (topMorphUnderPointer.parentThatIsA ListMorph)?
+    return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
 
 
-  addMouseChangeCommand: (upOrDownTrueUpFalseDown, button, ctrlKey) ->
+  addMouseChangeCommand: (upOrDown, button, ctrlKey) ->
     pointerAndMorphInfo = @getPointerAndMorphInfo()
-    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDownTrueUpFalseDown, button, ctrlKey, pointerAndMorphInfo...
+    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDown, button, ctrlKey, pointerAndMorphInfo...
 
 
   processMouseDown: (button, ctrlKey) ->
@@ -486,7 +487,7 @@ class WorldMorph extends FrameMorph
     # or user left or right-clicks on a menu,
     # in which case we record a more specific test
     # commands.
-    @addMouseChangeCommand false, button, ctrlKey
+    @addMouseChangeCommand "down", button, ctrlKey
 
 
     @hand.processMouseDown button, ctrlKey
@@ -494,13 +495,17 @@ class WorldMorph extends FrameMorph
   processMouseUp: (button) ->
     # event.preventDefault()
 
-    @addMouseChangeCommand true
+    @addMouseChangeCommand "up"
 
     @hand.processMouseUp button
 
   processMouseMove: (pageX, pageY) ->
-    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY)
     @hand.processMouseMove  pageX, pageY
+    # "@hand.processMouseMove" could cause a Grab
+    # command to be issued, so we want to
+    # add the mouse move command here *after* the
+    # potential grab command.
+    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.draggingSomething())
 
   # event.type must be keypress
   getChar: (event) ->
