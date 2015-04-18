@@ -275,7 +275,7 @@ class ScrollFrameMorph extends FrameMorph
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
-        (!world.hand.children.length) and
+        (!world.hand.draggingSomething()) and
         (@bounds.containsPoint(world.hand.position()))
           newPos = world.hand.bounds.origin
           if @hBar.isVisible
@@ -317,7 +317,7 @@ class ScrollFrameMorph extends FrameMorph
       inner = @bounds.insetBy(inset)
       if (@bounds.containsPoint(pos)) and
         (not (inner.containsPoint(pos))) and
-        (hand.children.length)
+        (hand.draggingSomething())
           @autoScroll pos
       else
         @step = noOperation

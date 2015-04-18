@@ -134,7 +134,8 @@ class HandMorph extends Morph
   grab: (aMorph) ->
     oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
-    if !@children.length
+    if !@draggingSomething()
+      @world.systemTestsRecorderAndPlayer.addGrabCommand()
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
       aMorph.prepareToBeGrabbed? @
@@ -163,9 +164,13 @@ class HandMorph extends Morph
       # readjusts itself if you take some morphs
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
-  
+
+  draggingSomething: ->
+    if @children.length > 0 then true else false
+
   drop: ->
-    if @children.length
+    if @draggingSomething()
+      @world.systemTestsRecorderAndPlayer.addDropCommand()
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
       @changed()
@@ -276,7 +281,7 @@ class HandMorph extends Morph
 
     # check whether we are in the middle
     # of a drag/drop operation
-    if @children.length
+    if @draggingSomething()
       @drop()
       @mouseButton = null
     else
@@ -353,7 +358,7 @@ class HandMorph extends Morph
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
-    if @children.length
+    if @draggingSomething()
       @drop()
     else
       # let's check if the user clicked on a menu item,
@@ -493,7 +498,7 @@ class HandMorph extends Morph
 
     morph = @topMorphUnderPointer()
     @destroyTemporaries()
-    if @children.length isnt 0
+    if @draggingSomething()
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
@@ -677,7 +682,7 @@ class HandMorph extends Morph
     # mouseOverNew = @allMorphsAtPointer().reverse()
     mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
 
-    if (!@children.length) and (@mouseButton is "left")
+    if (!@draggingSomething()) and (@mouseButton is "left")
       topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
@@ -733,7 +738,7 @@ class HandMorph extends Morph
         newMorph.mouseEnterDragging?()  if @mouseButton
 
       # autoScrolling support:
-      if @children.length
+      if @draggingSomething()
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3

@@ -358,6 +358,17 @@ class AutomatorRecorderAndPlayer
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addGrabCommand: ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandGrab @
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  addDropCommand: ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandDrop @
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   resetWorld: ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
