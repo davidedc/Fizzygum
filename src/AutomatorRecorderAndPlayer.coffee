@@ -830,14 +830,14 @@ class AutomatorRecorderAndPlayer
 
       aGoodImageName = (failedImage).imageName.replace("obtained-", "")
       filenameForScript = aGoodImageName.replace(/_image_.*/g, "")
-      renamerScript += "rm " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+      renamerScript += "rm " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/" +
               aGoodImageName + "*\n"
-      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/automation-assets/" + filenameForScript + "/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
