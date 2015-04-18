@@ -169,6 +169,11 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild(mousePointerIndicator)
     elem = document.createElement("img");
     elem.setAttribute("src", "icons/xPointerImage.png");
+    # this image is actually 160x160
+    # to make sure it looks crisp on
+    # higher-ppi displays
+    elem.setAttribute("width", "40px");
+    elem.setAttribute("height", "40px");
     document.getElementById("mousePointerIndicator").appendChild(elem);
 
     # add the div highlighting the state of the
