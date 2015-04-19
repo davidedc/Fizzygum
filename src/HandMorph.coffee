@@ -671,17 +671,17 @@ class HandMorph extends Morph
     Morph::trackChanges = true
     @fullChanged()
 
-  processMouseMove: (pageX, pageY) ->
+  processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
-    posInDocument = getDocumentPositionOf(@world.worldCanvas)
-    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
+    pos = new Point(worldX, worldY)
     @setPosition pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
       mousePointerIndicator.style.display = 'block'
-      mousePointerIndicator.style.left = (pageX - (mousePointerIndicator.clientWidth/2)) + 'px'
-      mousePointerIndicator.style.top = (pageY - (mousePointerIndicator.clientHeight/2)) + 'px'
+      posInDocument = getDocumentPositionOf(@world.worldCanvas)
+      mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
+      mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
     # determine the new mouse-over-list.
     # Spacial multiplexing

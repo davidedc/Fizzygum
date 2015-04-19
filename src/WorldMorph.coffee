@@ -467,6 +467,8 @@ class WorldMorph extends FrameMorph
     morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
     pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer
     pointerPositionPixelsInMorph = @hand.pointerPositionPixelsInMorph topMorphUnderPointer
+    # note that this pointer position is in world
+    # coordinates not in page coordinates
     pointerPositionPixelsInWorld = @hand.position()
     isPartOfListMorph = (topMorphUnderPointer.parentThatIsA ListMorph)?
     return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
@@ -668,7 +670,13 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      @processMouseMove  event.pageX, event.pageY
+      posInDocument = getDocumentPositionOf(@worldCanvas)
+      # events from JS arrive in page coordinates,
+      # we turn those into world coordinates
+      # instead.
+      worldX = event.pageX - posInDocument.x
+      worldY = event.pageY - posInDocument.y
+      @processMouseMove worldX, worldY
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>
