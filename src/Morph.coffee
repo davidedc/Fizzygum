@@ -966,8 +966,23 @@ class Morph extends MorphicNode
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
-      if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
-        w.broken.push @visibleBounds().spread()
+      # also check whether we are attached to the hand cause that still counts
+      # TODO this has to be made simpler and has to take into account
+      # visibility as well?
+      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
+        if (w instanceof HandMorph)
+          w = w.world
+          boundsToBeChanged = @boundsIncludingChildren().spread()
+        else
+          # @visibleBounds() should be smaller area
+          # and cheaper to calculate than @boundsIncludingChildren()
+          # cause it doesn't traverse the children and clips
+          # the area based on the clipping morphs up the
+          # hierarchy
+          boundsToBeChanged = @visibleBounds().spread()
+
+        w.broken.push boundsToBeChanged
+
     @parent.childChanged @  if @parent
   
   fullChanged: ->
@@ -975,8 +990,14 @@ class Morph extends MorphicNode
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
+      # also check whether we are attached to the hand cause that still counts
+      # TODO this has to be made simpler and has to take into account
+      # visibility as well?
       if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
-        world.broken.push @boundsIncludingChildren().spread()
+        if (w instanceof HandMorph)
+          w = w.world
+
+        w.broken.push @boundsIncludingChildren().spread()
   
   childChanged: ->
     # react to a  change in one of my children,
