@@ -109,8 +109,8 @@ class AutomatorRecorderAndPlayer
       console.log "deleting #{testName}_image_#{imageNumber}"
       delete AutomatorRecorderAndPlayer.loadedImages["#{testName}_image_#{imageNumber}"]
     console.log "deleting SystemTest_#{testName}"
-    window["#{testName}" + "_automatorCommands"] = null
-    delete window["#{testName}" + "_automatorCommands"]
+    window["#{testName}" + "_automationCommands"] = null
+    delete window["#{testName}" + "_automationCommands"]
 
   # clear any test with the same name
   # that might be loaded
@@ -776,7 +776,7 @@ class AutomatorRecorderAndPlayer
 
     testToBeSerialized = {}
     testToBeSerialized.automatorCommandsSequence = commands
-    testNameExtended = @testName + "_automatorCommands"
+    testNameExtended = @testName + "_automationCommands"
 
     """
   // This Automator file is automatically
@@ -899,7 +899,7 @@ class AutomatorRecorderAndPlayer
     zip.file("SystemTest_#{@testName}.js", blob);
 
     blob = @automatorCommandsFileContentCreator window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence
-    testNameExtended = @testName + "_automatorCommands"
+    testNameExtended = @testName + "_automationCommands"
     zip.file("SystemTest_#{testNameExtended}.js", blob);
     
     # save all the images, each as a .png and .js file
@@ -932,7 +932,7 @@ class AutomatorRecorderAndPlayer
 
   loadTest: (testNumber, andThenDoThis)->
     script = document.createElement('script')
-    script.src = "js/tests/"+@testsList()[testNumber] + "_automatorCommands.js"
+    script.src = "js/tests/"+@testsList()[testNumber] + "_automationCommands.js"
 
     script.onload = =>
       @loadImagesOfTest testNumber, andThenDoThis
@@ -941,7 +941,7 @@ class AutomatorRecorderAndPlayer
 
   loadImagesOfTest: (testNumber, andThenDoThis)->
 
-    for eachCommand in window[(@testsList()[testNumber])+ "_automatorCommands"].automatorCommandsSequence
+    for eachCommand in window[(@testsList()[testNumber])+ "_automationCommands"].automatorCommandsSequence
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in AutomatorRecorderAndPlayer.testsAssetsManifest
@@ -1014,7 +1014,7 @@ class AutomatorRecorderAndPlayer
     # need a few tests rather than all of them.
     @loadTest @indexOfSystemTestBeingPlayed, =>
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
-      @automatorCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_automatorCommands"].automatorCommandsSequence
+      @automatorCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_automationCommands"].automatorCommandsSequence
       @startTestPlayingWithSlideIntro()
 
   # Select tests based on test names, or tags, or special

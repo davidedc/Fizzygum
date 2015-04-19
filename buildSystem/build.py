@@ -142,16 +142,16 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     filenames2 = []
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
-          print(">>>>> %s" % (filename))
           # the way to differentiate between files: the asset files contain a hash
           # in the filename that we can use to filter them in/out.
           # note that this is not a normal regexp but rather a unix bash regexp
           # as explained here:
           # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
-          if filename.endswith("_automatorCommands"):
+          if filename.endswith("_automationCommands"):
             continue
           filenames2.append(os.path.join(filename))
+          print("adding to test manifest: %s" % (filename))
     filenames2 = sorted(filenames2)
 
     manifest = ""
