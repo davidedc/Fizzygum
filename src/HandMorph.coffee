@@ -135,7 +135,15 @@ class HandMorph extends Morph
     oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
     if !@draggingSomething()
+
       @world.systemTestsRecorderAndPlayer.addGrabCommand()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "grab"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+
+
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
       aMorph.prepareToBeGrabbed? @
@@ -170,7 +178,14 @@ class HandMorph extends Morph
 
   drop: ->
     if @draggingSomething()
+
       @world.systemTestsRecorderAndPlayer.addDropCommand()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "drop"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
       @changed()

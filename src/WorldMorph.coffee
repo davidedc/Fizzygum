@@ -505,6 +505,14 @@ class WorldMorph extends FrameMorph
     # command to be issued, so we want to
     # add the mouse move command here *after* the
     # potential grab command.
+
+    if @hand.draggingSomething()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "drag"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+    
     @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.draggingSomething())
 
   # event.type must be keypress

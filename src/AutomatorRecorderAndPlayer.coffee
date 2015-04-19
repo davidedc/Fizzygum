@@ -93,6 +93,8 @@ class AutomatorRecorderAndPlayer
   totalTime: 0
   millisOfTestSoFar: 0
 
+  tagsCollectedWhileRecordingTest: []
+
   constructor: (@worldMorph, @handMorph) ->
 
   clearCommandSeqAndImagesRelatedToTest: (testName) ->
@@ -141,6 +143,7 @@ class AutomatorRecorderAndPlayer
     @clearAnyDataRelatedToTest @testName
 
     @automatorCommandsSequence = []
+    @tagsCollectedWhileRecordingTest = []
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
     AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.RECORDING
 
@@ -747,7 +750,7 @@ class AutomatorRecorderAndPlayer
     testToBeSerialized = {}
     testToBeSerialized.timeRecorded = new Date()
     testToBeSerialized.description = @testDescription
-    testToBeSerialized.tags = @testTags
+    testToBeSerialized.tags = @testTags.concat @tagsCollectedWhileRecordingTest
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
     @calculateTotalTimeOfThisTest()
     testToBeSerialized.totalTime = @totalTime

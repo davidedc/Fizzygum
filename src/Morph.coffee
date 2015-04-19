@@ -247,6 +247,11 @@ class Morph extends MorphicNode
     super()
     @assignUniqueID()
 
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+      if (arr.indexOf @constructor.name) == -1
+        arr.push @constructor.name
+
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = @color or new Color(80, 80, 80)
