@@ -22,6 +22,18 @@ class Rectangle
   toString: ->
     "[" + @origin + " | " + @extent() + "]"
 
+  onlyContainingIntegers: ->
+    if Math.floor(@origin.x) == @origin.x and
+      Math.floor(@origin.y) == @origin.y and
+      Math.floor(@corner.x) == @corner.x and
+      Math.floor(@corner.y) == @corner.y
+        return true
+    else
+      return false
+
+  debugIfFloats: ->
+    if !@onlyContainingIntegers()
+      debugger
 
   prepareBeforeSerialization: ->
     @className = @constructor.name

@@ -894,7 +894,7 @@ class Morph extends MorphicNode
     #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage img, 0, 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round(-offset.x) * pixelRatio, Math.round(-offset.y) * pixelRatio
+    ctx.drawImage img, Math.round(-offset.x * pixelRatio), Math.round(-offset.y * pixelRatio)
     sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
     #ctx.scale pixelRatio, pixelRatio

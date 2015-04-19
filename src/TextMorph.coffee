@@ -98,7 +98,7 @@ class TextMorph extends StringMorph
         # slots count in the arrays
         @lines.push currentLine
         @lineSlots.push slot
-        @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)
+        @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
         currentLine = ""
       else
         if @maxWidth > 0
@@ -106,7 +106,7 @@ class TextMorph extends StringMorph
           # to check whether we overflowed it. So create
           # a prospective line and then check its width.
           lineForOverflowTest = currentLine + word + " "
-          w = context.measureText(lineForOverflowTest).width
+          w = Math.ceil(context.measureText(lineForOverflowTest).width)
           if w > @maxWidth
             # ok we just overflowed the available space,
             # so we need to push the old line and its
@@ -115,7 +115,7 @@ class TextMorph extends StringMorph
             # word that has caused the overflow.
             @lines.push currentLine
             @lineSlots.push slot
-            @maxLineWidth = Math.max(@maxLineWidth, context.measureText(currentLine).width)
+            @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
             currentLine = word + " "
           else
             # no overflow happened, so just proceed as normal
@@ -133,7 +133,7 @@ class TextMorph extends StringMorph
 
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
-    height = @lines.length * (fontHeight(@fontSize) + shadowHeight)
+    height = @lines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
     if @maxWidth is 0
       @bounds = @bounds.origin.extent(new Point(@maxLineWidth + shadowWidth, height))
     else
@@ -174,7 +174,7 @@ class TextMorph extends StringMorph
       context.fillStyle = @shadowColor.toString()
       i = 0
       for line in @lines
-        width = context.measureText(line).width + shadowWidth
+        width = Math.ceil(context.measureText(line).width) + shadowWidth
         if @alignment is "right"
           x = @width() - width
         else if @alignment is "center"
@@ -192,14 +192,14 @@ class TextMorph extends StringMorph
     context.fillStyle = @color.toString()
     i = 0
     for line in @lines
-      width = context.measureText(line).width + shadowWidth
+      width = Math.ceil(context.measureText(line).width) + shadowWidth
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
         x = (@width() - width) / 2
       else # 'left'
         x = 0
-      y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+      y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
       i++
       context.fillText line, x + offx, y + offy
 
@@ -212,9 +212,9 @@ class TextMorph extends StringMorph
       p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, context.measureText(c).width + 1, fontHeight(@fontSize)
+      context.fillRect p.x, p.y, Math.ceil(context.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
       context.fillStyle = @markedTextColor.toString()
-      context.fillText c, p.x, p.y + fontHeight(@fontSize)
+      context.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
 
   
   setExtent: (aPoint) ->
@@ -251,8 +251,8 @@ class TextMorph extends StringMorph
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
-    yOffset = slotRow * (fontHeight(@fontSize) + shadowHeight)
-    xOffset = context.measureText((@lines[slotRow]).substring(0,slotColumn)).width
+    yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
+    xOffset = Math.ceil(context.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -266,10 +266,10 @@ class TextMorph extends StringMorph
     col = 0
     shadowHeight = Math.abs(@shadowOffset.y)
     context = @image.getContext("2d")
-    row += 1  while aPoint.y - @top() > ((fontHeight(@fontSize) + shadowHeight) * row)
+    row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += context.measureText(@lines[row - 1][col]).width
+      charX += Math.ceil(context.measureText(@lines[row - 1][col]).width)
       col += 1
     @lineSlots[Math.max(row - 1, 0)] + col - 1
   

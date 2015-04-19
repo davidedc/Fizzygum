@@ -13,6 +13,17 @@ class Point
   y: null
    
   constructor: (@x = 0, @y = 0) ->
+
+  onlyContainingIntegers: ->
+    if Math.floor(@x) == @x and
+      Math.floor(@y) == @y
+        return true
+    else
+      return false
+
+  debugIfFloats: ->
+    if !@onlyContainingIntegers()
+      debugger
   
   # Point string representation: e.g. '12@68'
   toString: ->

@@ -212,7 +212,7 @@ radiansToDegrees = (radians) ->
 
 fontHeight = (height) ->
   minHeight = Math.max(height, WorldMorph.preferencesAndSettings.minimumFontHeight)
-  minHeight * 1.2 # assuming 1/5 font size for ascenders
+  Math.ceil(minHeight * 1.2) # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->
   # answer a new empty instance of Canvas, don't display anywhere
@@ -220,8 +220,8 @@ newCanvas = (extentPoint) ->
     x: 0
     y: 0
   canvas = document.createElement("canvas")
-  canvas.width = ext.x
-  canvas.height = ext.y
+  canvas.width = Math.ceil ext.x
+  canvas.height = Math.ceil  ext.y
   canvas
 
 getMinimumFontHeight = ->
@@ -233,7 +233,7 @@ getMinimumFontHeight = ->
   canvas.height = size
   ctx = canvas.getContext("2d")
   ctx.font = "1px serif"
-  maxX = ctx.measureText(str).width
+  maxX = Math.ceil(ctx.measureText(str).width)
   ctx.fillStyle = "black"
   ctx.textBaseline = "bottom"
   ctx.fillText str, 0, size

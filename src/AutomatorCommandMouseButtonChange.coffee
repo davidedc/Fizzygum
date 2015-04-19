@@ -16,8 +16,8 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
-    newX = (theMorph.bounds.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0]) + theMorph.bounds.origin.x
-    newY = (theMorph.bounds.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1]) + theMorph.bounds.origin.y
+    newX = Math.round((theMorph.bounds.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0])) + theMorph.bounds.origin.x
+    newY = Math.round((theMorph.bounds.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.bounds.origin.y
     world.hand.silentSetPosition new Point(newX, newY)
 
     if commandBeingPlayed.button == "left"

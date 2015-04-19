@@ -106,7 +106,7 @@ class StringMorph extends Morph
     context.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    return Math.max(context.measureText(text).width, 1)
+    return Math.ceil(Math.max(context.measureText(text).width, 1))
 
   setLayoutBeforeUpdatingBackingStore: ->
     width = @calculateExtentBasedOnText()
@@ -142,7 +142,7 @@ class StringMorph extends Morph
       p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
       context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, context.measureText(c).width + 1,
+      context.fillRect p.x, p.y, Math.ceil(context.measureText(c).width) + 1,
         fontHeight(@fontSize)
       context.fillStyle = @markedTextColor.toString()
       context.fillText c, p.x, fontHeight(@fontSize)
@@ -155,7 +155,7 @@ class StringMorph extends Morph
     drawBlank = ->
       context.drawImage blank, Math.round(x), 0
       x += space
-    space = context.measureText(" ").width
+    space = Math.ceil(context.measureText(" ").width)
     blank = newCanvas(new Point(space, @height()).scaleBy pixelRatio)
     ctx = blank.getContext("2d")
     words = @text.split(" ")
@@ -171,7 +171,7 @@ class StringMorph extends Morph
       isFirst = false
       if word isnt ""
         context.fillText word, x, y
-        x += context.measureText(word).width
+        x += Math.ceil(context.measureText(word).width)
   
   
   # StringMorph measuring:
@@ -181,7 +181,7 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
     context = @image.getContext("2d")
-    xOffset = context.measureText(text.substring(0,dest)).width
+    xOffset = Math.ceil(context.measureText(text.substring(0,dest)).width)
     @pos = dest
     x = @left() + xOffset
     y = @top()
@@ -196,10 +196,10 @@ class StringMorph extends Morph
     context = @image.getContext("2d")
 
     while aPoint.x - @left() > charX
-      charX += context.measureText(text[idx]).width
+      charX += Math.ceil(context.measureText(text[idx]).width)
       idx += 1
       if idx is text.length
-        if (context.measureText(text).width - (context.measureText(text[idx - 1]).width / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(context.measureText(text).width) - (Math.ceil(context.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   
