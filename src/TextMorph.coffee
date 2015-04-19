@@ -181,7 +181,7 @@ class TextMorph extends StringMorph
           x = (@width() - width) / 2
         else # 'left'
           x = 0
-        y = (i + 1) * (fontHeight(@fontSize) + shadowHeight) - shadowHeight
+        y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
         i++
         context.fillText line, x + offx, y + offy
 
