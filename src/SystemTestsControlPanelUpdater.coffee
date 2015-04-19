@@ -123,12 +123,15 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild(SystemTestsControlPanelUpdater[nameOfPanel])
 
   constructor: ->
+    
+    document.getElementById("world").style.top = "25px"
+
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
-    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small; top: 440px; left:200px; position: absolute;'
+    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small; top: 464px; left: 200px; position: absolute;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
-    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv", "height: 150px; width: 571px;border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 440px;left: 386px;"
+    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv", "height: 127px; width: 571px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden; position: absolute; top: 464px; left: 386px;"
     @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv", "height: 128px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 592px;width: 757px;left: 200px;"
 
     theCanvasDiv = document.getElementById('world')
@@ -198,17 +201,31 @@ class SystemTestsControlPanelUpdater
     document.getElementById("rightMouseButtonIndicator").appendChild(elem);
     fade('rightMouseButtonIndicator', 1, 0, 10, new Date().getTime());
 
+
+    # add the progress bar, which is made of two nested divs
+    testProgressBar = document.createElement('div')
+    testProgressBar.id = "testProgressBar"
+    testProgressBar.style.cssText = 'position: absolute; left: 20%; top: 0px; font-size: xx-large; font-family: sans-serif; width: 100%; height: 50px; background: rgb(221, 221, 221);'
+
+    testProgressBarWrap = document.createElement('div')
+    testProgressBarWrap.id = "testProgressBarWrap"
+    testProgressBarWrap.style.cssText = 'position: relative; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
+    testProgressBarWrap.appendChild(testProgressBar)
+    document.body.appendChild(testProgressBarWrap)
+    fade('testProgressBarWrap', 1, 0, 10, new Date().getTime());
+
     # add the div highlighting the percentage progress of the test
     testProgressIndicator = document.createElement('div')
     testProgressIndicator.id = "testProgressIndicator"
-    testProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 10px; font-size: xx-large; font-family: sans-serif;'
+    testProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 7px; font-size: x-small; font-family: sans-serif; color: red;'
     document.body.appendChild(testProgressIndicator)
     fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
+
 
     # add the div with title and description of the test
     testTitleAndDescription = document.createElement('div')
     testTitleAndDescription.id = "testTitleAndDescription"
-    testTitleAndDescription.style.cssText = 'position: absolute; left: 0px; top: 0px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 860px; height: 340px; padding: 50px; color: white;'
+    testTitleAndDescription.style.cssText = 'position: absolute; left: 0px; top: 25px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 860px; height: 340px; padding: 50px; color: white;'
     document.body.appendChild(testTitleAndDescription)
     fade('testTitleAndDescription', 1, 0, 10, new Date().getTime());
     #testTitleAndDescription.innerHTML = "Test asdasdasdasdasdakjhdasdasdasd"

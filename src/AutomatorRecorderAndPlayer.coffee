@@ -169,6 +169,7 @@ class AutomatorRecorderAndPlayer
     world.worldCanvas.tabIndex = "1"
 
     fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade('testProgressBarWrap', 1, 0, 10, new Date().getTime());
 
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
     AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.IDLE
@@ -683,6 +684,7 @@ class AutomatorRecorderAndPlayer
      console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @totalTime
      window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
      document.getElementById('testProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @totalTime)*100) + "%" + " complete"
+     document.getElementById('testProgressBar').style.left =  (Math.floor((@millisOfTestSoFar / @totalTime)*100)) + "%"
      @timeOfPreviouslyPlayedCommand = timeNow
      @indexOfTestCommandBeingPlayedFromSequence++
      if @indexOfTestCommandBeingPlayedFromSequence == @automatorCommandsSequence.length
@@ -725,6 +727,7 @@ class AutomatorRecorderAndPlayer
 
   setUpIntroSlide: ->
     fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('testProgressBarWrap', 0, 1, 10, new Date().getTime());
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
 
     testName = @testsList()[@indexOfSystemTestBeingPlayed]
