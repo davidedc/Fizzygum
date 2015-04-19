@@ -531,8 +531,10 @@ class Morph extends MorphicNode
   
   
   setPosition: (aPoint) ->
+    aPoint.debugIfFloats()
     delta = aPoint.subtract(@topLeft())
     @moveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
     delta = aPoint.subtract(@topLeft())

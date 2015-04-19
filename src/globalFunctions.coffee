@@ -215,6 +215,7 @@ fontHeight = (height) ->
   Math.ceil(minHeight * 1.2) # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->
+  extentPoint?.debugIfFloats()
   # answer a new empty instance of Canvas, don't display anywhere
   ext = extentPoint or
     x: 0
