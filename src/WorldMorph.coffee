@@ -212,7 +212,7 @@ class WorldMorph extends FrameMorph
       if window.location.href.indexOf("worldWithSystemTestHarness") != -1
         if @systemTestsRecorderAndPlayer.atLeastOneTestHasBeenRun
           if @systemTestsRecorderAndPlayer.allTestsPassedSoFar
-            document.body.style.background = "green"
+            document.getElementById("background").style.background = "green"
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
