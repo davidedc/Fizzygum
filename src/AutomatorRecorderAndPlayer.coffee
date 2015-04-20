@@ -90,8 +90,10 @@ class AutomatorRecorderAndPlayer
   atLeastOneTestHasBeenRun: false
   allTestsPassedSoFar: true
 
-  totalTime: 0
+  testDuration: 0
+  allTestsDuration: 0
   millisOfTestSoFar: 0
+  millisOfAllTestsSoFar: 0
 
   tagsCollectedWhileRecordingTest: []
 
@@ -168,8 +170,12 @@ class AutomatorRecorderAndPlayer
     # complete
     world.worldCanvas.tabIndex = "1"
 
-    fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
-    fade('testProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade('allTestsProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade('allTestsProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
+
 
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
     AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.IDLE
@@ -680,11 +686,19 @@ class AutomatorRecorderAndPlayer
        # no image data of morph, so just wait
        return
    if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
+
      @millisOfTestSoFar += timeUntilNextCommand
-     console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @totalTime
+     @millisOfAllTestsSoFar += timeUntilNextCommand
+
+     console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @testDuration
      window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
-     document.getElementById('testProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @totalTime)*100) + "%" + " complete"
-     document.getElementById('testProgressBar').style.left =  (Math.floor((@millisOfTestSoFar / @totalTime)*100)) + "%"
+
+     document.getElementById('singleTestProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @testDuration)*100) + "%" + " complete"
+     document.getElementById('singleTestProgressBar').style.left =  (Math.floor((@millisOfTestSoFar / @testDuration)*100)) + "%"
+
+     document.getElementById('allTestsProgressIndicator').innerHTML = "overall: " + Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100) + "%" + " complete"
+     document.getElementById('allTestsProgressBar').style.left =  (Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100)) + "%"
+
      @timeOfPreviouslyPlayedCommand = timeNow
      @indexOfTestCommandBeingPlayedFromSequence++
      if @indexOfTestCommandBeingPlayedFromSequence == @automatorCommandsSequence.length
@@ -692,11 +706,11 @@ class AutomatorRecorderAndPlayer
        @stopTestPlaying()
 
   calculateTotalTimeOfThisTest: ->
-    totalTime = 0
+    testDuration = 0
     for eachCommand in @automatorCommandsSequence
       if eachCommand.millisecondsSincePreviousCommand?
-        totalTime += eachCommand.millisecondsSincePreviousCommand
-    @totalTime = totalTime
+        testDuration += eachCommand.millisecondsSincePreviousCommand
+    @testDuration = testDuration
 
   startTestPlaying: ->
 
@@ -715,10 +729,16 @@ class AutomatorRecorderAndPlayer
     @atLeastOneTestHasBeenRun = true
     @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
-    @calculateTotalTimeOfThisTest()
+
+    testName = @testsList()[@indexOfSystemTestBeingPlayed]
+    if window["#{testName}"]?
+      @testDuration = window["#{testName}"].testDuration
+
     @millisOfTestSoFar = 0
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
+
+    document.getElementById('numberOfTestsDoneIndicator').innerHTML = "test " + (@indexOfSystemTestBeingPlayed + 1) + " of " + @testsList().length
 
 
   startTestPlayingWithSlideIntro: ->
@@ -726,8 +746,12 @@ class AutomatorRecorderAndPlayer
     @setUpIntroSlide()
 
   setUpIntroSlide: ->
-    fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
-    fade('testProgressBarWrap', 0, 1, 10, new Date().getTime());
+    fade('singleTestProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('singleTestProgressBarWrap', 0, 1, 10, new Date().getTime());
+    fade('allTestsProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('allTestsProgressBarWrap', 0, 1, 10, new Date().getTime());
+    fade('numberOfTestsDoneIndicator', 0, 1, 10, new Date().getTime());
+
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
 
     testName = @testsList()[@indexOfSystemTestBeingPlayed]
@@ -756,7 +780,7 @@ class AutomatorRecorderAndPlayer
     testToBeSerialized.tags = @testTags.concat @tagsCollectedWhileRecordingTest
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
     @calculateTotalTimeOfThisTest()
-    testToBeSerialized.totalTime = @totalTime
+    testToBeSerialized.testDuration = @testDuration
 
     """
   // This Automator file is automatically
@@ -843,7 +867,7 @@ class AutomatorRecorderAndPlayer
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/" +
               aGoodImageName + "*\n"
-      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/automation-assets/" + filenameForScript + "/" +
+      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
@@ -984,7 +1008,10 @@ class AutomatorRecorderAndPlayer
 
     console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
-    return preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+    actualTestList = preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+
+    return actualTestList
+
 
   loadTestMetadata: (testNumber, andThen)->
 
@@ -1068,6 +1095,7 @@ class AutomatorRecorderAndPlayer
 
   runAllSystemTests: ->
     console.log "runAllSystemTests"
+    @millisOfAllTestsSoFar = 0
 
     # we proceed here to FIRST load all the
     # metadata of all the tests, then
@@ -1079,6 +1107,12 @@ class AutomatorRecorderAndPlayer
     # of all the tests is loaded.
     actuallyRunTheTests = \
       =>
+        actualTestList = @testsList()
+        @allTestsDuration = 0
+        #debugger
+        for eachTest in actualTestList
+          @allTestsDuration += window["#{eachTest}"].testDuration
+
         @playingAllSystemTests = true
         @indexOfSystemTestBeingPlayed = -1
         @runNextSystemTest()
