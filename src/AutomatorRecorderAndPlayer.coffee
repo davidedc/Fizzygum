@@ -424,7 +424,7 @@ class AutomatorRecorderAndPlayer
       errorMessage = "FAIL was expecting a menu under the pointer"
       console.log errorMessage
       @allTestsPassedSoFar = false
-      document.body.style.background = "red"
+      document.getElementById("background").style.background = "red"
       if SystemTestsControlPanelUpdater?
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
       @stopTestPlaying()
@@ -448,11 +448,11 @@ class AutomatorRecorderAndPlayer
       giveError = =>
         if orderMatters
           @allTestsPassedSoFar = false
-          document.body.style.background = "red"
+          document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         else
           @allTestsPassedSoFar = false
-          document.body.style.background = "red"
+          document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -510,7 +510,7 @@ class AutomatorRecorderAndPlayer
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
         @allTestsPassedSoFar = false
-        document.body.style.background = "red"
+        document.getElementById("background").style.background = "red"
         errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -657,7 +657,7 @@ class AutomatorRecorderAndPlayer
    message = "FAIL - no screenshots like this one"
    console.log message
    @allTestsPassedSoFar = false
-   document.body.style.background = "red"
+   document.getElementById("background").style.background = "red"
    if SystemTestsControlPanelUpdater?
      SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
