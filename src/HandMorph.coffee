@@ -22,6 +22,7 @@ class HandMorph extends Morph
   mouseOverList: null
   temporaries: null
   touchHoldTimeout: null
+  doubleClickMorph: null
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -56,41 +57,6 @@ class HandMorph extends Morph
         (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
     return result
 
-  leftOrRightClickOnMenuItemWithText: (whichMouseButtonPressed, textLabelOfClickedItem, textLabelOccurrenceNumber) ->
-    mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
-    itemToTrigger = mostRecentlyCreatedMenu.nthChildSuchThat textLabelOccurrenceNumber, (m) ->
-      m.labelString == textLabelOfClickedItem
-
-    # these three are checks and actions that normally
-    # would happen on MouseDown event, but we
-    # removed that event as we collapsed the down and up
-    # into this coalesced higher-level event,
-    # but we still need to make these checks and actions
-    @destroyActiveHandleIfHandHasNotActionedIt itemToTrigger
-    @stopEditingIfActionIsElsewhere itemToTrigger
-
-    world.freshlyCreatedMenus = []
-    if whichMouseButtonPressed == "left"
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
-        setTimeout \
-          =>
-            fade('leftMouseButtonIndicator', 1, 0, 500, new Date().getTime())
-          , 100
-        
-      itemToTrigger.mouseClickLeft()
-    else if whichMouseButtonPressed == "right"
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
-        fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
-        setTimeout \
-          =>
-            fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime())
-          , 100
-      @openContextMenuAtPointer itemToTrigger.children[0]
-
-    if whichMouseButtonPressed == "left"
-      expectedClick = "mouseClickLeft"
-    @cleanupMenuMorphs(expectedClick, itemToTrigger)
 
 
   openContextMenuAtPointer: (morphTheMenuIsAbout) ->
@@ -109,7 +75,7 @@ class HandMorph extends Morph
     @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
       setTimeout \
         =>
@@ -168,7 +134,16 @@ class HandMorph extends Morph
   grab: (aMorph) ->
     oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
-    if !@children.length
+    if !@draggingSomething()
+
+      @world.systemTestsRecorderAndPlayer.addGrabCommand()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "grab"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+
+
       @world.stopEditing()
       @grabOrigin = aMorph.situation()
       aMorph.prepareToBeGrabbed? @
@@ -197,9 +172,20 @@ class HandMorph extends Morph
       # readjusts itself if you take some morphs
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
-  
+
+  draggingSomething: ->
+    if @children.length > 0 then true else false
+
   drop: ->
-    if @children.length
+    if @draggingSomething()
+
+      @world.systemTestsRecorderAndPlayer.addDropCommand()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "drop"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
       @changed()
@@ -287,11 +273,22 @@ class HandMorph extends Morph
         else
           @world.stopEditing()
 
+  pointerPositionFractionalInMorph: (theMorph) ->
+    [relativeXPos, relativeYPos] = @pointerPositionPixelsInMorph theMorph
+    fractionalXPos = relativeXPos / theMorph.bounds.width()
+    fractionalYPos = relativeYPos / theMorph.bounds.height()
+    return [fractionalXPos, fractionalYPos]
+
+  pointerPositionPixelsInMorph: (theMorph) ->
+    relativeXPos = @bounds.origin.x - theMorph.bounds.origin.x
+    relativeYPos = @bounds.origin.y - theMorph.bounds.origin.y
+    return [relativeXPos, relativeYPos]
+
   processMouseDown: (button, ctrlKey) ->
     @destroyTemporaries()
     @morphToGrab = null
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
         fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
       else
@@ -299,7 +296,7 @@ class HandMorph extends Morph
 
     # check whether we are in the middle
     # of a drag/drop operation
-    if @children.length
+    if @draggingSomething()
       @drop()
       @mouseButton = null
     else
@@ -364,10 +361,9 @@ class HandMorph extends Morph
   
    # note that the button param is not used,
    # but adding it for consistency...
-   processMouseUp: (button) ->
-    actionAlreadyProcessed = false
+  processMouseUp: (button) ->
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
         fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime());
       else
@@ -377,7 +373,7 @@ class HandMorph extends Morph
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
-    if @children.length
+    if @draggingSomething()
       @drop()
     else
       # let's check if the user clicked on a menu item,
@@ -385,6 +381,7 @@ class HandMorph extends Morph
       # [TODO] you need to do some of this only if you
       # are recording a test, it's worth saving
       # these steps...
+      #debugger
       ignored = null
       toDestructure = morph.parentThatIsA(MenuItemMorph)
       if toDestructure?
@@ -420,18 +417,39 @@ class HandMorph extends Morph
             # this being a right click, pop
             # up a menu as needed.
             @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
-          @openContextMenuAtPointer morph
-          actionAlreadyProcessed = true
 
-      if !actionAlreadyProcessed
-        # trigger the action
-        until morph[expectedClick]
-          morph = morph.parent
-          if not morph?
-            break
-        if morph?
-          if morph == @mouseDownMorph
-            morph[expectedClick] @bounds.origin
+      # trigger the action
+      until morph[expectedClick]
+        morph = morph.parent
+        if not morph?
+          break
+      if morph?
+        if morph == @mouseDownMorph
+
+          if expectedClick == "mouseClickLeft"
+            pointerAndMorphInfo = world.getPointerAndMorphInfo()
+            world.systemTestsRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+          else if expectedClick == "mouseClickRight"
+            pointerAndMorphInfo = world.getPointerAndMorphInfo()
+            world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+
+          morph[expectedClick] @bounds.origin
+          # also send doubleclick if the
+          # two clicks happen on the same morph
+          unless @doubleClickMorph?
+            @doubleClickMorph = morph
+            setTimeout (=>
+              if @doubleClickMorph?
+                console.log "single click"
+              @doubleClickMorph = null
+              return false
+            ), 300
+          else
+            if @doubleClickMorph == morph
+              @doubleClickMorph = null
+              console.log "double click"
+              @processDoubleClick()
+
 
       @cleanupMenuMorphs(expectedClick, morph)
     @mouseButton = null
@@ -489,9 +507,13 @@ class HandMorph extends Morph
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
   processDoubleClick: ->
+
+    pointerAndMorphInfo = world.getPointerAndMorphInfo()
+    world.systemTestsRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
+
     morph = @topMorphUnderPointer()
     @destroyTemporaries()
-    if @children.length isnt 0
+    if @draggingSomething()
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
@@ -649,17 +671,17 @@ class HandMorph extends Morph
     Morph::trackChanges = true
     @fullChanged()
 
-  processMouseMove: (pageX, pageY) ->
+  processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
-    posInDocument = getDocumentPositionOf(@world.worldCanvas)
-    pos = new Point(pageX - posInDocument.x, pageY - posInDocument.y)
+    pos = new Point(worldX, worldY)
     @setPosition pos
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
       mousePointerIndicator.style.display = 'block'
-      mousePointerIndicator.style.left = (pageX - (mousePointerIndicator.clientWidth/2)) + 'px'
-      mousePointerIndicator.style.top = (pageY - (mousePointerIndicator.clientHeight/2)) + 'px'
+      posInDocument = getDocumentPositionOf(@world.worldCanvas)
+      mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
+      mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
     # determine the new mouse-over-list.
     # Spacial multiplexing
@@ -675,7 +697,7 @@ class HandMorph extends Morph
     # mouseOverNew = @allMorphsAtPointer().reverse()
     mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
 
-    if (!@children.length) and (@mouseButton is "left")
+    if (!@draggingSomething()) and (@mouseButton is "left")
       topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
@@ -731,7 +753,7 @@ class HandMorph extends Morph
         newMorph.mouseEnterDragging?()  if @mouseButton
 
       # autoScrolling support:
-      if @children.length
+      if @draggingSomething()
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3

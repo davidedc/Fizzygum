@@ -1,10 +1,11 @@
 # REQUIRES SystemTestsReferenceImage
 # REQUIRES SystemTestsSystemInfo
+# REQUIRES globalFunctions
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.testCommandsSequence = NAMEOFTHETEST.testCommandsSequence
-# (e.g. window.world.systemTestsRecorderAndPlayer.testCommandsSequence = SystemTest_attachRectangleToPartsOfInspector.testCommandsSequence )
+# window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence = NAMEOFTHETEST.automatorCommandsSequence
+# (e.g. window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence = SystemTest_attachRectangleToPartsOfInspector.automatorCommandsSequence )
 # window.world.systemTestsRecorderAndPlayer.startTestPlayingWithSlideIntro()
 
 # How to inspect the screenshot differences:
@@ -45,8 +46,8 @@
 # images. See "how to load/play a test" above
 # to read how to load and play a test.
 
-class SystemTestsRecorderAndPlayer
-  testCommandsSequence: []
+class AutomatorRecorderAndPlayer
+  automatorCommandsSequence: []
   @RECORDING: 0
   @PLAYING: 1
   @IDLE: 2
@@ -89,8 +90,12 @@ class SystemTestsRecorderAndPlayer
   atLeastOneTestHasBeenRun: false
   allTestsPassedSoFar: true
 
-  totalTime: 0
+  testDuration: 0
+  allTestsDuration: 0
   millisOfTestSoFar: 0
+  millisOfAllTestsSoFar: 0
+
+  tagsCollectedWhileRecordingTest: []
 
   constructor: (@worldMorph, @handMorph) ->
 
@@ -104,10 +109,10 @@ class SystemTestsRecorderAndPlayer
       # configuration, we are clearing the variable
       # containing the array
       console.log "deleting #{testName}_image_#{imageNumber}"
-      delete SystemTestsRecorderAndPlayer.loadedImages["#{testName}_image_#{imageNumber}"]
+      delete AutomatorRecorderAndPlayer.loadedImages["#{testName}_image_#{imageNumber}"]
     console.log "deleting SystemTest_#{testName}"
-    window["#{testName}" + "_testCommands"] = null
-    delete window["#{testName}" + "_testCommands"]
+    window["#{testName}" + "_automationCommands"] = null
+    delete window["#{testName}" + "_automationCommands"]
 
   # clear any test with the same name
   # that might be loaded
@@ -139,12 +144,13 @@ class SystemTestsRecorderAndPlayer
     # to the chosen name
     @clearAnyDataRelatedToTest @testName
 
-    @testCommandsSequence = []
+    @automatorCommandsSequence = []
+    @tagsCollectedWhileRecordingTest = []
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
-    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.RECORDING
+    AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.RECORDING
 
   stopTestRecording: ->
-    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.IDLE
 
 
   # gonna use this in a callback so need
@@ -153,10 +159,26 @@ class SystemTestsRecorderAndPlayer
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.stopTestRec)
     console.log "wrapping up the playing of the test"
     
-    fade('testProgressIndicator', 1, 0, 10, new Date().getTime());
+    # seems that if focus is on canvas
+    # then updates to DOM get coalesced so
+    # much that the highlights/flashed
+    # on the test console are super-late
+    # or completely lost. So we need to
+    # temporarily remove the tab index at
+    # the start of the test and then
+    # put it back when the test playing is
+    # complete
+    world.worldCanvas.tabIndex = "1"
+
+    fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade('allTestsProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade('allTestsProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
+
 
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
-    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.IDLE
+    AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.IDLE
 
     # hide indicator of mouse pointer
     mousePointerIndicator = document.getElementById('mousePointerIndicator')
@@ -176,125 +198,135 @@ class SystemTestsRecorderAndPlayer
       @runNextSystemTest()
 
   showTestSource: ->
-    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @testCommandsSequence, null, 4 )))
+    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @automatorCommandsSequence, null, 4 )))
 
   turnOnAnimationsPacingControl: ->
     @constructor.animationsPacingControl = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.tieAnimations
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnAnimationsPacingControl @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOnAnimationsPacingControl @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
   turnOffAnimationsPacingControl: ->
     @constructor.animationsPacingControl = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.tieAnimations
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffAnimationsPacingControl @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOffAnimationsPacingControl @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
   turnOnAlignmentOfMorphIDsMechanism: ->
     @constructor.alignmentOfMorphIDsMechanism = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.alignMorphIDs
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOnAlignmentOfMorphIDsMechanism @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOffAlignmentOfMorphIDsMechanism: ->
     @constructor.alignmentOfMorphIDsMechanism = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.alignMorphIDs
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffAlignmentOfMorphIDsMechanism @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOffAlignmentOfMorphIDsMechanism @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOnHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideGeometry
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsGeometryInfoInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOnHidingOfMorphsGeometryInfoInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOffHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideGeometry
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOnHidingOfMorphsContentExtractInLabels: ->
     @constructor.hidingOfMorphsContentExtractInLabels = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideMorphContentExtracts
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsContentExtractInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOnHidingOfMorphsContentExtractInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOffHidingOfMorphsContentExtractInLabels: ->
     @constructor.hidingOfMorphsContentExtractInLabels = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideMorphContentExtracts
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsContentExtractInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOffHidingOfMorphsContentExtractInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOnHidingOfMorphsNumberIDInLabels: ->
     @constructor.hidingOfMorphsNumberIDInLabels = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideMorphIDs
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOnHidingOfMorphsNumberIDInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOnHidingOfMorphsNumberIDInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   turnOffHidingOfMorphsNumberIDInLabels: ->
     @constructor.hidingOfMorphsNumberIDInLabels = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideMorphIDs
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandTurnOffHidingOfMorphsNumberIDInLabels @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandTurnOffHidingOfMorphsNumberIDInLabels @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
-  addMouseMoveCommand: (pageX, pageY) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandMouseMove pageX, pageY, @
-    @testCommandsSequence.push systemTestCommand
+  addMouseMoveCommand: (pageX, pageY, draggingSomething) ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, draggingSomething, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseDownCommand: (button, ctrlKey) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandMouseDown button, ctrlKey, @
+  addMouseChangeCommand: (upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandMouseButtonChange upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
     @lastMouseDownCommand = systemTestCommand
-    @testCommandsSequence.push systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  addMouseClickCommand: (button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandMouseClick button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
+    @lastMouseDownCommand = systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  # note that we give for granted that double click
+  # is always on the left button
+  addMouseDoubleClickCommand: (ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandMouseDoubleClick ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
+    @lastMouseDownCommand = systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
 
   addOpenContextMenuCommand: (context) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    @removeLastMouseUpAndMouseDownCommands()
-    systemTestCommand = new SystemTestsCommandOpenContextMenu context, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    #@removeLastMouseUpAndMouseDownCommands()
+    systemTestCommand = new AutomatorCommandOpenContextMenu context, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addCommandLeftOrRightClickOnMenuItem: (mouseButton, labelString, occurrenceNumber) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    @removeLastMouseUpAndMouseDownCommands()
-    systemTestCommand = new SystemTestsCommandLeftOrRightClickOnMenuItem mouseButton, labelString, occurrenceNumber, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    #@removeLastMouseUpAndMouseDownCommands()
+    systemTestCommand = new AutomatorCommandLeftOrRightClickOnMenuItem mouseButton, labelString, occurrenceNumber, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseUpCommand: ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandMouseUp @
-    @lastMouseUpCommand = systemTestCommand
-    @testCommandsSequence.push systemTestCommand
-    @timeOfPreviouslyRecordedCommand = new Date().getTime()
-  
   # doesn't *actually* remove the command
   # because you do need to wait the time.
   # because for example the bubbles pop-up
@@ -302,50 +334,61 @@ class SystemTestsRecorderAndPlayer
   # You could remove the commands and note down
   # how much was the wait on each and charge it to
   # the next command but that would be very messy.
-  removeLastMouseUpAndMouseDownCommands: ->
-    @lastMouseDownCommand.transformIntoDoNothingCommand()
-    @lastMouseUpCommand.transformIntoDoNothingCommand()
+  #removeLastMouseUpAndMouseDownCommands: ->
+  #  @lastMouseDownCommand.transformIntoDoNothingCommand()
+  #  @lastMouseUpCommand.transformIntoDoNothingCommand()
 
   addKeyPressCommand: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandKeyPress charCode, symbol, shiftKey, ctrlKey, altKey, metaKey, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addKeyDownCommand: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addKeyUpCommand: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandKeyUp scanCode, shiftKey, ctrlKey, altKey, metaKey, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addCopyCommand: () ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandCopy @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandCopy @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addPasteCommand: (clipboardText) ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandPaste clipboardText, @
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandPaste clipboardText, @
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addGrabCommand: ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandGrab @
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
+  addDropCommand: ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandDrop @
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   resetWorld: ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
-    systemTestCommand = new SystemTestsCommandResetWorld @
-    window[systemTestCommand.testCommandName].replayFunction @, null
-    @testCommandsSequence.push systemTestCommand
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandResetWorld @
+    window[systemTestCommand.automatorCommandName].replayFunction @, null
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addTestComment: ->
-    return if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
     # note how we take the time before we prompt the
     # user so we can show the message sooner when playing
     # the test - i.e. the message will appear at the time
@@ -356,8 +399,8 @@ class SystemTestsRecorderAndPlayer
     # next steps.
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
     comment = prompt("enter comment", "your comment here")
-    systemTestCommand = new SystemTestsCommandShowComment comment, @
-    @testCommandsSequence.push systemTestCommand
+    systemTestCommand = new AutomatorCommandShowComment comment, @
+    @automatorCommandsSequence.push systemTestCommand
 
   checkStringsOfItemsInMenuOrderImportant: (stringOfItemsInMenuInOriginalOrder) ->
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkMenuEntriesInOrder)
@@ -381,20 +424,20 @@ class SystemTestsRecorderAndPlayer
       errorMessage = "FAIL was expecting a menu under the pointer"
       console.log errorMessage
       @allTestsPassedSoFar = false
-      document.body.style.background = "red"
+      document.getElementById("background").style.background = "red"
       if SystemTestsControlPanelUpdater?
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
       @stopTestPlaying()
 
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       if orderMatters
-        systemTestCommand = new SystemTestsCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
+        systemTestCommand = new AutomatorCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
       else
-        systemTestCommand = new SystemTestsCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
+        systemTestCommand = new AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
 
-      @testCommandsSequence.push systemTestCommand
+      @automatorCommandsSequence.push systemTestCommand
       @timeOfPreviouslyRecordedCommand = new Date().getTime()
-    else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       giveSuccess = =>
         if orderMatters
           message = "PASS Strings in menu are same and in same order"
@@ -405,11 +448,11 @@ class SystemTestsRecorderAndPlayer
       giveError = =>
         if orderMatters
           @allTestsPassedSoFar = false
-          document.body.style.background = "red"
+          document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         else
           @allTestsPassedSoFar = false
-          document.body.style.background = "red"
+          document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -447,7 +490,7 @@ class SystemTestsRecorderAndPlayer
 
   checkNumberOfItemsInMenu: (numberOfItems) ->
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkNumnberOfItems)
-    if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       menuAtPointer = @handMorph.menuAtPointer()
       console.log menuAtPointer
       if menuAtPointer?
@@ -456,10 +499,10 @@ class SystemTestsRecorderAndPlayer
       else
         console.log "was expecting a menu under the pointer"
         numberOfItems = 0
-      systemTestCommand = new SystemTestsCommandCheckNumberOfItemsInMenu numberOfItems, @
-      @testCommandsSequence.push systemTestCommand
+      systemTestCommand = new AutomatorCommandCheckNumberOfItemsInMenu numberOfItems, @
+      @automatorCommandsSequence.push systemTestCommand
       @timeOfPreviouslyRecordedCommand = new Date().getTime()
-    else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+    else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       menuAtPointer = @handMorph.menuAtPointer()
       giveSuccess = =>
         message = "PASS Number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
@@ -467,7 +510,7 @@ class SystemTestsRecorderAndPlayer
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
         @allTestsPassedSoFar = false
-        document.body.style.background = "red"
+        document.getElementById("background").style.background = "red"
         errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
@@ -483,18 +526,18 @@ class SystemTestsRecorderAndPlayer
   takeScreenshot: (whichMorph = @worldMorph) ->
     console.log "taking screenshot"
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
-    systemTestCommand = new SystemTestsCommandScreenshot imageName, @, whichMorph != @worldMorph
+    systemTestCommand = new AutomatorCommandScreenshot imageName, @, whichMorph != @worldMorph
 
     imageData = whichMorph.asItAppearsOnScreen()
 
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
-    unless SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"]?
-      SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"] = []
-    SystemTestsRecorderAndPlayer.loadedImages["#{imageName}"].push takenScreenshot
+    unless AutomatorRecorderAndPlayer.loadedImages["#{imageName}"]?
+      AutomatorRecorderAndPlayer.loadedImages["#{imageName}"] = []
+    AutomatorRecorderAndPlayer.loadedImages["#{imageName}"].push takenScreenshot
     @collectedImages.push takenScreenshot
-    @testCommandsSequence.push systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.RECORDING
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
       return systemTestCommand
 
   # a lenghty method because there
@@ -595,13 +638,13 @@ class SystemTestsRecorderAndPlayer
    # related to the failed tests. If we don't keep those
    # in this reference, they are disposed of and garbage collected
    # since they are quite big and they accumulate.
-   SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
-   for eachImage in SystemTestsRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
+   AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = AutomatorRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
+   for eachImage in AutomatorRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
      console.log "length of obtained: " + eachImage.imageData.length
      if eachImage.imageData == screenshotObtained
       message = "PASS - screenshot " + eachImage.fileName + " matched"
-      SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = null
-      delete SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"]
+      AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = null
+      delete AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"]
       console.log message
       if SystemTestsControlPanelUpdater?
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
@@ -614,7 +657,7 @@ class SystemTestsRecorderAndPlayer
    message = "FAIL - no screenshots like this one"
    console.log message
    @allTestsPassedSoFar = false
-   document.body.style.background = "red"
+   document.getElementById("background").style.background = "red"
    if SystemTestsControlPanelUpdater?
      SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
    obtainedImageName = "obtained-" + eachImage.imageName
@@ -623,8 +666,8 @@ class SystemTestsRecorderAndPlayer
 
   replayTestCommands: ->
    timeNow = (new Date()).getTime()
-   commandToBePlayed = @testCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
-   # console.log "examining command: " + commandToBePlayed.testCommandName + " at: " + commandToBePlayed.millisecondsSincePreviousCommand +
+   commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
+   # console.log "examining command: " + commandToBePlayed.automatorCommandName + " at: " + commandToBePlayed.millisecondsSincePreviousCommand +
    #   " time now: " + timeNow + " we are at: " + (timeNow - @timeOfPreviouslyPlayedCommand)
    timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
    # for the screenshot, the replay is going
@@ -638,37 +681,64 @@ class SystemTestsRecorderAndPlayer
    # search for imageDataOfAParticularMorph everywhere
    # to see where the image data is created and
    # put there.
-   if commandToBePlayed.testCommandName == "SystemTestsCommandScreenshot" and commandToBePlayed.screenshotTakenOfAParticularMorph
+   if commandToBePlayed.automatorCommandName == "AutomatorCommandScreenshot" and commandToBePlayed.screenshotTakenOfAParticularMorph
      if not @imageDataOfAParticularMorph?
        # no image data of morph, so just wait
        return
    if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
+
      @millisOfTestSoFar += timeUntilNextCommand
-     console.log "running command: " + commandToBePlayed.testCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @testCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @totalTime
-     window[commandToBePlayed.testCommandName].replayFunction.call @,@,commandToBePlayed
-     document.getElementById('testProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @totalTime)*100) + "%" + " complete"
+     @millisOfAllTestsSoFar += timeUntilNextCommand
+
+     console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @testDuration
+     window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
+
+     document.getElementById('singleTestProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @testDuration)*100) + "%" + " complete"
+     document.getElementById('singleTestProgressBar').style.left =  (Math.floor((@millisOfTestSoFar / @testDuration)*100)) + "%"
+
+     document.getElementById('allTestsProgressIndicator').innerHTML = "overall: " + Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100) + "%" + " complete"
+     document.getElementById('allTestsProgressBar').style.left =  (Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100)) + "%"
+
      @timeOfPreviouslyPlayedCommand = timeNow
      @indexOfTestCommandBeingPlayedFromSequence++
-     if @indexOfTestCommandBeingPlayedFromSequence == @testCommandsSequence.length
+     if @indexOfTestCommandBeingPlayedFromSequence == @automatorCommandsSequence.length
        console.log "stopping the test player"
        @stopTestPlaying()
 
   calculateTotalTimeOfThisTest: ->
-    totalTime = 0
-    for eachCommand in @testCommandsSequence
+    testDuration = 0
+    for eachCommand in @automatorCommandsSequence
       if eachCommand.millisecondsSincePreviousCommand?
-        totalTime += eachCommand.millisecondsSincePreviousCommand
-    @totalTime = totalTime
+        testDuration += eachCommand.millisecondsSincePreviousCommand
+    @testDuration = testDuration
 
   startTestPlaying: ->
-    SystemTestsRecorderAndPlayer.state = SystemTestsRecorderAndPlayer.PLAYING
+
+    # seems that if focus is on canvas
+    # then updates to DOM get coalesced so
+    # much that the highlights/flashed
+    # on the test console are super-late
+    # or completely lost. So we need to
+    # temporarily remove the tab index at
+    # the start of the test and then
+    # put it back when the test playing is
+    # complete
+    world.worldCanvas.tabIndex = "-1"
+
+    AutomatorRecorderAndPlayer.state = AutomatorRecorderAndPlayer.PLAYING
     @atLeastOneTestHasBeenRun = true
     @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
-    @calculateTotalTimeOfThisTest()
+
+    testName = @testsList()[@indexOfSystemTestBeingPlayed]
+    if window["#{testName}"]?
+      @testDuration = window["#{testName}"].testDuration
+
     @millisOfTestSoFar = 0
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
+
+    document.getElementById('numberOfTestsDoneIndicator').innerHTML = "test " + (@indexOfSystemTestBeingPlayed + 1) + " of " + @testsList().length
 
 
   startTestPlayingWithSlideIntro: ->
@@ -676,7 +746,12 @@ class SystemTestsRecorderAndPlayer
     @setUpIntroSlide()
 
   setUpIntroSlide: ->
-    fade('testProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('singleTestProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('singleTestProgressBarWrap', 0, 1, 10, new Date().getTime());
+    fade('allTestsProgressIndicator', 0, 1, 10, new Date().getTime());
+    fade('allTestsProgressBarWrap', 0, 1, 10, new Date().getTime());
+    fade('numberOfTestsDoneIndicator', 0, 1, 10, new Date().getTime());
+
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
 
     testName = @testsList()[@indexOfSystemTestBeingPlayed]
@@ -702,23 +777,16 @@ class SystemTestsRecorderAndPlayer
     testToBeSerialized = {}
     testToBeSerialized.timeRecorded = new Date()
     testToBeSerialized.description = @testDescription
-    # A string that can be used to group
-    # tests together, imagine for example they
-    # could be visualised in a tree structure of
-    # some sort.
-    # to begin with, it will be sorted
-    # alphabetically so at the top we put the
-    # "topical" tests that we just want run
-    # quickly cause they are about stuff
-    # we are working on right now.
-    testToBeSerialized.testGroup = "00: current tests / 00: unused / 00: unused"
-    testToBeSerialized.tags = @testTags
+    testToBeSerialized.tags = @testTags.concat @tagsCollectedWhileRecordingTest
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
+    @calculateTotalTimeOfThisTest()
+    testToBeSerialized.testDuration = @testDuration
 
     """
-  // This system test is automatically
+  // This Automator file is automatically
   // created.
-  // This test (and related reference images)
+  // If this is a test,
+  // this file (and related reference images)
   // can be copied in the /src/tests folder
   // to make them available in the testing
   // environment.
@@ -727,20 +795,21 @@ class SystemTestsRecorderAndPlayer
   SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialized, null, 4)};
     """
 
-  testCommandsFileContentCreator: (commands) ->
+  automatorCommandsFileContentCreator: (commands) ->
     # these here below is just one string
     # spanning multiple lines, which
     # includes the testName and commands
     # in the right places.
 
     testToBeSerialized = {}
-    testToBeSerialized.testCommandsSequence = commands
-    testNameExtended = @testName + "_testCommands"
+    testToBeSerialized.automatorCommandsSequence = commands
+    testNameExtended = @testName + "_automationCommands"
 
     """
-  // This system test is automatically
+  // This Automator file is automatically
   // created.
-  // This test (and related reference images)
+  // It this is a test,
+  // this file (and related reference images)
   // can be copied in the /src/tests folder
   // to make them available in the testing
   // environment.
@@ -752,7 +821,7 @@ class SystemTestsRecorderAndPlayer
   saveFailedScreenshots: ->
     zip = new JSZip()
     
-    SystemTestsRecorderAndPlayer.loadedImages = SystemTestsRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff
+    AutomatorRecorderAndPlayer.loadedImages = AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff
 
     # debugger
     # save all the images, each as a .png and .js file
@@ -791,21 +860,21 @@ class SystemTestsRecorderAndPlayer
 
       aGoodImageName = (failedImage).imageName.replace("obtained-", "")
       filenameForScript = aGoodImageName.replace(/_image_.*/g, "")
-      renamerScript += "rm " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+      renamerScript += "rm " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/" +
               aGoodImageName + "*\n"
-      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/" +
+      renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/\n\n"
 
-      setOfGoodImages = SystemTestsRecorderAndPlayer.loadedImages[aGoodImageName]
+      setOfGoodImages = AutomatorRecorderAndPlayer.loadedImages[aGoodImageName]
       diffNumber = 0
       for eachGoodImage in setOfGoodImages
         diffNumber++
@@ -856,8 +925,8 @@ class SystemTestsRecorderAndPlayer
     blob = @testMetadataFileContentCreator()
     zip.file("SystemTest_#{@testName}.js", blob);
 
-    blob = @testCommandsFileContentCreator window.world.systemTestsRecorderAndPlayer.testCommandsSequence
-    testNameExtended = @testName + "_testCommands"
+    blob = @automatorCommandsFileContentCreator window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence
+    testNameExtended = @testName + "_automationCommands"
     zip.file("SystemTest_#{testNameExtended}.js", blob);
     
     # save all the images, each as a .png and .js file
@@ -890,7 +959,7 @@ class SystemTestsRecorderAndPlayer
 
   loadTest: (testNumber, andThenDoThis)->
     script = document.createElement('script')
-    script.src = "js/tests/"+@testsList()[testNumber] + "_testCommands.js"
+    script.src = "js/tests/"+@testsList()[testNumber] + "_automationCommands.js"
 
     script.onload = =>
       @loadImagesOfTest testNumber, andThenDoThis
@@ -899,10 +968,10 @@ class SystemTestsRecorderAndPlayer
 
   loadImagesOfTest: (testNumber, andThenDoThis)->
 
-    for eachCommand in window[(@testsList()[testNumber])+ "_testCommands"].testCommandsSequence
+    for eachCommand in window[(@testsList()[testNumber])+ "_automationCommands"].automatorCommandsSequence
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
-        for eachAssetInManifest in SystemTestsRecorderAndPlayer.testsAssetsManifest
+        for eachAssetInManifest in AutomatorRecorderAndPlayer.testsAssetsManifest
           if eachAssetInManifest.indexOf(pureImageName) != -1
             script = document.createElement('script')
             ###
@@ -933,22 +1002,25 @@ class SystemTestsRecorderAndPlayer
     if @selectedTestsBasedOnTags.length != 0
       preselectionBeforeSplittingGroups = @selectedTestsBasedOnTags
     else
-      preselectionBeforeSplittingGroups = SystemTestsRecorderAndPlayer.testsManifest
+      preselectionBeforeSplittingGroups = AutomatorRecorderAndPlayer.testsManifest
 
     console.log "tests list before partitioning and picking: " + preselectionBeforeSplittingGroups
 
     console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
-    return preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+    actualTestList = preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+
+    return actualTestList
+
 
   loadTestMetadata: (testNumber, andThen)->
 
-    if testNumber >= SystemTestsRecorderAndPlayer.testsManifest.length
+    if testNumber >= AutomatorRecorderAndPlayer.testsManifest.length
       andThen()
       return
 
     script = document.createElement('script')
-    script.src = "js/tests/" + SystemTestsRecorderAndPlayer.testsManifest[testNumber] + ".js"
+    script.src = "js/tests/" + AutomatorRecorderAndPlayer.testsManifest[testNumber] + ".js"
 
     script.onload = =>
       @loadTestMetadata(testNumber+1, andThen)
@@ -972,7 +1044,7 @@ class SystemTestsRecorderAndPlayer
     # need a few tests rather than all of them.
     @loadTest @indexOfSystemTestBeingPlayed, =>
       SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + @testsList()[@indexOfSystemTestBeingPlayed]
-      @testCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_testCommands"].testCommandsSequence
+      @automatorCommandsSequence = window[(@testsList()[@indexOfSystemTestBeingPlayed])+ "_automationCommands"].automatorCommandsSequence
       @startTestPlayingWithSlideIntro()
 
   # Select tests based on test names, or tags, or special
@@ -998,7 +1070,7 @@ class SystemTestsRecorderAndPlayer
     selectTheTestsBasedOnTags = \
       =>
         @selectedTestsBasedOnTags = []
-        for eachTest in SystemTestsRecorderAndPlayer.testsManifest
+        for eachTest in AutomatorRecorderAndPlayer.testsManifest
           for eachWantedTagOrName in wantedTagsOrNamesArray
             # special tag/name "all" matches all the tests
             if eachWantedTagOrName == "all"
@@ -1023,10 +1095,11 @@ class SystemTestsRecorderAndPlayer
 
   runAllSystemTests: ->
     console.log "runAllSystemTests"
+    @millisOfAllTestsSoFar = 0
 
     # we proceed here to FIRST load all the
     # metadata of all the tests, then
-    # one by one as needed we need the testCommands
+    # one by one as needed we need the automatorCommands
     # and the assets.
 
     # First name the callback that starts the
@@ -1034,6 +1107,12 @@ class SystemTestsRecorderAndPlayer
     # of all the tests is loaded.
     actuallyRunTheTests = \
       =>
+        actualTestList = @testsList()
+        @allTestsDuration = 0
+        #debugger
+        for eachTest in actualTestList
+          @allTestsDuration += window["#{eachTest}"].testDuration
+
         @playingAllSystemTests = true
         @indexOfSystemTestBeingPlayed = -1
         @runNextSystemTest()

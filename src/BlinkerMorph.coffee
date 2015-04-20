@@ -21,8 +21,8 @@ class BlinkerMorph extends Morph
     # screenshots.
     # So we check here that flag, and make the
     # caret is always going to be visible.
-    if SystemTestsRecorderAndPlayer.animationsPacingControl and
-     SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+    if AutomatorRecorderAndPlayer.animationsPacingControl and
+     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
       return
  
     # in all other cases just

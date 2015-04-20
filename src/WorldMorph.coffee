@@ -17,7 +17,7 @@ class WorldMorph extends FrameMorph
   # the event listeners so we are
   # going to put them all in properties
   # here.
-  dblclickEventListener: null
+  # dblclickEventListener: null
   mousedownEventListener: null
   touchstartEventListener: null
   mouseupEventListener: null
@@ -179,7 +179,7 @@ class WorldMorph extends FrameMorph
     @bounds = new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
 
     @initEventListeners()
-    @systemTestsRecorderAndPlayer = new SystemTestsRecorderAndPlayer(@, @hand)
+    @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
 
     @changed()
     @updateBackingStore()
@@ -206,18 +206,18 @@ class WorldMorph extends FrameMorph
   nextStartupAction: ->
     startupActions = JSON.parse(getParameterByName('startupActions'))
 
-    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
-
-    if WorldMorph.ongoingUrlActionNumber == startupActions.actions.length
+    if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber= 0
       if window.location.href.indexOf("worldWithSystemTestHarness") != -1
         if @systemTestsRecorderAndPlayer.atLeastOneTestHasBeenRun
           if @systemTestsRecorderAndPlayer.allTestsPassedSoFar
-            document.body.style.background = "green"
+            document.getElementById("background").style.background = "green"
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
+
+    console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if currentAction.name == "runTests"
@@ -235,7 +235,12 @@ class WorldMorph extends FrameMorph
       @systemTestsRecorderAndPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
-
+  getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
+    allCandidateMorphsWithSameTextDescription = 
+      @allChildrenTopToBottomSuchThat( (m) ->
+        m.getTextDescription() == textDescription
+      )
+    return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
 
   mostRecentlyCreatedMenu: ->
     mostRecentMenu = null
@@ -262,7 +267,7 @@ class WorldMorph extends FrameMorph
   # Morph for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
       # Check which objects end with the word Morph
       theWordMorph = "Morph"
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->
@@ -452,6 +457,28 @@ class WorldMorph extends FrameMorph
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
+  getPointerAndMorphInfo:  ->
+    # we might eliminate this command afterwards if
+    # we find out user is clicking on a menu item
+    # or right-clicking on a morph
+    topMorphUnderPointer = @hand.topMorphUnderPointer()
+    absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.bounds.asArray_xywh()
+    morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
+    morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
+    pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer
+    pointerPositionPixelsInMorph = @hand.pointerPositionPixelsInMorph topMorphUnderPointer
+    # note that this pointer position is in world
+    # coordinates not in page coordinates
+    pointerPositionPixelsInWorld = @hand.position()
+    isPartOfListMorph = (topMorphUnderPointer.parentThatIsA ListMorph)?
+    return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
+
+
+  addMouseChangeCommand: (upOrDown, button, ctrlKey) ->
+    pointerAndMorphInfo = @getPointerAndMorphInfo()
+    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDown, button, ctrlKey, pointerAndMorphInfo...
+
+
   processMouseDown: (button, ctrlKey) ->
     # the recording of the test command (in case we are
     # recording a test) is handled inside the function
@@ -462,27 +489,33 @@ class WorldMorph extends FrameMorph
     # or user left or right-clicks on a menu,
     # in which case we record a more specific test
     # commands.
+    @addMouseChangeCommand "down", button, ctrlKey
 
-    # we might eliminate this command afterwards if
-    # we find out user is clicking on a menu item
-    # or right-clicking on a morph
-    @systemTestsRecorderAndPlayer.addMouseDownCommand(button, ctrlKey)
 
     @hand.processMouseDown button, ctrlKey
 
   processMouseUp: (button) ->
     # event.preventDefault()
 
-    # we might eliminate this command afterwards if
-    # we find out user is clicking on a menu item
-    # or right-clicking on a morph
-    @systemTestsRecorderAndPlayer.addMouseUpCommand()
+    @addMouseChangeCommand "up"
 
     @hand.processMouseUp button
 
   processMouseMove: (pageX, pageY) ->
-    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY)
     @hand.processMouseMove  pageX, pageY
+    # "@hand.processMouseMove" could cause a Grab
+    # command to be issued, so we want to
+    # add the mouse move command here *after* the
+    # potential grab command.
+
+    if @hand.draggingSomething()
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+        action = "drag"
+        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        if (arr.indexOf action) == -1
+          arr.push action
+    
+    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.draggingSomething())
 
   # event.type must be keypress
   getChar: (event) ->
@@ -595,13 +628,30 @@ class WorldMorph extends FrameMorph
       window.setTimeout ( => (@caret.insert text)), 50, true
 
 
+  # note that we don't register the normal click,
+  # we figure that out independently.
   initEventListeners: ->
     canvas = @worldCanvas
 
-    @dblclickEventListener = (event) =>
-      event.preventDefault()
-      @hand.processDoubleClick event
-    canvas.addEventListener "dblclick", @dblclickEventListener, false
+    # there is indeed a "dblclick" JS event
+    # but we reproduce it internally.
+    # The reason is that we do so for "click"
+    # because we want to check that the mouse
+    # button was released in the same morph
+    # where it was pressed (cause in the DOM you'd
+    # be pressing and releasing on the same
+    # element i.e. the canvas anyways
+    # so we receive clicks even though they aren't
+    # so we have to take care of the processing
+    # ourselves).
+    # So we also do the same internal
+    # processing for dblclick.
+    # Hence, don't register this event listener
+    # below...
+    #@dblclickEventListener = (event) =>
+    #  event.preventDefault()
+    #  @hand.processDoubleClick event
+    #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
       @processMouseDown event.button, event.ctrlKey
@@ -620,7 +670,13 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      @processMouseMove  event.pageX, event.pageY
+      posInDocument = getDocumentPositionOf(@worldCanvas)
+      # events from JS arrive in page coordinates,
+      # we turn those into world coordinates
+      # instead.
+      worldX = event.pageX - posInDocument.x
+      worldY = event.pageY - posInDocument.y
+      @processMouseMove worldX, worldY
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>
@@ -781,7 +837,7 @@ class WorldMorph extends FrameMorph
   
   removeEventListeners: ->
     canvas = @worldCanvas
-    canvas.removeEventListener 'dblclick', @dblclickEventListener
+    # canvas.removeEventListener 'dblclick', @dblclickEventListener
     canvas.removeEventListener 'mousedown', @mousedownEventListener
     canvas.removeEventListener 'touchstart', @touchstartEventListener
     canvas.removeEventListener 'mouseup', @mouseupEventListener
@@ -811,10 +867,7 @@ class WorldMorph extends FrameMorph
   
   mouseDownRight: ->
     noOperation
-  
-  mouseClickRight: ->
-    noOperation
-  
+    
   wantsDropOf: ->
     # allow handle drops if any drops are allowed
     @acceptsDrops

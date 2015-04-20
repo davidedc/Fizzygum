@@ -148,10 +148,10 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           # as explained here:
           # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
-          if filename.endswith("_testCommands"):
+          if filename.endswith("_automationCommands"):
             continue
           filenames2.append(os.path.join(filename))
-          print("%s" % (filename))
+          print("adding to test manifest: %s" % (filename))
     filenames2 = sorted(filenames2)
 
     manifest = ""
@@ -161,11 +161,11 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     manifest = manifest + "// order of the tests or limit the tests to a subset" + "\n"
     manifest = manifest + "// Just note that this file is loaded as soon as the" + "\n"
     manifest = manifest + "// world starts. Editing afterwards will have no effect." + "\n"
-    manifest = manifest + "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsManifest')) {" + "\n"
-    manifest = manifest + " SystemTestsRecorderAndPlayer.testsManifest = []; }" + "\n"
+    manifest = manifest + "if (!AutomatorRecorderAndPlayer.hasOwnProperty('testsManifest')) {" + "\n"
+    manifest = manifest + " AutomatorRecorderAndPlayer.testsManifest = []; }" + "\n"
 
     for filename in filenames2:
-        manifest = manifest + "SystemTestsRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');\n"
+        manifest = manifest + "AutomatorRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
@@ -189,10 +189,10 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           #print("%s" % (os.path.join(root,filename)))
     filenames2 = sorted(filenames2)
 
-    manifest = "if (!SystemTestsRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) {\nSystemTestsRecorderAndPlayer.testsAssetsManifest = []; }\n"
+    manifest = "if (!AutomatorRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) {\nAutomatorRecorderAndPlayer.testsAssetsManifest = []; }\n"
 
     for filename in filenames2:
-        manifest = manifest + "SystemTestsRecorderAndPlayer.testsAssetsManifest.push('"+filename+"');\n"
+        manifest = manifest + "AutomatorRecorderAndPlayer.testsAssetsManifest.push('"+filename+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:

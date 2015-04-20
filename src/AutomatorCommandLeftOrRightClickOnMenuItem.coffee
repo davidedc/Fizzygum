@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandLeftOrRightClickOnMenuItem extends SystemTestsCommand
+class AutomatorCommandLeftOrRightClickOnMenuItem extends AutomatorCommand
   whichMouseButtonPressed = ""
   textLabelOfClickedItem: 0
   # there might be multiple instances of
@@ -10,11 +10,11 @@ class SystemTestsCommandLeftOrRightClickOnMenuItem extends SystemTestsCommand
   textLabelOccurrenceNumber: 0
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.handMorph.leftOrRightClickOnMenuItemWithText(commandBeingPlayed.whichMouseButtonPressed, commandBeingPlayed.textLabelOfClickedItem, commandBeingPlayed.textLabelOccurrenceNumber)
+    #systemTestsRecorderAndPlayer.handMorph.leftOrRightClickOnMenuItemWithText(commandBeingPlayed.whichMouseButtonPressed, commandBeingPlayed.textLabelOfClickedItem, commandBeingPlayed.textLabelOccurrenceNumber)
 
   constructor: (@whichMouseButtonPressed, @textLabelOfClickedItem, @textLabelOccurrenceNumber, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandLeftOrRightClickOnMenuItem"
+    @automatorCommandName = "AutomatorCommandLeftOrRightClickOnMenuItem"

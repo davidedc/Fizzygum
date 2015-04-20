@@ -80,6 +80,31 @@ class MorphicNode
     return @parent.root() if @parent?
     @
 
+  # returns the path of this morph in terms
+  # of children positions relative to the world.
+  # Meaning that if the morph is not attached to the
+  # world or if it's attached to the hand, then
+  # null is returned.
+  # Example: [0, 2, 1] means that this morph is
+  # at
+  #  world.children[0].children[2].children[1]
+  pathOfChildrenPositionsRelativeToWorld: (pathSoFar) ->
+    if !pathSoFar?
+      pathSoFar = 
+        actualPath: []
+        lengthOfChildrenArrays: []
+
+    if @parent?
+      pathSoFar.actualPath.push @parent.children.indexOf(@)
+      pathSoFar.lengthOfChildrenArrays.push @parent.children.length
+      @parent.pathOfChildrenPositionsRelativeToWorld(pathSoFar)
+    else
+      if @ == world
+        pathSoFar.actualPath.reverse()
+        pathSoFar.lengthOfChildrenArrays.reverse()
+        return pathSoFar
+      else
+        return null
 
   isAttachedAnywhereToWorld: ->
     theRoot = @root()
@@ -105,23 +130,16 @@ class MorphicNode
       result = result.concat(child.allChildrenBottomToTop())
     result
 
+  allChildrenTopToBottom: ->
+    return allChildrenTopToBottomSuchThat(-> true)
+
   # the easiest way here would be to just return
   #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
   # but that's slower.
   # So we do the proper visit here instead.
-  allChildrenTopToBottom: ->
-    # base case - I am a leaf child, so I just
-    # return an array with myself
-    # note that I return an array rather than the
-    # element cause this method is always expected
-    # to return an array.
-    if @children.length == 0
-      return [@]
+  allChildrenTopToBottomSuchThat: (predicate) ->
+    collected = []
 
-    # if I have some children instead, then let's create
-    # an empty array where we'll concatenate the
-    # others.
-    arrayToReturn = []
 
     # if I have children, then start from the top
     # one (i.e. the last in the array) towards the bottom
@@ -129,12 +147,16 @@ class MorphicNode
     # top-to-bottom lists
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      arrayToReturn = arrayToReturn.concat morph.allChildrenTopToBottom
+      collected = collected.concat morph.allChildrenTopToBottomSuchThat predicate
 
-    # ok, last we add ourselves to the bottom
+    # base case: after we checked all the
+    # children, we add ourselves to the last position
     # of the list since this node is at the bottom of all of
     # its children...
-    arrayToReturn.push @
+    if predicate.call(null, @)
+      collected.push @ # include myself
+
+    return collected
 
 
   # A shorthand to run a function on all the internal/terminal nodes in the subtree
@@ -224,7 +246,7 @@ class MorphicNode
       # to find the state of affairs that caused
       # the problem.
       console.log "failed to find morph in test: " + window.world.systemTestsRecorderAndPlayer.name
-      console.log "trying to find item with text label: " +  window.world.systemTestsRecorderAndPlayer.testCommandsSequence[window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence].textLabelOfClickedItem
+      console.log "trying to find item with text label: " +  window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence[window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence].textLabelOfClickedItem
       console.log "...you can likely fix the test by correcting the label above in the test"
       debugger
     # test the morph itself
@@ -298,7 +320,7 @@ class MorphicNode
       if @ instanceof eachConstructor
         return [@, eachConstructor]
     return null  unless @parent
-    @parent.parentThatIsA constructor
+    @parent.parentThatIsA(constructors...)
 
   # checks whether the morph is a child,
   # directly or indirectly, of a specified

@@ -1,10 +1,10 @@
 # 
 
 
-class SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism extends SystemTestsCommand
+class AutomatorCommandTurnOffAlignmentOfMorphIDsMechanism extends AutomatorCommand
 
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()
+    systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
 
 
   constructor: (systemTestsRecorderAndPlayer) ->
@@ -12,4 +12,4 @@ class SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism extends SystemTestsCo
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandTurnOnAlignmentOfMorphIDsMechanism"
+    @automatorCommandName = "AutomatorCommandTurnOffAlignmentOfMorphIDsMechanism"

@@ -49,7 +49,7 @@ COMMON_FILES = [
 'src/BlinkerMorph.coffee',
 'src/MouseSensorMorph.coffee',
 'src/ShadowMorph.coffee',
-'src/SystemTestsRecorderAndPlayer.coffee',
+'src/AutomatorRecorderAndPlayer.coffee',
 ]
 
 def merge(files):

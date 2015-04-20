@@ -1,7 +1,7 @@
 # 
 
 
-class SystemTestsCommandKeyPress extends SystemTestsCommand
+class AutomatorCommandKeyPress extends AutomatorCommand
   charCode: null
   symbol: null
   shiftKey: null
@@ -19,4 +19,4 @@ class SystemTestsCommandKeyPress extends SystemTestsCommand
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
-    @testCommandName = "SystemTestsCommandKeyPress"
+    @automatorCommandName = "AutomatorCommandKeyPress"

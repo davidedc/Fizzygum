@@ -102,6 +102,32 @@ class Morph extends MorphicNode
   clickOutsideMeOrAnyOfMeChildrenCallback: [null]
   isMarkedForDestruction: false
 
+  textDescription: null
+
+
+  mouseClickRight: ->
+    world.hand.openContextMenuAtPointer @
+
+  getTextDescription: ->
+    if @textDescription?
+      return @textDescription + "" + @constructor.name + " (adhoc description of morph)"
+    else
+      return @constructor.name + " (class name)"
+
+  identifyViaTextLabel: ->
+    myTextDescription = @getTextDescription()
+    allCandidateMorphsWithSameTextDescription = 
+      world.allChildrenTopToBottomSuchThat( (m) ->
+        m.getTextDescription() == myTextDescription
+      )
+    position = allCandidateMorphsWithSameTextDescription.indexOf @
+
+    theLenght = allCandidateMorphsWithSameTextDescription.length
+    console.log [myTextDescription, position, theLenght]
+    return [myTextDescription, position, theLenght]
+
+  setTextDescription: (@textDescription) ->
+
 
   ##
   # Reactive Values start
@@ -221,6 +247,11 @@ class Morph extends MorphicNode
     super()
     @assignUniqueID()
 
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+      if (arr.indexOf @constructor.name) == -1
+        arr.push @constructor.name
+
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
     @color = @color or new Color(80, 80, 80)
@@ -266,12 +297,12 @@ class Morph extends MorphicNode
   toString: ->
     firstPart = "a "
 
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
       firstPart = firstPart + @morphClassString()
     else
       firstPart = firstPart + @uniqueIDString()
 
-    if SystemTestsRecorderAndPlayer.state != SystemTestsRecorderAndPlayer.IDLE and SystemTestsRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
       return firstPart
     else
       return firstPart + " " + @bounds
@@ -500,8 +531,10 @@ class Morph extends MorphicNode
   
   
   setPosition: (aPoint) ->
+    aPoint.debugIfFloats()
     delta = aPoint.subtract(@topLeft())
     @moveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
     delta = aPoint.subtract(@topLeft())
@@ -868,7 +901,7 @@ class Morph extends MorphicNode
     #ctx.scale pixelRatio, pixelRatio
     ctx.drawImage img, 0, 0
     ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round(-offset.x) * pixelRatio, Math.round(-offset.y) * pixelRatio
+    ctx.drawImage img, Math.round(-offset.x * pixelRatio), Math.round(-offset.y * pixelRatio)
     sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
     #ctx.scale pixelRatio, pixelRatio
@@ -933,8 +966,23 @@ class Morph extends MorphicNode
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
-      if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
-        w.broken.push @visibleBounds().spread()
+      # also check whether we are attached to the hand cause that still counts
+      # TODO this has to be made simpler and has to take into account
+      # visibility as well?
+      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
+        if (w instanceof HandMorph)
+          w = w.world
+          boundsToBeChanged = @boundsIncludingChildren().spread()
+        else
+          # @visibleBounds() should be smaller area
+          # and cheaper to calculate than @boundsIncludingChildren()
+          # cause it doesn't traverse the children and clips
+          # the area based on the clipping morphs up the
+          # hierarchy
+          boundsToBeChanged = @visibleBounds().spread()
+
+        w.broken.push boundsToBeChanged
+
     @parent.childChanged @  if @parent
   
   fullChanged: ->
@@ -942,8 +990,14 @@ class Morph extends MorphicNode
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
+      # also check whether we are attached to the hand cause that still counts
+      # TODO this has to be made simpler and has to take into account
+      # visibility as well?
       if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
-        world.broken.push @boundsIncludingChildren().spread()
+        if (w instanceof HandMorph)
+          w = w.world
+
+        w.broken.push @boundsIncludingChildren().spread()
   
   childChanged: ->
     # react to a  change in one of my children,
@@ -1228,8 +1282,8 @@ class Morph extends MorphicNode
     @acceptsDrops
   
   pickUp: ->
-    @setPosition world.hand.position().subtract(@extent().floorDivideBy(2))
     world.hand.grab @
+    @setPosition world.hand.position().subtract(@boundsIncludingChildrenNoShadow().extent().floorDivideBy(2))
   
   # note how this verified that
   # at *any point* up in the
@@ -1510,11 +1564,11 @@ class Morph extends MorphicNode
     # going to replay but *waiting* for that screenshot
     # first.
     takePic = =>
-      if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.RECORDING
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         # While recording a test, just trigger for
         # the takeScreenshot command to be recorded. 
         window.world.systemTestsRecorderAndPlayer.takeScreenshot(@)
-      else if SystemTestsRecorderAndPlayer.state == SystemTestsRecorderAndPlayer.PLAYING
+      else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
         # While playing a test, this command puts the
         # screenshot of this morph in a special
         # variable of the system test runner.

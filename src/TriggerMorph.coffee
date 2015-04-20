@@ -85,6 +85,17 @@ class TriggerMorph extends Morph
     if @centered
       @label.setPosition @center().subtract(@label.extent().floorDivideBy(2))
 
+  getTextDescription: ->
+    if @textDescription?
+      return @textDescription + " (adhoc description of button)"
+    if @labelString
+      textWithoutLocationOrInstanceNo = @labelString.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
+      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+      return textWithoutLocationOrInstanceNo + " (text in button)"
+    else
+      return super()
+
+
   setLabel: (@labelString) ->
     # just recreated the label
     # from scratch

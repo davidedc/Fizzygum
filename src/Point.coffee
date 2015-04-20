@@ -13,6 +13,17 @@ class Point
   y: null
    
   constructor: (@x = 0, @y = 0) ->
+
+  onlyContainingIntegers: ->
+    if Math.floor(@x) == @x and
+      Math.floor(@y) == @y
+        return true
+    else
+      return false
+
+  debugIfFloats: ->
+    if !@onlyContainingIntegers()
+      debugger
   
   # Point string representation: e.g. '12@68'
   toString: ->
@@ -55,9 +66,11 @@ class Point
     @x <= aPoint.x and @y <= aPoint.y
   
   max: (aPoint) ->
+    @debugIfFloats()
     new @constructor(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))
   
   min: (aPoint) ->
+    @debugIfFloats()
     new @constructor(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))
   
   
@@ -66,12 +79,15 @@ class Point
     new @constructor(Math.round(@x), Math.round(@y))
   
   abs: ->
+    @debugIfFloats()
     new @constructor(Math.abs(@x), Math.abs(@y))
   
   neg: ->
+    @debugIfFloats()
     new @constructor(-@x, -@y)
   
   mirror: ->
+    @debugIfFloats()
     new @constructor(@y, @x)
   
   floor: ->
@@ -83,22 +99,27 @@ class Point
   
   # Point arithmetic:
   add: (other) ->
+    @debugIfFloats()
     return new @constructor(@x + other.x, @y + other.y)  if other instanceof Point
     new @constructor(@x + other, @y + other)
   
   subtract: (other) ->
+    @debugIfFloats()
     return new @constructor(@x - other.x, @y - other.y)  if other instanceof Point
     new @constructor(@x - other, @y - other)
   
   multiplyBy: (other) ->
+    @debugIfFloats()
     return new @constructor(@x * other.x, @y * other.y)  if other instanceof Point
     new @constructor(@x * other, @y * other)
   
   divideBy: (other) ->
+    @debugIfFloats()
     return new @constructor(@x / other.x, @y / other.y)  if other instanceof Point
     new @constructor(@x / other, @y / other)
   
   floorDivideBy: (other) ->
+    @debugIfFloats()
     if other instanceof Point
       return new @constructor(Math.floor(@x / other.x), Math.floor(@y / other.y))
     new @constructor(Math.floor(@x / other), Math.floor(@y / other))

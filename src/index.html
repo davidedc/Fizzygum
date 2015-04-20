@@ -20,10 +20,10 @@
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
 
-			    worldCanvas.width = Math.round(800 * pixelRatio);
-			    worldCanvas.height = Math.round(600 * pixelRatio);
-			    worldCanvas.style.width = "800px";
-			    worldCanvas.style.height = "600px";				
+			    worldCanvas.width = Math.round(960 * pixelRatio);
+			    worldCanvas.height = Math.round(440 * pixelRatio);
+			    worldCanvas.style.width = "960px";
+			    worldCanvas.style.height = "440px";				
 
 				// Add "false" as second parameter below
 				// to fit the world in canvas as per dimensions
@@ -105,14 +105,17 @@
 		</script>
 	</head>
 
-	<body>
+	<body style="margin: 0px;">
 		<!-- note that the width and height of the
 		canvas below are ignored in case the WorldMorph
 		is created without a second parameter of with
 		second parameter = true, in which case the
 		world will fill the entire page-->
 
-		<canvas id="world" style="-webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -o-user-select: none;">
+		<div id="background" style="position: absolute; left: 0px; top: 0px; width: 960px; height: 720px; background-color: rgb(245, 245, 245);">
+		</canvas>
+
+		<canvas id="world" tabindex="1" style="position: absolute; left: 0px; top: 0px;">
 			<p>Your browser doesn't support canvas.</p>
 		</canvas>
 

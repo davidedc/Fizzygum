@@ -15,6 +15,8 @@ class ShadowMorph extends Morph
   constructor: (@targetMorph, @offset = new Point(7, 7), @alpha = 0.2, @color = new Color(0, 0, 0)) ->
     # console.log "creating shadow morph"
     super()
+    @bounds.debugIfFloats()
+    @offset.debugIfFloats()
 
   setLayoutBeforeUpdatingBackingStore: ->
     # console.log "shadow morph update rendering"
@@ -24,8 +26,11 @@ class ShadowMorph extends Morph
       @silentSetPosition fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
     else
       @silentSetPosition fb.origin.add(@offset)
+    @bounds.debugIfFloats()
+    @offset.debugIfFloats()
 
   isTransparentAt: (aPoint) ->
+    @bounds.debugIfFloats()
     if @bounds.containsPoint(aPoint)
       return false  if @texture
       point = aPoint.subtract(@bounds.origin)
@@ -37,10 +42,13 @@ class ShadowMorph extends Morph
 
   # no changes of position or extent
   updateBackingStore: ->
+    @bounds.debugIfFloats()
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       @image = @targetMorph.shadowImageBlurred(@offset, @color)
     else
       @image = @targetMorph.shadowImage(@offset, @color)
+    @bounds.debugIfFloats()
+    @offset.debugIfFloats()
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -83,4 +91,6 @@ class ShadowMorph extends Morph
         context.globalAlpha = 0.5
         context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
         context.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));
+    @bounds.debugIfFloats()
+    @offset.debugIfFloats()
     
