@@ -897,6 +897,7 @@ class WorldMorph extends FrameMorph
 
 
   resetWorld: ->
+    @hand.drop()
     @destroyAll()
     # some tests might change the background
     # color of the world so let's reset it.
