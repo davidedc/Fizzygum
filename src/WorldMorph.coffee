@@ -899,6 +899,7 @@ class WorldMorph extends FrameMorph
   resetWorld: ->
     @hand.drop()
     @hand.mouseOverList = []
+    @hand.nonFloatDraggedMorph = null
     @destroyAll()
     # some tests might change the background
     # color of the world so let's reset it.

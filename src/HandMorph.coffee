@@ -23,6 +23,8 @@ class HandMorph extends Morph
   temporaries: null
   touchHoldTimeout: null
   doubleClickMorph: null
+  nonFloatDraggedMorph: null
+  nonFloatDragPositionWithinMorphAtStart: null
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -175,6 +177,10 @@ class HandMorph extends Morph
 
   floatDraggingSomething: ->
     if @children.length > 0 then true else false
+
+  nonFloatDraggingSomething: ->
+    return @nonFloatDraggedMorph?
+
 
   drop: ->
     if @floatDraggingSomething()
@@ -373,6 +379,9 @@ class HandMorph extends Morph
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
+
+    @nonFloatDraggedMorph = null
+
     if @floatDraggingSomething()
       @drop()
     else
@@ -674,6 +683,7 @@ class HandMorph extends Morph
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point(worldX, worldY)
+    delta = pos.subtract @position()
     @setPosition pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -697,7 +707,7 @@ class HandMorph extends Morph
     # mouseOverNew = @allMorphsAtPointer().reverse()
     mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
 
-    if (!@floatDraggingSomething()) and (@mouseButton is "left")
+    if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
       topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
@@ -715,6 +725,10 @@ class HandMorph extends Morph
           morph.isfloatDraggable = true
           @grab morph
           @grabOrigin = @morphToGrab.situation()
+        else
+          @nonFloatDraggedMorph = @morphToGrab
+          @nonFloatDragPositionWithinMorphAtStart = pos.subtract @nonFloatDraggedMorph.position()
+
 
         # if the mouse has left its boundsIncludingChildren, center it
         if morph
@@ -742,6 +756,10 @@ class HandMorph extends Morph
     #			}
     #		}
     #
+
+    if @nonFloatDraggingSomething()
+      @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, delta)  if @mouseButton
+
     @mouseOverList.forEach (old) =>
       unless contains(mouseOverNew, old)
         old.mouseLeave?()

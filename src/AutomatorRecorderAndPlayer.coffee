@@ -94,6 +94,7 @@ class AutomatorRecorderAndPlayer
   allTestsDuration: 0
   millisOfTestSoFar: 0
   millisOfAllTestsSoFar: 0
+  forceSlowTestPlaying: true
 
   currentlyPlayingTestName: ""
 
@@ -694,7 +695,7 @@ class AutomatorRecorderAndPlayer
    # debugger
 
    runCurrentCommandImmediately = false
-   if window["#{@currentlyPlayingTestName}"].maxSpeedupFactor > 1
+   if (window["#{@currentlyPlayingTestName}"].maxSpeedupFactor > 1) and (!@forceSlowTestPlaying)
      if (@indexOfTestCommandBeingPlayedFromSequence >= 1) and
       (@indexOfTestCommandBeingPlayedFromSequence < (@automatorCommandsSequence.length - 2))
         consecutiveMouseMoves = 0

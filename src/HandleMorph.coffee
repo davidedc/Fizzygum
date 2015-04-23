@@ -47,6 +47,12 @@ class HandleMorph extends Morph
   # no changes of position or extent
   updateBackingStore: ->
     extent = @extent()
+    
+    highlighted = false
+    if @image?
+      if @image == @highlightImage
+        highlighted = true
+
     @normalImage = newCanvas(extent.scaleBy pixelRatio)
     normalImageContext = @normalImage.getContext("2d")
     normalImageContext.scale pixelRatio, pixelRatio
@@ -55,7 +61,11 @@ class HandleMorph extends Morph
     highlightImageContext.scale pixelRatio, pixelRatio
     @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
     @handleMorphRenderingHelper highlightImageContext, new Color(100, 100, 255), new Color(255, 255, 255)
-    @image = @normalImage
+    
+    if highlighted
+      @image = @highlightImage
+    else
+      @image = @normalImage
   
   handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
@@ -126,25 +136,18 @@ class HandleMorph extends Morph
   
   # HandleMorph stepping:
   mouseDownLeft: (pos) ->
-    world = @root()
-    offset = pos.subtract(@bounds.origin)
     return null  unless @target
     @target.bringToForegroud()
-    @step = =>
-      if world.hand.mouseButton
-        newPos = world.hand.bounds.origin.copy().subtract(offset)
-        if @type is "resize"
-          newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
-          newExt = newExt.max(@minExtent)
-          @target.setExtent newExt
-          @setPosition @target.bottomRight().subtract(@extent().add(@inset))
-        else # type === 'move'
-          @target.setPosition newPos.subtract(@target.extent()).add(@extent())
-      else
-        @step = null
-    
-    unless @target.step
-      @target.step = noOperation
+
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+    newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
+    if @type is "resize"
+      newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
+      newExt = newExt.max(@minExtent)
+      @target.setExtent newExt
+      @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+    else # type === 'move'
+      @target.setPosition newPos.subtract(@target.extent()).add(@extent())
   
   
   # HandleMorph floatDragging and dropping:
