@@ -261,10 +261,10 @@ class StringMorph extends Morph
 
     menu
   
-  toggleIsDraggable: ->
+  toggleIsfloatDraggable: ->
     # for context menu demo purposes
-    @isDraggable = not @isDraggable
-    if @isDraggable
+    @isfloatDraggable = not @isfloatDraggable
+    if @isfloatDraggable
       @disableSelecting()
     else
       @enableSelecting()
@@ -400,7 +400,7 @@ class StringMorph extends Morph
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
-      if @isEditable and (not @isDraggable)
+      if @isEditable and (not @isfloatDraggable)
         @edit()
         @root().caret.gotoPos pos
         @startMark = @slotAt(pos)
@@ -408,7 +408,7 @@ class StringMorph extends Morph
         @currentlySelecting = true
     
     @mouseMove = (pos) ->
-      if @isEditable and @currentlySelecting and (not @isDraggable)
+      if @isEditable and @currentlySelecting and (not @isfloatDraggable)
         newMark = @slotAt(pos)
         if newMark isnt @endMark
           @endMark = newMark

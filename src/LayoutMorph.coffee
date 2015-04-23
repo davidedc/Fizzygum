@@ -360,7 +360,7 @@ class LayoutMorph extends Morph
     # attach a HandleMorph to it so that
     # we can check how it resizes
     handle = new HandleMorph()
-    handle.isDraggable = false
+    handle.isfloatDraggable = false
     handle.target = row
     handle.updateBackingStore()
     handle.noticesTransparentClick = true
@@ -380,7 +380,7 @@ class LayoutMorph extends Morph
     # attach a HandleMorph to it so that
     # we can check how it resizes
     handle = new HandleMorph()
-    handle.isDraggable = false
+    handle.isfloatDraggable = false
     handle.target = row2
     handle.updateBackingStore()
     handle.noticesTransparentClick = true
@@ -402,7 +402,7 @@ class LayoutMorph extends Morph
     # attach a HandleMorph to it so that
     # we can check how it resizes
     handle = new HandleMorph()
-    handle.isDraggable = false
+    handle.isfloatDraggable = false
     handle.target = row3
     handle.updateBackingStore()
     handle.noticesTransparentClick = true
@@ -447,7 +447,7 @@ class LayoutMorph extends Morph
     # attach a HandleMorph to it so that
     # we can check how it resizes
     handle = new HandleMorph()
-    handle.isDraggable = false
+    handle.isfloatDraggable = false
     handle.target = row3
     handle.updateBackingStore()
     handle.noticesTransparentClick = true #

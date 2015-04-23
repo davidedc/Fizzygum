@@ -116,9 +116,9 @@ class HandMorph extends Morph
   
   
   
-  # HandMorph dragging and dropping:
+  # HandMorph floatDragging and dropping:
   #
-  #	drag 'n' drop events, method(arg) -> receiver:
+  #	floatDrag 'n' drop events, method(arg) -> receiver:
   #
   #		prepareToBeGrabbed(handMorph) -> grabTarget
   #		reactToGrabOf(grabbedMorph) -> oldParent
@@ -134,7 +134,7 @@ class HandMorph extends Morph
   grab: (aMorph) ->
     oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
-    if !@draggingSomething()
+    if !@floatDraggingSomething()
 
       @world.systemTestsRecorderAndPlayer.addGrabCommand()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
@@ -173,11 +173,11 @@ class HandMorph extends Morph
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
 
-  draggingSomething: ->
+  floatDraggingSomething: ->
     if @children.length > 0 then true else false
 
   drop: ->
-    if @draggingSomething()
+    if @floatDraggingSomething()
 
       @world.systemTestsRecorderAndPlayer.addDropCommand()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
@@ -217,7 +217,7 @@ class HandMorph extends Morph
       @setExtent new Point()
       morphToDrop.justDropped? @
       target.reactToDropOf morphToDrop, @  if target.reactToDropOf
-      @dragOrigin = null
+      @floatDragOrigin = null
   
   # HandMorph event dispatching:
   #
@@ -230,8 +230,8 @@ class HandMorph extends Morph
   #   mouseDoubleClick
   #		mouseEnter
   #		mouseLeave
-  #		mouseEnterDragging
-  #		mouseLeaveDragging
+  #		mouseEnterfloatDragging
+  #		mouseLeavefloatDragging
   #		mouseMove
   #		mouseScroll
   #
@@ -295,8 +295,8 @@ class HandMorph extends Morph
         fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
 
     # check whether we are in the middle
-    # of a drag/drop operation
-    if @draggingSomething()
+    # of a floatDrag/drop operation
+    if @floatDraggingSomething()
       @drop()
       @mouseButton = null
     else
@@ -373,7 +373,7 @@ class HandMorph extends Morph
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
-    if @draggingSomething()
+    if @floatDraggingSomething()
       @drop()
     else
       # let's check if the user clicked on a menu item,
@@ -513,7 +513,7 @@ class HandMorph extends Morph
 
     morph = @topMorphUnderPointer()
     @destroyTemporaries()
-    if @draggingSomething()
+    if @floatDraggingSomething()
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
@@ -664,7 +664,7 @@ class HandMorph extends Morph
         @temporaries.splice @temporaries.indexOf(morph), 1
   
   
-  # HandMorph dragging optimization
+  # HandMorph floatDragging optimization
   moveBy: (delta) ->
     Morph::trackChanges = false
     super delta
@@ -697,22 +697,22 @@ class HandMorph extends Morph
     # mouseOverNew = @allMorphsAtPointer().reverse()
     mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
 
-    if (!@draggingSomething()) and (@mouseButton is "left")
+    if (!@floatDraggingSomething()) and (@mouseButton is "left")
       topMorph = @topMorphUnderPointer()
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
       # if a morph is marked for grabbing, just grab it
       if @morphToGrab
-        if @morphToGrab.isDraggable
+        if @morphToGrab.isfloatDraggable
           morph = @morphToGrab
           @grab morph
         # templates create a copy of
-        # themselves when dragged
+        # themselves when floatDragged
         else if @morphToGrab.isTemplate
           morph = @morphToGrab.fullCopy()
           morph.isTemplate = false
-          morph.isDraggable = true
+          morph.isfloatDraggable = true
           @grab morph
           @grabOrigin = @morphToGrab.situation()
 
@@ -732,12 +732,12 @@ class HandMorph extends Morph
     #	retained in case of needing to fall back:
     #
     #		if (morph === this.morphToGrab) {
-    #			if (morph.isDraggable) {
+    #			if (morph.isfloatDraggable) {
     #				this.grab(morph);
     #			} else if (morph.isTemplate) {
     #				morph = morph.fullCopy();
     #				morph.isTemplate = false;
-    #				morph.isDraggable = true;
+    #				morph.isfloatDraggable = true;
     #				this.grab(morph);
     #			}
     #		}
@@ -745,15 +745,15 @@ class HandMorph extends Morph
     @mouseOverList.forEach (old) =>
       unless contains(mouseOverNew, old)
         old.mouseLeave?()
-        old.mouseLeaveDragging?()  if @mouseButton
+        old.mouseLeavefloatDragging?()  if @mouseButton
 
     mouseOverNew.forEach (newMorph) =>
       unless contains(@mouseOverList, newMorph)
         newMorph.mouseEnter?()
-        newMorph.mouseEnterDragging?()  if @mouseButton
+        newMorph.mouseEnterfloatDragging?()  if @mouseButton
 
       # autoScrolling support:
-      if @draggingSomething()
+      if @floatDraggingSomething()
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3

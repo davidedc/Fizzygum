@@ -16,7 +16,7 @@ class MorphsListMorph extends BoxMorph
     @silentSetExtent new Point(
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
-    @isDraggable = true
+    @isfloatDraggable = true
     @border = 1
     @edge = 5
     @color = new Color(60, 60, 60)

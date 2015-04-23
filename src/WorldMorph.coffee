@@ -158,7 +158,7 @@ class WorldMorph extends FrameMorph
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
     @isMinimised = false
-    @isDraggable = false
+    @isfloatDraggable = false
 
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
@@ -303,7 +303,7 @@ class WorldMorph extends FrameMorph
     #    since the FrameMorph clips at its border) and b) stops recursion on all
     #    the children that are outside such intersection.
     #  * this implementation which just takes into account that the hand
-    #    (which could contain a Morph being dragged)
+    #    (which could contain a Morph being floatDragged)
     #    is painted on top of everything.
     super aCanvas, aRect
     # the mouse cursor is always drawn on top of everything
@@ -508,14 +508,14 @@ class WorldMorph extends FrameMorph
     # add the mouse move command here *after* the
     # potential grab command.
 
-    if @hand.draggingSomething()
+    if @hand.floatDraggingSomething()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        action = "drag"
+        action = "floatDrag"
         arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if (arr.indexOf action) == -1
           arr.push action
     
-    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.draggingSomething())
+    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething())
 
   # event.type must be keypress
   getChar: (event) ->
@@ -983,7 +983,7 @@ class WorldMorph extends FrameMorph
     menu.popUpAtHand(@firstContainerMenu())
 
   create: (aMorph) ->
-    aMorph.isDraggable = true
+    aMorph.isfloatDraggable = true
     aMorph.pickUp()
 
   createNewRectangleMorph: ->
@@ -1203,7 +1203,7 @@ class WorldMorph extends FrameMorph
   # Editing can stop because of three reasons:
   #   cancel (user hits ESC)
   #   accept (on stringmorph, user hits enter)
-  #   user clicks/drags another morph
+  #   user clicks/floatDrags another morph
   stopEditing: ->
     if @caret
       @lastEditedText = @caret.target

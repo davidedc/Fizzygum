@@ -285,9 +285,9 @@ class AutomatorRecorderAndPlayer
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
-  addMouseMoveCommand: (pageX, pageY, draggingSomething) ->
+  addMouseMoveCommand: (pageX, pageY, floatDraggingSomething) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, draggingSomething, @
+    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, floatDraggingSomething, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 

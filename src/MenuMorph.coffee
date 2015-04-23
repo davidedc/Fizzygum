@@ -25,7 +25,7 @@ class MenuMorph extends BoxMorph
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren("destroy")
-    @isDraggable = true
+    @isfloatDraggable = true
     super()
 
     @border = null # the Box Morph constructor puts this to 2
@@ -314,7 +314,7 @@ class MenuMorph extends BoxMorph
     @fullChanged()
 
   # shadow is added to a morph by
-  # the HandMorph while dragging
+  # the HandMorph while floatDragging
   addShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
     super offset, alpha, color
   

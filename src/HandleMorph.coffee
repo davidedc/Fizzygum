@@ -147,7 +147,7 @@ class HandleMorph extends Morph
       @target.step = noOperation
   
   
-  # HandleMorph dragging and dropping:
+  # HandleMorph floatDragging and dropping:
   rootForGrab: ->
     @
   
@@ -164,7 +164,7 @@ class HandleMorph extends Morph
     @changed()
 
   makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
-    @isDraggable = false
+    @isfloatDraggable = false
     @target = morphAttachedTo
     @target.add @
     @updateResizerHandlePosition()

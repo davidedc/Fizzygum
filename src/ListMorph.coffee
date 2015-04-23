@@ -47,7 +47,7 @@ class ListMorph extends ScrollFrameMorph
     @buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of null because the scrollbars (inherited from scrollframe)
-    # need the step function to react to mouse drag.
+    # need the step function to react to mouse floatDrag.
   
   # builds the list contents
   buildAndConnectChildren: ->

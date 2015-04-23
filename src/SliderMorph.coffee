@@ -26,7 +26,7 @@ class SliderMorph extends CircleBoxMorph
 
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
     @button = new SliderButtonMorph()
-    @button.isDraggable = false
+    @button.isfloatDraggable = false
     @button.color = new Color(0, 0, 0)
     @button.highlightColor = new Color(110, 110, 110)
     @button.pressColor = new Color(100, 100, 100)
@@ -244,7 +244,7 @@ class SliderMorph extends CircleBoxMorph
     else
       @offset = pos.subtract(@button.bounds.origin)
     world = @root()
-    # this is to create the "drag the slider" effect
+    # this is to create the "floatDrag the slider" effect
     # basically if the mouse is pressing within the boundaries
     # then in the next step you remember to check again where the mouse
     # is and update the scrollbar. As soon as the mouse is unpressed

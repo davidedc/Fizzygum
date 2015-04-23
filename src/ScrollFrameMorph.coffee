@@ -13,7 +13,7 @@ class ScrollFrameMorph extends FrameMorph
   padding: 0 # around the scrollable area
   growth: 0 # pixels or Point to grow right/left when near edge
   isTextLineWrapping: false
-  isScrollingByDragging: true
+  isScrollingByfloatDragging: true
   scrollBarSize: null
   contents: null
   vBar: null
@@ -41,13 +41,13 @@ class ScrollFrameMorph extends FrameMorph
     @hBar = new SliderMorph(null, null, null, null, "horizontal", @sliderColor)
     @hBar.setHeight @scrollBarSize
 
-    @hBar.isDraggable = false
+    @hBar.isfloatDraggable = false
     @hBar.target = @
     @add @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.setWidth @scrollBarSize
-    @vBar.isDraggable = false
+    @vBar.isfloatDraggable = false
     @vBar.target = @
     @add @vBar
 
@@ -214,7 +214,7 @@ class ScrollFrameMorph extends FrameMorph
     if @contents.bottom() < @bottom()
       @contents.moveBy 0, new Point(@bottom() - @contents.bottom(), 0)
   
-  # ScrollFrameMorph scrolling by dragging:
+  # ScrollFrameMorph scrolling by floatDragging:
   scrollX: (steps) ->
     cl = @contents.left()
     l = @left()
@@ -263,10 +263,10 @@ class ScrollFrameMorph extends FrameMorph
       return false
   
   # sometimes you can scroll the contents of a scrollframe
-  # by dragging its contents. This is particularly
+  # by floatDragging its contents. This is particularly
   # useful in touch devices.
   mouseDownLeft: (pos) ->
-    return null  unless @isScrollingByDragging
+    return null  unless @isScrollingByfloatDragging
     world = @root()
     oldPos = pos
     deltaX = 0
@@ -275,7 +275,7 @@ class ScrollFrameMorph extends FrameMorph
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
-        (!world.hand.draggingSomething()) and
+        (!world.hand.floatDraggingSomething()) and
         (@bounds.containsPoint(world.hand.position()))
           newPos = world.hand.bounds.origin
           if @hBar.isVisible
@@ -317,7 +317,7 @@ class ScrollFrameMorph extends FrameMorph
       inner = @bounds.insetBy(inset)
       if (@bounds.containsPoint(pos)) and
         (not (inner.containsPoint(pos))) and
-        (hand.draggingSomething())
+        (hand.floatDraggingSomething())
           @autoScroll pos
       else
         @step = noOperation

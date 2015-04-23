@@ -23,7 +23,7 @@ class FrameMorph extends Morph
     @color = new Color(255, 250, 245)
     @acceptsDrops = true
     if @scrollFrame
-      @isDraggable = false
+      @isfloatDraggable = false
       @noticesTransparentClick = false
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->

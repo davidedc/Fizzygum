@@ -75,9 +75,9 @@ class Morph extends MorphicNode
   isMinimised: false
   isVisible: true
 
-  isDraggable: false
+  isfloatDraggable: false
   # if a morph is a "template" it means that
-  # when you drag it, it creates a copy of itself.
+  # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
   # right click and then "duplicate..."
   isTemplate: false
@@ -935,7 +935,7 @@ class Morph extends MorphicNode
   
   
   # shadow is added to a morph by
-  # the HandMorph while dragging
+  # the HandMorph while floatDragging
   addShadow: (offset, alpha, color) ->
     shadow = @silentAddShadow offset, alpha, color
     shadow.setLayoutBeforeUpdatingBackingStore()
@@ -1214,7 +1214,7 @@ class Morph extends MorphicNode
     return clonedMorphs[0]
 
   
-  # Morph dragging and dropping /////////////////////////////////////////
+  # Morph floatDragging and dropping /////////////////////////////////////////
   
   rootForGrab: ->
     if @ instanceof ShadowMorph
@@ -1224,7 +1224,7 @@ class Morph extends MorphicNode
     if @parent is null or
       @parent instanceof WorldMorph or
       @parent instanceof FrameMorph or
-      @isDraggable is true
+      @isfloatDraggable is true
         return @  
     @parent.rootForGrab()
 
@@ -1337,7 +1337,7 @@ class Morph extends MorphicNode
     else
       text = "NULL"
     m = new MenuMorph(false, @, true, true, text)
-    m.isDraggable = true
+    m.isfloatDraggable = true
     m.popUpCenteredAtHand @world()
   
   inform: (msg) ->
@@ -1348,7 +1348,7 @@ class Morph extends MorphicNode
       text = "NULL"
     m = new MenuMorph(false, @, true, true, text)
     m.addItem "Ok"
-    m.isDraggable = true
+    m.isfloatDraggable = true
     m.popUpCenteredAtHand @world()
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
@@ -1393,7 +1393,7 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.isDraggable = true
+    menu.isfloatDraggable = true
     menu.popUpAtHand(@firstContainerMenu())
     tempPromptEntryField.text.edit()
 
@@ -1422,7 +1422,7 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.isDraggable = true
+    menu.isfloatDraggable = true
     menu.popUpAtHand(@firstContainerMenu())
 
   inspect: (anotherObject) ->
@@ -1544,12 +1544,12 @@ class Morph extends MorphicNode
     menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
 
     menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize...", true, @, "resize", "show a handle\nwhich can be dragged\nto change this morph's" + " extent"
+    menu.addItem "resize...", true, @, "resize", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
     menu.addLine()
     menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
     menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-    menu.addItem "move", true, @, "move", "show a handle\nwhich can be dragged\nto move this morph"
+    menu.addItem "move", true, @, "move", "show a handle\nwhich can be floatDragged\nto move this morph"
     menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
 
     # A) normally, just take a picture of this morph
@@ -1586,10 +1586,10 @@ class Morph extends MorphicNode
     menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
     menu.addLine()
-    if @isDraggable
-      menu.addItem "lock", true, @, "toggleIsDraggable", "make this morph\nunmovable"
+    if @isfloatDraggable
+      menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
     else
-      menu.addItem "unlock", true, @, "toggleIsDraggable", "make this morph\nmovable"
+      menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
     menu.addItem "hide", true, @, "minimise"
     menu.addItem "delete", true, @, "destroy"
     menu
@@ -1629,9 +1629,9 @@ class Morph extends MorphicNode
     else
       # you expect Morphs attached
       # inside a FrameMorph
-      # to be draggable out of it
+      # to be floatDraggable out of it
       # (as opposed to the content of a ScrollFrameMorph)
-      theMorphToBeAttached.isDraggable = false
+      theMorphToBeAttached.isfloatDraggable = false
 
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs(@)
@@ -1659,9 +1659,9 @@ class Morph extends MorphicNode
       menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
     menu.popUpAtHand(@firstContainerMenu())
   
-  toggleIsDraggable: ->
+  toggleIsfloatDraggable: ->
     # for context menu demo purposes
-    @isDraggable = not @isDraggable
+    @isfloatDraggable = not @isfloatDraggable
   
   colorSetters: ->
     # for context menu demo purposes
