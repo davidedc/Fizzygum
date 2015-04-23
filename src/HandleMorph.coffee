@@ -154,10 +154,12 @@ class HandleMorph extends Morph
   
   # HandleMorph events:
   mouseEnter: ->
+    console.log "<<<<<< handle mousenter"
     @image = @highlightImage
     @changed()
   
   mouseLeave: ->
+    console.log "<<<<<< handle mouseleave"
     @image = @normalImage
     @changed()
 
