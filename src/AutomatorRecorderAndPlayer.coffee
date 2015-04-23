@@ -95,6 +95,8 @@ class AutomatorRecorderAndPlayer
   millisOfTestSoFar: 0
   millisOfAllTestsSoFar: 0
 
+  currentlyPlayingTestName: ""
+
   tagsCollectedWhileRecordingTest: []
 
   constructor: (@worldMorph, @handMorph) ->
@@ -665,11 +667,12 @@ class AutomatorRecorderAndPlayer
    @collectedFailureImages.push obtainedImage
 
   replayTestCommands: ->
-   timeNow = (new Date()).getTime()
    commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
    # console.log "examining command: " + commandToBePlayed.automatorCommandName + " at: " + commandToBePlayed.millisecondsSincePreviousCommand +
    #   " time now: " + timeNow + " we are at: " + (timeNow - @timeOfPreviouslyPlayedCommand)
-   timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
+
+
+
    # for the screenshot, the replay is going
    # to consist in comparing the image data.
    # in case the screenshot is made of the entire world
@@ -685,12 +688,53 @@ class AutomatorRecorderAndPlayer
      if not @imageDataOfAParticularMorph?
        # no image data of morph, so just wait
        return
-   if timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand
+
+   #if commandToBePlayed.automatorCommandName == "AutomatorCommandScreenshot"
+   # @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence + 1].millisecondsSincePreviousCommand = 0
+   # debugger
+
+   runCurrentCommandImmediately = false
+   if window["#{@currentlyPlayingTestName}"].maxSpeedupFactor > 1
+     if (@indexOfTestCommandBeingPlayedFromSequence >= 1) and
+      (@indexOfTestCommandBeingPlayedFromSequence < (@automatorCommandsSequence.length - 2))
+        consecutiveMouseMoves = 0
+        while true
+          previousCommand1 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence - 1]
+          commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
+          nextCommand1 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence + 1]
+          nextCommand2 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence + 2]
+          if previousCommand1.automatorCommandName == "AutomatorCommandMouseMove" and
+           nextCommand1.automatorCommandName == "AutomatorCommandMouseMove" and
+           nextCommand2.automatorCommandName == "AutomatorCommandMouseMove" and
+           commandToBePlayed.automatorCommandName == "AutomatorCommandMouseMove"
+            consecutiveMouseMoves++
+            #if (consecutiveMouseMoves % window["#{@currentlyPlayingTestName}"].maxSpeedupFactor) != 0
+            #if (consecutiveMouseMoves % 6) != 0
+            if (consecutiveMouseMoves % 10000) != 0
+              timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
+              @millisOfTestSoFar += timeUntilNextCommand
+              @millisOfAllTestsSoFar += timeUntilNextCommand
+              console.log ">>>>>> skipping mousemove"
+              @indexOfTestCommandBeingPlayedFromSequence++
+            else
+              runCurrentCommandImmediately = true
+              break
+          else
+            runCurrentCommandImmediately = true
+            break
+
+
+   timeNow = (new Date()).getTime()
+   timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
+   
+   if runCurrentCommandImmediately or (timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand)
+
+     console.log ">>>>>> doing "  + commandToBePlayed.automatorCommandName
 
      @millisOfTestSoFar += timeUntilNextCommand
      @millisOfAllTestsSoFar += timeUntilNextCommand
 
-     console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @testDuration
+     #console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @testDuration
      window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
 
      document.getElementById('singleTestProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @testDuration)*100) + "%" + " complete"
@@ -730,9 +774,9 @@ class AutomatorRecorderAndPlayer
     @constructor.animationsPacingControl = true
     @worldMorph.removeEventListeners()
 
-    testName = @testsList()[@indexOfSystemTestBeingPlayed]
-    if window["#{testName}"]?
-      @testDuration = window["#{testName}"].testDuration
+    @currentlyPlayingTestName = @testsList()[@indexOfSystemTestBeingPlayed]
+    if window["#{@currentlyPlayingTestName}"]?
+      @testDuration = window["#{@currentlyPlayingTestName}"].testDuration
 
     @millisOfTestSoFar = 0
     @ongoingTestPlayingTask = (=> @replayTestCommands())
@@ -754,14 +798,13 @@ class AutomatorRecorderAndPlayer
 
     fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
 
-    testName = @testsList()[@indexOfSystemTestBeingPlayed]
-    presentableTestName = testName.replace(/SystemTest_/g, "")
+    presentableTestName = @currentlyPlayingTestName.replace(/SystemTest_/g, "")
     presentableTestName = decamelize presentableTestName, " "
     presentableTestName = presentableTestName.charAt(0).toUpperCase() + presentableTestName.slice(1)
     presentableTestName = '"' + presentableTestName + '"'
     testTitleAndDescription.innerHTML =  presentableTestName
-    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>(#{testName})</small>"
-    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>" + window["#{testName}"].description + "</small>"
+    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>(#{@currentlyPlayingTestName})</small>"
+    testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>" + window["#{@currentlyPlayingTestName}"].description + "</small>"
     setTimeout \
       =>
         fade('testTitleAndDescription', 1, 0, 2000, new Date().getTime());        
