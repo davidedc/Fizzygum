@@ -24,7 +24,7 @@ class InspectorMorph extends BoxMorph
     super()
     # override inherited properties:
     @silentSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
-      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
+      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
     @isfloatDraggable = true
     @border = 1
     @edge = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
@@ -378,13 +378,13 @@ class InspectorMorph extends BoxMorph
     detailWidth = detailRight - detailLeft
     if @detail.parent == @
       @detail.setPosition new Point(detailLeft, labelBottom)
-      @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @edge)
+      @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @edge).round()
 
     # work
-    workTop = labelBottom + (listHeight * 2 / 3)
+    workTop = Math.round(labelBottom + (listHeight * 2 / 3))
     if @work.parent == @
       @work.setPosition new Point(detailLeft, workTop)
-      @work.setExtent new Point(detailWidth, listHeight / 3)
+      @work.setExtent new Point(detailWidth, listHeight / 3).round()
 
     # properties button
     propertiesLeft = labelLeft
@@ -398,7 +398,7 @@ class InspectorMorph extends BoxMorph
     # inspect button
     inspectLeft = detailLeft
     inspectWidth = detailWidth - @edge - WorldMorph.preferencesAndSettings.handleSize
-    inspectWidth = inspectWidth / 3 - @edge / 3
+    inspectWidth = Math.round(inspectWidth / 3 - @edge / 3)
     inspectRight = inspectLeft + inspectWidth
     if @buttonInspect.parent == @
       @buttonInspect.setPosition new Point(inspectLeft, propertiesTop)
