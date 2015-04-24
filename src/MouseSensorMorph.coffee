@@ -17,6 +17,15 @@ class MouseSensorMorph extends BoxMorph
     @noticesTransparentClick = false
   
   touch: ->
+
+    # don't animate anything if we are in an animation pacing control
+    # situation.
+    if AutomatorRecorderAndPlayer.animationsPacingControl
+      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING or AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+        @alpha = 0.6
+        @changed()
+        return
+
     unless @isTouched
       @isTouched = true
       @alpha = 0.6
