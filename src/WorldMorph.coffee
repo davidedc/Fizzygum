@@ -332,6 +332,7 @@ class WorldMorph extends FrameMorph
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
+    @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @updateBroken()
   
   runOtherTasksStepFunction : ->
