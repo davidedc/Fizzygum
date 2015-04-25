@@ -216,9 +216,10 @@ class TriggerMorph extends Morph
   mouseDoubleClick: ->
     @triggerDoubleClick()
 
-  # Disable floatDragging compound Morphs by Triggers
-  # User can still move the trigger itself though
-  # (it it's unlocked)
+  # you shouldn't be able to floatDragging a compound
+  # morphs containing a trigger by dragging the trigger
+  # User might still move the trigger itself though
+  # (if it's unlocked)
   rootForGrab: ->
     if @isfloatDraggable
       return super()
