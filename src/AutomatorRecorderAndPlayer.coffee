@@ -697,21 +697,20 @@ class AutomatorRecorderAndPlayer
    runCurrentCommandImmediately = false
    if (window["#{@currentlyPlayingTestName}"].maxSpeedupFactor > 1) and (!@forceSlowTestPlaying)
      if (@indexOfTestCommandBeingPlayedFromSequence >= 1) and
-      (@indexOfTestCommandBeingPlayedFromSequence < (@automatorCommandsSequence.length - 2))
+      (@indexOfTestCommandBeingPlayedFromSequence < (@automatorCommandsSequence.length - 1))
         consecutiveMouseMoves = 0
         while true
           previousCommand1 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence - 1]
           commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
           nextCommand1 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence + 1]
-          nextCommand2 = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence + 2]
           if previousCommand1.automatorCommandName == "AutomatorCommandMouseMove" and
            nextCommand1.automatorCommandName == "AutomatorCommandMouseMove" and
-           nextCommand2.automatorCommandName == "AutomatorCommandMouseMove" and
            commandToBePlayed.automatorCommandName == "AutomatorCommandMouseMove"
             consecutiveMouseMoves++
             #if (consecutiveMouseMoves % window["#{@currentlyPlayingTestName}"].maxSpeedupFactor) != 0
             #if (consecutiveMouseMoves % 6) != 0
             if (consecutiveMouseMoves % 10000) != 0
+              window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
               timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
               @millisOfTestSoFar += timeUntilNextCommand
               @millisOfAllTestsSoFar += timeUntilNextCommand
