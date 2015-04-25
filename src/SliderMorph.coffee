@@ -21,7 +21,6 @@ class SliderMorph extends CircleBoxMorph
   size: null
   offset: null
   button: null
-  step: null
   argumentToAction: null
 
   constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
@@ -237,35 +236,3 @@ class SliderMorph extends CircleBoxMorph
     list
   
   
-  # SliderMorph stepping:
-  mouseDownLeft: (pos) ->
-    unless @button.bounds.containsPoint(pos)
-      @offset = new Point() # return null;
-    else
-      @offset = pos.subtract(@button.bounds.origin)
-    world = @root()
-    # this is to create the "floatDrag the slider" effect
-    # basically if the mouse is pressing within the boundaries
-    # then in the next step you remember to check again where the mouse
-    # is and update the scrollbar. As soon as the mouse is unpressed
-    # then the step function is set to null to save cycles.
-    @step = =>
-      if world.hand.mouseButton and @isVisible
-        mousePos = world.hand.bounds.origin
-        oldButtonPosition = @button.position()
-        if @orientation is "vertical"
-          newX = @button.bounds.origin.x
-          newY = Math.max(
-            Math.min(mousePos.y - @offset.y,
-            @bottom() - @button.height()), @top())
-        else
-          newY = @button.bounds.origin.y
-          newX = Math.max(
-            Math.min(mousePos.x - @offset.x,
-            @right() - @button.width()), @left())
-        newPosition = new Point(newX, newY)
-        if !oldButtonPosition.eq newPosition
-          @button.setPosition newPosition
-          @updateValue()
-      else
-        @step = null
