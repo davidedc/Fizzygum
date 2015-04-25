@@ -222,6 +222,7 @@ class TextMorph extends StringMorph
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
+    @changed()
   
   # TextMorph measuring ////
 
