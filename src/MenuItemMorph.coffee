@@ -97,11 +97,7 @@ class MenuItemMorph extends TriggerMorph
       @parent.unselectAllItems()
       @escalateEvent "mouseDownLeft", pos
     @image = @pressImage
-    @changed()
-  
-  mouseMove: ->
-    @escalateEvent "mouseMove"  if @isListItem()
-  
+    @changed()  
   
   isListItem: ->
     return @parent.isListContents  if @parent

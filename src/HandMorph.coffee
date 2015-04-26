@@ -310,7 +310,7 @@ class HandMorph extends Morph
       @destroyActiveHandleIfHandHasNotActionedIt morph
       @stopEditingIfActionIsElsewhere morph
 
-      @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
+      @morphToGrab = morph.rootForGrab()
       if button is 2 or ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
