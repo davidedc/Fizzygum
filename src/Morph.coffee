@@ -76,6 +76,7 @@ class Morph extends MorphicNode
   isVisible: true
 
   isfloatDraggable: false
+
   # if a morph is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
