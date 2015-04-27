@@ -94,7 +94,7 @@ class AutomatorRecorderAndPlayer
   allTestsDuration: 0
   millisOfTestSoFar: 0
   millisOfAllTestsSoFar: 0
-  forceSlowTestPlaying: true
+  forceSlowTestPlaying: false
 
   currentlyPlayingTestName: ""
 
