@@ -737,10 +737,10 @@ class AutomatorRecorderAndPlayer
      #console.log "running command: " + commandToBePlayed.automatorCommandName + " " + @indexOfTestCommandBeingPlayedFromSequence + " / " + @automatorCommandsSequence.length + " ms: " + @millisOfTestSoFar + " / " + @testDuration
      window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
 
-     document.getElementById('singleTestProgressIndicator').innerHTML = "Test " + Math.floor((@millisOfTestSoFar / @testDuration)*100) + "%" + " complete"
+     document.getElementById('singleTestProgressIndicator').innerHTML = "test: " + Math.floor((@millisOfTestSoFar / @testDuration)*100) + "%" + " done"
      document.getElementById('singleTestProgressBar').style.left =  (Math.floor((@millisOfTestSoFar / @testDuration)*100)) + "%"
 
-     document.getElementById('allTestsProgressIndicator').innerHTML = "overall: " + Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100) + "%" + " complete"
+     document.getElementById('allTestsProgressIndicator').innerHTML = "all: " + Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100) + "%" + " done"
      document.getElementById('allTestsProgressBar').style.left =  (Math.floor((@millisOfAllTestsSoFar / @allTestsDuration)*100)) + "%"
 
      @timeOfPreviouslyPlayedCommand = timeNow

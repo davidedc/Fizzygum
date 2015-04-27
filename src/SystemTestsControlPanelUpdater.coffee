@@ -210,7 +210,7 @@ class SystemTestsControlPanelUpdater
 
     singleTestProgressBarWrap = document.createElement('div')
     singleTestProgressBarWrap.id = "singleTestProgressBarWrap"
-    singleTestProgressBarWrap.style.cssText = 'position: absolute; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 120px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
+    singleTestProgressBarWrap.style.cssText = 'position: absolute; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
     singleTestProgressBarWrap.appendChild(singleTestProgressBar)
     document.body.appendChild(singleTestProgressBarWrap)
     fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
@@ -218,7 +218,7 @@ class SystemTestsControlPanelUpdater
     # add the div highlighting the percentage progress of the test
     singleTestProgressIndicator = document.createElement('div')
     singleTestProgressIndicator.id = "singleTestProgressIndicator"
-    singleTestProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 7px; font-size: x-small; font-family: sans-serif; color: white;'
+    singleTestProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
     document.body.appendChild(singleTestProgressIndicator)
     fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
 
@@ -231,7 +231,7 @@ class SystemTestsControlPanelUpdater
 
     allTestsProgressBarWrap = document.createElement('div')
     allTestsProgressBarWrap.id = "allTestsProgressBarWrap"
-    allTestsProgressBarWrap.style.cssText = 'position: absolute; left: 135px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 120px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
+    allTestsProgressBarWrap.style.cssText = 'position: absolute; left: 110px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
     allTestsProgressBarWrap.appendChild(allTestsProgressBar)
     document.body.appendChild(allTestsProgressBarWrap)
     fade('allTestsProgressBarWrap', 1, 0, 10, new Date().getTime());
@@ -239,7 +239,7 @@ class SystemTestsControlPanelUpdater
     # add the div highlighting the percentage progress of the test
     allTestsProgressIndicator = document.createElement('div')
     allTestsProgressIndicator.id = "allTestsProgressIndicator"
-    allTestsProgressIndicator.style.cssText = 'position: absolute; left: 140px; top: 7px; font-size: x-small; font-family: sans-serif; color: white;'
+    allTestsProgressIndicator.style.cssText = 'position: absolute; left: 115px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
     document.body.appendChild(allTestsProgressIndicator)
     fade('allTestsProgressIndicator', 1, 0, 10, new Date().getTime());
 
@@ -257,7 +257,7 @@ class SystemTestsControlPanelUpdater
     # add the div highlighting the percentage progress of the test
     numberOfTestsDoneIndicator = document.createElement('div')
     numberOfTestsDoneIndicator.id = "numberOfTestsDoneIndicator"
-    numberOfTestsDoneIndicator.style.cssText = 'position: absolute; left: 265px; top: 7px; font-size: x-small; font-family: sans-serif; color: black;'
+    numberOfTestsDoneIndicator.style.cssText = 'position: absolute; left: 217px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: black;'
     document.body.appendChild(numberOfTestsDoneIndicator)
     fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
 
