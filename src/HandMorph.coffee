@@ -23,6 +23,8 @@ class HandMorph extends Morph
   temporaries: null
   touchHoldTimeout: null
   doubleClickMorph: null
+  nonFloatDraggedMorph: null
+  nonFloatDragPositionWithinMorphAtStart: null
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -176,6 +178,10 @@ class HandMorph extends Morph
   floatDraggingSomething: ->
     if @children.length > 0 then true else false
 
+  nonFloatDraggingSomething: ->
+    return @nonFloatDraggedMorph?
+
+
   drop: ->
     if @floatDraggingSomething()
 
@@ -304,7 +310,7 @@ class HandMorph extends Morph
       @destroyActiveHandleIfHandHasNotActionedIt morph
       @stopEditingIfActionIsElsewhere morph
 
-      @morphToGrab = morph.rootForGrab()  unless morph.mouseMove
+      @morphToGrab = morph.rootForGrab()
       if button is 2 or ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
@@ -373,6 +379,9 @@ class HandMorph extends Morph
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
+
+    @nonFloatDraggedMorph = null
+
     if @floatDraggingSomething()
       @drop()
     else
@@ -674,6 +683,7 @@ class HandMorph extends Morph
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point(worldX, worldY)
+    delta = pos.subtract @position()
     @setPosition pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -695,10 +705,14 @@ class HandMorph extends Morph
     
     # commented-out implementation of 1):
     # mouseOverNew = @allMorphsAtPointer().reverse()
-    mouseOverNew = @topMorphUnderPointer().allParentsTopToBottom()
+    topMorph = @topMorphUnderPointer()
+    mouseOverNew = topMorph.allParentsTopToBottom()
 
-    if (!@floatDraggingSomething()) and (@mouseButton is "left")
-      topMorph = @topMorphUnderPointer()
+    @determineGrabs pos, delta, topMorph, mouseOverNew
+    @dispatchEventsFollowingMouseMove mouseOverNew
+
+  determineGrabs: (pos, delta, topMorph, mouseOverNew) ->
+    if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
@@ -715,6 +729,10 @@ class HandMorph extends Morph
           morph.isfloatDraggable = true
           @grab morph
           @grabOrigin = @morphToGrab.situation()
+        else
+          @nonFloatDraggedMorph = @morphToGrab
+          @nonFloatDragPositionWithinMorphAtStart = pos.subtract @nonFloatDraggedMorph.position()
+
 
         # if the mouse has left its boundsIncludingChildren, center it
         if morph
@@ -726,6 +744,11 @@ class HandMorph extends Morph
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);
+
+
+    if @nonFloatDraggingSomething()
+      console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
+      @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, delta)  if @mouseButton
     
     #
     #	original, more cautious code for grabbing Morphs,
@@ -742,6 +765,14 @@ class HandMorph extends Morph
     #			}
     #		}
     #
+
+  reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
+    topMorph = @topMorphUnderPointer()
+    mouseOverNew = topMorph.allParentsTopToBottom()
+    @dispatchEventsFollowingMouseMove mouseOverNew
+
+  dispatchEventsFollowingMouseMove: (mouseOverNew) ->
+
     @mouseOverList.forEach (old) =>
       unless contains(mouseOverNew, old)
         old.mouseLeave?()

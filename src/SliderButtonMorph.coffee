@@ -28,9 +28,15 @@ class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
     @color = new Color(80, 80, 80)
     super orientation
-  
+    @isfloatDraggable = false
+    @noticesTransparentClick = true
+
   autoOrientation: ->
       noOperation
+
+  # HandleMorph floatDragging and dropping:
+  rootForGrab: ->
+    @
 
   setLayoutBeforeUpdatingBackingStore: ->
     if @parent?
@@ -67,6 +73,25 @@ class SliderButtonMorph extends CircleBoxMorph
     @color = colorBak
     @image = @normalImage
     @changed()
+
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+    @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart
+    if world.hand.mouseButton and @isVisible
+      oldButtonPosition = @position()
+      if @parent.orientation is "vertical"
+        newX = @bounds.origin.x
+        newY = Math.max(
+          Math.min(@offset.y,
+          @parent.bottom() - @height()), @parent.top())
+      else
+        newY = @bounds.origin.y
+        newX = Math.max(
+          Math.min(@offset.x,
+          @parent.right() - @width()), @parent.left())
+      newPosition = new Point(newX, newY)
+      if !oldButtonPosition.eq newPosition
+        @setPosition newPosition
+        @parent.updateValue()
     
   
   #SliderButtonMorph events:
@@ -81,13 +106,11 @@ class SliderButtonMorph extends CircleBoxMorph
   mouseDownLeft: (pos) ->
     @image = @pressImage
     @changed()
-    @escalateEvent "mouseDownLeft", pos
+    return null
+    #@escalateEvent "mouseDownLeft", pos
   
   mouseClickLeft: ->
     super()
     @image = @highlightImage
     @changed()
   
-  # prevent my parent from getting picked up
-  mouseMove: ->
-      noOperation

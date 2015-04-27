@@ -116,6 +116,14 @@ class TriggerMorph extends Morph
   # no changes of position or extent
   updateBackingStore: ->
     extent = @extent()
+
+    whichImage = "normalImage"
+    if @image?
+      if @image == @highlightImage
+        whichImage = "highlightImage"
+      else if @image == @pressImage
+        whichImage = "pressImage"
+
     @normalImage = newCanvas(extent.scaleBy pixelRatio)
     context = @normalImage.getContext("2d")
     context.scale pixelRatio, pixelRatio
@@ -131,7 +139,13 @@ class TriggerMorph extends Morph
     context.scale pixelRatio, pixelRatio
     context.fillStyle = @pressColor.toString()
     context.fillRect 0, 0, extent.x, extent.y
-    @image = @normalImage
+
+    if whichImage == "normalImage"
+      @image = @normalImage
+    else if whichImage == "highlightImage"
+      @image = @highlightImage
+    else if whichImage == "pressImage"
+      @image = @pressImage
   
   createLabel: ->
     # bold
@@ -202,9 +216,10 @@ class TriggerMorph extends Morph
   mouseDoubleClick: ->
     @triggerDoubleClick()
 
-  # Disable floatDragging compound Morphs by Triggers
-  # User can still move the trigger itself though
-  # (it it's unlocked)
+  # you shouldn't be able to floatDragging a compound
+  # morphs containing a trigger by dragging the trigger
+  # User might still move the trigger itself though
+  # (if it's unlocked)
   rootForGrab: ->
     if @isfloatDraggable
       return super()

@@ -37,6 +37,15 @@ class ColorPaletteMorph extends Morph
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
+
+  # you can't grab the colorPaletteMorph in any
+  # way since you could use it to pick a color in
+  # any moment.
+  # You should perhaps allow it to allow pick ups
+  # if it's disabled, say, but we don't have this
+  # concept now.
+  rootForGrab: ->
+    return null
   
   mouseMove: (pos) ->
     @choice = @getPixelColor(pos)
