@@ -232,6 +232,15 @@ class WorldMorph extends FrameMorph
       else
         @systemTestsRecorderAndPlayer.groupToBeRun = 0
 
+      if currentAction.forceSlowTestPlaying?
+        @systemTestsRecorderAndPlayer.forceSlowTestPlaying = true
+      if currentAction.forceTurbo?
+        @systemTestsRecorderAndPlayer.forceTurbo = true
+      if currentAction.forceSkippingInBetweenMouseMoves?
+        @systemTestsRecorderAndPlayer.forceSkippingInBetweenMouseMoves = true
+      if currentAction.forceRunningInBetweenMouseMoves?
+        @systemTestsRecorderAndPlayer.forceRunningInBetweenMouseMoves = true
+
       @systemTestsRecorderAndPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
@@ -975,12 +984,20 @@ class WorldMorph extends FrameMorph
     menu = new MenuMorph(false, @, true, true, "system tests")
 
     menu.addItem "run system tests", true, @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addItem "run system tests force slow", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addItem "run system tests force fast skip in-between mouse moves", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
+    menu.addItem "run system tests force fast run in-between mouse moves", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
+
     menu.addItem "start test recording", true, @systemTestsRecorderAndPlayer, "startTestRecording", "start recording a test"
     menu.addItem "stop test recording", true, @systemTestsRecorderAndPlayer, "stopTestRecording", "stop recording the test"
-    menu.addItem "(re)play recorded test", true, @systemTestsRecorderAndPlayer, "startTestPlaying", "start playing the test"
+
+    menu.addItem "(re)play recorded test slow", true, @systemTestsRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
+    menu.addItem "(re)play recorded test fast skip in-between mouse moves", true, @systemTestsRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
+    menu.addItem "(re)play recorded test  fast run in-between mouse moves", true, @systemTestsRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
+
     menu.addItem "show test source", true, @systemTestsRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
     menu.addItem "save recorded test", true, @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
-    menu.addItem "save failed screenshots test", true, @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots test"
+    menu.addItem "save failed screenshots", true, @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand(@firstContainerMenu())
 

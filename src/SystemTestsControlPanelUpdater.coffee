@@ -261,5 +261,16 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild(numberOfTestsDoneIndicator)
     fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
 
+    # ------------------------------------------------------
+    # add the div highlighting the number of failed tests
+    numberOfFailedTests = document.createElement('div')
+    numberOfFailedTests.id = "numberOfFailedTests"
+    numberOfFailedTests.style.cssText = 'position: absolute; left: 291px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: black; text-decoration: underline; cursor:pointer;'
+    document.body.appendChild(numberOfFailedTests)
+    numberOfFailedTests.onclick = ->
+        debugger
+        world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
+    #fade('numberOfFailedTests', 1, 0, 10, new Date().getTime());
+
 
     

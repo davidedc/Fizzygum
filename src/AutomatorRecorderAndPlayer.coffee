@@ -94,11 +94,16 @@ class AutomatorRecorderAndPlayer
   allTestsDuration: 0
   millisOfTestSoFar: 0
   millisOfAllTestsSoFar: 0
+
   forceSlowTestPlaying: false
+  forceTurbo: false
+  forceSkippingInBetweenMouseMoves: false
+  forceRunningInBetweenMouseMoves: false
 
   currentlyPlayingTestName: ""
 
   tagsCollectedWhileRecordingTest: []
+  failedTests: []
 
   constructor: (@worldMorph, @handMorph) ->
 
@@ -426,6 +431,9 @@ class AutomatorRecorderAndPlayer
     else
       errorMessage = "FAIL was expecting a menu under the pointer"
       console.log errorMessage
+      testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+      if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+      document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
       @allTestsPassedSoFar = false
       document.getElementById("background").style.background = "red"
       if SystemTestsControlPanelUpdater?
@@ -453,10 +461,16 @@ class AutomatorRecorderAndPlayer
           @allTestsPassedSoFar = false
           document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+          testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+          if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+          document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
         else
           @allTestsPassedSoFar = false
           document.getElementById("background").style.background = "red"
           errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+          testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+          if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+          document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
@@ -515,6 +529,9 @@ class AutomatorRecorderAndPlayer
         @allTestsPassedSoFar = false
         document.getElementById("background").style.background = "red"
         errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
+        testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+        if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+        document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
@@ -666,6 +683,9 @@ class AutomatorRecorderAndPlayer
    obtainedImageName = "obtained-" + eachImage.imageName
    obtainedImage = new SystemTestsReferenceImage(obtainedImageName,screenshotObtained, new SystemTestsSystemInfo())
    @collectedFailureImages.push obtainedImage
+   testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+   if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+   document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
 
   replayTestCommands: ->
    commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
@@ -695,7 +715,7 @@ class AutomatorRecorderAndPlayer
    # debugger
 
    runCurrentCommandImmediately = false
-   if (window["#{@currentlyPlayingTestName}"].maxSpeedupFactor > 1) and (!@forceSlowTestPlaying)
+   if ((window["#{@currentlyPlayingTestName}"]?.supportsTurboPlayback) and (!@forceSlowTestPlaying)) or @forceTurbo
      if (@indexOfTestCommandBeingPlayedFromSequence >= 1) and
       (@indexOfTestCommandBeingPlayedFromSequence < (@automatorCommandsSequence.length - 1))
         consecutiveMouseMoves = 0
@@ -707,10 +727,10 @@ class AutomatorRecorderAndPlayer
            nextCommand1.automatorCommandName == "AutomatorCommandMouseMove" and
            commandToBePlayed.automatorCommandName == "AutomatorCommandMouseMove"
             consecutiveMouseMoves++
-            #if (consecutiveMouseMoves % window["#{@currentlyPlayingTestName}"].maxSpeedupFactor) != 0
             #if (consecutiveMouseMoves % 6) != 0
             if (consecutiveMouseMoves % 10000) != 0
-              window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
+              if (!window["#{@currentlyPlayingTestName}"]?.skipInbetweenMouseMoves and (!@forceSkippingInBetweenMouseMoves)) or @forceRunningInBetweenMouseMoves
+                window[commandToBePlayed.automatorCommandName].replayFunction.call @,@,commandToBePlayed
               timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
               @millisOfTestSoFar += timeUntilNextCommand
               @millisOfAllTestsSoFar += timeUntilNextCommand
@@ -755,6 +775,20 @@ class AutomatorRecorderAndPlayer
       if eachCommand.millisecondsSincePreviousCommand?
         testDuration += eachCommand.millisecondsSincePreviousCommand
     @testDuration = testDuration
+
+  startTestPlayingSlow: ->
+    @forceSlowTestPlaying = true
+    @startTestPlaying()
+
+  startTestPlayingFastSkipInbetweenMouseMoves: ->
+    @forceTurbo = true
+    @forceSkippingInBetweenMouseMoves = true
+    @startTestPlaying()
+
+  startTestPlayingFastRunInbetweenMouseMoves: ->
+    @forceTurbo = true
+    @forceRunningInBetweenMouseMoves = true
+    @startTestPlaying()
 
   startTestPlaying: ->
 
@@ -824,6 +858,8 @@ class AutomatorRecorderAndPlayer
     testToBeSerialized.systemInfo = new SystemTestsSystemInfo()
     @calculateTotalTimeOfThisTest()
     testToBeSerialized.testDuration = @testDuration
+    testToBeSerialized.supportsTurboPlayback = true
+    testToBeSerialized.skipInbetweenMouseMoves = true
 
     """
   // This Automator file is automatically
@@ -1136,7 +1172,24 @@ class AutomatorRecorderAndPlayer
     # when all the metadata is loaded.
     @loadTestsMetadata(selectTheTestsBasedOnTags)
 
+
+  runAllSystemTestsForceSlow: ->
+    @forceSlowTestPlaying = true
+    @runAllSystemTests()
+
+  runAllSystemTestsForceFastSkipInbetweenMouseMoves: ->
+    @forceTurbo = true
+    @forceSkippingInBetweenMouseMoves = true
+    @runAllSystemTests()
+
+  runAllSystemTestsForceFastRunInbetweenMouseMoves: ->
+    @forceTurbo = true
+    @forceRunningInBetweenMouseMoves = true
+    @runAllSystemTests()
+
+
   runAllSystemTests: ->
+    @failedTests = []
     console.log "runAllSystemTests"
     @millisOfAllTestsSoFar = 0
 
