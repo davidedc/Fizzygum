@@ -57,6 +57,12 @@ python ./buildSystem/build.py
 # turn the coffeescript file into js in the js directory
 coffee -b -c -o ../Zombie-Kernel-builds/latest/js/ ../Zombie-Kernel-builds/latest/delete_me/zombie-kernel.coffee 
 
+if [ "$?" != "0" ]; then
+    tput bel;
+    echo "!!!!!!!!!!! error: coffeescript compilation failed!" 1>&2
+    exit 1
+fi
+
 # copy the html files
 cp src/index.html ../Zombie-Kernel-builds/latest/
 
@@ -77,3 +83,5 @@ cp -r ../Zombie-Kernel-tests/tests/* ../Zombie-Kernel-builds/latest/js/tests/ass
 find ../Zombie-Kernel-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Zombie-Kernel-builds/latest/js/tests \;
 
 rm -rdf ../Zombie-Kernel-builds/latest/delete_me
+
+say -v Bells "e"
