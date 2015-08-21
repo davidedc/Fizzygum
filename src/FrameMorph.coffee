@@ -76,7 +76,8 @@ class FrameMorph extends Morph
 
     return result
   
-  # frames clip at their boundaries
+  # frames clip any of their children
+  # at their boundaries
   # so there is no need to do a deep
   # traversal to find the bounds.
   boundsIncludingChildren: ->
