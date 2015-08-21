@@ -980,6 +980,10 @@ class AutomatorRecorderAndPlayer
             diffNumber+
             ".png"
           , subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
+
+    renamerScript += "# take away all the 'obtained' prefixes in all the files" + "\n"
+    renamerScript += "find ../Zombie-Kernel-tests/tests/ -name 'obtained-*' -type f -exec bash -c 'mv \"$1\" \"${1/\\/obtained-//}\"' -- {} \\;" + "\n"
+
     zip.file("replace_all_images.sh", renamerScript);
 
     # OK the images are all put in the zip
