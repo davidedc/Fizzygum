@@ -1,3 +1,4 @@
+##########################################################################################
 # REQUIRES SystemTestsReferenceImage
 # REQUIRES SystemTestsSystemInfo
 # REQUIRES globalFunctions
@@ -442,9 +443,11 @@ class AutomatorRecorderAndPlayer
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       if orderMatters
-        systemTestCommand = new AutomatorCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
+        systemTestCommand =
+          new AutomatorCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
       else
-        systemTestCommand = new AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
+        systemTestCommand =
+          new AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
 
       @automatorCommandsSequence.push systemTestCommand
       @timeOfPreviouslyRecordedCommand = new Date().getTime()
@@ -460,14 +463,18 @@ class AutomatorRecorderAndPlayer
         if orderMatters
           @allTestsPassedSoFar = false
           document.getElementById("background").style.background = "red"
-          errorMessage = "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+          errorMessage =
+            "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " +
+              stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
           testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
           if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
           document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
         else
           @allTestsPassedSoFar = false
           document.getElementById("background").style.background = "red"
-          errorMessage = "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " + stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+          errorMessage =
+            "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " +
+              stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
           testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
           if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
           document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
@@ -952,6 +959,7 @@ class AutomatorRecorderAndPlayer
               systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/\n\n"
+
 
       setOfGoodImages = AutomatorRecorderAndPlayer.loadedImages[aGoodImageName]
       diffNumber = 0
