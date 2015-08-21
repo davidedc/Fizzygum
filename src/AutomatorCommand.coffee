@@ -9,4 +9,5 @@ class AutomatorCommand
   millisecondsSincePreviousCommand: 0
 
   constructor: (systemTestsRecorderAndPlayer) ->
-    @millisecondsSincePreviousCommand = (new Date().getTime()) - systemTestsRecorderAndPlayer.timeOfPreviouslyRecordedCommand
+    @millisecondsSincePreviousCommand = (new Date().getTime()) -
+    	systemTestsRecorderAndPlayer.timeOfPreviouslyRecordedCommand

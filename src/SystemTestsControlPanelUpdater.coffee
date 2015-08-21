@@ -49,10 +49,13 @@ class SystemTestsControlPanelUpdater
 
 
   @addMessageToSystemTestsConsole: (theText) ->
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML + theText + "</br>";
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML =
+        SystemTestsControlPanelUpdater.SystemTestsControlPanelOutputConsoleDiv.innerHTML +
+        theText + "</br>"
 
   @addMessageToTestCommentsConsole: (theText) ->
-    SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML = SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML + theText + "</br>";
+    SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML =
+        SystemTestsControlPanelUpdater.SystemTestsControlPanelTestCommentsOutputConsoleDiv.innerHTML + theText + "</br>"
 
   @blinkLink: (theId) ->
     theElement = document.getElementById(theId)
@@ -128,11 +131,14 @@ class SystemTestsControlPanelUpdater
 
     @SystemTestsControlPanelDiv = document.createElement('div')
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
-    @SystemTestsControlPanelDiv.style.cssText = 'border: 1px solid green; overflow: hidden; font-size: x-small; top: 464px; left: 200px; position: absolute;'
+    @SystemTestsControlPanelDiv.style.cssText =
+        'border: 1px solid green; overflow: hidden; font-size: x-small; top: 464px; left: 200px; position: absolute;'
     document.body.appendChild(@SystemTestsControlPanelDiv)
 
-    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv", "height: 127px; width: 571px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden; position: absolute; top: 464px; left: 386px;"
-    @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv", "height: 128px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 592px;width: 757px;left: 200px;"
+    @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv",
+        "height: 127px; width: 571px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden; position: absolute; top: 464px; left: 386px;"
+    @addOutputPanel "SystemTestsControlPanelTestCommentsOutputConsoleDiv",
+        "height: 128px; border: 1px solid red; overflow-y: scroll; overflow-x: hidden;position: absolute;top: 592px;width: 757px;left: 200px;"
 
     theCanvasDiv = document.getElementById('world')
     # one of these is for IE and the other one
@@ -148,21 +154,57 @@ class SystemTestsControlPanelUpdater
     # via e menu: a bunch of mouse actions would be
     # recorded, exposing as well to the risk of the
     # menu items changing.
-    SystemTestsControlPanelUpdater.resetWorldLink = @addLink "alt+d: reset world", (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
-    SystemTestsControlPanelUpdater.tieAnimations = @addOnOffSwitchLink "tie animations to test step", "alt+e", "alt+u", (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
-    SystemTestsControlPanelUpdater.alignMorphIDs = @addOnOffSwitchLink "periodically align Morph IDs", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()), (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
-    SystemTestsControlPanelUpdater.hideGeometry = @addOnOffSwitchLink "hide Morph geometry in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
+    SystemTestsControlPanelUpdater.resetWorldLink =
+            @addLink "alt+d: reset world",
+                (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
+    SystemTestsControlPanelUpdater.tieAnimations =
+        @addOnOffSwitchLink "tie animations to test step",
+            "alt+e",
+            "alt+u",
+            (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()),
+            (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
+    SystemTestsControlPanelUpdater.alignMorphIDs =
+        @addOnOffSwitchLink "periodically align Morph IDs",
+            "-",
+            "-",
+            (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()),
+            (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
+    SystemTestsControlPanelUpdater.hideGeometry =
+        @addOnOffSwitchLink "hide Morph geometry in labels",
+            "-",
+            "-",
+            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
 
-    SystemTestsControlPanelUpdater.hideMorphContentExtracts = @addOnOffSwitchLink "hide Morph content extract in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
+    SystemTestsControlPanelUpdater.hideMorphContentExtracts =
+        @addOnOffSwitchLink "hide Morph content extract in labels",
+            "-",
+            "-",
+            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
 
-    SystemTestsControlPanelUpdater.hideMorphIDs = @addOnOffSwitchLink "hide Morph number ID in labels", "-", "-", (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
+    SystemTestsControlPanelUpdater.hideMorphIDs =
+        @addOnOffSwitchLink "hide Morph number ID in labels",
+            "-",
+            "-",
+            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
 
-    SystemTestsControlPanelUpdater.takeScreenshot = @addLink "alt+c: take screenshot", (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
-    SystemTestsControlPanelUpdater.checkNumnberOfItems = @addLink "alt+k: check number of items in menu", (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
-    SystemTestsControlPanelUpdater.checkMenuEntriesInOrder = @addLink "alt+a: check menu entries (in order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
-    SystemTestsControlPanelUpdater.checkMenuEntriesNotInOrder = @addLink "alt+z: check menu entries (any order)", (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
-    SystemTestsControlPanelUpdater.addTestComment = @addLink "alt+m: add test comment", (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
-    SystemTestsControlPanelUpdater.stopTestRec = @addLink "alt+t: stop test recording", (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
+    SystemTestsControlPanelUpdater.takeScreenshot =
+        @addLink "alt+c: take screenshot",
+            (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+    SystemTestsControlPanelUpdater.checkNumnberOfItems =
+        @addLink "alt+k: check number of items in menu",
+            (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
+    SystemTestsControlPanelUpdater.checkMenuEntriesInOrder =
+        @addLink "alt+a: check menu entries (in order)",
+            (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
+    SystemTestsControlPanelUpdater.checkMenuEntriesNotInOrder =
+        @addLink "alt+z: check menu entries (any order)",
+            (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
+    SystemTestsControlPanelUpdater.addTestComment =
+        @addLink "alt+m: add test comment",
+            (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
+    SystemTestsControlPanelUpdater.stopTestRec =
+        @addLink "alt+t: stop test recording",
+            (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
 
 
     # add the div with the fake mouse pointer
@@ -206,11 +248,13 @@ class SystemTestsControlPanelUpdater
     # add the progress bar, which is made of two nested divs
     singleTestProgressBar = document.createElement('div')
     singleTestProgressBar.id = "singleTestProgressBar"
-    singleTestProgressBar.style.cssText = 'position: absolute; left: 20%; top: 0px; font-size: xx-large; font-family: sans-serif; width: 100%; height: 50px; background: rgb(173, 173, 173);'
+    singleTestProgressBar.style.cssText =
+        'position: absolute; left: 20%; top: 0px; font-size: xx-large; font-family: sans-serif; width: 100%; height: 50px; background: rgb(173, 173, 173);'
 
     singleTestProgressBarWrap = document.createElement('div')
     singleTestProgressBarWrap.id = "singleTestProgressBarWrap"
-    singleTestProgressBarWrap.style.cssText = 'position: absolute; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
+    singleTestProgressBarWrap.style.cssText =
+        'position: absolute; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
     singleTestProgressBarWrap.appendChild(singleTestProgressBar)
     document.body.appendChild(singleTestProgressBarWrap)
     fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
@@ -218,7 +262,8 @@ class SystemTestsControlPanelUpdater
     # add the div highlighting the percentage progress of the test
     singleTestProgressIndicator = document.createElement('div')
     singleTestProgressIndicator.id = "singleTestProgressIndicator"
-    singleTestProgressIndicator.style.cssText = 'position: absolute; left: 10px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
+    singleTestProgressIndicator.style.cssText =
+        'position: absolute; left: 10px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
     document.body.appendChild(singleTestProgressIndicator)
     fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
 
@@ -271,6 +316,3 @@ class SystemTestsControlPanelUpdater
         debugger
         world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
     #fade('numberOfFailedTests', 1, 0, 10, new Date().getTime());
-
-
-    
