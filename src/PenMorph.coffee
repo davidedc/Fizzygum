@@ -155,7 +155,7 @@ class PenMorph extends Morph
       dest = @position().distanceAngle(dist, @heading)
     else
       dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
-    @setPosition dest
+    @setPosition dest.round()
     @drawLine start, @center()
   
   down: ->

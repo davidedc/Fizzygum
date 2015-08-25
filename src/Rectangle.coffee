@@ -215,8 +215,13 @@ class Rectangle
     result
   
   round: ->
-    @debugIfFloats()
     @origin.round().corner @corner.round()
+
+  floor: ->
+    @origin.floor().corner @corner.floor()
+
+  ceil: ->
+    @origin.ceil().corner @corner.ceil()
   
   spread: ->
     @debugIfFloats()

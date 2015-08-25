@@ -33,15 +33,15 @@ class CircleBoxMorph extends Morph
     if @orientation is "vertical"
       radius = @width() / 2
       x = @center().x
-      center1 = new Point(x, @top() + radius)
-      center2 = new Point(x, @bottom() - radius)
+      center1 = new Point(x, @top() + radius).round()
+      center2 = new Point(x, @bottom() - radius).round()
       rect = @bounds.origin.add(
         new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
     else
       radius = @height() / 2
       y = @center().y
-      center1 = new Point(@left() + radius, y)
-      center2 = new Point(@right() - radius, y)
+      center1 = new Point(@left() + radius, y).round()
+      center2 = new Point(@right() - radius, y).round()
       rect = @bounds.origin.add(
         new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
 
@@ -53,6 +53,7 @@ class CircleBoxMorph extends Morph
       context.arc center.x, center.y, radius, 0, 2 * Math.PI, false
       context.closePath()
       context.fill()
+    rect = rect.floor()
     rect = rect.translateBy(@bounds.origin.neg())
     ext = rect.extent()
     if ext.x > 0 and ext.y > 0
