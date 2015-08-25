@@ -1,5 +1,5 @@
 class ProfilerData
-  
+
   @reactiveValues_valueRecalculations: 0
   @reactiveValues_signatureCalculations: 0
   @reactiveValues_signatureComparison: 0
