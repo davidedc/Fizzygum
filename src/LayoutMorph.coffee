@@ -198,19 +198,20 @@ class LayoutMorph extends Morph
   # So the user can adjust layout
   addAdjusterMorph: ->
     thickness = 4
+    adjuster = new LayoutAdjustingMorph()
 
     if @direction == "#horizontal"
-      @addMorph( new LayoutAdjustingMorph() )
-      @layoutSpec = LayoutSpec.fixedWidth(thickness)
+      @addMorphFixedWidth adjuster, thickness
 
     if @direction == "#vertical"
-      @addMorph( new LayoutAdjustingMorph() )
-      @layoutSpec = LayoutSpec.fixedHeight(thickness)
+      @addMorphFixedHeight adjuster, thickness
+
+    adjuster
 
   #"Add a submorph, at the bottom or right, with aLayoutSpec"
   addMorphWithLayoutSpec: (aMorph, aLayoutSpec) ->
     aMorph.layoutSpec = aLayoutSpec
-    @addMorph aMorph
+    @add aMorph
 
   minPaneHeightForReframe: ->
     return 20
@@ -241,15 +242,16 @@ class LayoutMorph extends Morph
 
   adjustHorizontallyByAt: (aLayoutAdjustMorph, aPoint) ->
     # | delta l ls r rs lNewWidth rNewWidth i lCurrentWidth rCurrentWidth doNotResizeBelow |
-    doNotResizeBelow =  @minPaneWidthForReframe
-    i = @children[aLayoutAdjustMorph]
+    doNotResizeBelow =  @minPaneWidthForReframe()
+    i = @children.indexOf(aLayoutAdjustMorph)
     l = @children[i+1]
     ls = l.layoutSpec
-    lCurrentWidth = Math.max(l.morphWidth(),1) # avoid division by zero
+    lCurrentWidth = Math.max(l.width(),1) # avoid division by zero
     r = @children[i - 1]
     rs = r.layoutSpec
-    rCurrentWidth = Math.max(r.morphWidth(),1) # avoid division by zero
+    rCurrentWidth = Math.max(r.width(),1) # avoid division by zero
     delta = aPoint.x - aLayoutAdjustMorph.position().x
+    #delta = aPoint.x
     delta = Math.max(delta, doNotResizeBelow - lCurrentWidth)
     delta = Math.min(delta, rCurrentWidth - doNotResizeBelow)
     if delta == 0 then return @
@@ -257,26 +259,26 @@ class LayoutMorph extends Morph
     lNewWidth = lCurrentWidth + delta
     if ls.isProportionalWidth() and rs.isProportionalWidth()
       # If both proportional, update them
-      ls.setProportionalWidth 1.0 * lNewWidth / lCurrentWidth * ls.proportionalWidth()
-      rs.setProportionalWidth 1.0 * rNewWidth / rCurrentWidth * rs.proportionalWidth()
+      ls.setProportionalWidth 1.0 * lNewWidth / lCurrentWidth * ls.getProportionalWidth()
+      rs.setProportionalWidth 1.0 * rNewWidth / rCurrentWidth * rs.getProportionalWidth()
     else
       # If at least one is fixed, update only the fixed
       if !ls.isProportionalWidth()
-          ls.fixedOrMorphWidth lNewWidth
+          ls.setFixedOrMorphWidth lNewWidth
       if !rs.isProportionalWidth()
-          rs.fixedOrMorphWidth rNewWidth
+          rs.setFixedOrMorphWidth rNewWidth
     @layoutSubmorphs()
 
   adjustVerticallyByAt: (aLayoutAdjustMorph, aPoint) ->
     # | delta t ts b bs tNewHeight bNewHeight i tCurrentHeight bCurrentHeight doNotResizeBelow |
     doNotResizeBelow = @minPaneHeightForReframe()
-    i = @children[aLayoutAdjustMorph]
+    i = @children.indexOf(aLayoutAdjustMorph)
     t = @children[i+1]
     ts = t.layoutSpec()
-    tCurrentHeight = Math.max(t.morphHeight(),1) # avoid division by zero
+    tCurrentHeight = Math.max(t.height(),1) # avoid division by zero
     b = @children[i - 1]
     bs = b.layoutSpec
-    bCurrentHeight = Math.max(b.morphHeight(),1) # avoid division by zero
+    bCurrentHeight = Math.max(b.height(),1) # avoid division by zero
     delta = aPoint.y - aLayoutAdjustMorph.position().y
     delta = Math.max(delta, doNotResizeBelow - tCurrentHeight)
     delta = Math.min(delta, bCurrentHeight - doNotResizeBelow)
@@ -285,14 +287,14 @@ class LayoutMorph extends Morph
     bNewHeight = bCurrentHeight - delta
     if ts.isProportionalHeight() and bs.isProportionalHeight()
       # If both proportional, update them
-      ts.setProportionalHeight 1.0 * tNewHeight / tCurrentHeight * ts.proportionalHeight()
-      bs.setProportionalHeight 1.0 * bNewHeight / bCurrentHeight * bs.proportionalHeight()
+      ts.setProportionalHeight 1.0 * tNewHeight / tCurrentHeight * ts.getProportionalHeight()
+      bs.setProportionalHeight 1.0 * bNewHeight / bCurrentHeight * bs.getProportionalHeight()
     else
       # If at least one is fixed, update only the fixed
       if !ts.isProportionalHeight()
-          ts.fixedOrMorphHeight tNewHeight
+          ts.setFixedOrMorphHeight tNewHeight
       if !bs.isProportionalHeight()
-          bs.fixedOrMorphHeight bNewHeight
+          bs.setFixedOrMorphHeight bNewHeight
     @layoutSubmorphs()
 
   #####################
@@ -304,8 +306,8 @@ class LayoutMorph extends Morph
 
   addAdjusterAndMorphLayoutSpec: (aMorph, aLayoutSpec) ->
     #Add a submorph, at the bottom or right, with aLayoutSpec"
-    @addAdjusterMorph()
-    @addMorphLayoutSpec(aMorph, aLayoutSpec)
+    adj = @addAdjusterMorph()
+    @addMorphWithLayoutSpec aMorph, aLayoutSpec
 
   addAdjusterAndMorphProportionalHeight: (aMorph, aNumber) ->
     @addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalHeight(aNumber))
@@ -390,9 +392,12 @@ class LayoutMorph extends Morph
     rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
     rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
     row3 = LayoutMorph.newRow()
-    row3.addMorphProportionalWidth(rect6,2)
-    row3.addMorphFixedWidth(rect5,10)
-    row3.addMorphProportionalWidth(rect7,1)
+    row3.addMorphProportionalWidth(rect6,2) # green
+    row3.addAdjusterAndMorphProportionalWidth(rect7,1) # blue
+    row3.addMorphProportionalWidth(rect5,3) # red
+    #row3.addMorphFixedWidth(rect5,10) # red
+
+    #row3.addMorphProportionalWidth(rect7,1)
     row3.layoutSubmorphs()
     row3.setPosition(world.hand.position());
     row3.keepWithin(world);

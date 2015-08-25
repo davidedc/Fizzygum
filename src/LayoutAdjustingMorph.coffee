@@ -1,6 +1,8 @@
 # LayoutAdjustingMorph
 
-# this comment below is needed to figure our dependencies between classes
+# this Morph must be attached to a LayoutMorph
+# because it relies on LayoutMorph's adjustHorizontallyByAt
+# and adjustVerticallyByAt to adjust the layout
 
 # This is a port of the
 # respective Cuis Smalltalk classes (version 4.2-1766)
@@ -16,10 +18,32 @@ class LayoutAdjustingMorph extends RectangleMorph
   indicator: null
 
   constructor: ->
+    super()
+    @isfloatDraggable = false
+    @noticesTransparentClick = true
+
+  # HandleMorph floatDragging and dropping:
+  rootForGrab: ->
+    @
 
   @includeInNewMorphMenu: ->
     # Return true for all classes that can be instantiated from the menu
     return false
+
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+    console.log "layout adjuster being moved!"
+    newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
+    @parent.adjustByAt @, newPos
+
+  #SliderButtonMorph events:
+  mouseEnter: ->
+    if @parent.direction == "#horizontal"
+      document.getElementById("world").style.cursor = "col-resize"
+    else if @parent.direction == "#vertical"
+      document.getElementById("world").style.cursor = "row-resize"
+  
+  mouseLeave: ->
+    document.getElementById("world").style.cursor = "auto"
 
   ###
   adoptWidgetsColor: (paneColor) ->
