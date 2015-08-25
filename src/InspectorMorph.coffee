@@ -216,25 +216,30 @@ class InspectorMorph extends BoxMorph
     # update layout
     @layoutSubmorphs()
 
+  showAttributes: ->
+    @showing = "attributes"
+    @buildAndConnectChildren()
+
+  showMethods: ->
+    @showing = "methods"
+    @buildAndConnectChildren()
+
+  showAttributesAndMethods: ->
+    @showing = "all"
+    @buildAndConnectChildren()
+
+  highlightOwnershipOfProperties: ->
+    @markOwnershipOfProperties = not @markOwnershipOfProperties
+    @buildAndConnectChildren()
+
+
   openShowMenu: ->
     menu = new MenuMorph(false)
-    menu.addItem "attributes", true, @, =>
-      @showing = "attributes"
-      @buildAndConnectChildren()
-
-    menu.addItem "methods", true, @, =>
-      @showing = "methods"
-      @buildAndConnectChildren()
-
-    menu.addItem "all", true, @, =>
-      @showing = "all"
-      @buildAndConnectChildren()
-
+    menu.addItem "attributes", true, @, "showAttributes"
+    menu.addItem "methods", true, @, "showMethods"
+    menu.addItem "all", true, @, "showAttributesAndMethods"
     menu.addLine()
-    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, (=>
-      @markOwnershipOfProperties = not @markOwnershipOfProperties
-      @buildAndConnectChildren()
-    ), "highlight\nownership of properties"
+    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, "highlightOwnershipOfProperties", "highlight\nownership of properties"
     menu.popUpAtHand(@firstContainerMenu())
 
   openInspectorMenu: ->
