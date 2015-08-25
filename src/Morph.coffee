@@ -502,6 +502,8 @@ class Morph extends MorphicNode
   
   visibleBounds: ->
     # answer which part of me is not clipped by a Frame
+    if @ == Window
+      debugger
     visible = @bounds
     frames = @allParentsTopToBottomSuchThat (p) ->
       p instanceof FrameMorph
@@ -715,6 +717,8 @@ class Morph extends MorphicNode
       #context = @image.getContext("2d")
       #context.scale pixelRatio, pixelRatio
       context.save()
+      if !@color?
+        debugger
       context.fillStyle = @color.toString()
       context.fillRect  Math.round(al),
           Math.round(at),
