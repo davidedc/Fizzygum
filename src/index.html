@@ -6,6 +6,13 @@
 		<script type="text/javascript" src="js/zombie-kernel.js"></script>
 		<script type="text/javascript" src="js/libs/FileSaver.js"></script>
 		<script type="text/javascript" src="js/libs/jszip.min.js"></script>
+		<!-- coffee-script.js is used to compile all the coffeescript
+		sources of the morphs (after which, the classes are loaded). -->
+		<script type="text/javascript" src="js/libs/coffee-script.js"></script>
+		<!-- this manifest contains the names of all the .js files containing
+		the morph's coffeescript sources. This is so we can dynamically load
+		them. -->
+		<script type="text/javascript" src="js/sourceCode/sourceCodeManifest.js"></script>
 
 		<!--include test scripts here-->
 
@@ -23,83 +30,13 @@
 			    worldCanvas.width = Math.round(960 * pixelRatio);
 			    worldCanvas.height = Math.round(440 * pixelRatio);
 			    worldCanvas.style.width = "960px";
-			    worldCanvas.style.height = "440px";				
-
-				// Add "false" as second parameter below
-				// to fit the world in canvas as per dimensions
-				// specified in the canvas element. Fill entire
-				// page otherwise.
-			    if(window.location.href.indexOf("worldWithSystemTestHarness") > -1) {
-			    	// the user is here to record a system test so
-			    	// don't fill entire page cause there are some
-			    	// controls on the right side of the canvas
-					world = new WorldMorph(worldCanvas, false);
-			    }
-			    else {
-					world = new WorldMorph(worldCanvas, true);			    	
-			    }
-
-				world.isDevMode = true;
-
-				hi = new StringMorph(
-					'Hello, World!', 48, 'serif');
-				hi.isDraggable = true;
-				hi.isEditable = true;
-				hi.setPosition(new Point(275, 200));
-				world.add(hi);
-
-				hint1 = new StringMorph(
-					'right click...', 20, 'serif');
-				hint1.isDraggable = true;
-				hint1.isEditable = true;
-				hint1.setPosition(new Point(350, 270));
-				world.add(hint1);
-				
-				hint2 = new StringMorph(
-					'(or touch and hold)', 10, 'sans-serif');
-				hint2.isDraggable = true;
-				hint2.isEditable = true;
-				hint2.setPosition(hint1.bottomLeft());
-				world.add(hint2);
-
-				// shim layer with setTimeout fallback
-				window.requestAnimFrame = (function(){
-				  return  window.requestAnimationFrame       || 
-						  window.webkitRequestAnimationFrame || 
-						  window.mozRequestAnimationFrame    || 
-						  window.oRequestAnimationFrame      || 
-						  window.msRequestAnimationFrame     || 
-						  function( callback ){
-							window.setTimeout(callback, 1000 / 60);
-						  };
-				})();			 
-			 
-				// usage: 
-				// instead of setInterval(render, 16) ....
-			 
-				(function animloop(){
-				  requestAnimFrame(animloop);
-				  world.doOneCycle();
-				})();
-				// place the rAF *before* the render() to assure as close to 
-				// 60fps with the setTimeout fallback.
-
-			    if(window.location.href.indexOf("runAllTests") > -1) {
-			       world.runAllSystemTests();
-			    }
-
-			    // in case we want to set up the page
-			    // for the System Tests, then add a panel
-			    // to the right where helper commands can be
-			    // clicked.
-			    if(window.location.href.indexOf("worldWithSystemTestHarness") > -1) {
-    				if (SystemTestsControlPanelUpdater !== null) {
-      					new SystemTestsControlPanelUpdater();
-    				}
-			    }
-
-			    world.boot();
-				
+			    worldCanvas.style.height = "440px";
+			    // "boot" here first loads the manifests for the
+			    // source code of the Morphs, and two manifests
+			    // for the tests.
+			    // Then it sets up the event handlers and
+			    // the requestAnimationFrame loop.
+			    boot();
 			};
 
 		</script>

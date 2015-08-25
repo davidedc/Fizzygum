@@ -43,6 +43,10 @@ if [ ! -d ../Zombie-Kernel-builds/latest/js/libs ]; then
   mkdir ../Zombie-Kernel-builds/latest/js/libs
 fi
 
+if [ ! -d ../Zombie-Kernel-builds/latest/js/sourceCode ]; then
+  mkdir ../Zombie-Kernel-builds/latest/js/sourceCode
+fi
+
 if [ ! -d ../Zombie-Kernel-builds/latest/delete_me ]; then
   mkdir ../Zombie-Kernel-builds/latest/delete_me
 fi
@@ -52,10 +56,17 @@ mkdir ../Zombie-Kernel-builds/latest/js/tests/
 
 
 # generate the zombie-kernel coffee file in the delete_me directory
+# note that this file won't contain much code.
+# All the code of the morphs is put in other .coffee files
+# which just contain the coffeescript source as the text!
 python ./buildSystem/build.py
 
 # turn the coffeescript file into js in the js directory
 coffee -b -c -o ../Zombie-Kernel-builds/latest/js/ ../Zombie-Kernel-builds/latest/delete_me/zombie-kernel.coffee 
+
+# compile all the files containing the coffeescript source for the morphs.
+# this creates javascript files which contain the original coffeescript source as text.
+coffee -b -c -o ../Zombie-Kernel-builds/latest/js/sourceCode/ ../Zombie-Kernel-builds/latest/js/sourceCode/
 
 if [ "$?" != "0" ]; then
     tput bel;
@@ -69,6 +80,7 @@ cp src/index.html ../Zombie-Kernel-builds/latest/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver\ submodule/FileSaver.js ../Zombie-Kernel-builds/latest/js/libs/
 cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js ../Zombie-Kernel-builds/latest/js/libs/
+cp auxiliary\ files/CoffeeScript\ submodule/coffee-script.js ../Zombie-Kernel-builds/latest/js/libs/
 
 # copy aux icon files
 cp auxiliary\ files/additional-icons/*.png ../Zombie-Kernel-builds/latest/icons/

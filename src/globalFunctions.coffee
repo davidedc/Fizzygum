@@ -287,4 +287,187 @@ getDocumentPositionOf = (aDOMelement) ->
     offsetParent = offsetParent.offsetParent
   pos
 
+# -------------------------------------------
+
+howManySourcesLoaded = 0
+howManyTestManifestsLoaded = 0
+
+aSourceHasBeenLoaded = ->
+  howManySourcesLoaded++
+  if howManySourcesLoaded == sourcesManifests.length
+    continueBooting()
+
+
+
+loadAllSources = ->
+  for eachClass in sourcesManifests
+
+    script = document.createElement('script')
+    script.src = "js/sourceCode/" + eachClass + ".js"
+
+    script.onload = =>
+      aSourceHasBeenLoaded()
+
+    document.head.appendChild script
+
+aTestScriptHasBeenLoaded = ->
+  howManyTestManifestsLoaded++
+  if howManyTestManifestsLoaded == 2
+    continueBooting2()
+
+
+loadAllTestManifests = ->
+    script = document.createElement('script')
+    script.src = "js/tests/testsManifest.js"
+    script.onload = =>
+      aTestScriptHasBeenLoaded()
+    document.head.appendChild script
+
+    script2 = document.createElement('script')
+    script2.src = "js/tests/testsAssetsManifest.js"
+    script2.onload = =>
+      aTestScriptHasBeenLoaded()
+    document.head.appendChild script2
+
+
+
+boot = ->
+
+  loadAllSources()
+
+
+# The whole idea here is that
+#    a needs b,c,d
+#    b needs c
+# forms a tree. (a root with b,c,d as children,
+# and b's node has C as child)
+# You basically find out the correct inclusion order
+# by just doing a depth-first visit of that tree
+# and collecting the nodes in reverse "coming back" from
+# the leafs.
+visit = (dependencies, klass, inclusion_order) ->
+  if dependencies[klass]?
+    for key in dependencies[klass]
+      if key in inclusion_order
+        break;
+      visit(dependencies, key, inclusion_order)
+  inclusion_order.push klass
+
+# we still need to evaluate the classes in the
+# correct order. We do that by looking at the sources
+# and some hints in the sources.
+generate_inclusion_order = (dependencies) ->
+  """
+  Returns a list of the coffee files. The list is ordered in such a way  that
+  the dependencies between the files are respected.
+  """
+  inclusion_order = []
+
+
+  for key of dependencies
+    if (key == 'length' || !dependencies.hasOwnProperty(key))
+      continue
+    #value = dependencies[key]
+    #console.log value
+    visit dependencies, key, inclusion_order
+  console.log "inclusion_order: " + inclusion_order
+  return inclusion_order
+
+continueBooting = ->
+
+  console.log "--------------------------------"
+  # find out the dependencies looking at each klass'
+  # source code and hints in it.
+  dependencies = []
+  REQUIRES = ///\sREQUIRES\s*(\w+)///
+  EXTENDS = ///\sextends\s*(\w+)///
+  DEPENDS = ///\s\w+:\s*new\s*(\w+)///
+  IS_CLASS = ///\s*class\s+(\w+)///
+  TRIPLE_QUOTES = ///'''///
+  #debugger
+  for eachClass in sourcesManifests
+
+    eachClass = eachClass.replace("_coffeSource","")
+    #if namedClasses.hasOwnProperty eachClass
+    console.log eachClass + " - "
+    dependencies[eachClass] = []
+    lines = window[eachClass + "_coffeSource"].split('\n')
+    i = 0
+    while i < lines.length
+      #console.log lines[i]
+
+      matches = lines[i].match EXTENDS
+      if matches?
+        #console.log matches
+        dependencies[eachClass].push matches[1]
+        console.log eachClass + " extends " + matches[1]
+
+      matches = lines[i].match REQUIRES
+      if matches?
+        #console.log matches
+        dependencies[eachClass].push matches[1]
+        console.log eachClass + " requires " + matches[1]
+
+      matches = lines[i].match DEPENDS
+      if matches?
+        #console.log matches
+        dependencies[eachClass].push matches[1]
+        console.log eachClass + " has klass init in instance variable " + matches[1]
+
+      i++
+  inclusion_order = generate_inclusion_order dependencies
+  console.log "--------------------------------"
+
+  for eachClass in inclusion_order
+    console.log "checking whether " + eachClass + " is already in the system "
+    if !window[eachClass]?
+      if eachClass + "_coffeSource" in sourcesManifests
+        console.log "loading " + eachClass + " from souce code"
+        # give life to the loaded and translated coffeescript klass now!
+        eval.call(window,CoffeeScript.compile(window[eachClass + "_coffeSource"],{"bare":true}));
+
+  loadAllTestManifests()
+
+
+world = {}; # we make "world" global
+
+continueBooting2 = ->
+  # Add "false" as second parameter below
+  # to fit the world in canvas as per dimensions
+  # specified in the canvas element. Fill entire
+  # page otherwise.
+  if window.location.href.indexOf('worldWithSystemTestHarness') > -1
+    # the user is here to record a system test so
+    # don't fill entire page cause there are some
+    # controls on the right side of the canvas
+    world = new WorldMorph(worldCanvas, false)
+  else
+    world = new WorldMorph(worldCanvas, true)
+  world.isDevMode = true
+  # shim layer with setTimeout fallback
+  window.requestAnimFrame = do ->
+    window.requestAnimationFrame or window.webkitRequestAnimationFrame or window.mozRequestAnimationFrame or window.oRequestAnimationFrame or window.msRequestAnimationFrame or (callback) ->
+      window.setTimeout callback, 1000 / 60
+      return
+  # usage: 
+  # instead of setInterval(render, 16) ....
+  (animloop = ->
+    requestAnimFrame animloop
+    world.doOneCycle()
+    return
+  )()
+  # place the rAF *before* the render() to assure as close to 
+  # 60fps with the setTimeout fallback.
+  if window.location.href.indexOf('runAllTests') > -1
+    world.runAllSystemTests()
+  # in case we want to set up the page
+  # for the System Tests, then add a panel
+  # to the right where helper commands can be
+  # clicked.
+  if window.location.href.indexOf('worldWithSystemTestHarness') > -1
+    if SystemTestsControlPanelUpdater != null
+      new SystemTestsControlPanelUpdater
+  world.boot()
+
+
 

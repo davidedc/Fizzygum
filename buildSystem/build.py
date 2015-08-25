@@ -58,10 +58,6 @@ import fnmatch
 # GLOBALS
 FINAL_OUTPUT_FILE = '../Zombie-Kernel-builds/latest/delete_me/zombie-kernel.coffee'
 
-STRING_BLOCK = \
-"""  @coffeeScriptSourceOfThisClass: '''
-%s  '''
-"""
 
 DIRECTORY_WITH_TEST_FILES = "../Zombie-Kernel-tests/tests/"
 FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
@@ -214,8 +210,9 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
         target = target + '<script type="text/javascript" src="js/tests/'+ntpath.basename(filename)+'"></script>'
 
     '''
-    target =  '<script type="text/javascript" src="js/tests/testsManifest.js"></script>\n'
-    target =  target + '<script type="text/javascript" src="js/tests/testsAssetsManifest.js"></script>'
+    #target =  '<script type="text/javascript" src="js/tests/testsManifest.js"></script>\n'
+    #target =  target + '<script type="text/javascript" src="js/tests/testsAssetsManifest.js"></script>'
+    target =  ""
 
     # put the tests inclusion in the right place
 
@@ -275,23 +272,53 @@ def main():
     for filename in inclusion_order:
         print(filename)
 
+
+    STRING_BLOCK = \
+    """window.%s = '''\n%s\n'''"""
+    sourcesManifests = "sourcesManifests = [];\n"
+
     # now iterate through the files and create the giant final *.coffee file.
     text = []
     for filename in inclusion_order:
+        print(">>>> %s " % (filename))
         # open file and read its contents
         with codecs.open(filename, "r", "utf-8") as f:
             content = f.read()
-        text.append(content)
 
         # if the file is a class, then we add its source code in the giant
         # *.coffee file as a static variable (string block).
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
         is_class_file = IS_CLASS.search(content)
+
+        if not is_class_file:
+            print("#### appending %s " % (filename))
+            text.append(content)
+
+        # all the class files' coffeescript source is put
+        # in .coffee files containing such sources as text.
+        # later on in the build process these .coffee "source containers"
+        # are going to be translated to javascript (still containing coffeescript
+        # sources as text).
+        # Also keep track of all the sources in a manifest.
+        # The manifest will be loaded, and then the sources will be
+        # dynamically loaded following the manifest entries.
+        # This is to avoid the page necessarily loading all the morph
+        # classes on load.
         if is_class_file:
             # If there is a string block in the source, then we must escape it.
             escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
-            text.append(STRING_BLOCK % escaped_content)
+            # also all the slashes need to be escaped
+            escaped_content = escaped_content.replace("\\","\\\\")
+
+            sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
+            with codecs.open("../Zombie-Kernel-builds/latest/js/sourceCode/"+sourceFileName+".coffee", "w", "utf-8") as f:
+                f.write(STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content)))
+                sourcesManifests += "sourcesManifests.push('" + sourceFileName + "');\n";
+
+    with codecs.open("../Zombie-Kernel-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
+        f.write(sourcesManifests)
+
 
     # add the morphic version. This is used in the about box.
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
