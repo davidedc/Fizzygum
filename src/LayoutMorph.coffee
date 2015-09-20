@@ -17,6 +17,7 @@ class LayoutMorph extends Morph
 
   constructor: ->
     super()
+    @setColor @defaultColor()
 
   defaultColor: ->
     return Color.transparent()
