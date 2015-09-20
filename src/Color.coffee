@@ -295,5 +295,5 @@ class Color
     result
 
   @transparent: ->
-    return new @constructor(0,0,0,0)
+    return new @(0,0,0,0)
 
