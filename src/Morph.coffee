@@ -637,7 +637,7 @@ class Morph extends MorphicNode
   #   run their own updateBackingStore method, so each child will have its own
   #   canvas with their own contents.
   #   Note that updateBackingStore should be called sparingly. A morph should repaint
-  #   its buffer pretty much only *after* it's been added to itf first parent and
+  #   its buffer pretty much only *after* it's been added to its first parent and
   #   whenever it changes dimensions. Things like changing parent and updating
   #   the position shouldn't normally trigger an update of the buffer.
   #   Also note that before the buffer is painted for the first time, they
