@@ -4,8 +4,8 @@
 # because it relies on LinearLayoutMorph's adjustHorizontallyByAt
 # and adjustVerticallyByAt to adjust the layout
 
-# This is a port of the
-# respective Cuis Smalltalk classes (version 4.2-1766)
+# This is a port of the LayoutAdjustingMorph class from
+# Cuis Smalltalk (version 4.2-1766)
 # Cuis is by Juan Vuletich
 
 

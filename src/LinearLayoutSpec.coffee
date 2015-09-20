@@ -2,8 +2,8 @@
 
 # this comment below is needed to figure our dependencies between classes
 
-# This is a port of the
-# respective Cuis Smalltalk classes (version 4.2-1766)
+# This is a port of the LayoutSpec class from
+# Cuis Smalltalk (version 4.2-1766)
 # Cuis is by Juan Vuletich
 
 # LinearLayoutSpecs are the basis for the layout mechanism.

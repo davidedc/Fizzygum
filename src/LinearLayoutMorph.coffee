@@ -6,15 +6,15 @@
 # REQUIRES Rectangle
 
 # This is a port of the
-# respective Cuis Smalltalk classes (version 4.2-1766)
+# LayoutMorph Cuis Smalltalk classe (version 4.2-1766)
 # Cuis is by Juan Vuletich
 
 # A Layout that arranges its children in a single column or a single row.
-# A row or column of widgets, does layout by placing
-# them either horizontally or vertically.
-# The direction of the row can be set.
+# I.e. a row or column of widgets, does layout by placing
+# them either (respectively) horizontally or vertically.
 
-# Submorphs might specify a LinearLayoutSpec.
+# Submorphs might have a linearLinearLayoutSpec property
+# specifying a LinearLayoutSpec.
 # If some don't, then, for a column, the column
 # width is taken as the width, and any morph height
 # is kept. Same for rows: submorph width would be
@@ -62,6 +62,9 @@ class LinearLayoutMorph extends Morph
   defaultColor: ->
     return Color.transparent()
 
+  # TODO unclear whether "padding" is the right word
+  # here. It seems like this is how the extra remaining
+  # space is used, or about how the widgets "flush"...?
   # This sets how extra space is used when doing layout.
   # For example, a column might have extra , un-needed
   # vertical space. #top means widgets are set close
