@@ -4,6 +4,7 @@
 # REQUIRES Color
 # REQUIRES Point
 # REQUIRES Rectangle
+# REQUIRES LinearLayoutAdjustingMorph
 
 # This is a port of the
 # LayoutMorph Cuis Smalltalk classe (version 4.2-1766)
@@ -21,7 +22,7 @@
 # maintained, and submorph height would be made
 # equal to row height.
 
-class LinearLayoutMorph extends Morph
+class LinearLayoutMorph extends LayoutMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -29,12 +30,10 @@ class LinearLayoutMorph extends Morph
   instanceVariableNames: 'direction separation padding'
   classVariableNames: ''
   poolDictionaries: ''
-  category: 'Morphic-Layouts'
 
   direction: ""
   padding: 0
   separation: null # contains a Point
-  layoutNeeded: false
 
   constructor: ->
     super()
@@ -216,12 +215,6 @@ class LinearLayoutMorph extends Morph
   addMorphWithLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
     aMorph.linearLinearLayoutSpec = aLinearLayoutSpec
     @add aMorph
-
-  minPaneHeightForReframe: ->
-    return 20
-
-  minPaneWidthForReframe: ->
-    return 40
 
   proportionalHeightNormalizationFactor: ->
     sumOfProportional = 0

@@ -16,6 +16,7 @@ class LinearLayoutAdjustingMorph extends RectangleMorph
 
   hand: null
   indicator: null
+  category: 'Morphic-Layouts'
 
   constructor: ->
     super()

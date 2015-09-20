@@ -35,6 +35,7 @@ class LinearLayoutSpec
   fixedHeight: 0
   proportionalWidth: 1.0
   proportionalHeight: 1.0
+  category: 'Morphic-Layouts'
 
 
   # Just some reasonable defaults, use all available space
