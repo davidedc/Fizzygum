@@ -1,4 +1,4 @@
-# LayoutSpec
+# LinearLayoutSpec
 
 # this comment below is needed to figure our dependencies between classes
 
@@ -6,11 +6,11 @@
 # respective Cuis Smalltalk classes (version 4.2-1766)
 # Cuis is by Juan Vuletich
 
-# LayoutSpecs are the basis for the layout mechanism.
-# Any Morph can be given a LayoutSpec, but in order to honor it,
-# its owner must be a LayoutMorph.
+# LinearLayoutSpecs are the basis for the layout mechanism.
+# Any Morph can be given a LinearLayoutSpec, but in order to honor it,
+# its owner must be a LinearLayoutMorph.
 
-# A LayoutSpec specifies how a morph wants to be laid out.
+# A LinearLayoutSpec specifies how a morph wants to be laid out.
 # It can specify either a fixed width or a fraction of some
 # available owner width. Same goes for height. If a fraction
 # is specified, a minimum extent is also possible.
@@ -24,7 +24,7 @@
 
 #Same goes for proportionalHeight and fixedHeight
 
-class LayoutSpec
+class LinearLayoutSpec
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -44,108 +44,108 @@ class LayoutSpec
     @newWithFixedWidthFixedHeight(aPoint.x, aPoint.y)
 
   @newWithFixedHeight: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedHeight aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedHeight aNumber
+   return linearLinearLayoutSpec
 
   @newWithFixedWidth: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   return linearLinearLayoutSpec
 
   @newWithFixedWidthFixedHeight: (aNumber, otherNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   layoutSpec.setFixedHeight otherNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   linearLinearLayoutSpec.setFixedHeight otherNumber
+   return linearLinearLayoutSpec
 
   @newWithFixedWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   layoutSpec.setFixedHeight otherNumber
-   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   linearLinearLayoutSpec.setFixedHeight otherNumber
+   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   return linearLinearLayoutSpec
 
   @newWithFixedWidthProportionalHeight: (aNumber, otherNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   layoutSpec.setProportionalHeight otherNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   linearLinearLayoutSpec.setProportionalHeight otherNumber
+   return linearLinearLayoutSpec
 
   @newWithFixedWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   layoutSpec.setProportionalHeight otherNumber
-   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   linearLinearLayoutSpec.setProportionalHeight otherNumber
+   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   return linearLinearLayoutSpec
 
   @newWithKeepMorphExtent: ->
-   layoutSpec = new @()
-   layoutSpec.useMorphWidth
-   layoutSpec.useMorphHeight
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.useMorphWidth
+   linearLinearLayoutSpec.useMorphHeight
+   return linearLinearLayoutSpec
 
   @newWithMorphHeightFixedWidth: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setFixedWidth aNumber
-   layoutSpec.useMorphHeight
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setFixedWidth aNumber
+   linearLinearLayoutSpec.useMorphHeight
+   return linearLinearLayoutSpec
 
   @newWithMorphHeightProportionalWidth: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   layoutSpec.useMorphHeight()
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   linearLinearLayoutSpec.useMorphHeight()
+   return linearLinearLayoutSpec
 
   @newWithMorphWidthFixedHeight: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.useMorphWidth()
-   layoutSpec.setFixedHeight aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.useMorphWidth()
+   linearLinearLayoutSpec.setFixedHeight aNumber
+   return linearLinearLayoutSpec
 
   @newWithMorphWidthProportionalHeight: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.useMorphWidth()
-   layoutSpec.setProportionalHeight aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.useMorphWidth()
+   linearLinearLayoutSpec.setProportionalHeight aNumber
+   return linearLinearLayoutSpec
 
   # Will use all available width
   @newWithProportionalHeight: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalHeight aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalHeight aNumber
+   return linearLinearLayoutSpec
 
   # Will use all available height
   @newWithProportionalWidth: (aNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   return linearLinearLayoutSpec
 
   @newWithProportionalWidthFixedHeight: (aNumber, otherNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   layoutSpec.setFixedHeight otherNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   linearLinearLayoutSpec.setFixedHeight otherNumber
+   return linearLinearLayoutSpec
 
   @newWithProportionalWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   layoutSpec.setFixedHeight otherNumber
-   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   linearLinearLayoutSpec.setFixedHeight otherNumber
+   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   return linearLinearLayoutSpec
 
   @newWithProportionalWidthProportionalHeight: (aNumber, otherNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   layoutSpec.setProportionalHeight otherNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   linearLinearLayoutSpec.setProportionalHeight otherNumber
+   return linearLinearLayoutSpec
 
   @newWithProportionalWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
-   layoutSpec = new @()
-   layoutSpec.setProportionalWidth aNumber
-   layoutSpec.setProportionalHeight otherNumber
-   layoutSpec.setMinorDirectionPadding aSymbolOrNumber
-   return layoutSpec
+   linearLinearLayoutSpec = new @()
+   linearLinearLayoutSpec.setProportionalWidth aNumber
+   linearLinearLayoutSpec.setProportionalHeight otherNumber
+   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   return linearLinearLayoutSpec
 
   # Use all available space
   @newWithUseAll: ->

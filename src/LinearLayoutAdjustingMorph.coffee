@@ -1,7 +1,7 @@
-# LayoutAdjustingMorph
+# LinearLayoutAdjustingMorph
 
-# this Morph must be attached to a LayoutMorph
-# because it relies on LayoutMorph's adjustHorizontallyByAt
+# this Morph must be attached to a LinearLayoutMorph
+# because it relies on LinearLayoutMorph's adjustHorizontallyByAt
 # and adjustVerticallyByAt to adjust the layout
 
 # This is a port of the
@@ -9,7 +9,7 @@
 # Cuis is by Juan Vuletich
 
 
-class LayoutAdjustingMorph extends RectangleMorph
+class LinearLayoutAdjustingMorph extends RectangleMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype

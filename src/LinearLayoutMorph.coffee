@@ -1,4 +1,4 @@
-# LayoutMorph
+# LinearLayoutMorph
 
 # this comment below is needed to figure our dependencies between classes
 # REQUIRES Color
@@ -9,17 +9,19 @@
 # respective Cuis Smalltalk classes (version 4.2-1766)
 # Cuis is by Juan Vuletich
 
+# A Layout that arranges its children in a single column or a single row.
 # A row or column of widgets, does layout by placing
 # them either horizontally or vertically.
+# The direction of the row can be set.
 
-# Submorphs might specify a LayoutSpec.
+# Submorphs might specify a LinearLayoutSpec.
 # If some don't, then, for a column, the column
 # width is taken as the width, and any morph height
 # is kept. Same for rows: submorph width would be
 # maintained, and submorph height would be made
 # equal to row height.
 
-class LayoutMorph extends Morph
+class LinearLayoutMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -39,15 +41,15 @@ class LayoutMorph extends Morph
     @separation = new Point 0,0
   
   @newColumn: ->
-    newLayoutMorph =  new @()
-    newLayoutMorph.beColumn()
-    return newLayoutMorph
+    newLinearLayoutMorph =  new @()
+    newLinearLayoutMorph.beColumn()
+    return newLinearLayoutMorph
 
   @newRow: ->
     #debugger
-    newLayoutMorph =  new @()
-    newLayoutMorph.beRow()
-    return newLayoutMorph
+    newLinearLayoutMorph =  new @()
+    newLinearLayoutMorph.beRow()
+    return newLinearLayoutMorph
 
   beColumn: ->
     @direction = "#vertical"
@@ -79,8 +81,7 @@ class LayoutMorph extends Morph
       when "#bottom" then @padding = 1.0
       else @padding = howMuchPadding
 
-  setSeparation: (howMuchSeparation) ->
-    @separation = howMuchSeparation
+  setSeparation: (@separation) ->
 
   xSeparation: ->
     return @separation.x
@@ -90,7 +91,7 @@ class LayoutMorph extends Morph
 
   # Compute a new layout based on the given layout bounds
   layoutSubmorphs: ->
-    console.log "layoutSubmorphs in LayoutMorph"
+    console.log "layoutSubmorphs in LinearLayoutMorph"
     #debugger
     if @children.length == 0
       @layoutNeeded = false
@@ -112,18 +113,18 @@ class LayoutMorph extends Morph
     usableWidth = boundsForLayout.width() - ((@children.length + 1) * xSep)
     sumOfFixed = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
-        if child.layoutSpec.fixedWidth?
-          sumOfFixed += child.layoutSpec.getFixedWidth()
+      if child.linearLinearLayoutSpec?
+        if child.linearLinearLayoutSpec.fixedWidth?
+          sumOfFixed += child.linearLinearLayoutSpec.getFixedWidth()
     availableForPropWidth = usableWidth - sumOfFixed
     normalizationFactor = @proportionalWidthNormalizationFactor()
     availableForPropWidth = availableForPropWidth * normalizationFactor
     widths = []
     sumOfWidths = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
+      if child.linearLinearLayoutSpec?
         #debugger
-        theWidth = child.layoutSpec.widthFor availableForPropWidth
+        theWidth = child.linearLinearLayoutSpec.widthFor availableForPropWidth
         sumOfWidths += theWidth
         widths.push theWidth
     l = ((usableWidth - sumOfWidths) * @padding + Math.max(xSep, 0)) +  boundsForLayout.left()
@@ -135,11 +136,11 @@ class LayoutMorph extends Morph
       # major direction
       w = widths[i]
       # minor direction
-      ls = m.layoutSpec
+      ls = m.linearLinearLayoutSpec
       if not ls?
         # there might be submorphs that don't have a layout.
         # for example, currently, the HandleMorph can be attached
-        # to the LayoutMorph without a layoutSpec.
+        # to the LinearLayoutMorph without a linearLinearLayoutSpec.
         # just skip those. The HandleMorph does its own
         # layouting.
         continue
@@ -162,17 +163,17 @@ class LayoutMorph extends Morph
     usableHeight = boundsForLayout.height() - ((@children.length + 1) * ySep)
     sumOfFixed = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
-        if child.layoutSpec.fixedWidth?
-          sumOfFixed += child.layoutSpec.fixedHeight
+      if child.linearLinearLayoutSpec?
+        if child.linearLinearLayoutSpec.fixedWidth?
+          sumOfFixed += child.linearLinearLayoutSpec.fixedHeight
     availableForPropHeight = usableHeight - sumOfFixed
     normalizationFactor = @proportionalHeightNormalizationFactor
     availableForPropHeight = availableForPropHeight * normalizationFactor
     heights = []
     sumOfHeights = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
-        theHeight = child.layoutSpec.heightFor availableForPropHeight
+      if child.linearLinearLayoutSpec?
+        theHeight = child.linearLinearLayoutSpec.heightFor availableForPropHeight
         sumOfHeights += theHeight
         heights.push theHeight
     t = ((usableHeight - sumOfHeights) * @padding + Math.max(ySep, 0)) +  boundsForLayout.top()
@@ -184,7 +185,7 @@ class LayoutMorph extends Morph
       # major direction
       h = heights[i]
       # minor direction
-      ls = m.layoutSpec
+      ls = m.linearLinearLayoutSpec
       w = Math.min(usableWidth, ls.widthFor(usableWidth))
       l = (usableWidth - w) * ls.minorDirectionPadding() + xSep + boundsLeft
       # Set bounds and adjust major direction for next step
@@ -198,7 +199,7 @@ class LayoutMorph extends Morph
   # So the user can adjust layout
   addAdjusterMorph: ->
     thickness = 4
-    adjuster = new LayoutAdjustingMorph()
+    adjuster = new LinearLayoutAdjustingMorph()
 
     if @direction == "#horizontal"
       @addMorphFixedWidth adjuster, thickness
@@ -208,9 +209,9 @@ class LayoutMorph extends Morph
 
     adjuster
 
-  #"Add a submorph, at the bottom or right, with aLayoutSpec"
-  addMorphWithLayoutSpec: (aMorph, aLayoutSpec) ->
-    aMorph.layoutSpec = aLayoutSpec
+  #"Add a submorph, at the bottom or right, with aLinearLayoutSpec"
+  addMorphWithLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
+    aMorph.linearLinearLayoutSpec = aLinearLayoutSpec
     @add aMorph
 
   minPaneHeightForReframe: ->
@@ -222,15 +223,15 @@ class LayoutMorph extends Morph
   proportionalHeightNormalizationFactor: ->
     sumOfProportional = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
-        sumOfProportional += child.layoutSpec.proportionalHeight()
+      if child.linearLinearLayoutSpec?
+        sumOfProportional += child.linearLinearLayoutSpec.proportionalHeight()
     return 1.0/Math.max(sumOfProportional, 1.0)
 
   proportionalWidthNormalizationFactor: ->
     sumOfProportional = 0
     @children.forEach (child) =>
-      if child.layoutSpec?
-        sumOfProportional += child.layoutSpec.getProportionalWidth()
+      if child.linearLinearLayoutSpec?
+        sumOfProportional += child.linearLinearLayoutSpec.getProportionalWidth()
     return 1.0/Math.max(sumOfProportional, 1.0)
 
   adjustByAt: (aLayoutAdjustMorph, aPoint) ->
@@ -245,10 +246,10 @@ class LayoutMorph extends Morph
     doNotResizeBelow =  @minPaneWidthForReframe()
     i = @children.indexOf(aLayoutAdjustMorph)
     l = @children[i+1]
-    ls = l.layoutSpec
+    ls = l.linearLinearLayoutSpec
     lCurrentWidth = Math.max(l.width(),1) # avoid division by zero
     r = @children[i - 1]
-    rs = r.layoutSpec
+    rs = r.linearLinearLayoutSpec
     rCurrentWidth = Math.max(r.width(),1) # avoid division by zero
     delta = aPoint.x - aLayoutAdjustMorph.position().x
     #delta = aPoint.x
@@ -274,10 +275,10 @@ class LayoutMorph extends Morph
     doNotResizeBelow = @minPaneHeightForReframe()
     i = @children.indexOf(aLayoutAdjustMorph)
     t = @children[i+1]
-    ts = t.layoutSpec()
+    ts = t.linearLinearLayoutSpec()
     tCurrentHeight = Math.max(t.height(),1) # avoid division by zero
     b = @children[i - 1]
-    bs = b.layoutSpec
+    bs = b.linearLinearLayoutSpec
     bCurrentHeight = Math.max(b.height(),1) # avoid division by zero
     delta = aPoint.y - aLayoutAdjustMorph.position().y
     delta = Math.max(delta, doNotResizeBelow - tCurrentHeight)
@@ -302,38 +303,38 @@ class LayoutMorph extends Morph
   #####################
 
   addAdjusterAndMorphFixedHeight: (aMorph,aNumber) ->
-    @addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedHeight aNumber)
+    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedHeight aNumber)
 
-  addAdjusterAndMorphLayoutSpec: (aMorph, aLayoutSpec) ->
-    #Add a submorph, at the bottom or right, with aLayoutSpec"
+  addAdjusterAndMorphLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
+    #Add a submorph, at the bottom or right, with aLinearLayoutSpec"
     adj = @addAdjusterMorph()
-    @addMorphWithLayoutSpec aMorph, aLayoutSpec
+    @addMorphWithLinearLayoutSpec aMorph, aLinearLayoutSpec
 
   addAdjusterAndMorphProportionalHeight: (aMorph, aNumber) ->
-    @addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalHeight(aNumber))
+    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalHeight(aNumber))
 
   addAdjusterAndMorphProportionalWidth: (aMorph, aNumber) ->
-    @addAdjusterAndMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalWidth(aNumber))
+    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalWidth(aNumber))
 
   addMorphFixedHeight: (aMorph, aNumber) ->
-    @addMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedHeight(aNumber))
+    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedHeight(aNumber))
 
   addMorphFixedWidth: (aMorph, aNumber) ->
-    @addMorphLayoutSpec(aMorph, LayoutSpec.newWithFixedWidth(aNumber))
+    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedWidth(aNumber))
 
-  addMorphLayoutSpec: (aMorph, aLayoutSpec) ->
-    # Add a submorph, at the bottom or right, with aLayoutSpec
-    aMorph.layoutSpec = aLayoutSpec
+  addMorphWithLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
+    # Add a submorph, at the bottom or right, with aLinearLayoutSpec
+    aMorph.linearLinearLayoutSpec = aLinearLayoutSpec
     @add aMorph
 
   addMorphProportionalHeight: (aMorph, aNumber) ->
-    @addMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalHeight(aNumber))
+    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalHeight(aNumber))
 
   addMorphProportionalWidth: (aMorph, aNumber) ->
-    @addMorphLayoutSpec(aMorph, LayoutSpec.newWithProportionalWidth(aNumber))
+    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalWidth(aNumber))
 
   addMorphUseAll: (aMorph) ->
-    @addMorphLayoutSpec(aMorph, LayoutSpec.useAll())
+    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.useAll())
 
   addMorphs: (morphs) ->
     morphs.forEach (morph) =>
@@ -345,12 +346,12 @@ class LayoutMorph extends Morph
 
   # unclear how to translate this one for the time being
   is: (aSymbol) ->
-    return aSymbol == "#LayoutMorph" # or [ super is: aSymbol ]
+    return aSymbol == "#LinearLayoutMorph" # or [ super is: aSymbol ]
 
   @test1: ->
     rect1 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect2 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-    row = LayoutMorph.newRow()
+    row = LinearLayoutMorph.newRow()
     row.addMorphProportionalWidth(rect1,2)
     row.addMorphProportionalWidth(rect2,1)
     row.layoutSubmorphs()
@@ -370,7 +371,7 @@ class LayoutMorph extends Morph
   @test2: ->
     rect3 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect4 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-    row2 = LayoutMorph.newRow()
+    row2 = LinearLayoutMorph.newRow()
     row2.addMorphFixedWidth(rect3,10)
     row2.addMorphProportionalWidth(rect4,1)
     row2.layoutSubmorphs()
@@ -391,7 +392,7 @@ class LayoutMorph extends Morph
     rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
     rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
-    row3 = LayoutMorph.newRow()
+    row3 = LinearLayoutMorph.newRow()
     row3.addMorphProportionalWidth(rect6,2) # green
     row3.addAdjusterAndMorphProportionalWidth(rect7,1) # blue
     row3.addMorphProportionalWidth(rect5,3) # red
@@ -420,14 +421,14 @@ class LayoutMorph extends Morph
     # container, not to the other layouts.
     # Equivalent smalltalk code:
     # | pane rect1 rect2 |
-    # pane _ LayoutMorph newRow separation: 5. "3"
+    # pane _ LinearLayoutMorph newRow separation: 5. "3"
     # pane addMorph: (StringMorph contents: '3').
     # 
     # rect1 := BorderedRectMorph new color: (Color lightOrange).
     # pane addMorph: rect1 
-    #          layoutSpec: (LayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionPadding: #center).
+    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionPadding: #center).
     # rect2 := BorderedRectMorph new color: (Color cyan);
-    #   layoutSpec: (LayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionPadding: #center).
+    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionPadding: #center).
     # pane addMorph: rect2.
     # pane
     #   color: Color lightGreen;
@@ -439,7 +440,7 @@ class LayoutMorph extends Morph
     rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
     rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
-    row3 = LayoutMorph.newRow()
+    row3 = LinearLayoutMorph.newRow()
     row3.addMorphProportionalHeight(rect6,0.5)
     row3.addMorphFixedHeight(rect5,200)
     row3.addMorphProportionalHeight(rect7,1.1)
