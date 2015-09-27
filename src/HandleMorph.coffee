@@ -2,7 +2,7 @@
 # not to be confused with the HandMorph
 # I am a resize / move handle that can be attached to any Morph
 
-# this comment below is needed to figure our dependencies between classes
+# this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES BackingStoreMixin
 

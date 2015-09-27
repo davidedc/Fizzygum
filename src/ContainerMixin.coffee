@@ -2,7 +2,7 @@
 #      THIS MIXIN IS TEMPORARY. JUST STARTED IT.
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure our dependencies between classes
+# these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
 #   1) a container has potentially a background and

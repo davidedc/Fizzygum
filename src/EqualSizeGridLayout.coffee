@@ -1,6 +1,6 @@
 # EqualSizeGridLayout
 
-# this comment below is needed to figure our dependencies between classes
+# this comment below is needed to figure out dependencies between classes
 # REQUIRES Color
 # REQUIRES Point
 # REQUIRES Rectangle

@@ -1,6 +1,6 @@
 # LinearLayoutSpec
 
-# this comment below is needed to figure our dependencies between classes
+# this comment below is needed to figure out dependencies between classes
 
 # This is a port of the LayoutSpec class from
 # Cuis Smalltalk (version 4.2-1766)

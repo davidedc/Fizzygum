@@ -9,7 +9,7 @@
 # if a Morph has no owner it never gets drawn
 # (but note that there are other ways to hide a Morph).
 
-# this comment below is needed to figure our dependencies between classes
+# this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES DeepCopierMixin
 

@@ -1,6 +1,6 @@
 # //////////////////////////////////////////////////////////
 
-# these comments below needed to figure our dependencies between classes
+# these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
 # some morphs (for example ColorPaletteMorph

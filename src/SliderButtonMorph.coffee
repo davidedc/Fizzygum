@@ -3,7 +3,7 @@
 # Sliders (and hence this button)
 # are also used in the ScrollMorphs.
 
-# this comment below is needed to figure our dependencies between classes
+# this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
 class SliderButtonMorph extends CircleBoxMorph

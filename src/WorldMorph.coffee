@@ -1,6 +1,6 @@
 # WorldMorph //////////////////////////////////////////////////////////
 
-# these comments below needed to figure our dependencies between classes
+# these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES PreferencesAndSettings
 # REQUIRES Color
