@@ -953,6 +953,15 @@ class AutomatorRecorderAndPlayer
               systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               "devicePixelRatio_" + pixelRatioString + "/" +
               aGoodImageName + "*\n"
+      # someone could get rid of the pixelRatio directories
+      # that don't apply to him/her (say, to save space)
+      # so make sure you create it if it doesn't exist.
+      renamerScript += "mkdir -p " + "../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
+              systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+              "devicePixelRatio_" + pixelRatioString + "\n"
       renamerScript += "cp " + (failedImage).imageName + "* ../Zombie-Kernel-tests/tests/" + filenameForScript + "/automation-assets/" +
               systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
               systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
