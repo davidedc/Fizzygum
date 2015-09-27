@@ -578,6 +578,13 @@ class Morph extends MorphicNode
   # tweak many of their children...
   layoutSubmorphs: ->
   
+
+  # do nothing in most cases but for example for
+  # layouts, if something inside a layout wants to
+  # change extent, then the whole layout might need to
+  # change extent.
+  childChangedExtent: (theMorphChangingTheExtent) ->
+
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
     # check whether we are actually changing the extent.
@@ -588,6 +595,8 @@ class Morph extends MorphicNode
       @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
       @layoutSubmorphs()
+      if @parent?
+        @parent.childChangedExtent(@)
   
   silentSetExtent: (aPoint) ->
     ext = aPoint.round()
