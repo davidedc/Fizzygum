@@ -30,7 +30,7 @@ class LinearLayoutSpec
   namedClasses[@name] = @prototype
 
   morph: null
-  minorDirectionPadding: 0.5
+  minorDirectionFloat: 0.5 # equivalent to "#center"
   fixedWidth: 0
   fixedHeight: 0
   proportionalWidth: 1.0
@@ -60,11 +60,11 @@ class LinearLayoutSpec
    linearLinearLayoutSpec.setFixedHeight otherNumber
    return linearLinearLayoutSpec
 
-  @newWithFixedWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
+  @newWithFixedWidthFixedHeightMinorDirectionFloat: (aNumber, otherNumber, aSymbolOrNumber) ->
    linearLinearLayoutSpec = new @()
    linearLinearLayoutSpec.setFixedWidth aNumber
    linearLinearLayoutSpec.setFixedHeight otherNumber
-   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   linearLinearLayoutSpec.setMinorDirectionFloat aSymbolOrNumber
    return linearLinearLayoutSpec
 
   @newWithFixedWidthProportionalHeight: (aNumber, otherNumber) ->
@@ -73,11 +73,11 @@ class LinearLayoutSpec
    linearLinearLayoutSpec.setProportionalHeight otherNumber
    return linearLinearLayoutSpec
 
-  @newWithFixedWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
+  @newWithFixedWidthProportionalHeightMinorDirectionFloat: (aNumber, otherNumber, aSymbolOrNumber) ->
    linearLinearLayoutSpec = new @()
    linearLinearLayoutSpec.setFixedWidth aNumber
    linearLinearLayoutSpec.setProportionalHeight otherNumber
-   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   linearLinearLayoutSpec.setMinorDirectionFloat aSymbolOrNumber
    return linearLinearLayoutSpec
 
   @newWithKeepMorphExtent: ->
@@ -128,11 +128,11 @@ class LinearLayoutSpec
    linearLinearLayoutSpec.setFixedHeight otherNumber
    return linearLinearLayoutSpec
 
-  @newWithProportionalWidthFixedHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
+  @newWithProportionalWidthFixedHeightMinorDirectionFloat: (aNumber, otherNumber, aSymbolOrNumber) ->
    linearLinearLayoutSpec = new @()
    linearLinearLayoutSpec.setProportionalWidth aNumber
    linearLinearLayoutSpec.setFixedHeight otherNumber
-   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   linearLinearLayoutSpec.setMinorDirectionFloat aSymbolOrNumber
    return linearLinearLayoutSpec
 
   @newWithProportionalWidthProportionalHeight: (aNumber, otherNumber) ->
@@ -141,11 +141,11 @@ class LinearLayoutSpec
    linearLinearLayoutSpec.setProportionalHeight otherNumber
    return linearLinearLayoutSpec
 
-  @newWithProportionalWidthProportionalHeightMinorDirectionPadding: (aNumber, otherNumber, aSymbolOrNumber) ->
+  @newWithProportionalWidthProportionalHeightMinorDirectionFloat: (aNumber, otherNumber, aSymbolOrNumber) ->
    linearLinearLayoutSpec = new @()
    linearLinearLayoutSpec.setProportionalWidth aNumber
    linearLinearLayoutSpec.setProportionalHeight otherNumber
-   linearLinearLayoutSpec.setMinorDirectionPadding aSymbolOrNumber
+   linearLinearLayoutSpec.setMinorDirectionFloat aSymbolOrNumber
    return linearLinearLayoutSpec
 
   # Use all available space
@@ -182,8 +182,8 @@ class LinearLayoutSpec
     @fixedWidth = aNumber
     @proportionalWidth = null
 
-  setMinorDirectionPadding: (howMuchPadding) ->
-    # This sets how padding is done in the secondary direction.
+  setMinorDirectionFloat: (howMuchFloat) ->
+    # This sets how float is done in the secondary direction.
     # For instance, if the owning morph is set in a row,
     # the row will control horizontal layout. But if there
     # is unused vertical space, it will be used according to
@@ -192,16 +192,16 @@ class LinearLayoutSpec
     # contained in a column, #left, #center or #right should be
     # used. Alternatively, any number between 0.0 and 1.0 can be
     # used.
-    #  self new minorDirectionPadding: #center
-    #  self new minorDirectionPadding: 0.9
+    #  self new minorDirectionFloat: #center
+    #  self new minorDirectionFloat: 0.9
 
-    switch howMuchPadding
-      when "#top" then @minorDirectionPadding = 0.0
-      when "#left" then @minorDirectionPadding = 0.0
-      when "#center" then @minorDirectionPadding = 0.5
-      when "#right" then @minorDirectionPadding = 1.0
-      when "#bottom" then @minorDirectionPadding = 1.0
-      else @minorDirectionPadding = howMuchPadding
+    switch howMuchFloat
+      when "#top" then @minorDirectionFloat = 0.0
+      when "#left" then @minorDirectionFloat = 0.0
+      when "#center" then @minorDirectionFloat = 0.5
+      when "#right" then @minorDirectionFloat = 1.0
+      when "#bottom" then @minorDirectionFloat = 1.0
+      else @minorDirectionFloat = howMuchFloat
 
   setProportionalHeight: (aNumber) ->
    @setProportionalHeightMinimum(aNumber, 0.0)

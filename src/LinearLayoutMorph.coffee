@@ -27,12 +27,12 @@ class LinearLayoutMorph extends LayoutMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  instanceVariableNames: 'direction separation padding'
+  instanceVariableNames: 'direction separation float'
   classVariableNames: ''
   poolDictionaries: ''
 
   direction: ""
-  padding: 0
+  float: 0 # equivalent to #left, or #top
   separation: null # contains a Point
 
   constructor: ->
@@ -52,18 +52,15 @@ class LinearLayoutMorph extends LayoutMorph
 
   beColumn: ->
     @direction = "#vertical"
-    @setPadding "#center"
+    @setFloat "#center"
 
   beRow: ->
     @direction = "#horizontal"
-    @setPadding= "#left"
+    @setFloat= "#left"
 
   defaultColor: ->
     return Color.transparent()
 
-  # TODO unclear whether "padding" is the right word
-  # here. It seems like this is how the extra remaining
-  # space is used, or about how the widgets "flush"...?
   # This sets how extra space is used when doing layout.
   # For example, a column might have extra , un-needed
   # vertical space. #top means widgets are set close
@@ -72,16 +69,16 @@ class LinearLayoutMorph extends LayoutMorph
   # and extra space is at top. Valid values include
   # #left and #right (for rows) and #center. Alternatively,
   # any number between 0.0 and 1.0 might be used.
-  #   self new padding: #center
-  #   self new padding: 0.9
-  setPadding: (howMuchPadding) ->
-    switch howMuchPadding
-      when "#top" then @padding = 0.0
-      when "#left" then @padding = 0.0
-      when "#center" then @padding = 0.5
-      when "#right" then @padding = 1.0
-      when "#bottom" then @padding = 1.0
-      else @padding = howMuchPadding
+  #   self new float: #center
+  #   self new float: 0.9
+  setFloat: (howMuchFloat) ->
+    switch howMuchFloat
+      when "#top" then @float = 0.0
+      when "#left" then @float = 0.0
+      when "#center" then @float = 0.5
+      when "#right" then @float = 1.0
+      when "#bottom" then @float = 1.0
+      else @float = howMuchFloat
 
   setSeparation: (@separation) ->
 
@@ -162,7 +159,7 @@ class LinearLayoutMorph extends LayoutMorph
         theMainDirection = child.linearLinearLayoutSpec[mainDirectionForVarName] availableForPropMainDirection
         sumOfMainDirections += theMainDirection
         mainDirections.push theMainDirection
-    l = ((usableMainDirectionSpace - sumOfMainDirections) * @padding + Math.max(separationInMainDirection, 0)) +  mainDirectionStart
+    l = ((usableMainDirectionSpace - sumOfMainDirections) * @float + Math.max(separationInMainDirection, 0)) +  mainDirectionStart
 
     usableMinorDirection = minorDirectionBoundsExtent - Math.max(2*separationInMinorDirection,0)
     
@@ -180,7 +177,7 @@ class LinearLayoutMorph extends LayoutMorph
         # layouting.
         continue
       h = Math.min(usableMinorDirection, ls[minorDirectionForVarName](usableMinorDirection))
-      t = (usableMinorDirection - h) * ls.minorDirectionPadding + separationInMinorDirection + minorDirectionStart
+      t = (usableMinorDirection - h) * ls.minorDirectionFloat + separationInMinorDirection + minorDirectionStart
 
       # Set bounds and adjust major direction for next step
       # self flag: #jmvVer2.
@@ -441,9 +438,9 @@ class LinearLayoutMorph extends LayoutMorph
     # 
     # rect1 := BorderedRectMorph new color: (Color lightOrange).
     # pane addMorph: rect1 
-    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionPadding: #center).
+    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionFloat: #center).
     # rect2 := BorderedRectMorph new color: (Color cyan);
-    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionPadding: #center).
+    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionFloat: #center).
     # pane addMorph: rect2.
     # pane
     #   color: Color lightGreen;
@@ -490,9 +487,9 @@ class LinearLayoutMorph extends LayoutMorph
     # 
     # rect1 := BorderedRectMorph new color: (Color lightOrange).
     # pane addMorph: rect1 
-    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionPadding: #center).
+    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionFloat: #center).
     # rect2 := BorderedRectMorph new color: (Color cyan);
-    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionPadding: #center).
+    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionFloat: #center).
     # pane addMorph: rect2.
     # pane
     #   color: Color lightGreen;
