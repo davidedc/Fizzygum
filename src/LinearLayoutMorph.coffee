@@ -141,41 +141,62 @@ class LinearLayoutMorph extends LayoutMorph
       mainDirectionForVarName = "heightFor"
       minorDirectionForVarName = "widthFor"
 
+    # there might be submorphs that don't have a layout.
+    # for example, currently, the HandleMorph can be attached
+    # to the LinearLayoutMorph without a linearLinearLayoutSpec.
+    # just skip those. The HandleMorph does its own
+    # layouting.
+    childrenWithLinearLayoutSpec = @children.filter (child) ->
+      child.linearLinearLayoutSpec?
 
-    usableMainDirectionSpace = mainDirectionBoundsExtent - ((@children.length + 1) * separationInMainDirection)
+    # first off let's see how much space we have to
+    # put the morphs in.
+    # Which is same as the current extent of the layout
+    # minus any gaps between the morphs.
+    # TODO you have to correct on that you have to count only the
+    # morph that have a layout spec here
+    usableMainDirectionSpace = mainDirectionBoundsExtent - ((childrenWithLinearLayoutSpec.length + 1) * separationInMainDirection)
+    
+
+    # next, we take away from the available space the space
+    # required by the fixed size morphs.
     sumOfFixed = 0
-    @children.forEach (child) =>
-      if child.linearLinearLayoutSpec?
-        if child.linearLinearLayoutSpec[fixedMainDirectionVarName]?
-          sumOfFixed += child.linearLinearLayoutSpec[getFixedMainDirectionVarName]()
+
+
+    childrenWithLinearLayoutSpec.forEach (child) =>
+      if child.linearLinearLayoutSpec[fixedMainDirectionVarName]?
+        sumOfFixed += child.linearLinearLayoutSpec[getFixedMainDirectionVarName]()
+    
+    # what's left now is the space we have available for all the
+    # proportional-size morphs
     availableForPropMainDirection = usableMainDirectionSpace - sumOfFixed
+    # if the sum of the proportional sizes is > 1.0 then
+    # we distribute the space by normalising to the total sum
+    # If it's < 1.0 then we don't normalise to 1, so there might be
+    # some further space left.
     normalizationFactor = @proportionalMainDirectionNormalizationFactor()
     availableForPropMainDirection = availableForPropMainDirection * normalizationFactor
-    mainDirections = []
+    # Distribute the space to the proportional morphs, put all the
+    # spaces in an array
+    # TODO again you should skip the morphs without a
+    # linearspec
+    mainDirectionSizesOfMorphs = []
     sumOfMainDirections = 0
-    @children.forEach (child) =>
-      if child.linearLinearLayoutSpec?
-        #debugger
-        theMainDirection = child.linearLinearLayoutSpec[mainDirectionForVarName] availableForPropMainDirection
-        sumOfMainDirections += theMainDirection
-        mainDirections.push theMainDirection
-    l = ((usableMainDirectionSpace - sumOfMainDirections) * @float + Math.max(separationInMainDirection, 0)) +  mainDirectionStart
+    childrenWithLinearLayoutSpec.forEach (child) =>
+      mainDirectionSizeForThisMorph = child.linearLinearLayoutSpec[mainDirectionForVarName] availableForPropMainDirection
+      sumOfMainDirections += mainDirectionSizeForThisMorph
+      mainDirectionSizesOfMorphs.push mainDirectionSizeForThisMorph
+    startingSpaceInMainDirection = ((usableMainDirectionSpace - sumOfMainDirections) * @float + Math.max(separationInMainDirection, 0)) +  mainDirectionStart
+    mainDirectionCursor = startingSpaceInMainDirection
 
     usableMinorDirection = minorDirectionBoundsExtent - Math.max(2*separationInMinorDirection,0)
     
-    for i in [@children.length-1 .. 0]
-      m = @children[i]
+    for i in [childrenWithLinearLayoutSpec.length-1 .. 0]
+      m = childrenWithLinearLayoutSpec[i]
       # major direction
-      w = mainDirections[i]
+      mainDirectionSizeForThisMorph = mainDirectionSizesOfMorphs[i]
       # minor direction
       ls = m.linearLinearLayoutSpec
-      if not ls?
-        # there might be submorphs that don't have a layout.
-        # for example, currently, the HandleMorph can be attached
-        # to the LinearLayoutMorph without a linearLinearLayoutSpec.
-        # just skip those. The HandleMorph does its own
-        # layouting.
-        continue
       h = Math.min(usableMinorDirection, ls[minorDirectionForVarName](usableMinorDirection))
       t = (usableMinorDirection - h) * ls.minorDirectionFloat + separationInMinorDirection + minorDirectionStart
 
@@ -183,19 +204,20 @@ class LinearLayoutMorph extends LayoutMorph
       # self flag: #jmvVer2.
       # should extent be set in m's coordinate system? what if its scale is not 1?
       if direction == "#horizontal"
-        newExtent = new Point(Math.min(w,mainDirectionBoundsExtent),h)
+        newExtent = new Point(Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent),h)
       else if direction == "#vertical"
-        newExtent = new Point(h,Math.min(w,mainDirectionBoundsExtent))
+        newExtent = new Point(h,Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent))
 
       if direction == "#horizontal"
-        m.setPosition(new Point(l,t))
+        m.setPosition(new Point(mainDirectionCursor,t))
       else if direction == "#vertical"
-        m.setPosition(new Point(t,l))
+        m.setPosition(new Point(t,mainDirectionCursor))
       #debugger
       m.setExtent(newExtent)
 
-      if w>0
-        l = Math.min(l + w + separationInMainDirection, mainDirectionEnd)
+      if mainDirectionSizeForThisMorph > 0
+        # move on the cursor along the main direction
+        mainDirectionCursor = Math.min(mainDirectionCursor + mainDirectionSizeForThisMorph + separationInMainDirection, mainDirectionEnd)
 
 
   # So the user can adjust layout
@@ -217,6 +239,16 @@ class LinearLayoutMorph extends LayoutMorph
     @add aMorph
 
 
+  # if the sum of the proportional sizes is > 1.0 then
+  # we normalise for that, i.e. the space is distributed
+  # according to the size proportional to the sum > 1.0
+  #
+  # if the sum of the proportional sizes < 1.0
+  # then we DON'T normalise on that sum, meaning that there
+  # might be space left in the layout. For example if you
+  # add only one morph with proportional size of 0.5
+  # then it will be half of the layout's size even if there are
+  # no other morphs.
   proportionalMainDirectionNormalizationFactor: ->
     sumOfProportional = 0
     @children.forEach (child) =>
@@ -341,6 +373,7 @@ class LinearLayoutMorph extends LayoutMorph
     @testScenario3("#horizontal")
     @testScenario4("#horizontal")
     @testScenario5("#horizontal")
+    @testScenario6("#horizontal")
 
   @testSet2: ->
     @testScenario1("#vertical")
@@ -348,6 +381,7 @@ class LinearLayoutMorph extends LayoutMorph
     @testScenario3("#vertical")
     @testScenario4("#vertical")
     @testScenario5("#vertical")
+    @testScenario6("#vertical")
 
   @testScenario1: (direction = "#horizontal")->
     rect1 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
@@ -475,29 +509,6 @@ class LinearLayoutMorph extends LayoutMorph
     new HandleMorph(line)
 
   @testScenario5: (direction = "#horizontal")->
-    # //////////////////////////////////////////////////
-    # note how the vertical spacing in the horizontal layout
-    # is different. the vertical size is not adjusted considering
-    # all other morphs. A proportional of 1.1 is proportional to the
-    # container, not to the other layouts.
-    # Equivalent smalltalk code:
-    # | pane rect1 rect2 |
-    # pane _ LinearLayoutMorph newRow separation: 5. "3"
-    # pane addMorph: (StringMorph contents: '3').
-    # 
-    # rect1 := BorderedRectMorph new color: (Color lightOrange).
-    # pane addMorph: rect1 
-    #          linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 1.1 minorDirectionFloat: #center).
-    # rect2 := BorderedRectMorph new color: (Color cyan);
-    #   linearLinearLayoutSpec: (LinearLayoutSpec  fixedWidth: 20 proportionalHeight: 0.5 minorDirectionFloat: #center).
-    # pane addMorph: rect2.
-    # pane
-    #   color: Color lightGreen;
-    #   openInWorld;
-    #   morphPosition: 520 @ 50;
-    #   morphExtent: 180 @ 100
-    # //////////////////////////////////////////////////
-
     rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
     rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
@@ -515,6 +526,29 @@ class LinearLayoutMorph extends LayoutMorph
 
     line.layoutSubmorphs()
     line.setPosition new Point(410,10)
+    line.keepWithin(world);
+    world.add(line);
+    line.changed();
+
+    # attach a HandleMorph to it so that
+    # we can check how it resizes
+    new HandleMorph(line)
+
+  @testScenario6: (direction = "#horizontal")->
+    rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
+    rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
+
+    if direction == "#horizontal"
+      line = LinearLayoutMorph.newRow()
+      line.addMorphProportionalWidth(rect6,0.5) # green
+      line.addMorphFixedWidth(rect5,20) # red
+    else
+      line = LinearLayoutMorph.newColumn()
+      line.addMorphProportionalHeight(rect6,0.5) # green
+      line.addMorphFixedHeight(rect5,20) # red
+
+    line.layoutSubmorphs()
+    line.setPosition new Point(510,10)
     line.keepWithin(world);
     world.add(line);
     line.changed();
