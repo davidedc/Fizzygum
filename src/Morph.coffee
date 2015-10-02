@@ -1098,7 +1098,7 @@ class Morph extends MorphicNode
   #	potential alternative - solution for morphAt.
   #	Has some issues, commented out for now...
   #
-  #Morph.prototype.morphAt = function (aPoint) {
+  #Morph::morphAt = function (aPoint) {
   #	return this.topMorphSuchThat(function (m) {
   #		return m.boundsIncludingChildren().containsPoint(aPoint);
   #	});
@@ -1737,14 +1737,14 @@ class Morph extends MorphicNode
   #	levels in the Morphic tree (e.g. dialog boxes) for a more fine-grained
   #	control over the tabbing cycle.
   #
-  #Morph.prototype.nextTab = function (editField) {
+  #Morph::nextTab = function (editField) {
   #	var	next = this.nextEntryField(editField);
   #	editField.clearSelection();
   #	next.selectAll();
   #	next.edit();
   #};
   #
-  #Morph.prototype.previousTab = function (editField) {
+  #Morph::previousTab = function (editField) {
   #	var	prev = this.previousEntryField(editField);
   #	editField.clearSelection();
   #	prev.selectAll();

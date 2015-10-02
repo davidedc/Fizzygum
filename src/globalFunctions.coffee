@@ -128,14 +128,14 @@ getParameterByName = (name) ->
 # These two methods are for mixins
 ## -------------------------------------------------------
 # adds klass properties
-Object.prototype.augmentWith = (obj) ->
+Object::augmentWith = (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
   obj.onceAddedClassProperties?.apply(@)
   this
 
 # adds instance properties
-Object.prototype.addInstanceProperties= (obj) ->
+Object::addInstanceProperties= (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype
     @::[key] = value
@@ -201,7 +201,7 @@ sizeOf = (object) ->
   size = 0
   key = undefined
   for key of object
-    size += 1  if Object.prototype.hasOwnProperty.call(object, key)
+    size += 1  if Object::hasOwnProperty.call(object, key)
   size
 
 isString = (target) ->

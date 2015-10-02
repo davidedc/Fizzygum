@@ -65,7 +65,7 @@ DeepCopierMixin =
         if typeof @ is "object"
           # note that this case ALSO handles arrays
           # since they test positive as typeof "object"
-          theClone = Object.create(@constructor.prototype)
+          theClone = Object.create(@constructor::)
           if addClassNameFieldIfObjectNotArray
             theClone.className = @constructor.name
           #console.log "theClone class:" + theClone.constructor.name

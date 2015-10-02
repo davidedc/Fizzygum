@@ -113,7 +113,7 @@ class InspectorMorph extends BoxMorph
     
     # caches the own methods of the object
     if @markOwnershipOfProperties
-      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor.prototype)
+      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor::)
       #alert targetOwnMethods
 
     # open a new inspector, just on objects so
@@ -302,7 +302,7 @@ class InspectorMorph extends BoxMorph
             # functions.
             # In theory, getOwnPropertyNames should give ALL the properties but the methods
             # are still not picked up, maybe because of the coffeescript construction system, I am not sure
-            (Object.prototype.hasOwnProperty.call(@target, element))
+            (Object::hasOwnProperty.call(@target, element))
         ],
         [new Color(180, 0, 0),
           (element) =>

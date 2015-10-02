@@ -97,7 +97,7 @@ class HandMorph extends Morph
   #	performant - solution for topMorphUnderPointer.
   #	Has some issues, commented out for now
   #
-  #HandMorph.prototype.topMorphUnderPointer = function () {
+  #HandMorph::topMorphUnderPointer = function () {
   #	var myself = this;
   #	return this.world.topMorphSuchThat(function (m) {
   #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
@@ -533,7 +533,7 @@ class HandMorph extends Morph
     morph = @topMorphUnderPointer()
     morph = morph.parent  while morph and not morph.mouseScroll
 
-    morph.mouseScroll (event.detail / -3) or ((if Object.prototype.hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
+    morph.mouseScroll (event.detail / -3) or ((if Object::hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
   
   
   #
