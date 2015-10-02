@@ -177,7 +177,7 @@ class MenuMorph extends BoxMorph
     # note that menus can contain:
     # strings, colorpickers,
     # sliders, menuItems (which are buttons)
-    # and lines.
+    # and divider lines.
     # console.log "menu @items.length " + @items.length
     @items.forEach (tuple) =>
       isLine = false
