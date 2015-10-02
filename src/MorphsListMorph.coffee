@@ -73,7 +73,7 @@ class MorphsListMorph extends BoxMorph
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@, @cornerRadius, @cornerRadius)
+    @resizer = new HandleMorph(@)
 
     # update layout
     @layoutSubmorphs()

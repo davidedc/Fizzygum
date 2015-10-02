@@ -1355,7 +1355,7 @@ class Morph extends MorphicNode
     @world().activeHandle = new HandleMorph(@)
   
   move: ->
-    @world().activeHandle = new HandleMorph(@, null, null, "move")
+    @world().activeHandle = new HandleMorph(@, "move")
   
   hint: (msg) ->
     text = msg

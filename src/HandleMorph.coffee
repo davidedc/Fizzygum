@@ -17,9 +17,11 @@ class HandleMorph extends Morph
   inset: null
   type: null # "resize" or "move"
 
-  constructor: (@target = null, insetX, insetY, @type = "resize") ->
-    # if insetY is missing, it will be the same as insetX
-    @inset = new Point(insetX or 0, insetY or insetX or 0)
+  constructor: (@target = null, @type = "resize") ->
+    if @target?.padding?
+      @inset = new Point(@target.padding, @target.padding)
+    else
+      @inset = new Point(0,0)
     super()
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true

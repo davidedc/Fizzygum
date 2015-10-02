@@ -19,6 +19,7 @@ class InspectorMorph extends BoxMorph
   buttonSubset: null
   buttonEdit: null
   resizer: null
+  padding: null
 
   constructor: (@target) ->
     super()
@@ -26,7 +27,7 @@ class InspectorMorph extends BoxMorph
     @silentSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
     @isfloatDraggable = true
-    @edge = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
+    @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
     @color = new Color(60, 60, 60)
     @buildAndConnectChildren()  if @target
   
@@ -210,7 +211,7 @@ class InspectorMorph extends BoxMorph
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@, @edge, @edge)
+    @resizer = new HandleMorph @
 
     # update layout
     @layoutSubmorphs()
@@ -351,9 +352,9 @@ class InspectorMorph extends BoxMorph
     Morph::trackChanges = false
 
     # label
-    labelLeft = @left() + @edge
-    labelTop = @top() + @edge
-    labelRight = @right() - @edge
+    labelLeft = @left() + @padding
+    labelTop = @top() + @padding
+    labelRight = @right() - @padding
     labelWidth = labelRight - labelLeft
     if @label.parent == @
       @label.setPosition new Point(labelLeft, labelTop)
@@ -368,8 +369,8 @@ class InspectorMorph extends BoxMorph
     # list
     labelBottom = labelTop + @label.height() + 2
     listWidth = Math.floor(@width() / 3)
-    listWidth -= @edge
-    b = @bottom() - (2 * @edge) - WorldMorph.preferencesAndSettings.handleSize
+    listWidth -= @padding
+    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
     listHeight = b - labelBottom
     listBottom = labelBottom + listHeight
     if @list.parent == @
@@ -377,12 +378,12 @@ class InspectorMorph extends BoxMorph
       @list.setExtent new Point(listWidth, listHeight)
 
     # detail
-    detailLeft = labelLeft + listWidth + @edge
-    detailRight = @right() - @edge
+    detailLeft = labelLeft + listWidth + @padding
+    detailRight = @right() - @padding
     detailWidth = detailRight - detailLeft
     if @detail.parent == @
       @detail.setPosition new Point(detailLeft, labelBottom)
-      @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @edge).round()
+      @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @padding).round()
 
     # work
     workTop = Math.round(labelBottom + (listHeight * 2 / 3))
@@ -392,7 +393,7 @@ class InspectorMorph extends BoxMorph
 
     # properties button
     propertiesLeft = labelLeft
-    propertiesTop = listBottom + @edge
+    propertiesTop = listBottom + @padding
     propertiesWidth = listWidth
     propertiesHeight = WorldMorph.preferencesAndSettings.handleSize
     if @buttonSubset.parent == @
@@ -401,23 +402,23 @@ class InspectorMorph extends BoxMorph
 
     # inspect button
     inspectLeft = detailLeft
-    inspectWidth = detailWidth - @edge - WorldMorph.preferencesAndSettings.handleSize
-    inspectWidth = Math.round(inspectWidth / 3 - @edge / 3)
+    inspectWidth = detailWidth - @padding - WorldMorph.preferencesAndSettings.handleSize
+    inspectWidth = Math.round(inspectWidth / 3 - @padding / 3)
     inspectRight = inspectLeft + inspectWidth
     if @buttonInspect.parent == @
       @buttonInspect.setPosition new Point(inspectLeft, propertiesTop)
       @buttonInspect.setExtent new Point(inspectWidth, propertiesHeight)
 
     # edit button
-    editLeft = inspectRight + @edge
+    editLeft = inspectRight + @padding
     editRight = editLeft + inspectWidth
     if @buttonEdit.parent == @
       @buttonEdit.setPosition new Point(editLeft, propertiesTop)
       @buttonEdit.setExtent new Point(inspectWidth, propertiesHeight)
 
     # close button
-    closeLeft = editRight + @edge
-    closeRight = detailRight - @edge - WorldMorph.preferencesAndSettings.handleSize
+    closeLeft = editRight + @padding
+    closeRight = detailRight - @padding - WorldMorph.preferencesAndSettings.handleSize
     closeWidth = closeRight - closeLeft
     if @buttonClose.parent == @
       @buttonClose.setPosition new Point(closeLeft, propertiesTop)
