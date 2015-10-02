@@ -918,6 +918,10 @@ class WorldMorph extends FrameMorph
     # color of the world so let's reset it.
     @setColor(new Color(205, 205, 205))
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.resetWorldLink)
+    # make sure thw window is scrolled to top
+    # so we can see the test results while tests
+    # are running.
+    document.body.scrollTop = document.documentElement.scrollTop = 0    
   
   # There is something special that the
   # "world" version of destroyAll does:
