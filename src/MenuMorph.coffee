@@ -144,7 +144,7 @@ class MenuMorph extends BoxMorph
     @label = new BoxMorph 3
     @label.add text
     if WorldMorph.preferencesAndSettings.isFlat
-      @label.edge = 0
+      @label.cornerRadius = 0
     @label.color = new Color 60,60,60
     @label.setExtent text.extent().add(2) # here!
     @label.text = text
@@ -155,7 +155,7 @@ class MenuMorph extends BoxMorph
     @destroyAll()
 
     unless @isListContents
-      @edge = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
+      @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(0, 0)
     y = @top()

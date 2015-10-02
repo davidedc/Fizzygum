@@ -22,12 +22,12 @@ class SpeechBubbleMorph extends BoxMorph
     @contents="",
     @morphInvokingThis,
     color,
-    edge,
+    cornerRadius,
     @padding = 0,
     @isThought = false) ->
       # console.log "bubble super"
       @color = color or new Color(230, 230, 230)
-      super(edge or 6)
+      super(cornerRadius or 6)
       # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
@@ -103,15 +103,15 @@ class SpeechBubbleMorph extends BoxMorph
     @add @contentsMorph
 
     # adjust my layout
-    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
-    @silentSetHeight @contentsMorph.height() + @edge + @padding * 2 + 2
+    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
+    @silentSetHeight @contentsMorph.height() + @cornerRadius + @padding * 2 + 2
 
     # draw my outline
     #super()
 
     # position my contents
     @contentsMorph.setPosition @position().add(
-      new Point(@padding or @edge, @padding + 1))
+      new Point(@padding or @cornerRadius, @padding + 1))
 
 
   outlinePath: (context, radius) ->

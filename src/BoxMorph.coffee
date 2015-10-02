@@ -7,9 +7,9 @@ class BoxMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  edge: null
+  cornerRadius: null
 
-  constructor: (@edge = 4) ->
+  constructor: (@cornerRadius = 4) ->
     super()
 
   isTransparentAt: (aPoint) ->
@@ -19,7 +19,7 @@ class BoxMorph extends Morph
       return true
  
     thisMorphPosition = @position()
-    radius = Math.max(@edge, 0)
+    radius = Math.max(@cornerRadius, 0)
  
     relativePoint = new Point(aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y)
 
@@ -98,7 +98,7 @@ class BoxMorph extends Morph
       context.fillStyle = @color.toString()
       
       context.beginPath()
-      @outlinePath context, Math.max(@edge, 0)
+      @outlinePath context, Math.max(@cornerRadius, 0)
       context.closePath()
       context.fill()
 
@@ -134,11 +134,11 @@ class BoxMorph extends Morph
     # bottom left:
     context.arc offset, h - offset, radius, degreesToRadians(90), degreesToRadians(180), false
 
-  cornerSizePopout: (menuItem)->
-    @prompt menuItem.parent.title + "\ncorner\nsize:",
+  cornerRadiusPopout: (menuItem)->
+    @prompt menuItem.parent.title + "\ncorner\nradius:",
       @,
-      "setCornerSize",
-      @edge.toString(),
+      "setCornerRadius",
+      @cornerRadius.toString(),
       null,
       0,
       100,
@@ -149,22 +149,22 @@ class BoxMorph extends Morph
     menu = super()
     menu.addLine()
 
-    menu.addItem "corner size...", true, @, "cornerSizePopout", "set the corner's\nradius"
+    menu.addItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
     menu
   
   
-  setCornerSize: (sizeOrMorphGivingSize, morphGivingSize) ->
-    if morphGivingSize?.getValue?
-      size = morphGivingSize.getValue()
+  setCornerRadius: (radiusOrMorphGivingRadius, morphGivingRadius) ->
+    if morphGivingRadius?.getValue?
+      radius = morphGivingRadius.getValue()
     else
-      size = sizeOrMorphGivingSize
+      radius = radiusOrMorphGivingRadius
 
     # for context menu demo purposes
-    if typeof size is "number"
-      @edge = Math.max(size, 0)
+    if typeof radius is "number"
+      @cornerRadius = Math.max(radius, 0)
     else
-      newSize = parseFloat(size)
-      @edge = Math.max(newSize, 0)  unless isNaN(newSize)
+      newRadius = parseFloat(radius)
+      @cornerRadius = Math.max(newRadius, 0)  unless isNaN(newRadius)
     @updateBackingStore()
     @changed()
   
@@ -175,5 +175,5 @@ class BoxMorph extends Morph
   numericalSetters: ->
     # for context menu demo purposes
     list = super()
-    list.push "setCornerSize"
+    list.push "setCornerRadius"
     list

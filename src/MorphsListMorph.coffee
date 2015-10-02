@@ -17,7 +17,7 @@ class MorphsListMorph extends BoxMorph
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @isfloatDraggable = true
-    @edge = 5
+    @cornerRadius = 5
     @color = new Color(60, 60, 60)
     @buildAndConnectChildren()
   
@@ -73,7 +73,7 @@ class MorphsListMorph extends BoxMorph
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@, @edge, @edge)
+    @resizer = new HandleMorph(@, @cornerRadius, @cornerRadius)
 
     # update layout
     @layoutSubmorphs()
@@ -82,9 +82,9 @@ class MorphsListMorph extends BoxMorph
     Morph::trackChanges = false
 
     # label
-    x = @left() + @edge
-    y = @top() + @edge
-    r = @right() - @edge
+    x = @left() + @cornerRadius
+    y = @top() + @cornerRadius
+    r = @right() - @cornerRadius
     w = r - x
     @label.setPosition new Point(x, y)
     @label.setWidth w
@@ -95,18 +95,18 @@ class MorphsListMorph extends BoxMorph
 
     # morphsList
     y = @label.bottom() + 2
-    w = @width() - @edge
-    w -= @edge
-    b = @bottom() - (2 * @edge) - WorldMorph.preferencesAndSettings.handleSize
+    w = @width() - @cornerRadius
+    w -= @cornerRadius
+    b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
     @morphsList.setPosition new Point(x, y)
     @morphsList.setExtent new Point(w, h)
 
     # close button
     x = @morphsList.left()
-    y = @morphsList.bottom() + @edge
+    y = @morphsList.bottom() + @cornerRadius
     h = WorldMorph.preferencesAndSettings.handleSize
-    w = @morphsList.width() - h - @edge
+    w = @morphsList.width() - h - @cornerRadius
     @buttonClose.setPosition new Point(x, y)
     @buttonClose.setExtent new Point(w, h)
     Morph::trackChanges = true
