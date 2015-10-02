@@ -835,15 +835,18 @@ class WorldMorph extends FrameMorph
       @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
     window.addEventListener "resize", @resizeEventListener, false
     
-    window.onbeforeunload = (evt) ->
-      e = evt or window.event
-      msg = "Are you sure you want to leave?"
+    ###
+    window.onbeforeunload = (e) ->
+      # If we haven't been passed the event get the window.event
+      e = e or window.event
+      message = 'Are you sure you want to leave?'
+      # For IE6-8 and Firefox prior to version 4
+      if e
+        e.returnValue = message
+      # For Chrome, Safari, IE8+ and Opera 12+
+      message
+    ###
 
-      # For IE and Firefox
-      e.returnValue = msg  if e
-
-      # For Safari / chrome
-      msg
   
   removeEventListeners: ->
     canvas = @worldCanvas
