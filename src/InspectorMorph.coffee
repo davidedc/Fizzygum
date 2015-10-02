@@ -211,7 +211,7 @@ class InspectorMorph extends BoxMorph
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@, 150, 100, @edge, @edge)
+    @resizer = new HandleMorph(@, @edge, @edge)
 
     # update layout
     @layoutSubmorphs()

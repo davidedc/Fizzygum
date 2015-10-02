@@ -14,13 +14,11 @@ class HandleMorph extends Morph
   @augmentWith BackingStoreMixin
 
   target: null
-  minExtent: null
   inset: null
   type: null # "resize" or "move"
 
-  constructor: (@target = null, minX = 0, minY = 0, insetX, insetY, @type = "resize") ->
+  constructor: (@target = null, insetX, insetY, @type = "resize") ->
     # if insetY is missing, it will be the same as insetX
-    @minExtent = new Point(minX, minY)
     @inset = new Point(insetX or 0, insetY or insetX or 0)
     super()
     @color = new Color(255, 255, 255)
@@ -141,7 +139,6 @@ class HandleMorph extends Morph
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
-      newExt = newExt.max(@minExtent)
       @target.setExtent newExt
       @setPosition @target.bottomRight().subtract(@extent().add(@inset))
     else # type === 'move'

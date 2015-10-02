@@ -191,6 +191,7 @@ class MenuMorph extends BoxMorph
       else if tuple[0] is 0
         isLine = true
         item = new Morph()
+        item.setMinimumExtent new Point 5,1
         item.color = new Color 60,60,60
         item.setHeight tuple[1]
       # menuItem

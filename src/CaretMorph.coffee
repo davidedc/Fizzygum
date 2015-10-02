@@ -19,6 +19,10 @@ class CaretMorph extends BlinkerMorph
     @originalAlignment = @target.alignment
     @slot = @target.text.length
     super()
+
+    # font could be really small I guess?
+    @minimumExtent = new Point 1,1
+
     ls = fontHeight(@target.fontSize)
     @setExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
     if (@target instanceof TextMorph && (@target.alignment != 'left'))

@@ -47,6 +47,7 @@ class Morph extends MorphicNode
 
   isMorph: true
   bounds: null
+  minimumExtent: null
   color: null
   texture: null # optional url of a fill-image
   cachedTexture: null # internal cache of actual bg image
@@ -255,6 +256,7 @@ class Morph extends MorphicNode
 
     # [TODO] why is there this strange non-zero default bound?
     @bounds = new Rectangle(0, 0, 50, 40)
+    @minimumExtent = new Point 5,5
     @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
     # Note that we don't call @updateBackingStore()
@@ -585,11 +587,22 @@ class Morph extends MorphicNode
   # change extent.
   childChangedExtent: (theMorphChangingTheExtent) ->
 
+  # more complex Morphs, e.g. layouts, might
+  # do a more complex calculation to get the
+  # minimum extent
+  getMinimumExtent: ->
+    @minimumExtent
+
+  setMinimumExtent: (@minimumExtent) ->
+
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint) ->
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @changed()
+      minExtent = @getMinimumExtent()
+      if ! aPoint.ge minExtent
+        aPoint = aPoint.max minExtent
       @silentSetExtent aPoint
       @changed()
       @setLayoutBeforeUpdatingBackingStore()
@@ -1342,7 +1355,7 @@ class Morph extends MorphicNode
     @world().activeHandle = new HandleMorph(@)
   
   move: ->
-    @world().activeHandle = new HandleMorph(@, null, null, null, null, "move")
+    @world().activeHandle = new HandleMorph(@, null, null, "move")
   
   hint: (msg) ->
     text = msg
