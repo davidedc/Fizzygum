@@ -137,7 +137,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # assets, so it's one js file for each test
     filenames2 = []
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
-      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
+      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
           # the way to differentiate between files: the asset files contain a hash
           # in the filename that we can use to filter them in/out.
           # note that this is not a normal regexp but rather a unix bash regexp
@@ -174,7 +174,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     filenames2 = []
     #print("Tests assets ----------------------------")
     for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
-      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
+      for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
           # the way to differentiate between files: the asset files contain a hash
           # in the filename that we can use to filter them in/out.
           # note that this is not a normal regexp but rather a unix bash regexp

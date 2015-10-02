@@ -92,7 +92,7 @@ cp auxiliary\ files/additional-icons/*.png ../Zombie-Kernel-builds/latest/icons/
 # doesn't cut it, we need the find below
 mkdir ../Zombie-Kernel-builds/latest/js/tests/assets
 cp -r ../Zombie-Kernel-tests/tests/* ../Zombie-Kernel-builds/latest/js/tests/assets
-find ../Zombie-Kernel-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Zombie-Kernel-builds/latest/js/tests \;
+find ../Zombie-Kernel-builds/latest/js/tests -iname '*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js' -exec mv \{\} ../Zombie-Kernel-builds/latest/js/tests \;
 
 rm -rdf ../Zombie-Kernel-builds/latest/delete_me
 
