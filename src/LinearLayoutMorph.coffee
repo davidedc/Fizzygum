@@ -196,9 +196,9 @@ class LinearLayoutMorph extends LayoutMorph
       # major direction
       mainDirectionSizeForThisMorph = mainDirectionSizesOfMorphs[i]
       # minor direction
-      ls = m.linearLinearLayoutSpec
-      h = Math.min(usableMinorDirection, ls[minorDirectionForVarName](usableMinorDirection))
-      t = (usableMinorDirection - h) * ls.minorDirectionFloat + separationInMinorDirection + minorDirectionStart
+      lls = m.linearLinearLayoutSpec
+      h = Math.min(usableMinorDirection, lls[minorDirectionForVarName](usableMinorDirection))
+      t = (usableMinorDirection - h) * lls.minorDirectionFloat + separationInMinorDirection + minorDirectionStart
 
       # Set bounds and adjust major direction for next step
       # self flag: #jmvVer2.
@@ -262,14 +262,14 @@ class LinearLayoutMorph extends LayoutMorph
 
 
   adjustByAt: (aLayoutAdjustMorph, aPoint) ->
-    # | delta l ls r rs lNewWidth rNewWidth i lCurrentWidth rCurrentWidth doNotResizeBelow |
+    # | delta l lls r rs lNewWidth rNewWidth i lCurrentWidth rCurrentWidth doNotResizeBelow |
 
     i = @children.indexOf(aLayoutAdjustMorph)
 
     l = @children[i+1]
     r = @children[i - 1]
 
-    ls = l.linearLinearLayoutSpec
+    lls = l.linearLinearLayoutSpec
 
     if @direction == "#horizontal"      
       doNotResizeBelow =  @minPaneWidthForReframe()
@@ -300,14 +300,14 @@ class LinearLayoutMorph extends LayoutMorph
     if delta == 0 then return @
     lNewWidth = lCurrentWidth + delta
     rNewWidth = rCurrentWidth - delta
-    if ls[checkProportionalSizeVarName]() and rs[checkProportionalSizeVarName]()
+    if lls[checkProportionalSizeVarName]() and rs[checkProportionalSizeVarName]()
       # If both proportional, update them
-      ls[setProportionalSizeVarName] 1.0 * lNewWidth / lCurrentWidth * ls[getProportionalSizeVarName]()
+      lls[setProportionalSizeVarName] 1.0 * lNewWidth / lCurrentWidth * lls[getProportionalSizeVarName]()
       rs[setProportionalSizeVarName] 1.0 * rNewWidth / rCurrentWidth * rs[getProportionalSizeVarName]()
     else
       # If at least one is fixed, update only the fixed
-      if !ls[checkProportionalSizeVarName]()
-          ls[setFixedSizeVarName] lNewWidth
+      if !lls[checkProportionalSizeVarName]()
+          lls[setFixedSizeVarName] lNewWidth
       if !rs[checkProportionalSizeVarName]()
           rs[setFixedSizeVarName] rNewWidth
     @layoutSubmorphs()
