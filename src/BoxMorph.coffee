@@ -8,10 +8,8 @@ class BoxMorph extends Morph
   namedClasses[@name] = @prototype
 
   edge: null
-  border: null
 
-  constructor: (@edge = 4, border) ->
-    @border = border or ((if (border is 0) then 0 else 2))
+  constructor: (@edge = 4) ->
     super()
 
   isTransparentAt: (aPoint) ->
@@ -21,7 +19,7 @@ class BoxMorph extends Morph
       return true
  
     thisMorphPosition = @position()
-    radius = Math.max(@edge - @border, 0)
+    radius = Math.max(@edge, 0)
  
     relativePoint = new Point(aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y)
 
@@ -100,7 +98,7 @@ class BoxMorph extends Morph
       context.fillStyle = @color.toString()
       
       context.beginPath()
-      @outlinePath context, Math.max(@edge - @border, 0), @border
+      @outlinePath context, Math.max(@edge, 0)
       context.closePath()
       context.fill()
 
@@ -123,8 +121,8 @@ class BoxMorph extends Morph
       ###
 
   
-  outlinePath: (context, radius, inset) ->
-    offset = radius + inset
+  outlinePath: (context, radius) ->
+    offset = radius
     w = @width()
     h = @height()
     # top left:
@@ -145,39 +143,14 @@ class BoxMorph extends Morph
       0,
       100,
       true
-
   
   # BoxMorph menus:
   developersMenu: ->
     menu = super()
     menu.addLine()
 
-    menu.addItem "border width...", true, @, (->
-      @prompt menu.title + "\nborder\nwidth:",
-        @setBorderWidth,
-        @border.toString(),
-        null,
-        0,
-        100,
-        true
-    ), "set the border's\nline size"
     menu.addItem "corner size...", true, @, "cornerSizePopout", "set the corner's\nradius"
     menu
-  
-  setBorderWidth: (sizeOrMorphGivingSize) ->
-    if sizeOrMorphGivingSize.getValue?
-      size = sizeOrMorphGivingSize.getValue()
-    else
-      size = sizeOrMorphGivingSize
-
-    # for context menu demo purposes
-    if typeof size is "number"
-      @border = Math.max(size, 0)
-    else
-      newSize = parseFloat(size)
-      @border = Math.max(newSize, 0)  unless isNaN(newSize)
-    @updateBackingStore()
-    @changed()
   
   
   setCornerSize: (sizeOrMorphGivingSize, morphGivingSize) ->
@@ -202,5 +175,5 @@ class BoxMorph extends Morph
   numericalSetters: ->
     # for context menu demo purposes
     list = super()
-    list.push "setBorderWidth", "setCornerSize"
+    list.push "setCornerSize"
     list

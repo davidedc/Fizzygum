@@ -142,12 +142,12 @@ class MenuMorph extends BoxMorph
     text.color = new Color(255, 255, 255)
     text.backgroundColor = new Color 60,60,60
 
-    @label = new BoxMorph(3, 0)
+    @label = new BoxMorph 3
     @label.add text
     if WorldMorph.preferencesAndSettings.isFlat
       @label.edge = 0
     @label.color = new Color 60,60,60
-    @label.setExtent text.extent().add(4) # here!
+    @label.setExtent text.extent().add(2) # here!
     @label.text = text
 
   setLayoutBeforeUpdatingBackingStore: ->
@@ -160,18 +160,18 @@ class MenuMorph extends BoxMorph
       @border = if WorldMorph.preferencesAndSettings.isFlat then 1 else 2
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(0, 0)
-    y = @top() + 2
-    x = @left() + 4
+    y = @top()
+    x = @left() + 2
 
 
     unless @isListContents
       if @title
         @createLabel()
-        @label.setPosition @bounds.origin.add(4)
+        @label.setPosition @bounds.origin.add(2)
         @add @label
         y = @label.bottom()
       else
-        y = @top() + 4
+        y = @top()
     y += 1
 
     # note that menus can contain:
@@ -235,7 +235,7 @@ class MenuMorph extends BoxMorph
     @adjustWidthsOfMenuEntries()
     fb = @boundsIncludingChildren()
     #console.log "fb: " + fb
-    @silentSetExtent fb.extent().add(4)
+    @silentSetExtent fb.extent().add(2)
   
   maxWidth: ->
     w = 0
