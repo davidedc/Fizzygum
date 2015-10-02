@@ -28,7 +28,6 @@ class MenuMorph extends BoxMorph
     @isfloatDraggable = true
     super()
 
-    @border = null # the Box Morph constructor puts this to 2
     if !@isListContents
       world.freshlyCreatedMenus.push @
       world.openMenus.push @
@@ -157,7 +156,6 @@ class MenuMorph extends BoxMorph
 
     unless @isListContents
       @edge = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
-      @border = if WorldMorph.preferencesAndSettings.isFlat then 1 else 2
     @color = new Color(255, 255, 255)
     @silentSetExtent new Point(0, 0)
     y = @top()

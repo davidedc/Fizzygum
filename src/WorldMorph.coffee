@@ -1073,7 +1073,6 @@ class WorldMorph extends FrameMorph
     newMorph = new MouseSensorMorph()
     newMorph.setColor new Color(230, 200, 100)
     newMorph.edge = 35
-    newMorph.border = 15
     newMorph.alpha = 0.2
     newMorph.setExtent new Point(100, 100)
     @create newMorph

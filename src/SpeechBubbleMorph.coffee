@@ -23,12 +23,11 @@ class SpeechBubbleMorph extends BoxMorph
     @morphInvokingThis,
     color,
     edge,
-    border,
     @padding = 0,
     @isThought = false) ->
       # console.log "bubble super"
       @color = color or new Color(230, 230, 230)
-      super edge or 6, border or ((if (border is 0) then 0 else 1))
+      super(edge or 6)
       # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
@@ -38,7 +37,7 @@ class SpeechBubbleMorph extends BoxMorph
     # and the mouse is still over it, otherwise
     # do nothing.
     if morphInvokingThis.world()? and morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
-      theBubble = new @(localize(contents), morphInvokingThis, null, null, 1)
+      theBubble = new @(localize(contents), morphInvokingThis, null, null)
       theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
@@ -54,6 +53,7 @@ class SpeechBubbleMorph extends BoxMorph
   
   # SpeechBubbleMorph invoking:
   popUp: (pos, isClickable) ->
+    debugger
     # console.log "bubble popup"
     world = @morphInvokingThis.world()
     @setPosition pos.subtract(new Point(0, @height()))
@@ -104,22 +104,22 @@ class SpeechBubbleMorph extends BoxMorph
 
     # adjust my layout
     @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @edge * 2))
-    @silentSetHeight @contentsMorph.height() + @edge + @border * 2 + @padding * 2 + 2
+    @silentSetHeight @contentsMorph.height() + @edge + @padding * 2 + 2
 
     # draw my outline
     #super()
 
     # position my contents
     @contentsMorph.setPosition @position().add(
-      new Point(@padding or @edge, @border + @padding + 1))
+      new Point(@padding or @edge, @padding + 1))
 
 
-  outlinePath: (context, radius, inset) ->
+  outlinePath: (context, radius) ->
     # console.log "bubble outlinePath"
     circle = (x, y, r) ->
       context.moveTo x + r, y
       context.arc x, y, r, degreesToRadians(0), degreesToRadians(360)
-    offset = radius + inset
+    offset = radius
     w = @width()
     h = @height()
 
@@ -134,9 +134,9 @@ class SpeechBubbleMorph extends BoxMorph
     unless @isThought # draw speech bubble hook
       if @isPointingRight
         context.lineTo offset + radius, h - offset
-        context.lineTo radius / 2 + inset, h - inset
+        context.lineTo radius / 2, h
       else # pointing left
-        context.lineTo w - (radius / 2 + inset), h - inset
+        context.lineTo w - (radius / 2), h
         context.lineTo w - (offset + radius), h - offset
 
     # bottom left:
@@ -144,32 +144,32 @@ class SpeechBubbleMorph extends BoxMorph
 
     if @isThought
       # close large bubble:
-      context.lineTo inset, offset
+      context.lineTo 0, offset
 
       # draw thought bubbles:
       if @isPointingRight
 
         # tip bubble:
         rad = radius / 4
-        circle rad + inset, h - rad - inset, rad
+        circle rad, h - rad, rad
 
         # middle bubble:
         rad = radius / 3.2
-        circle rad * 2 + inset, h - rad - inset * 2, rad
+        circle rad * 2, h - rad, rad
 
         # top bubble:
         rad = radius / 2.8
-        circle rad * 3 + inset * 2, h - rad - inset * 4, rad
+        circle rad * 3, h - rad, rad
       else # pointing left
         # tip bubble:
         rad = radius / 4
-        circle w - (rad + inset), h - rad - inset, rad
+        circle w - (rad), h - rad, rad
 
         # middle bubble:
         rad = radius / 3.2
-        circle w - (rad * 2 + inset), h - rad - inset * 2, rad
+        circle w - (rad * 2), h - rad, rad
 
         # top bubble:
         rad = radius / 2.8
-        circle w - (rad * 3 + inset * 2), h - rad - inset * 4, rad
+        circle w - (rad * 3), h - rad, rad
 

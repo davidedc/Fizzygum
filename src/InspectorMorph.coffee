@@ -26,7 +26,6 @@ class InspectorMorph extends BoxMorph
     @silentSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
     @isfloatDraggable = true
-    @border = 1
     @edge = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
     @color = new Color(60, 60, 60)
     @buildAndConnectChildren()  if @target

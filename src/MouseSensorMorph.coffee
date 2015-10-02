@@ -6,10 +6,8 @@ class MouseSensorMorph extends BoxMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  constructor: (edge, border) ->
+  constructor: (@edge = 4) ->
     super
-    @edge = edge or 4
-    @border = border or 2
     @color = new Color(255, 255, 255)
     @isTouched = false
     @upStep = 0.05
