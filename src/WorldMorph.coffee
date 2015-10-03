@@ -911,6 +911,7 @@ class WorldMorph extends FrameMorph
 
   resetWorld: ->
     @hand.drop()
+    @changed() # redraw the whole screen
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = null
     @destroyAll()
