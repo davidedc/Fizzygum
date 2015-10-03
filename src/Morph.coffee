@@ -36,6 +36,13 @@ class Morph extends MorphicNode
   # count
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
+
+  # some visual cues work best if they are always in
+  # the same aspect ratio. E.g. icons are much less
+  # recognisable when they come with different aspect
+  # ratios. So there is a way to keep the same aspect
+  # ratio when resizing
+  aspectRatio: null
   
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -254,9 +261,12 @@ class Morph extends MorphicNode
       if (arr.indexOf @constructor.name) == -1
         arr.push @constructor.name
 
-    # [TODO] why is there this strange non-zero default bound?
-    @bounds = new Rectangle(0, 0, 50, 40)
+    @bounds = new Rectangle(0, 0, 0, 0)
     @minimumExtent = new Point 5,5
+    @silentSetPosition(new Point 0,0)
+    # [TODO] why is there this strange non-zero default extent?
+    @silentSetExtent(new Point 50, 40)
+
     @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
     # Note that we don't call @updateBackingStore()
@@ -573,12 +583,30 @@ class Morph extends MorphicNode
     @moveBy new Point(0, -topOff)  if topOff < 0
     bottomOff = @boundsIncludingChildren().bottom() - aMorph.bottom()
     @moveBy new Point(0, -bottomOff)  if bottomOff > 0
+
+  # normally morphs do nothing when the
+  # parent is layouting, as they are
+  # placed with absolute positioning.
+  # In some cases though, such as in the
+  # case of the HandleMorph, a Morph
+  # make take the occasion to do special things
+  # In the case of the HandleMorph, it's going
+  # to place itself in the bottom-right
+  # corner.
+  parentIsLayouting: ->
   
   # the default of layoutSubmorphs
-  # is to do nothing, but things like
+  # is to do nothing apart from notifying
+  # the children (in case, for example,
+  # there is a HandleMorph in this morph
+  # which will cause the HandleMorph to
+  # replace itself in the new position)
+  # , but things like
   # the inspector might well want to
   # tweak many of their children...
   layoutSubmorphs: ->
+    @children.forEach (child) ->
+      child.parentIsLayouting()
   
 
   # do nothing in most cases but for example for
@@ -600,9 +628,6 @@ class Morph extends MorphicNode
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @changed()
-      minExtent = @getMinimumExtent()
-      if ! aPoint.ge minExtent
-        aPoint = aPoint.max minExtent
       @silentSetExtent aPoint
       @changed()
       @setLayoutBeforeUpdatingBackingStore()
@@ -612,9 +637,26 @@ class Morph extends MorphicNode
         @parent.childChangedExtent(@)
   
   silentSetExtent: (aPoint) ->
-    ext = aPoint.round()
-    newWidth = Math.max(ext.x, 0)
-    newHeight = Math.max(ext.y, 0)
+    aPoint = aPoint.round()
+
+    minExtent = @getMinimumExtent()
+    if ! aPoint.ge minExtent
+      aPoint = aPoint.max minExtent
+    if @aspectRatio?
+      debugger
+      if @aspectRatio >= 1
+        if aPoint.y >= aPoint.x
+          aPoint = new Point aPoint.y * @aspectRatio, aPoint.y
+        else
+          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
+      else if @aspectRatio < 1
+        if aPoint.y >= aPoint.x
+          aPoint = new Point aPoint.y * (1/@aspectRatio), aPoint.y
+        else
+          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
+
+    newWidth = Math.max(aPoint.x, 0)
+    newHeight = Math.max(aPoint.y, 0)
     @bounds.corner = new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
   setWidth: (width) ->
@@ -1065,9 +1107,12 @@ class Morph extends MorphicNode
   # this is done before the updating of the
   # backing store in some morphs that
   # need to figure out their whole
-  # layout before painting themselves
+  # layout (which depends on the children)
+  # before painting themselves
   # e.g. the MenuMorph
   setLayoutBeforeUpdatingBackingStore: ->
+    @children.forEach (child) ->
+      child.parentIsLayouting()
 
 
   calculateAndUpdateExtent: ->

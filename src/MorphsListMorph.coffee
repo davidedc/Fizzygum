@@ -79,6 +79,7 @@ class MorphsListMorph extends BoxMorph
     @layoutSubmorphs()
   
   layoutSubmorphs: ->
+    super()
     Morph::trackChanges = false
 
     # label

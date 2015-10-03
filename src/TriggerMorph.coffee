@@ -80,6 +80,7 @@ class TriggerMorph extends Morph
       @layoutSubmorphs()
   
   layoutSubmorphs: ->
+    super()
     if not @label?
       @createLabel()
     if @centered

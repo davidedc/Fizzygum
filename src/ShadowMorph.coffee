@@ -20,6 +20,7 @@ class ShadowMorph extends Morph
 
   setLayoutBeforeUpdatingBackingStore: ->
     # console.log "shadow morph update rendering"
+    super()
     fb = @targetMorph.boundsIncludingChildrenNoShadow()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat

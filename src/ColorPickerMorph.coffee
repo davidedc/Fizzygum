@@ -26,6 +26,7 @@ class ColorPickerMorph extends Morph
     @setExtent new Point(80, 80)
 
   setLayoutBeforeUpdatingBackingStore: ->
+    super()
     @buildSubmorphs()
 
   buildSubmorphs: ->

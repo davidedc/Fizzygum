@@ -40,6 +40,7 @@ class StringFieldMorph extends FrameMorph
     console.log "string fleid morph extent: " + @extent()
 
   setLayoutBeforeUpdatingBackingStore: ->
+    super()
     txt = (if @text then @getValue() else @defaultContents)
     @text = null
     @destroyAll()

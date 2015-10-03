@@ -92,6 +92,7 @@ class LinearLayoutMorph extends LayoutMorph
   layoutSubmorphs: ->
     console.log "layoutSubmorphs in LinearLayoutMorph"
     #debugger
+    super()
     if @children.length == 0
       @layoutNeeded = false
       return @

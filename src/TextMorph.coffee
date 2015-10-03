@@ -126,6 +126,7 @@ class TextMorph extends StringMorph
   
 
   setLayoutBeforeUpdatingBackingStore: ->
+    super()
     ANimage = newCanvas()
     context = ANimage.getContext("2d")
     context.font = @font()

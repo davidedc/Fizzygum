@@ -31,11 +31,14 @@ class HandleMorph extends Morph
       @target.add @
     @updateResizerHandlePosition()
 
+  parentIsLayouting: ->
+    @updateResizerHandlePosition()
+
   updateResizerHandlePosition: ->
     if @target
+        @changed()
         @silentUpdateResizerHandlePosition()
-        # todo wow, wasteful!
-        @target.changed()
+        @changed()
 
   silentUpdateResizerHandlePosition: ->
     if @target
@@ -142,7 +145,10 @@ class HandleMorph extends Morph
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
       @target.setExtent newExt
-      @setPosition @target.bottomRight().subtract(@extent().add(@inset))
+      # the position of this handle will be changed when the
+      # parentIsLayouting methos of this handle will be called
+      # as the parent is layouting following the setExtent call just
+      # made
     else # type === 'move'
       @target.setPosition newPos.subtract(@target.extent()).add(@extent())
   

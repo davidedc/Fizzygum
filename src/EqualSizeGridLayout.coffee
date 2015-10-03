@@ -33,6 +33,7 @@ class EqualSizeGridLayout extends LayoutMorph
   # Compute a new layout based on the given layout bounds
   layoutSubmorphs: ->
     # ...
+    super()
     @layoutNeeded = false
 
 

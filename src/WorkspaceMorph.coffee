@@ -83,6 +83,7 @@ class WorkspaceMorph extends BoxMorph
     @layoutSubmorphs()
   
   layoutSubmorphs: ->
+    super()
     Morph::trackChanges = false
 
     handleSize = WorldMorph.preferencesAndSettings.handleSize;

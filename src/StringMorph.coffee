@@ -109,6 +109,7 @@ class StringMorph extends Morph
     return Math.ceil(Math.max(context.measureText(text).width, 1))
 
   setLayoutBeforeUpdatingBackingStore: ->
+    super()
     width = @calculateExtentBasedOnText()
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))

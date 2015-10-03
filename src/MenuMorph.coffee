@@ -151,6 +151,7 @@ class MenuMorph extends BoxMorph
 
   setLayoutBeforeUpdatingBackingStore: ->
     # console.log "menu update rendering"
+    super()
     isLine = false
     @destroyAll()
 
