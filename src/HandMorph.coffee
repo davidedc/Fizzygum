@@ -248,9 +248,12 @@ class HandMorph extends Morph
   # event object.
 
   destroyActiveHandleIfHandHasNotActionedIt: (actionedMorph) ->
-    if @world.activeHandle?
-      if actionedMorph isnt @world.activeHandle
-        @world.activeHandle = @world.activeHandle.destroy()    
+    if @world.activeHandle.length > 0
+      debugger
+      if @world.activeHandle.indexOf(actionedMorph) == -1
+        for eachActiveHandle in @world.activeHandle
+          eachActiveHandle.destroy()
+        @world.activeHandle = []
 
   stopEditingIfActionIsElsewhere: (actionedMorph) ->
     if @world.caret?

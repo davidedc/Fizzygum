@@ -168,7 +168,7 @@ class WorldMorph extends FrameMorph
     @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
-    @activeHandle = null
+    @activeHandle = []
     @inputDOMElementForVirtualKeyboard = null
 
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
