@@ -42,7 +42,11 @@ class HandleMorph extends Morph
 
   silentUpdateResizerHandlePosition: ->
     if @target
-        @silentSetPosition @target.bottomRight().subtract(@extent().add(@inset))
+        if @type == "resize"
+          @silentSetPosition @target.bottomRight().subtract(@extent().add(@inset))
+        else if @type == "move"
+          offsetFromMiddlePoint = new Point(@extent().x + @inset.x, Math.floor(@extent().y/2))
+          @silentSetPosition @target.rightCenter().subtract(offsetFromMiddlePoint)
   
   
   # HandleMorph drawing:
@@ -150,7 +154,8 @@ class HandleMorph extends Morph
       # as the parent is layouting following the setExtent call just
       # made
     else # type === 'move'
-      @target.setPosition newPos.subtract(@target.extent()).add(@extent())
+      offsetFromMiddlePoint = new Point( @inset.x , Math.floor(@target.extent().y/2) - Math.floor(@extent().y/2))
+      @target.setPosition newPos.subtract(@target.extent()).add(@extent()).add(offsetFromMiddlePoint)
   
   
   # HandleMorph floatDragging and dropping:
