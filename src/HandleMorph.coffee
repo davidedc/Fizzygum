@@ -146,7 +146,7 @@ class HandleMorph extends Morph
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
       @target.setExtent newExt
       # the position of this handle will be changed when the
-      # parentIsLayouting methos of this handle will be called
+      # parentIsLayouting method of this handle will be called
       # as the parent is layouting following the setExtent call just
       # made
     else # type === 'move'
@@ -156,7 +156,6 @@ class HandleMorph extends Morph
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->
     @
-  
   
   # HandleMorph events:
   mouseEnter: ->
