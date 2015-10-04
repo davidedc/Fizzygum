@@ -45,8 +45,13 @@ class HandleMorph extends Morph
         if @type == "resize"
           @silentSetPosition @target.bottomRight().subtract(@extent().add(@inset))
         else if @type == "move"
+          @silentSetPosition @target.topLeft().add(@inset)
+        else if @type == "resizeRight"
           offsetFromMiddlePoint = new Point(@extent().x + @inset.x, Math.floor(@extent().y/2))
           @silentSetPosition @target.rightCenter().subtract(offsetFromMiddlePoint)
+        else if @type == "resizeDown"
+          offsetFromMiddlePoint = new Point(Math.floor(@extent().x/2), @extent().y + @inset.y)
+          @silentSetPosition @target.bottomCenter().subtract(offsetFromMiddlePoint)
   
   
   # HandleMorph drawing:
@@ -153,9 +158,14 @@ class HandleMorph extends Morph
       # parentIsLayouting method of this handle will be called
       # as the parent is layouting following the setExtent call just
       # made
-    else # type === 'move'
-      offsetFromMiddlePoint = new Point( @inset.x , Math.floor(@target.extent().y/2) - Math.floor(@extent().y/2))
-      @target.setPosition newPos.subtract(@target.extent()).add(@extent()).add(offsetFromMiddlePoint)
+    else if @type is "move"
+      @target.setPosition newPos.subtract @inset
+    else if @type is "resizeRight"
+      newWidth = newPos.x + @extent().x + @inset.x - @target.bounds.origin.x
+      @target.setWidth newWidth
+    else if @type is "resizeDown"
+      newHeight = newPos.y + @extent().y + @inset.y - @target.bounds.origin.y
+      @target.setHeight newHeight
   
   
   # HandleMorph floatDragging and dropping:
