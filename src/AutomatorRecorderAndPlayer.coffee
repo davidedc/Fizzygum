@@ -1129,6 +1129,18 @@ class AutomatorRecorderAndPlayer
   loadTestsMetadata: (andThen) ->
     @loadTestMetadata 0, andThen
 
+  loadAndRunSingleTestFromName: (testName) ->
+    testNumber = AutomatorRecorderAndPlayer.testsManifest.indexOf("SystemTest_inspectorResizingOKEvenWhenTakenApart")
+    debugger
+    @loadTestMetadata testNumber, =>
+      debugger
+      @loadTest testNumber, =>
+        debugger
+        SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "playing test: " + testName
+        @automatorCommandsSequence = window[(testName)+ "_automationCommands"].automatorCommandsSequence
+        @startTestPlaying()
+
+
   runNextSystemTest: ->
     @indexOfSystemTestBeingPlayed++
     if @indexOfSystemTestBeingPlayed >= @testsList().length
