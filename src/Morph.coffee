@@ -1401,10 +1401,10 @@ class Morph extends MorphicNode
   # Morph utilities ////////////////////////////////////////////////////////
   
   resize: ->
-    @world().activeHandle.push new HandleMorph(@)
     @world().activeHandle.push new HandleMorph(@, "resizeRight")
     @world().activeHandle.push new HandleMorph(@, "resizeDown")
     @world().activeHandle.push new HandleMorph(@, "move")
+    @world().activeHandle.push new HandleMorph(@, "resize")
   
   move: ->
     @world().activeHandle.push new HandleMorph(@, "move")

@@ -36,9 +36,32 @@ class HandleMorph extends Morph
 
   updateResizerHandlePosition: ->
     if @target
-        @changed()
-        @silentUpdateResizerHandlePosition()
-        @changed()
+      # collapse some of the handles if the
+      # morph gets too small because they
+      # become unusable anyways once they
+      # overlap
+      if @type == "move"
+        if @target.width() < 2 * @width()
+          @hide()
+          return
+        else
+          @show()
+      else if @type == "resizeRight"
+        if @target.height() < 3 * @height()
+          @hide()
+          return
+        else
+          @show()
+      else if @type == "resizeDown"
+        if @target.width() < 3 * @width()
+          @hide()
+          return
+        else
+          @show()
+
+      @changed()
+      @silentUpdateResizerHandlePosition()
+      @changed()
 
   silentUpdateResizerHandlePosition: ->
     if @target
@@ -71,7 +94,7 @@ class HandleMorph extends Morph
     highlightImageContext = @highlightImage.getContext("2d")
     highlightImageContext.scale pixelRatio, pixelRatio
     @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
-    @handleMorphRenderingHelper highlightImageContext, new Color(100, 100, 255), new Color(255, 255, 255)
+    @handleMorphRenderingHelper highlightImageContext, new Color(255, 255, 255), new Color(200, 200, 255)
     
     if highlighted
       @image = @highlightImage
@@ -79,63 +102,94 @@ class HandleMorph extends Morph
       @image = @normalImage
   
   handleMorphRenderingHelper: (context, color, shadowColor) ->
+    # we need this to bring these variable to be in
+    # the common scope of the two inner functions
+    # doPath and drawHandle
+    leftArrowPoint = rightArrowPoint = arrowPieceLeftUp =
+    arrowPieceLeftDown = arrowPieceRightUp =
+    arrowPieceRightDown = null
+
+    doPath = ->
+      context.beginPath()
+      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+      context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
+      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+      context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
+
+      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+      context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
+
+      context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightUp.x, 0.5 + rightArrowPoint.y + arrowPieceRightUp.y
+      context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
+      context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightDown.x, 0.5 + rightArrowPoint.y + arrowPieceRightDown.y
+
+      context.closePath()
+      context.stroke()
+
+    drawHandle = =>
+      if @type is "resizeRight" or @type is "move"
+        p0 = @bottomLeft().subtract(@position())
+        p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
+        
+        leftArrowPoint = p0.copy()
+        leftArrowPoint = leftArrowPoint.add(new Point(Math.ceil(@width()/15),0))
+
+        rightArrowPoint = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
+        arrowPieceLeftUp = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
+        arrowPieceLeftDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
+        arrowPieceRightUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
+        arrowPieceRightDown = new Point(-Math.ceil(@width()/5),Math.ceil(@height()/5))
+        doPath()
+
+      if @type is "resizeDown" or @type is "move"
+        p0 = @bottomCenter().subtract(@position())
+        
+        leftArrowPoint = p0.copy()
+        leftArrowPoint = leftArrowPoint.add(new Point(0,-Math.ceil(@height()/14)))
+
+        rightArrowPoint = p0.add(new Point(0, -@height() + Math.ceil(@height()/15)))
+        arrowPieceLeftUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
+        arrowPieceLeftDown = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
+        arrowPieceRightUp = new Point(-Math.ceil(@width()/5), Math.ceil(@height()/5))
+        arrowPieceRightDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
+        doPath()
+
+
+      if @type is "resize"
+        p0 = @topLeft().subtract(@position())
+        
+        leftArrowPoint = p0.copy()
+        leftArrowPoint = leftArrowPoint.add( @extent().floorDivideBy(7) )
+
+        rightArrowPoint = @bottomRight().subtract(@position()).subtract( @extent().floorDivideBy(7) )
+        arrowPieceLeftUp = new Point(Math.ceil(@width()/4),0)
+        arrowPieceLeftDown = new Point(0,Math.ceil(@height()/4))
+        arrowPieceRightUp = new Point(0,-Math.ceil(@width()/4))
+        arrowPieceRightDown = new Point(-Math.ceil(@width()/4),0)
+        doPath()
+
+
+
     context.lineWidth = 1
     context.lineCap = "round"
-    context.strokeStyle = color.toString()
-    if @type is "move"
-      p1 = @bottomLeft().subtract(@position())
-      p11 = p1.copy()
-      p2 = @topRight().subtract(@position())
-      p22 = p2.copy()
-      for i in [0..@height()] by 6
-        p11.y = p1.y - i
-        p22.y = p2.y - i
-        context.beginPath()
-        context.moveTo p11.x, p11.y
-        context.lineTo p22.x, p22.y
-        context.closePath()
-        context.stroke()
 
-    p1 = @bottomLeft().subtract(@position())
-    p11 = p1.copy()
-    p2 = @topRight().subtract(@position())
-    p22 = p2.copy()
-    for i in [0..@width()] by 6
-      p11.x = p1.x + i
-      p22.x = p2.x + i
-      context.beginPath()
-      context.moveTo p11.x, p11.y
-      context.lineTo p22.x, p22.y
-      context.closePath()
-      context.stroke()
-
+    # give it a good shadow so that
+    # it's visible also when on light
+    # background. Do that by painting it
+    # twice, slightly translated, in
+    # darker color.
+    context.save()
     context.strokeStyle = shadowColor.toString()
-    if @type is "move"
-      p1 = @bottomLeft().subtract(@position())
-      p11 = p1.copy()
-      p2 = @topRight().subtract(@position())
-      p22 = p2.copy()
-      for i in [-1..@height()] by 6
-        p11.y = p1.y - i
-        p22.y = p2.y - i
-        context.beginPath()
-        context.moveTo p11.x, p11.y
-        context.lineTo p22.x, p22.y
-        context.closePath()
-        context.stroke()
+    context.translate 1,1
+    drawHandle()
+    context.translate 1,0
+    drawHandle()
+    context.restore()
 
-    p1 = @bottomLeft().subtract(@position())
-    p11 = p1.copy()
-    p2 = @topRight().subtract(@position())
-    p22 = p2.copy()
-    for i in [2..@width()] by 6
-      p11.x = p1.x + i
-      p22.x = p2.x + i
-      context.beginPath()
-      context.moveTo p11.x, p11.y
-      context.lineTo p22.x, p22.y
-      context.closePath()
-      context.stroke()
+    context.strokeStyle = color.toString()
+    drawHandle()
+
+
   
 
   # implement dummy methods in here
