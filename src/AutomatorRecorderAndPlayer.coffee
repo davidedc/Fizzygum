@@ -5,9 +5,7 @@
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence = NAMEOFTHETEST.automatorCommandsSequence
-# (e.g. window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence = SystemTest_attachRectangleToPartsOfInspector.automatorCommandsSequence )
-# window.world.systemTestsRecorderAndPlayer.startTestPlayingWithSlideIntro()
+# world.systemTestsRecorderAndPlayer.loadAndRunSingleTestFromName("SystemTest_inspectorResizingOKEvenWhenTakenApart")
 
 # How to inspect the screenshot differences:
 # after having played a test with some failing screenshots
