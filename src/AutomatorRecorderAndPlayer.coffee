@@ -466,7 +466,7 @@ class AutomatorRecorderAndPlayer
               stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
           testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
           if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-          document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
+          document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
         else
           @allTestsPassedSoFar = false
           document.getElementById("background").style.background = "red"
@@ -475,7 +475,7 @@ class AutomatorRecorderAndPlayer
               stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
           testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
           if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-          document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
+          document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
@@ -536,7 +536,7 @@ class AutomatorRecorderAndPlayer
         errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
         testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
         if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-        document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
+        document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
@@ -700,7 +700,7 @@ class AutomatorRecorderAndPlayer
    @collectedFailureImages.push obtainedImage
    testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
    if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-   document.getElementById('numberOfFailedTests').innerHTML = "-" + @failedTests.length + " failed"
+   document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
 
   replayTestCommands: ->
    commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
