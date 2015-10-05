@@ -600,6 +600,16 @@ class AutomatorRecorderAndPlayer
       obtainedImage.onload = =>
         obtainedCanvas.width = obtainedImage.width
         obtainedCanvas.height = obtainedImage.height
+
+        if (obtainedImage.width != expectedImage.width) or
+        (obtainedImage.height != expectedImage.height)
+          # this happens when comparing screenshots
+          # coming from screens with different
+          # pixelRatios. The resulting diff image
+          # would be very glitchy and strange and
+          # just maningless so skip the process
+          return
+
         obtainedCanvasContext = obtainedCanvas.getContext "2d"
         obtainedCanvasContext.drawImage(obtainedImage,0,0)
         obtainedImageData = obtainedCanvasContext.getImageData(0, 0, obtainedCanvas.width, obtainedCanvas.height)
