@@ -861,12 +861,16 @@ class Morph extends MorphicNode
   
 
   hide: ->
+    if @isVisible == false
+      return
     @isVisible = false
     @changed()
     @children.forEach (child) ->
       child.hide()
 
   show: ->
+    if @isVisible == true
+      return
     @isVisible = true
     @changed()
     @children.forEach (child) ->
