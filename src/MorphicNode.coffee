@@ -48,10 +48,18 @@ class MorphicNode
     aMorphicNode.parent = @
     ## @connectValuesToAddedChild aMorphicNode
   
+  # currently used to add the shadow. The shadow
+  # is in the background in respect to everything
+  # else so it's drawn as the first child
+  # (after the morph itself, but the shadow has a hole
+  # or semi-transparency for it)
   addChildFirst: (aMorphicNode) ->
     @children.splice 0, null, aMorphicNode
     aMorphicNode.parent = @
 
+  # used for example when you
+  # click morphs around... they
+  # pop to the foreground
   moveAsLastChild: ->
     return unless @parent
     idx = @parent.children.indexOf(@)

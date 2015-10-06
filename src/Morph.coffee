@@ -643,7 +643,6 @@ class Morph extends MorphicNode
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
     if @aspectRatio?
-      debugger
       if @aspectRatio >= 1
         if aPoint.y >= aPoint.x
           aPoint = new Point aPoint.y * @aspectRatio, aPoint.y
@@ -984,13 +983,35 @@ class Morph extends MorphicNode
     ctx.fillRect 0, 0, fb.x * pixelRatio, fb.y * pixelRatio
     sha
   
-  # the one used right now
+  # the one used right now.
+  # The canvas with the shadow is completely
+  # transparent apart from the shadow
+  # "overflowing" from the edges.
+  # If you take a blue rectangle for example,
+  # and run this method, you'll get a canvas with
+  # a transparent rectangle in the middle and the
+  # "leaking" shadow.
+  # The "completely" transparent bit is actually
+  # partially transparent if the fill of the
+  # rectangle is semi-transparent, i.e. you can
+  # see the shadow through a semitransparent
+  # morph.
+  # So, the shadow of a blue semi-transparent box
+  # *will* contain some semi-transparent fill of
+  # the box.
   shadowImageBlurred: (off_, color) ->
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
     fb = @boundsIncludingChildrenNoShadow().extent().add(blur * 2)
+
+    # take "the image" which is the image of all the
+    # morphs. This image contains no shadows, the shadow
+    # will be made starting from this image in a second.
     img = @fullImageNoShadow()
+
+    # draw the image in special "shadowBlur" mode
+    # http://www.w3schools.com/tags/canvas_shadowblur.asp
     sha = newCanvas(fb.scaleBy pixelRatio)
     ctx = sha.getContext("2d")
     #ctx.scale pixelRatio, pixelRatio
@@ -999,6 +1020,9 @@ class Morph extends MorphicNode
     ctx.shadowBlur = blur * pixelRatio
     ctx.shadowColor = clr.toString()
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
+    # now redraw the image in destination-out mode so that
+    # it "cuts-out" everything that is not the actual shadow
+    # around the edges.
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     ctx.shadowBlur = 0
