@@ -128,6 +128,7 @@ getParameterByName = (name) ->
 # These two methods are for mixins
 ## -------------------------------------------------------
 # adds klass properties
+# these are added to the constructor
 Object::augmentWith = (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
@@ -135,6 +136,7 @@ Object::augmentWith = (obj) ->
   this
 
 # adds instance properties
+# these are added to the prototype
 Object::addInstanceProperties= (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype

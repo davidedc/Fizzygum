@@ -130,7 +130,8 @@ class HandMorph extends Morph
   #
   dropTargetFor: (aMorph) ->
     target = @topMorphUnderPointer()
-    target = target.parent  until target.wantsDropOf(aMorph)
+    until target.wantsDropOf(aMorph)
+      target = target.parent
     target
   
   grab: (aMorph) ->
