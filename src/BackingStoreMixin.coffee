@@ -28,7 +28,6 @@ BackingStoreMixin =
           @drawCachedTexture()
         else @drawTexture @texture  if @texture
 
-    @addInstanceProperties
       # This method only paints this very morph's "image",
       # it doesn't descend the children
       # recursively. The recursion mechanism is done by recursivelyBlit, which

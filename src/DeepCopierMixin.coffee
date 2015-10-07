@@ -50,7 +50,6 @@ DeepCopierMixin =
 
         return cloneOfMe
 
-    @addInstanceProperties
       # creates a new instance of target's type
       # note that
       #   1) the constructor method is not run!
