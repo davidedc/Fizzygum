@@ -46,9 +46,6 @@ class BoxMorph extends Morph
 
     return false
   
-  silentUpdateBackingStore: ->
-    #console.log 'BoxMorph doing nothing with the backing store'
-
   # This method only paints this very morph's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by recursivelyBlit, which
