@@ -143,13 +143,70 @@ class BoxMorph extends Morph
       0,
       100,
       true
+
+  insetPosition: ->
+    return @position().add(@cornerRadius - Math.round(@cornerRadius/Math.sqrt(2)))
+
+  insetSpaceExtent: ->
+    return @extent().subtract(2*(@cornerRadius - Math.round(@cornerRadius/Math.sqrt(2))))
+
+  extentBasedOnInsetExtent: (insetMorph) ->
+    return insetMorph.extent().add(2*(@cornerRadius - Math.round(@cornerRadius/Math.sqrt(2))))
+
+  # there is another method almost equal to this
+  # todo refactor
+  choiceOfMorphToBePicked: (ignored, morphPickingUp) ->
+    # this is what happens when "each" is
+    # selected: we attach the selected morph
+    debugger
+    morphPickingUp.addInset @
+    @isfloatDraggable = false
+    if @ instanceof ScrollFrameMorph
+      @adjustContentsBounds()
+      @adjustScrollBars()
+    else
+      # you expect Morphs attached
+      # inside a FrameMorph
+      # to be floatDraggable out of it
+      # (as opposed to the content of a ScrollFrameMorph)
+      @isfloatDraggable = false
   
+  # there is another method almost equal to this
+  # todo refactor
+  pickInset: ->
+    choices = world.plausibleTargetAndDestinationMorphs(@)
+
+    # my direct parent might be in the
+    # options which is silly, leave that one out
+    choicesExcludingParent = []
+    choices.forEach (each) =>
+      if each != @parent
+        choicesExcludingParent.push each
+
+    if choicesExcludingParent.length > 0
+      menu = new MenuMorph(false, @, true, true, "choose Morph to put as inset:")
+      choicesExcludingParent.forEach (each) =>
+        menu.addItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
+    else
+      # the ideal would be to not show the
+      # "attach" menu entry at all but for the
+      # time being it's quite costly to
+      # find the eligible morphs to attach
+      # to, so for now let's just calculate
+      # this list if the user invokes the
+      # command, and if there are no good
+      # morphs then show some kind of message.
+      menu = new MenuMorph(false, @, true, true, "no morphs to pick")
+    menu.popUpAtHand(@firstContainerMenu())
+
+
   # BoxMorph menus:
   developersMenu: ->
     menu = super()
     menu.addLine()
 
     menu.addItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
+    menu.addItem "pick inset...", true, @, "pickInset", "put a morph as inset"
     menu
   
   
@@ -166,6 +223,7 @@ class BoxMorph extends Morph
       newRadius = parseFloat(radius)
       @cornerRadius = Math.max(newRadius, 0)  unless isNaN(newRadius)
     @updateBackingStore()
+    @layoutInset()
     @changed()
   
   colorSetters: ->

@@ -328,12 +328,6 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
-    # todo there is something to be figured out here
-    # cause in theory ALL the morphs in here are not
-    # visible, not just the parent... but it kind of
-    # seems overkill...
-    @visible = false
-
     # remove callback when user clicks outside
     # me or any of my children
     console.log "****** destroying morph"
@@ -594,6 +588,12 @@ class Morph extends MorphicNode
   # to place itself in the bottom-right
   # corner.
   parentIsLayouting: ->
+
+  layoutInset: (morphStartingTheChange = null) ->
+    if @insetMorph?
+      if @insetMorph != morphStartingTheChange
+        @insetMorph.setPosition @insetPosition()
+        @insetMorph.setExtent @insetSpaceExtent(), @
   
   # the default of layoutSubmorphs
   # is to do nothing apart from notifying
@@ -604,9 +604,12 @@ class Morph extends MorphicNode
   # , but things like
   # the inspector might well want to
   # tweak many of their children...
-  layoutSubmorphs: ->
+  layoutSubmorphs: (morphStartingTheChange = null) ->
+    @layoutInset morphStartingTheChange
+
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      if morphStartingTheChange != child
+        child.parentIsLayouting()
   
 
   # do nothing in most cases but for example for
@@ -614,6 +617,8 @@ class Morph extends MorphicNode
   # change extent, then the whole layout might need to
   # change extent.
   childChangedExtent: (theMorphChangingTheExtent) ->
+    if @insetMorph == theMorphChangingTheExtent
+      @setExtent(@extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent)
 
   # more complex Morphs, e.g. layouts, might
   # do a more complex calculation to get the
@@ -624,7 +629,12 @@ class Morph extends MorphicNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Morph accessing - dimensional changes requiring a complete redraw
-  setExtent: (aPoint) ->
+  setExtent: (aPoint, morphStartingTheChange = null) ->
+    debugger
+    if @ == morphStartingTheChange
+      return
+    if morphStartingTheChange == null
+      morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @changed()
@@ -632,9 +642,10 @@ class Morph extends MorphicNode
       @changed()
       @setLayoutBeforeUpdatingBackingStore()
       @updateBackingStore()
-      @layoutSubmorphs()
+      @layoutSubmorphs(morphStartingTheChange)
       if @parent?
-        @parent.childChangedExtent(@)
+        if @parent != morphStartingTheChange
+          @parent.childChangedExtent(@)
   
   silentSetExtent: (aPoint) ->
     aPoint = aPoint.round()
@@ -1119,7 +1130,7 @@ class Morph extends MorphicNode
   #     being added to itself and the case of
   # ??? TODO a Morph being added to one of its
   #     children
-  add: (aMorph) ->
+  add: (aMorph, position = null) ->
     # the morph that is being
     # attached might be attached to
     # a clipping morph. So we
@@ -1129,8 +1140,28 @@ class Morph extends MorphicNode
     # painted over.
     if aMorph.parent?
       aMorph.changed()
-    @silentAdd(aMorph, true)
+    @silentAdd(aMorph, true, position)
     aMorph.imBeingAddedTo @
+
+  addInset: (aMorph) ->
+
+    if aMorph.parent?
+      aMorph.changed()
+
+    @insetMorph = aMorph
+
+    if @children.length > 0
+      if @children[0] instanceof ShadowMorph
+        @add aMorph, 1
+      else
+        @add aMorph, 0
+    else
+      @add aMorph, 0
+
+    aMorph.setPosition @insetPosition()
+    aMorph.setExtent @insetSpaceExtent(), @
+
+
 
   # this is done before the updating of the
   # backing store in some morphs that
@@ -1145,7 +1176,7 @@ class Morph extends MorphicNode
 
   calculateAndUpdateExtent: ->
 
-  silentAdd: (aMorph, avoidExtentCalculation) ->
+  silentAdd: (aMorph, avoidExtentCalculation, position = null) ->
     # the morph that is being
     # attached might be attached to
     # a clipping morph. So we
@@ -1156,7 +1187,7 @@ class Morph extends MorphicNode
     owner = aMorph.parent
     owner.removeChild aMorph  if owner?
     aMorph.isMarkedForDestruction = false
-    @addChild aMorph
+    @addChild aMorph, position
     if !avoidExtentCalculation
       aMorph.calculateAndUpdateExtent()
   

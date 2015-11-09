@@ -337,8 +337,8 @@ class InspectorMorph extends BoxMorph
     cnts.setReceiver @target
     @detail.setContents cnts, 2
   
-  layoutSubmorphs: ->
-    super()
+  layoutSubmorphs: (morphStartingTheChange = null) ->
+    super(morphStartingTheChange)
     console.log "fixing the layout of the inspector"
 
     # here we are disabling all the broken

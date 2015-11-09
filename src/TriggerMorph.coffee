@@ -79,7 +79,7 @@ class TriggerMorph extends Morph
     if @labelString?
       @layoutSubmorphs()
   
-  layoutSubmorphs: ->
+  layoutSubmorphs: (morphStartingTheChange = null) ->
     super()
     if not @label?
       @createLabel()

@@ -43,8 +43,11 @@ class MorphicNode
     arrayShallowCopyAndReverse(@children)  
   
   # MorphicNode accessing:
-  addChild: (aMorphicNode) ->
-    @children.push aMorphicNode
+  addChild: (aMorphicNode, position = null) ->
+    if !position?
+      @children.push aMorphicNode
+    else
+      @children.splice position, null, aMorphicNode
     aMorphicNode.parent = @
     ## @connectValuesToAddedChild aMorphicNode
   
@@ -54,8 +57,8 @@ class MorphicNode
   # (after the morph itself, but the shadow has a hole
   # or semi-transparency for it)
   addChildFirst: (aMorphicNode) ->
-    @children.splice 0, null, aMorphicNode
-    aMorphicNode.parent = @
+    
+    @addChild aMorphicNode, 0
 
   # used for example when you
   # click morphs around... they
