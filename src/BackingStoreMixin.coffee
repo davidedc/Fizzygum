@@ -3,12 +3,31 @@
 # these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-# some morphs (for example ColorPaletteMorph
-# or SliderMorph) can control a target
-# and they have the same function to attach
-# targets. Not worth having this in the
-# whole Morph hierarchy, so... ideal use
-# of mixins here.
+# A BackingStore is a canvas that a morph can keep for
+# two reasons:
+#   1) as a cache
+#   2) because the morph has inherently a "raster" nature
+#      such as the canvas where you can run a turtle to
+#      draw stuff
+#
+# The cache use is useful for morphs that ideally
+#  * have a small extent
+#  * have an expensive painting process
+#
+# (Note that the cache for the time being is only
+# for the very morph, not for the whole of the
+# hierarchy.)
+#
+# Ideal use of a cache is tex,t because painting text
+# can be a lengthy operation.
+# Worst possible use of a cache is the large
+# desktop background rectangle, where a lot of memory
+# would be wasted for saving a very short painting
+# operation.
+#
+# In theory the "cache" use should be transparent and
+# automatic, driven perhaps by dynamic considerations,
+# but we are not there yet.
 
 BackingStoreMixin =
   # klass properties here:

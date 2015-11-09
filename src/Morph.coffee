@@ -759,8 +759,12 @@ class Morph extends MorphicNode
   isTransparentAt: ->
     return false
   
+  # by default this does nothing because normally
+  # morphs are expected to repaint themselves from
+  # graphics primitives. Some morphs might
+  # use a BackingStore though, they can override this
+  # one then. 
   silentUpdateBackingStore: ->
-    #console.log 'frame morph doing nothing with the backing store'
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
