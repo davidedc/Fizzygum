@@ -38,12 +38,15 @@ class ColorPaletteMorph extends Morph
         context.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         context.fillRect x, y, 1, 1
 
-  # you can't grab the colorPaletteMorph in any
-  # way since you could use it to pick a color in
-  # any moment.
-  # You should perhaps allow it to allow pick ups
-  # if it's disabled, say, but we don't have this
-  # concept now.
+  # you can't grab the colorPaletteMorph because
+  # the drag operation currently picks a color.
+  # You could change that, you could pick color
+  # only by normal click for example.
+  # Or you could have either behaviour based on
+  # preference.
+  # Or you could perhaps allow it to be grabbed
+  # if it's disabled, say. (but we don't have this
+  # "disabled" concept implemented now).
   rootForGrab: ->
     return null
   
