@@ -8,8 +8,6 @@ class CircleBoxMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  @augmentWith BackingStoreMixin
-
   orientation: null
   autoOrient: true
 
@@ -23,13 +21,10 @@ class CircleBoxMorph extends Morph
       @orientation = "vertical"
     else
       @orientation = "horizontal"
-  
-  # no changes of position or extent
-  updateBackingStore: ->
+
+
+  calculateKeyPoints: ->
     @autoOrientation()  if @autoOrient
-    @image = newCanvas(@extent().scaleBy pixelRatio)
-    context = @image.getContext("2d")
-    context.scale pixelRatio, pixelRatio
     if @orientation is "vertical"
       radius = @width() / 2
       x = @center().x
@@ -44,21 +39,94 @@ class CircleBoxMorph extends Morph
       center2 = new Point(@right() - radius, y).round()
       rect = @bounds.origin.add(
         new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
+    return [radius,center1,center2,rect]
 
-    # draw the two circles and then the rectangle connecting them
-    points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
-    points.forEach (center) =>
+  isTransparentAt: (aPoint) ->
+    # first quickly check if the point is even
+    # within the bounding box
+    if !@bounds.containsPoint aPoint
+      return true
+
+    [radius,center1,center2,rect] = @calculateKeyPoints()
+
+    if center1.distanceTo(aPoint) < radius or
+    center2.distanceTo(aPoint) < radius or
+    rect.containsPoint aPoint
+      return false
+
+    return true
+  
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
+    if area.isNotEmpty()
+      delta = @position().neg()
+      src = area.copy().translateBy(delta).round()
+      context = aCanvas.getContext("2d")
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      return null  if w < 1 or h < 1
+
+      # initialize my surface property
+      #@image = newCanvas(@extent().scaleBy pixelRatio)
+      #context = @image.getContext("2d")
+      #context.scale pixelRatio, pixelRatio
+
+      context.save()
+
+      # clip out the dirty rectangle as we are
+      # going to paint the whole of the box
+      context.beginPath()
+      context.moveTo(Math.round(al), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at))
+      context.closePath()
+      context.clip()
+
+      context.globalAlpha = @alpha
+
+      context.scale pixelRatio, pixelRatio
+      morphPosition = @position()
+      context.translate morphPosition.x, morphPosition.y
+
+      [radius,center1,center2,rect] = @calculateKeyPoints()
+
+      # the centers of two circles
+      points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
+
       context.fillStyle = @color.toString()
       context.beginPath()
-      context.arc center.x, center.y, radius, 0, 2 * Math.PI, false
+
+      # the two circles (one at each end)
+      context.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI, false
+      context.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI, false
+      # the rectangle
+      rect = rect.floor()
+      rect = rect.translateBy(@bounds.origin.neg())
+      context.moveTo rect.origin.x, rect.origin.y
+      context.lineTo rect.origin.x + rect.width(), rect.origin.y
+      context.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
+      context.lineTo rect.origin.x, rect.origin.y + rect.height()
+
       context.closePath()
       context.fill()
-    rect = rect.floor()
-    rect = rect.translateBy(@bounds.origin.neg())
-    ext = rect.extent()
-    if ext.x > 0 and ext.y > 0
-      context.fillRect rect.origin.x, rect.origin.y, rect.width(), rect.height()
-  
+
+      context.restore()
+
   
   # CircleBoxMorph menu:
   developersMenu: ->
