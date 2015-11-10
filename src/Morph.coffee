@@ -756,6 +756,14 @@ class Morph extends MorphicNode
     @changed()
   
   
+  # a morph by default is considered as completely
+  # opaque and rectangular. This method is called when
+  # the mouse if within the bounds of the morph.
+  # There are two possible implementations of this
+  # method - one is raster-based and looks up the
+  # backing store contents. The other one calculated
+  # mathematically whether there is anything under
+  # the mouse.
   isTransparentAt: ->
     return false
   
