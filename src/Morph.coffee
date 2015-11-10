@@ -1636,7 +1636,7 @@ class Morph extends MorphicNode
 
 
   popUpColorSetter: ->
-    @pickColor "color:", "setColor", "color"
+    @pickColor "color:", "setColor", new Color 0,0,0
 
   transparencyPopout: (menuItem)->
     @prompt menuItem.parent.title + "\nalpha\nvalue:",

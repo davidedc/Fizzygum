@@ -84,6 +84,11 @@ Array::chunk = (chunkSize) ->
     if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
   )
 
+# from https://gist.github.com/vjt/827679
+String::camelize = ->
+  @replace /(?:^|[-])(\w)/g, (_, c) ->
+    if c then c.toUpperCase() else ''
+
 ## -------------------------------------------------------
 
 # utility function taken from:

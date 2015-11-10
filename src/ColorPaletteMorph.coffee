@@ -60,13 +60,11 @@ class ColorPaletteMorph extends Morph
   
   updateTarget: ->
     if @target instanceof Morph and @choice?
-      if @target[@targetSetter] instanceof Function
-        @target[@targetSetter] @choice
+      setterMethodString = "set" + @targetSetter.camelize()
+      if @target[setterMethodString] instanceof Function
+        @target[setterMethodString] @choice
       else
-        @target[@targetSetter] = @choice
-        @target.setLayoutBeforeUpdatingBackingStore()
-        @target.updateBackingStore()
-        @target.changed()
+        alert "this shouldn't happen"
   
     
   # ColorPaletteMorph menu:
