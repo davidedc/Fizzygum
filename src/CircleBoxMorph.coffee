@@ -1,7 +1,6 @@
 # CircleBoxMorph //////////////////////////////////////////////////////
 
 # I can be used for sliders
-# REQUIRES BackingStoreMixin
 
 class CircleBoxMorph extends Morph
   # this is so we can create objects from the object class name 
