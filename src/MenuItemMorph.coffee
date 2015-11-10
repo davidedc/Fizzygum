@@ -81,14 +81,14 @@ class MenuItemMorph extends TriggerMorph
   # MenuItemMorph events:
   mouseEnter: ->
     unless @isListItem()
-      @image = @highlightImage
+      @state = @STATE_HIGHLIGHTED
       @changed()
     if @hint
       @startCountdownForBubbleHelp @hint
   
   mouseLeave: ->
     unless @isListItem()
-      @image = @normalImage
+      @state = @STATE_NORMAL
       @changed()
     world.hand.destroyTemporaries()  if @hint
   
@@ -96,7 +96,7 @@ class MenuItemMorph extends TriggerMorph
     if @isListItem()
       @parent.unselectAllItems()
       @escalateEvent "mouseDownLeft", pos
-    @image = @pressImage
+    @state = @STATE_PRESSED
     @changed()  
   
   isListItem: ->
@@ -104,5 +104,5 @@ class MenuItemMorph extends TriggerMorph
     false
   
   isSelectedListItem: ->
-    return @image is @pressImage  if @isListItem()
+    return @state is @STATE_PRESSED if @isListItem()
     false

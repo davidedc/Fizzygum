@@ -6,14 +6,11 @@
 # trivial, as the concepts of
 # dataSourceMorphForTarget, target and action
 # are used - see comments.
-# REQUIRES BackingStoreMixin
 
 class TriggerMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
-
-  @augmentWith BackingStoreMixin
 
   target: null
   action: null
@@ -36,17 +33,19 @@ class TriggerMorph extends Morph
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   highlightColor: new Color(192, 192, 192)
-  highlightImage: null
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   pressColor: new Color(128, 128, 128)
-  normalImage: null
-  pressImage: null
   centered: false
   closesUnpinnedMenus: true
+
+  state: 0
+  STATE_NORMAL: 0
+  STATE_HIGHLIGHTED: 1
+  STATE_PRESSED: 2
 
   constructor: (
       @closesUnpinnedMenus = true,
@@ -114,40 +113,67 @@ class TriggerMorph extends Morph
       @centered = false
       @layoutSubmorphs()
   
-  # no changes of position or extent
-  updateBackingStore: ->
-    extent = @extent()
 
-    whichImage = "normalImage"
-    if @image?
-      if @image == @highlightImage
-        whichImage = "highlightImage"
-      else if @image == @pressImage
-        whichImage = "pressImage"
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
+    if area.isNotEmpty()
+      delta = @position().neg()
+      src = area.copy().translateBy(delta).round()
+      context = aCanvas.getContext("2d")
+      context.globalAlpha = @alpha
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      return null  if w < 1 or h < 1
 
-    @normalImage = newCanvas(extent.scaleBy pixelRatio)
-    context = @normalImage.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    context.fillStyle = @color.toString()
-    context.fillRect 0, 0, extent.x, extent.y
-    @highlightImage = newCanvas(extent.scaleBy pixelRatio)
-    context = @highlightImage.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    context.fillStyle = @highlightColor.toString()
-    context.fillRect 0, 0, extent.x, extent.y
-    @pressImage = newCanvas(extent.scaleBy pixelRatio)
-    context = @pressImage.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    context.fillStyle = @pressColor.toString()
-    context.fillRect 0, 0, extent.x, extent.y
+      # initialize my surface property
+      #@image = newCanvas(@extent().scaleBy pixelRatio)
+      #context = @image.getContext("2d")
+      #context.scale pixelRatio, pixelRatio
+      context.save()
+      if !@color?
+        debugger
 
-    if whichImage == "normalImage"
-      @image = @normalImage
-    else if whichImage == "highlightImage"
-      @image = @highlightImage
-    else if whichImage == "pressImage"
-      @image = @pressImage
-  
+      if @state == @STATE_NORMAL
+        context.fillStyle = @color.toString()
+      if @state == @STATE_HIGHLIGHTED
+        context.fillStyle = @highlightColor.toString()
+      if @state == @STATE_PRESSED
+        context.fillStyle = @pressColor.toString()
+
+      context.fillRect  Math.round(al),
+          Math.round(at),
+          Math.round(w),
+          Math.round(h)
+      context.restore()
+
+      if world.showRedraws
+        randomR = Math.round(Math.random()*255)
+        randomG = Math.round(Math.random()*255)
+        randomB = Math.round(Math.random()*255)
+
+        context.save()
+        context.globalAlpha = 0.5
+        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        context.fillRect  Math.round(al),
+            Math.round(at),
+            Math.round(w),
+            Math.round(h)
+        context.restore()
+
+
   createLabel: ->
     # bold
     # italic
@@ -193,22 +219,22 @@ class TriggerMorph extends Morph
   
   # TriggerMorph events:
   mouseEnter: ->
-    @image = @highlightImage
+    @state = @STATE_HIGHLIGHTED
     @changed()
     @startCountdownForBubbleHelp @hint  if @hint
   
   mouseLeave: ->
-    @image = @normalImage
+    @state = @STATE_NORMAL
     @changed()
     @world().hand.destroyTemporaries()  if @hint
   
   mouseDownLeft: ->
-    @image = @pressImage
+    @state = @STATE_PRESSED
     @changed()
   
   mouseClickLeft: ->
     super()
-    @image = @highlightImage
+    @state = @STATE_HIGHLIGHTED
     @changed()
     if @closesUnpinnedMenus
       @propagateKillMenus()

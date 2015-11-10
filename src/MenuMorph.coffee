@@ -263,19 +263,15 @@ class MenuMorph extends BoxMorph
     @children.forEach (item) =>
       Morph::trackChanges = false
       item.setWidth w
-      if item instanceof MenuItemMorph
-        isSelected = (item.image == item.pressImage)
-        if isSelected then item.image = item.pressImage          
-      else
-        if item is @label
-          item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
+      if item is @label
+        item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
       #console.log "new width of " + item + " : " + item.width()
       Morph::trackChanges = true
 
   
   unselectAllItems: ->
     @children.forEach (item) ->
-      item.image = item.normalImage  if item instanceof MenuItemMorph
+      item.state = item.STATE_NORMAL  if item instanceof MenuItemMorph
 
     @changed()
 
