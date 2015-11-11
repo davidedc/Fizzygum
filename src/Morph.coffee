@@ -630,7 +630,6 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
-    debugger
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null

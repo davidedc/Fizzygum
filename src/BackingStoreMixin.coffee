@@ -13,6 +13,7 @@
 # The cache use is useful for morphs that ideally
 #  * have a small extent
 #  * have an expensive painting process
+#  * are repainted often
 #
 # (Note that the cache for the time being is only
 # for the very morph, not for the whole of the
