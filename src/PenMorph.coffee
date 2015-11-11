@@ -10,8 +10,6 @@ class PenMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
-
-  @augmentWith BackingStoreMixin
   
   heading: 0
   penSize: null
@@ -54,51 +52,89 @@ class PenMorph extends Morph
         w.broken.push @visibleBounds().spread()
       @parent.childChanged @  if @parent
   
-  
-  # PenMorph display:
-  # no changes of position or extent
-  updateBackingStore: (facing) ->
-    #
-    #    my orientation can be overridden with the "facing" parameter to
-    #    implement Scratch-style rotation styles
-    #    
-    #
-    direction = facing or @heading
-    if @isWarped
-      @wantsRedraw = true
-      return
-    @image = newCanvas(@extent().scaleBy pixelRatio)
-    context = @image.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    len = @width() / 2
-    start = @center().subtract(@bounds.origin)
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
+    if area.isNotEmpty()
+      delta = @position().neg()
+      src = area.copy().translateBy(delta).round()
+      context = aCanvas.getContext("2d")
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      return null  if w < 1 or h < 1
 
-    if @penPoint is "tip"
-      dest = start.distanceAngle(len * 0.75, direction - 180)
-      left = start.distanceAngle(len, direction + 195)
-      right = start.distanceAngle(len, direction - 195)
-    else # 'middle'
-      dest = start.distanceAngle(len * 0.75, direction)
-      left = start.distanceAngle(len * 0.33, direction + 230)
-      right = start.distanceAngle(len * 0.33, direction - 230)
+      # initialize my surface property
+      #@image = newCanvas(@extent().scaleBy pixelRatio)
+      #context = @image.getContext("2d")
+      #context.scale pixelRatio, pixelRatio
 
-    context.fillStyle = @color.toString()
-    context.beginPath()
+      context.save()
 
-    context.moveTo start.x, start.y
-    context.lineTo left.x, left.y
-    context.lineTo dest.x, dest.y
-    context.lineTo right.x, right.y
+      # clip out the dirty rectangle as we are
+      # going to paint the whole of the box
+      context.beginPath()
+      context.moveTo(Math.round(al), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at))
+      context.closePath()
+      context.clip()
 
-    context.closePath()
-    context.strokeStyle = "white"
-    context.lineWidth = 3
-    context.stroke()
-    context.strokeStyle = "black"
-    context.lineWidth = 1
-    context.stroke()
-    context.fill()
-    @wantsRedraw = false
+      context.globalAlpha = @alpha
+
+      context.scale pixelRatio, pixelRatio
+      morphPosition = @position()
+      context.translate morphPosition.x, morphPosition.y
+
+      direction = @heading
+      if @isWarped
+        @wantsRedraw = true
+        return
+      len = @width() / 2
+      start = @center().subtract(@bounds.origin)
+
+      if @penPoint is "tip"
+        dest = start.distanceAngle(len * 0.75, direction - 180)
+        left = start.distanceAngle(len, direction + 195)
+        right = start.distanceAngle(len, direction - 195)
+      else # 'middle'
+        dest = start.distanceAngle(len * 0.75, direction)
+        left = start.distanceAngle(len * 0.33, direction + 230)
+        right = start.distanceAngle(len * 0.33, direction - 230)
+
+      context.fillStyle = @color.toString()
+      context.beginPath()
+
+      context.moveTo start.x, start.y
+      context.lineTo left.x, left.y
+      context.lineTo dest.x, dest.y
+      context.lineTo right.x, right.y
+
+      context.closePath()
+      context.strokeStyle = "white"
+      context.lineWidth = 3
+      context.stroke()
+      context.strokeStyle = "black"
+      context.lineWidth = 1
+      context.stroke()
+      context.fill()
+      @wantsRedraw = false
+
+      context.restore()  
+
   
   
   # PenMorph access:
