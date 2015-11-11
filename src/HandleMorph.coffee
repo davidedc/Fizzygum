@@ -4,7 +4,6 @@
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
-# REQUIRES BackingStoreMixin
 
 class HandleMorph extends Morph
   # this is so we can create objects from the object class name 
