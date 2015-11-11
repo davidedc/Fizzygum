@@ -11,11 +11,14 @@ class HandleMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  @augmentWith BackingStoreMixin
 
   target: null
   inset: null
   type: null # "resize" or "move"
+
+  state: 0
+  STATE_NORMAL: 0
+  STATE_HIGHLIGHTED: 1
 
   constructor: (@target = null, @type = "resize") ->
     if @target?.padding?
@@ -77,99 +80,138 @@ class HandleMorph extends Morph
           @silentSetPosition @target.bottomCenter().subtract(offsetFromMiddlePoint)
   
   
-  # HandleMorph drawing:
-  # no changes of position or extent
-  updateBackingStore: ->
-    extent = @extent()
-    
-    highlighted = false
-    if @image?
-      if @image == @highlightImage
-        highlighted = true
 
-    @normalImage = newCanvas(extent.scaleBy pixelRatio)
-    normalImageContext = @normalImage.getContext("2d")
-    normalImageContext.scale pixelRatio, pixelRatio
-    @highlightImage = newCanvas(extent.scaleBy pixelRatio)
-    highlightImageContext = @highlightImage.getContext("2d")
-    highlightImageContext.scale pixelRatio, pixelRatio
-    @handleMorphRenderingHelper normalImageContext, @color, new Color(100, 100, 100)
-    @handleMorphRenderingHelper highlightImageContext, new Color(255, 255, 255), new Color(200, 200, 255)
-    
-    if highlighted
-      @image = @highlightImage
-    else
-      @image = @normalImage
-  
-  handleMorphRenderingHelper: (context, color, shadowColor) ->
-    # we need this to bring these variable to be in
-    # the common scope of the two inner functions
-    # doPath and drawHandle
-    leftArrowPoint = rightArrowPoint = arrowPieceLeftUp =
-    arrowPieceLeftDown = arrowPieceRightUp =
-    arrowPieceRightDown = null
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit, which
+  # eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    area = clippingRectangle.intersect(@bounds).round()
+    # test whether anything that we are going to be drawing
+    # is visible (i.e. within the clippingRectangle)
+    if area.isNotEmpty()
+      delta = @position().neg()
+      src = area.copy().translateBy(delta).round()
+      context = aCanvas.getContext("2d")
+      sl = src.left() * pixelRatio
+      st = src.top() * pixelRatio
+      al = area.left() * pixelRatio
+      at = area.top() * pixelRatio
+      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
+      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+      return null  if w < 1 or h < 1
 
-    doPath = ->
+      # initialize my surface property
+      #@image = newCanvas(@extent().scaleBy pixelRatio)
+      #context = @image.getContext("2d")
+      #context.scale pixelRatio, pixelRatio
+
+      context.save()
+
+      # clip out the dirty rectangle as we are
+      # going to paint the whole of the box
       context.beginPath()
-      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-      context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
-      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-      context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
-
-      context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
-      context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-
-      context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightUp.x, 0.5 + rightArrowPoint.y + arrowPieceRightUp.y
-      context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
-      context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightDown.x, 0.5 + rightArrowPoint.y + arrowPieceRightDown.y
-
+      context.moveTo(Math.round(al), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at))
+      context.lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at) + Math.round(h))
+      context.lineTo(Math.round(al), Math.round(at))
       context.closePath()
-      context.stroke()
+      context.clip()
 
-    drawHandle = =>
-      if @type is "resizeRight" or @type is "move"
-        p0 = @bottomLeft().subtract(@position())
-        p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
-        
-        leftArrowPoint = p0.copy()
-        leftArrowPoint = leftArrowPoint.add(new Point(Math.ceil(@width()/15),0))
+      context.globalAlpha = @alpha
 
-        rightArrowPoint = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
-        arrowPieceLeftUp = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
-        arrowPieceLeftDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
-        arrowPieceRightUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
-        arrowPieceRightDown = new Point(-Math.ceil(@width()/5),Math.ceil(@height()/5))
-        doPath()
+      context.scale pixelRatio, pixelRatio
+      morphPosition = @position()
+      context.translate morphPosition.x, morphPosition.y
 
-      if @type is "resizeDown" or @type is "move"
-        p0 = @bottomCenter().subtract(@position())
-        
-        leftArrowPoint = p0.copy()
-        leftArrowPoint = leftArrowPoint.add(new Point(0,-Math.ceil(@height()/14)))
-
-        rightArrowPoint = p0.add(new Point(0, -@height() + Math.ceil(@height()/15)))
-        arrowPieceLeftUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
-        arrowPieceLeftDown = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
-        arrowPieceRightUp = new Point(-Math.ceil(@width()/5), Math.ceil(@height()/5))
-        arrowPieceRightDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
-        doPath()
+      debugger
+      if @state == @STATE_NORMAL
+        @handleMorphRenderingHelper context, @color, new Color(100, 100, 100)
+      if @state == @STATE_HIGHLIGHTED
+        @handleMorphRenderingHelper context, new Color(255, 255, 255), new Color(200, 200, 255)
 
 
-      if @type is "resize"
-        p0 = @topLeft().subtract(@position())
-        
-        leftArrowPoint = p0.copy()
-        leftArrowPoint = leftArrowPoint.add( @extent().floorDivideBy(7) )
+      context.restore()
 
-        rightArrowPoint = @bottomRight().subtract(@position()).subtract( @extent().floorDivideBy(7) )
-        arrowPieceLeftUp = new Point(Math.ceil(@width()/4),0)
-        arrowPieceLeftDown = new Point(0,Math.ceil(@height()/4))
-        arrowPieceRightUp = new Point(0,-Math.ceil(@width()/4))
-        arrowPieceRightDown = new Point(-Math.ceil(@width()/4),0)
-        doPath()
+      if world.showRedraws
+        randomR = Math.round(Math.random()*255)
+        randomG = Math.round(Math.random()*255)
+        randomB = Math.round(Math.random()*255)
+
+        context.save()
+        context.globalAlpha = 0.5
+        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        context.fillRect  Math.round(al),
+            Math.round(at),
+            Math.round(w),
+            Math.round(h)
+        context.restore()
+
+  doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
+    context.beginPath()
+    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
+    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+    context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftDown.x, 0.5 + leftArrowPoint.y + arrowPieceLeftDown.y
+
+    context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
+    context.lineTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
+
+    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightUp.x, 0.5 + rightArrowPoint.y + arrowPieceRightUp.y
+    context.moveTo 0.5 + rightArrowPoint.x, 0.5 + rightArrowPoint.y
+    context.lineTo 0.5 + rightArrowPoint.x + arrowPieceRightDown.x, 0.5 + rightArrowPoint.y + arrowPieceRightDown.y
+
+    context.closePath()
+    context.stroke()
+
+  drawHandle: (context) ->
+    if @type is "resizeRight" or @type is "move"
+      p0 = @bottomLeft().subtract(@position())
+      p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
+      
+      leftArrowPoint = p0.copy()
+      leftArrowPoint = leftArrowPoint.add(new Point(Math.ceil(@width()/15),0))
+
+      rightArrowPoint = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
+      arrowPieceLeftUp = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
+      arrowPieceLeftDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
+      arrowPieceRightUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
+      arrowPieceRightDown = new Point(-Math.ceil(@width()/5),Math.ceil(@height()/5))
+      @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
+
+    if @type is "resizeDown" or @type is "move"
+      p0 = @bottomCenter().subtract(@position())
+      
+      leftArrowPoint = p0.copy()
+      leftArrowPoint = leftArrowPoint.add(new Point(0,-Math.ceil(@height()/14)))
+
+      rightArrowPoint = p0.add(new Point(0, -@height() + Math.ceil(@height()/15)))
+      arrowPieceLeftUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
+      arrowPieceLeftDown = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
+      arrowPieceRightUp = new Point(-Math.ceil(@width()/5), Math.ceil(@height()/5))
+      arrowPieceRightDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
+      @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
 
+    if @type is "resize"
+      debugger
+      p0 = @topLeft().subtract(@position())
+      
+      leftArrowPoint = p0.copy()
+      leftArrowPoint = leftArrowPoint.add( @extent().floorDivideBy(7) )
 
+      rightArrowPoint = @bottomRight().subtract(@position()).subtract( @extent().floorDivideBy(7) )
+      arrowPieceLeftUp = new Point(Math.ceil(@width()/4),0)
+      arrowPieceLeftDown = new Point(0,Math.ceil(@height()/4))
+      arrowPieceRightUp = new Point(0,-Math.ceil(@width()/4))
+      arrowPieceRightDown = new Point(-Math.ceil(@width()/4),0)
+      @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
+
+  handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
     context.lineCap = "round"
 
@@ -181,13 +223,13 @@ class HandleMorph extends Morph
     context.save()
     context.strokeStyle = shadowColor.toString()
     context.translate 1,1
-    drawHandle()
+    @drawHandle(context)
     context.translate 1,0
-    drawHandle()
+    @drawHandle(context)
     context.restore()
 
     context.strokeStyle = color.toString()
-    drawHandle()
+    @drawHandle(context)
 
 
   
@@ -229,12 +271,12 @@ class HandleMorph extends Morph
   # HandleMorph events:
   mouseEnter: ->
     console.log "<<<<<< handle mousenter"
-    @image = @highlightImage
+    @state = @STATE_HIGHLIGHTED
     @changed()
   
   mouseLeave: ->
     console.log "<<<<<< handle mouseleave"
-    @image = @normalImage
+    @state = @STATE_NORMAL
     @changed()
 
   makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
