@@ -54,6 +54,14 @@ class SliderMorph extends CircleBoxMorph
     # it's the time of the button
     @button.setLayoutBeforeUpdatingBackingStore()
     @button.updateBackingStore()
+
+  toggleOrientation: ->
+    super()
+    # the background CircleBoxMorph has just been updated
+    # in the call of super, now
+    # it's the time of the button
+    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.updateBackingStore()
   
   autoOrientation: ->
       noOperation
