@@ -112,14 +112,7 @@ class HandleMorph extends Morph
 
       # clip out the dirty rectangle as we are
       # going to paint the whole of the box
-      context.beginPath()
-      context.moveTo(Math.round(al), Math.round(at))
-      context.lineTo(Math.round(al) + Math.round(w), Math.round(at))
-      context.lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
-      context.lineTo(Math.round(al), Math.round(at) + Math.round(h))
-      context.lineTo(Math.round(al), Math.round(at))
-      context.closePath()
-      context.clip()
+      context.clipToRectangle al,at,w,h
 
       context.globalAlpha = @alpha
 

@@ -89,6 +89,18 @@ String::camelize = ->
   @replace /(?:^|[-])(\w)/g, (_, c) ->
     if c then c.toUpperCase() else ''
 
+# used to clip any subsequent drawing on the context
+# to the dirty rectangle.
+CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
+  @beginPath()
+  @moveTo(Math.round(al), Math.round(at))
+  @lineTo(Math.round(al) + Math.round(w), Math.round(at))
+  @lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
+  @lineTo(Math.round(al), Math.round(at) + Math.round(h))
+  @lineTo(Math.round(al), Math.round(at))
+  @closePath()
+  @clip()
+
 ## -------------------------------------------------------
 
 # utility function taken from:
