@@ -214,7 +214,12 @@ class SliderMorph extends CircleBoxMorph
       newSize = parseFloat(size)
       @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
     @value = Math.min(@value, @stop - @size)
-    @updateTarget()
+    # it just so happens that, as hoped but somewhat
+    # unexpectedly, as the slider resizes,
+    # the resize mechanism is such that the
+    # button keeps the same value, so there
+    # is no need to update the target.
+    #@updateTarget()
     @setLayoutBeforeUpdatingBackingStore()
     @updateBackingStore()
     @button.setLayoutBeforeUpdatingBackingStore()
