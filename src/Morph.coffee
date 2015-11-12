@@ -773,14 +773,7 @@ class Morph extends MorphicNode
   # one then. 
   silentUpdateBackingStore: ->
 
-  # This method only paints this very morph's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyBlit, which
-  # eventually invokes blit.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  blit: (aCanvas, clippingRectangle) ->
-    return null  if @isMinimised or !@isVisible
+  calculateKeyValues: (aCanvas, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
     # is visible (i.e. within the clippingRectangle)
@@ -788,14 +781,26 @@ class Morph extends MorphicNode
       delta = @position().neg()
       src = area.copy().translateBy(delta).round()
       context = aCanvas.getContext("2d")
-      context.globalAlpha = @alpha
       sl = src.left() * pixelRatio
       st = src.top() * pixelRatio
       al = area.left() * pixelRatio
       at = area.top() * pixelRatio
       w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
       h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+    return [context,area,sl,st,al,at,w,h]
+
+  # This method only paints this very morph
+  # i.e. it doesn't descend the children
+  # recursively. The recursion mechanism is done by recursivelyBlit,
+  # which eventually invokes blit.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  blit: (aCanvas, clippingRectangle) ->
+    return null  if @isMinimised or !@isVisible
+    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aCanvas, clippingRectangle
+    if area.isNotEmpty()
       return null  if w < 1 or h < 1
+      context.globalAlpha = @alpha
 
       # initialize my surface property
       #@image = newCanvas(@extent().scaleBy pixelRatio)

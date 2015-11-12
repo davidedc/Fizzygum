@@ -49,6 +49,22 @@ BackingStoreMixin =
           @drawCachedTexture()
         else @drawTexture @texture  if @texture
 
+      calculateKeyValues: (aCanvas, clippingRectangle) ->
+        area = clippingRectangle.intersect(@bounds).round()
+        # test whether anything that we are going to be drawing
+        # is visible (i.e. within the clippingRectangle)
+        if area.isNotEmpty()
+          delta = @position().neg()
+          src = area.copy().translateBy(delta).round()
+          context = aCanvas.getContext("2d")
+          sl = src.left() * pixelRatio
+          st = src.top() * pixelRatio
+          al = area.left() * pixelRatio
+          at = area.top() * pixelRatio
+          w = Math.min(src.width() * pixelRatio, @image.width - sl)
+          h = Math.min(src.height() * pixelRatio, @image.height - st)
+        return [context,area,sl,st,al,at,w,h]
+
       # This method only paints this very morph's "image",
       # it doesn't descend the children
       # recursively. The recursion mechanism is done by recursivelyBlit, which
@@ -57,21 +73,10 @@ BackingStoreMixin =
       # it's not a "leaf".
       blit: (aCanvas, clippingRectangle) ->
         return null  if @isMinimised or !@isVisible or !@image?
-        area = clippingRectangle.intersect(@bounds).round()
-        # test whether anything that we are going to be drawing
-        # is visible (i.e. within the clippingRectangle)
+        [context,area,sl,st,al,at,w,h] = @calculateKeyValues aCanvas, clippingRectangle
         if area.isNotEmpty()
-          delta = @position().neg()
-          src = area.copy().translateBy(delta).round()
-          context = aCanvas.getContext("2d")
-          context.globalAlpha = @alpha
-          sl = src.left() * pixelRatio
-          st = src.top() * pixelRatio
-          al = area.left() * pixelRatio
-          at = area.top() * pixelRatio
-          w = Math.min(src.width() * pixelRatio, @image.width - sl)
-          h = Math.min(src.height() * pixelRatio, @image.height - st)
           return null  if w < 1 or h < 1
+          context.globalAlpha = @alpha
 
           context.drawImage @image,
             Math.round(sl),

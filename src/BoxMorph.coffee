@@ -54,25 +54,9 @@ class BoxMorph extends Morph
   # it's not a "leaf".
   blit: (aCanvas, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    area = clippingRectangle.intersect(@bounds).round()
-    # test whether anything that we are going to be drawing
-    # is visible (i.e. within the clippingRectangle)
+    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aCanvas, clippingRectangle
     if area.isNotEmpty()
-      delta = @position().neg()
-      src = area.copy().translateBy(delta).round()
-      context = aCanvas.getContext("2d")
-      sl = src.left() * pixelRatio
-      st = src.top() * pixelRatio
-      al = area.left() * pixelRatio
-      at = area.top() * pixelRatio
-      w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
-      h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
       return null  if w < 1 or h < 1
-
-      # initialize my surface property
-      #@image = newCanvas(@extent().scaleBy pixelRatio)
-      #context = @image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
 
       context.save()
 
