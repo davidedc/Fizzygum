@@ -142,5 +142,4 @@ class CircleBoxMorph extends Morph
       @orientation = "vertical"
     @silentSetExtent new Point(@height(), @width())
     @setCenter center
-    @updateBackingStore()
     @changed()

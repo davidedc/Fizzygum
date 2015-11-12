@@ -182,7 +182,6 @@ class WorldMorph extends FrameMorph
     @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
 
     @changed()
-    @updateBackingStore()
 
   boot: ->
     # boot-up state machine

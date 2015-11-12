@@ -212,7 +212,6 @@ class BoxMorph extends Morph
     else
       newRadius = parseFloat(radius)
       @cornerRadius = Math.max(newRadius, 0)  unless isNaN(newRadius)
-    @updateBackingStore()
     @layoutInset()
     @changed()
   
