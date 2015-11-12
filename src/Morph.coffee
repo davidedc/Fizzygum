@@ -824,42 +824,7 @@ class Morph extends MorphicNode
             Math.round(w),
             Math.round(h)
         context.restore()
-  
-  
-  # "for debugging purposes:"
-  #
-  #		try {
-  #			context.drawImage(
-  #				this.image,
-  #				src.left(),
-  #				src.top(),
-  #				w,
-  #				h,
-  #				area.left(),
-  #				area.top(),
-  #				w,
-  #				h
-  #			);
-  #		} catch (err) {
-  #			alert('internal error\n\n' + err
-  #				+ '\n ---'
-  #				+ '\n canvas: ' + aCanvas
-  #				+ '\n canvas.width: ' + aCanvas.width
-  #				+ '\n canvas.height: ' + aCanvas.height
-  #				+ '\n ---'
-  #				+ '\n image: ' + this.image
-  #				+ '\n image.width: ' + this.image.width
-  #				+ '\n image.height: ' + this.image.height
-  #				+ '\n ---'
-  #				+ '\n w: ' + w
-  #				+ '\n h: ' + h
-  #				+ '\n sl: ' + sl
-  #				+ '\n st: ' + st
-  #				+ '\n area.left: ' + area.left()
-  #				+ '\n area.top ' + area.top()
-  #				);
-  #		}
-  #	
+
   recursivelyBlit: (aCanvas, clippingRectangle = @boundsIncludingChildren()) ->
     return null  if @isMinimised or !@isVisible
 
@@ -983,6 +948,7 @@ class Morph extends MorphicNode
   fullImageHashCode: ->
     return hashCode(@fullImageData())
   
+  # Morph shadow.
   # The canvas with the shadow is completely
   # transparent apart from the shadow
   # "overflowing" from the edges.

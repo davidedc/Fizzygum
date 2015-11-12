@@ -8,7 +8,8 @@
 #   1) as a cache
 #   2) because the morph has inherently a "raster" nature
 #      such as the canvas where you can run a turtle to
-#      draw stuff
+#      draw stuff, or a Morph where you want to have
+#      pixel-based filters.
 #
 # The cache use is useful for morphs that ideally
 #  * have a small extent
@@ -26,7 +27,7 @@
 # would be wasted for saving a very short painting
 # operation.
 #
-# In theory the "cache" use should be transparent and
+# In theory the backing store use should be transparent and
 # automatic, driven perhaps by dynamic considerations,
 # but we are not there yet.
 
