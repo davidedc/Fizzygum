@@ -797,10 +797,6 @@ class Morph extends MorphicNode
       return null  if w < 1 or h < 1
       context.globalAlpha = @alpha
 
-      # initialize my surface property
-      #@image = newCanvas(@extent().scaleBy pixelRatio)
-      #context = @image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
       context.save()
       if !@color?
         debugger
