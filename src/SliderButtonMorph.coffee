@@ -16,20 +16,27 @@ class SliderButtonMorph extends CircleBoxMorph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  highlightColor: new Color(90, 90, 140)
+  highlightColor: new Color(110, 110, 110)
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  pressColor: new Color(80, 80, 160)
+  pressColor: new Color(100, 100, 100)
+  normalColor: new Color(0, 0, 0)
   is3D: false
 
+  state: 0
+  STATE_NORMAL: 0
+  STATE_HIGHLIGHTED: 1
+  STATE_PRESSED: 2
+
   constructor: (orientation) ->
-    @color = new Color(80, 80, 80)
     super orientation
+    @color = @normalColor.copy()
     @isfloatDraggable = false
     @noticesTransparentClick = true
+    @alpha = 0.4
 
   autoOrientation: ->
       noOperation
@@ -60,20 +67,7 @@ class SliderButtonMorph extends CircleBoxMorph
           @parent.width() - @width())
       @silentSetPosition new Point(posX, posY).add(@parent.bounds.origin)
 
-  # no changes of position or extent
-  updateBackingStore: ->
-    colorBak = @color.copy()
-    super()
-    @normalImage = @image
-    @color = @highlightColor.copy()
-    super()
-    @highlightImage = @image
-    @color = @pressColor.copy()
-    super()
-    @pressImage = @image
-    @color = colorBak
-    @image = @normalImage
-    @changed()
+
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart
@@ -97,21 +91,23 @@ class SliderButtonMorph extends CircleBoxMorph
   
   #SliderButtonMorph events:
   mouseEnter: ->
-    @image = @highlightImage
+    @state = @STATE_HIGHLIGHTED
+    @color = @highlightColor.copy()
     @changed()
   
   mouseLeave: ->
-    @image = @normalImage
+    @state = @STATE_NORMAL
+    @color = @normalColor.copy()
     @changed()
   
   mouseDownLeft: (pos) ->
-    @image = @pressImage
+    @state = @STATE_PRESSED
+    @color = @pressColor.copy()
     @changed()
-    return null
-    #@escalateEvent "mouseDownLeft", pos
   
   mouseClickLeft: ->
     super()
-    @image = @highlightImage
+    @state = @STATE_HIGHLIGHTED
+    @color = @highlightColor.copy()
     @changed()
   
