@@ -983,29 +983,6 @@ class Morph extends MorphicNode
   fullImageHashCode: ->
     return hashCode(@fullImageData())
   
-  # Morph shadow:
-  shadowImage: (off_, color) ->
-    # fallback for Windows Chrome-Shadow bug
-    offset = off_ or new Point(7, 7)
-    clr = color or new Color(0, 0, 0)
-    fb = @boundsIncludingChildrenNoShadow().extent()
-    img = @fullImage()
-    outline = newCanvas(fb.scaleBy pixelRatio)
-    ctx = outline.getContext("2d")
-    #ctx.scale pixelRatio, pixelRatio
-    ctx.drawImage img, 0, 0
-    ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round(-offset.x * pixelRatio), Math.round(-offset.y * pixelRatio)
-    sha = newCanvas(fb.scaleBy pixelRatio)
-    ctx = sha.getContext("2d")
-    #ctx.scale pixelRatio, pixelRatio
-    ctx.drawImage outline, 0, 0
-    ctx.globalCompositeOperation = "source-atop"
-    ctx.fillStyle = clr.toString()
-    ctx.fillRect 0, 0, fb.x * pixelRatio, fb.y * pixelRatio
-    sha
-  
-  # the one used right now.
   # The canvas with the shadow is completely
   # transparent apart from the shadow
   # "overflowing" from the edges.
@@ -1021,7 +998,7 @@ class Morph extends MorphicNode
   # So, the shadow of a blue semi-transparent box
   # *will* contain some semi-transparent fill of
   # the box.
-  shadowImageBlurred: (off_, color) ->
+  shadowImage: (off_, color, blurred) ->
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
@@ -1039,7 +1016,8 @@ class Morph extends MorphicNode
     #ctx.scale pixelRatio, pixelRatio
     ctx.shadowOffsetX = offset.x * pixelRatio
     ctx.shadowOffsetY = offset.y * pixelRatio
-    ctx.shadowBlur = blur * pixelRatio
+    if blurred
+      ctx.shadowBlur = blur * pixelRatio
     ctx.shadowColor = clr.toString()
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
     # now redraw the image in destination-out mode so that

@@ -45,9 +45,9 @@ class ShadowMorph extends Morph
   updateBackingStore: ->
     @bounds.debugIfFloats()
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      @image = @targetMorph.shadowImageBlurred(@offset, @color)
+      @image = @targetMorph.shadowImage(@offset, @color, true)
     else
-      @image = @targetMorph.shadowImage(@offset, @color)
+      @image = @targetMorph.shadowImage(@offset, @color, false)
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
