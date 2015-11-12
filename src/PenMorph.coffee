@@ -121,7 +121,6 @@ class PenMorph extends Morph
   # PenMorph access:
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
-    @updateBackingStore()
     @changed()
   
   
