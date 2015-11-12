@@ -96,11 +96,6 @@ class Morph extends MorphicNode
   customContextMenu: null
   trackChanges: true
   shadowBlur: 10
-  # note that image contains only the CURRENT morph, not the composition of this
-  # morph with all of the submorphs. I.e. for an inspector, this will only
-  # contain the background of the window pane. Not any of its contents.
-  # for the worldMorph, this only contains the background
-  image: null
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
   # contains all the reactive vals
@@ -1181,14 +1176,6 @@ class Morph extends MorphicNode
   #	});
   #};
   #
-  
-  # Morph pixel access:
-  getPixelColor: (aPoint) ->
-    point = aPoint.subtract(@bounds.origin)
-    context = @image.getContext("2d")
-    data = context.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
-    new Color(data.data[0], data.data[1], data.data[2], data.data[3])
-  
   
 
   # Duplication and Serialization /////////////////////////////////////////

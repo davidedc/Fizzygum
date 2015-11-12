@@ -38,6 +38,13 @@ BackingStoreMixin =
   # instance properties to follow:
   onceAddedClassProperties: ->
     @addInstanceProperties
+
+      # note that image contains only the CURRENT morph, not the composition of this
+      # morph with all of the submorphs. I.e. for an inspector, this will only
+      # contain the background of the window pane. Not any of its contents.
+      # for the worldMorph, this only contains the background
+      image: null
+
       silentUpdateBackingStore: ->
         # initialize my surface property
         @image = newCanvas(@extent().scaleBy pixelRatio)
@@ -64,6 +71,14 @@ BackingStoreMixin =
           w = Math.min(src.width() * pixelRatio, @image.width - sl)
           h = Math.min(src.height() * pixelRatio, @image.height - st)
         return [context,area,sl,st,al,at,w,h]
+
+      # Morph pixel access:
+      getPixelColor: (aPoint) ->
+        point = aPoint.subtract(@bounds.origin)
+        context = @image.getContext("2d")
+        data = context.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
+        new Color(data.data[0], data.data[1], data.data[2], data.data[3])
+
 
       # This method only paints this very morph's "image",
       # it doesn't descend the children
