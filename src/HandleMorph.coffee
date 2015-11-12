@@ -260,7 +260,6 @@ class HandleMorph extends Morph
     @target = morphAttachedTo
     @target.add @
     @updateResizerHandlePosition()
-    @updateBackingStore()
     @noticesTransparentClick = true
   
     
