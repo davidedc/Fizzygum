@@ -63,11 +63,6 @@ class PenMorph extends Morph
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
 
-      # initialize my surface property
-      #@image = newCanvas(@extent().scaleBy pixelRatio)
-      #context = @image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
-
       context.save()
 
       # clip out the dirty rectangle as we are

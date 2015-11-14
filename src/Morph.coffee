@@ -731,13 +731,6 @@ class Morph extends MorphicNode
     @changed()
 
   
-  drawTexture: (url) ->
-    @cachedTexture = new Image()
-    @cachedTexture.onload = =>
-      @drawCachedTexture()
-
-    @cachedTexture.src = @texture = url # make absolute
-  
   # tiles the texture
   drawCachedTexture: ->
     bg = @cachedTexture
