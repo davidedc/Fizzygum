@@ -144,8 +144,8 @@ class TextMorph extends StringMorph
   # no changes of position or extent
   updateBackingStore: ->
     @image = newCanvas()
-    context = @image.getContext("2d")
-    context.font = @font()
+    @imageContext = @image.getContext("2d")
+    @imageContext.font = @font()
 
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
@@ -157,25 +157,25 @@ class TextMorph extends StringMorph
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    context.scale pixelRatio, pixelRatio
-    context.font = @font()
-    context.textAlign = "left"
-    context.textBaseline = "bottom"
+    @imageContext.scale pixelRatio, pixelRatio
+    @imageContext.font = @font()
+    @imageContext.textAlign = "left"
+    @imageContext.textBaseline = "bottom"
 
     # fill the background, if desired
     if @backgroundColor
-      context.fillStyle = @backgroundColor.toString()
-      context.fillRect 0, 0, @width(), @height()
+      @imageContext.fillStyle = @backgroundColor.toString()
+      @imageContext.fillRect 0, 0, @width(), @height()
 
     # draw the shadow, if any
     if @shadowColor
       offx = Math.max(@shadowOffset.x, 0)
       offy = Math.max(@shadowOffset.y, 0)
       #console.log 'shadow x: ' + offx + " y: " + offy
-      context.fillStyle = @shadowColor.toString()
+      @imageContext.fillStyle = @shadowColor.toString()
       i = 0
       for line in @lines
-        width = Math.ceil(context.measureText(line).width) + shadowWidth
+        width = Math.ceil(@imageContext.measureText(line).width) + shadowWidth
         if @alignment is "right"
           x = @width() - width
         else if @alignment is "center"
@@ -184,16 +184,16 @@ class TextMorph extends StringMorph
           x = 0
         y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
         i++
-        context.fillText line, x + offx, y + offy
+        @imageContext.fillText line, x + offx, y + offy
 
     # now draw the actual text
     offx = Math.abs(Math.min(@shadowOffset.x, 0))
     offy = Math.abs(Math.min(@shadowOffset.y, 0))
     #console.log 'maintext x: ' + offx + " y: " + offy
-    context.fillStyle = @color.toString()
+    @imageContext.fillStyle = @color.toString()
     i = 0
     for line in @lines
-      width = Math.ceil(context.measureText(line).width) + shadowWidth
+      width = Math.ceil(@imageContext.measureText(line).width) + shadowWidth
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
@@ -202,7 +202,7 @@ class TextMorph extends StringMorph
         x = 0
       y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
       i++
-      context.fillText line, x + offx, y + offy
+      @imageContext.fillText line, x + offx, y + offy
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
@@ -212,10 +212,10 @@ class TextMorph extends StringMorph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
-      context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, Math.ceil(context.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
-      context.fillStyle = @markedTextColor.toString()
-      context.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
+      @imageContext.fillStyle = @markedBackgoundColor.toString()
+      @imageContext.fillRect p.x, p.y, Math.ceil(@imageContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
+      @imageContext.fillStyle = @markedTextColor.toString()
+      @imageContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
 
   
   setExtent: (aPoint) ->
@@ -251,10 +251,9 @@ class TextMorph extends StringMorph
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
-    context = @image.getContext("2d")
     shadowHeight = Math.abs(@shadowOffset.y)
     yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    xOffset = Math.ceil(context.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
+    xOffset = Math.ceil(@imageContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -267,11 +266,10 @@ class TextMorph extends StringMorph
     row = 0
     col = 0
     shadowHeight = Math.abs(@shadowOffset.y)
-    context = @image.getContext("2d")
     row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += Math.ceil(context.measureText(@lines[row - 1][col]).width)
+      charX += Math.ceil(@imageContext.measureText(@lines[row - 1][col]).width)
       col += 1
     @lineSlots[Math.max(row - 1, 0)] + col - 1
   

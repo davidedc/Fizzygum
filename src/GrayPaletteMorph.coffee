@@ -12,11 +12,11 @@ class GrayPaletteMorph extends ColorPaletteMorph
   updateBackingStore: ->
     extent = @extent()
     @image = newCanvas(extent.scaleBy pixelRatio)
-    context = @image.getContext("2d")
-    context.scale pixelRatio, pixelRatio
+    @imageContext = @image.getContext("2d")
+    @imageContext.scale pixelRatio, pixelRatio
     @choice = new Color()
-    gradient = context.createLinearGradient(0, 0, extent.x, extent.y)
+    gradient = @imageContext.createLinearGradient(0, 0, extent.x, extent.y)
     gradient.addColorStop 0, "black"
     gradient.addColorStop 1, "white"
-    context.fillStyle = gradient
-    context.fillRect 0, 0, extent.x, extent.y
+    @imageContext.fillStyle = gradient
+    @imageContext.fillRect 0, 0, extent.x, extent.y

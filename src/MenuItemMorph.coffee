@@ -57,6 +57,7 @@ class MenuItemMorph extends TriggerMorph
     # source can be either a Morph or an HTMLCanvasElement
     icon = new Morph()
     icon.image = (if source instanceof Morph then source.fullImage() else source)
+    icon.imageContext = icon.image.getContext("2d")
 
     # adjust shadow dimensions
     if source instanceof Morph and source.getShadow()
@@ -64,9 +65,8 @@ class MenuItemMorph extends TriggerMorph
       icon.image = newCanvas(
         source.fullBounds().extent().subtract(
           @shadowBlur * ((if WorldMorph.preferencesAndSettings.useBlurredShadows then 1 else 2))).scaleBy pixelRatio)
-      context = icon.image.getContext("2d")
-      #context.scale pixelRatio, pixelRatio
-      context.drawImage src, 0, 0
+      icon.imageContext = icon.image.getContext("2d")
+      icon.imageContext.drawImage src, 0, 0
 
     icon.silentSetWidth icon.image.width
     icon.silentSetHeight icon.image.height

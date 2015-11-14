@@ -44,17 +44,15 @@ BackingStoreMixin =
       # contain the background of the window pane. Not any of its contents.
       # for the worldMorph, this only contains the background
       image: null
+      imageContext: null
 
       silentUpdateBackingStore: ->
         # initialize my surface property
         @image = newCanvas(@extent().scaleBy pixelRatio)
-        context = @image.getContext("2d")
-        context.scale pixelRatio, pixelRatio
-        context.fillStyle = @color.toString()
-        context.fillRect 0, 0, @width(), @height()
-        if @cachedTexture
-          @drawCachedTexture()
-        else @drawTexture @texture  if @texture
+        @imageContext = @image.getContext("2d")
+        @imageContext.scale pixelRatio, pixelRatio
+        @imageContext.fillStyle = @color.toString()
+        @imageContext.fillRect 0, 0, @width(), @height()
 
       calculateKeyValues: (aCanvas, clippingRectangle) ->
         area = clippingRectangle.intersect(@bounds).round()
@@ -84,8 +82,7 @@ BackingStoreMixin =
       # Morph pixel access:
       getPixelColor: (aPoint) ->
         point = aPoint.subtract(@bounds.origin)
-        context = @image.getContext("2d")
-        data = context.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
+        data = @imageContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
         new Color(data.data[0], data.data[1], data.data[2], data.data[3])
 
 

@@ -99,14 +99,14 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     @image = newCanvas()
-    context = @image.getContext("2d")
-    context.scale pixelRatio, pixelRatio
-    context.font = @font()
-    context.textAlign = "left"
-    context.textBaseline = "bottom"
+    @imageContext = @image.getContext("2d")
+    @imageContext.scale pixelRatio, pixelRatio
+    @imageContext.font = @font()
+    @imageContext.textAlign = "left"
+    @imageContext.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    return Math.ceil(Math.max(context.measureText(text).width, 1))
+    return Math.ceil(Math.max(@imageContext.measureText(text).width, 1))
 
   setLayoutBeforeUpdatingBackingStore: ->
     super()
@@ -120,21 +120,21 @@ class StringMorph extends Morph
     # initialize my surface property
     width = @calculateExtentBasedOnText()
     @image = newCanvas (new Point width, @height()).scaleBy pixelRatio
-    context = @image.getContext("2d")
+    @imageContext = @image.getContext("2d")
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    context.scale pixelRatio, pixelRatio
-    context.font = @font()
-    context.textAlign = "left"
-    context.textBaseline = "bottom"
+    @imageContext.scale pixelRatio, pixelRatio
+    @imageContext.font = @font()
+    @imageContext.textAlign = "left"
+    @imageContext.textBaseline = "bottom"
 
-    context.fillStyle = @color.toString()
+    @imageContext.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks context, 0, fontHeight(@fontSize)
+      @renderWithBlanks @imageContext, 0, fontHeight(@fontSize)
     else
-      context.fillText text, 0, fontHeight(@fontSize)
+      @imageContext.fillText text, 0, fontHeight(@fontSize)
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -142,11 +142,11 @@ class StringMorph extends Morph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
-      context.fillStyle = @markedBackgoundColor.toString()
-      context.fillRect p.x, p.y, Math.ceil(context.measureText(c).width) + 1,
+      @imageContext.fillStyle = @markedBackgoundColor.toString()
+      @imageContext.fillRect p.x, p.y, Math.ceil(@imageContext.measureText(c).width) + 1,
         fontHeight(@fontSize)
-      context.fillStyle = @markedTextColor.toString()
-      context.fillText c, p.x, fontHeight(@fontSize)
+      @imageContext.fillStyle = @markedTextColor.toString()
+      @imageContext.fillText c, p.x, fontHeight(@fontSize)
 
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
@@ -181,8 +181,7 @@ class StringMorph extends Morph
     # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
-    context = @image.getContext("2d")
-    xOffset = Math.ceil(context.measureText(text.substring(0,dest)).width)
+    xOffset = Math.ceil(@imageContext.measureText(text.substring(0,dest)).width)
     @pos = dest
     x = @left() + xOffset
     y = @top()
@@ -194,13 +193,12 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     idx = 0
     charX = 0
-    context = @image.getContext("2d")
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil(context.measureText(text[idx]).width)
+      charX += Math.ceil(@imageContext.measureText(text[idx]).width)
       idx += 1
       if idx is text.length
-        if (Math.ceil(context.measureText(text).width) - (Math.ceil(context.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(@imageContext.measureText(text).width) - (Math.ceil(@imageContext.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   

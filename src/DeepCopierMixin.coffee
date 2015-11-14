@@ -36,10 +36,20 @@ DeepCopierMixin =
           # also includes the "parent" property
           if @hasOwnProperty(property)
 
+            if property == "imageContext"
+              debugger
             if !@[property]?
               cloneOfMe[property] = null
             else if typeof @[property] == 'object'
-              cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
+              # if the value can be rebuilt after the cloning
+              # then skip it, otherwise clone it. We know when
+              # that's the case because the object also has a
+              # rebuildDerivedValue method to be used to
+              # rebuild it
+              if @[property].rebuildDerivedValue?
+                cloneOfMe[property] = null
+              else
+                cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
             else
               if property != "instanceNumericID"
                 cloneOfMe[property] = @[property]
@@ -47,8 +57,25 @@ DeepCopierMixin =
         if doSerialize
           return "$" + positionInObjClonesArray
 
+        # see comment in the method
+        cloneOfMe.rebuildDerivedValues(@)
 
         return cloneOfMe
+
+      # some variables such as canvas contexts
+      # are not copied, as they are derived values
+      # so we take care or fixing the temporaries here
+      rebuildDerivedValues: (theOriginal)->
+        for property of @
+          # also includes the "parent" property
+          if @hasOwnProperty(property)
+            # OK so we look at the original value
+            # and check whether it has a rebuildDerivedValue
+            # method. If it does, we invoke that method,
+            # which rebuilds the value and adds it
+            # *to the clone* (which is the @)
+            if theOriginal[property]?.rebuildDerivedValue?
+              theOriginal[property].rebuildDerivedValue(@, property)
 
       # creates a new instance of target's type
       # note that

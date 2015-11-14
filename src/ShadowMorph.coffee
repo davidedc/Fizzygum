@@ -39,6 +39,7 @@ class ShadowMorph extends Morph
       @image = @targetMorph.shadowImage(@offset, @color, true)
     else
       @image = @targetMorph.shadowImage(@offset, @color, false)
+    @imageContext =  @image.getContext("2d")
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 

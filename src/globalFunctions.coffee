@@ -43,6 +43,9 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
   return cloneOfMe
 
+CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName) ->
+  objectIBelongTo[myPropertyName] = @canvas.getContext("2d")
+
 # Extending Array's prototype if 'filter' doesn't exist
 # already
 unless Array::filter
