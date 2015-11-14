@@ -92,7 +92,7 @@ class FrameMorph extends Morph
     @bounds
 
   
-  recursivelyBlit: (aCanvas, clippingRectangle = @bounds) ->
+  recursivelyBlit: (aContext, clippingRectangle = @bounds) ->
     return null  unless (!@isMinimised and @isVisible)
 
     # a FrameMorph has the special property that all of its children
@@ -147,13 +147,13 @@ class FrameMorph extends Morph
     
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
-    @blit aCanvas, dirtyPartOfFrame
+    @blit aContext, dirtyPartOfFrame
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.recursivelyBlit aCanvas, clippingRectangle
+        child.recursivelyBlit aContext, clippingRectangle
       else
-        child.recursivelyBlit aCanvas, dirtyPartOfFrame
+        child.recursivelyBlit aContext, dirtyPartOfFrame
 
   
   # FrameMorph scrolling optimization:

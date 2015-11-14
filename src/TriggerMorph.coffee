@@ -120,9 +120,9 @@ class TriggerMorph extends Morph
   # eventually invokes blit.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  blit: (aCanvas, clippingRectangle) ->
+  blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aCanvas, clippingRectangle
+    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
       context.globalAlpha = @alpha

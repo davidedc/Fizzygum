@@ -303,7 +303,7 @@ class WorldMorph extends FrameMorph
   # by the blit function.
   # The blit function is defined in Morph and is not overriden by
   # any morph.
-  recursivelyBlit: (aCanvas, aRect) ->
+  recursivelyBlit: (aContext, aRect) ->
     # invokes the Morph's recursivelyBlit, which has only three implementations:
     #  * the default one by Morph which just invokes the blit of all children
     #  * the interesting one in FrameMorph which a) narrows the dirty
@@ -313,10 +313,10 @@ class WorldMorph extends FrameMorph
     #  * this implementation which just takes into account that the hand
     #    (which could contain a Morph being floatDragged)
     #    is painted on top of everything.
-    super aCanvas, aRect
+    super aContext, aRect
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
-    @hand.recursivelyBlit aCanvas, aRect
+    @hand.recursivelyBlit aContext, aRect
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
@@ -332,7 +332,7 @@ class WorldMorph extends FrameMorph
     # and nearby rectangles.
 
     @broken.forEach (rect) =>
-      @recursivelyBlit @worldCanvas, rect  if rect.isNotEmpty()
+      @recursivelyBlit @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
   
   doOneCycle: ->
