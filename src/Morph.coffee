@@ -948,8 +948,9 @@ class Morph extends MorphicNode
   # The canvas with the shadow is completely
   # transparent apart from the shadow
   # "overflowing" from the edges.
-  # If you take a blue rectangle for example,
-  # and run this method, you'll get a canvas with
+  # For example if you create the shadow for
+  # a blue rectangle by running this method,
+  # you'll get a canvas with
   # a transparent rectangle in the middle and the
   # "leaking" shadow.
   # The "completely" transparent bit is actually
@@ -984,7 +985,10 @@ class Morph extends MorphicNode
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
     # now redraw the image in destination-out mode so that
     # it "cuts-out" everything that is not the actual shadow
-    # around the edges.
+    # around the edges. This is so we can draw the shadow ON TOP
+    # of the morph and it's gonna loook OK (cause there is a hole
+    # where the morph can peek through as it's drawn after the
+    # shadow)
     ctx.shadowOffsetX = 0
     ctx.shadowOffsetY = 0
     ctx.shadowBlur = 0
