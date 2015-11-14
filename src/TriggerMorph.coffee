@@ -122,41 +122,41 @@ class TriggerMorph extends Morph
   # it's not a "leaf".
   blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
-      context.globalAlpha = @alpha
+      aContext.globalAlpha = @alpha
 
-      context.save()
+      aContext.save()
       if !@color?
         debugger
 
       if @state == @STATE_NORMAL
-        context.fillStyle = @color.toString()
+        aContext.fillStyle = @color.toString()
       if @state == @STATE_HIGHLIGHTED
-        context.fillStyle = @highlightColor.toString()
+        aContext.fillStyle = @highlightColor.toString()
       if @state == @STATE_PRESSED
-        context.fillStyle = @pressColor.toString()
+        aContext.fillStyle = @pressColor.toString()
 
-      context.fillRect  Math.round(al),
+      aContext.fillRect  Math.round(al),
           Math.round(at),
           Math.round(w),
           Math.round(h)
-      context.restore()
+      aContext.restore()
 
       if world.showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
 
-        context.save()
-        context.globalAlpha = 0.5
-        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect  Math.round(al),
+        aContext.save()
+        aContext.globalAlpha = 0.5
+        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        aContext.fillRect  Math.round(al),
             Math.round(at),
             Math.round(w),
             Math.round(h)
-        context.restore()
+        aContext.restore()
 
 
   createLabel: ->

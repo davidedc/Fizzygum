@@ -63,45 +63,45 @@ class CircleBoxMorph extends Morph
   # it's not a "leaf".
   blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
 
-      context.save()
+      aContext.save()
 
       # clip out the dirty rectangle as we are
       # going to paint the whole of the box
-      context.clipToRectangle al,at,w,h
+      aContext.clipToRectangle al,at,w,h
 
-      context.globalAlpha = @alpha
+      aContext.globalAlpha = @alpha
 
-      context.scale pixelRatio, pixelRatio
+      aContext.scale pixelRatio, pixelRatio
       morphPosition = @position()
-      context.translate morphPosition.x, morphPosition.y
+      aContext.translate morphPosition.x, morphPosition.y
 
       [radius,center1,center2,rect] = @calculateKeyPoints()
 
       # the centers of two circles
       points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
 
-      context.fillStyle = @color.toString()
-      context.beginPath()
+      aContext.fillStyle = @color.toString()
+      aContext.beginPath()
 
       # the two circles (one at each end)
-      context.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI, false
-      context.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI, false
+      aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI, false
+      aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI, false
       # the rectangle
       rect = rect.floor()
       rect = rect.translateBy(@bounds.origin.neg())
-      context.moveTo rect.origin.x, rect.origin.y
-      context.lineTo rect.origin.x + rect.width(), rect.origin.y
-      context.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
-      context.lineTo rect.origin.x, rect.origin.y + rect.height()
+      aContext.moveTo rect.origin.x, rect.origin.y
+      aContext.lineTo rect.origin.x + rect.width(), rect.origin.y
+      aContext.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()
+      aContext.lineTo rect.origin.x, rect.origin.y + rect.height()
 
-      context.closePath()
-      context.fill()
+      aContext.closePath()
+      aContext.fill()
 
-      context.restore()
+      aContext.restore()
 
   
   # CircleBoxMorph menu:

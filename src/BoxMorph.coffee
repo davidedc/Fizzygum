@@ -54,45 +54,30 @@ class BoxMorph extends Morph
   # it's not a "leaf".
   blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
 
-      context.save()
+      aContext.save()
 
       # clip out the dirty rectangle as we are
       # going to paint the whole of the box
-      context.clipToRectangle al,at,w,h
+      aContext.clipToRectangle al,at,w,h
 
-      context.globalAlpha = @alpha
+      aContext.globalAlpha = @alpha
 
-      context.scale pixelRatio, pixelRatio
+      aContext.scale pixelRatio, pixelRatio
       morphPosition = @position()
-      context.translate morphPosition.x, morphPosition.y
-      context.fillStyle = @color.toString()
+      aContext.translate morphPosition.x, morphPosition.y
+      aContext.fillStyle = @color.toString()
       
-      context.beginPath()
-      @outlinePath context, Math.max(@cornerRadius, 0)
-      context.closePath()
-      context.fill()
+      aContext.beginPath()
+      @outlinePath aContext, Math.max(@cornerRadius, 0)
+      aContext.closePath()
+      aContext.fill()
 
-      context.restore()
+      aContext.restore()
 
-      ###
-      if world.showRedraws
-        randomR = Math.round(Math.random()*255)
-        randomG = Math.round(Math.random()*255)
-        randomB = Math.round(Math.random()*255)
-
-        context.save()
-        context.globalAlpha = 0.5
-        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect  Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
-        context.restore()
-      ###
 
   
   outlinePath: (context, radius) ->

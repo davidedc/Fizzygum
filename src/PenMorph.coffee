@@ -59,21 +59,21 @@ class PenMorph extends Morph
   # it's not a "leaf".
   blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
 
-      context.save()
+      aContext.save()
 
       # clip out the dirty rectangle as we are
       # going to paint the whole of the box
-      context.clipToRectangle al,at,w,h
+      aContext.clipToRectangle al,at,w,h
 
-      context.globalAlpha = @alpha
+      aContext.globalAlpha = @alpha
 
-      context.scale pixelRatio, pixelRatio
+      aContext.scale pixelRatio, pixelRatio
       morphPosition = @position()
-      context.translate morphPosition.x, morphPosition.y
+      aContext.translate morphPosition.x, morphPosition.y
 
       direction = @heading
       if @isWarped
@@ -91,25 +91,25 @@ class PenMorph extends Morph
         left = start.distanceAngle(len * 0.33, direction + 230)
         right = start.distanceAngle(len * 0.33, direction - 230)
 
-      context.fillStyle = @color.toString()
-      context.beginPath()
+      aContext.fillStyle = @color.toString()
+      aContext.beginPath()
 
-      context.moveTo start.x, start.y
-      context.lineTo left.x, left.y
-      context.lineTo dest.x, dest.y
-      context.lineTo right.x, right.y
+      aContext.moveTo start.x, start.y
+      aContext.lineTo left.x, left.y
+      aContext.lineTo dest.x, dest.y
+      aContext.lineTo right.x, right.y
 
-      context.closePath()
-      context.strokeStyle = "white"
-      context.lineWidth = 3
-      context.stroke()
-      context.strokeStyle = "black"
-      context.lineWidth = 1
-      context.stroke()
-      context.fill()
+      aContext.closePath()
+      aContext.strokeStyle = "white"
+      aContext.lineWidth = 3
+      aContext.stroke()
+      aContext.strokeStyle = "black"
+      aContext.lineWidth = 1
+      aContext.stroke()
+      aContext.fill()
       @wantsRedraw = false
 
-      context.restore()  
+      aContext.restore()  
 
   
   

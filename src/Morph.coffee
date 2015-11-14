@@ -774,7 +774,7 @@ class Morph extends MorphicNode
       at = area.top() * pixelRatio
       w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
       h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
-    return [context,area,sl,st,al,at,w,h]
+    return [area,sl,st,al,at,w,h]
 
   # This method only paints this very morph
   # i.e. it doesn't descend the children
@@ -784,34 +784,34 @@ class Morph extends MorphicNode
   # it's not a "leaf".
   blit: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
-    [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       return null  if w < 1 or h < 1
-      context.globalAlpha = @alpha
+      aContext.globalAlpha = @alpha
 
-      context.save()
+      aContext.save()
       if !@color?
         debugger
-      context.fillStyle = @color.toString()
-      context.fillRect  Math.round(al),
+      aContext.fillStyle = @color.toString()
+      aContext.fillRect  Math.round(al),
           Math.round(at),
           Math.round(w),
           Math.round(h)
-      context.restore()
+      aContext.restore()
 
       if world.showRedraws
         randomR = Math.round(Math.random()*255)
         randomG = Math.round(Math.random()*255)
         randomB = Math.round(Math.random()*255)
 
-        context.save()
-        context.globalAlpha = 0.5
-        context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        context.fillRect  Math.round(al),
+        aContext.save()
+        aContext.globalAlpha = 0.5
+        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        aContext.fillRect  Math.round(al),
             Math.round(at),
             Math.round(w),
             Math.round(h)
-        context.restore()
+        aContext.restore()
 
   recursivelyBlit: (aContext, clippingRectangle = @boundsIncludingChildren()) ->
     return null  if @isMinimised or !@isVisible

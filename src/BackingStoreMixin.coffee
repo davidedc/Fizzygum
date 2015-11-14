@@ -71,7 +71,7 @@ BackingStoreMixin =
           at = area.top() * pixelRatio
           w = Math.min(src.width() * pixelRatio, @image.width - sl)
           h = Math.min(src.height() * pixelRatio, @image.height - st)
-        return [context,area,sl,st,al,at,w,h]
+        return [area,sl,st,al,at,w,h]
 
       isTransparentAt: (aPoint) ->
         @bounds.debugIfFloats()
@@ -97,12 +97,12 @@ BackingStoreMixin =
       # it's not a "leaf".
       blit: (aContext, clippingRectangle) ->
         return null  if @isMinimised or !@isVisible or !@image?
-        [context,area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+        [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
         if area.isNotEmpty()
           return null  if w < 1 or h < 1
-          context.globalAlpha = @alpha
+          aContext.globalAlpha = @alpha
 
-          context.drawImage @image,
+          aContext.drawImage @image,
             Math.round(sl),
             Math.round(st),
             Math.round(w),
@@ -116,6 +116,6 @@ BackingStoreMixin =
             randomR = Math.round(Math.random()*255)
             randomG = Math.round(Math.random()*255)
             randomB = Math.round(Math.random()*255)
-            context.globalAlpha = 0.5
-            context.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-            context.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));
+            aContext.globalAlpha = 0.5
+            aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+            aContext.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));
