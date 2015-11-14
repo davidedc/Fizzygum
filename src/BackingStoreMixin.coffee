@@ -46,6 +46,10 @@ BackingStoreMixin =
       image: null
       imageContext: null
 
+      # just a flag to indicate that the
+      # imageContext value can be derived from others
+      imageContext_isDerivedValue: true
+
       silentUpdateBackingStore: ->
         # initialize my surface property
         @image = newCanvas(@extent().scaleBy pixelRatio)
