@@ -72,6 +72,15 @@ BackingStoreMixin =
           h = Math.min(src.height() * pixelRatio, @image.height - st)
         return [context,area,sl,st,al,at,w,h]
 
+      isTransparentAt: (aPoint) ->
+        @bounds.debugIfFloats()
+        if @bounds.containsPoint(aPoint)
+          return false  if @texture
+          data = @getPixelColor aPoint
+          # check the 4th byte - the Alpha (RGBA)
+          return data.a is 0
+        false
+
       # Morph pixel access:
       getPixelColor: (aPoint) ->
         point = aPoint.subtract(@bounds.origin)

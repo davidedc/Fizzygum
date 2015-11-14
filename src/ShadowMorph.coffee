@@ -32,17 +32,6 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-  isTransparentAt: (aPoint) ->
-    @bounds.debugIfFloats()
-    if @bounds.containsPoint(aPoint)
-      return false  if @texture
-      point = aPoint.subtract(@bounds.origin)
-      context = @image.getContext("2d")
-      data = context.getImageData(Math.floor(point.x)*pixelRatio, Math.floor(point.y)*pixelRatio, 1, 1)
-      # check the 4th byte - the Alpha (RGBA)
-      return data.data[3] is 0
-    false
-
   # no changes of position or extent
   updateBackingStore: ->
     @bounds.debugIfFloats()
