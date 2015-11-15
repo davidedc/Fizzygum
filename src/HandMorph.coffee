@@ -223,7 +223,8 @@ class HandMorph extends Morph
       @children = []
       @setExtent new Point()
       morphToDrop.justDropped? @
-      target.reactToDropOf morphToDrop, @  if target.reactToDropOf
+      if target.reactToDropOf
+        target.reactToDropOf morphToDrop, @
       @floatDragOrigin = null
   
   # HandMorph event dispatching:
