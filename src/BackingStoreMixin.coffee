@@ -2,6 +2,7 @@
 
 # these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
+# REQUIRES BackBufferValidityChecker
 
 # A BackingStore is a canvas that a morph can keep for
 # two reasons:
@@ -45,6 +46,7 @@ BackingStoreMixin =
       # for the worldMorph, this only contains the background
       backBuffer: null
       backBufferContext: null
+      backBufferValidityChecker: null
 
       # just a flag to indicate that the
       # backBufferContext value can be derived from others

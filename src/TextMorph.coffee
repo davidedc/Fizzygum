@@ -1,4 +1,6 @@
 # TextMorph ///////////////////////////////////////////////////////////
+# these comments below needed to figure out dependencies between classes
+# REQUIRES BackBufferValidityChecker
 
 # I am a multi-line, word-wrapping String
 
@@ -140,9 +142,30 @@ class TextMorph extends StringMorph
     else
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
+
+  updateBackingStore: ->
+
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+    @updateBackingStore2()
+    super aContext, clippingRectangle
+
   
   # no changes of position or extent
-  updateBackingStore: ->
+  updateBackingStore2: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.extent == @extent().toString() and
+      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.textAlign == @alignment and
+      @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
+      @backBufferValidityChecker.color == @color.toString() and
+      @backBufferValidityChecker.textHash == hashCode(@text) and
+      @backBufferValidityChecker.startMark == @startMark and
+      @backBufferValidityChecker.endMark == @endMark and
+      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
+        console.log "saved a bunch of drawing"
+        return
+
+    console.log "text cache is invalid"
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext("2d")
     @backBufferContext.font = @font()
@@ -216,6 +239,18 @@ class TextMorph extends StringMorph
       @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
       @backBufferContext.fillStyle = @markedTextColor.toString()
       @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
+
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()
+    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.textAlign = @alignment
+    @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
+    @backBufferValidityChecker.color = @color.toString()
+    @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.startMark = @startMark
+    @backBufferValidityChecker.endMark = @endMark
+    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
+
 
   
   setExtent: (aPoint) ->
