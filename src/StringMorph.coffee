@@ -114,8 +114,24 @@ class StringMorph extends Morph
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))
   
-  # no changes of position or extent
   updateBackingStore: ->
+  # no changes of position or extent
+
+
+  updateBackingStore2: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.isPassword == @isPassword and
+      @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
+      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.textAlign == @alignment and
+      @backBufferValidityChecker.color == @color.toString() and
+      @backBufferValidityChecker.textHash == hashCode(@text) and
+      @backBufferValidityChecker.startMark == @startMark and
+      @backBufferValidityChecker.endMark == @endMark and
+      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
+        console.log "saved a bunch of drawing"
+        return
+
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     width = @calculateExtentBasedOnText()
@@ -148,6 +164,16 @@ class StringMorph extends Morph
       @backBufferContext.fillStyle = @markedTextColor.toString()
       @backBufferContext.fillText c, p.x, fontHeight(@fontSize)
 
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.isPassword = @isPassword
+    @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
+    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.textAlign = @alignment
+    @backBufferValidityChecker.color = @color.toString()
+    @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.startMark = @startMark
+    @backBufferValidityChecker.endMark = @endMark
+    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
   

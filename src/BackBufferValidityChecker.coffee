@@ -18,3 +18,6 @@ class BackBufferValidityChecker
   startMark: null
   endMark: null
   markedBackgoundColor: null
+
+  isPassword: null
+  isShowingBlanks: null

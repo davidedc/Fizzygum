@@ -145,10 +145,6 @@ class TextMorph extends StringMorph
 
   updateBackingStore: ->
 
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-    @updateBackingStore2()
-    super aContext, clippingRectangle
-
   
   # no changes of position or extent
   updateBackingStore2: ->
