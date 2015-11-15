@@ -28,9 +28,9 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
-    # no need to call @updateBackingStore() because @setExtent does it.
+    # no need to call  because @setExtent does it.
     # (should it?)
-    #@updateBackingStore()
+    #
 
 
   @staticVariable: 1
@@ -176,7 +176,7 @@ class PenMorph extends Morph
     @isDown = false
   
   clear: ->
-    @parent.updateBackingStore()
+    
     @parent.changed()
   
   
@@ -188,7 +188,7 @@ class PenMorph extends Morph
   endWarp: ->
     @isWarped = false
     if @wantsRedraw
-      @updateBackingStore()
+      
       @wantsRedraw = false
     @parent.changed()
   

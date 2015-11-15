@@ -201,7 +201,7 @@ class ScrollFrameMorph extends FrameMorph
     unless @contents.bounds.eq(newBounds)
       @contents.bounds = newBounds
       @contents.setLayoutBeforeUpdatingBackingStore()
-      @contents.updateBackingStore()
+      
       @keepContentsInScrollFrame()
 
   keepContentsInScrollFrame: ->

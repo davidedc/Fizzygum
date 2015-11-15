@@ -18,9 +18,6 @@ class ColorPaletteMorph extends Morph
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
   
-  updateBackingStore: ->
-  # no changes of position or extent
-
   updateBackingStore2: ->
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()

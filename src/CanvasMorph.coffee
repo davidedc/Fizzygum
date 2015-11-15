@@ -31,3 +31,22 @@ class CanvasMorph extends FrameMorph
   
   
   imBeingAddedTo: (newParentMorph) ->
+
+  updateBackingStore2: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.extent == @extent().toString() and
+      @backBufferValidityChecker.color == @color.toString()
+        console.log "saved a bunch of drawing"
+        return
+
+    extent = @extent()
+    @backBuffer = newCanvas(extent.scaleBy pixelRatio)
+    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext.scale pixelRatio, pixelRatio
+
+    @backBufferContext.fillStyle = @color.toString()
+    @backBufferContext.fillRect 0, 0, extent.x, extent.y
+
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()
+    @backBufferValidityChecker.color = @color.toString()

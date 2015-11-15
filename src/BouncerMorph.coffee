@@ -22,10 +22,10 @@ class BouncerMorph extends Morph
     else
       @direction = "right"
 
-    # @updateBackingStore() not needed, probably
+    #  not needed, probably
     # because it's repainted in the
     # next frame since it's an animation?
-    #@updateBackingStore()
+    #
 
   resetPosition: ->
     if @type is "vertical"

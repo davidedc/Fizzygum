@@ -90,7 +90,7 @@ class ListMorph extends ScrollFrameMorph
 
     @listContents.setPosition @contents.position()
     @listContents.setLayoutBeforeUpdatingBackingStore()
-    @listContents.updateBackingStore()
+    
     @addContents @listContents
   
   select: (item, trigger) ->

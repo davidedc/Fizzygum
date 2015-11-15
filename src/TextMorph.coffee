@@ -143,8 +143,6 @@ class TextMorph extends StringMorph
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
 
-  updateBackingStore: ->
-  
   # no changes of position or extent
   updateBackingStore2: ->
     if @backBufferValidityChecker?
@@ -252,7 +250,7 @@ class TextMorph extends StringMorph
     @maxWidth = Math.max(aPoint.x, 0)
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   # TextMorph measuring ////
@@ -340,19 +338,19 @@ class TextMorph extends StringMorph
   setAlignmentToLeft: ->
     @alignment = "left"
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()  
   
   # TextMorph evaluation:

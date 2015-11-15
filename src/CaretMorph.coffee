@@ -177,7 +177,7 @@ class CaretMorph extends BlinkerMorph
       else if @target.endMark isnt @slot
         @target.endMark = @slot
         @target.setLayoutBeforeUpdatingBackingStore()
-        @target.updateBackingStore()
+        
         @target.changed()
     else
       @target.clearSelection()  
@@ -213,7 +213,7 @@ class CaretMorph extends BlinkerMorph
     # vs. updateBackingStore semantics.
     @target.changed()
     @target.setLayoutBeforeUpdatingBackingStore()
-    @target.updateBackingStore()
+    
     @target.changed()
 
     @gotoSlot 0
@@ -232,7 +232,7 @@ class CaretMorph extends BlinkerMorph
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
       @target.text = text
       @target.setLayoutBeforeUpdatingBackingStore()
-      @target.updateBackingStore()
+      
       @target.changed()
       @goRight false, symbol.length
   
@@ -284,7 +284,7 @@ class CaretMorph extends BlinkerMorph
       text = text.slice(0, @slot) + text.slice(@slot + 1)
       @target.text = text
     @target.setLayoutBeforeUpdatingBackingStore()
-    @target.updateBackingStore()
+    
   
   deleteLeft: ->
     if @target.selection()
@@ -295,7 +295,7 @@ class CaretMorph extends BlinkerMorph
       @target.changed()
       @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
     @target.setLayoutBeforeUpdatingBackingStore()
-    @target.updateBackingStore()
+    
     @goLeft()
 
   # CaretMorph destroying:
@@ -303,7 +303,7 @@ class CaretMorph extends BlinkerMorph
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
       @target.setLayoutBeforeUpdatingBackingStore()
-      @target.updateBackingStore()
+      
       @target.changed()
     super  
   

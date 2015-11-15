@@ -115,9 +115,6 @@ class StringMorph extends Morph
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))
   
-  updateBackingStore: ->
-  # no changes of position or extent
-
   updateBackingStore2: ->
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
@@ -301,42 +298,42 @@ class StringMorph extends Morph
     @isShowingBlanks = not @isShowingBlanks
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
@@ -353,7 +350,7 @@ class StringMorph extends Morph
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   setText: (size) ->
@@ -361,7 +358,7 @@ class StringMorph extends Morph
     @text = Math.round(size).toString()
     @changed()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @changed()
   
   numericalSetters: ->
@@ -386,7 +383,7 @@ class StringMorph extends Morph
     @startMark = null
     @endMark = null
     @changed()
-    @updateBackingStore()
+    
     @changed()
   
   deleteSelection: ->
@@ -400,7 +397,7 @@ class StringMorph extends Morph
   selectAll: ->
     @startMark = 0
     @endMark = @text.length
-    @updateBackingStore()
+    
     @changed()
 
   mouseDownLeft: (pos) ->
@@ -440,7 +437,7 @@ class StringMorph extends Morph
         newMark = @slotAt(pos)
         if newMark isnt @endMark
           @endMark = newMark
-          @updateBackingStore()
+          
           @changed()
   
   disableSelecting: ->

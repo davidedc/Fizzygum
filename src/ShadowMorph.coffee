@@ -32,9 +32,6 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-  updateBackingStore: ->
-  # no changes of position or extent
-
   updateBackingStore2: ->
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()

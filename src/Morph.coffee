@@ -264,7 +264,7 @@ class Morph extends MorphicNode
 
     @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
-    # Note that we don't call @updateBackingStore()
+    # Note that we don't call 
     # that's because the actual extending morph will probably
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
@@ -635,7 +635,7 @@ class Morph extends MorphicNode
       @silentSetExtent aPoint
       @changed()
       @setLayoutBeforeUpdatingBackingStore()
-      @updateBackingStore()
+      
       @layoutSubmorphs(morphStartingTheChange)
       if @parent?
         if @parent != morphStartingTheChange
@@ -667,7 +667,6 @@ class Morph extends MorphicNode
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
-    # do not updateBackingStore() just yet
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
@@ -675,7 +674,6 @@ class Morph extends MorphicNode
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
-    # do not updateBackingStore() just yet
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   
@@ -688,7 +686,7 @@ class Morph extends MorphicNode
       unless @color.eq(aColor)
         @color = aColor
         @changed()
-        @updateBackingStore()
+        
     return aColor
   
   
@@ -717,19 +715,6 @@ class Morph extends MorphicNode
   # * recursivelyPaintIntoAreaOrBlAtFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
-  # this is normally invoked form setExtent
-  # and setExtent also invokes layoutSubmorphs
-  # afterwards
-  # no changes of position or extent
-  updateBackingStore: ->
-    @changed()
-    @silentUpdateBackingStore()
-    # to do you might be smarter here and ask the silentUpdateBackingStore
-    # method whether a) there was any change at all and b) whether only
-    # the buffer changed and not the bounds (in which case only one changed()
-    # is needed)
-    @changed()
-
   
   # tiles the texture
   drawCachedTexture: ->
@@ -754,12 +739,6 @@ class Morph extends MorphicNode
   isTransparentAt: ->
     return false
   
-  # by default this does nothing because normally
-  # morphs are expected to repaint themselves from
-  # graphics primitives. Some morphs might
-  # use a BackingStore though, they can override this
-  # one then. 
-  silentUpdateBackingStore: ->
 
   calculateKeyValues: (aContext, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()
@@ -997,7 +976,7 @@ class Morph extends MorphicNode
   addShadow: (offset, alpha, color) ->
     shadow = @silentAddShadow offset, alpha, color
     shadow.setLayoutBeforeUpdatingBackingStore()
-    shadow.updateBackingStore()
+    
     @fullChanged()
     shadow
 
@@ -1073,7 +1052,7 @@ class Morph extends MorphicNode
 
   imBeingAddedTo: (newParentMorph) ->
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
@@ -1175,15 +1154,6 @@ class Morph extends MorphicNode
 
   # Duplication and Serialization /////////////////////////////////////////
 
-
-  ### not currently used
-  completelyRepaint: ()->
-    allMorphsInStructure = @allChildrenBottomToTop()
-    for eachMorph in allMorphsInStructure
-      if eachMorph.updateBackingStore?
-        eachMorph.updateBackingStore()
-        eachMorph.changed()
-  ###
 
   duplicateMenuAction: ->
     aFullCopy = @fullCopy()
@@ -1477,7 +1447,7 @@ class Morph extends MorphicNode
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
     theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
-    theMenu.tempPromptEntryField.text.updateBackingStore()
+    
     theMenu.tempPromptEntryField.text.changed()
     theMenu.tempPromptEntryField.text.edit()
 
@@ -1485,7 +1455,7 @@ class Morph extends MorphicNode
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = num.toString()
     theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
-    theMenu.tempPromptEntryField.text.updateBackingStore()
+    
     theMenu.tempPromptEntryField.text.changed()
   
   pickColor: (msg, callback, defaultContents) ->
@@ -1828,7 +1798,7 @@ class Morph extends MorphicNode
     try
       result = eval(code)
       @setLayoutBeforeUpdatingBackingStore()
-      @updateBackingStore()
+      
       @changed()
     catch err
       @inform err

@@ -49,4 +49,4 @@ ContainerMixin =
           @bounds = newBounds
           @changed()
           @setLayoutBeforeUpdatingBackingStore()
-          @updateBackingStore()
+          

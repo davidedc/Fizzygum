@@ -8,9 +8,6 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point(80, 10)
   
-  updateBackingStore: ->
-  # no changes of position or extent
-
   updateBackingStore2: ->
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()

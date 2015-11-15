@@ -33,13 +33,13 @@ class SliderMorph extends CircleBoxMorph
 
   imBeingAddedTo: (newParentMorph) ->
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
     if @button? and @button instanceof SliderButtonMorph
       @button.setLayoutBeforeUpdatingBackingStore()
-      @button.updateBackingStore()
+      
     @changed()
 
   setExtent: (a) ->
@@ -48,7 +48,7 @@ class SliderMorph extends CircleBoxMorph
     # in the call of super, now
     # it's the time of the button
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
 
   toggleOrientation: ->
     super()
@@ -56,7 +56,7 @@ class SliderMorph extends CircleBoxMorph
     # in the call of super, now
     # it's the time of the button
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
   
   autoOrientation: ->
       noOperation
@@ -149,9 +149,9 @@ class SliderMorph extends CircleBoxMorph
     if value? then @value = value
     if size? then @size = size
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
     @changed()
   
   setStart: (numOrMorphGivingNum) ->
@@ -170,9 +170,9 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.max(@value, @start)
     @updateTarget()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
     @changed()
   
   setStop: (numOrMorphGivingNum) ->
@@ -191,9 +191,9 @@ class SliderMorph extends CircleBoxMorph
     @value = Math.min(@value, @stop)
     @updateTarget()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
     @changed()
   
   setSize: (sizeOrMorphGivingSize) ->
@@ -216,9 +216,9 @@ class SliderMorph extends CircleBoxMorph
     # is no need to update the target.
     #@updateTarget()
     @setLayoutBeforeUpdatingBackingStore()
-    @updateBackingStore()
+    
     @button.setLayoutBeforeUpdatingBackingStore()
-    @button.updateBackingStore()
+    
     @changed()
   
   # setTarget: -> taken form the ControllerMixin

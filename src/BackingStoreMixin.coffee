@@ -52,14 +52,6 @@ BackingStoreMixin =
       # backBufferContext value can be derived from others
       backBufferContext_isDerivedValue: true
 
-      silentUpdateBackingStore: ->
-        # initialize my surface property
-        @backBuffer = newCanvas(@extent().scaleBy pixelRatio)
-        @backBufferContext = @backBuffer.getContext("2d")
-        @backBufferContext.scale pixelRatio, pixelRatio
-        @backBufferContext.fillStyle = @color.toString()
-        @backBufferContext.fillRect 0, 0, @width(), @height()
-
       calculateKeyValues: (aContext, clippingRectangle) ->
         area = clippingRectangle.intersect(@bounds).round()
         # test whether anything that we are going to be drawing
@@ -86,7 +78,7 @@ BackingStoreMixin =
 
       # Morph pixel access:
       getPixelColor: (aPoint) ->
-        if @updateBackingStore2? then @updateBackingStore2()
+        @updateBackingStore2()
         point = aPoint.subtract(@bounds.origin)
         data = @backBufferContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
         new Color(data.data[0], data.data[1], data.data[2], data.data[3])

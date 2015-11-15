@@ -99,7 +99,6 @@ class WorkspaceMorph extends BoxMorph
     if @label.height() > (@height() - 50)
       @setHeight @label.height() + 50
       @changed()
-      #@resizer.updateBackingStore()
 
     # morphsList
     y = @label.bottom() + @cornerRadius/2
