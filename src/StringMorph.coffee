@@ -98,15 +98,15 @@ class StringMorph extends Morph
   calculateExtentBasedOnText: ->
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
-    @backBuffer = newCanvas()
-    @backBufferContext = @backBuffer.getContext("2d")
-    @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @font()
-    @backBufferContext.textAlign = "left"
-    @backBufferContext.textBaseline = "bottom"
+    measuringCanvas = newCanvas()
+    measuringCanvasContext = measuringCanvas.getContext("2d")
+    measuringCanvasContext.scale pixelRatio, pixelRatio
+    measuringCanvasContext.font = @font()
+    measuringCanvasContext.textAlign = "left"
+    measuringCanvasContext.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    return Math.ceil(Math.max(@backBufferContext.measureText(text).width, 1))
+    return Math.ceil(Math.max(measuringCanvasContext.measureText(text).width, 1))
 
   setLayoutBeforeUpdatingBackingStore: ->
     super()
