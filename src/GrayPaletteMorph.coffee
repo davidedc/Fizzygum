@@ -8,8 +8,15 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point(80, 10)
   
-  # no changes of position or extent
   updateBackingStore: ->
+  # no changes of position or extent
+
+  updateBackingStore2: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.extent == @extent().toString()
+        console.log "saved a bunch of drawing"
+        return
+
     extent = @extent()
     @backBuffer = newCanvas(extent.scaleBy pixelRatio)
     @backBufferContext = @backBuffer.getContext("2d")
@@ -20,3 +27,6 @@ class GrayPaletteMorph extends ColorPaletteMorph
     gradient.addColorStop 1, "white"
     @backBufferContext.fillStyle = gradient
     @backBufferContext.fillRect 0, 0, extent.x, extent.y
+
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()

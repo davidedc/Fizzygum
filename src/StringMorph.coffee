@@ -117,10 +117,10 @@ class StringMorph extends Morph
   updateBackingStore: ->
   # no changes of position or extent
 
-
   updateBackingStore2: ->
     if @backBufferValidityChecker?
-      if @backBufferValidityChecker.isPassword == @isPassword and
+      if @backBufferValidityChecker.extent == @extent().toString() and
+      @backBufferValidityChecker.isPassword == @isPassword and
       @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
       @backBufferValidityChecker.font == @font() and
       @backBufferValidityChecker.textAlign == @alignment and
@@ -165,6 +165,7 @@ class StringMorph extends Morph
       @backBufferContext.fillText c, p.x, fontHeight(@fontSize)
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.isPassword = @isPassword
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
     @backBufferValidityChecker.font = @font()

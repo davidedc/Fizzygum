@@ -32,8 +32,12 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-  # no changes of position or extent
   updateBackingStore: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.extent == @extent().toString()
+        console.log "saved a bunch of drawing"
+        return
+
     @bounds.debugIfFloats()
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       @backBuffer = @targetMorph.shadowImage(@offset, @color, true)
@@ -43,5 +47,7 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()
 
     

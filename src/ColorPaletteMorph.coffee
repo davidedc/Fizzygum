@@ -18,8 +18,15 @@ class ColorPaletteMorph extends Morph
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
   
-  # no changes of position or extent
   updateBackingStore: ->
+  # no changes of position or extent
+
+  updateBackingStore2: ->
+    if @backBufferValidityChecker?
+      if @backBufferValidityChecker.extent == @extent().toString()
+        console.log "saved a bunch of drawing"
+        return
+
     extent = @extent()
     @backBuffer = newCanvas(extent.scaleBy pixelRatio)
     @backBufferContext = @backBuffer.getContext("2d")
@@ -37,6 +44,9 @@ class ColorPaletteMorph extends Morph
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
         @backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
         @backBufferContext.fillRect x, y, 1, 1
+
+    @backBufferValidityChecker = new BackBufferValidityChecker()
+    @backBufferValidityChecker.extent = @extent().toString()
 
   # you can't grab the colorPaletteMorph because
   # the drag operation currently picks a color.

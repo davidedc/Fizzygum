@@ -144,7 +144,6 @@ class TextMorph extends StringMorph
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
 
   updateBackingStore: ->
-
   
   # no changes of position or extent
   updateBackingStore2: ->

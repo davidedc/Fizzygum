@@ -21,3 +21,5 @@ class BackBufferValidityChecker
 
   isPassword: null
   isShowingBlanks: null
+
+  boundsIncludingChildren: null
