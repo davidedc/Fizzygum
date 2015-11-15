@@ -127,7 +127,7 @@ class TextMorph extends StringMorph
         slot += word.length + 1
   
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     super()
     ANimage = newCanvas()
     context = ANimage.getContext("2d")
@@ -144,7 +144,10 @@ class TextMorph extends StringMorph
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
 
   # no changes of position or extent
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.font == @font() and
@@ -249,7 +252,7 @@ class TextMorph extends StringMorph
   setExtent: (aPoint) ->
     @maxWidth = Math.max(aPoint.x, 0)
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
@@ -337,19 +340,19 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()  
   

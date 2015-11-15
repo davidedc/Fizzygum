@@ -70,19 +70,21 @@ class ScrollFrameMorph extends FrameMorph
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
-    # keep in synch the value of the container scrollFrame
-    # if there is one. Note that the container scrollFrame
+    # keep in synch the color of the content.
+    # Note that the container scrollFrame.
     # is actually not painted.
-    if @scrollFrame
-      @scrollFrame.color = aColor
+    @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor
+    return aColor
 
-  setAlphaScaled: (alpha) ->
+  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
+    debugger
+    alpha = super(alphaOrMorphGivingAlpha, morphGivingAlpha)
     # update the alpha of the scrollFrame - note
     # that we are never going to paint the scrollFrame
     # we are updating the alpha so that its value is the same as the
     # contained frame
-    @alpha = @calculateAlphaScaled(alpha)
-    @contents.setAlphaScaled(alpha)
+    @contents.setAlphaScaled alphaOrMorphGivingAlpha, morphGivingAlpha
+    return alpha
 
   adjustScrollBars: ->
     hWidth = @width() - @scrollBarSize
@@ -200,7 +202,7 @@ class ScrollFrameMorph extends FrameMorph
 
     unless @contents.bounds.eq(newBounds)
       @contents.bounds = newBounds
-      @contents.setLayoutBeforeUpdatingBackingStore()
+      @contents.reLayout()
       
       @keepContentsInScrollFrame()
 

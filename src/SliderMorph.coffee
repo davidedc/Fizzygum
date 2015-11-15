@@ -32,13 +32,13 @@ class SliderMorph extends CircleBoxMorph
     @silentAdd @button
 
   imBeingAddedTo: (newParentMorph) ->
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     # might happen in phase of deserialization that
     # the button reference here is still a string
     # so skip in that case
     if @button? and @button instanceof SliderButtonMorph
-      @button.setLayoutBeforeUpdatingBackingStore()
+      @button.reLayout()
       
     @changed()
 
@@ -47,7 +47,7 @@ class SliderMorph extends CircleBoxMorph
     # my backing store had just been updated
     # in the call of super, now
     # it's the time of the button
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
 
   toggleOrientation: ->
@@ -55,7 +55,7 @@ class SliderMorph extends CircleBoxMorph
     # the background CircleBoxMorph has just been updated
     # in the call of super, now
     # it's the time of the button
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
   
   autoOrientation: ->
@@ -148,9 +148,9 @@ class SliderMorph extends CircleBoxMorph
     if stop? then @stop = stop
     if value? then @value = value
     if size? then @size = size
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
     @changed()
   
@@ -169,9 +169,9 @@ class SliderMorph extends CircleBoxMorph
       @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
     @value = Math.max(@value, @start)
     @updateTarget()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
     @changed()
   
@@ -190,9 +190,9 @@ class SliderMorph extends CircleBoxMorph
       @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
     @value = Math.min(@value, @stop)
     @updateTarget()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
     @changed()
   
@@ -215,9 +215,9 @@ class SliderMorph extends CircleBoxMorph
     # button keeps the same value, so there
     # is no need to update the target.
     #@updateTarget()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
-    @button.setLayoutBeforeUpdatingBackingStore()
+    @button.reLayout()
     
     @changed()
   

@@ -8,7 +8,10 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point(80, 10)
   
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()
         console.log "saved a bunch of drawing"

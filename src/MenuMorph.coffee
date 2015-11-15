@@ -149,7 +149,7 @@ class MenuMorph extends BoxMorph
     @label.setExtent text.extent().add(2) # here!
     @label.text = text
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     # console.log "menu update rendering"
     super()
     isLine = false

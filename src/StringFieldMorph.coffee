@@ -39,7 +39,7 @@ class StringFieldMorph extends FrameMorph
     @setWidth(Math.max(@minWidth,text.width()))
     console.log "string fleid morph extent: " + @extent()
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     super()
     txt = (if @text then @getValue() else @defaultContents)
     @text = null

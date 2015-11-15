@@ -362,7 +362,7 @@ class InspectorMorph extends BoxMorph
       @label.setWidth labelWidth
       if @label.height() > (@height() - 50)
         @silentSetHeight @label.height() + 50
-        @setLayoutBeforeUpdatingBackingStore()
+        @reLayout()
         
         @changed()
         @resizer.silentUpdateResizerHandlePosition()
@@ -441,7 +441,7 @@ class InspectorMorph extends BoxMorph
       # this.target[propertyName] = evaluate(txt);
       @target.evaluateString "this." + propertyName + " = " + txt
       @target.changed()
-      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.reLayout()
       
       @target.changed()
     catch err
@@ -455,7 +455,7 @@ class InspectorMorph extends BoxMorph
       @target[prop] = null
       @buildAndConnectChildren()
       @target.changed()
-      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.reLayout()
       
       @target.changed()
   
@@ -474,7 +474,7 @@ class InspectorMorph extends BoxMorph
       @inform err
     @buildAndConnectChildren()
     @target.changed()
-    @target.setLayoutBeforeUpdatingBackingStore()
+    @target.reLayout()
     
     @target.changed()
   
@@ -490,7 +490,7 @@ class InspectorMorph extends BoxMorph
       @currentProperty = null
       @buildAndConnectChildren()
       @target.changed()
-      @target.setLayoutBeforeUpdatingBackingStore()
+      @target.reLayout()
       
       @target.changed()
     catch err

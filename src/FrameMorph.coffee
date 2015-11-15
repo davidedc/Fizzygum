@@ -32,15 +32,18 @@ class FrameMorph extends Morph
     # if there is one. Note that the container scrollFrame
     # is actually not painted.
     if @scrollFrame
-      @scrollFrame.color = aColor
+      unless @scrollFrame.color.eq(aColor)
+        @scrollFrame.color = aColor
+    return aColor
 
-  setAlphaScaled: (alpha) ->
-    # keep in synch the value of the container scrollFrame
-    # if there is one. Note that the container scrollFrame
-    # is actually not painted.
+
+  setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
+    alpha = super(alphaOrMorphGivingAlpha, morphGivingAlpha)
     if @scrollFrame
-      @scrollFrame.alpha = @calculateAlphaScaled(alpha)
-    super(alpha)
+      unless @scrollFrame.alpha == alpha
+        @scrollFrame.alpha = alpha
+    return alpha
+
 
   # used for example:
   # - to determine which morphs you can attach a morph to

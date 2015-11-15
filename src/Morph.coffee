@@ -634,7 +634,7 @@ class Morph extends MorphicNode
       @changed()
       @silentSetExtent aPoint
       @changed()
-      @setLayoutBeforeUpdatingBackingStore()
+      @reLayout()
       
       @layoutSubmorphs(morphStartingTheChange)
       if @parent?
@@ -685,6 +685,7 @@ class Morph extends MorphicNode
     if aColor
       unless @color.eq(aColor)
         @color = aColor
+        if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
         @changed()
         
     return aColor
@@ -975,7 +976,7 @@ class Morph extends MorphicNode
   # the HandMorph while floatDragging
   addShadow: (offset, alpha, color) ->
     shadow = @silentAddShadow offset, alpha, color
-    shadow.setLayoutBeforeUpdatingBackingStore()
+    shadow.reLayout()
     
     @fullChanged()
     shadow
@@ -1051,7 +1052,7 @@ class Morph extends MorphicNode
     null
 
   imBeingAddedTo: (newParentMorph) ->
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
   
   # attaches submorph on top
@@ -1098,7 +1099,9 @@ class Morph extends MorphicNode
   # layout (which depends on the children)
   # before painting themselves
   # e.g. the MenuMorph
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
+    if @backBufferIsPotentiallyDirty?
+      @backBufferIsPotentiallyDirty = true
     @children.forEach (child) ->
       child.parentIsLayouting()
 
@@ -1446,7 +1449,7 @@ class Morph extends MorphicNode
   reactToSliderAction1: (num, theMenu) ->
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
-    theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    theMenu.tempPromptEntryField.text.reLayout()
     
     theMenu.tempPromptEntryField.text.changed()
     theMenu.tempPromptEntryField.text.edit()
@@ -1454,7 +1457,7 @@ class Morph extends MorphicNode
   reactToSliderAction2: (num, theMenu) ->
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = num.toString()
-    theMenu.tempPromptEntryField.text.setLayoutBeforeUpdatingBackingStore()
+    theMenu.tempPromptEntryField.text.reLayout()
     
     theMenu.tempPromptEntryField.text.changed()
   
@@ -1662,9 +1665,14 @@ class Morph extends MorphicNode
       alpha = alphaOrMorphGivingAlpha
 
     if alpha
-      @alpha = @calculateAlphaScaled(alpha)
-      @changed()
-  
+      alpha = @calculateAlphaScaled(alpha)
+      unless @alpha == alpha
+        @alpha = alpha
+        if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
+        @changed()
+
+    return alpha
+
   newParentChoice: (ignored, theMorphToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
@@ -1797,7 +1805,7 @@ class Morph extends MorphicNode
   evaluateString: (code) ->
     try
       result = eval(code)
-      @setLayoutBeforeUpdatingBackingStore()
+      @reLayout()
       
       @changed()
     catch err

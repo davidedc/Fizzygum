@@ -45,7 +45,7 @@ class SliderButtonMorph extends CircleBoxMorph
   rootForGrab: ->
     @
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     super()
     if @parent?
       @orientation = @parent.orientation

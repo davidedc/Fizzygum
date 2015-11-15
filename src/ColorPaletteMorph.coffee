@@ -18,7 +18,10 @@ class ColorPaletteMorph extends Morph
     super()
     @silentSetExtent sizePoint or new Point(80, 50)
   
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()
         console.log "saved a bunch of drawing"

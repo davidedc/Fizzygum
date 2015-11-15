@@ -32,7 +32,10 @@ class CanvasMorph extends FrameMorph
   
   imBeingAddedTo: (newParentMorph) ->
 
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.color == @color.toString()

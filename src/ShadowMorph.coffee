@@ -20,7 +20,7 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     # console.log "shadow morph update rendering"
     super()
     fb = @targetMorph.boundsIncludingChildrenNoShadow()
@@ -32,7 +32,10 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()
         console.log "saved a bunch of drawing"

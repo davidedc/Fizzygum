@@ -47,6 +47,7 @@ BackingStoreMixin =
       backBuffer: null
       backBufferContext: null
       backBufferValidityChecker: null
+      backBufferIsPotentiallyDirty: true
 
       # just a flag to indicate that the
       # backBufferContext value can be derived from others
@@ -78,7 +79,7 @@ BackingStoreMixin =
 
       # Morph pixel access:
       getPixelColor: (aPoint) ->
-        @updateBackingStore2()
+        @repaintBackBufferIfNeeded()
         point = aPoint.subtract(@bounds.origin)
         data = @backBufferContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
         new Color(data.data[0], data.data[1], data.data[2], data.data[3])
@@ -91,7 +92,7 @@ BackingStoreMixin =
       # Note that this morph might paint something on the screen even if
       # it's not a "leaf".
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-        @updateBackingStore2()
+        @repaintBackBufferIfNeeded()
         return null  if @isMinimised or !@isVisible or !@backBuffer?
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

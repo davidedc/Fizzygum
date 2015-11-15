@@ -109,13 +109,16 @@ class StringMorph extends Morph
     # set my extent based on the size of the text
     return Math.ceil(Math.max(measuringCanvasContext.measureText(text).width, 1))
 
-  setLayoutBeforeUpdatingBackingStore: ->
+  reLayout: ->
     super()
     width = @calculateExtentBasedOnText()
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))
   
-  updateBackingStore2: ->
+  repaintBackBufferIfNeeded: ->
+    if !@backBufferIsPotentiallyDirty then return
+    @backBufferIsPotentiallyDirty = false
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.isPassword == @isPassword and
@@ -297,42 +300,42 @@ class StringMorph extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
@@ -349,7 +352,7 @@ class StringMorph extends Morph
       newSize = parseFloat(size)
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
@@ -357,7 +360,7 @@ class StringMorph extends Morph
     # for context menu demo purposes
     @text = Math.round(size).toString()
     @changed()
-    @setLayoutBeforeUpdatingBackingStore()
+    @reLayout()
     
     @changed()
   
