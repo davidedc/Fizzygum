@@ -92,8 +92,11 @@ class FrameMorph extends Morph
     @bounds
 
   
-  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @bounds) ->
+  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
     return null  unless (!@isMinimised and @isVisible)
+
+    if noShadow and (@ instanceof ShadowMorph)
+      return
 
     # a FrameMorph has the special property that all of its children
     # are actually inside its boundary.
@@ -151,9 +154,9 @@ class FrameMorph extends Morph
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle
+        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle, noShadow
       else
-        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, dirtyPartOfFrame
+        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, dirtyPartOfFrame, noShadow
 
   
   # FrameMorph scrolling optimization:

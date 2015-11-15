@@ -33,6 +33,9 @@ class ShadowMorph extends Morph
     @offset.debugIfFloats()
 
   updateBackingStore: ->
+  # no changes of position or extent
+
+  updateBackingStore2: ->
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()
         console.log "saved a bunch of drawing"

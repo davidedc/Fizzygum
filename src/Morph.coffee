@@ -813,8 +813,11 @@ class Morph extends MorphicNode
             Math.round(h)
         aContext.restore()
 
-  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren()) ->
+  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
     return null  if @isMinimised or !@isVisible
+
+    if noShadow and (@ instanceof ShadowMorph)
+      return
 
     # in general, the children of a Morph could be outside the
     # bounds of the parent (they could also be much larger
@@ -831,7 +834,7 @@ class Morph extends MorphicNode
 
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
-      child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle
+      child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle, noShadow
   
 
   hide: ->
@@ -874,7 +877,7 @@ class Morph extends MorphicNode
   
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Zombie-Kernel/issues/160
-  fullImage: (bounds) ->
+  fullImage: (bounds, noShadow = false) ->
     if !bounds?
       bounds = @boundsIncludingChildren()
 
@@ -890,12 +893,12 @@ class Morph extends MorphicNode
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
-    @recursivelyPaintIntoAreaOrBlAtFromBackBuffer ctx, bounds
+    @recursivelyPaintIntoAreaOrBlAtFromBackBuffer ctx, bounds, noShadow
     img
 
   fullImageNoShadow: ->
     boundsWithNoShadow = @boundsIncludingChildrenNoShadow()
-    return @fullImage(boundsWithNoShadow)
+    return @fullImage(boundsWithNoShadow, true)
 
   fullImageData: ->
     # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."

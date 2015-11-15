@@ -95,8 +95,9 @@ class StringMorph extends Morph
     font = font + "italic "  if @isItalic
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
 
-  calculateExtentBasedOnText: ->
-    text = (if @isPassword then @password("*", @text.length) else @text)
+
+  calculateExtentBasedOnText: (text = @text)->
+    text = (if @isPassword then @password("*", text.length) else text)
     # initialize my surface property
     measuringCanvas = newCanvas()
     measuringCanvasContext = measuringCanvas.getContext("2d")
@@ -208,7 +209,8 @@ class StringMorph extends Morph
     # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
-    xOffset = Math.ceil(@backBufferContext.measureText(text.substring(0,dest)).width)
+
+    xOffset = Math.ceil(@calculateExtentBasedOnText(text.substring(0,dest)))
     @pos = dest
     x = @left() + xOffset
     y = @top()
@@ -222,10 +224,10 @@ class StringMorph extends Morph
     charX = 0
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@backBufferContext.measureText(text[idx]).width)
+      charX += Math.ceil(@calculateExtentBasedOnText(text[idx]))
       idx += 1
       if idx is text.length
-        if (Math.ceil(@backBufferContext.measureText(text).width) - (Math.ceil(@backBufferContext.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(@calculateExtentBasedOnText(text)) - (Math.ceil(@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   
