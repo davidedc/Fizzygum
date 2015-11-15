@@ -57,11 +57,11 @@ class CircleBoxMorph extends Morph
   
   # This method only paints this very morph's "image",
   # it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyBlit, which
-  # eventually invokes blit.
+  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlAtFromBackBuffer, which
+  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  blit: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()

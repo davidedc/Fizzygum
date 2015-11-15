@@ -711,10 +711,10 @@ class Morph extends MorphicNode
   #   Also note that before the buffer is painted for the first time, they
   #   might not know their extent. Typically text-related Morphs know their
   #   extensions after they painted the text for the first time...
-  # * blit: takes the local canvas and blits it to a specific area in a passed
+  # * paintIntoAreaOrBlitFromBackBuffer: takes the local canvas and paints it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
-  # * recursivelyBlit: recursively draws all the local canvas of this morph and all
+  # * recursivelyPaintIntoAreaOrBlAtFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
   # this is normally invoked form setExtent
@@ -778,11 +778,11 @@ class Morph extends MorphicNode
 
   # This method only paints this very morph
   # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyBlit,
-  # which eventually invokes blit.
+  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlAtFromBackBuffer,
+  # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  blit: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
@@ -813,7 +813,7 @@ class Morph extends MorphicNode
             Math.round(h)
         aContext.restore()
 
-  recursivelyBlit: (aContext, clippingRectangle = @boundsIncludingChildren()) ->
+  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren()) ->
     return null  if @isMinimised or !@isVisible
 
     # in general, the children of a Morph could be outside the
@@ -829,9 +829,9 @@ class Morph extends MorphicNode
     # in discarding whole sections of the scene graph.
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
 
-    @blit aContext, clippingRectangle
+    @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
-      child.recursivelyBlit aContext, clippingRectangle
+      child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle
   
 
   hide: ->
@@ -890,7 +890,7 @@ class Morph extends MorphicNode
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
-    @recursivelyBlit ctx, bounds
+    @recursivelyPaintIntoAreaOrBlAtFromBackBuffer ctx, bounds
     img
 
   fullImageNoShadow: ->

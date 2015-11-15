@@ -92,7 +92,7 @@ class FrameMorph extends Morph
     @bounds
 
   
-  recursivelyBlit: (aContext, clippingRectangle = @bounds) ->
+  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @bounds) ->
     return null  unless (!@isMinimised and @isVisible)
 
     # a FrameMorph has the special property that all of its children
@@ -100,8 +100,8 @@ class FrameMorph extends Morph
     # This allows
     # us to avoid the further traversal of potentially
     # many many morphs if we see that the rectangle we
-    # want to blit is outside its frame.
-    # If the rectangle we want to blit is inside the frame
+    # want to paint is outside its frame.
+    # If the rectangle we want to paint is inside the frame
     # then we do have to continue traversing all the
     # children of the Frame.
 
@@ -147,13 +147,13 @@ class FrameMorph extends Morph
     
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
-    @blit aContext, dirtyPartOfFrame
+    @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.recursivelyBlit aContext, clippingRectangle
+        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle
       else
-        child.recursivelyBlit aContext, dirtyPartOfFrame
+        child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, dirtyPartOfFrame
 
   
   # FrameMorph scrolling optimization:

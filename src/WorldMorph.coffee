@@ -298,14 +298,13 @@ class WorldMorph extends FrameMorph
       rect.intersects fb
   
   
-  # recursivelyBlit results into actual blittings of pices of
+  # recursivelyPaintIntoAreaOrBlAtFromBackBuffer results into actual painting of pices of
   # morphs done
-  # by the blit function.
-  # The blit function is defined in Morph and is not overriden by
-  # any morph.
-  recursivelyBlit: (aContext, aRect) ->
-    # invokes the Morph's recursivelyBlit, which has only three implementations:
-    #  * the default one by Morph which just invokes the blit of all children
+  # by the paintIntoAreaOrBlitFromBackBuffer function.
+  # The paintIntoAreaOrBlitFromBackBuffer function is defined in Morph.
+  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, aRect) ->
+    # invokes the Morph's recursivelyPaintIntoAreaOrBlAtFromBackBuffer, which has only three implementations:
+    #  * the default one by Morph which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
     #  * the interesting one in FrameMorph which a) narrows the dirty
     #    rectangle (intersecting it with its border
     #    since the FrameMorph clips at its border) and b) stops recursion on all
@@ -316,7 +315,7 @@ class WorldMorph extends FrameMorph
     super aContext, aRect
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
-    @hand.recursivelyBlit aContext, aRect
+    @hand.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, aRect
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
@@ -332,7 +331,7 @@ class WorldMorph extends FrameMorph
     # and nearby rectangles.
 
     @broken.forEach (rect) =>
-      @recursivelyBlit @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
+      @recursivelyPaintIntoAreaOrBlAtFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
   
   doOneCycle: ->
