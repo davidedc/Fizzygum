@@ -21,9 +21,9 @@ class ColorPaletteMorph extends Morph
   # no changes of position or extent
   updateBackingStore: ->
     extent = @extent()
-    @image = newCanvas(extent.scaleBy pixelRatio)
-    @imageContext = @image.getContext("2d")
-    @imageContext.scale pixelRatio, pixelRatio
+    @backBuffer = newCanvas(extent.scaleBy pixelRatio)
+    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext.scale pixelRatio, pixelRatio
     @choice = new Color()
     for x in [0..extent.x]
       h = 360 * x / extent.x
@@ -35,8 +35,8 @@ class ColorPaletteMorph extends Morph
         # You should really be using putImageData of the whole buffer
         # here anyways. But this is clearer.
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-        @imageContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
-        @imageContext.fillRect x, y, 1, 1
+        @backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
+        @backBufferContext.fillRect x, y, 1, 1
 
   # you can't grab the colorPaletteMorph because
   # the drag operation currently picks a color.

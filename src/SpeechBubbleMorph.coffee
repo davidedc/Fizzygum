@@ -91,8 +91,8 @@ class SpeechBubbleMorph extends BoxMorph
       @contentsMorph = new Morph()
       @contentsMorph.silentSetWidth @contents.width
       @contentsMorph.silentSetHeight @contents.height
-      @contentsMorph.image = @contents
-      @contentsMorph.imageContext = @contentsMorph.image.getContext("2d")
+      @contentsMorph.backBuffer = @contents
+      @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext("2d")
     else
       @contentsMorph = new TextMorph(
         @contents.toString(),

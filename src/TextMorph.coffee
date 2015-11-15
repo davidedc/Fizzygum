@@ -143,39 +143,39 @@ class TextMorph extends StringMorph
   
   # no changes of position or extent
   updateBackingStore: ->
-    @image = newCanvas()
-    @imageContext = @image.getContext("2d")
-    @imageContext.font = @font()
+    @backBuffer = newCanvas()
+    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext.font = @font()
 
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
 
 
-    @image.width = @width() * pixelRatio
-    @image.height = @height() * pixelRatio
+    @backBuffer.width = @width() * pixelRatio
+    @backBuffer.height = @height() * pixelRatio
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    @imageContext.scale pixelRatio, pixelRatio
-    @imageContext.font = @font()
-    @imageContext.textAlign = "left"
-    @imageContext.textBaseline = "bottom"
+    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.font = @font()
+    @backBufferContext.textAlign = "left"
+    @backBufferContext.textBaseline = "bottom"
 
     # fill the background, if desired
     if @backgroundColor
-      @imageContext.fillStyle = @backgroundColor.toString()
-      @imageContext.fillRect 0, 0, @width(), @height()
+      @backBufferContext.fillStyle = @backgroundColor.toString()
+      @backBufferContext.fillRect 0, 0, @width(), @height()
 
     # draw the shadow, if any
     if @shadowColor
       offx = Math.max(@shadowOffset.x, 0)
       offy = Math.max(@shadowOffset.y, 0)
       #console.log 'shadow x: ' + offx + " y: " + offy
-      @imageContext.fillStyle = @shadowColor.toString()
+      @backBufferContext.fillStyle = @shadowColor.toString()
       i = 0
       for line in @lines
-        width = Math.ceil(@imageContext.measureText(line).width) + shadowWidth
+        width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
         if @alignment is "right"
           x = @width() - width
         else if @alignment is "center"
@@ -184,16 +184,16 @@ class TextMorph extends StringMorph
           x = 0
         y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
         i++
-        @imageContext.fillText line, x + offx, y + offy
+        @backBufferContext.fillText line, x + offx, y + offy
 
     # now draw the actual text
     offx = Math.abs(Math.min(@shadowOffset.x, 0))
     offy = Math.abs(Math.min(@shadowOffset.y, 0))
     #console.log 'maintext x: ' + offx + " y: " + offy
-    @imageContext.fillStyle = @color.toString()
+    @backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @lines
-      width = Math.ceil(@imageContext.measureText(line).width) + shadowWidth
+      width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
@@ -202,7 +202,7 @@ class TextMorph extends StringMorph
         x = 0
       y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
       i++
-      @imageContext.fillText line, x + offx, y + offy
+      @backBufferContext.fillText line, x + offx, y + offy
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
@@ -212,10 +212,10 @@ class TextMorph extends StringMorph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
-      @imageContext.fillStyle = @markedBackgoundColor.toString()
-      @imageContext.fillRect p.x, p.y, Math.ceil(@imageContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
-      @imageContext.fillStyle = @markedTextColor.toString()
-      @imageContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillStyle = @markedTextColor.toString()
+      @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
 
   
   setExtent: (aPoint) ->
@@ -253,7 +253,7 @@ class TextMorph extends StringMorph
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     shadowHeight = Math.abs(@shadowOffset.y)
     yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    xOffset = Math.ceil(@imageContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
+    xOffset = Math.ceil(@backBufferContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -269,7 +269,7 @@ class TextMorph extends StringMorph
     row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@imageContext.measureText(@lines[row - 1][col]).width)
+      charX += Math.ceil(@backBufferContext.measureText(@lines[row - 1][col]).width)
       col += 1
     @lineSlots[Math.max(row - 1, 0)] + col - 1
   

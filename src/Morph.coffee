@@ -734,9 +734,9 @@ class Morph extends MorphicNode
   # tiles the texture
   drawCachedTexture: ->
     bg = @cachedTexture
-    cols = Math.floor(@image.width / bg.width)
-    lines = Math.floor(@image.height / bg.height)
-    context = @image.getContext("2d")
+    cols = Math.floor(@backBuffer.width / bg.width)
+    lines = Math.floor(@backBuffer.height / bg.height)
+    context = @backBuffer.getContext("2d")
     for y in [0..lines]
       for x in [0..cols]
         context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)

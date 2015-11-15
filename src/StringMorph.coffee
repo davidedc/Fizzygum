@@ -98,15 +98,15 @@ class StringMorph extends Morph
   calculateExtentBasedOnText: ->
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
-    @image = newCanvas()
-    @imageContext = @image.getContext("2d")
-    @imageContext.scale pixelRatio, pixelRatio
-    @imageContext.font = @font()
-    @imageContext.textAlign = "left"
-    @imageContext.textBaseline = "bottom"
+    @backBuffer = newCanvas()
+    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.font = @font()
+    @backBufferContext.textAlign = "left"
+    @backBufferContext.textBaseline = "bottom"
 
     # set my extent based on the size of the text
-    return Math.ceil(Math.max(@imageContext.measureText(text).width, 1))
+    return Math.ceil(Math.max(@backBufferContext.measureText(text).width, 1))
 
   setLayoutBeforeUpdatingBackingStore: ->
     super()
@@ -119,22 +119,22 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     width = @calculateExtentBasedOnText()
-    @image = newCanvas (new Point width, @height()).scaleBy pixelRatio
-    @imageContext = @image.getContext("2d")
+    @backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
+    @backBufferContext = @backBuffer.getContext("2d")
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    @imageContext.scale pixelRatio, pixelRatio
-    @imageContext.font = @font()
-    @imageContext.textAlign = "left"
-    @imageContext.textBaseline = "bottom"
+    @backBufferContext.scale pixelRatio, pixelRatio
+    @backBufferContext.font = @font()
+    @backBufferContext.textAlign = "left"
+    @backBufferContext.textBaseline = "bottom"
 
-    @imageContext.fillStyle = @color.toString()
+    @backBufferContext.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks @imageContext, 0, fontHeight(@fontSize)
+      @renderWithBlanks @backBufferContext, 0, fontHeight(@fontSize)
     else
-      @imageContext.fillText text, 0, fontHeight(@fontSize)
+      @backBufferContext.fillText text, 0, fontHeight(@fontSize)
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -142,11 +142,11 @@ class StringMorph extends Morph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
-      @imageContext.fillStyle = @markedBackgoundColor.toString()
-      @imageContext.fillRect p.x, p.y, Math.ceil(@imageContext.measureText(c).width) + 1,
+      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1,
         fontHeight(@fontSize)
-      @imageContext.fillStyle = @markedTextColor.toString()
-      @imageContext.fillText c, p.x, fontHeight(@fontSize)
+      @backBufferContext.fillStyle = @markedTextColor.toString()
+      @backBufferContext.fillText c, p.x, fontHeight(@fontSize)
 
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
@@ -181,7 +181,7 @@ class StringMorph extends Morph
     # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min(Math.max(slot, 0), text.length)
-    xOffset = Math.ceil(@imageContext.measureText(text.substring(0,dest)).width)
+    xOffset = Math.ceil(@backBufferContext.measureText(text.substring(0,dest)).width)
     @pos = dest
     x = @left() + xOffset
     y = @top()
@@ -195,10 +195,10 @@ class StringMorph extends Morph
     charX = 0
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@imageContext.measureText(text[idx]).width)
+      charX += Math.ceil(@backBufferContext.measureText(text[idx]).width)
       idx += 1
       if idx is text.length
-        if (Math.ceil(@imageContext.measureText(text).width) - (Math.ceil(@imageContext.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(@backBufferContext.measureText(text).width) - (Math.ceil(@backBufferContext.measureText(text[idx - 1]).width) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   

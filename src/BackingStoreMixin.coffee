@@ -43,20 +43,20 @@ BackingStoreMixin =
       # morph with all of the submorphs. I.e. for an inspector, this will only
       # contain the background of the window pane. Not any of its contents.
       # for the worldMorph, this only contains the background
-      image: null
-      imageContext: null
+      backBuffer: null
+      backBufferContext: null
 
       # just a flag to indicate that the
-      # imageContext value can be derived from others
-      imageContext_isDerivedValue: true
+      # backBufferContext value can be derived from others
+      backBufferContext_isDerivedValue: true
 
       silentUpdateBackingStore: ->
         # initialize my surface property
-        @image = newCanvas(@extent().scaleBy pixelRatio)
-        @imageContext = @image.getContext("2d")
-        @imageContext.scale pixelRatio, pixelRatio
-        @imageContext.fillStyle = @color.toString()
-        @imageContext.fillRect 0, 0, @width(), @height()
+        @backBuffer = newCanvas(@extent().scaleBy pixelRatio)
+        @backBufferContext = @backBuffer.getContext("2d")
+        @backBufferContext.scale pixelRatio, pixelRatio
+        @backBufferContext.fillStyle = @color.toString()
+        @backBufferContext.fillRect 0, 0, @width(), @height()
 
       calculateKeyValues: (aContext, clippingRectangle) ->
         area = clippingRectangle.intersect(@bounds).round()
@@ -69,8 +69,8 @@ BackingStoreMixin =
           st = src.top() * pixelRatio
           al = area.left() * pixelRatio
           at = area.top() * pixelRatio
-          w = Math.min(src.width() * pixelRatio, @image.width - sl)
-          h = Math.min(src.height() * pixelRatio, @image.height - st)
+          w = Math.min(src.width() * pixelRatio, @backBuffer.width - sl)
+          h = Math.min(src.height() * pixelRatio, @backBuffer.height - st)
         return [area,sl,st,al,at,w,h]
 
       isTransparentAt: (aPoint) ->
@@ -85,7 +85,7 @@ BackingStoreMixin =
       # Morph pixel access:
       getPixelColor: (aPoint) ->
         point = aPoint.subtract(@bounds.origin)
-        data = @imageContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
+        data = @backBufferContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
         new Color(data.data[0], data.data[1], data.data[2], data.data[3])
 
 
@@ -96,13 +96,13 @@ BackingStoreMixin =
       # Note that this morph might paint something on the screen even if
       # it's not a "leaf".
       blit: (aContext, clippingRectangle) ->
-        return null  if @isMinimised or !@isVisible or !@image?
+        return null  if @isMinimised or !@isVisible or !@backBuffer?
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
         if area.isNotEmpty()
           return null  if w < 1 or h < 1
           aContext.globalAlpha = @alpha
 
-          aContext.drawImage @image,
+          aContext.drawImage @backBuffer,
             Math.round(sl),
             Math.round(st),
             Math.round(w),

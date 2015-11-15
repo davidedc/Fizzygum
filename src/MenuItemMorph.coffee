@@ -56,20 +56,20 @@ class MenuItemMorph extends TriggerMorph
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement
     icon = new Morph()
-    icon.image = (if source instanceof Morph then source.fullImage() else source)
-    icon.imageContext = icon.image.getContext("2d")
+    icon.backBuffer = (if source instanceof Morph then source.fullImage() else source)
+    icon.backBufferContext = icon.backBuffer.getContext("2d")
 
     # adjust shadow dimensions
     if source instanceof Morph and source.getShadow()
-      src = icon.image
-      icon.image = newCanvas(
+      src = icon.backBuffer
+      icon.backBuffer = newCanvas(
         source.fullBounds().extent().subtract(
           @shadowBlur * ((if WorldMorph.preferencesAndSettings.useBlurredShadows then 1 else 2))).scaleBy pixelRatio)
-      icon.imageContext = icon.image.getContext("2d")
-      icon.imageContext.drawImage src, 0, 0
+      icon.backBufferContext = icon.backBuffer.getContext("2d")
+      icon.backBufferContext.drawImage src, 0, 0
 
-    icon.silentSetWidth icon.image.width
-    icon.silentSetHeight icon.image.height
+    icon.silentSetWidth icon.backBuffer.width
+    icon.silentSetHeight icon.backBuffer.height
     icon
 
   createLabelString: (string) ->

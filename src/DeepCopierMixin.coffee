@@ -36,7 +36,7 @@ DeepCopierMixin =
           # also includes the "parent" property
           if @hasOwnProperty(property)
 
-            if property == "imageContext"
+            if property == "backBufferContext"
               debugger
             if !@[property]?
               cloneOfMe[property] = null

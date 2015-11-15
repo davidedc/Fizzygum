@@ -27,7 +27,7 @@ class CanvasMorph extends FrameMorph
     # you may wish to modify its **penTrails()** property, so that
     # it keeps a separate offscreen canvas for pen trails
     # (and doesn't lose these on redraw).
-    @image
+    @backBuffer
   
   
   imBeingAddedTo: (newParentMorph) ->
