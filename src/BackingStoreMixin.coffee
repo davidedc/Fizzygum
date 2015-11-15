@@ -91,7 +91,7 @@ BackingStoreMixin =
       # Note that this morph might paint something on the screen even if
       # it's not a "leaf".
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-        if @updateBackingStore2? then @updateBackingStore2()
+        @updateBackingStore2()
         return null  if @isMinimised or !@isVisible or !@backBuffer?
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
