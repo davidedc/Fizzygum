@@ -18,7 +18,7 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
     newX = Math.round((theMorph.bounds.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0])) + theMorph.bounds.origin.x
     newY = Math.round((theMorph.bounds.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.bounds.origin.y
-    world.hand.silentSetPosition new Point(newX, newY)
+    world.hand.setPosition new Point(newX, newY)
 
     if commandBeingPlayed.button == "left"
       button = 0
