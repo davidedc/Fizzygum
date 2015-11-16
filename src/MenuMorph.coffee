@@ -261,12 +261,12 @@ class MenuMorph extends BoxMorph
     w = @maxWidth()
     #console.log "maxwidth " + w
     @children.forEach (item) =>
-      Morph::trackChanges = false
+      trackChanges.push false
       item.setWidth w
       if item is @label
         item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
       #console.log "new width of " + item + " : " + item.width()
-      Morph::trackChanges = true
+      trackChanges.pop()
 
   
   unselectAllItems: ->

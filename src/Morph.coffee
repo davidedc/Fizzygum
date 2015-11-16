@@ -94,7 +94,6 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
   customContextMenu: null
-  trackChanges: true
   shadowBlur: 10
   onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
 
@@ -1000,7 +999,7 @@ class Morph extends MorphicNode
   
   # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
-    if @trackChanges
+    if trackChanges[trackChanges.length - 1]
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
@@ -1024,7 +1023,7 @@ class Morph extends MorphicNode
     @parent.childChanged @  if @parent
   
   fullChanged: ->
-    if @trackChanges
+    if trackChanges[trackChanges.length - 1]
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible

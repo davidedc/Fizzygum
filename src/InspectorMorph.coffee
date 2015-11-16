@@ -350,7 +350,7 @@ class InspectorMorph extends BoxMorph
     # Also note that if you attach something else to its
     # boundary in a way that sticks out, that's still
     # going to be painted and moved OK.
-    Morph::trackChanges = false
+    trackChanges.push false
 
     # label
     labelLeft = @left() + @padding
@@ -425,7 +425,7 @@ class InspectorMorph extends BoxMorph
       @buttonClose.setPosition new Point(closeLeft, propertiesTop)
       @buttonClose.setExtent new Point(closeWidth, propertiesHeight)
 
-    Morph::trackChanges = true
+    trackChanges.pop()
     @changed()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

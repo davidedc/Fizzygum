@@ -459,6 +459,16 @@ continueBooting = ->
 
 world = {}; # we make "world" global
 
+# we use the trackChanges array as a stack to
+# keep track whether a whole segment of code
+# (including all function calls in it) will
+# record the broken rectangles.
+# This was previously done only by using one global
+# flag but this was not entirely correct because it
+# wouldn't account for nesting of "disabling track
+# changes" correctly.
+trackChanges = [true]
+
 continueBooting2 = ->
   # Add "false" as second parameter below
   # to fit the world in canvas as per dimensions

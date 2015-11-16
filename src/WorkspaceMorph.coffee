@@ -84,7 +84,7 @@ class WorkspaceMorph extends BoxMorph
   
   layoutSubmorphs: ->
     super()
-    Morph::trackChanges = false
+    trackChanges.push false
 
     handleSize = WorldMorph.preferencesAndSettings.handleSize;
 
@@ -116,7 +116,7 @@ class WorkspaceMorph extends BoxMorph
     w = @morphsList.width() - h - @cornerRadius
     @buttonClose.setPosition new Point(x, y)
     @buttonClose.setExtent new Point(w, h)
-    Morph::trackChanges = true
+    trackChanges.pop()
     @changed()
   
   setExtent: (aPoint) ->

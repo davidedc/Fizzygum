@@ -680,9 +680,9 @@ class HandMorph extends Morph
   
   # HandMorph floatDragging optimization
   moveBy: (delta) ->
-    Morph::trackChanges = false
+    trackChanges.push false
     super delta
-    Morph::trackChanges = true
+    trackChanges.pop()
     @fullChanged()
 
   processMouseMove: (worldX, worldY) ->

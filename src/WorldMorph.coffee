@@ -132,6 +132,7 @@ class WorldMorph extends FrameMorph
   @bootState: 0
   @ongoingUrlActionNumber: 0
 
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
