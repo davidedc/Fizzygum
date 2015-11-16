@@ -158,10 +158,8 @@ class TextMorph extends StringMorph
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
-        console.log "saved a bunch of drawing"
         return
 
-    console.log "text cache is invalid"
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext("2d")
     @backBufferContext.font = @font()

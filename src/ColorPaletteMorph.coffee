@@ -24,7 +24,6 @@ class ColorPaletteMorph extends Morph
 
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString()
-        console.log "saved a bunch of drawing"
         return
 
     extent = @extent()

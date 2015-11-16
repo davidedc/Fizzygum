@@ -39,7 +39,6 @@ class CanvasMorph extends FrameMorph
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.color == @color.toString()
-        console.log "saved a bunch of drawing"
         return
 
     extent = @extent()

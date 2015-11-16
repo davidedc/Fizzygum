@@ -130,7 +130,6 @@ class StringMorph extends Morph
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
-        console.log "saved a bunch of drawing"
         return
 
     text = (if @isPassword then @password("*", @text.length) else @text)
