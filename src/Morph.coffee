@@ -107,6 +107,7 @@ class Morph extends MorphicNode
 
   textDescription: null
 
+  geometryOrPositionPossiblyChanged: false
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -485,7 +486,6 @@ class Morph extends MorphicNode
   ###
 
   
-  boundsIncludingChildren: ->
     result = @bounds
     @children.forEach (child) ->
       if !child.isMinimised and child.isVisible
@@ -1012,7 +1012,6 @@ class Morph extends MorphicNode
           boundsToBeChanged = @boundsIncludingChildren().spread()
         else
           # @visibleBounds() should be smaller area
-          # and cheaper to calculate than @boundsIncludingChildren()
           # cause it doesn't traverse the children and clips
           # the area based on the clipping morphs up the
           # hierarchy
@@ -1034,7 +1033,6 @@ class Morph extends MorphicNode
         if (w instanceof HandMorph)
           w = w.world
 
-        w.broken.push @boundsIncludingChildren().spread()
   
   childChanged: ->
     # react to a  change in one of my children,

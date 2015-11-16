@@ -468,6 +468,8 @@ world = {}; # we make "world" global
 # wouldn't account for nesting of "disabling track
 # changes" correctly.
 trackChanges = [true]
+healingRectanglesPhase = false
+morphsThatMaybeChangedGeometryOrPosition = []
 
 continueBooting2 = ->
   # Add "false" as second parameter below

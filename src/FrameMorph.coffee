@@ -83,7 +83,13 @@ class FrameMorph extends Morph
   # at their boundaries
   # so there is no need to do a deep
   # traversal to find the bounds.
-  boundsIncludingChildren: ->
+  boundsIncludingChildren: (setAsChanged = false) ->
+
+    if setAsChanged
+      if !@geometryOrPositionPossiblyChanged
+        if trackChanges[trackChanges.length - 1]
+          @geometryOrPositionPossiblyChanged = true
+
     shadow = @getShadow()
     if shadow?
       return @bounds.merge(shadow.bounds)
@@ -96,6 +102,8 @@ class FrameMorph extends Morph
 
   
   recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
+    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+
     return null  unless (!@isMinimised and @isVisible)
 
     if noShadow and (@ instanceof ShadowMorph)

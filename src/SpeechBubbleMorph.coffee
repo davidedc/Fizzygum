@@ -53,7 +53,6 @@ class SpeechBubbleMorph extends BoxMorph
   
   # SpeechBubbleMorph invoking:
   popUp: (pos, isClickable) ->
-    debugger
     # console.log "bubble popup"
     world = @morphInvokingThis.world()
     @setPosition pos.subtract(new Point(0, @height()))

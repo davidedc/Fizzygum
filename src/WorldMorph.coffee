@@ -317,6 +317,37 @@ class WorldMorph extends FrameMorph
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
     @hand.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, aRect
+
+  fleshOutBroken: ->
+    for brokenMorph in morphsThatMaybeChangedGeometryOrPosition
+
+      w = brokenMorph.root()
+      # unless we are the main desktop, then if the morph has no parent
+      # don't add the broken rect since the morph is not visible
+      # also check whether we are attached to the hand cause that still counts
+      # TODO this has to be made simpler and has to take into account
+      # visibility as well?
+      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((brokenMorph instanceof WorldMorph or brokenMorph.parent?)))
+        if (w instanceof HandMorph)
+          w = w.world
+          boundsToBeChanged = brokenMorph.boundsIncludingChildren().spread()
+        else
+          # @visibleBounds() should be smaller area
+          # and is cheaper to calculate than @boundsIncludingChildren()
+          # cause it doesn't traverse the children and clips
+          # the area based on the clipping morphs up the
+          # hierarchy
+          boundsToBeChanged = brokenMorph.visibleBounds().spread()
+
+        if brokenMorph.boundsWhenLastPainted?
+          w.broken.push brokenMorph.boundsWhenLastPainted
+
+        w.broken.push boundsToBeChanged
+        brokenMorph.boundsWhenLastPainted = boundsToBeChanged
+      else
+        brokenMorph.boundsWhenLastPainted = null
+
+
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
@@ -331,9 +362,13 @@ class WorldMorph extends FrameMorph
     # each broken rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
 
+    #@fleshOutBroken()
+    morphsThatMaybeChangedGeometryOrPosition = []
+    healingRectanglesPhase = true
     @broken.forEach (rect) =>
       @recursivelyPaintIntoAreaOrBlAtFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
+    healingRectanglesPhase = false
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
