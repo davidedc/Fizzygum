@@ -108,6 +108,7 @@ class Morph extends MorphicNode
   textDescription: null
 
   geometryOrPositionPossiblyChanged: false
+  boundsWhenLastPainted: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -486,10 +487,15 @@ class Morph extends MorphicNode
   ###
 
   
+  boundsIncludingChildren: (setAsChanged = false) ->
     result = @bounds
     @children.forEach (child) ->
       if !child.isMinimised and child.isVisible
-        result = result.merge(child.boundsIncludingChildren())
+        if setAsChanged
+          if !child.geometryOrPositionPossiblyChanged
+            if trackChanges[trackChanges.length - 1]
+              child.geometryOrPositionPossiblyChanged = true
+        result = result.merge(child.boundsIncludingChildren(setAsChanged))
     result
   
   boundsIncludingChildrenNoShadow: ->
@@ -793,6 +799,8 @@ class Morph extends MorphicNode
         aContext.restore()
 
   recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
+    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+
     return null  if @isMinimised or !@isVisible
 
     if noShadow and (@ instanceof ShadowMorph)
@@ -1000,6 +1008,10 @@ class Morph extends MorphicNode
   # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
     if trackChanges[trackChanges.length - 1]
+      #if !@geometryOrPositionPossiblyChanged
+      #  morphsThatMaybeChangedGeometryOrPosition.push @
+      @geometryOrPositionPossiblyChanged = true
+
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
@@ -1012,6 +1024,7 @@ class Morph extends MorphicNode
           boundsToBeChanged = @boundsIncludingChildren().spread()
         else
           # @visibleBounds() should be smaller area
+          # and is cheaper to calculate than @boundsIncludingChildren()
           # cause it doesn't traverse the children and clips
           # the area based on the clipping morphs up the
           # hierarchy
@@ -1033,6 +1046,7 @@ class Morph extends MorphicNode
         if (w instanceof HandMorph)
           w = w.world
 
+        w.broken.push @boundsIncludingChildren(true).spread()
   
   childChanged: ->
     # react to a  change in one of my children,
