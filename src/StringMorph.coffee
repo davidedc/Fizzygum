@@ -400,7 +400,7 @@ class StringMorph extends Morph
   selectAll: ->
     @startMark = 0
     @endMark = @text.length
-    
+    @backBufferIsPotentiallyDirty = true
     @changed()
 
   mouseDownLeft: (pos) ->
