@@ -58,7 +58,7 @@ class PenMorph extends Morph
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+    if window.healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
