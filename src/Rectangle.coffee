@@ -161,6 +161,7 @@ class Rectangle
   
   # Rectangle comparison:
   eq: (aRect) ->
+    if !aRect? then return false
     @debugIfFloats()
     @origin.eq(aRect.origin) and @corner.eq(aRect.corner)
   

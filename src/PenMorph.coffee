@@ -60,12 +60,19 @@ class PenMorph extends Morph
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
     if window.healingRectanglesPhase
       @geometryOrPositionPossiblyChanged = false
+
+    if @isMinimised or !@isVisible
+      if window.healingRectanglesPhase
+        @boundsWhenLastPainted = null
+      return null
+
+    if window.healingRectanglesPhase
       @boundsWhenLastPainted = @bounds.copy()
 
-    return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
-      return null  if w < 1 or h < 1
+      if w < 1 or h < 1
+        return null
 
       aContext.save()
 

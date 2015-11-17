@@ -345,9 +345,10 @@ class WorldMorph extends FrameMorph
         if brokenMorph.boundsWhenLastPainted?
           @broken.push brokenMorph.boundsWhenLastPainted
 
-        # TODO avoid to break two rectangles if the change
+        # avoid to break two rectangles if the change
         # is in-place
-        @broken.push boundsToBeChanged
+        if !boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
+          @broken.push boundsToBeChanged
       else
         brokenMorph.boundsWhenLastPainted = null
 

@@ -94,14 +94,20 @@ BackingStoreMixin =
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
         if window.healingRectanglesPhase
           @geometryOrPositionPossiblyChanged = false
-          @boundsWhenLastPainted = @bounds.copy()
 
         @repaintBackBufferIfNeeded()
-        return null  if @isMinimised or !@isVisible or !@backBuffer?
+        if @isMinimised or !@isVisible or !@backBuffer?
+          if window.healingRectanglesPhase
+            @boundsWhenLastPainted = null
+          return null
+
+        if window.healingRectanglesPhase
+          @boundsWhenLastPainted = @bounds.copy()
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
         if area.isNotEmpty()
-          return null  if w < 1 or h < 1
+          if w < 1 or h < 1
+            return null
           aContext.globalAlpha = @alpha
 
           aContext.drawImage @backBuffer,
