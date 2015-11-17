@@ -104,14 +104,16 @@ class FrameMorph extends Morph
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
     if @isMinimised or !@isVisible
       if window.healingRectanglesPhase
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = null
+        if @geometryOrPositionPossiblyChanged
+          @geometryOrPositionPossiblyChanged = false
+          @boundsWhenLastPainted = null
       return null
 
     if noShadow and (@ instanceof ShadowMorph)
       if window.healingRectanglesPhase
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = null
+        if @geometryOrPositionPossiblyChanged
+          @geometryOrPositionPossiblyChanged = false
+          @boundsWhenLastPainted = null
       return
 
     # a FrameMorph has the special property that all of its children

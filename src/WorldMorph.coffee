@@ -323,7 +323,7 @@ class WorldMorph extends FrameMorph
       debugger
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
-      brokenMorph.geometryOrPositionPossiblyChanged = false
+      #brokenMorph.geometryOrPositionPossiblyChanged = false
       w = brokenMorph.root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible

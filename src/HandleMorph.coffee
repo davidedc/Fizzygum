@@ -86,16 +86,18 @@ class HandleMorph extends Morph
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-    if window.healingRectanglesPhase
-      @geometryOrPositionPossiblyChanged = false
 
     if @isMinimised or !@isVisible
       if window.healingRectanglesPhase
-        @boundsWhenLastPainted = null
+        if @geometryOrPositionPossiblyChanged
+          @geometryOrPositionPossiblyChanged = false
+          @boundsWhenLastPainted = null
       return null
 
     if window.healingRectanglesPhase
-      @boundsWhenLastPainted = @bounds.copy()
+      if @geometryOrPositionPossiblyChanged
+        @geometryOrPositionPossiblyChanged = false
+        @boundsWhenLastPainted = @bounds.copy()
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
