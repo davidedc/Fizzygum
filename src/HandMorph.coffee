@@ -31,12 +31,7 @@ class HandMorph extends Morph
     @temporaries = []
     super()
     @bounds = new Rectangle()
-  
-  changed: ->
-    if @world?
-      b = @boundsIncludingChildren()
-      if !b.extent().eq(new Point())
-        @world.broken.push @boundsIncludingChildren().spread()
+
   
   
   # HandMorph navigation:
@@ -680,6 +675,7 @@ class HandMorph extends Morph
   
   # HandMorph floatDragging optimization
   moveBy: (delta) ->
+    @fullChanged()
     trackChanges.push false
     super delta
     trackChanges.pop()
