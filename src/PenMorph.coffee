@@ -53,7 +53,7 @@ class PenMorph extends Morph
   
   # This method only paints this very morph's "image",
   # it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlAtFromBackBuffer, which
+  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlitFromBackBuffer, which
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".

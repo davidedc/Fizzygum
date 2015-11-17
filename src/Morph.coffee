@@ -719,7 +719,7 @@ class Morph extends MorphicNode
   # * paintIntoAreaOrBlitFromBackBuffer: takes the local canvas and paints it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
-  # * recursivelyPaintIntoAreaOrBlAtFromBackBuffer: recursively draws all the local canvas of this morph and all
+  # * recursivelyPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
   
@@ -764,7 +764,7 @@ class Morph extends MorphicNode
 
   # This method only paints this very morph
   # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlAtFromBackBuffer,
+  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlitFromBackBuffer,
   # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
@@ -800,8 +800,8 @@ class Morph extends MorphicNode
             Math.round(h)
         aContext.restore()
 
-  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
     if window.healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
 
     return null  if @isMinimised or !@isVisible
 
@@ -823,7 +823,7 @@ class Morph extends MorphicNode
 
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
-      child.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, clippingRectangle, noShadow
+      child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
   
 
   hide: ->
@@ -882,7 +882,7 @@ class Morph extends MorphicNode
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
-    @recursivelyPaintIntoAreaOrBlAtFromBackBuffer ctx, bounds, noShadow
+    @recursivelyPaintIntoAreaOrBlitFromBackBuffer ctx, bounds, noShadow
     img
 
   fullImageNoShadow: ->

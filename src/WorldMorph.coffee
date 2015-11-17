@@ -299,12 +299,12 @@ class WorldMorph extends FrameMorph
       rect.intersects fb
   
   
-  # recursivelyPaintIntoAreaOrBlAtFromBackBuffer results into actual painting of pices of
+  # recursivelyPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pices of
   # morphs done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
   # The paintIntoAreaOrBlitFromBackBuffer function is defined in Morph.
-  recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, aRect) ->
-    # invokes the Morph's recursivelyPaintIntoAreaOrBlAtFromBackBuffer, which has only three implementations:
+  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
+    # invokes the Morph's recursivelyPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
     #  * the default one by Morph which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
     #  * the interesting one in FrameMorph which a) narrows the dirty
     #    rectangle (intersecting it with its border
@@ -316,7 +316,7 @@ class WorldMorph extends FrameMorph
     super aContext, aRect
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
-    @hand.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, aRect
+    @hand.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   fleshOutBroken: ->
     if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
@@ -375,7 +375,7 @@ class WorldMorph extends FrameMorph
 
     window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
-      @recursivelyPaintIntoAreaOrBlAtFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
+      @recursivelyPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
     window.healingRectanglesPhase = false
   
