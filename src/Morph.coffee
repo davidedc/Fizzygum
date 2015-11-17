@@ -109,6 +109,7 @@ class Morph extends MorphicNode
 
   geometryOrPositionPossiblyChanged: false
   boundsWhenLastPainted: null
+  parentWhenLastPainted: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -768,6 +769,7 @@ class Morph extends MorphicNode
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
@@ -799,7 +801,7 @@ class Morph extends MorphicNode
         aContext.restore()
 
   recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
-    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+    if window.healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
 
     return null  if @isMinimised or !@isVisible
 
@@ -1008,10 +1010,11 @@ class Morph extends MorphicNode
   # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
     if trackChanges[trackChanges.length - 1]
-      #if !@geometryOrPositionPossiblyChanged
-      #  morphsThatMaybeChangedGeometryOrPosition.push @
-      @geometryOrPositionPossiblyChanged = true
+      if !@geometryOrPositionPossiblyChanged
+        window.morphsThatMaybeChangedGeometryOrPosition.push @
+        @geometryOrPositionPossiblyChanged = true
 
+      ###
       w = @root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
@@ -1031,6 +1034,7 @@ class Morph extends MorphicNode
           boundsToBeChanged = @visibleBounds().spread()
 
         w.broken.push boundsToBeChanged
+        ###
 
     @parent.childChanged @  if @parent
   

@@ -102,7 +102,7 @@ class FrameMorph extends Morph
 
   
   recursivelyPaintIntoAreaOrBlAtFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
-    if healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
+    if window.healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
 
     return null  unless (!@isMinimised and @isVisible)
 

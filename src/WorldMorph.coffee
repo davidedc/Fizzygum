@@ -319,8 +319,11 @@ class WorldMorph extends FrameMorph
     @hand.recursivelyPaintIntoAreaOrBlAtFromBackBuffer aContext, aRect
 
   fleshOutBroken: ->
-    for brokenMorph in morphsThatMaybeChangedGeometryOrPosition
+    if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
+      debugger
+    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
+      brokenMorph.geometryOrPositionPossiblyChanged = false
       w = brokenMorph.root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
@@ -337,20 +340,28 @@ class WorldMorph extends FrameMorph
           # cause it doesn't traverse the children and clips
           # the area based on the clipping morphs up the
           # hierarchy
-          boundsToBeChanged = brokenMorph.visibleBounds().spread()
+          if brokenMorph.parentWhenLastPainted == brokenMorph.parent
+            boundsToBeChanged = brokenMorph.visibleBounds().spread()
+          else
+            boundsToBeChanged = brokenMorph.bounds.spread()
 
         if brokenMorph.boundsWhenLastPainted?
-          w.broken.push brokenMorph.boundsWhenLastPainted
+          @broken.push brokenMorph.boundsWhenLastPainted
 
-        w.broken.push boundsToBeChanged
-        brokenMorph.boundsWhenLastPainted = boundsToBeChanged
+        # TODO avoid to break two rectangles if the change
+        # is in-place
+        @broken.push boundsToBeChanged
+        brokenMorph.boundsWhenLastPainted = boundsToBeChanged.copy()
+        brokenMorph.parentWhenLastPainted = brokenMorph.parent
       else
         brokenMorph.boundsWhenLastPainted = null
 
+    window.morphsThatMaybeChangedGeometryOrPosition = []
 
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
+    @fleshOutBroken()
     ProfilingDataCollector.profileBrokenRects @broken.length
 
     # each broken rectangle requires traversing the scenegraph to
@@ -362,13 +373,11 @@ class WorldMorph extends FrameMorph
     # each broken rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
 
-    #@fleshOutBroken()
-    morphsThatMaybeChangedGeometryOrPosition = []
-    healingRectanglesPhase = true
+    window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
       @recursivelyPaintIntoAreaOrBlAtFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
-    healingRectanglesPhase = false
+    window.healingRectanglesPhase = false
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
