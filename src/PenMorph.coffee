@@ -61,7 +61,6 @@ class PenMorph extends Morph
     if window.healingRectanglesPhase
       @geometryOrPositionPossiblyChanged = false
       @boundsWhenLastPainted = @bounds.copy()
-      @parentWhenLastPainted = @parent
 
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

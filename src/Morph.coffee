@@ -109,7 +109,6 @@ class Morph extends MorphicNode
 
   geometryOrPositionPossiblyChanged: false
   boundsWhenLastPainted: null
-  parentWhenLastPainted: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -772,7 +771,6 @@ class Morph extends MorphicNode
     if window.healingRectanglesPhase
       @geometryOrPositionPossiblyChanged = false
       @boundsWhenLastPainted = @bounds.copy()
-      @parentWhenLastPainted = @parent
 
     return null  if @isMinimised or !@isVisible
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
@@ -808,7 +806,6 @@ class Morph extends MorphicNode
     if window.healingRectanglesPhase
       @geometryOrPositionPossiblyChanged = false
       @boundsWhenLastPainted = @bounds.copy()
-      @parentWhenLastPainted = @parent
 
     return null  if @isMinimised or !@isVisible
 

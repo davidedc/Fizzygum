@@ -105,7 +105,6 @@ class FrameMorph extends Morph
     if window.healingRectanglesPhase
       @geometryOrPositionPossiblyChanged = false
       @boundsWhenLastPainted = @bounds.copy()
-      @parentWhenLastPainted = @parent
 
     return null  unless (!@isMinimised and @isVisible)
 

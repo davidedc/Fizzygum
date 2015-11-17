@@ -95,7 +95,6 @@ BackingStoreMixin =
         if window.healingRectanglesPhase
           @geometryOrPositionPossiblyChanged = false
           @boundsWhenLastPainted = @bounds.copy()
-          @parentWhenLastPainted = @parent
 
         @repaintBackBufferIfNeeded()
         return null  if @isMinimised or !@isVisible or !@backBuffer?
