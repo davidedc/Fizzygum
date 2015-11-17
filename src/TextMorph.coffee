@@ -249,9 +249,7 @@ class TextMorph extends StringMorph
   
   setExtent: (aPoint) ->
     @maxWidth = Math.max(aPoint.x, 0)
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   # TextMorph measuring ////
@@ -338,20 +336,17 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
     @reLayout()
-    
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
     @reLayout()
-    
     @changed()  
   
   # TextMorph evaluation:

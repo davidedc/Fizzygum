@@ -440,9 +440,7 @@ class InspectorMorph extends BoxMorph
     try
       # this.target[propertyName] = evaluate(txt);
       @target.evaluateString "this." + propertyName + " = " + txt
-      @target.changed()
-      @target.reLayout()
-      
+      @target.reLayout()      
       @target.changed()
     catch err
       @inform err
@@ -454,9 +452,7 @@ class InspectorMorph extends BoxMorph
         prop = prop.getValue()
       @target[prop] = null
       @buildAndConnectChildren()
-      @target.changed()
-      @target.reLayout()
-      
+      @target.reLayout()      
       @target.changed()
   
   addPropertyPopout: ->
@@ -473,9 +469,7 @@ class InspectorMorph extends BoxMorph
     catch err
       @inform err
     @buildAndConnectChildren()
-    @target.changed()
-    @target.reLayout()
-    
+    @target.reLayout()    
     @target.changed()
   
   renamePropertyPopout: ->
@@ -489,9 +483,7 @@ class InspectorMorph extends BoxMorph
 
       @currentProperty = null
       @buildAndConnectChildren()
-      @target.changed()
-      @target.reLayout()
-      
+      @target.reLayout()      
       @target.changed()
     catch err
       @inform err

@@ -130,7 +130,6 @@ class CircleBoxMorph extends Morph
   
   toggleOrientation: ->
     center = @center()
-    @changed()
     if @orientation is "vertical"
       @orientation = "horizontal"
     else

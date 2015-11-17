@@ -211,9 +211,7 @@ class CaretMorph extends BlinkerMorph
     # already, but I'm leaving them here
     # until I understand better this changed
     # vs. updateBackingStore semantics.
-    @target.changed()
-    @target.reLayout()
-    
+    @target.reLayout()    
     @target.changed()
 
     @gotoSlot 0

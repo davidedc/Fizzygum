@@ -61,7 +61,6 @@ class HandleMorph extends Morph
         else
           @show()
 
-      @changed()
       @silentUpdateResizerHandlePosition()
       @changed()
 

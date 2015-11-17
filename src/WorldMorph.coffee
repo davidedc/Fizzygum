@@ -1304,7 +1304,6 @@ class WorldMorph extends FrameMorph
     menu.popup @, @aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   
   reactToSlide: (num) ->
-    @aStringMorphOrTextMorph.changed()
     @aStringMorphOrTextMorph.text = Math.round(num).toString()
     @aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackingStore()
     @aStringMorphOrTextMorph.updateBackingStore()

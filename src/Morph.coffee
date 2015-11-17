@@ -530,7 +530,6 @@ class Morph extends MorphicNode
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
-
     @changed()
   
   silentMoveBy: (delta) ->
@@ -636,7 +635,6 @@ class Morph extends MorphicNode
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
-      @changed()
       @silentSetExtent aPoint
       @changed()
       @reLayout()

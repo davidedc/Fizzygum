@@ -298,44 +298,32 @@ class StringMorph extends Morph
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
@@ -350,17 +338,13 @@ class StringMorph extends Morph
     else
       newSize = parseFloat(size)
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   setText: (size) ->
     # for context menu demo purposes
     @text = Math.round(size).toString()
-    @changed()
-    @reLayout()
-    
+    @reLayout()    
     @changed()
   
   numericalSetters: ->
@@ -384,8 +368,6 @@ class StringMorph extends Morph
     @currentlySelecting = false
     @startMark = null
     @endMark = null
-    @changed()
-    
     @changed()
   
   deleteSelection: ->
