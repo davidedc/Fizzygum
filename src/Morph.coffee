@@ -812,15 +812,15 @@ class Morph extends MorphicNode
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
 
     if @isMinimised or !@isVisible
-      if window.healingRectanglesPhase
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = null
+      #if window.healingRectanglesPhase
+      #  @geometryOrPositionPossiblyChanged = false
+      #  @boundsWhenLastPainted = null
       return null
 
     if noShadow and (@ instanceof ShadowMorph)
-      if window.healingRectanglesPhase
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = null
+      #if window.healingRectanglesPhase
+      #  @geometryOrPositionPossiblyChanged = false
+      #  @boundsWhenLastPainted = null
       return
 
     # in general, the children of a Morph could be outside the

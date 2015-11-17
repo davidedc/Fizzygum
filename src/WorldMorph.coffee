@@ -319,8 +319,8 @@ class WorldMorph extends FrameMorph
     @hand.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   fleshOutBroken: ->
-    if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
-      debugger
+    #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
+    #  debugger
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
       #brokenMorph.geometryOrPositionPossiblyChanged = false
@@ -349,8 +349,12 @@ class WorldMorph extends FrameMorph
         # is in-place
         if !boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
           @broken.push boundsToBeChanged
+
+        brokenMorph.boundsWhenLastPainted = boundsToBeChanged
       else
         brokenMorph.boundsWhenLastPainted = null
+
+      brokenMorph.geometryOrPositionPossiblyChanged = false
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
