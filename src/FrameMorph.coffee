@@ -101,8 +101,11 @@ class FrameMorph extends Morph
     @bounds
 
   
-    if window.healingRectanglesPhase then @geometryOrPositionPossiblyChanged = false
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
+    if window.healingRectanglesPhase
+      @geometryOrPositionPossiblyChanged = false
+      @boundsWhenLastPainted = @bounds.copy()
+      @parentWhenLastPainted = @parent
 
     return null  unless (!@isMinimised and @isVisible)
 

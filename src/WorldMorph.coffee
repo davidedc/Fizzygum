@@ -340,10 +340,7 @@ class WorldMorph extends FrameMorph
           # cause it doesn't traverse the children and clips
           # the area based on the clipping morphs up the
           # hierarchy
-          if brokenMorph.parentWhenLastPainted == brokenMorph.parent
-            boundsToBeChanged = brokenMorph.visibleBounds().spread()
-          else
-            boundsToBeChanged = brokenMorph.bounds.spread()
+          boundsToBeChanged = brokenMorph.visibleBounds().spread()
 
         if brokenMorph.boundsWhenLastPainted?
           @broken.push brokenMorph.boundsWhenLastPainted
@@ -351,8 +348,6 @@ class WorldMorph extends FrameMorph
         # TODO avoid to break two rectangles if the change
         # is in-place
         @broken.push boundsToBeChanged
-        brokenMorph.boundsWhenLastPainted = boundsToBeChanged.copy()
-        brokenMorph.parentWhenLastPainted = brokenMorph.parent
       else
         brokenMorph.boundsWhenLastPainted = null
 
