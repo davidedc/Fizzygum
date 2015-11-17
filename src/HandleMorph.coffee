@@ -88,16 +88,7 @@ class HandleMorph extends Morph
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
     if @isMinimised or !@isVisible
-      if window.healingRectanglesPhase
-        if @geometryOrPositionPossiblyChanged
-          @geometryOrPositionPossiblyChanged = false
-          @boundsWhenLastPainted = null
       return null
-
-    if window.healingRectanglesPhase
-      if @geometryOrPositionPossiblyChanged
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = @bounds.copy()
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()

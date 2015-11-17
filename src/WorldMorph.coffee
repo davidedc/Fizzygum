@@ -358,9 +358,30 @@ class WorldMorph extends FrameMorph
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
+  fleshOutFullBroken: ->
+    #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
+    #  debugger
+    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+
+      boundsToBeChanged = brokenMorph.boundsIncludingChildren().spread()
+
+      if brokenMorph.fullBoundsWhenLastPainted?
+        @broken.push brokenMorph.fullBoundsWhenLastPainted
+
+      # avoid to break two rectangles if the change
+      # is in-place
+      if !boundsToBeChanged.eq brokenMorph.fullBoundsWhenLastPainted
+        @broken.push boundsToBeChanged
+
+      brokenMorph.fullBoundsWhenLastPainted = boundsToBeChanged
+   
+      brokenMorph.fullGeometryOrPositionPossiblyChanged = false
+
+    window.morphsThatMaybeChangedFullGeometryOrPosition = []
   
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
+    @fleshOutFullBroken()
     @fleshOutBroken()
     ProfilingDataCollector.profileBrokenRects @broken.length
 

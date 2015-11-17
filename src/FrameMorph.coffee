@@ -86,9 +86,7 @@ class FrameMorph extends Morph
   boundsIncludingChildren: (setAsChanged = false) ->
 
     if setAsChanged
-      if !@geometryOrPositionPossiblyChanged
-        if trackChanges[trackChanges.length - 1]
-          @geometryOrPositionPossiblyChanged = true
+      @changed()
 
     shadow = @getShadow()
     if shadow?
@@ -103,17 +101,9 @@ class FrameMorph extends Morph
   
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
     if @isMinimised or !@isVisible
-      if window.healingRectanglesPhase
-        if @geometryOrPositionPossiblyChanged
-          @geometryOrPositionPossiblyChanged = false
-          @boundsWhenLastPainted = null
       return null
 
     if noShadow and (@ instanceof ShadowMorph)
-      if window.healingRectanglesPhase
-        if @geometryOrPositionPossiblyChanged
-          @geometryOrPositionPossiblyChanged = false
-          @boundsWhenLastPainted = null
       return
 
     # a FrameMorph has the special property that all of its children

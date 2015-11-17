@@ -110,6 +110,9 @@ class Morph extends MorphicNode
   geometryOrPositionPossiblyChanged: false
   boundsWhenLastPainted: null
 
+  fullGeometryOrPositionPossiblyChanged: false
+  fullBoundsWhenLastPainted: null
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -329,6 +332,7 @@ class Morph extends MorphicNode
     console.log "****** destroying morph"
     @onClickOutsideMeOrAnyOfMyChildren null
 
+    debugger
     if @parent?
       @fullChanged()
       @parent.removeChild @
@@ -492,9 +496,7 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       if !child.isMinimised and child.isVisible
         if setAsChanged
-          if !child.geometryOrPositionPossiblyChanged
-            if trackChanges[trackChanges.length - 1]
-              child.geometryOrPositionPossiblyChanged = true
+          child.changed()
         result = result.merge(child.boundsIncludingChildren(setAsChanged))
     result
   
@@ -768,16 +770,7 @@ class Morph extends MorphicNode
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
     if @isMinimised or !@isVisible
-      if window.healingRectanglesPhase
-        if @geometryOrPositionPossiblyChanged
-          @geometryOrPositionPossiblyChanged = false
-          @boundsWhenLastPainted = null
       return null
-
-    if window.healingRectanglesPhase
-      if @geometryOrPositionPossiblyChanged
-        @geometryOrPositionPossiblyChanged = false
-        @boundsWhenLastPainted = @bounds.copy()
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
@@ -1029,43 +1022,13 @@ class Morph extends MorphicNode
         window.morphsThatMaybeChangedGeometryOrPosition.push @
         @geometryOrPositionPossiblyChanged = true
 
-      ###
-      w = @root()
-      # unless we are the main desktop, then if the morph has no parent
-      # don't add the broken rect since the morph is not visible
-      # also check whether we are attached to the hand cause that still counts
-      # TODO this has to be made simpler and has to take into account
-      # visibility as well?
-      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
-        if (w instanceof HandMorph)
-          w = w.world
-          boundsToBeChanged = @boundsIncludingChildren().spread()
-        else
-          # @visibleBounds() should be smaller area
-          # and is cheaper to calculate than @boundsIncludingChildren()
-          # cause it doesn't traverse the children and clips
-          # the area based on the clipping morphs up the
-          # hierarchy
-          boundsToBeChanged = @visibleBounds().spread()
-
-        w.broken.push boundsToBeChanged
-        ###
-
     @parent.childChanged @  if @parent
   
   fullChanged: ->
     if trackChanges[trackChanges.length - 1]
-      w = @root()
-      # unless we are the main desktop, then if the morph has no parent
-      # don't add the broken rect since the morph is not visible
-      # also check whether we are attached to the hand cause that still counts
-      # TODO this has to be made simpler and has to take into account
-      # visibility as well?
-      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((@ instanceof WorldMorph or @parent?)))
-        if (w instanceof HandMorph)
-          w = w.world
-
-        w.broken.push @boundsIncludingChildren(true).spread()
+      if !@fullGeometryOrPositionPossiblyChanged
+        window.morphsThatMaybeChangedFullGeometryOrPosition.push @
+        @fullGeometryOrPositionPossiblyChanged = true
   
   childChanged: ->
     # react to a  change in one of my children,

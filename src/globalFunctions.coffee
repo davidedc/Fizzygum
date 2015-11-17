@@ -470,6 +470,7 @@ world = {}; # we make "world" global
 trackChanges = [true]
 window.healingRectanglesPhase = false
 window.morphsThatMaybeChangedGeometryOrPosition = []
+window.morphsThatMaybeChangedFullGeometryOrPosition = []
 
 continueBooting2 = ->
   # Add "false" as second parameter below

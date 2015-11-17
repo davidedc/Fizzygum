@@ -164,7 +164,7 @@ class HandMorph extends Morph
       aMorph.addShadow(new Point(7,7),0.2)
       
       #debugger
-      @changed()
+      @fullChanged()
       # this gives an occasion to the old parent
       # morph to adjust itself e.g. the scrollmorph
       # readjusts itself if you take some morphs
@@ -190,9 +190,9 @@ class HandMorph extends Morph
 
       morphToDrop = @children[0]
       target = @dropTargetFor(morphToDrop)
-      @changed()
+      @fullChanged()
       target.add morphToDrop
-      morphToDrop.changed()
+      morphToDrop.fullChanged()
 
       doRemoveShadow = true
       if (morphToDrop instanceof MenuMorph)
