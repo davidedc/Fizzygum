@@ -82,7 +82,6 @@ class MenuItemMorph extends TriggerMorph
   mouseEnter: ->
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
-      debugger
       @changed()
     if @hint
       @startCountdownForBubbleHelp @hint

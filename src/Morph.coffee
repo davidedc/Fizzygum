@@ -329,10 +329,8 @@ class Morph extends MorphicNode
   destroy: ->
     # remove callback when user clicks outside
     # me or any of my children
-    console.log "****** destroying morph"
     @onClickOutsideMeOrAnyOfMyChildren null
 
-    debugger
     if @parent?
       @fullChanged()
       @parent.removeChild @
@@ -1018,6 +1016,17 @@ class Morph extends MorphicNode
   # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
     if trackChanges[trackChanges.length - 1]
+
+      # if the morph is attached to a hand then
+      # there is also a shadow to change, so we
+      # change everything that is attached
+      # to the hand, which means we issue a
+      # fullChanged()
+      root = @root()
+      if root instanceof HandMorph
+        root.fullChanged()
+        return
+
       if !@geometryOrPositionPossiblyChanged
         window.morphsThatMaybeChangedGeometryOrPosition.push @
         @geometryOrPositionPossiblyChanged = true

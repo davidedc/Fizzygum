@@ -330,17 +330,13 @@ class WorldMorph extends FrameMorph
       # also check whether we are attached to the hand cause that still counts
       # TODO this has to be made simpler and has to take into account
       # visibility as well?
-      if (w instanceof HandMorph) or (w instanceof WorldMorph and ((brokenMorph instanceof WorldMorph or brokenMorph.parent?)))
-        if (w instanceof HandMorph)
-          w = w.world
-          boundsToBeChanged = brokenMorph.boundsIncludingChildren().spread()
-        else
-          # @visibleBounds() should be smaller area
-          # and is cheaper to calculate than @boundsIncludingChildren()
-          # cause it doesn't traverse the children and clips
-          # the area based on the clipping morphs up the
-          # hierarchy
-          boundsToBeChanged = brokenMorph.visibleBounds().spread()
+      if ((brokenMorph instanceof WorldMorph or brokenMorph.parent?))
+        # @visibleBounds() should be smaller area
+        # and is cheaper to calculate than @boundsIncludingChildren()
+        # cause it doesn't traverse the children and clips
+        # the area based on the clipping morphs up the
+        # hierarchy
+        boundsToBeChanged = brokenMorph.visibleBounds().spread()
 
         if brokenMorph.boundsWhenLastPainted?
           @broken.push brokenMorph.boundsWhenLastPainted
@@ -358,6 +354,12 @@ class WorldMorph extends FrameMorph
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
+  recursivelySetNewBounds: (whichMorph) ->
+    whichMorph.boundsWhenLastPainted =  whichMorph.visibleBounds().spread()
+    whichMorph.fullBoundsWhenLastPainted = whichMorph.boundsIncludingChildren().spread()
+    for child in whichMorph.children
+      @recursivelySetNewBounds(child)
+
   fleshOutFullBroken: ->
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
@@ -373,9 +375,10 @@ class WorldMorph extends FrameMorph
       if !boundsToBeChanged.eq brokenMorph.fullBoundsWhenLastPainted
         @broken.push boundsToBeChanged
 
-      brokenMorph.fullBoundsWhenLastPainted = boundsToBeChanged
+      
    
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
+      @recursivelySetNewBounds(brokenMorph)
 
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
   

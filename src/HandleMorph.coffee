@@ -107,7 +107,6 @@ class HandleMorph extends Morph
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 
-      debugger
       if @state == @STATE_NORMAL
         @handleMorphRenderingHelper aContext, @color, new Color(100, 100, 100)
       if @state == @STATE_HIGHLIGHTED
@@ -177,7 +176,6 @@ class HandleMorph extends Morph
 
 
     if @type is "resize"
-      debugger
       p0 = @topLeft().subtract(@position())
       
       leftArrowPoint = p0.copy()
@@ -228,6 +226,7 @@ class HandleMorph extends Morph
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
+      debugger
       @target.setExtent newExt
       # the position of this handle will be changed when the
       # parentIsLayouting method of this handle will be called
