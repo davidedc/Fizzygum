@@ -78,21 +78,25 @@ class FrameMorph extends Morph
         result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
 
     return result
+
+  # do nothing
+  invalidateBoundsCache: () ->
+    @cachedFullBounds = null
   
   # frames clip any of their children
   # at their boundaries
   # so there is no need to do a deep
   # traversal to find the bounds.
-  boundsIncludingChildren: (setAsChanged = false) ->
-
-    if setAsChanged
-      @changed()
-
+  boundsIncludingChildren: () ->
+    if @cachedFullBounds?
+      return @cachedFullBounds
     shadow = @getShadow()
     if shadow?
       return @bounds.merge(shadow.bounds)
     @bounds
-
+    console.log "@bounds.corner.x: " + @bounds.corner.x
+    if @bounds.corner.x > 3000 then debugger
+    @cachedFullBounds = @bounds.copy()
   
   boundsIncludingChildrenNoShadow: ->
     # answer my full bounds but ignore any shadow
@@ -171,6 +175,7 @@ class FrameMorph extends Morph
   moveBy: (delta) ->
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
+    @invalidateBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
     @changed()

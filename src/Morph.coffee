@@ -113,6 +113,8 @@ class Morph extends MorphicNode
   fullGeometryOrPositionPossiblyChanged: false
   fullBoundsWhenLastPainted: null
 
+  cachedFullBounds: null
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -488,15 +490,24 @@ class Morph extends MorphicNode
     result
   ###
 
+  invalidateBoundsCache: () ->
+    @cachedFullBounds = null
+    if @parent?.cachedFullBounds?
+        @parent.invalidateBoundsCache()
   
-  boundsIncludingChildren: (setAsChanged = false) ->
+  boundsIncludingChildren: () ->
+    if @cachedFullBounds?
+      console.log "@cachedFullBounds.corner.x: " + @cachedFullBounds.corner.x
+      if @cachedFullBounds.corner.x > 3000 then debugger
+      return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
       if !child.isMinimised and child.isVisible
-        if setAsChanged
-          child.changed()
-        result = result.merge(child.boundsIncludingChildren(setAsChanged))
+        result = result.merge(child.boundsIncludingChildren())
     result
+    console.log "result.corner.x: " + result.corner.x
+    if result.corner.x > 3000 then debugger
+    @cachedFullBounds = result.copy()
   
   boundsIncludingChildrenNoShadow: ->
     # answer my full bounds but ignore any shadow
@@ -531,9 +542,11 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       child.moveBy delta
     @changed()
-  
+    @invalidateBoundsCache()
+
   silentMoveBy: (delta) ->
     @bounds = @bounds.translateBy(delta)
+    @invalidateBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
   
@@ -636,6 +649,7 @@ class Morph extends MorphicNode
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @silentSetExtent aPoint
+      @invalidateBoundsCache()
       @changed()
       @reLayout()
       

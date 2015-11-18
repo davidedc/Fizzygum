@@ -90,6 +90,7 @@ class ScrollFrameMorph extends FrameMorph
     hWidth = @width() - @scrollBarSize
     vHeight = @height() - @scrollBarSize
     @changed()
+    debugger
 
     # this check is to see whether the bar actually belongs to this
     # scrollframe. The reason why the bar could belong to another
@@ -182,6 +183,7 @@ class ScrollFrameMorph extends FrameMorph
     # extend indefinitely as you are typing. Rather,
     # the width will be constrained and the text will
     # wrap.
+    debugger
     if @isTextLineWrapping
       @contents.children.forEach (morph) =>
         if morph instanceof TextMorph
