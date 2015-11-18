@@ -114,6 +114,7 @@ class Morph extends MorphicNode
   fullBoundsWhenLastPainted: null
 
   cachedFullBounds: null
+  childrenBoundsUpdatedAt: -1
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @

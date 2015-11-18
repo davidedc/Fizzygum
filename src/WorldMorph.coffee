@@ -132,6 +132,7 @@ class WorldMorph extends FrameMorph
   @bootState: 0
   @ongoingUrlActionNumber: 0
 
+  @frameCount: 0
 
   constructor: (
       @worldCanvas,
@@ -355,10 +356,12 @@ class WorldMorph extends FrameMorph
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
   recursivelySetNewBounds: (whichMorph) ->
-    whichMorph.boundsWhenLastPainted =  whichMorph.visibleBounds().spread()
-    whichMorph.fullBoundsWhenLastPainted = whichMorph.boundsIncludingChildren().spread()
-    for child in whichMorph.children
-      @recursivelySetNewBounds(child)
+    if whichMorph.childrenBoundsUpdatedAt < WorldMorph.frameCount
+      whichMorph.childrenBoundsUpdatedAt = WorldMorph.frameCount
+      whichMorph.boundsWhenLastPainted =  whichMorph.visibleBounds().spread()
+      whichMorph.fullBoundsWhenLastPainted = whichMorph.boundsIncludingChildren().spread()
+      for child in whichMorph.children
+        @recursivelySetNewBounds(child)
 
   fleshOutFullBroken: ->
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
@@ -410,6 +413,7 @@ class WorldMorph extends FrameMorph
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @updateBroken()
+    WorldMorph.frameCount++
   
   runOtherTasksStepFunction : ->
     for task in @otherTasksToBeRunOnStep
