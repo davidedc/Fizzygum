@@ -491,10 +491,21 @@ class Morph extends MorphicNode
     result
   ###
 
-  invalidateBoundsCache: () ->
+  # Note that in a case of a move
+  # you should also invalidate all the morphs in
+  # the subtree
+  # as well. This happens indirectly as the
+  # moveBy moves all the children too, so *that*
+  # invalidates them. Note that things might change
+  # if you use a different coordinate system, in which
+  # case you have to invalidate the caches in all the
+  # submorphs manually.
+  invalidateFullBoundsCache: () ->
+    if !@cachedFullBounds?
+      return
     @cachedFullBounds = null
     if @parent?.cachedFullBounds?
-        @parent.invalidateBoundsCache()
+        @parent.invalidateFullBoundsCache()
   
   boundsIncludingChildren: () ->
     if @cachedFullBounds?
@@ -542,11 +553,11 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       child.moveBy delta
     @changed()
-    @invalidateBoundsCache()
+    @invalidateFullBoundsCache()
 
   silentMoveBy: (delta) ->
     @bounds = @bounds.translateBy(delta)
-    @invalidateBoundsCache()
+    @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
   
@@ -649,7 +660,7 @@ class Morph extends MorphicNode
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @silentSetExtent aPoint
-      @invalidateBoundsCache()
+      @invalidateFullBoundsCache()
       @changed()
       @reLayout()
       

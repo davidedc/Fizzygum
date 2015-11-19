@@ -80,7 +80,7 @@ class FrameMorph extends Morph
     return result
 
   # do nothing
-  invalidateBoundsCache: () ->
+  invalidateFullBoundsCache: () ->
     @cachedFullBounds = null
   
   # frames clip any of their children
@@ -175,7 +175,7 @@ class FrameMorph extends Morph
   moveBy: (delta) ->
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
-    @invalidateBoundsCache()
+    @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
     @changed()

@@ -105,7 +105,7 @@ class ListMorph extends ScrollFrameMorph
         @target[@action].call @target, item.labelString
   
   setExtent: (aPoint) ->
-    @invalidateBoundsCache()
+    @invalidateFullBoundsCache()
     lb = @listContents.bounds
     nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
     if nb.right() > lb.right() and nb.width() <= lb.width()
