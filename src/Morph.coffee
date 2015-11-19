@@ -115,6 +115,9 @@ class Morph extends MorphicNode
   cachedFullBounds: null
   childrenBoundsUpdatedAt: -1
 
+  checkVisibilityCache: null
+  checkVisibilityCacheChecker: ""
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -491,12 +494,21 @@ class Morph extends MorphicNode
 
   checkVisibility: () ->
     if !@isVisible
-      return false
+      # I'm not sure updating the cache here does
+      # anything but it's two lines so let's do it
+      @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @checkVisibilityCache = false
+      return @checkVisibilityCache
 
     if !@parent?
       return true
     else
-      return @parent.checkVisibility()
+      if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        return @checkVisibilityCache
+      else
+        @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        @checkVisibilityCache = @parent.checkVisibility()
+        return @checkVisibilityCache
 
 
   # Note that in a case of a move
@@ -867,12 +879,14 @@ class Morph extends MorphicNode
 
   hide: ->
     @isVisible = false
+    WorldMorph.numberOfVisibilityFlagsChanges++
     @fullChanged()
 
   show: ->
     if @checkVisibility() == true
       return
     @isVisible = true
+    WorldMorph.numberOfVisibilityFlagsChanges++
     @fullChanged()
   
   minimise: ->
@@ -884,6 +898,7 @@ class Morph extends MorphicNode
   
   toggleVisibility: ->
     @isVisible = (not @isVisible)
+    WorldMorph.numberOfVisibilityFlagsChanges++
     @fullChanged()
   
   
