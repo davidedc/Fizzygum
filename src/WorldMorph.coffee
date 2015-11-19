@@ -331,7 +331,7 @@ class WorldMorph extends FrameMorph
       # also check whether we are attached to the hand cause that still counts
       # TODO this has to be made simpler and has to take into account
       # visibility as well?
-      if ((brokenMorph instanceof WorldMorph or brokenMorph.parent?))
+      if ((brokenMorph instanceof WorldMorph) or (brokenMorph.parent?))
         # @visibleBounds() should be smaller area
         # and is cheaper to calculate than @boundsIncludingChildren()
         # cause it doesn't traverse the children and clips
