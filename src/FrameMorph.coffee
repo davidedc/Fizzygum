@@ -59,8 +59,7 @@ class FrameMorph extends Morph
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
-    if !@isMinimised and
-        @isVisible and
+    if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
         @bounds.intersects(theMorph.bounds) and
         !@anyParentMarkedForDestruction()
@@ -104,7 +103,7 @@ class FrameMorph extends Morph
 
   
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
-    if @isMinimised or !@isVisible
+    if !@checkVisibility()
       return null
 
     if noShadow and (@ instanceof ShadowMorph)

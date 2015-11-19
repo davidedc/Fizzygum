@@ -159,7 +159,6 @@ class WorldMorph extends FrameMorph
     console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
-    @isMinimised = false
     @isfloatDraggable = false
 
     # additional properties:
@@ -1249,7 +1248,7 @@ class WorldMorph extends FrameMorph
   
   showAllMinimised: ->
     @forAllChildrenBottomToTop (child) ->
-      child.unminimise() if child.isMinimised
+      child.unminimise() if !child.checkVisibility()
   
   about: ->
     @inform "Zombie Kernel\n\n" +

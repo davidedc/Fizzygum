@@ -38,8 +38,7 @@ class HandMorph extends Morph
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@bounds.origin) and
-        !m.isMinimised and
-        m.isVisible and
+        m.checkVisibility() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and
         (m not instanceof ShadowMorph)
     if result?
@@ -50,7 +49,7 @@ class HandMorph extends Morph
   menuAtPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@bounds.origin) and
-        !m.isMinimised and m.isVisible and (m.noticesTransparentClick or
+        m.checkVisibility() and (m.noticesTransparentClick or
         (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
     return result
 
@@ -109,7 +108,7 @@ class HandMorph extends Morph
   # not used in ZK yet
   allMorphsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
-      !m.isMinimised and m.isVisible and m.visibleBounds().containsPoint(@bounds.origin)
+      m.checkVisibility() and m.visibleBounds().containsPoint(@bounds.origin)
   
   
   

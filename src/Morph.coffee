@@ -80,7 +80,6 @@ class Morph extends MorphicNode
   # separate reasons of why a morph is not being
   # painted on screen, so it makes sense to have
   # two separate flags.
-  isMinimised: false
   isVisible: true
 
   isfloatDraggable: false
@@ -470,8 +469,7 @@ class Morph extends MorphicNode
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
-    if !@isMinimised and
-        @isVisible and
+    if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
         @bounds.intersects(theMorph.bounds) and
         !@anyParentMarkedForDestruction()
@@ -490,6 +488,16 @@ class Morph extends MorphicNode
         result = result.merge(child.boundsIncludingChildren())
     result
   ###
+
+  checkVisibility: () ->
+    if !@isVisible
+      return false
+
+    if !@parent?
+      return true
+    else
+      return @parent.checkVisibility()
+
 
   # Note that in a case of a move
   # you should also invalidate all the morphs in
@@ -514,7 +522,7 @@ class Morph extends MorphicNode
       return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
-      if !child.isMinimised and child.isVisible
+      if child.checkVisibility()
         result = result.merge(child.boundsIncludingChildren())
     result
     console.log "result.corner.x: " + result.corner.x
@@ -525,7 +533,7 @@ class Morph extends MorphicNode
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
-      if (child not instanceof ShadowMorph) and (!child.isMinimised) and (child.isVisible)
+      if (child not instanceof ShadowMorph) and (child.checkVisibility())
         result = result.merge(child.boundsIncludingChildrenNoShadow())
     result
   
@@ -792,7 +800,7 @@ class Morph extends MorphicNode
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if @isMinimised or !@isVisible
+    if !@checkVisibility()
       return null
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
@@ -827,7 +835,7 @@ class Morph extends MorphicNode
 
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
 
-    if @isMinimised or !@isVisible
+    if !@checkVisibility()
       #if window.healingRectanglesPhase
       #  @geometryOrPositionPossiblyChanged = false
       #  @boundsWhenLastPainted = null
@@ -858,39 +866,25 @@ class Morph extends MorphicNode
   
 
   hide: ->
-    if @isVisible == false
-      return
     @isVisible = false
-    @changed()
-    @children.forEach (child) ->
-      child.hide()
+    @fullChanged()
 
   show: ->
-    if @isVisible == true
+    if @checkVisibility() == true
       return
     @isVisible = true
-    @changed()
-    @children.forEach (child) ->
-      child.show()
+    @fullChanged()
   
   minimise: ->
-    @isMinimised = true
-    @changed()
-    @children.forEach (child) ->
-      child.minimise()
+    @hide()
   
   unminimise: ->
-    @isMinimised = false
-    @changed()
-    @children.forEach (child) ->
-      child.unminimise()
+    @show()
   
   
   toggleVisibility: ->
-    @isMinimised = (not @isMinimised)
-    @changed()
-    @children.forEach (child) ->
-      child.toggleVisibility()
+    @isVisible = (not @isVisible)
+    @fullChanged()
   
   
   # Morph full image:
