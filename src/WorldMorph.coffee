@@ -135,6 +135,7 @@ class WorldMorph extends FrameMorph
   @frameCount: 0
   @numberOfAddsAndRemoved: 0
   @numberOfVisibilityFlagsChanges: 0
+  @numberOfMovedAndResizes: 0
 
   constructor: (
       @worldCanvas,

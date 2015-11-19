@@ -93,8 +93,6 @@ class FrameMorph extends Morph
     if shadow?
       return @bounds.merge(shadow.bounds)
     @bounds
-    console.log "@bounds.corner.x: " + @bounds.corner.x
-    if @bounds.corner.x > 3000 then debugger
     @cachedFullBounds = @bounds.copy()
   
   boundsIncludingChildrenNoShadow: ->
@@ -169,11 +167,29 @@ class FrameMorph extends Morph
       else
         child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
 
-  
+  visibleBounds: (boundsToBeClippedGoingUp) ->
+    # answer which part of me is not clipped by a Frame
+    debugger
+    if @ == Window
+      debugger
+
+    if @visibleBoundsCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
+      #console.log "cache hit visibleBoundsCache"
+      return @visibleBoundsCache
+    
+    if !boundsToBeClippedGoingUp?
+      boundsToBeClippedGoingUp = @bounds.copy()
+    else
+      if boundsToBeClippedGoingUp.isNotEmpty()
+        boundsToBeClippedGoingUp = boundsToBeClippedGoingUp.intersect @bounds
+
+    return (super boundsToBeClippedGoingUp)
+
   # FrameMorph scrolling optimization:
   moveBy: (delta) ->
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
+    WorldMorph.numberOfMovedAndResizes++
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta

@@ -118,6 +118,9 @@ class Morph extends MorphicNode
   checkVisibilityCache: null
   checkVisibilityCacheChecker: ""
 
+  visibleBoundsCache: null
+  visibleBoundsCacheChecker: ""
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -504,6 +507,7 @@ class Morph extends MorphicNode
       return true
     else
       if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        #console.log "cache hit checkVisibility"
         return @checkVisibilityCache
       else
         @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
@@ -529,16 +533,12 @@ class Morph extends MorphicNode
   
   boundsIncludingChildren: () ->
     if @cachedFullBounds?
-      console.log "@cachedFullBounds.corner.x: " + @cachedFullBounds.corner.x
-      if @cachedFullBounds.corner.x > 3000 then debugger
       return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
         result = result.merge(child.boundsIncludingChildren())
     result
-    console.log "result.corner.x: " + result.corner.x
-    if result.corner.x > 3000 then debugger
     @cachedFullBounds = result.copy()
   
   boundsIncludingChildrenNoShadow: ->
@@ -549,17 +549,40 @@ class Morph extends MorphicNode
         result = result.merge(child.boundsIncludingChildrenNoShadow())
     result
   
-  visibleBounds: ->
+  visibleBounds: (boundsToBeClippedGoingUp) ->
     # answer which part of me is not clipped by a Frame
     if @ == Window
       debugger
+
+    if @visibleBoundsCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
+      console.log "cache hit visibleBoundsCache"
+      return @visibleBoundsCache
+
+
     visible = @bounds
     frames = @allParentsTopToBottomSuchThat (p) ->
       p instanceof FrameMorph
     frames.forEach (f) ->
       visible = visible.intersect(f.bounds)
+    ###
 
-    visible
+    if !boundsToBeClippedGoingUp?
+      boundsToBeClippedGoingUp = @bounds.copy()
+
+    if !@parent? or boundsToBeClippedGoingUp.isEmpty()
+      visible = boundsToBeClippedGoingUp.copy()
+    else
+      if false #@visibleBoundsCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
+        #console.log "cache hit visibleBoundsCache"
+        return @visibleBoundsCache
+      visible = (@parent.visibleBounds boundsToBeClippedGoingUp).copy()
+
+    ###
+
+    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
+    @visibleBoundsCache = visible.copy()
+
+    return visible
   
   
   # Morph accessing - simple changes:
@@ -570,6 +593,7 @@ class Morph extends MorphicNode
     # position and the end position.
     # Both need to be repainted.
     @bounds = @bounds.translateBy(delta)
+    WorldMorph.numberOfMovedAndResizes++
     @children.forEach (child) ->
       child.moveBy delta
     @changed()
@@ -577,6 +601,7 @@ class Morph extends MorphicNode
 
   silentMoveBy: (delta) ->
     @bounds = @bounds.translateBy(delta)
+    WorldMorph.numberOfMovedAndResizes++
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
@@ -673,6 +698,7 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
+    WorldMorph.numberOfMovedAndResizes++
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
@@ -691,7 +717,7 @@ class Morph extends MorphicNode
   
   silentSetExtent: (aPoint) ->
     aPoint = aPoint.round()
-
+    WorldMorph.numberOfMovedAndResizes++
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
