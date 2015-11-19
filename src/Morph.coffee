@@ -538,7 +538,6 @@ class Morph extends MorphicNode
     # that are dirty: the starting
     # position and the end position.
     # Both need to be repainted.
-    @changed()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
@@ -1374,7 +1373,6 @@ class Morph extends MorphicNode
     oldFps = @fps
     @fps = 0
     @step = =>
-      @fullChanged()
       @silentMoveBy new Point(xStep, yStep)
       @fullChanged()
       stepCount += 1

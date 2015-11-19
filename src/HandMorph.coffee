@@ -675,7 +675,6 @@ class HandMorph extends Morph
   
   # HandMorph floatDragging optimization
   moveBy: (delta) ->
-    @fullChanged()
     trackChanges.push false
     super delta
     trackChanges.pop()
