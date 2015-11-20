@@ -335,6 +335,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+    WorldMorph.numberOfAddsAndRemoved++
     # remove callback when user clicks outside
     # me or any of my children
     @onClickOutsideMeOrAnyOfMyChildren null
@@ -345,6 +346,7 @@ class Morph extends MorphicNode
     return null
   
   destroyAll: ->
+    WorldMorph.numberOfAddsAndRemoved++
     # we can't use forEach because we are iterating over
     # an array that changes its values (and length) while
     # we are iterating on it.
@@ -549,40 +551,29 @@ class Morph extends MorphicNode
         result = result.merge(child.boundsIncludingChildrenNoShadow())
     result
   
-  visibleBounds: (boundsToBeClippedGoingUp) ->
+  visibleBounds: ->
     # answer which part of me is not clipped by a Frame
     if @ == Window
       debugger
 
-    if @visibleBoundsCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
-      console.log "cache hit visibleBoundsCache"
-      return @visibleBoundsCache
-
-
-    visible = @bounds
-    frames = @allParentsTopToBottomSuchThat (p) ->
-      p instanceof FrameMorph
-    frames.forEach (f) ->
-      visible = visible.intersect(f.bounds)
-    ###
-
-    if !boundsToBeClippedGoingUp?
-      boundsToBeClippedGoingUp = @bounds.copy()
-
-    if !@parent? or boundsToBeClippedGoingUp.isEmpty()
-      visible = boundsToBeClippedGoingUp.copy()
+    if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoved + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovedAndResizes)
+      #console.log "cache hit @visibleBoundsCacheChecker"
+      return @visibleBoundsCache.copy()
     else
-      if false #@visibleBoundsCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
-        #console.log "cache hit visibleBoundsCache"
-        return @visibleBoundsCache
-      visible = (@parent.visibleBounds boundsToBeClippedGoingUp).copy()
+      console.log "cache miss @visibleBoundsCacheChecker"
 
-    ###
 
-    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges + "" + WorldMorph.numberOfMovedAndResizes
-    @visibleBoundsCache = visible.copy()
+    chainFromRoot = @allParentsBottomToTop()
 
-    return visible
+    visible = chainFromRoot[0].bounds
+    for eachElement in chainFromRoot
+      if eachElement instanceof FrameMorph
+        visible = visible.intersect eachElement.bounds
+      eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoved + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovedAndResizes
+      eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
+
+
+    return @visibleBoundsCache
   
   
   # Morph accessing - simple changes:
@@ -592,28 +583,30 @@ class Morph extends MorphicNode
     # that are dirty: the starting
     # position and the end position.
     # Both need to be repainted.
-    @bounds = @bounds.translateBy(delta)
     WorldMorph.numberOfMovedAndResizes++
+    @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
     @changed()
     @invalidateFullBoundsCache()
 
   silentMoveBy: (delta) ->
-    @bounds = @bounds.translateBy(delta)
     WorldMorph.numberOfMovedAndResizes++
+    @bounds = @bounds.translateBy(delta)
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
   
   
   setPosition: (aPoint) ->
+    WorldMorph.numberOfMovedAndResizes++
     aPoint.debugIfFloats()
     delta = aPoint.subtract(@topLeft())
     @moveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
     @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
+    WorldMorph.numberOfMovedAndResizes++
     delta = aPoint.subtract(@topLeft())
     @silentMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
@@ -738,16 +731,20 @@ class Morph extends MorphicNode
     @bounds.corner = new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
   setWidth: (width) ->
+    WorldMorph.numberOfMovedAndResizes++
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
+    WorldMorph.numberOfMovedAndResizes++
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
+    WorldMorph.numberOfMovedAndResizes++
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
+    WorldMorph.numberOfMovedAndResizes++
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   

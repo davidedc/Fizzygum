@@ -120,5 +120,6 @@ class WorkspaceMorph extends BoxMorph
     @changed()
   
   setExtent: (aPoint) ->
+    WorldMorph.numberOfMovedAndResizes++
     super aPoint
     @layoutSubmorphs()

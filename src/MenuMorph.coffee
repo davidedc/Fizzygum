@@ -276,6 +276,7 @@ class MenuMorph extends BoxMorph
     @changed()
 
   destroy: ->
+    WorldMorph.numberOfAddsAndRemoved++
     super()
     if !@isListContents
       index = world.openMenus.indexOf @

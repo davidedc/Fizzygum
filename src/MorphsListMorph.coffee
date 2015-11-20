@@ -113,4 +113,5 @@ class MorphsListMorph extends BoxMorph
     @changed()
   
   setExtent: (aPoint) ->
+    WorldMorph.numberOfMovedAndResizes++
     super aPoint
