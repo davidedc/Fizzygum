@@ -43,7 +43,7 @@ class SliderMorph extends CircleBoxMorph
     @changed()
 
   setExtent: (a) -> 
-    WorldMorph.numberOfMovedAndResizes++  
+    WorldMorph.numberOfMovesAndResizes++  
     super a
     # my backing store had just been updated
     # in the call of super, now

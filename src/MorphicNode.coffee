@@ -44,7 +44,7 @@ class MorphicNode
   
   # MorphicNode accessing:
   addChild: (aMorphicNode, position = null) ->
-    WorldMorph.numberOfAddsAndRemoved++
+    WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache()
     if !position?
       @children.push aMorphicNode
@@ -82,7 +82,7 @@ class MorphicNode
   removeChild: (aMorphicNode) ->
     # remove the array element from the
     # array
-    WorldMorph.numberOfAddsAndRemoved++
+    WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache()
     idx = @children.indexOf(aMorphicNode)
     @children.splice idx, 1  if idx isnt -1

@@ -335,7 +335,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
-    WorldMorph.numberOfAddsAndRemoved++
+    WorldMorph.numberOfAddsAndRemoves++
     # remove callback when user clicks outside
     # me or any of my children
     @onClickOutsideMeOrAnyOfMyChildren null
@@ -346,7 +346,7 @@ class Morph extends MorphicNode
     return null
   
   destroyAll: ->
-    WorldMorph.numberOfAddsAndRemoved++
+    WorldMorph.numberOfAddsAndRemoves++
     # we can't use forEach because we are iterating over
     # an array that changes its values (and length) while
     # we are iterating on it.
@@ -501,18 +501,18 @@ class Morph extends MorphicNode
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
-      @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
       @checkVisibilityCache = false
       return @checkVisibilityCache
 
     if !@parent?
       return true
     else
-      if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
         #console.log "cache hit checkVisibility"
         return @checkVisibilityCache
       else
-        @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoved + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
         @checkVisibilityCache = @parent.checkVisibility()
         return @checkVisibilityCache
 
@@ -556,7 +556,7 @@ class Morph extends MorphicNode
     if @ == Window
       debugger
 
-    if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoved + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovedAndResizes)
+    if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
       #console.log "cache hit @visibleBoundsCacheChecker"
       return @visibleBoundsCache.copy()
     else
@@ -569,7 +569,7 @@ class Morph extends MorphicNode
     for eachElement in chainFromRoot
       if eachElement instanceof FrameMorph
         visible = visible.intersect eachElement.bounds
-      eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoved + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovedAndResizes
+      eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
       eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
 
 
@@ -583,7 +583,7 @@ class Morph extends MorphicNode
     # that are dirty: the starting
     # position and the end position.
     # Both need to be repainted.
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
@@ -591,7 +591,7 @@ class Morph extends MorphicNode
     @invalidateFullBoundsCache()
 
   silentMoveBy: (delta) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @bounds = @bounds.translateBy(delta)
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
@@ -599,14 +599,14 @@ class Morph extends MorphicNode
   
   
   setPosition: (aPoint) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     aPoint.debugIfFloats()
     delta = aPoint.subtract(@topLeft())
     @moveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
     @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     delta = aPoint.subtract(@topLeft())
     @silentMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
@@ -691,7 +691,7 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
@@ -710,7 +710,7 @@ class Morph extends MorphicNode
   
   silentSetExtent: (aPoint) ->
     aPoint = aPoint.round()
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
@@ -731,20 +731,20 @@ class Morph extends MorphicNode
     @bounds.corner = new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
   setWidth: (width) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   

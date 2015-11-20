@@ -133,9 +133,9 @@ class WorldMorph extends FrameMorph
   @ongoingUrlActionNumber: 0
 
   @frameCount: 0
-  @numberOfAddsAndRemoved: 0
+  @numberOfAddsAndRemoves: 0
   @numberOfVisibilityFlagsChanges: 0
-  @numberOfMovedAndResizes: 0
+  @numberOfMovesAndResizes: 0
 
   constructor: (
       @worldCanvas,

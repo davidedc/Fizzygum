@@ -298,7 +298,7 @@ class CaretMorph extends BlinkerMorph
 
   # CaretMorph destroying:
   destroy: ->
-    WorldMorph.numberOfAddsAndRemoved++
+    WorldMorph.numberOfAddsAndRemoves++
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
       @target.reLayout()

@@ -248,7 +248,7 @@ class TextMorph extends StringMorph
 
   
   setExtent: (aPoint) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @maxWidth = Math.max(aPoint.x, 0)
     @reLayout()    
     @changed()

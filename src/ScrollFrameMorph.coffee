@@ -162,7 +162,7 @@ class ScrollFrameMorph extends FrameMorph
     @addContents aMorph
   
   setExtent: (aPoint) ->
-    WorldMorph.numberOfMovedAndResizes++
+    WorldMorph.numberOfMovesAndResizes++
     @contents.setPosition @position().copy()  if @isTextLineWrapping
     super aPoint
     @contents.setExtent(aPoint)
