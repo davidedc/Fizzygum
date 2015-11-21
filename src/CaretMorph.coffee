@@ -186,13 +186,11 @@ class CaretMorph extends BlinkerMorph
 
   # User presses enter on a stringMorph
   accept: ->
-    world = @root()
     world.stopEditing()  if world
     @escalateEvent "accept", null
   
   # User presses ESC
   cancel: ->
-    world = @root()
     @undo()
     world.stopEditing()  if world
     @escalateEvent 'cancel', null
