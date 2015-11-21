@@ -497,6 +497,13 @@ class Morph extends MorphicNode
     result
   ###
 
+  surelyNotShowingUpOnScreen: ->
+    if @isOrphan()
+      return true
+    if !@checkVisibility()
+      return true
+    return false
+
   checkVisibility: () ->
     if !@isVisible
       # I'm not sure updating the cache here does
