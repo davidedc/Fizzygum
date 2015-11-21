@@ -159,6 +159,11 @@ class FrameMorph extends Morph
     
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
+    
+    if !@boundsWhenLastPainted?
+      @boundsWhenLastPainted =  @bounds
+    if !@fullBoundsWhenLastPainted?
+      @fullBoundsWhenLastPainted = @boundsIncludingChildren().spread()
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
     @children.forEach (child) =>

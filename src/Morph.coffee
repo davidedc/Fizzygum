@@ -922,7 +922,11 @@ class Morph extends MorphicNode
     # boundsIncludingChildren property, then we could be smarter
     # in discarding whole sections of the scene graph.
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
-
+    
+    if !@boundsWhenLastPainted?
+      @boundsWhenLastPainted =  @bounds
+    if !@fullBoundsWhenLastPainted?
+      @fullBoundsWhenLastPainted = @boundsIncludingChildren().spread()
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
       child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
