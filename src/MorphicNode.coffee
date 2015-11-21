@@ -6,7 +6,8 @@
 # OUT OF SCOPE:
 # It's important to note that this layer
 # knows nothing about visibility, targets,
-# image buffers, dirty rectangles, events.
+# image buffers, dirty rectangles, events,
+# position and extent (and hence bounds).
 # Please no invocations to changed or fullChanged
 # or updateBackingStore in here, and no
 # touching of any of the out-of-scope properties
