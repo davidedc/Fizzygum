@@ -354,7 +354,7 @@ class StringMorph extends Morph
   
   # StringMorph editing:
   edit: ->
-    @root().edit @
+    world.edit @
 
   selection: ->
     start = Math.min(@startMark, @endMark)
@@ -394,11 +394,11 @@ class StringMorph extends Morph
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
     super()
-    caret = @root().caret;
+    caret = world.caret;
     if @isEditable
       @edit()  unless @currentlySelecting
       if caret then caret.gotoPos pos
-      @root().caret.gotoPos pos
+      world.caret.gotoPos pos
       @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos
@@ -411,7 +411,7 @@ class StringMorph extends Morph
       @clearSelection()
       if @isEditable and (not @isfloatDraggable)
         @edit()
-        @root().caret.gotoPos pos
+        world.caret.gotoPos pos
         @startMark = @slotAt(pos)
         @endMark = @startMark
         @currentlySelecting = true

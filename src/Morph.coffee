@@ -1113,9 +1113,8 @@ class Morph extends MorphicNode
       # change everything that is attached
       # to the hand, which means we issue a
       # fullChanged()
-      root = @root()
-      if root instanceof HandMorph
-        root.fullChanged()
+      if @isBeingFloatDragged()
+        world.hand.fullChanged()
         return
 
       if !@geometryOrPositionPossiblyChanged
@@ -1571,7 +1570,6 @@ class Morph extends MorphicNode
 
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
-    world = (if @world instanceof Function then @world() else (@root() or @world))
     inspector.setPosition world.hand.position()
     inspector.keepWithin world
     world.add inspector
@@ -1623,7 +1621,6 @@ class Morph extends MorphicNode
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
-    world = (if @world instanceof Function then @world() else (@root() or @world))
     menu = new MenuMorph(false, @, true, true, null)
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.

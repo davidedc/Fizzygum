@@ -267,7 +267,7 @@ class WorldMorph extends FrameMorph
     # note how we examine the array in reverse order
     # because we might delete its elements
     for i in [(@openMenus.length-1).. 0] by -1
-      if !@openMenus[i].isAttachedAnywhereToWorld()
+      if @openMenus[i].isOrphan()
         @openMenus.splice i, 1
 
     for eachMenu in @openMenus
@@ -331,8 +331,6 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
-      #brokenMorph.geometryOrPositionPossiblyChanged = false
-      w = brokenMorph.root()
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
       # also check whether we are attached to the hand cause that still counts

@@ -271,7 +271,6 @@ class ScrollFrameMorph extends FrameMorph
   # useful in touch devices.
   mouseDownLeft: (pos) ->
     return null  unless @isScrollingByfloatDragging
-    world = @root()
     oldPos = pos
     deltaX = 0
     deltaY = 0
@@ -312,8 +311,7 @@ class ScrollFrameMorph extends FrameMorph
   
   startAutoScrolling: ->
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
-    world = @world()
-    return null  unless world
+    if @isOrphan() then return null
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     @step = =>

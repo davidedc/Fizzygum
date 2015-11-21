@@ -97,7 +97,7 @@ class MorphicNode
   # the hand?
   isOrphan: ->
     root = @root()
-    if (root instanceof WorldMorph) or (root instanceof HandMorph)
+    if root == world or root == world.hand
       return false
     return true
 
@@ -140,13 +140,6 @@ class MorphicNode
         return pathSoFar
       else
         return null
-
-  isAttachedAnywhereToWorld: ->
-    theRoot = @root()
-    if theRoot == world or theRoot == world.hand
-      return true
-    else
-      return false
 
   
   # currently unused
