@@ -33,7 +33,7 @@ class MorphicNode
   children: null
 
   rootCache: null
-  rootCacheChecker: 0
+  rootCacheChecker: null
 
   constructor: (@parent = null, @children = []) ->
 
