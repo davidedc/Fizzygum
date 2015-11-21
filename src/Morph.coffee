@@ -1064,7 +1064,20 @@ class Morph extends MorphicNode
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
     sha
   
-  
+  isBeingFloatDragged: ->
+    # first check if the hand is nonfloatdragging
+    # anything at all
+    if !@nonFloatDraggedMorph?
+      return false
+
+    # then check if my root is the hand
+    if root() instanceof HandMorph
+      return true
+
+    # if we are here it means we are not being
+    # nonfloatdragged
+    return false
+
   # shadow is added to a morph by
   # the HandMorph while floatDragging
   addShadow: (offset, alpha, color) ->
