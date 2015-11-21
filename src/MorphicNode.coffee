@@ -93,7 +93,14 @@ class MorphicNode
     aMorphicNode.parent = null
     ## @disconnectValuesFromRemovedChild aMorphicNode
   
-  
+  # is this Morph attached to neither the world nor to
+  # the hand?
+  isOrphan: ->
+    root = @root()
+    if (root instanceof WorldMorph) or (root instanceof HandMorph)
+      return false
+    return true
+
   # MorphicNode functions:
   root: ->
     if @rootCacheChecker == WorldMorph.numberOfAddsAndRemoves
