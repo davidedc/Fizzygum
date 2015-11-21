@@ -32,7 +32,10 @@ class HandMorph extends Morph
     super()
     @bounds = new Rectangle()
 
-  
+  visibleBounds: ->
+    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @visibleBoundsCache = @bounds
+    return @visibleBoundsCache  
   
   # HandMorph navigation:
   topMorphUnderPointer: ->
@@ -674,8 +677,10 @@ class HandMorph extends Morph
   
   # HandMorph floatDragging optimization
   moveBy: (delta) ->
-    WorldMorph.numberOfMovesAndResizes++
+    if delta.isZero() then return
     trackChanges.push false
+    #console.log "move 2"
+    @breakNumberOfMovesAndResizesCaches()
     super delta
     trackChanges.pop()
     @fullChanged()

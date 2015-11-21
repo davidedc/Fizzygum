@@ -105,7 +105,8 @@ class ListMorph extends ScrollFrameMorph
         @target[@action].call @target, item.labelString
   
   setExtent: (aPoint) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 3"
+    @breakNumberOfMovesAndResizesCaches()
     @invalidateFullBoundsCache()
     lb = @listContents.bounds
     nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))

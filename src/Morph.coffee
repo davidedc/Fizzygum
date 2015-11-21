@@ -512,6 +512,7 @@ class Morph extends MorphicNode
         #console.log "cache hit checkVisibility"
         return @checkVisibilityCache
       else
+        #console.log "cache miss checkVisibility"
         @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
         @checkVisibilityCache = @parent.checkVisibility()
         return @checkVisibilityCache
@@ -558,9 +559,11 @@ class Morph extends MorphicNode
 
     if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
       #console.log "cache hit @visibleBoundsCacheChecker"
-      return @visibleBoundsCache.copy()
-    else
-      console.log "cache miss @visibleBoundsCacheChecker"
+      return @visibleBoundsCache
+    #else
+    #  console.log "cache miss @visibleBoundsCacheChecker"
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @visibleBoundsCacheChecker
+    #  #debugger
 
 
     chainFromRoot = @allParentsBottomToTop()
@@ -578,12 +581,14 @@ class Morph extends MorphicNode
   
   # Morph accessing - simple changes:
   moveBy: (delta) ->
+    if delta.isZero() then return
     # note that changed() is called two times
     # because there are two areas of the screens
     # that are dirty: the starting
     # position and the end position.
     # Both need to be repainted.
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 4"
+    @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.moveBy delta
@@ -591,22 +596,32 @@ class Morph extends MorphicNode
     @invalidateFullBoundsCache()
 
   silentMoveBy: (delta) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 5"
+    @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
   
+  breakNumberOfMovesAndResizesCaches: ->
+    if @ instanceof HandMorph
+      if @children.length == 0
+        return
+    WorldMorph.numberOfMovesAndResizes++
+
   
   setPosition: (aPoint) ->
-    WorldMorph.numberOfMovesAndResizes++
     aPoint.debugIfFloats()
     delta = aPoint.subtract(@topLeft())
-    @moveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    if !delta.isZero()
+      #console.log "move 6"
+      @breakNumberOfMovesAndResizesCaches()
+      @moveBy delta
     @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 7"
+    @breakNumberOfMovesAndResizesCaches()
     delta = aPoint.subtract(@topLeft())
     @silentMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
@@ -691,7 +706,8 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 8"
+    @breakNumberOfMovesAndResizesCaches()
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
@@ -710,7 +726,8 @@ class Morph extends MorphicNode
   
   silentSetExtent: (aPoint) ->
     aPoint = aPoint.round()
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 9"
+    @breakNumberOfMovesAndResizesCaches()
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
@@ -731,20 +748,24 @@ class Morph extends MorphicNode
     @bounds.corner = new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
   setWidth: (width) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 10"
+    @breakNumberOfMovesAndResizesCaches()
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 11"
+    @breakNumberOfMovesAndResizesCaches()
     w = Math.max(Math.round(width or 0), 0)
     @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 12"
+    @breakNumberOfMovesAndResizesCaches()
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 13"
+    @breakNumberOfMovesAndResizesCaches()
     h = Math.max(Math.round(height or 0), 0)
     @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
   

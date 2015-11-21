@@ -113,5 +113,6 @@ class MorphsListMorph extends BoxMorph
     @changed()
   
   setExtent: (aPoint) ->
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 14"
+    @breakNumberOfMovesAndResizesCaches()
     super aPoint

@@ -263,7 +263,7 @@ class HandleMorph extends Morph
     @target.add @
     @updateResizerHandlePosition()
     @noticesTransparentClick = true
-  
+
     
   # HandleMorph menu:
   attach: ->

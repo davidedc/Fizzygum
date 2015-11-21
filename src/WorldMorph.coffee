@@ -321,6 +321,11 @@ class WorldMorph extends FrameMorph
     # and it's not attached to the WorldMorph.
     @hand.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
+  visibleBounds: ->
+    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @visibleBoundsCache = @bounds
+    return @visibleBoundsCache
+
   fleshOutBroken: ->
     #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
     #  debugger

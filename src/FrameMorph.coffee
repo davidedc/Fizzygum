@@ -172,7 +172,8 @@ class FrameMorph extends Morph
   moveBy: (delta) ->
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
-    WorldMorph.numberOfMovesAndResizes++
+    #console.log "move 1"
+    @breakNumberOfMovesAndResizesCaches()
     @invalidateFullBoundsCache()
     @children.forEach (child) ->
       child.silentMoveBy delta
