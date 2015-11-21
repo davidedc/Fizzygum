@@ -331,12 +331,7 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
-      # unless we are the main desktop, then if the morph has no parent
-      # don't add the broken rect since the morph is not visible
-      # also check whether we are attached to the hand cause that still counts
-      # TODO this has to be made simpler and has to take into account
-      # visibility as well?
-      if ((brokenMorph instanceof WorldMorph) or (brokenMorph.parent?))
+      unless brokenMorph.surelyNotShowingUpOnScreen()
         # @visibleBounds() should be smaller area
         # and is cheaper to calculate than @boundsIncludingChildren()
         # cause it doesn't traverse the children and clips
