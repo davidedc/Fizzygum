@@ -31,6 +31,9 @@ class MorphicNode
   # others.
   children: null
 
+  rootCache: null
+  rootCacheChecker: 0
+
   constructor: (@parent = null, @children = []) ->
 
   
@@ -92,8 +95,17 @@ class MorphicNode
   
   # MorphicNode functions:
   root: ->
-    return @parent.root() if @parent?
-    @
+    if @rootCacheChecker == WorldMorph.numberOfAddsAndRemoves
+      #console.log "cache hit root"
+      return @rootCache
+  
+    theRoot = @
+    if @parent?
+      theRoot = @parent.root()
+
+    @rootCacheChecker = WorldMorph.numberOfAddsAndRemoves
+    @rootCache = theRoot
+    return @rootCache
 
   # returns the path of this morph in terms
   # of children positions relative to the world.
