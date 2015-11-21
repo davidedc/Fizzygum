@@ -43,6 +43,11 @@ class Point
   # Point copying:
   copy: ->
     new @constructor(@x, @y)
+
+  # Point comparison:
+  isZero: (aPoint) ->
+    # ==
+    @x is 0 and @y is 0
   
   # Point comparison:
   eq: (aPoint) ->
