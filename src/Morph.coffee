@@ -917,18 +917,25 @@ class Morph extends MorphicNode
             Math.round(h)
         aContext.restore()
 
-  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
-
+  preliminaryCheckNothingToDraw: (noShadow) ->
     if !@checkVisibility()
-      #if window.healingRectanglesPhase
-      #  @geometryOrPositionPossiblyChanged = false
-      #  @boundsWhenLastPainted = null
-      return null
+      return true
 
     if noShadow and (@ instanceof ShadowMorph)
-      #if window.healingRectanglesPhase
-      #  @geometryOrPositionPossiblyChanged = false
-      #  @boundsWhenLastPainted = null
+      return true
+
+    return false
+
+  recordDrawnAreaForNextBrokenRects: ->
+    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
+      @childrenBoundsUpdatedAt = WorldMorph.frameCount
+      @boundsWhenLastPainted = @visibleBounds()
+      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
+
+
+  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
+
+    if @preliminaryCheckNothingToDraw noShadow
       return
 
     # in general, the children of a Morph could be outside the
@@ -944,11 +951,8 @@ class Morph extends MorphicNode
     # in discarding whole sections of the scene graph.
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
     
-    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
-      @childrenBoundsUpdatedAt = WorldMorph.frameCount
-      @boundsWhenLastPainted = @visibleBounds()
-      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
 
+    @recordDrawnAreaForNextBrokenRects()
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
       child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow

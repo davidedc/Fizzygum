@@ -124,10 +124,7 @@ class FrameMorph extends Morph
   
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
 
-    if !@checkVisibility()
-      return null
-
-    if noShadow and (@ instanceof ShadowMorph)
+    if @preliminaryCheckNothingToDraw noShadow
       return
 
     # a FrameMorph has the special property that all of its children
@@ -183,10 +180,7 @@ class FrameMorph extends Morph
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
     
-    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
-      @childrenBoundsUpdatedAt = WorldMorph.frameCount
-      @boundsWhenLastPainted = @visibleBounds()
-      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
+    @recordDrawnAreaForNextBrokenRects()
 
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
