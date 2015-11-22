@@ -540,7 +540,7 @@ class Morph extends MorphicNode
       return
     @cachedFullBounds = null
     if @parent?.cachedFullBounds?
-        @parent.invalidateFullBoundsCache()
+        @parent.invalidateFullBoundsCache(@)
 
   SLOWboundsIncludingChildren: () ->
     result = @bounds
@@ -620,18 +620,18 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       child.moveBy delta
     @changed()
-    @invalidateFullBoundsCache()
+    @invalidateFullBoundsCache(@)
 
   silentMoveBy: (delta) ->
     #console.log "move 5"
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
-    @invalidateFullBoundsCache()
+    @invalidateFullBoundsCache(@)
     @children.forEach (child) ->
       child.silentMoveBy delta
   
   breakNumberOfMovesAndResizesCaches: ->
-    @invalidateFullBoundsCache()
+    @invalidateFullBoundsCache(@)
     if @ instanceof HandMorph
       if @children.length == 0
         return
@@ -743,7 +743,7 @@ class Morph extends MorphicNode
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @silentSetExtent aPoint
-      @invalidateFullBoundsCache()
+      @invalidateFullBoundsCache(@)
       @changed()
       @reLayout()
       

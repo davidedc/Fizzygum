@@ -78,9 +78,13 @@ class FrameMorph extends Morph
 
     return result
 
-  # do nothing
-  #invalidateFullBoundsCache: () ->
-  #  @cachedFullBounds = null
+  # do nothing if the call comes from a child
+  # otherwise, if it comes from me (say, because the
+  # frame has been moved), then
+  # do invalidate the cache as normal.
+  invalidateFullBoundsCache: (morphCalling) ->
+    if morphCalling == @
+      super @
   
   SLOWboundsIncludingChildren: () ->
     shadow = @getShadow()
@@ -199,7 +203,7 @@ class FrameMorph extends Morph
     @bounds = @bounds.translateBy(delta)
     #console.log "move 1"
     @breakNumberOfMovesAndResizesCaches()
-    @invalidateFullBoundsCache()
+    @invalidateFullBoundsCache(@)
     @children.forEach (child) ->
       child.silentMoveBy delta
     @changed()
