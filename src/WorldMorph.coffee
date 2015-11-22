@@ -324,6 +324,7 @@ class WorldMorph extends FrameMorph
   visibleBounds: ->
     @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @visibleBoundsCache = @bounds
+    @clipThroughBoundsCache = world.bounds
     return @visibleBoundsCache
 
   fleshOutBroken: ->

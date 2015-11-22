@@ -119,6 +119,7 @@ class Morph extends MorphicNode
   checkVisibilityCacheChecker: ""
 
   visibleBoundsCache: null
+  clipThroughBoundsCache: null
   visibleBoundsCacheChecker: ""
 
   mouseClickRight: ->
@@ -565,6 +566,10 @@ class Morph extends MorphicNode
       if (child not instanceof ShadowMorph) and (child.checkVisibility())
         result = result.merge(child.boundsIncludingChildrenNoShadow())
     result
+
+  clipThroughBounds: ->
+    @visibleBounds()
+    return @clipThroughBoundsCache
   
   visibleBounds: ->
     # answer which part of me is not clipped by a Frame
@@ -588,7 +593,7 @@ class Morph extends MorphicNode
         visible = visible.intersect eachElement.bounds
       eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
       eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
-
+      eachElement.clipThroughBoundsCache = visible
 
     return @visibleBoundsCache
   
