@@ -338,7 +338,7 @@ class WorldMorph extends FrameMorph
         # cause it doesn't traverse the children and clips
         # the area based on the clipping morphs up the
         # hierarchy
-        boundsToBeChanged = brokenMorph.visibleBounds().spread()
+        boundsToBeChanged = brokenMorph.visibleBounds()
 
         if brokenMorph.boundsWhenLastPainted?
           @broken.push brokenMorph.boundsWhenLastPainted
@@ -346,30 +346,19 @@ class WorldMorph extends FrameMorph
         # avoid to break two rectangles if the change
         # is in-place
         if !boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
-          @broken.push boundsToBeChanged
+          @broken.push boundsToBeChanged.spread()
 
-        brokenMorph.boundsWhenLastPainted = boundsToBeChanged
-      else
-        brokenMorph.boundsWhenLastPainted = null
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
-
-  recursivelySetNewBounds: (whichMorph) ->
-    if whichMorph.childrenBoundsUpdatedAt < WorldMorph.frameCount
-      whichMorph.childrenBoundsUpdatedAt = WorldMorph.frameCount
-      whichMorph.boundsWhenLastPainted =  whichMorph.visibleBounds().spread()
-      whichMorph.fullBoundsWhenLastPainted = whichMorph.boundsIncludingChildren().spread()
-      for child in whichMorph.children
-        @recursivelySetNewBounds(child)
 
   fleshOutFullBroken: ->
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
-      boundsToBeChanged = brokenMorph.boundsIncludingChildren().spread()
+      boundsToBeChanged = brokenMorph.boundsIncludingChildren()
 
       if brokenMorph.fullBoundsWhenLastPainted?
         @broken.push brokenMorph.fullBoundsWhenLastPainted
@@ -377,12 +366,11 @@ class WorldMorph extends FrameMorph
       # avoid to break two rectangles if the change
       # is in-place
       if !boundsToBeChanged.eq brokenMorph.fullBoundsWhenLastPainted
-        @broken.push boundsToBeChanged
+        @broken.push boundsToBeChanged.spread()
 
       
    
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
-      @recursivelySetNewBounds(brokenMorph)
 
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
   

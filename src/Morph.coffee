@@ -551,12 +551,20 @@ class Morph extends MorphicNode
   
   boundsIncludingChildren: () ->
     if @cachedFullBounds?
+      if (!@cachedFullBounds.containsRectangle @SLOWboundsIncludingChildren()) and
+      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWboundsIncludingChildren())
+        debugger
+        #alert "boundsIncludingChildren is broken"
       return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
         result = result.merge(child.boundsIncludingChildren())
     result
+    if (!result.containsRectangle @SLOWboundsIncludingChildren()) and
+    (!result.growBy(1).containsRectangle @SLOWboundsIncludingChildren())
+      debugger
+      #alert "boundsIncludingChildren is broken"
     @cachedFullBounds = result.copy()
   
   boundsIncludingChildrenNoShadow: ->
@@ -623,6 +631,7 @@ class Morph extends MorphicNode
       child.silentMoveBy delta
   
   breakNumberOfMovesAndResizesCaches: ->
+    @invalidateFullBoundsCache()
     if @ instanceof HandMorph
       if @children.length == 0
         return
@@ -935,10 +944,11 @@ class Morph extends MorphicNode
     # in discarding whole sections of the scene graph.
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
     
-    if !@boundsWhenLastPainted?
-      @boundsWhenLastPainted =  @bounds
-    if !@fullBoundsWhenLastPainted?
-      @fullBoundsWhenLastPainted = @boundsIncludingChildren().spread()
+    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
+      @childrenBoundsUpdatedAt = WorldMorph.frameCount
+      @boundsWhenLastPainted = @visibleBounds()
+      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
+
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
       child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow

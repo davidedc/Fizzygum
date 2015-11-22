@@ -79,8 +79,8 @@ class FrameMorph extends Morph
     return result
 
   # do nothing
-  invalidateFullBoundsCache: () ->
-    @cachedFullBounds = null
+  #invalidateFullBoundsCache: () ->
+  #  @cachedFullBounds = null
   
   SLOWboundsIncludingChildren: () ->
     shadow = @getShadow()
@@ -96,12 +96,22 @@ class FrameMorph extends Morph
   # traversal to find the bounds.
   boundsIncludingChildren: () ->
     if @cachedFullBounds?
+      if (!@cachedFullBounds.containsRectangle @SLOWboundsIncludingChildren()) and
+      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWboundsIncludingChildren())
+        debugger
+        #alert "boundsIncludingChildren is broken"
       return @cachedFullBounds
     shadow = @getShadow()
     if shadow?
-      return @bounds.merge(shadow.bounds)
-    @bounds
-    @cachedFullBounds = @bounds.copy()
+      result = @bounds.merge(shadow.bounds)
+    else
+      result = @bounds
+
+    if (!result.containsRectangle @SLOWboundsIncludingChildren()) and
+    (!result.growBy(1).containsRectangle @SLOWboundsIncludingChildren())
+      debugger
+      #alert "boundsIncludingChildren is broken"
+    @cachedFullBounds = result
   
   boundsIncludingChildrenNoShadow: ->
     # answer my full bounds but ignore any shadow
@@ -109,6 +119,7 @@ class FrameMorph extends Morph
 
   
   recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
+
     if !@checkVisibility()
       return null
 
@@ -168,10 +179,11 @@ class FrameMorph extends Morph
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
     
-    if !@boundsWhenLastPainted?
-      @boundsWhenLastPainted =  @bounds
-    if !@fullBoundsWhenLastPainted?
-      @fullBoundsWhenLastPainted = @boundsIncludingChildren().spread()
+    if @childrenBoundsUpdatedAt < WorldMorph.frameCount
+      @childrenBoundsUpdatedAt = WorldMorph.frameCount
+      @boundsWhenLastPainted = @visibleBounds()
+      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
+
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
     @children.forEach (child) =>
