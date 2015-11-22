@@ -250,7 +250,7 @@ class Rectangle
   
   containsRectangle: (aRect) ->
     @debugIfFloats()
-    aRect.origin.gt(@origin) and aRect.corner.lt(@corner)
+    aRect.origin.ge(@origin) and aRect.corner.le(@corner)
   
   intersects: (aRect) ->
     @debugIfFloats()
