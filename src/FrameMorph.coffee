@@ -82,6 +82,14 @@ class FrameMorph extends Morph
   invalidateFullBoundsCache: () ->
     @cachedFullBounds = null
   
+  SLOWboundsIncludingChildren: () ->
+    shadow = @getShadow()
+    if shadow?
+      result = @bounds.merge(shadow.bounds)
+    else
+      result = @bounds
+    result
+
   # frames clip any of their children
   # at their boundaries
   # so there is no need to do a deep

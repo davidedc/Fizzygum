@@ -540,6 +540,13 @@ class Morph extends MorphicNode
     @cachedFullBounds = null
     if @parent?.cachedFullBounds?
         @parent.invalidateFullBoundsCache()
+
+  SLOWboundsIncludingChildren: () ->
+    result = @bounds
+    @children.forEach (child) ->
+      if child.checkVisibility()
+        result = result.merge(child.SLOWboundsIncludingChildren())
+    result
   
   boundsIncludingChildren: () ->
     if @cachedFullBounds?
