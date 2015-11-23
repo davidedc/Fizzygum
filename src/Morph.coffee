@@ -1231,8 +1231,6 @@ class Morph extends MorphicNode
   reLayout: ->
     if @backBufferIsPotentiallyDirty?
       @backBufferIsPotentiallyDirty = true
-    @children.forEach (child) ->
-      child.parentIsLayouting()
 
 
   calculateAndUpdateExtent: ->

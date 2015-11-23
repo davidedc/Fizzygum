@@ -142,6 +142,8 @@ class TextMorph extends StringMorph
     else
       @bounds = @bounds.origin.extent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
+    @children.forEach (child) ->
+      child.parentIsLayouting()
 
   # no changes of position or extent
   repaintBackBufferIfNeeded: ->

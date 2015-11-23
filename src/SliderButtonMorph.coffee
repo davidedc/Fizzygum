@@ -66,6 +66,8 @@ class SliderButtonMorph extends CircleBoxMorph
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
           @parent.width() - @width())
       @silentSetPosition new Point(posX, posY).add(@parent.bounds.origin)
+      @children.forEach (child) ->
+        child.parentIsLayouting()
 
 
 

@@ -31,6 +31,8 @@ class ShadowMorph extends Morph
       @silentSetPosition fb.origin.add(@offset)
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
+    @children.forEach (child) ->
+      child.parentIsLayouting()
 
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

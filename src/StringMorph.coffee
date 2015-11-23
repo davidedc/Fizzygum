@@ -114,6 +114,8 @@ class StringMorph extends Morph
     width = @calculateExtentBasedOnText()
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))
+    @children.forEach (child) ->
+      child.parentIsLayouting()
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

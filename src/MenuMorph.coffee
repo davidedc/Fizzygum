@@ -161,6 +161,8 @@ class MenuMorph extends BoxMorph
     @silentSetExtent new Point(0, 0)
     y = @top()
     x = @left() + 2
+    @children.forEach (child) ->
+      child.parentIsLayouting()
 
 
     unless @isListContents
