@@ -222,7 +222,7 @@ class HandleMorph extends Morph
     return null  unless @target
     @target.bringToForegroud()
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)

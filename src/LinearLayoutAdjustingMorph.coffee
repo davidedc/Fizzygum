@@ -31,7 +31,7 @@ class LinearLayoutAdjustingMorph extends RectangleMorph
     # Return true for all classes that can be instantiated from the menu
     return false
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     console.log "layout adjuster being moved!"
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     @parent.adjustByAt @, newPos

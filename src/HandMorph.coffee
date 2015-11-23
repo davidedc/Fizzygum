@@ -689,7 +689,6 @@ class HandMorph extends Morph
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point(worldX, worldY)
-    delta = pos.subtract @position()
     @setPosition pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -714,10 +713,10 @@ class HandMorph extends Morph
     topMorph = @topMorphUnderPointer()
     mouseOverNew = topMorph.allParentsTopToBottom()
 
-    @determineGrabs pos, delta, topMorph, mouseOverNew
+    @determineGrabs pos, topMorph, mouseOverNew
     @dispatchEventsFollowingMouseMove mouseOverNew
 
-  determineGrabs: (pos, delta, topMorph, mouseOverNew) ->
+  determineGrabs: (pos, topMorph, mouseOverNew) ->
     if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
       morph = topMorph.rootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
@@ -754,7 +753,7 @@ class HandMorph extends Morph
 
     if @nonFloatDraggingSomething()
       console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
-      @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, delta)  if @mouseButton
+      @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos)  if @mouseButton
     
     #
     #	original, more cautious code for grabbing Morphs,

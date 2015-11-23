@@ -71,7 +71,7 @@ class SliderButtonMorph extends CircleBoxMorph
 
 
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, delta) ->
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if world.hand.mouseButton and @checkVisibility()
       oldButtonPosition = @position()
