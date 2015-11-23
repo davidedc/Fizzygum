@@ -115,7 +115,7 @@ class StringMorph extends Morph
     @bounds.corner = @bounds.origin.add(new Point(
       width, fontHeight(@fontSize)))
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      child.parentHasReLayouted()
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

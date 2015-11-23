@@ -29,7 +29,7 @@ class ColorPickerMorph extends Morph
     super()
     @buildSubmorphs()
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      child.parentHasReLayouted()
 
   buildSubmorphs: ->
     @destroyAll()

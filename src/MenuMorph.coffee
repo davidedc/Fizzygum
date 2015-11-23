@@ -162,7 +162,7 @@ class MenuMorph extends BoxMorph
     y = @top()
     x = @left() + 2
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      child.parentHasReLayouted()
 
 
     unless @isListContents

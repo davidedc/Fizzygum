@@ -32,7 +32,7 @@ class ShadowMorph extends Morph
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      child.parentHasReLayouted()
 
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

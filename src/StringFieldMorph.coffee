@@ -53,7 +53,7 @@ class StringFieldMorph extends FrameMorph
     @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
     @add @text
     @children.forEach (child) ->
-      child.parentIsLayouting()
+      child.parentHasReLayouted()
 
   
   getValue: ->

@@ -691,7 +691,7 @@ class Morph extends MorphicNode
   # In the case of the HandleMorph, it's going
   # to place itself in the bottom-right
   # corner.
-  parentIsLayouting: ->
+  parentHasReLayouted: ->
 
   layoutInset: (morphStartingTheChange = null) ->
     if @insetMorph?
@@ -713,7 +713,7 @@ class Morph extends MorphicNode
 
     @children.forEach (child) ->
       if morphStartingTheChange != child
-        child.parentIsLayouting()
+        child.parentHasReLayouted()
   
 
   # do nothing in most cases but for example for
