@@ -430,6 +430,14 @@ class Morph extends MorphicNode
   boundingBox: ->
     @bounds.copy()
   
+  setBounds: (newBounds) ->
+    @setPosition newBounds.origin
+    @setExtent newBounds.extent()
+
+  silentSetBounds: (newBounds) ->
+    @silentSetPosition newBounds.origin
+    @silentSetExtent newBounds.extent()
+  
   corners: ->
     @bounds.corners()
   
