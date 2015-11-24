@@ -155,7 +155,7 @@ class ScrollFrameMorph extends FrameMorph
   
   setContents: (aMorph, extraPadding) ->
     @extraPadding = extraPadding
-    @contents.destroyAll()
+    @contents.fullDestroyChildren()
 
     aMorph.fullMoveTo @position().add(@padding + @extraPadding)
     @addContents aMorph

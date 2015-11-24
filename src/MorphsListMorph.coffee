@@ -30,7 +30,7 @@ class MorphsListMorph extends BoxMorph
     @attribs = []
 
     # remove existing panes
-    @destroyAll()
+    @fullDestroyChildren()
 
     # label
     @label = new TextMorph("Morphs List")

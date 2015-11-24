@@ -974,7 +974,7 @@ class WorldMorph extends FrameMorph
     @changed() # redraw the whole screen
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = null
-    @destroyAll()
+    @fullDestroyChildren()
     # some tests might change the background
     # color of the world so let's reset it.
     @setColor(new Color(205, 205, 205))
@@ -984,8 +984,8 @@ class WorldMorph extends FrameMorph
     # are running.
     document.body.scrollTop = document.documentElement.scrollTop = 0    
   
-  # There is something special that the
-  # "world" version of destroyAll does:
+  # There is something special about the
+  # "world" version of fullDestroyChildren:
   # it resets the counter used to count
   # how many morphs exist of each Morph class.
   # That counter is also used to determine the
@@ -993,7 +993,7 @@ class WorldMorph extends FrameMorph
   # all morphs from the world causes the
   # counts and IDs of all the subsequent
   # morphs to start from scratch again.
-  destroyAll: ->
+  fullDestroyChildren: ->
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
     ListOfMorphs = (Object.keys(window)).filter (i) ->
@@ -1025,7 +1025,7 @@ class WorldMorph extends FrameMorph
       menu.addLine()
       menu.addItem "show all", true, @, "showAllMinimised"
       menu.addItem "hide all", true, @, "minimiseAll"
-      menu.addItem "delete all", true, @, "destroyAll"
+      menu.addItem "delete all", true, @, "fullDestroy"
       menu.addItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addItem "inspect", true, @, "inspect", "open a window on\nall properties"
       menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"

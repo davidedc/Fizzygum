@@ -153,7 +153,7 @@ class MenuMorph extends BoxMorph
     # console.log "menu update rendering"
     super()
     isLine = false
-    @destroyAll()
+    @fullDestroyChildren()
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5

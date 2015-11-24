@@ -351,14 +351,27 @@ class Morph extends MorphicNode
       @parent.removeChild @
     return null
   
-  destroyAll: ->
+  fullDestroy: ->
     WorldMorph.numberOfAddsAndRemoves++
-    # we can't use forEach because we are iterating over
-    # an array that changes its values (and length) while
-    # we are iterating on it.
+    # we can't use a normal iterator because
+    # we are iterating over an array that changes
+    # its length as we are deleting its contents
+    # while we are iterating on it.
     until @children.length == 0
-      @children[0].destroy()
+      @children[0].fullDestroy()
+    @destroy()
     return null
+
+  fullDestroyChildren: ->
+    WorldMorph.numberOfAddsAndRemoves++
+    # we can't use a normal iterator because
+    # we are iterating over an array that changes
+    # its length as we are deleting its contents
+    # while we are iterating on it.
+    until @children.length == 0
+      @children[0].fullDestroy()
+    return null
+
 
   # Morph stepping:
   runChildrensStepFunction: ->

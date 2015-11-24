@@ -32,7 +32,7 @@ class ColorPickerMorph extends Morph
       child.parentHasReLayouted()
 
   buildSubmorphs: ->
-    @destroyAll()
+    @fullDestroyChildren()
     @feedback = new RectangleMorph(new Point(20, 20), @choice)
     @colorPalette = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     @grayPalette = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
