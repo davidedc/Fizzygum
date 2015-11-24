@@ -269,7 +269,7 @@ class Morph extends MorphicNode
       if (arr.indexOf @constructor.name) == -1
         arr.push @constructor.name
 
-    @bounds = new Rectangle(0, 0, 0, 0)
+    @silentSetBounds new Rectangle()
     @minimumExtent = new Point 5,5
     @silentSetPosition(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
@@ -362,7 +362,7 @@ class Morph extends MorphicNode
     # then step is set to null.
     # If the morph wants to do nothing but the children might want to do something,
     # then step is set to the function that does nothing (i.e. a function noOperation that
-    # only returns null) 
+    # only returns null)
     return null  unless @step
 
     # for objects where @fps is defined, check which ones are due to be stepped
