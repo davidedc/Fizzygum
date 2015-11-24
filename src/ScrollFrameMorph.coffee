@@ -315,7 +315,7 @@ class ScrollFrameMorph extends FrameMorph
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     @step = =>
-      pos = hand.bounds.origin
+      pos = hand.position()
       inner = @bounds.insetBy(inset)
       if (@bounds.containsPoint(pos)) and
         (not (inner.containsPoint(pos))) and

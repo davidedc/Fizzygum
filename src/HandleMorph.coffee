@@ -176,16 +176,14 @@ class HandleMorph extends Morph
 
 
     if @type is "resize"
-      p0 = @topLeft().subtract(@position())
-      
-      leftArrowPoint = p0.copy()
-      leftArrowPoint = leftArrowPoint.add( @extent().floorDivideBy(7) )
-
+      leftArrowPoint = @extent().floorDivideBy(7)
       rightArrowPoint = @bottomRight().subtract(@position()).subtract( @extent().floorDivideBy(7) )
+
       arrowPieceLeftUp = new Point(Math.ceil(@width()/4),0)
       arrowPieceLeftDown = new Point(0,Math.ceil(@height()/4))
       arrowPieceRightUp = new Point(0,-Math.ceil(@width()/4))
       arrowPieceRightDown = new Point(-Math.ceil(@width()/4),0)
+
       @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
   handleMorphRenderingHelper: (context, color, shadowColor) ->
@@ -225,7 +223,7 @@ class HandleMorph extends Morph
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
-      newExt = newPos.add(@extent().add(@inset)).subtract(@target.bounds.origin)
+      newExt = newPos.add(@extent().add(@inset)).subtract(@target.position())
       debugger
       @target.setExtent newExt
       # the position of this handle will be changed when the
@@ -235,10 +233,10 @@ class HandleMorph extends Morph
     else if @type is "move"
       @target.setPosition newPos.subtract @inset
     else if @type is "resizeRight"
-      newWidth = newPos.x + @extent().x + @inset.x - @target.bounds.origin.x
+      newWidth = newPos.x + @extent().x + @inset.x - @target.left()
       @target.setWidth newWidth
     else if @type is "resizeDown"
-      newHeight = newPos.y + @extent().y + @inset.y - @target.bounds.origin.y
+      newHeight = newPos.y + @extent().y + @inset.y - @target.top()
       @target.setHeight newHeight
   
   

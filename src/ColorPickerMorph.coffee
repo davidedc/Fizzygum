@@ -36,7 +36,7 @@ class ColorPickerMorph extends Morph
     @feedback = new RectangleMorph(new Point(20, 20), @choice)
     @colorPalette = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
     @grayPalette = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
-    @colorPalette.setPosition @bounds.origin
+    @colorPalette.setPosition @position()
     @add @colorPalette
     @grayPalette.setPosition @colorPalette.bottomLeft()
     @add @grayPalette

@@ -29,14 +29,14 @@ class CircleBoxMorph extends Morph
       x = @center().x
       center1 = new Point(x, @top() + radius).round()
       center2 = new Point(x, @bottom() - radius).round()
-      rect = @bounds.origin.add(
+      rect = @topLeft().add(
         new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
     else
       radius = @height() / 2
       y = @center().y
       center1 = new Point(@left() + radius, y).round()
       center2 = new Point(@right() - radius, y).round()
-      rect = @bounds.origin.add(
+      rect = @topLeft().add(
         new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
     return [radius,center1,center2,rect]
 
@@ -86,7 +86,7 @@ class CircleBoxMorph extends Morph
       [radius,center1,center2,rect] = @calculateKeyPoints()
 
       # the centers of two circles
-      points = [center1.subtract(@bounds.origin), center2.subtract(@bounds.origin)]
+      points = [center1.toLocalCoordinatesOf(@), center2.toLocalCoordinatesOf(@)]
 
       aContext.fillStyle = @color.toString()
       aContext.beginPath()
@@ -96,7 +96,7 @@ class CircleBoxMorph extends Morph
       aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI, false
       # the rectangle
       rect = rect.floor()
-      rect = rect.translateBy(@bounds.origin.neg())
+      rect = rect.toLocalCoordinatesOf @
       aContext.moveTo rect.origin.x, rect.origin.y
       aContext.lineTo rect.origin.x + rect.width(), rect.origin.y
       aContext.lineTo rect.origin.x + rect.width(), rect.origin.y + rect.height()

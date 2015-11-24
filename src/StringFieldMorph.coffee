@@ -46,7 +46,7 @@ class StringFieldMorph extends FrameMorph
     @destroyAll()
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     @text.isNumeric = @isNumeric # for whichever reason...
-    @text.setPosition @bounds.origin.copy()
+    @text.setPosition @position().copy()
     @text.isEditable = @isEditable
     @text.isfloatDraggable = false
     @text.enableSelecting()    

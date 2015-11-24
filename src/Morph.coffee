@@ -442,8 +442,9 @@ class Morph extends MorphicNode
   topCenter: ->
     @bounds.topCenter()
   
+  # same as position()
   topLeft: ->
-    @bounds.topLeft()
+    @bounds.origin
   
   topRight: ->
     @bounds.topRight()
@@ -640,7 +641,7 @@ class Morph extends MorphicNode
   
   setPosition: (aPoint) ->
     aPoint.debugIfFloats()
-    delta = aPoint.subtract(@topLeft())
+    delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       #console.log "move 6"
       @breakNumberOfMovesAndResizesCaches()
@@ -650,7 +651,7 @@ class Morph extends MorphicNode
   silentSetPosition: (aPoint) ->
     #console.log "move 7"
     @breakNumberOfMovesAndResizesCaches()
-    delta = aPoint.subtract(@topLeft())
+    delta = aPoint.toLocalCoordinatesOf @
     @silentMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   setLeft: (x) ->

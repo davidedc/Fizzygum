@@ -168,7 +168,7 @@ class MenuMorph extends BoxMorph
     unless @isListContents
       if @title
         @createLabel()
-        @label.setPosition @bounds.origin.add(2)
+        @label.setPosition @position().add(2)
         @add @label
         y = @label.bottom()
       else

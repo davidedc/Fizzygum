@@ -65,7 +65,7 @@ class SliderButtonMorph extends CircleBoxMorph
         posX = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
           @parent.width() - @width())
-      @silentSetPosition new Point(posX, posY).add(@parent.bounds.origin)
+      @silentSetPosition new Point(posX, posY).add(@parent.position())
       @children.forEach (child) ->
         child.parentHasReLayouted()
 
@@ -76,12 +76,12 @@ class SliderButtonMorph extends CircleBoxMorph
     if world.hand.mouseButton and @checkVisibility()
       oldButtonPosition = @position()
       if @parent.orientation is "vertical"
-        newX = @bounds.origin.x
+        newX = @left()
         newY = Math.max(
           Math.min(@offset.y,
           @parent.bottom() - @height()), @parent.top())
       else
-        newY = @bounds.origin.y
+        newY = @top()
         newX = Math.max(
           Math.min(@offset.x,
           @parent.right() - @width()), @parent.left())

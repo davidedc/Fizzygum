@@ -112,8 +112,7 @@ class StringMorph extends Morph
   reLayout: ->
     super()
     width = @calculateExtentBasedOnText()
-    @bounds.corner = @bounds.origin.add(new Point(
-      width, fontHeight(@fontSize)))
+    @silentSetExtent(new Point( width, fontHeight(@fontSize)))
     @children.forEach (child) ->
       child.parentHasReLayouted()
   

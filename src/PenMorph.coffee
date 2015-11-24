@@ -84,7 +84,7 @@ class PenMorph extends Morph
         @wantsRedraw = true
         return
       len = @width() / 2
-      start = @center().subtract(@bounds.origin)
+      start = @center().subtract(@position())
 
       if @penPoint is "tip"
         dest = start.distanceAngle(len * 0.75, direction - 180)

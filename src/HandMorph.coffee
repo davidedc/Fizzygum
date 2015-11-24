@@ -41,9 +41,9 @@ class HandMorph extends Morph
   # HandMorph navigation:
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
-      m.visibleBounds().containsPoint(@bounds.origin) and
+      m.visibleBounds().containsPoint(@position()) and
         m.checkVisibility() and
-        (m.noticesTransparentClick or (not m.isTransparentAt(@bounds.origin))) and
+        (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
         (m not instanceof ShadowMorph)
     if result?
       return result
@@ -52,9 +52,9 @@ class HandMorph extends Morph
 
   menuAtPointer: ->
     result = @world.topMorphSuchThat (m) =>
-      m.visibleBounds().containsPoint(@bounds.origin) and
+      m.visibleBounds().containsPoint(@position()) and
         m.checkVisibility() and (m.noticesTransparentClick or
-        (not m.isTransparentAt(@bounds.origin))) and (m instanceof MenuMorph)
+        (not m.isTransparentAt(@position()))) and (m instanceof MenuMorph)
     return result
 
 
@@ -94,7 +94,7 @@ class HandMorph extends Morph
   # not used in ZK yet
   allMorphsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
-      m.checkVisibility() and m.visibleBounds().containsPoint(@bounds.origin)
+      m.checkVisibility() and m.visibleBounds().containsPoint(@position())
   
   
   
@@ -271,9 +271,8 @@ class HandMorph extends Morph
     return [fractionalXPos, fractionalYPos]
 
   pointerPositionPixelsInMorph: (theMorph) ->
-    relativeXPos = @bounds.origin.x - theMorph.bounds.origin.x
-    relativeYPos = @bounds.origin.y - theMorph.bounds.origin.y
-    return [relativeXPos, relativeYPos]
+    relativePos = @position().toLocalCoordinatesOf theMorph
+    return [relativePos.x, relativePos.y]
 
   processMouseDown: (button, ctrlKey) ->
     @destroyTemporaries()
@@ -308,7 +307,7 @@ class HandMorph extends Morph
       @mouseDownMorph = morph
       @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
       morph = morph.parent  until morph[actualClick]
-      morph[actualClick] @bounds.origin
+      morph[actualClick] @position()
   
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
@@ -427,7 +426,7 @@ class HandMorph extends Morph
             pointerAndMorphInfo = world.getPointerAndMorphInfo()
             world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
-          morph[expectedClick] @bounds.origin
+          morph[expectedClick] @position()
           # also send doubleclick if the
           # two clicks happen on the same morph
           unless @doubleClickMorph?
@@ -511,7 +510,7 @@ class HandMorph extends Morph
       @drop()
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
-      morph.mouseDoubleClick @bounds.origin  if morph
+      morph.mouseDoubleClick @position() if morph
     @mouseButton = null
   
   processMouseScroll: (event) ->
@@ -725,7 +724,8 @@ class HandMorph extends Morph
         if morph
           fb = morph.boundsIncludingChildren()
           unless fb.containsPoint(pos)
-            @bounds.origin = fb.center()
+            #@bounds.origin = fb.center()
+            @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
             @grab morph
             @setPosition pos
     #endProcessMouseMove = new Date().getTime()
@@ -775,7 +775,7 @@ class HandMorph extends Morph
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.bounds.insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3
-                ).containsPoint(@bounds.origin)
+                ).containsPoint(@position())
                   newMorph.startAutoScrolling();
 
     @mouseOverList = mouseOverNew

@@ -80,7 +80,7 @@ BackingStoreMixin =
       # Morph pixel access:
       getPixelColor: (aPoint) ->
         @repaintBackBufferIfNeeded()
-        point = aPoint.subtract(@bounds.origin)
+        point = aPoint.toLocalCoordinatesOf @
         data = @backBufferContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
         new Color(data.data[0], data.data[1], data.data[2], data.data[3])
 
