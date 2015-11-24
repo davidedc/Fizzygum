@@ -90,24 +90,6 @@ class HandMorph extends Morph
     if contextMenu 
       contextMenu.popUpAtHand(morphTheMenuIsAbout.firstContainerMenu()) 
 
-  #
-  #    alternative -  more elegant and possibly more
-  #	performant - solution for topMorphUnderPointer.
-  #	Has some issues, commented out for now
-  #
-  #HandMorph::topMorphUnderPointer = function () {
-  #	var myself = this;
-  #	return this.world.topMorphSuchThat(function (m) {
-  #		return m.visibleBounds().containsPoint(myself.bounds.origin) &&
-  #			!m.isMinimised &&
-  #     m.isVisible &&
-  #			(m.noticesTransparentClick ||
-  #				(! m.isTransparentAt(myself.bounds.origin))) &&
-  #			(! (m instanceof ShadowMorph));
-  #	});
-  #};
-  #
-
 
   # not used in ZK yet
   allMorphsAtPointer: ->
