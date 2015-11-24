@@ -36,7 +36,7 @@ class SpeechBubbleMorph extends BoxMorph
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
     # do nothing.
-    if morphInvokingThis.world()? and morphInvokingThis.bounds.containsPoint(morphInvokingThis.world().hand.position())
+    if morphInvokingThis.world()? and morphInvokingThis.boundsContainPoint(morphInvokingThis.world().hand.position())
       theBubble = new @(localize(contents), morphInvokingThis, null, null)
       theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
 

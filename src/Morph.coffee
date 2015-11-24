@@ -861,6 +861,8 @@ class Morph extends MorphicNode
   isTransparentAt: ->
     return false
   
+  boundsContainPoint: (aPoint) ->
+    @bounds.containsPoint aPoint
 
   calculateKeyValues: (aContext, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()

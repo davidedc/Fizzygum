@@ -652,7 +652,7 @@ class HandMorph extends Morph
     #	to display tools tips of speech bubble help.
     #
     @temporaries.forEach (morph) =>
-      unless morph.isClickable and morph.bounds.containsPoint(@position())
+      unless morph.isClickable and morph.boundsContainPoint(@position())
         morph = morph.destroy()
         @temporaries.splice @temporaries.indexOf(morph), 1
   

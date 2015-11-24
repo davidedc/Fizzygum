@@ -15,7 +15,7 @@ class BoxMorph extends Morph
   isTransparentAt: (aPoint) ->
     # first quickly check if the point is even
     # within the bounding box
-    if !@bounds.containsPoint aPoint
+    if !@boundsContainPoint aPoint
       return true
  
     thisMorphPosition = @position()

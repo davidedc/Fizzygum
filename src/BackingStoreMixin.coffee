@@ -70,7 +70,7 @@ BackingStoreMixin =
 
       isTransparentAt: (aPoint) ->
         @bounds.debugIfFloats()
-        if @bounds.containsPoint(aPoint)
+        if @boundsContainPoint(aPoint)
           return false  if @texture
           data = @getPixelColor aPoint
           # check the 4th byte - the Alpha (RGBA)
