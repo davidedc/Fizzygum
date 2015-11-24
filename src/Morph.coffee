@@ -431,12 +431,14 @@ class Morph extends MorphicNode
     @bounds.copy()
   
   setBounds: (newBounds) ->
-    @setPosition newBounds.origin
-    @setExtent newBounds.extent()
+    @breakNumberOfMovesAndResizesCaches()
+    @bounds = newBounds.copy()
+    @changed()
+    @invalidateFullBoundsCache(@)
+
 
   silentSetBounds: (newBounds) ->
-    @silentSetPosition newBounds.origin
-    @silentSetExtent newBounds.extent()
+    @bounds = newBounds.copy()
   
   corners: ->
     @bounds.corners()
