@@ -53,6 +53,11 @@ class Morph extends MorphicNode
   # End of tests here ////////////////////
 
   isMorph: true
+
+  # we conveniently keep all geometry information
+  # into a single property (a Rectangle). Only
+  # a few geometry-related methods should directly
+  # access this property.
   bounds: null
   minimumExtent: null
   color: null
@@ -559,6 +564,15 @@ class Morph extends MorphicNode
       if child.checkVisibility()
         result = result.merge(child.SLOWboundsIncludingChildren())
     result
+
+  # for FrameMorph scrolling support:
+  subMorphsMergedFullBounds: ->
+    result = null
+    if @children.length
+      result = @children[0].bounds
+      @children.forEach (child) ->
+        result = result.merge(child.boundsIncludingChildren())
+    result    
   
   boundsIncludingChildren: () ->
     if @cachedFullBounds?

@@ -196,7 +196,7 @@ class ScrollFrameMorph extends FrameMorph
           morph.maxWidth = @contents.width() - totalPadding
           @contents.setHeight Math.max(morph.height(), @height() - totalPadding)
 
-    subBounds = @contents.submorphBounds()
+    subBounds = @contents.subMorphsMergedFullBounds()
     if subBounds
       newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@boundingBox())
     else

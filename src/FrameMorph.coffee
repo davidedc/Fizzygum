@@ -213,18 +213,7 @@ class FrameMorph extends Morph
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars()
-  
-  
-  # FrameMorph scrolling support:
-  submorphBounds: ->
-    result = null
-    if @children.length
-      result = @children[0].bounds
-      @children.forEach (child) ->
-        result = result.merge(child.boundsIncludingChildren())
-    result    
-    
-    
+
   # FrameMorph menus:
   developersMenu: ->
     menu = super()

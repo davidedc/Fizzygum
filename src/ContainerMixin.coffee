@@ -29,16 +29,8 @@ ContainerMixin =
           menu = new MenuMorph(false, @, true, true, "no targets available")
         menu.popUpAtHand(@firstContainerMenu())
 
-      submorphBounds: ->
-        result = null
-        if @children.length
-          result = @children[0].boundingBox()
-          @children.forEach (child) ->
-            result = result.merge(child.boundsIncludingChildren())
-        result
-        
       adjustBounds: ->
-        newBounds = @submorphBounds()
+        newBounds = @subMorphsMergedFullBounds()
         if newBounds
           if @padding?
             newBounds = newBounds.expandBy(@padding)
