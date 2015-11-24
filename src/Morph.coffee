@@ -1209,11 +1209,6 @@ class Morph extends MorphicNode
   
   
   # Morph accessing - structure //////////////////////////////////////////////
-  world: ->
-    root = @root()
-    return root  if root instanceof WorldMorph
-    return root.world  if root instanceof HandMorph
-    null
 
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
@@ -1667,7 +1662,6 @@ class Morph extends MorphicNode
     #    return @hierarchyMenu()
     if @customContextMenu
       return @customContextMenu()
-    world = (if @world instanceof Function then @world() else (@root() or @world))
     if world and world.isDevMode
       if @parent is world
         return @developersMenu()

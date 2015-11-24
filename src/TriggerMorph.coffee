@@ -215,7 +215,7 @@ class TriggerMorph extends Morph
   mouseLeave: ->
     @state = @STATE_NORMAL
     @changed()
-    @world().hand.destroyTemporaries()  if @hint
+    world.hand.destroyTemporaries()  if @hint
   
   mouseDownLeft: ->
     @state = @STATE_PRESSED
