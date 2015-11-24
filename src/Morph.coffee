@@ -428,7 +428,7 @@ class Morph extends MorphicNode
     @bounds.bottomRight()
   
   boundingBox: ->
-    @bounds
+    @bounds.copy()
   
   corners: ->
     @bounds.corners()
