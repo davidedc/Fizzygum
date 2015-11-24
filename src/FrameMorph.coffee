@@ -87,7 +87,7 @@ class FrameMorph extends Morph
       super @
   
   SLOWfullBounds: ->
-    shadow = @getShadow()
+    shadow = @getShadowMorph()
     if shadow?
       result = @bounds.merge(shadow.bounds)
     else
@@ -105,7 +105,7 @@ class FrameMorph extends Morph
         debugger
         #alert "fullBounds is broken"
       return @cachedFullBounds
-    shadow = @getShadow()
+    shadow = @getShadowMorph()
     if shadow?
       result = @bounds.merge(shadow.bounds)
     else

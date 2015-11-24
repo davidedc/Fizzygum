@@ -146,7 +146,7 @@ class HandMorph extends Morph
       # so they all seem to float at a particular height)
       # but here when we grab morphs we
       # specify a particular look for the shadow.
-      aMorph.addShadow(new Point(7,7),0.2)
+      aMorph.addFullShadow(new Point(7,7),0.2)
       
       #debugger
       @fullChanged()
@@ -190,15 +190,15 @@ class HandMorph extends Morph
         doRemoveShadow = true
 
       if doRemoveShadow
-        morphToDrop.removeShadow()
+        morphToDrop.removeShadowMorph()
       else
         # TODO adding of the shadow
         # is not really legit because it
         # ignores the original color and opacity
         # of the shadow...
-        shadow = morphToDrop.getShadow()
+        shadow = morphToDrop.getShadowMorph()
         if !shadow?
-          morphToDrop.addShadow()
+          morphToDrop.addFullShadow()
 
       @children = []
       @setExtent new Point()

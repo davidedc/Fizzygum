@@ -553,7 +553,7 @@ class AutomatorRecorderAndPlayer
     imageName = "SystemTest_"+@testName+"_image_" + (@collectedImages.length + 1)
     systemTestCommand = new AutomatorCommandScreenshot imageName, @, whichMorph != @worldMorph
 
-    imageData = whichMorph.asItAppearsOnScreen()
+    imageData = whichMorph.fullImageAsItAppearsOnScreen()
 
     takenScreenshot = new SystemTestsReferenceImage(imageName,imageData, new SystemTestsSystemInfo())
     unless AutomatorRecorderAndPlayer.loadedImages["#{imageName}"]?
@@ -658,7 +658,7 @@ class AutomatorRecorderAndPlayer
      @imageDataOfAParticularMorph = null
    else
      console.log "comparing pic of whole desktop"
-     screenshotObtained = @worldMorph.asItAppearsOnScreen()
+     screenshotObtained = @worldMorph.fullImageAsItAppearsOnScreen()
    
    console.log "trying to match screenshot: " + testNameWithImageNumber
    console.log "length of obtained: " + screenshotObtained.length

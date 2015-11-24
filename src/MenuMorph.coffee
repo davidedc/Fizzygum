@@ -309,12 +309,12 @@ class MenuMorph extends BoxMorph
     # to base the shadow on
     # P.S. this is the thing that causes the MenuMorph buffer
     # to be painted after the creation.
-    @addShadow()
+    @addFullShadow()
     @fullChanged()
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
+  addFullShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
     super offset, alpha, color
   
   popUpAtHand: (morphToAttachTo)->

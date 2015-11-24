@@ -61,7 +61,7 @@ class SpeechBubbleMorph extends BoxMorph
     @buildAndConnectChildren()
 
     world.add @
-    @addShadow()
+    @addFullShadow()
     @fullChanged()
     world.hand.destroyTemporaries()
     world.hand.temporaries.push @

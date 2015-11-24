@@ -1065,7 +1065,7 @@ class Morph extends MorphicNode
   # causing any repaints. If streaks are on the
   # screen due to bad painting, we capture them
   # exactly as the user sees them.
-  asItAppearsOnScreen: ->
+  fullImageAsItAppearsOnScreen: ->
     fullExtentOfMorph = @fullBounds()
     destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
     destCtx = destCanvas.getContext '2d'
@@ -1152,24 +1152,24 @@ class Morph extends MorphicNode
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addShadow: (offset, alpha, color) ->
-    shadow = @silentAddShadow offset, alpha, color
+  addFullShadow: (offset, alpha, color) ->
+    shadow = @silentAddFullShadow offset, alpha, color
     shadow.reLayout()
     
     @fullChanged()
     shadow
 
-  silentAddShadow: (offset, alpha, color) ->
+  silentAddFullShadow: (offset, alpha, color) ->
     shadow = new ShadowMorph(@, offset, alpha, color)
     @addChildFirst shadow
     shadow
   
-  getShadow: ->
+  getShadowMorph: ->
     return @topmostChildSuchThat (child) ->
       child instanceof ShadowMorph
   
-  removeShadow: ->
-    shadow = @getShadow()
+  removeShadowMorph: ->
+    shadow = @getShadowMorph()
     if shadow?
       @fullChanged()
       @removeChild shadow
