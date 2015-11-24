@@ -872,6 +872,9 @@ class Morph extends MorphicNode
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
+  boundsIntersect: (aMorph) ->
+    @bounds.intersects aMorph.bounds
+
   calculateKeyValues: (aContext, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()
     # test whether anything that we are going to be drawing
