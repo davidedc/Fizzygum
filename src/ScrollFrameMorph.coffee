@@ -198,12 +198,12 @@ class ScrollFrameMorph extends FrameMorph
 
     subBounds = @contents.submorphBounds()
     if subBounds
-      newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@bounds)
+      newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@boundingBox())
     else
       newBounds = @boundingBox().copy()
 
     unless @contents.boundingBox().eq(newBounds)
-      @contents.bounds = newBounds
+      @contents.silentSetBounds newBounds
       @contents.reLayout()
       
       @keepContentsInScrollFrame()

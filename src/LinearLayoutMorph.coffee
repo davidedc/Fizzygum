@@ -97,7 +97,7 @@ class LinearLayoutMorph extends LayoutMorph
       @layoutNeeded = false
       return @
 
-    @layoutSubmorphsWithinBounds @bounds, @direction
+    @layoutSubmorphsWithinBounds @boundingBox(), @direction
 
     @layoutNeeded = false
 

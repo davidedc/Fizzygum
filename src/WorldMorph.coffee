@@ -180,7 +180,7 @@ class WorldMorph extends FrameMorph
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
-    @bounds = new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
+    @silentSetBounds new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
 
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)

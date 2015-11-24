@@ -51,7 +51,7 @@ class MenuItemMorph extends TriggerMorph
     @silentSetExtent @label.extent().add(new Point(8, 0))
     @silentSetWidth w
     np = @position().add(new Point(4, 0))
-    @label.bounds = np.extent(@label.extent())
+    @label.silentSetPosition np
   
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement

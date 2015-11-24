@@ -32,7 +32,7 @@ ContainerMixin =
       submorphBounds: ->
         result = null
         if @children.length
-          result = @children[0].bounds
+          result = @children[0].boundingBox()
           @children.forEach (child) ->
             result = result.merge(child.boundsIncludingChildren())
         result
@@ -46,7 +46,7 @@ ContainerMixin =
           newBounds = @boundingBox()
 
         unless @boundingBox().eq(newBounds)
-          @bounds = newBounds
+          @silentSetBounds newBounds
           @changed()
           @reLayout()
           

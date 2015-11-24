@@ -326,7 +326,7 @@ class Morph extends MorphicNode
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
       return firstPart
     else
-      return firstPart + " " + @bounds
+      return firstPart + " " + @boundingBox()
 
   # Morph string representation: e.g. 'a Morph#2'
   toStringWithoutGeometry: ->

@@ -122,7 +122,7 @@ class FrameMorph extends Morph
     @bounds
 
   
-  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @bounds, noShadow = false) ->
+  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundingBox(), noShadow = false) ->
 
     if @preliminaryCheckNothingToDraw noShadow
       return

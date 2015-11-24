@@ -54,7 +54,7 @@ BackingStoreMixin =
       backBufferContext_isDerivedValue: true
 
       calculateKeyValues: (aContext, clippingRectangle) ->
-        area = clippingRectangle.intersect(@bounds).round()
+        area = clippingRectangle.intersect(@boundingBox()).round()
         # test whether anything that we are going to be drawing
         # is visible (i.e. within the clippingRectangle)
         if area.isNotEmpty()
