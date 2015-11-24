@@ -546,7 +546,7 @@ class Morph extends MorphicNode
   # you should also invalidate all the morphs in
   # the subtree
   # as well. This happens indirectly as the
-  # moveBy moves all the children too, so *that*
+  # fullMoveBy moves all the children too, so *that*
   # invalidates them. Note that things might change
   # if you use a different coordinate system, in which
   # case you have to invalidate the caches in all the
@@ -632,7 +632,7 @@ class Morph extends MorphicNode
   
   
   # Morph accessing - simple changes:
-  moveBy: (delta) ->
+  fullMoveBy: (delta) ->
     if delta.isZero() then return
     # note that changed() is called two times
     # because there are two areas of the screens
@@ -643,17 +643,17 @@ class Morph extends MorphicNode
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
-      child.moveBy delta
+      child.fullMoveBy delta
     @changed()
     @invalidateFullBoundsCache(@)
 
-  silentMoveBy: (delta) ->
+  silentFullMoveBy: (delta) ->
     #console.log "move 5"
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @invalidateFullBoundsCache(@)
     @children.forEach (child) ->
-      child.silentMoveBy delta
+      child.silentFullMoveBy delta
   
   breakNumberOfMovesAndResizesCaches: ->
     @invalidateFullBoundsCache(@)
@@ -669,14 +669,14 @@ class Morph extends MorphicNode
     if !delta.isZero()
       #console.log "move 6"
       @breakNumberOfMovesAndResizesCaches()
-      @moveBy delta
+      @fullMoveBy delta
     @bounds.debugIfFloats()
   
   silentSetPosition: (aPoint) ->
     #console.log "move 7"
     @breakNumberOfMovesAndResizesCaches()
     delta = aPoint.toLocalCoordinatesOf @
-    @silentMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    @silentFullMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   setLeft: (x) ->
     @setPosition new Point(x, @top())
@@ -699,13 +699,13 @@ class Morph extends MorphicNode
   # make sure I am completely within another Morph's bounds
   keepWithin: (aMorph) ->
     leftOff = @fullBounds().left() - aMorph.left()
-    @moveBy new Point(-leftOff, 0)  if leftOff < 0
+    @fullMoveBy new Point(-leftOff, 0)  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
-    @moveBy new Point(-rightOff, 0)  if rightOff > 0
+    @fullMoveBy new Point(-rightOff, 0)  if rightOff > 0
     topOff = @fullBounds().top() - aMorph.top()
-    @moveBy new Point(0, -topOff)  if topOff < 0
+    @fullMoveBy new Point(0, -topOff)  if topOff < 0
     bottomOff = @fullBounds().bottom() - aMorph.bottom()
-    @moveBy new Point(0, -bottomOff)  if bottomOff > 0
+    @fullMoveBy new Point(0, -bottomOff)  if bottomOff > 0
 
   # normally morphs do nothing when the
   # parent is layouting, as they are
@@ -1514,7 +1514,7 @@ class Morph extends MorphicNode
     oldFps = @fps
     @fps = 0
     @step = =>
-      @silentMoveBy new Point(xStep, yStep)
+      @silentFullMoveBy new Point(xStep, yStep)
       @fullChanged()
       stepCount += 1
       if stepCount is steps

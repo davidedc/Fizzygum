@@ -210,13 +210,13 @@ class ScrollFrameMorph extends FrameMorph
 
   keepContentsInScrollFrame: ->
     if @contents.left() > @left()
-      @contents.moveBy new Point(@left() - @contents.left(), 0)
+      @contents.fullMoveBy new Point(@left() - @contents.left(), 0)
     if @contents.right() < @right()
-      @contents.moveBy new Point(@right() - @contents.right(), 0)  
+      @contents.fullMoveBy new Point(@right() - @contents.right(), 0)  
     if @contents.top() > @top()
-      @contents.moveBy new Point(0, @top() - @contents.top())  
+      @contents.fullMoveBy new Point(0, @top() - @contents.top())  
     if @contents.bottom() < @bottom()
-      @contents.moveBy 0, new Point(@bottom() - @contents.bottom(), 0)
+      @contents.fullMoveBy 0, new Point(@bottom() - @contents.bottom(), 0)
   
   # ScrollFrameMorph scrolling by floatDragging:
   scrollX: (steps) ->
