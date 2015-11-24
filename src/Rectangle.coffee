@@ -12,10 +12,10 @@ class Rectangle
   origin: null
   corner: null
   
-  constructor: (left, top, right, bottom) ->
+  constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     
-    @origin = new Point((left or 0), (top or 0))
-    @corner = new Point((right or 0), (bottom or 0))
+    @origin = new Point(left, top)
+    @corner = new Point(right, bottom)
   
   
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
