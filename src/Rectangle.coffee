@@ -242,6 +242,8 @@ class Rectangle
     dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
     new Point(dx, dy)
   
+  toLocalCoordinatesOf: (aMorph) ->
+    new @constructor(@origin.x - aMorph.left(),@origin.y - aMorph.top(),@corner.x - aMorph.left(),@corner.y - aMorph.top())
   
   # Rectangle testing:
   containsPoint: (aPoint) ->

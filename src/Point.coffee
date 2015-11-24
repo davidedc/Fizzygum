@@ -129,6 +129,8 @@ class Point
       return new @constructor(Math.floor(@x / other.x), Math.floor(@y / other.y))
     new @constructor(Math.floor(@x / other), Math.floor(@y / other))
   
+  toLocalCoordinatesOf: (aMorph) ->
+    new @constructor(@x - aMorph.left(),@y - aMorph.top())
   
   # Point polar coordinates:
   r: ->
