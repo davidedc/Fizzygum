@@ -125,7 +125,7 @@ class InspectorMorph extends BoxMorph
       world = @world()
       inspector = new InspectorMorph @currentProperty
       inspector.fullMoveTo world.hand.position()
-      inspector.keepWithin world
+      inspector.fullMoveWithin world
       world.add inspector
       inspector.changed()
 
@@ -249,7 +249,7 @@ class InspectorMorph extends BoxMorph
         world = @world()
         inspector = new @constructor(@currentProperty)
         inspector.fullMoveTo world.hand.position()
-        inspector.keepWithin world
+        inspector.fullMoveWithin world
         world.add inspector
         inspector.changed()
 

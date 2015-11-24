@@ -130,7 +130,7 @@ class BasicCalculatedVal extends GroundVal
   # fetchVal is an apt name because it doesn't necessarily
   # recalculate the val (although it might need to) and it
   # doesn't just look it up either. It's some sort of retrieval.
-  fetchVal: () ->
+  fetchVal: ->
     if @lastCalculatedValContentMaybeOutdated is false
       return @lastCalculatedValContent
     

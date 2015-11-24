@@ -86,7 +86,7 @@ class FrameMorph extends Morph
     if morphCalling == @
       super @
   
-  SLOWfullBounds: () ->
+  SLOWfullBounds: ->
     shadow = @getShadow()
     if shadow?
       result = @bounds.merge(shadow.bounds)
@@ -98,7 +98,7 @@ class FrameMorph extends Morph
   # at their boundaries
   # so there is no need to do a deep
   # traversal to find the bounds.
-  fullBounds: () ->
+  fullBounds: ->
     if @cachedFullBounds?
       if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
       (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
@@ -224,4 +224,4 @@ class FrameMorph extends Morph
   
   keepAllSubmorphsWithin: ->
     @children.forEach (m) =>
-      m.keepWithin @
+      m.fullMoveWithin @

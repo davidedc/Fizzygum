@@ -56,7 +56,7 @@ class SpeechBubbleMorph extends BoxMorph
     # console.log "bubble popup"
     world = @morphInvokingThis.world()
     @fullMoveTo pos.subtract(new Point(0, @height()))
-    @keepWithin world
+    @fullMoveWithin world
 
     @buildAndConnectChildren()
 

@@ -39,8 +39,8 @@ class MenuItemMorph extends TriggerMorph
       lbl = @createLabelString(@labelString[1])
       @label.add lbl
 
-      lbl.setCenter icon.center()
-      lbl.setLeft icon.right() + 4
+      lbl.fullMoveCenterTo icon.center()
+      lbl.fullMoveLeftSideTo icon.right() + 4
       @label.setBounds(icon.boundingBox().merge(lbl.boundingBox()))
     else # assume it's either a Morph or a Canvas
       @label = @createIcon(@labelString)

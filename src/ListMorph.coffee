@@ -111,7 +111,7 @@ class ListMorph extends ScrollFrameMorph
     lb = @listContents.bounds
     nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
     if nb.right() > lb.right() and nb.width() <= lb.width()
-      @listContents.setRight nb.right()
+      @listContents.fullMoveRightSideTo nb.right()
     if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-      @listContents.setBottom nb.bottom()
+      @listContents.fullMoveBottomSideTo nb.bottom()
     super aPoint

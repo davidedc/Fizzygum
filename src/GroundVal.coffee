@@ -48,7 +48,7 @@ class GroundVal
     @localValsAffectedByChangeOfThisVal = []
 
 
-  checkAndPropagateChangeBasedOnArgChange: () ->
+  checkAndPropagateChangeBasedOnArgChange: ->
     if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
       console.log "checking if " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " has any damaged inputs..."
 

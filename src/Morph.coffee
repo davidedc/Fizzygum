@@ -518,14 +518,6 @@ class Morph extends MorphicNode
 
     return result
 
-  ###
-  mergedBoundsOfChildren: ->
-    result = new Rectangle(0,0)
-    @children.forEach (child) ->
-      if !child.isMinimised and child.isVisible
-        result = result.merge(child.fullBounds())
-    result
-  ###
 
   surelyNotShowingUpOnScreen: ->
     if @isOrphan()
@@ -534,7 +526,7 @@ class Morph extends MorphicNode
       return true
     return false
 
-  checkVisibility: () ->
+  checkVisibility: ->
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
@@ -564,14 +556,14 @@ class Morph extends MorphicNode
   # if you use a different coordinate system, in which
   # case you have to invalidate the caches in all the
   # submorphs manually.
-  invalidateFullBoundsCache: () ->
+  invalidateFullBoundsCache: ->
     if !@cachedFullBounds?
       return
     @cachedFullBounds = null
     if @parent?.cachedFullBounds?
         @parent.invalidateFullBoundsCache(@)
 
-  SLOWfullBounds: () ->
+  SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
@@ -587,7 +579,7 @@ class Morph extends MorphicNode
         result = result.merge(child.fullBounds())
     result    
   
-  fullBounds: () ->
+  fullBounds: ->
     if @cachedFullBounds?
       if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
       (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
@@ -691,26 +683,26 @@ class Morph extends MorphicNode
     delta = aPoint.toLocalCoordinatesOf @
     @silentFullMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
-  setLeft: (x) ->
+  fullMoveLeftSideTo: (x) ->
     @fullMoveTo new Point(x, @top())
   
-  setRight: (x) ->
+  fullMoveRightSideTo: (x) ->
     @fullMoveTo new Point(x - @width(), @top())
   
-  setTop: (y) ->
+  fullMoveTopSideTo: (y) ->
     @fullMoveTo new Point(@left(), y)
   
-  setBottom: (y) ->
+  fullMoveBottomSideTo: (y) ->
     @fullMoveTo new Point(@left(), y - @height())
   
-  setCenter: (aPoint) ->
+  fullMoveCenterTo: (aPoint) ->
     @fullMoveTo aPoint.subtract(@extent().floorDivideBy(2))
   
-  setFullCenter: (aPoint) ->
+  fullMoveFullCenterTo: (aPoint) ->
     @fullMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
-  keepWithin: (aMorph) ->
+  fullMoveWithin: (aMorph) ->
     leftOff = @fullBounds().left() - aMorph.left()
     @fullMoveBy new Point(-leftOff, 0)  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
@@ -1649,7 +1641,7 @@ class Morph extends MorphicNode
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
     inspector.fullMoveTo world.hand.position()
-    inspector.keepWithin world
+    inspector.fullMoveWithin world
     world.add inspector
     inspector.changed()
     
@@ -1890,7 +1882,7 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["setLeft", "setTop", "setWidth", "setHeight", "setAlphaScaled"]
+    ["fullMoveLeftSideTo", "fullMoveTopSideTo", "setWidth", "setHeight", "setAlphaScaled"]
   
   
   # Morph entry field tabbing //////////////////////////////////////////////

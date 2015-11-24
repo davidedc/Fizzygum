@@ -236,7 +236,7 @@ class ScrollFrameMorph extends FrameMorph
     # updates of the content and scrollbars
     # or not.
     if newX isnt cl
-      @contents.setLeft newX
+      @contents.fullMoveLeftSideTo newX
       return true
     else
       return false
@@ -261,7 +261,7 @@ class ScrollFrameMorph extends FrameMorph
     # updates of the content and scrollbars
     # or not.
     if newY isnt ct
-      @contents.setTop newY
+      @contents.fullMoveTopSideTo newY
       return true
     else
       return false
@@ -360,17 +360,17 @@ class ScrollFrameMorph extends FrameMorph
     fr = @right() - @padding
     @adjustContentsBounds()
     if caretMorph.top() < ft
-      @contents.setTop @contents.top() + ft - caretMorph.top()
-      caretMorph.setTop ft
+      @contents.fullMoveTopSideTo @contents.top() + ft - caretMorph.top()
+      caretMorph.fullMoveTopSideTo ft
     else if caretMorph.bottom() > fb
-      @contents.setBottom @contents.bottom() + fb - caretMorph.bottom()
-      caretMorph.setBottom fb
+      @contents.fullMoveBottomSideTo @contents.bottom() + fb - caretMorph.bottom()
+      caretMorph.fullMoveBottomSideTo fb
     if caretMorph.left() < fl
-      @contents.setLeft @contents.left() + fl - caretMorph.left()
-      caretMorph.setLeft fl
+      @contents.fullMoveLeftSideTo @contents.left() + fl - caretMorph.left()
+      caretMorph.fullMoveLeftSideTo fl
     else if caretMorph.right() > fr
-      @contents.setRight @contents.right() + fr - caretMorph.right()
-      caretMorph.setRight fr
+      @contents.fullMoveRightSideTo @contents.right() + fr - caretMorph.right()
+      caretMorph.fullMoveRightSideTo fr
     @adjustContentsBounds()
     @adjustScrollBars()
 

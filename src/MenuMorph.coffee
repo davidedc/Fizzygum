@@ -294,13 +294,13 @@ class MenuMorph extends BoxMorph
     # console.log "menu popup"
     @silentFullMoveTo pos
     morphToAttachTo.add @
-    # the @keepWithin method
+    # the @fullMoveWithin method
     # needs to know the extent of the morph
     # so it must be called after the morphToAttachTo.add
     # method. If you call before, there is
     # nopainting happening and the morph doesn't
     # know its extent.
-    @keepWithin world
+    @fullMoveWithin world
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph

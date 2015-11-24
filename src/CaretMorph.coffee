@@ -120,15 +120,15 @@ class CaretMorph extends BlinkerMorph
       right = @parent.right() - @viewPadding
       left = @parent.left() + @viewPadding
       if pos.x > right
-        @target.setLeft @target.left() + right - pos.x
+        @target.fullMoveLeftSideTo @target.left() + right - pos.x
         pos.x = right
       if pos.x < left
         left = Math.min(@parent.left(), left)
-        @target.setLeft @target.left() + left - pos.x
+        @target.fullMoveLeftSideTo @target.left() + left - pos.x
         pos.x = left
       if @target.right() < right and right - @target.width() < left
         pos.x += right - @target.right()
-        @target.setRight right
+        @target.fullMoveRightSideTo right
     @show()
     @fullMoveTo pos
 

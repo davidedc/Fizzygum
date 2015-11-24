@@ -350,7 +350,7 @@ class StringMorph extends Morph
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["setLeft", "setTop", "setAlphaScaled", "setFontSize", "setText"]
+    ["fullMoveLeftSideTo", "fullMoveTopSideTo", "setAlphaScaled", "setFontSize", "setText"]
   
   
   # StringMorph editing:
