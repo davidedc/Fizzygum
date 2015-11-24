@@ -323,10 +323,8 @@ class MenuMorph extends BoxMorph
     @popup morphToAttachTo, world.hand.position()
   
   popUpCenteredAtHand: (world) ->
-    wrrld = world or @world()
-    @popup wrrld, wrrld.hand.position().subtract(@extent().floorDivideBy(2))
+    @popup world, world.hand.position().subtract(@extent().floorDivideBy(2))
   
   popUpCenteredInWorld: (world) ->
-    wrrld = world or @world()
-    @popup wrrld, wrrld.center().subtract(@extent().floorDivideBy(2))
+    @popup world, world.center().subtract(@extent().floorDivideBy(2))
 

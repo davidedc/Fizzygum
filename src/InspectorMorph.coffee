@@ -122,7 +122,6 @@ class InspectorMorph extends BoxMorph
     doubleClickAction = =>
       if (!isObject(@currentProperty))
         return
-      world = @world()
       inspector = new InspectorMorph @currentProperty
       inspector.fullMoveTo world.hand.position()
       inspector.fullMoveWithin world
@@ -246,7 +245,6 @@ class InspectorMorph extends BoxMorph
     if isObject(@currentProperty)
       menu = new MenuMorph(false)
       menu.addItem "in new inspector...", true, @, =>
-        world = @world()
         inspector = new @constructor(@currentProperty)
         inspector.fullMoveTo world.hand.position()
         inspector.fullMoveWithin world

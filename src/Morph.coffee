@@ -1532,13 +1532,13 @@ class Morph extends MorphicNode
   # Morph utilities ////////////////////////////////////////////////////////
   
   resize: ->
-    @world().activeHandle.push new HandleMorph(@, "resizeRight")
-    @world().activeHandle.push new HandleMorph(@, "resizeDown")
-    @world().activeHandle.push new HandleMorph(@, "move")
-    @world().activeHandle.push new HandleMorph(@, "resize")
+    world.activeHandle.push new HandleMorph(@, "resizeRight")
+    world.activeHandle.push new HandleMorph(@, "resizeDown")
+    world.activeHandle.push new HandleMorph(@, "move")
+    world.activeHandle.push new HandleMorph(@, "resize")
   
   move: ->
-    @world().activeHandle.push new HandleMorph(@, "move")
+    world.activeHandle.push new HandleMorph(@, "move")
   
   hint: (msg) ->
     text = msg
@@ -1548,7 +1548,7 @@ class Morph extends MorphicNode
       text = "NULL"
     m = new MenuMorph(false, @, true, true, text)
     m.isfloatDraggable = true
-    m.popUpCenteredAtHand @world()
+    m.popUpCenteredAtHand world
   
   inform: (msg) ->
     text = msg
@@ -1559,7 +1559,7 @@ class Morph extends MorphicNode
     m = new MenuMorph(false, @, true, true, text)
     m.addItem "Ok"
     m.isfloatDraggable = true
-    m.popUpCenteredAtHand @world()
+    m.popUpCenteredAtHand world
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
