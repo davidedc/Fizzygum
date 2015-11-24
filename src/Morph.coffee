@@ -509,7 +509,7 @@ class Morph extends MorphicNode
     result = []
     if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
-        @boundsIntersect(theMorph) and
+        @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]
 
@@ -893,8 +893,8 @@ class Morph extends MorphicNode
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
-  boundsIntersect: (aMorph) ->
-    @bounds.intersects aMorph.bounds
+  areBoundsIntersecting: (aMorph) ->
+    @bounds.isIntersecting aMorph.bounds
 
   calculateKeyValues: (aContext, clippingRectangle) ->
     area = clippingRectangle.intersect(@bounds).round()

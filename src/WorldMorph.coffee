@@ -299,7 +299,7 @@ class WorldMorph extends FrameMorph
     # private
     fb = aMorph.fullBounds()
     @broken.filter (rect) ->
-      rect.intersects fb
+      rect.isIntersecting fb
   
   
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pices of

@@ -254,7 +254,7 @@ class Rectangle
     @debugIfFloats()
     aRect.origin.ge(@origin) and aRect.corner.le(@corner)
   
-  intersects: (aRect) ->
+  isIntersecting: (aRect) ->
     @debugIfFloats()
     ro = aRect.origin
     rc = aRect.corner

@@ -61,7 +61,7 @@ class FrameMorph extends Morph
     result = []
     if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
-        @boundsIntersect(theMorph) and
+        @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]
 
@@ -72,7 +72,7 @@ class FrameMorph extends Morph
     # hence *actually* not overlapping with theMorph.
     # So continue checking the children only if the
     # frame itself actually overlaps.
-    if @boundsIntersect(theMorph)
+    if @areBoundsIntersecting(theMorph)
       @children.forEach (child) ->
         result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
 
