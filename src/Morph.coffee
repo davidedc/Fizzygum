@@ -510,7 +510,7 @@ class Morph extends MorphicNode
     result = new Rectangle(0,0)
     @children.forEach (child) ->
       if !child.isMinimised and child.isVisible
-        result = result.merge(child.boundsIncludingChildren())
+        result = result.merge(child.fullBounds())
     result
   ###
 
@@ -558,11 +558,11 @@ class Morph extends MorphicNode
     if @parent?.cachedFullBounds?
         @parent.invalidateFullBoundsCache(@)
 
-  SLOWboundsIncludingChildren: () ->
+  SLOWfullBounds: () ->
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
-        result = result.merge(child.SLOWboundsIncludingChildren())
+        result = result.merge(child.SLOWfullBounds())
     result
 
   # for FrameMorph scrolling support:
@@ -571,33 +571,33 @@ class Morph extends MorphicNode
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
-        result = result.merge(child.boundsIncludingChildren())
+        result = result.merge(child.fullBounds())
     result    
   
-  boundsIncludingChildren: () ->
+  fullBounds: () ->
     if @cachedFullBounds?
-      if (!@cachedFullBounds.containsRectangle @SLOWboundsIncludingChildren()) and
-      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWboundsIncludingChildren())
+      if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
+      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
         debugger
-        #alert "boundsIncludingChildren is broken"
+        #alert "fullBounds is broken"
       return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
-        result = result.merge(child.boundsIncludingChildren())
+        result = result.merge(child.fullBounds())
     result
-    if (!result.containsRectangle @SLOWboundsIncludingChildren()) and
-    (!result.growBy(1).containsRectangle @SLOWboundsIncludingChildren())
+    if (!result.containsRectangle @SLOWfullBounds()) and
+    (!result.growBy(1).containsRectangle @SLOWfullBounds())
       debugger
-      #alert "boundsIncludingChildren is broken"
+      #alert "fullBounds is broken"
     @cachedFullBounds = result.copy()
   
-  boundsIncludingChildrenNoShadow: ->
+  fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
       if (child not instanceof ShadowMorph) and (child.checkVisibility())
-        result = result.merge(child.boundsIncludingChildrenNoShadow())
+        result = result.merge(child.fullBoundsNoShadow())
     result
 
   clipThroughBounds: ->
@@ -694,17 +694,17 @@ class Morph extends MorphicNode
     @setPosition aPoint.subtract(@extent().floorDivideBy(2))
   
   setFullCenter: (aPoint) ->
-    @setPosition aPoint.subtract(@boundsIncludingChildren().extent().floorDivideBy(2))
+    @setPosition aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
   keepWithin: (aMorph) ->
-    leftOff = @boundsIncludingChildren().left() - aMorph.left()
+    leftOff = @fullBounds().left() - aMorph.left()
     @moveBy new Point(-leftOff, 0)  if leftOff < 0
-    rightOff = @boundsIncludingChildren().right() - aMorph.right()
+    rightOff = @fullBounds().right() - aMorph.right()
     @moveBy new Point(-rightOff, 0)  if rightOff > 0
-    topOff = @boundsIncludingChildren().top() - aMorph.top()
+    topOff = @fullBounds().top() - aMorph.top()
     @moveBy new Point(0, -topOff)  if topOff < 0
-    bottomOff = @boundsIncludingChildren().bottom() - aMorph.bottom()
+    bottomOff = @fullBounds().bottom() - aMorph.bottom()
     @moveBy new Point(0, -bottomOff)  if bottomOff > 0
 
   # normally morphs do nothing when the
@@ -858,7 +858,7 @@ class Morph extends MorphicNode
   # * paintIntoAreaOrBlitFromBackBuffer: takes the local canvas and paints it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
   #   this morph.
-  # * recursivelyPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
+  # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
   
@@ -908,7 +908,7 @@ class Morph extends MorphicNode
 
   # This method only paints this very morph
   # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by recursivelyPaintIntoAreaOrBlitFromBackBuffer,
+  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
   # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
@@ -960,10 +960,10 @@ class Morph extends MorphicNode
     if @childrenBoundsUpdatedAt < WorldMorph.frameCount
       @childrenBoundsUpdatedAt = WorldMorph.frameCount
       @boundsWhenLastPainted = @visibleBounds()
-      @fullBoundsWhenLastPainted = @boundsIncludingChildren().intersect @clipThroughBounds()
+      @fullBoundsWhenLastPainted = @fullBounds().intersect @clipThroughBounds()
 
 
-  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundsIncludingChildren(), noShadow = false) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullBounds(), noShadow = false) ->
 
     if @preliminaryCheckNothingToDraw noShadow
       return
@@ -977,7 +977,7 @@ class Morph extends MorphicNode
     # within the parent's boundary.
 
     # Note that if we could dynamically and cheaply keep an updated
-    # boundsIncludingChildren property, then we could be smarter
+    # fullBounds property, then we could be smarter
     # in discarding whole sections of the scene graph.
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
     
@@ -985,7 +985,7 @@ class Morph extends MorphicNode
     @recordDrawnAreaForNextBrokenRects()
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
-      child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
   
 
   hide: ->
@@ -1019,7 +1019,7 @@ class Morph extends MorphicNode
   # and https://github.com/davidedc/Zombie-Kernel/issues/160
   fullImage: (bounds, noShadow = false) ->
     if !bounds?
-      bounds = @boundsIncludingChildren()
+      bounds = @fullBounds()
 
     img = newCanvas(bounds.extent().scaleBy pixelRatio)
     ctx = img.getContext("2d")
@@ -1033,11 +1033,11 @@ class Morph extends MorphicNode
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
-    @recursivelyPaintIntoAreaOrBlitFromBackBuffer ctx, bounds, noShadow
+    @fullPaintIntoAreaOrBlitFromBackBuffer ctx, bounds, noShadow
     img
 
   fullImageNoShadow: ->
-    boundsWithNoShadow = @boundsIncludingChildrenNoShadow()
+    boundsWithNoShadow = @fullBoundsNoShadow()
     return @fullImage(boundsWithNoShadow, true)
 
   fullImageData: ->
@@ -1061,7 +1061,7 @@ class Morph extends MorphicNode
   # screen due to bad painting, we capture them
   # exactly as the user sees them.
   asItAppearsOnScreen: ->
-    fullExtentOfMorph = @boundsIncludingChildren()
+    fullExtentOfMorph = @fullBounds()
     destCanvas = newCanvas fullExtentOfMorph.extent().scaleBy pixelRatio
     destCtx = destCanvas.getContext '2d'
     destCtx.drawImage world.worldCanvas,
@@ -1100,7 +1100,7 @@ class Morph extends MorphicNode
     offset = off_ or new Point(7, 7)
     blur = @shadowBlur
     clr = color or new Color(0, 0, 0)
-    fb = @boundsIncludingChildrenNoShadow().extent().add(blur * 2)
+    fb = @fullBoundsNoShadow().extent().add(blur * 2)
 
     # take "the image" which is the image of all the
     # morphs. This image contains no shadows, the shadow
@@ -1295,7 +1295,7 @@ class Morph extends MorphicNode
     morphs = @allChildrenTopToBottom()
     result = null
     morphs.forEach (m) ->
-      if m.boundsIncludingChildren().containsPoint(aPoint) and (result is null)
+      if m.fullBounds().containsPoint(aPoint) and (result is null)
         result = m
 
     result
@@ -1306,7 +1306,7 @@ class Morph extends MorphicNode
   #
   #Morph::morphAt = function (aPoint) {
   #	return this.topMorphSuchThat(function (m) {
-  #		return m.boundsIncludingChildren().containsPoint(aPoint);
+  #		return m.fullBounds().containsPoint(aPoint);
   #	});
   #};
   #
@@ -1486,7 +1486,7 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @setPosition world.hand.position().subtract(@boundsIncludingChildrenNoShadow().extent().floorDivideBy(2))
+    @setPosition world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
   
   # note how this verified that
   # at *any point* up in the
@@ -1977,8 +1977,8 @@ class Morph extends MorphicNode
     ) isnt null
   
   overlappingImage: (otherMorph) ->
-    fb = @boundsIncludingChildren()
-    otherFb = otherMorph.boundsIncludingChildren()
+    fb = @fullBounds()
+    otherFb = otherMorph.fullBounds()
     oRect = fb.intersect(otherFb)
     oImg = newCanvas(oRect.extent().scaleBy pixelRatio)
     ctx = oImg.getContext("2d")

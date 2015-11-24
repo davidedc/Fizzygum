@@ -234,7 +234,7 @@ class MenuMorph extends BoxMorph
       y += 1  if isLine
   
     @adjustWidthsOfMenuEntries()
-    fb = @boundsIncludingChildren()
+    fb = @fullBounds()
     #console.log "fb: " + fb
     @silentSetExtent fb.extent().add(2)
   

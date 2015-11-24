@@ -297,17 +297,17 @@ class WorldMorph extends FrameMorph
   # World Morph display:
   brokenFor: (aMorph) ->
     # private
-    fb = aMorph.boundsIncludingChildren()
+    fb = aMorph.fullBounds()
     @broken.filter (rect) ->
       rect.intersects fb
   
   
-  # recursivelyPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pices of
+  # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pices of
   # morphs done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
   # The paintIntoAreaOrBlitFromBackBuffer function is defined in Morph.
-  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
-    # invokes the Morph's recursivelyPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
+    # invokes the Morph's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
     #  * the default one by Morph which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
     #  * the interesting one in FrameMorph which a) narrows the dirty
     #    rectangle (intersecting it with its border
@@ -319,7 +319,7 @@ class WorldMorph extends FrameMorph
     super aContext, aRect
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
-    @hand.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
+    @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   visibleBounds: ->
     @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
@@ -334,7 +334,7 @@ class WorldMorph extends FrameMorph
 
       unless brokenMorph.surelyNotShowingUpOnScreen()
         # @visibleBounds() should be smaller area
-        # and is cheaper to calculate than @boundsIncludingChildren()
+        # and is cheaper to calculate than @fullBounds()
         # cause it doesn't traverse the children and clips
         # the area based on the clipping morphs up the
         # hierarchy
@@ -358,7 +358,7 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
-      boundsToBeChanged = brokenMorph.boundsIncludingChildren()
+      boundsToBeChanged = brokenMorph.fullBounds()
 
       if brokenMorph.fullBoundsWhenLastPainted?
         @broken.push brokenMorph.fullBoundsWhenLastPainted
@@ -391,7 +391,7 @@ class WorldMorph extends FrameMorph
 
     window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
-      @recursivelyPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
+      @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     @broken = []
     window.healingRectanglesPhase = false
   

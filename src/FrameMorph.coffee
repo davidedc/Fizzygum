@@ -86,7 +86,7 @@ class FrameMorph extends Morph
     if morphCalling == @
       super @
   
-  SLOWboundsIncludingChildren: () ->
+  SLOWfullBounds: () ->
     shadow = @getShadow()
     if shadow?
       result = @bounds.merge(shadow.bounds)
@@ -98,12 +98,12 @@ class FrameMorph extends Morph
   # at their boundaries
   # so there is no need to do a deep
   # traversal to find the bounds.
-  boundsIncludingChildren: () ->
+  fullBounds: () ->
     if @cachedFullBounds?
-      if (!@cachedFullBounds.containsRectangle @SLOWboundsIncludingChildren()) and
-      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWboundsIncludingChildren())
+      if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
+      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
         debugger
-        #alert "boundsIncludingChildren is broken"
+        #alert "fullBounds is broken"
       return @cachedFullBounds
     shadow = @getShadow()
     if shadow?
@@ -111,18 +111,18 @@ class FrameMorph extends Morph
     else
       result = @bounds
 
-    if (!result.containsRectangle @SLOWboundsIncludingChildren()) and
-    (!result.growBy(1).containsRectangle @SLOWboundsIncludingChildren())
+    if (!result.containsRectangle @SLOWfullBounds()) and
+    (!result.growBy(1).containsRectangle @SLOWfullBounds())
       debugger
-      #alert "boundsIncludingChildren is broken"
+      #alert "fullBounds is broken"
     @cachedFullBounds = result
   
-  boundsIncludingChildrenNoShadow: ->
+  fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
     @bounds
 
   
-  recursivelyPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundingBox(), noShadow = false) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundingBox(), noShadow = false) ->
 
     if @preliminaryCheckNothingToDraw noShadow
       return
@@ -160,7 +160,7 @@ class FrameMorph extends Morph
 
     # Also note that in theory you could stop recursion on any
     # FrameMorph completely covered by a large opaque morph
-    # (or on any Morph which boundsIncludingChildren are completely
+    # (or on any Morph which fullBounds are completely
     # covered, for that matter). You could
     # keep for example a list of the top n biggest opaque morphs
     # (say, frames and rectangles)
@@ -186,9 +186,9 @@ class FrameMorph extends Morph
     
     @children.forEach (child) =>
       if child instanceof ShadowMorph
-        child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
+        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
       else
-        child.recursivelyPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
+        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
 
 
   # FrameMorph scrolling optimization:

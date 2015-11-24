@@ -720,9 +720,9 @@ class HandMorph extends Morph
           @nonFloatDragPositionWithinMorphAtStart = pos.subtract @nonFloatDraggedMorph.position()
 
 
-        # if the mouse has left its boundsIncludingChildren, center it
+        # if the mouse has left its fullBounds, center it
         if morph
-          fb = morph.boundsIncludingChildren()
+          fb = morph.fullBounds()
           unless fb.containsPoint(pos)
             #@bounds.origin = fb.center()
             @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
