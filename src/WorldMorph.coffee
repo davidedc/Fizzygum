@@ -432,7 +432,7 @@ class WorldMorph extends FrameMorph
       @worldCanvas.height = clientHeight
       @setHeight clientHeight
     @children.forEach (child) =>
-      child.reactToWorldResize? @bounds.copy()
+      child.reactToWorldResize? @boundingBox()
   
   
   
@@ -532,7 +532,7 @@ class WorldMorph extends FrameMorph
     # we find out user is clicking on a menu item
     # or right-clicking on a morph
     topMorphUnderPointer = @hand.topMorphUnderPointer()
-    absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.bounds.asArray_xywh()
+    absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.boundingBox().asArray_xywh()
     morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
     morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
     pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer

@@ -61,7 +61,7 @@ class FrameMorph extends Morph
     result = []
     if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
-        @bounds.intersects(theMorph.bounds) and
+        @boundsIntersect(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]
 
@@ -72,7 +72,7 @@ class FrameMorph extends Morph
     # hence *actually* not overlapping with theMorph.
     # So continue checking the children only if the
     # frame itself actually overlaps.
-    if @bounds.intersects(theMorph.bounds)
+    if @boundsIntersect(theMorph)
       @children.forEach (child) ->
         result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
 
@@ -172,7 +172,7 @@ class FrameMorph extends Morph
     # since the whole point of the frame is to clip everything to a specific
     # rectangle.
     # So, check which part of the Frame should be redrawn:
-    dirtyPartOfFrame = @bounds.intersect(clippingRectangle)
+    dirtyPartOfFrame = @boundingBox().intersect(clippingRectangle)
     
     # if there is no dirty part in the frame then do nothing
     return null if dirtyPartOfFrame.isEmpty()

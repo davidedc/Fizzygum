@@ -142,8 +142,8 @@ class PenMorph extends Morph
     # it keeps a separate offscreen canvas for pen trails
     # (and doesn't lose these on redraw).
 
-    from = start.subtract(@parent.bounds.origin)
-    to = dest.subtract(@parent.bounds.origin)
+    from = start.subtract(@parent.position())
+    to = dest.subtract(@parent.position())
     if @isDown
       context.lineWidth = @penSize
       context.strokeStyle = @color.toString()

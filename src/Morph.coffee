@@ -489,7 +489,7 @@ class Morph extends MorphicNode
     result = []
     if @checkVisibility() and
         !theMorph.containedInParentsOf(@) and
-        @bounds.intersects(theMorph.bounds) and
+        @boundsIntersect(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]
 

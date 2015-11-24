@@ -200,9 +200,9 @@ class ScrollFrameMorph extends FrameMorph
     if subBounds
       newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@bounds)
     else
-      newBounds = @bounds.copy()
+      newBounds = @boundingBox().copy()
 
-    unless @contents.bounds.eq(newBounds)
+    unless @contents.boundingBox().eq(newBounds)
       @contents.bounds = newBounds
       @contents.reLayout()
       
@@ -280,7 +280,7 @@ class ScrollFrameMorph extends FrameMorph
       if world.hand.mouseButton and
         (!world.hand.floatDraggingSomething()) and
         (@boundsContainPoint(world.hand.position()))
-          newPos = world.hand.bounds.origin
+          newPos = world.hand.position()
           if @hBar.checkVisibility()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
@@ -316,7 +316,7 @@ class ScrollFrameMorph extends FrameMorph
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     @step = =>
       pos = hand.position()
-      inner = @bounds.insetBy(inset)
+      inner = @boundingBox().insetBy(inset)
       if (@boundsContainPoint(pos)) and
         (not (inner.containsPoint(pos))) and
         (hand.floatDraggingSomething())

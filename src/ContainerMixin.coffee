@@ -43,9 +43,9 @@ ContainerMixin =
           if @padding?
             newBounds = newBounds.expandBy(@padding)
         else
-          newBounds = @bounds.copy()
+          newBounds = @boundingBox()
 
-        unless @bounds.eq(newBounds)
+        unless @boundingBox().eq(newBounds)
           @bounds = newBounds
           @changed()
           @reLayout()

@@ -266,8 +266,8 @@ class HandMorph extends Morph
 
   pointerPositionFractionalInMorph: (theMorph) ->
     [relativeXPos, relativeYPos] = @pointerPositionPixelsInMorph theMorph
-    fractionalXPos = relativeXPos / theMorph.bounds.width()
-    fractionalYPos = relativeYPos / theMorph.bounds.height()
+    fractionalXPos = relativeXPos / theMorph.width()
+    fractionalYPos = relativeYPos / theMorph.height()
     return [fractionalXPos, fractionalYPos]
 
   pointerPositionPixelsInMorph: (theMorph) ->
@@ -773,7 +773,7 @@ class HandMorph extends Morph
       # autoScrolling support:
       if @floatDraggingSomething()
           if newMorph instanceof ScrollFrameMorph
-              if !newMorph.bounds.insetBy(
+              if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3
                 ).containsPoint(@position())
                   newMorph.startAutoScrolling();

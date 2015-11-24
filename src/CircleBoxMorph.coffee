@@ -30,14 +30,14 @@ class CircleBoxMorph extends Morph
       center1 = new Point(x, @top() + radius).round()
       center2 = new Point(x, @bottom() - radius).round()
       rect = @topLeft().add(
-        new Point(0, radius)).corner(@bounds.corner.subtract(new Point(0, radius)))
+        new Point(0, radius)).corner(@bottomRight().subtract(new Point(0, radius)))
     else
       radius = @height() / 2
       y = @center().y
       center1 = new Point(@left() + radius, y).round()
       center2 = new Point(@right() - radius, y).round()
       rect = @topLeft().add(
-        new Point(radius, 0)).corner(@bounds.corner.subtract(new Point(radius, 0)))
+        new Point(radius, 0)).corner(@bottomRight().subtract(new Point(radius, 0)))
     return [radius,center1,center2,rect]
 
   isTransparentAt: (aPoint) ->
