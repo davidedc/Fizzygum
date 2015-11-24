@@ -87,7 +87,7 @@ class MorphsListMorph extends BoxMorph
     y = @top() + @cornerRadius
     r = @right() - @cornerRadius
     w = r - x
-    @label.setPosition new Point(x, y)
+    @label.fullMoveTo new Point(x, y)
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @setHeight @label.height() + 50
@@ -99,7 +99,7 @@ class MorphsListMorph extends BoxMorph
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
-    @morphsList.setPosition new Point(x, y)
+    @morphsList.fullMoveTo new Point(x, y)
     @morphsList.setExtent new Point(w, h)
 
     # close button
@@ -107,7 +107,7 @@ class MorphsListMorph extends BoxMorph
     y = @morphsList.bottom() + @cornerRadius
     h = WorldMorph.preferencesAndSettings.handleSize
     w = @morphsList.width() - h - @cornerRadius
-    @buttonClose.setPosition new Point(x, y)
+    @buttonClose.fullMoveTo new Point(x, y)
     @buttonClose.setExtent new Point(w, h)
     trackChanges.pop()
     @changed()

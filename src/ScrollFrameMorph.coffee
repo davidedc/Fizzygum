@@ -59,12 +59,12 @@ class ScrollFrameMorph extends FrameMorph
     @adjustScrollBars()
 
   adjustContentsBasedOnHBar: (num) ->
-    @contents.setPosition new Point(@left() - num, @contents.position().y)
+    @contents.fullMoveTo new Point(@left() - num, @contents.position().y)
     @adjustContentsBounds()
     @adjustScrollBars()
 
   adjustContentsBasedOnVBar: (num) ->
-    @contents.setPosition new Point(@contents.position().x, @top() - num)
+    @contents.fullMoveTo new Point(@contents.position().x, @top() - num)
     @adjustContentsBounds()
     @adjustScrollBars()
 
@@ -117,7 +117,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @hBar.parent == @
-          @hBar.setPosition new Point(@left(), @bottom() - @hBar.height())
+          @hBar.fullMoveTo new Point(@left(), @bottom() - @hBar.height())
         stopValue = @contents.width() - @width()
         @hBar.updateSpecs(
           0, # start
@@ -137,7 +137,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @vBar.parent == @
-          @vBar.setPosition new Point(@right() - @vBar.width(), @top())
+          @vBar.fullMoveTo new Point(@right() - @vBar.width(), @top())
         stopValue = @contents.height() - @height()
         @vBar.updateSpecs(
           0, # start
@@ -157,13 +157,13 @@ class ScrollFrameMorph extends FrameMorph
     @extraPadding = extraPadding
     @contents.destroyAll()
 
-    aMorph.setPosition @position().add(@padding + @extraPadding)
+    aMorph.fullMoveTo @position().add(@padding + @extraPadding)
     @addContents aMorph
   
   setExtent: (aPoint) ->
     #console.log "move 15"
     @breakNumberOfMovesAndResizesCaches()
-    @contents.setPosition @position().copy()  if @isTextLineWrapping
+    @contents.fullMoveTo @position().copy()  if @isTextLineWrapping
     super aPoint
     @contents.setExtent(aPoint)
     @adjustContentsBounds()

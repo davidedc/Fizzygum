@@ -94,7 +94,7 @@ class WorkspaceMorph extends BoxMorph
     w = r - x
 
     # label
-    @label.setPosition new Point(x + handleSize * 2/3 + @cornerRadius, y - @cornerRadius/2)
+    @label.fullMoveTo new Point(x + handleSize * 2/3 + @cornerRadius, y - @cornerRadius/2)
     @label.setWidth w
     if @label.height() > (@height() - 50)
       @setHeight @label.height() + 50
@@ -106,7 +106,7 @@ class WorkspaceMorph extends BoxMorph
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - handleSize
     h = b - y
-    @morphsList.setPosition new Point(x, y)
+    @morphsList.fullMoveTo new Point(x, y)
     @morphsList.setExtent new Point(w, h)
 
     # close button
@@ -114,7 +114,7 @@ class WorkspaceMorph extends BoxMorph
     y = @morphsList.bottom() + @cornerRadius
     h = handleSize
     w = @morphsList.width() - h - @cornerRadius
-    @buttonClose.setPosition new Point(x, y)
+    @buttonClose.fullMoveTo new Point(x, y)
     @buttonClose.setExtent new Point(w, h)
     trackChanges.pop()
     @changed()

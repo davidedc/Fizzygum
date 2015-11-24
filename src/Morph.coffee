@@ -276,7 +276,7 @@ class Morph extends MorphicNode
 
     @silentSetBounds new Rectangle()
     @minimumExtent = new Point 5,5
-    @silentSetPosition(new Point 0,0)
+    @silentFullMoveTo(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
     @silentSetExtent(new Point 50, 40)
 
@@ -663,7 +663,7 @@ class Morph extends MorphicNode
     WorldMorph.numberOfMovesAndResizes++
 
   
-  setPosition: (aPoint) ->
+  fullMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
@@ -672,29 +672,29 @@ class Morph extends MorphicNode
       @fullMoveBy delta
     @bounds.debugIfFloats()
   
-  silentSetPosition: (aPoint) ->
+  silentFullMoveTo: (aPoint) ->
     #console.log "move 7"
     @breakNumberOfMovesAndResizesCaches()
     delta = aPoint.toLocalCoordinatesOf @
     @silentFullMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   setLeft: (x) ->
-    @setPosition new Point(x, @top())
+    @fullMoveTo new Point(x, @top())
   
   setRight: (x) ->
-    @setPosition new Point(x - @width(), @top())
+    @fullMoveTo new Point(x - @width(), @top())
   
   setTop: (y) ->
-    @setPosition new Point(@left(), y)
+    @fullMoveTo new Point(@left(), y)
   
   setBottom: (y) ->
-    @setPosition new Point(@left(), y - @height())
+    @fullMoveTo new Point(@left(), y - @height())
   
   setCenter: (aPoint) ->
-    @setPosition aPoint.subtract(@extent().floorDivideBy(2))
+    @fullMoveTo aPoint.subtract(@extent().floorDivideBy(2))
   
   setFullCenter: (aPoint) ->
-    @setPosition aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
+    @fullMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
   keepWithin: (aMorph) ->
@@ -721,7 +721,7 @@ class Morph extends MorphicNode
   layoutInset: (morphStartingTheChange = null) ->
     if @insetMorph?
       if @insetMorph != morphStartingTheChange
-        @insetMorph.setPosition @insetPosition()
+        @insetMorph.fullMoveTo @insetPosition()
         @insetMorph.setExtent @insetSpaceExtent(), @
   
   # the default of layoutSubmorphs
@@ -1247,7 +1247,7 @@ class Morph extends MorphicNode
     else
       @add aMorph, 0
 
-    aMorph.setPosition @insetPosition()
+    aMorph.fullMoveTo @insetPosition()
     aMorph.setExtent @insetSpaceExtent(), @
 
 
@@ -1486,7 +1486,7 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @setPosition world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
+    @fullMoveTo world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
   
   # note how this verified that
   # at *any point* up in the
@@ -1635,7 +1635,7 @@ class Morph extends MorphicNode
 
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
-    inspector.setPosition world.hand.position()
+    inspector.fullMoveTo world.hand.position()
     inspector.keepWithin world
     world.add inspector
     inspector.changed()

@@ -124,7 +124,7 @@ class InspectorMorph extends BoxMorph
         return
       world = @world()
       inspector = new InspectorMorph @currentProperty
-      inspector.setPosition world.hand.position()
+      inspector.fullMoveTo world.hand.position()
       inspector.keepWithin world
       world.add inspector
       inspector.changed()
@@ -248,7 +248,7 @@ class InspectorMorph extends BoxMorph
       menu.addItem "in new inspector...", true, @, =>
         world = @world()
         inspector = new @constructor(@currentProperty)
-        inspector.setPosition world.hand.position()
+        inspector.fullMoveTo world.hand.position()
         inspector.keepWithin world
         world.add inspector
         inspector.changed()
@@ -358,7 +358,7 @@ class InspectorMorph extends BoxMorph
     labelRight = @right() - @padding
     labelWidth = labelRight - labelLeft
     if @label.parent == @
-      @label.setPosition new Point(labelLeft, labelTop)
+      @label.fullMoveTo new Point(labelLeft, labelTop)
       @label.setWidth labelWidth
       if @label.height() > (@height() - 50)
         @silentSetHeight @label.height() + 50
@@ -375,7 +375,7 @@ class InspectorMorph extends BoxMorph
     listHeight = b - labelBottom
     listBottom = labelBottom + listHeight
     if @list.parent == @
-      @list.setPosition new Point(labelLeft, labelBottom)
+      @list.fullMoveTo new Point(labelLeft, labelBottom)
       @list.setExtent new Point(listWidth, listHeight)
 
     # detail
@@ -383,13 +383,13 @@ class InspectorMorph extends BoxMorph
     detailRight = @right() - @padding
     detailWidth = detailRight - detailLeft
     if @detail.parent == @
-      @detail.setPosition new Point(detailLeft, labelBottom)
+      @detail.fullMoveTo new Point(detailLeft, labelBottom)
       @detail.setExtent new Point(detailWidth, (listHeight * 2 / 3) - @padding).round()
 
     # work
     workTop = Math.round(labelBottom + (listHeight * 2 / 3))
     if @work.parent == @
-      @work.setPosition new Point(detailLeft, workTop)
+      @work.fullMoveTo new Point(detailLeft, workTop)
       @work.setExtent new Point(detailWidth, listHeight / 3).round()
 
     # properties button
@@ -398,7 +398,7 @@ class InspectorMorph extends BoxMorph
     propertiesWidth = listWidth
     propertiesHeight = WorldMorph.preferencesAndSettings.handleSize
     if @buttonSubset.parent == @
-      @buttonSubset.setPosition new Point(propertiesLeft, propertiesTop)
+      @buttonSubset.fullMoveTo new Point(propertiesLeft, propertiesTop)
       @buttonSubset.setExtent new Point(propertiesWidth, propertiesHeight)
 
     # inspect button
@@ -407,14 +407,14 @@ class InspectorMorph extends BoxMorph
     inspectWidth = Math.round(inspectWidth / 3 - @padding / 3)
     inspectRight = inspectLeft + inspectWidth
     if @buttonInspect.parent == @
-      @buttonInspect.setPosition new Point(inspectLeft, propertiesTop)
+      @buttonInspect.fullMoveTo new Point(inspectLeft, propertiesTop)
       @buttonInspect.setExtent new Point(inspectWidth, propertiesHeight)
 
     # edit button
     editLeft = inspectRight + @padding
     editRight = editLeft + inspectWidth
     if @buttonEdit.parent == @
-      @buttonEdit.setPosition new Point(editLeft, propertiesTop)
+      @buttonEdit.fullMoveTo new Point(editLeft, propertiesTop)
       @buttonEdit.setExtent new Point(inspectWidth, propertiesHeight)
 
     # close button
@@ -422,7 +422,7 @@ class InspectorMorph extends BoxMorph
     closeRight = detailRight - @padding - WorldMorph.preferencesAndSettings.handleSize
     closeWidth = closeRight - closeLeft
     if @buttonClose.parent == @
-      @buttonClose.setPosition new Point(closeLeft, propertiesTop)
+      @buttonClose.fullMoveTo new Point(closeLeft, propertiesTop)
       @buttonClose.setExtent new Point(closeWidth, propertiesHeight)
 
     trackChanges.pop()

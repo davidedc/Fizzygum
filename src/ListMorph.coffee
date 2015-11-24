@@ -88,7 +88,7 @@ class ListMorph extends ScrollFrameMorph
         @doubleClickAction # doubleClickAction
       )
 
-    @listContents.setPosition @contents.position()
+    @listContents.fullMoveTo @contents.position()
     @listContents.reLayout()
     
     @addContents @listContents

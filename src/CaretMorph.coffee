@@ -106,7 +106,7 @@ class CaretMorph extends BlinkerMorph
   
   # CaretMorph navigation - simple version
   #gotoSlot: (newSlot) ->
-  #  @setPosition @target.slotCoordinates(newSlot)
+  #  @fullMoveTo @target.slotCoordinates(newSlot)
   #  @slot = Math.max(newSlot, 0)
 
   gotoSlot: (slot) ->
@@ -130,7 +130,7 @@ class CaretMorph extends BlinkerMorph
         pos.x += right - @target.right()
         @target.setRight right
     @show()
-    @setPosition pos
+    @fullMoveTo pos
 
     if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
       @parent.parent.scrollCaretIntoView @

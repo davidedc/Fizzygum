@@ -168,7 +168,7 @@ class MenuMorph extends BoxMorph
     unless @isListContents
       if @title
         @createLabel()
-        @label.setPosition @position().add(2)
+        @label.fullMoveTo @position().add(2)
         @add @label
         y = @label.bottom()
       else
@@ -223,7 +223,7 @@ class MenuMorph extends BoxMorph
         #  debugger
         #  item.environment = item
       y += 1  if isLine
-      item.setPosition new Point(x, y)
+      item.fullMoveTo new Point(x, y)
       # we do a silentAdd here because we are going
       # to update all the morphs again later in
       # adjustWidthsOfMenuEntries
@@ -266,7 +266,7 @@ class MenuMorph extends BoxMorph
       trackChanges.push false
       item.setWidth w
       if item is @label
-        item.text.setPosition item.center().subtract(item.text.extent().floorDivideBy(2))
+        item.text.fullMoveTo item.center().subtract(item.text.extent().floorDivideBy(2))
       #console.log "new width of " + item + " : " + item.width()
       trackChanges.pop()
 
@@ -292,7 +292,7 @@ class MenuMorph extends BoxMorph
   
   popup: (morphToAttachTo, pos) ->
     # console.log "menu popup"
-    @silentSetPosition pos
+    @silentFullMoveTo pos
     morphToAttachTo.add @
     # the @keepWithin method
     # needs to know the extent of the morph

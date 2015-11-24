@@ -32,7 +32,7 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
-    @setPosition new Point(@parent.position().x, @parent.position().y)
+    @fullMoveTo new Point(@parent.position().x, @parent.position().y)
   
   
   # BouncerMorph moving.

@@ -55,7 +55,7 @@ class SpeechBubbleMorph extends BoxMorph
   popUp: (pos, isClickable) ->
     # console.log "bubble popup"
     world = @morphInvokingThis.world()
-    @setPosition pos.subtract(new Point(0, @height()))
+    @fullMoveTo pos.subtract(new Point(0, @height()))
     @keepWithin world
 
     @buildAndConnectChildren()
@@ -110,7 +110,7 @@ class SpeechBubbleMorph extends BoxMorph
     #super()
 
     # position my contents
-    @contentsMorph.setPosition @position().add(
+    @contentsMorph.fullMoveTo @position().add(
       new Point(@padding or @cornerRadius, @padding + 1))
 
 

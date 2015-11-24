@@ -670,7 +670,7 @@ class HandMorph extends Morph
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point(worldX, worldY)
-    @setPosition pos
+    @fullMoveTo pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
@@ -727,7 +727,7 @@ class HandMorph extends Morph
             #@bounds.origin = fb.center()
             @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
             @grab morph
-            @setPosition pos
+            @fullMoveTo pos
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);

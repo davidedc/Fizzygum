@@ -67,15 +67,15 @@ class HandleMorph extends Morph
   silentUpdateResizerHandlePosition: ->
     if @target
         if @type == "resize"
-          @silentSetPosition @target.bottomRight().subtract(@extent().add(@inset))
+          @silentFullMoveTo @target.bottomRight().subtract(@extent().add(@inset))
         else if @type == "move"
-          @silentSetPosition @target.topLeft().add(@inset)
+          @silentFullMoveTo @target.topLeft().add(@inset)
         else if @type == "resizeRight"
           offsetFromMiddlePoint = new Point(@extent().x + @inset.x, Math.floor(@extent().y/2))
-          @silentSetPosition @target.rightCenter().subtract(offsetFromMiddlePoint)
+          @silentFullMoveTo @target.rightCenter().subtract(offsetFromMiddlePoint)
         else if @type == "resizeDown"
           offsetFromMiddlePoint = new Point(Math.floor(@extent().x/2), @extent().y + @inset.y)
-          @silentSetPosition @target.bottomCenter().subtract(offsetFromMiddlePoint)
+          @silentFullMoveTo @target.bottomCenter().subtract(offsetFromMiddlePoint)
   
   
 
@@ -231,7 +231,7 @@ class HandleMorph extends Morph
       # as the parent has re-layouted following the setExtent call just
       # made.
     else if @type is "move"
-      @target.setPosition newPos.subtract @inset
+      @target.fullMoveTo newPos.subtract @inset
     else if @type is "resizeRight"
       newWidth = newPos.x + @extent().x + @inset.x - @target.left()
       @target.setWidth newWidth
