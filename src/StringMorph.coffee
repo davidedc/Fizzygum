@@ -342,6 +342,13 @@ class StringMorph extends Morph
     @reLayout()    
     @changed()
   
+  # TODO this is invoked when for example you take a slider
+  # and set it to target a TextMorph.
+  # this is rather strange but I see why in case
+  # of a Number you might want to show this in a more
+  # compact form. This would have to be handled
+  # in a different way though, "setText"'s obvious
+  # meaning is very different from this...
   setText: (size) ->
     # for context menu demo purposes
     @text = Math.round(size).toString()
