@@ -805,7 +805,7 @@ class Morph extends MorphicNode
 
     newWidth = Math.max(aPoint.x, 0)
     newHeight = Math.max(aPoint.y, 0)
-    @bounds.corner = new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
+    @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
   setWidth: (width) ->
     #console.log "move 10"
@@ -816,7 +816,7 @@ class Morph extends MorphicNode
     #console.log "move 11"
     @breakNumberOfMovesAndResizesCaches()
     w = Math.max(Math.round(width or 0), 0)
-    @bounds.corner = new Point(@bounds.origin.x + w, @bounds.corner.y)
+    @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
     #console.log "move 12"
@@ -827,7 +827,7 @@ class Morph extends MorphicNode
     #console.log "move 13"
     @breakNumberOfMovesAndResizesCaches()
     h = Math.max(Math.round(height or 0), 0)
-    @bounds.corner = new Point(@bounds.corner.x, @bounds.origin.y + h)
+    @bounds = new Rectangle @bounds.origin, new Point(@bounds.corner.x, @bounds.origin.y + h)
   
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     if morphGivingColor?.getColor?
