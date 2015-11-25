@@ -59,7 +59,7 @@ BackingStoreMixin =
         # is visible (i.e. within the clippingRectangle)
         if area.isNotEmpty()
           delta = @position().neg()
-          src = area.copy().translateBy(delta).round()
+          src = area.translateBy(delta).round()
           sl = src.left() * pixelRatio
           st = src.top() * pixelRatio
           al = area.left() * pixelRatio

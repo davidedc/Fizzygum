@@ -151,8 +151,7 @@ class HandleMorph extends Morph
       p0 = @bottomLeft().subtract(@position())
       p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
       
-      leftArrowPoint = p0.copy()
-      leftArrowPoint = leftArrowPoint.add(new Point(Math.ceil(@width()/15),0))
+      leftArrowPoint = p0.add(new Point(Math.ceil(@width()/15),0))
 
       rightArrowPoint = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
       arrowPieceLeftUp = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
@@ -164,8 +163,7 @@ class HandleMorph extends Morph
     if @type is "resizeDown" or @type is "move"
       p0 = @bottomCenter().subtract(@position())
       
-      leftArrowPoint = p0.copy()
-      leftArrowPoint = leftArrowPoint.add(new Point(0,-Math.ceil(@height()/14)))
+      leftArrowPoint = p0.add(new Point(0,-Math.ceil(@height()/14)))
 
       rightArrowPoint = p0.add(new Point(0, -@height() + Math.ceil(@height()/15)))
       arrowPieceLeftUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))

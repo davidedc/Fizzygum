@@ -109,7 +109,7 @@ class ListMorph extends ScrollFrameMorph
     @breakNumberOfMovesAndResizesCaches()
     @invalidateFullBoundsCache(@)
     lb = @listContents.bounds
-    nb = @bounds.origin.copy().corner(@bounds.origin.add(aPoint))
+    nb = @bounds.origin.corner(@bounds.origin.add(aPoint))
     if nb.right() > lb.right() and nb.width() <= lb.width()
       @listContents.fullMoveRightSideTo nb.right()
     if nb.bottom() > lb.bottom() and nb.height() <= lb.height()

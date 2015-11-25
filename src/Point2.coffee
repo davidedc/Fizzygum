@@ -170,7 +170,7 @@ class Point2
   # Point2 functions:
     
   distanceTo: (aPoint2) ->
-    (aPoint2.copy().subtract(@)).r()
+    (aPoint2.subtract(@)).r()
   
   rotate: (direction, center) ->
     # direction must be 'right', 'left' or 'pi'
@@ -185,7 +185,7 @@ class Point2
       return
 
     # direction === 'pi'
-    tmpPointForRotate = center.copy().subtract offset
+    tmpPointForRotate = center.subtract offset
     @x = tmpPointForRotate.x
     @y = tmpPointForRotate.y
   

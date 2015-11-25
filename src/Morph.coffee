@@ -446,17 +446,17 @@ class Morph extends MorphicNode
     @bounds.bottomRight()
   
   boundingBox: ->
-    @bounds.copy()
+    @bounds
   
   setBounds: (newBounds) ->
     @breakNumberOfMovesAndResizesCaches()
-    @bounds = newBounds.copy()
+    @bounds = newBounds
     @changed()
     @invalidateFullBoundsCache(@)
 
 
   silentSetBounds: (newBounds) ->
-    @bounds = newBounds.copy()
+    @bounds = newBounds
   
   corners: ->
     @bounds.corners()
@@ -597,7 +597,7 @@ class Morph extends MorphicNode
     (!result.growBy(1).containsRectangle @SLOWfullBounds())
       debugger
       #alert "fullBounds is broken"
-    @cachedFullBounds = result.copy()
+    @cachedFullBounds = result
   
   fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
@@ -904,7 +904,7 @@ class Morph extends MorphicNode
     # is visible (i.e. within the clippingRectangle)
     if area.isNotEmpty()
       delta = @position().neg()
-      src = area.copy().translateBy(delta).round()
+      src = area.translateBy(delta).round()
       sl = src.left() * pixelRatio
       st = src.top() * pixelRatio
       al = area.left() * pixelRatio

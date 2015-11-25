@@ -163,7 +163,7 @@ class ScrollFrameMorph extends FrameMorph
   setExtent: (aPoint) ->
     #console.log "move 15"
     @breakNumberOfMovesAndResizesCaches()
-    @contents.fullMoveTo @position().copy()  if @isTextLineWrapping
+    @contents.fullMoveTo @position()  if @isTextLineWrapping
     super aPoint
     @contents.setExtent(aPoint)
     @adjustContentsBounds()
@@ -200,7 +200,7 @@ class ScrollFrameMorph extends FrameMorph
     if subBounds
       newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@boundingBox())
     else
-      newBounds = @boundingBox().copy()
+      newBounds = @boundingBox()
 
     unless @contents.boundingBox().eq(newBounds)
       @contents.silentSetBounds newBounds
