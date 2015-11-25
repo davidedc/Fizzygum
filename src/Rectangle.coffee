@@ -14,8 +14,21 @@ class Rectangle
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     
-    @origin = new Point(left, top)
-    @corner = new Point(right, bottom)
+    if (typeof(left) is "number") and (typeof(top) is "number") and (typeof(right) is "number") and (typeof(bottom) is "number")
+      @origin = new Point(left, top)
+      @corner = new Point(right, bottom)
+    else if (left instanceof Point) and (typeof(top) is "number") and (typeof(right) is "number")
+      @origin = left
+      @corner = new Point(top, right)
+    else if (typeof(left) is "number") and (typeof(top) is "number") and (right instanceof Point)
+      @origin = new Point(left, top)
+      @corner = right
+    else if (left instanceof Point) and (top instanceof Point)
+      @origin = left
+      @corner = top
+    else if (left instanceof Rectangle)
+      @origin = left.origin
+      @corner = top.origin
   
   
   # Rectangle string representation: e.g. '[0@0 | 160@80]'
