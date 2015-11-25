@@ -724,7 +724,6 @@ class HandMorph extends Morph
         if morph
           fb = morph.fullBounds()
           unless fb.containsPoint(pos)
-            #@bounds.origin = fb.center()
             @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
             @grab morph
             @fullMoveTo pos

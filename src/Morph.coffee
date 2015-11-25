@@ -519,6 +519,8 @@ class Morph extends MorphicNode
     return result
 
 
+  # both methods invoked in here
+  # are cached
   surelyNotShowingUpOnScreen: ->
     if @isOrphan()
       return true
