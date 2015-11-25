@@ -2,6 +2,9 @@
 
 # REQUIRES DeepCopierMixin
 
+# See the Rectangle class about the "copy on change" policy
+# of this class.
+
 class Point
   # this is so we can create objects from the object class name 
   # (for the deserialization process)

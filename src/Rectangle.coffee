@@ -2,6 +2,40 @@
 
 # REQUIRES DeepCopierMixin
 
+# Just like the Point class, this class has a "new on change"
+# policy (also often called "immutable data structures").
+# This means that any time you change any part of a
+# Rectangle, a *new* Rectangle is created, the old one is
+# left unchanged.
+# The reason for this is that as manipulation and assignments
+# of (parts of) Rectangles is done a lot, it gets
+# difficult otherwise to understand how one change to
+# (part of) a Rectangle propagates because of the
+# assignments that may have happened.
+# In this "new on change" policy things are easier - a change
+# doesn't affect any other Rectangle ever apart from the
+# new one.
+# So for example you never change the @bounds property of
+# a Morph in-place ever, rather
+# you rather replace it with a new Rectangle.
+# Also this means that as you create a Rectangle from another,
+# you can have the new Rectangle pointing directly at the old
+# origin and corner, because we are guaranteed that *those*
+# will never change.
+# Also another effect is that you never need to copy() a
+# Rectangle. This is because the one you have will never change
+# and the new operations you put it through will just create
+# new ones.
+# The drawback is that "new on change" policy means that a bunch
+# of Rectangles are created for potentially a great
+# number of transient transformations which would
+# otherwise be cheaper to just do
+# in place. The problem with mixing the two approaches
+# is that using in-place changes poisons the other approach,
+# so the two approaches can only be mixed with great care, so
+# it should probably only be done in "optimisation" phase
+# if profiling shows it's actually a problem.
+
 class Rectangle
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
