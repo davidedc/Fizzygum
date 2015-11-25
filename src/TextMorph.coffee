@@ -255,7 +255,6 @@ class TextMorph extends StringMorph
     @maxWidth = Math.max(aPoint.x, 0)
     @reLayout()    
     @changed()
-    @invalidateFullBoundsCache(@)
   
   # TextMorph measuring ////
 

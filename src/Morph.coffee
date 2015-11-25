@@ -457,6 +457,7 @@ class Morph extends MorphicNode
 
   silentSetBounds: (newBounds) ->
     @bounds = newBounds
+    @invalidateFullBoundsCache(@)
   
   corners: ->
     @bounds.corners()
@@ -583,20 +584,18 @@ class Morph extends MorphicNode
   
   fullBounds: ->
     if @cachedFullBounds?
-      if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
-      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
+      if !@cachedFullBounds.eq @SLOWfullBounds()
         debugger
-        #alert "fullBounds is broken"
+        alert "fullBounds is broken"
       return @cachedFullBounds
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
         result = result.merge(child.fullBounds())
     result
-    if (!result.containsRectangle @SLOWfullBounds()) and
-    (!result.growBy(1).containsRectangle @SLOWfullBounds())
+    if !result.eq @SLOWfullBounds()
       debugger
-      #alert "fullBounds is broken"
+      alert "fullBounds is broken"
     @cachedFullBounds = result
   
   fullBoundsNoShadow: ->
@@ -652,13 +651,11 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       child.fullMoveBy delta
     @changed()
-    @invalidateFullBoundsCache(@)
 
   silentFullMoveBy: (delta) ->
     #console.log "move 5"
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
-    @invalidateFullBoundsCache(@)
     @children.forEach (child) ->
       child.silentFullMoveBy delta
   
@@ -775,7 +772,6 @@ class Morph extends MorphicNode
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
       @silentSetExtent aPoint
-      @invalidateFullBoundsCache(@)
       @changed()
       @reLayout()
       
@@ -788,6 +784,7 @@ class Morph extends MorphicNode
     aPoint = aPoint.round()
     #console.log "move 9"
     @breakNumberOfMovesAndResizesCaches()
+
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
@@ -998,6 +995,7 @@ class Morph extends MorphicNode
   hide: ->
     @isVisible = false
     WorldMorph.numberOfVisibilityFlagsChanges++
+    @invalidateFullBoundsCache(@)
     @fullChanged()
 
   show: ->
@@ -1005,6 +1003,7 @@ class Morph extends MorphicNode
       return
     @isVisible = true
     WorldMorph.numberOfVisibilityFlagsChanges++
+    @invalidateFullBoundsCache(@)
     @fullChanged()
   
   minimise: ->
@@ -1017,6 +1016,7 @@ class Morph extends MorphicNode
   toggleVisibility: ->
     @isVisible = (not @isVisible)
     WorldMorph.numberOfVisibilityFlagsChanges++
+    @invalidateFullBoundsCache(@)
     @fullChanged()
   
   

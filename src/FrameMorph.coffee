@@ -100,10 +100,9 @@ class FrameMorph extends Morph
   # traversal to find the bounds.
   fullBounds: ->
     if @cachedFullBounds?
-      if (!@cachedFullBounds.containsRectangle @SLOWfullBounds()) and
-      (!@cachedFullBounds.growBy(2).containsRectangle @SLOWfullBounds())
+      if !@cachedFullBounds.eq @SLOWfullBounds()
         debugger
-        #alert "fullBounds is broken"
+        alert "fullBounds is broken"
       return @cachedFullBounds
     shadow = @getShadowMorph()
     if shadow?
@@ -111,10 +110,9 @@ class FrameMorph extends Morph
     else
       result = @bounds
 
-    if (!result.containsRectangle @SLOWfullBounds()) and
-    (!result.growBy(1).containsRectangle @SLOWfullBounds())
+    if !result.eq @SLOWfullBounds()
       debugger
-      #alert "fullBounds is broken"
+      alert "fullBounds is broken"
     @cachedFullBounds = result
   
   fullBoundsNoShadow: ->
@@ -197,7 +195,6 @@ class FrameMorph extends Morph
     @bounds = @bounds.translateBy(delta)
     #console.log "move 1"
     @breakNumberOfMovesAndResizesCaches()
-    @invalidateFullBoundsCache(@)
     @children.forEach (child) ->
       child.silentFullMoveBy delta
     @changed()
