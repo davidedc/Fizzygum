@@ -529,25 +529,39 @@ class Morph extends MorphicNode
       return true
     return false
 
+  SLOWcheckVisibility: ->
+    if !@isVisible
+      return false
+    if @parent?
+      return @parent.SLOWcheckVisibility()
+    else
+      return true
+
   checkVisibility: ->
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
       @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
       @checkVisibilityCache = false
-      return @checkVisibilityCache
-
-    if !@parent?
-      return true
+      result = @checkVisibilityCache
     else
-      if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-        #console.log "cache hit checkVisibility"
-        return @checkVisibilityCache
+      if !@parent?
+        result = true
       else
-        #console.log "cache miss checkVisibility"
-        @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-        @checkVisibilityCache = @parent.checkVisibility()
-        return @checkVisibilityCache
+        if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          #console.log "cache hit checkVisibility"
+          result = @checkVisibilityCache
+        else
+          #console.log "cache miss checkVisibility"
+          @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          @checkVisibilityCache = @parent.checkVisibility()
+          result = @checkVisibilityCache
+
+    if result != @SLOWcheckVisibility()
+      debugger
+      alert "checkVisibility is broken"
+
+    return result
 
 
   # Note that in a case of a move

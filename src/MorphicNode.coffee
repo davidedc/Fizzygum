@@ -102,18 +102,32 @@ class MorphicNode
     return true
 
   # MorphicNode functions:
+  SLOWroot: ->
+    if @parent?
+      return @parent.SLOWroot()
+    else
+      return @
+
+  # MorphicNode functions:
   root: ->
     if @rootCacheChecker == WorldMorph.numberOfAddsAndRemoves
       #console.log "cache hit root"
-      return @rootCache
+      result = @rootCache
+    else
   
-    theRoot = @
-    if @parent?
-      theRoot = @parent.root()
+      theRoot = @
+      if @parent?
+        theRoot = @parent.root()
 
-    @rootCacheChecker = WorldMorph.numberOfAddsAndRemoves
-    @rootCache = theRoot
-    return @rootCache
+      @rootCacheChecker = WorldMorph.numberOfAddsAndRemoves
+      @rootCache = theRoot
+      result = @rootCache
+
+    if result != @SLOWroot()
+      debugger
+      alert "root is broken"
+
+    return result
 
   # returns the path of this morph in terms
   # of children positions relative to the world.
