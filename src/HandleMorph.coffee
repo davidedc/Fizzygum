@@ -222,7 +222,6 @@ class HandleMorph extends Morph
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.position())
-      debugger
       @target.setExtent newExt
       # the position of this handle will be changed when the
       # parentHasReLayouted method of this handle will be called

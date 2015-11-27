@@ -602,14 +602,16 @@ class Morph extends MorphicNode
         debugger
         alert "fullBounds is broken"
       return @cachedFullBounds
+
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
         result = result.merge(child.fullBounds())
-    result
+
     if !result.eq @SLOWfullBounds()
       debugger
       alert "fullBounds is broken"
+
     @cachedFullBounds = result
   
   fullBoundsNoShadow: ->
