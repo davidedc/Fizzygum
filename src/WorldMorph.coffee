@@ -343,10 +343,15 @@ class WorldMorph extends FrameMorph
         if brokenMorph.boundsWhenLastPainted?
           @broken.push brokenMorph.boundsWhenLastPainted
 
+          if brokenMorph!= world and (brokenMorph.boundsWhenLastPainted.containsPoint (new Point(10,10)))
+            debugger
+
         # avoid to break two rectangles if the change
         # is in-place
         if !boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
           @broken.push boundsToBeChanged.spread()
+          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+            debugger
 
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
@@ -362,11 +367,15 @@ class WorldMorph extends FrameMorph
 
       if brokenMorph.fullBoundsWhenLastPainted?
         @broken.push brokenMorph.fullBoundsWhenLastPainted
+        if brokenMorph!= world and (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+          debugger
 
       # avoid to break two rectangles if the change
       # is in-place
       if !boundsToBeChanged.eq brokenMorph.fullBoundsWhenLastPainted
         @broken.push boundsToBeChanged.spread()
+        if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+          debugger
 
       
    

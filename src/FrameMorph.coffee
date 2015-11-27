@@ -178,7 +178,8 @@ class FrameMorph extends Morph
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail
     
-    @recordDrawnAreaForNextBrokenRects()
+    if aContext == world.worldCanvas.getContext("2d")
+      @recordDrawnAreaForNextBrokenRects()
 
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
