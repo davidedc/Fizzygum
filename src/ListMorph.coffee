@@ -55,6 +55,7 @@ class ListMorph extends ScrollFrameMorph
       @listContents = @listContents.destroy()
     @listContents = new MenuMorph(true, @, false, false, null, null)
     @elements = ["(empty)"]  if !@elements.length
+    trackChanges.push false
     @elements.forEach (element) =>
       color = null
       bold = false
@@ -88,7 +89,8 @@ class ListMorph extends ScrollFrameMorph
         @doubleClickAction # doubleClickAction
       )
 
-    @listContents.fullMoveTo @contents.position()
+    trackChanges.pop()
+    @listContents.silentFullMoveTo @contents.position()
     @listContents.reLayout()
     
     @addContents @listContents
