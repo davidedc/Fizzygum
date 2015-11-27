@@ -115,13 +115,19 @@ class Morph extends MorphicNode
   boundsWhenLastPainted: null
 
   fullGeometryOrPositionPossiblyChanged: false
-  fullBoundsWhenLastPainted: null
+  fullClippedBoundsWhenLastPainted: null
 
   cachedFullBounds: null
   childrenBoundsUpdatedAt: -1
 
+  checkFullClippedBoundsCache: null
+  cachedFullClippedBounds: null
+
   checkVisibilityCache: null
   checkVisibilityCacheChecker: ""
+
+  checkClippingVisibilityCache: null
+  checkClippingVisibilityCacheChecker: ""
 
   visibleBoundsCache: null
   clipThroughBoundsCache: null
@@ -453,11 +459,13 @@ class Morph extends MorphicNode
     @bounds = newBounds
     @changed()
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
 
 
   silentSetBounds: (newBounds) ->
     @bounds = newBounds
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
   
   corners: ->
     @bounds.corners()
@@ -537,6 +545,14 @@ class Morph extends MorphicNode
     else
       return true
 
+  SLOWcheckClippingVisibility: ->
+    if !@isVisible or @isOrphan()
+      return false
+    if @parent?
+      return @parent.SLOWcheckClippingVisibility()
+    else
+      return true
+
   checkVisibility: ->
     if !@isVisible
       # I'm not sure updating the cache here does
@@ -563,6 +579,31 @@ class Morph extends MorphicNode
 
     return result
 
+  checkClippingVisibility: ->
+    if !@isVisible or @isOrphan()
+      # I'm not sure updating the cache here does
+      # anything but it's two lines so let's do it
+      @checkClippingVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @checkClippingVisibilityCache = false
+      result = @checkClippingVisibilityCache
+    else
+      if !@parent?
+        result = true
+      else
+        if @checkClippingVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          #console.log "cache hit checkClippingVisibility"
+          result = @checkClippingVisibilityCache
+        else
+          #console.log "cache miss checkClippingVisibility"
+          @checkClippingVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          @checkClippingVisibilityCache = @parent.checkClippingVisibility()
+          result = @checkClippingVisibilityCache
+
+    if result != @SLOWcheckClippingVisibility()
+      debugger
+      alert "checkClippingVisibility is broken"
+
+    return result
 
   # Note that in a case of a move
   # you should also invalidate all the morphs in
@@ -580,11 +621,28 @@ class Morph extends MorphicNode
     if @parent?.cachedFullBounds?
         @parent.invalidateFullBoundsCache(@)
 
+  invalidateFullClippedBoundsCache: ->
+    if !@cachedFullClippedBounds?
+      return
+    @cachedFullClippedBounds = null
+    if @parent?.cachedFullClippedBounds?
+        @parent.invalidateFullClippedBoundsCache(@)
+
+
   SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
       if child.checkVisibility()
         result = result.merge(child.SLOWfullBounds())
+    result
+
+  SLOWfullClippedBounds: ->
+    if @isOrphan() or !@checkClippingVisibility()
+      return new Rectangle()
+    result = @bounds
+    @children.forEach (child) ->
+      if child.checkClippingVisibility()
+        result = result.merge(child.SLOWfullClippedBounds())
     result
 
   # for FrameMorph scrolling support:
@@ -613,6 +671,29 @@ class Morph extends MorphicNode
       alert "fullBounds is broken"
 
     @cachedFullBounds = result
+
+  fullClippedBounds: ->
+    if @isOrphan() or !@checkClippingVisibility()
+      result = new Rectangle()
+    else
+      if @cachedFullClippedBounds?
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+            debugger
+            alert "fullClippedBounds is broken"
+          return @cachedFullClippedBounds
+
+      result = @bounds
+      @children.forEach (child) ->
+        if child.checkClippingVisibility()
+          result = result.merge(child.fullClippedBounds())
+
+    if !result.eq @SLOWfullClippedBounds()
+      debugger
+      alert "fullClippedBounds is broken"
+
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+    @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
@@ -644,11 +725,18 @@ class Morph extends MorphicNode
 
     visible = chainFromRoot[0].bounds
     for eachElement in chainFromRoot
-      if eachElement instanceof FrameMorph
-        visible = visible.intersect eachElement.bounds
-      eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-      eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
-      eachElement.clipThroughBoundsCache = visible
+
+      if @isOrphan()
+        visible = new Rectangle()
+        eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+        eachElement.visibleBoundsCache = visible
+        eachElement.clipThroughBoundsCache = visible
+      else
+        if eachElement instanceof FrameMorph
+          visible = visible.intersect eachElement.bounds
+        eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+        eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
+        eachElement.clipThroughBoundsCache = visible.copy()
 
     return @visibleBoundsCache
   
@@ -677,6 +765,7 @@ class Morph extends MorphicNode
   
   breakNumberOfMovesAndResizesCaches: ->
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     if @ instanceof HandMorph
       if @children.length == 0
         return
@@ -980,7 +1069,9 @@ class Morph extends MorphicNode
     if @childrenBoundsUpdatedAt < WorldMorph.frameCount
       @childrenBoundsUpdatedAt = WorldMorph.frameCount
       @boundsWhenLastPainted = @visibleBounds()
-      @fullBoundsWhenLastPainted = @fullBounds().intersect @clipThroughBounds()
+      if @!= world and (@boundsWhenLastPainted.containsPoint (new Point(10,10)))
+        debugger
+      @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
 
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullBounds(), noShadow = false) ->
@@ -1002,7 +1093,8 @@ class Morph extends MorphicNode
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
     
 
-    @recordDrawnAreaForNextBrokenRects()
+    if aContext == world.worldCanvas.getContext("2d")
+      @recordDrawnAreaForNextBrokenRects()
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
@@ -1012,6 +1104,7 @@ class Morph extends MorphicNode
     @isVisible = false
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     @fullChanged()
 
   show: ->
@@ -1020,6 +1113,7 @@ class Morph extends MorphicNode
     @isVisible = true
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     @fullChanged()
   
   minimise: ->
@@ -1033,6 +1127,7 @@ class Morph extends MorphicNode
     @isVisible = (not @isVisible)
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     @fullChanged()
   
   

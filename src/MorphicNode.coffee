@@ -50,6 +50,7 @@ class MorphicNode
   addChild: (aMorphicNode, position = null) ->
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     if !position?
       @children.push aMorphicNode
     else
@@ -88,6 +89,7 @@ class MorphicNode
     # array
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
     idx = @children.indexOf(aMorphicNode)
     @children.splice idx, 1  if idx isnt -1
     aMorphicNode.parent = null

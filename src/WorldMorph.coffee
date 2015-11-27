@@ -363,16 +363,16 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
-      boundsToBeChanged = brokenMorph.fullBounds()
+      boundsToBeChanged = brokenMorph.fullClippedBounds()
 
-      if brokenMorph.fullBoundsWhenLastPainted?
-        @broken.push brokenMorph.fullBoundsWhenLastPainted
+      if brokenMorph.fullClippedBoundsWhenLastPainted?
+        @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
         if brokenMorph!= world and (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           debugger
 
       # avoid to break two rectangles if the change
       # is in-place
-      if !boundsToBeChanged.eq brokenMorph.fullBoundsWhenLastPainted
+      if !boundsToBeChanged.eq brokenMorph.fullClippedBoundsWhenLastPainted
         @broken.push boundsToBeChanged.spread()
         if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           debugger

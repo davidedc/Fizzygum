@@ -85,10 +85,24 @@ class FrameMorph extends Morph
   invalidateFullBoundsCache: (morphCalling) ->
     if morphCalling == @
       super @
+
+  invalidateFullClippedBoundsCache: (morphCalling) ->
+    if morphCalling == @
+      super @
   
   SLOWfullBounds: ->
     shadow = @getShadowMorph()
     if shadow?
+      result = @bounds.merge(shadow.bounds)
+    else
+      result = @bounds
+    result
+
+  SLOWfullClippedBounds: ->
+    shadow = @getShadowMorph()
+    if @isOrphan() or !@checkVisibility()
+      result = new Rectangle()
+    else if shadow?
       result = @bounds.merge(shadow.bounds)
     else
       result = @bounds
@@ -116,6 +130,30 @@ class FrameMorph extends Morph
       alert "fullBounds is broken"
 
     @cachedFullBounds = result
+
+  fullClippedBounds: ->
+    if @isOrphan() or !@checkVisibility()
+      result = new Rectangle()
+    else
+      if @cachedFullClippedBounds?
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+            debugger
+            alert "fullClippedBounds is broken"
+          return @cachedFullClippedBounds
+
+      shadow = @getShadowMorph()
+      if shadow?
+        result = @bounds.merge(shadow.bounds)
+      else
+        result = @bounds
+
+    if !result.eq @SLOWfullClippedBounds()
+      debugger
+      alert "fullClippedBounds is broken"
+
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+    @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
