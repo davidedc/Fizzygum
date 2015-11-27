@@ -373,7 +373,25 @@ class WorldMorph extends FrameMorph
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
 
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
-  
+
+  showBrokenRects: (aContext) ->
+    aContext.save()
+    aContext.globalAlpha = 0.5
+    aContext.scale pixelRatio, pixelRatio
+ 
+    for eachBrokenRect in @broken
+
+      randomR = Math.round(Math.random()*255)
+      randomG = Math.round(Math.random()*255)
+      randomB = Math.round(Math.random()*255)
+
+      aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+      aContext.fillRect  Math.round(eachBrokenRect.origin.x),
+          Math.round(eachBrokenRect.origin.y),
+          Math.round(eachBrokenRect.width()),
+          Math.round(eachBrokenRect.height())
+    aContext.restore()
+
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @fleshOutFullBroken()
@@ -392,6 +410,7 @@ class WorldMorph extends FrameMorph
     window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
       @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
+    #@showBrokenRects(@worldCanvas.getContext("2d"))
     @broken = []
     window.healingRectanglesPhase = false
   
