@@ -152,15 +152,10 @@ class Rectangle
   
   isEmpty: ->
     @debugIfFloats()
-    # The subtract method creates a new Point
-    theExtent = @corner.subtract @origin
-    return ((theExtent.x == 0) or (theExtent.y == 0))
+    return ((@width() <= 0) or (@height() <= 0))
 
   isNotEmpty: ->
-    @debugIfFloats()
-    # The subtract method creates a new Point
-    theExtent = @corner.subtract @origin
-    theExtent.x > 0 and theExtent.y > 0
+    !@isEmpty()
   
   height: ->
     @debugIfFloats()
@@ -246,6 +241,10 @@ class Rectangle
     result.debugIfFloats()
     result
   
+  # Note that "negative" rectangles can come
+  # out of this operation. E.g.
+  # new Rectangle(10,10,20,20).intersect(new Rectangle(15,25,19,25))
+  # gives a rectangle with the corner above the origin.
   intersect: (aRect) ->
     @debugIfFloats()
     result = new @constructor()
