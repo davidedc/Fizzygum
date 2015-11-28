@@ -533,7 +533,7 @@ class Morph extends MorphicNode
   surelyNotShowingUpOnScreen: ->
     if @isOrphan()
       return true
-    if !@checkVisibility()
+    if !@checkClippingVisibility()
       return true
     return false
 
