@@ -455,17 +455,14 @@ class Morph extends MorphicNode
     @bounds
   
   setBounds: (newBounds) ->
-    @breakNumberOfMovesAndResizesCaches()
     @bounds = newBounds
     @changed()
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @breakNumberOfMovesAndResizesCaches()
 
 
   silentSetBounds: (newBounds) ->
     @bounds = newBounds
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @breakNumberOfMovesAndResizesCaches()
   
   corners: ->
     @bounds.corners()
