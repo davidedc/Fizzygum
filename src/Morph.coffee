@@ -1056,7 +1056,10 @@ class Morph extends MorphicNode
             Math.round(h)
         aContext.restore()
 
-  preliminaryCheckNothingToDraw: (noShadow) ->
+  preliminaryCheckNothingToDraw: (noShadow, clippingRectangle) ->
+    if clippingRectangle.isEmpty()
+      return true
+
     if !@checkVisibility()
       return true
 
@@ -1074,9 +1077,9 @@ class Morph extends MorphicNode
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
 
 
-  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullBounds(), noShadow = false) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
 
-    if @preliminaryCheckNothingToDraw noShadow
+    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle
       return
 
     # in general, the children of a Morph could be outside the

@@ -160,9 +160,9 @@ class FrameMorph extends Morph
     @bounds
 
   
-  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @boundingBox(), noShadow = false) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @visibleBounds(), noShadow = false) ->
 
-    if @preliminaryCheckNothingToDraw noShadow
+    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle
       return
 
     # a FrameMorph has the special property that all of its children
