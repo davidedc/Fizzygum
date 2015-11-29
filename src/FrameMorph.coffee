@@ -101,7 +101,7 @@ class FrameMorph extends Morph
   SLOWfullClippedBounds: ->
     shadow = @getShadowMorph()
     if @isOrphan() or !@checkClippingVisibility()
-      result = new Rectangle()
+      result = Rectangle.EMPTY
     else if shadow?
       result = @visibleBounds().merge(shadow.bounds)
     else
@@ -133,7 +133,7 @@ class FrameMorph extends Morph
 
   fullClippedBounds: ->
     if @isOrphan() or !@checkClippingVisibility()
-      result = new Rectangle()
+      result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?
         if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes

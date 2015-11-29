@@ -45,6 +45,7 @@ class Rectangle
 
   origin: null
   corner: null
+  @EMPTY: new Rectangle()
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     
@@ -250,7 +251,7 @@ class Rectangle
     a = @zeroIfNegative()
     b = aRect.zeroIfNegative()
     if a.isEmpty() or b.isEmpty()
-      return new Rectangle()
+      return @constructor.EMPTY
     result = new @constructor()
     result.origin = a.origin.max(b.origin)
     result.corner = a.corner.min(b.corner)
@@ -261,7 +262,7 @@ class Rectangle
   zeroIfNegative: () ->
     @debugIfFloats()
     if @isEmpty()
-      return new Rectangle()
+      return @constructor.EMPTY
     return @
   
   merge: (aRect) ->

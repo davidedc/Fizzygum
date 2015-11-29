@@ -280,7 +280,7 @@ class Morph extends MorphicNode
       if (arr.indexOf @constructor.name) == -1
         arr.push @constructor.name
 
-    @silentSetBounds new Rectangle()
+    @silentSetBounds Rectangle.EMPTY
     @minimumExtent = new Point 5,5
     @silentFullMoveTo(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
@@ -635,7 +635,7 @@ class Morph extends MorphicNode
 
   SLOWfullClippedBounds: ->
     if @isOrphan() or !@checkClippingVisibility()
-      return new Rectangle()
+      return Rectangle.EMPTY
     result = @visibleBounds()
     @children.forEach (child) ->
       if child.checkClippingVisibility()
@@ -671,7 +671,7 @@ class Morph extends MorphicNode
 
   fullClippedBounds: ->
     if @isOrphan() or !@checkClippingVisibility()
-      result = new Rectangle()
+      result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?
         if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
@@ -724,7 +724,7 @@ class Morph extends MorphicNode
     for eachElement in chainFromRoot
 
       if @isOrphan()
-        visible = new Rectangle()
+        visible = Rectangle.EMPTY
         eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
         eachElement.visibleBoundsCache = visible
         eachElement.clipThroughBoundsCache = visible
