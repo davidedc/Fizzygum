@@ -421,7 +421,8 @@ class WorldMorph extends FrameMorph
     window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
       @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
-    #@showBrokenRects(@worldCanvas.getContext("2d"))
+    if world.showRedraws
+      @showBrokenRects(@worldCanvas.getContext("2d"))
     @broken = []
     window.healingRectanglesPhase = false
   
