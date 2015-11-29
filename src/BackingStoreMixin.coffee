@@ -112,11 +112,3 @@ BackingStoreMixin =
             Math.round(at),
             Math.round(w),
             Math.round(h)
-
-          if world.showRedraws
-            randomR = Math.round(Math.random()*255)
-            randomG = Math.round(Math.random()*255)
-            randomB = Math.round(Math.random()*255)
-            aContext.globalAlpha = 0.5
-            aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-            aContext.fillRect(Math.round(al),Math.round(at),Math.round(w),Math.round(h));

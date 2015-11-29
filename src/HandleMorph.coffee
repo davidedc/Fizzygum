@@ -115,20 +115,6 @@ class HandleMorph extends Morph
 
       aContext.restore()
 
-      if world.showRedraws
-        randomR = Math.round(Math.random()*255)
-        randomG = Math.round(Math.random()*255)
-        randomB = Math.round(Math.random()*255)
-
-        aContext.save()
-        aContext.globalAlpha = 0.5
-        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        aContext.fillRect  Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
-        aContext.restore()
-
   doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()
     context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y

@@ -148,21 +148,6 @@ class TriggerMorph extends Morph
           Math.round(h)
       aContext.restore()
 
-      if world.showRedraws
-        randomR = Math.round(Math.random()*255)
-        randomG = Math.round(Math.random()*255)
-        randomB = Math.round(Math.random()*255)
-
-        aContext.save()
-        aContext.globalAlpha = 0.5
-        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-        aContext.fillRect  Math.round(al),
-            Math.round(at),
-            Math.round(w),
-            Math.round(h)
-        aContext.restore()
-
-
   createLabel: ->
     # bold
     # italic
