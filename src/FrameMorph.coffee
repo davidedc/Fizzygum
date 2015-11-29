@@ -103,9 +103,9 @@ class FrameMorph extends Morph
     if @isOrphan() or !@checkClippingVisibility()
       result = new Rectangle()
     else if shadow?
-      result = @bounds.merge(shadow.bounds)
+      result = @visibleBounds().merge(shadow.bounds)
     else
-      result = @bounds
+      result = @visibleBounds()
     result
 
   # frames clip any of their children
@@ -136,7 +136,7 @@ class FrameMorph extends Morph
       result = new Rectangle()
     else
       if @cachedFullClippedBounds?
-        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
           if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
             debugger
             alert "fullClippedBounds is broken"
@@ -144,15 +144,15 @@ class FrameMorph extends Morph
 
       shadow = @getShadowMorph()
       if shadow?
-        result = @bounds.merge(shadow.bounds)
+        result = @visibleBounds().merge(shadow.bounds)
       else
-        result = @bounds
+        result = @visibleBounds()
 
     if !result.eq @SLOWfullClippedBounds()
       debugger
       alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->

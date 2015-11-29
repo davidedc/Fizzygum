@@ -636,7 +636,7 @@ class Morph extends MorphicNode
   SLOWfullClippedBounds: ->
     if @isOrphan() or !@checkClippingVisibility()
       return new Rectangle()
-    result = @bounds
+    result = @visibleBounds()
     @children.forEach (child) ->
       if child.checkClippingVisibility()
         result = result.merge(child.SLOWfullClippedBounds())
@@ -674,13 +674,13 @@ class Morph extends MorphicNode
       result = new Rectangle()
     else
       if @cachedFullClippedBounds?
-        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
           if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
             debugger
             alert "fullClippedBounds is broken"
           return @cachedFullClippedBounds
 
-      result = @bounds
+      result = @visibleBounds()
       @children.forEach (child) ->
         if child.checkClippingVisibility()
           result = result.merge(child.fullClippedBounds())
@@ -689,7 +689,7 @@ class Morph extends MorphicNode
       debugger
       alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
@@ -720,7 +720,7 @@ class Morph extends MorphicNode
 
     chainFromRoot = @allParentsBottomToTop()
 
-    visible = chainFromRoot[0].bounds
+    visible = world.bounds
     for eachElement in chainFromRoot
 
       if @isOrphan()
