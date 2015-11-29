@@ -655,7 +655,7 @@ class Morph extends MorphicNode
     if @cachedFullBounds?
       if !@cachedFullBounds.eq @SLOWfullBounds()
         debugger
-        alert "fullBounds is broken"
+        alert "fullBounds is broken (cached)"
       return @cachedFullBounds
 
     result = @bounds
@@ -665,7 +665,7 @@ class Morph extends MorphicNode
 
     if !result.eq @SLOWfullBounds()
       debugger
-      alert "fullBounds is broken"
+      alert "fullBounds is broken (uncached)"
 
     @cachedFullBounds = result
 

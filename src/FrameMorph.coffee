@@ -116,7 +116,7 @@ class FrameMorph extends Morph
     if @cachedFullBounds?
       if !@cachedFullBounds.eq @SLOWfullBounds()
         debugger
-        alert "fullBounds is broken"
+        alert "fullBounds is broken (cached)"
       return @cachedFullBounds
 
     shadow = @getShadowMorph()
@@ -127,7 +127,7 @@ class FrameMorph extends Morph
 
     if !result.eq @SLOWfullBounds()
       debugger
-      alert "fullBounds is broken"
+      alert "fullBounds is broken (uncached)"
 
     @cachedFullBounds = result
 
