@@ -438,8 +438,8 @@ class InspectorMorph extends BoxMorph
     try
       # this.target[propertyName] = evaluate(txt);
       @target.evaluateString "this." + propertyName + " = " + txt
-      @target.reLayout()      
-      @target.changed()
+      @target.reLayout?()      
+      @target.changed?()
     catch err
       @inform err
 
@@ -450,8 +450,8 @@ class InspectorMorph extends BoxMorph
         prop = prop.getValue()
       @target[prop] = null
       @buildAndConnectChildren()
-      @target.reLayout()      
-      @target.changed()
+      @target.reLayout?()      
+      @target.changed?()
   
   addPropertyPopout: ->
     @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
@@ -467,8 +467,8 @@ class InspectorMorph extends BoxMorph
     catch err
       @inform err
     @buildAndConnectChildren()
-    @target.reLayout()    
-    @target.changed()
+    @target.reLayout?()    
+    @target.changed?()
   
   renamePropertyPopout: ->
     propertyName = @list.selected.labelString
@@ -481,7 +481,7 @@ class InspectorMorph extends BoxMorph
 
       @currentProperty = null
       @buildAndConnectChildren()
-      @target.reLayout()      
-      @target.changed()
+      @target.reLayout?()      
+      @target.changed?()
     catch err
       @inform err
