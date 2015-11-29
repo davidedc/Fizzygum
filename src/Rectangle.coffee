@@ -247,17 +247,32 @@ class Rectangle
   # gives a rectangle with the corner above the origin.
   intersect: (aRect) ->
     @debugIfFloats()
+    a = @zeroIfNegative()
+    b = aRect.zeroIfNegative()
+    if a.isEmpty() or b.isEmpty()
+      return new Rectangle()
     result = new @constructor()
-    result.origin = @origin.max(aRect.origin)
-    result.corner = @corner.min(aRect.corner)
+    result.origin = a.origin.max(b.origin)
+    result.corner = a.corner.min(b.corner)
+    result = result.zeroIfNegative()
     result.debugIfFloats()
     result
+
+  zeroIfNegative: () ->
+    @debugIfFloats()
+    if @isEmpty()
+      return new Rectangle()
+    return @
   
   merge: (aRect) ->
     @debugIfFloats()
+    a = @zeroIfNegative()
+    b = aRect.zeroIfNegative()
+    if a.isEmpty()
+      return b
     result = new @constructor()
-    result.origin = @origin.min(aRect.origin)
-    result.corner = @corner.max(aRect.corner)
+    result.origin = a.origin.min(b.origin)
+    result.corner = a.corner.max(aRect.corner)
     result.debugIfFloats()
     result
   
