@@ -271,6 +271,8 @@ class Rectangle
     b = aRect.zeroIfNegative()
     if a.isEmpty()
       return b
+    if b.isEmpty()
+      return a
     result = new @constructor()
     result.origin = a.origin.min(b.origin)
     result.corner = a.corner.max(aRect.corner)
