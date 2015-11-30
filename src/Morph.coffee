@@ -347,6 +347,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+    @breakNumberOfMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
     # remove callback when user clicks outside
     # me or any of my children
