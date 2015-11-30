@@ -641,6 +641,8 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       if child.checkClippingVisibility()
         result = result.merge(child.SLOWfullClippedBounds())
+    #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
+    #  debugger
     result
 
   # for FrameMorph scrolling support:
@@ -1056,9 +1058,13 @@ class Morph extends MorphicNode
     if @childrenBoundsUpdatedAt < WorldMorph.frameCount
       @childrenBoundsUpdatedAt = WorldMorph.frameCount
       @boundsWhenLastPainted = @visibleBounds()
-      if @!= world and (@boundsWhenLastPainted.containsPoint (new Point(10,10)))
-        debugger
+      #if (@ != world) and (@boundsWhenLastPainted.containsPoint (new Point(10,10)))
+      #  debugger
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
+      #if (@ != world) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+      #  debugger
+      #if (@ instanceof MenuMorph) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+      #  debugger
 
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->

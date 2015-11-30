@@ -106,6 +106,8 @@ class FrameMorph extends Morph
       result = @visibleBounds().merge(shadow.bounds)
     else
       result = @visibleBounds()
+    #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
+    #  debugger
     result
 
   # frames clip any of their children
