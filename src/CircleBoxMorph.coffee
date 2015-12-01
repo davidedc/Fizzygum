@@ -63,7 +63,7 @@ class CircleBoxMorph extends Morph
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if !@checkVisibility()
+    if !@visibleBasedOnIsVisibleProperty()
       return null
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

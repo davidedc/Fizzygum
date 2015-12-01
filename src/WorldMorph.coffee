@@ -324,9 +324,13 @@ class WorldMorph extends FrameMorph
 
   visibleBounds: ->
     @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-    @visibleBoundsCache = @bounds
-    @clipThroughBoundsCache = world.bounds
+    @visibleBoundsCache = @boundingBox()
     return @visibleBoundsCache
+
+  clipThrough: ->
+    @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @clipThroughCache = @boundingBox()
+    return @clipThroughCache
 
   fleshOutBroken: ->
     #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
@@ -1269,7 +1273,7 @@ class WorldMorph extends FrameMorph
   
   showAllMinimised: ->
     @forAllChildrenBottomToTop (child) ->
-      child.unminimise() if !child.checkVisibility()
+      child.unminimise() if !child.visibleBasedOnIsVisibleProperty()
   
   about: ->
     @inform "Zombie Kernel\n\n" +

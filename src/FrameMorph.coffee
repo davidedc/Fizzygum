@@ -59,7 +59,7 @@ class FrameMorph extends Morph
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
-    if @checkVisibility() and
+    if @visibleBasedOnIsVisibleProperty() and
         !theMorph.containedInParentsOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -100,7 +100,7 @@ class FrameMorph extends Morph
 
   SLOWfullClippedBounds: ->
     shadow = @getShadowMorph()
-    if @isOrphan() or !@checkClippingVisibility()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else if shadow?
       result = @visibleBounds().merge(shadow.bounds)
@@ -134,7 +134,7 @@ class FrameMorph extends Morph
     @cachedFullBounds = result
 
   fullClippedBounds: ->
-    if @isOrphan() or !@checkClippingVisibility()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?

@@ -281,11 +281,11 @@ class ScrollFrameMorph extends FrameMorph
         (!world.hand.floatDraggingSomething()) and
         (@boundsContainPoint(world.hand.position()))
           newPos = world.hand.position()
-          if @hBar.checkVisibility()
+          if @hBar.visibleBasedOnIsVisibleProperty()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
               scrollbarJustChanged = scrollbarJustChanged || @scrollX deltaX
-          if @vBar.checkVisibility()
+          if @vBar.visibleBasedOnIsVisibleProperty()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
               scrollbarJustChanged = scrollbarJustChanged || @scrollY deltaY
@@ -297,11 +297,11 @@ class ScrollFrameMorph extends FrameMorph
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
           else
-            if @hBar.checkVisibility()
+            if @hBar.visibleBasedOnIsVisibleProperty()
               deltaX = deltaX * friction
               if deltaX isnt 0
                 scrollbarJustChanged = scrollbarJustChanged || @scrollX Math.round(deltaX)
-            if @vBar.checkVisibility()
+            if @vBar.visibleBasedOnIsVisibleProperty()
               deltaY = deltaY * friction
               if deltaY isnt 0
                 scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)

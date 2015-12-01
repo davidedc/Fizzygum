@@ -123,15 +123,14 @@ class Morph extends MorphicNode
   checkFullClippedBoundsCache: null
   cachedFullClippedBounds: null
 
-  checkVisibilityCache: null
-  checkVisibilityCacheChecker: ""
-
-  checkClippingVisibilityCache: null
-  checkClippingVisibilityCacheChecker: ""
+  visibleBasedOnIsVisiblePropertyCache: null
+  visibleBasedOnIsVisiblePropertyCacheChecker: ""
 
   visibleBoundsCache: null
-  clipThroughBoundsCache: null
   visibleBoundsCacheChecker: ""
+
+  clipThroughCache: null
+  clipThroughCacheChecker: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -514,7 +513,7 @@ class Morph extends MorphicNode
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
-    if @checkVisibility() and
+    if @visibleBasedOnIsVisibleProperty() and
         !theMorph.containedInParentsOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -531,75 +530,41 @@ class Morph extends MorphicNode
   surelyNotShowingUpOnScreen: ->
     if @isOrphan()
       return true
-    if !@checkClippingVisibility()
+    if !@visibleBasedOnIsVisibleProperty()
       return true
     return false
 
-  SLOWcheckVisibility: ->
+  SLOWvisibleBasedOnIsVisibleProperty: ->
     if !@isVisible
       return false
     if @parent?
-      return @parent.SLOWcheckVisibility()
+      return @parent.SLOWvisibleBasedOnIsVisibleProperty()
     else
       return true
 
-  SLOWcheckClippingVisibility: ->
-    if !@isVisible or @isOrphan()
-      return false
-    if @parent?
-      return @parent.SLOWcheckClippingVisibility()
-    else
-      return true
-
-  checkVisibility: ->
+  visibleBasedOnIsVisibleProperty: ->
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
-      @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-      @checkVisibilityCache = false
-      result = @checkVisibilityCache
+      @visibleBasedOnIsVisiblePropertyCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @visibleBasedOnIsVisiblePropertyCache = false
+      result = @visibleBasedOnIsVisiblePropertyCache
     else
       if !@parent?
         result = true
       else
-        if @checkVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-          #console.log "cache hit checkVisibility"
-          result = @checkVisibilityCache
+        if @visibleBasedOnIsVisiblePropertyCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          #console.log "cache hit visibleBasedOnIsVisibleProperty"
+          result = @visibleBasedOnIsVisiblePropertyCache
         else
-          #console.log "cache miss checkVisibility"
-          @checkVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-          @checkVisibilityCache = @parent.checkVisibility()
-          result = @checkVisibilityCache
+          #console.log "cache miss visibleBasedOnIsVisibleProperty"
+          @visibleBasedOnIsVisiblePropertyCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
+          result = @visibleBasedOnIsVisiblePropertyCache
 
-    if result != @SLOWcheckVisibility()
+    if result != @SLOWvisibleBasedOnIsVisibleProperty()
       debugger
-      alert "checkVisibility is broken"
-
-    return result
-
-  checkClippingVisibility: ->
-    if !@isVisible or @isOrphan()
-      # I'm not sure updating the cache here does
-      # anything but it's two lines so let's do it
-      @checkClippingVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-      @checkClippingVisibilityCache = false
-      result = @checkClippingVisibilityCache
-    else
-      if !@parent?
-        result = true
-      else
-        if @checkClippingVisibilityCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-          #console.log "cache hit checkClippingVisibility"
-          result = @checkClippingVisibilityCache
-        else
-          #console.log "cache miss checkClippingVisibility"
-          @checkClippingVisibilityCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
-          @checkClippingVisibilityCache = @parent.checkClippingVisibility()
-          result = @checkClippingVisibilityCache
-
-    if result != @SLOWcheckClippingVisibility()
-      debugger
-      alert "checkClippingVisibility is broken"
+      alert "visibleBasedOnIsVisibleProperty is broken"
 
     return result
 
@@ -630,16 +595,16 @@ class Morph extends MorphicNode
   SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
-      if child.checkVisibility()
+      if child.visibleBasedOnIsVisibleProperty()
         result = result.merge(child.SLOWfullBounds())
     result
 
   SLOWfullClippedBounds: ->
-    if @isOrphan() or !@checkClippingVisibility()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       return Rectangle.EMPTY
     result = @visibleBounds()
     @children.forEach (child) ->
-      if child.checkClippingVisibility()
+      if child.visibleBasedOnIsVisibleProperty()
         result = result.merge(child.SLOWfullClippedBounds())
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
@@ -663,7 +628,7 @@ class Morph extends MorphicNode
 
     result = @bounds
     @children.forEach (child) ->
-      if child.checkVisibility()
+      if child.visibleBasedOnIsVisibleProperty()
         result = result.merge(child.fullBounds())
 
     if !result.eq @SLOWfullBounds()
@@ -673,7 +638,7 @@ class Morph extends MorphicNode
     @cachedFullBounds = result
 
   fullClippedBounds: ->
-    if @isOrphan() or !@checkClippingVisibility()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?
@@ -685,7 +650,7 @@ class Morph extends MorphicNode
 
       result = @visibleBounds()
       @children.forEach (child) ->
-        if child.checkClippingVisibility()
+        if child.visibleBasedOnIsVisibleProperty()
           result = result.merge(child.fullClippedBounds())
 
     if !result.eq @SLOWfullClippedBounds()
@@ -699,18 +664,11 @@ class Morph extends MorphicNode
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
-      if (child not instanceof ShadowMorph) and (child.checkVisibility())
+      if (child not instanceof ShadowMorph) and (child.visibleBasedOnIsVisibleProperty())
         result = result.merge(child.fullBoundsNoShadow())
     result
 
-  clipThroughBounds: ->
-    @visibleBounds()
-    return @clipThroughBoundsCache
-  
   visibleBounds: ->
-    # answer which part of me is not clipped by a Frame
-    if @ == Window
-      debugger
 
     if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
       #console.log "cache hit @visibleBoundsCacheChecker"
@@ -720,26 +678,41 @@ class Morph extends MorphicNode
     #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @visibleBoundsCacheChecker
     #  #debugger
 
+    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @visibleBoundsCache = @boundingBox().intersect @clipThrough()
+    return @visibleBoundsCache
+  
+  clipThrough: ->
+    # answer which part of me is not clipped by a Frame
+    if @ == Window
+      debugger
+
+    if @clipThroughCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+      #console.log "cache hit @clipThroughCacheChecker"
+      return @clipThroughCache
+    #else
+    #  console.log "cache miss @clipThroughCacheChecker"
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clipThroughCacheChecker
+    #  #debugger
+
 
     if @isOrphan()
       visible = Rectangle.EMPTY
-      @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-      @visibleBoundsCache = visible
-      @clipThroughBoundsCache = visible
+      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @clipThroughCache = visible
     else
       firstFrameParent = @firstFrameParent()
       if !firstFrameParent?
         firstFrameParent = world
-      firstFrameVisibleBounds = firstFrameParent.visibleBounds()
-      @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-      @visibleBoundsCache = @boundingBox().intersect firstFrameVisibleBounds
+      firstFrameVisibleBounds = firstFrameParent.clipThrough()
+      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
       if @ instanceof FrameMorph
-        @clipThroughBoundsCache = @visibleBoundsCache
+        @clipThroughCache = @boundingBox().intersect firstFrameVisibleBounds
       else
-        @clipThroughBoundsCache = firstFrameVisibleBounds
+        @clipThroughCache = firstFrameVisibleBounds
 
 
-    return @visibleBoundsCache
+    return @clipThroughCache
   
   
   # Morph accessing - simple changes:
@@ -1024,7 +997,7 @@ class Morph extends MorphicNode
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if !@checkVisibility()
+    if !@visibleBasedOnIsVisibleProperty()
       return null
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
@@ -1047,7 +1020,7 @@ class Morph extends MorphicNode
     if clippingRectangle.isEmpty()
       return true
 
-    if !@checkVisibility()
+    if !@visibleBasedOnIsVisibleProperty()
       return true
 
     if noShadow and (@ instanceof ShadowMorph)
@@ -1102,7 +1075,7 @@ class Morph extends MorphicNode
     @fullChanged()
 
   show: ->
-    if @checkVisibility() == true
+    if @visibleBasedOnIsVisibleProperty() == true
       return
     @isVisible = true
     WorldMorph.numberOfVisibilityFlagsChanges++

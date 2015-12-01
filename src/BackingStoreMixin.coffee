@@ -94,7 +94,7 @@ BackingStoreMixin =
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
         @repaintBackBufferIfNeeded()
-        if !@checkVisibility() or !@backBuffer?
+        if !@visibleBasedOnIsVisibleProperty() or !@backBuffer?
           return null
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

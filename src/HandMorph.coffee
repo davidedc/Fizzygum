@@ -34,15 +34,19 @@ class HandMorph extends Morph
 
   visibleBounds: ->
     @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-    @visibleBoundsCache = @bounds
-    @clipThroughBoundsCache = world.bounds
-    return @visibleBoundsCache  
+    @visibleBoundsCache = @boundingBox()
+    return @visibleBoundsCache
+
+  clipThrough: ->
+    @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @clipThroughCache = @boundingBox()
+    return @clipThroughCache
   
   # HandMorph navigation:
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@position()) and
-        m.checkVisibility() and
+        m.visibleBasedOnIsVisibleProperty() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
         (m not instanceof ShadowMorph)
     if result?
@@ -53,7 +57,7 @@ class HandMorph extends Morph
   menuAtPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.visibleBounds().containsPoint(@position()) and
-        m.checkVisibility() and (m.noticesTransparentClick or
+        m.visibleBasedOnIsVisibleProperty() and (m.noticesTransparentClick or
         (not m.isTransparentAt(@position()))) and (m instanceof MenuMorph)
     return result
 
@@ -94,7 +98,7 @@ class HandMorph extends Morph
   # not used in ZK yet
   allMorphsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
-      m.checkVisibility() and m.visibleBounds().containsPoint(@position())
+      m.visibleBasedOnIsVisibleProperty() and m.visibleBounds().containsPoint(@position())
   
   
   
