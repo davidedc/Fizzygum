@@ -294,7 +294,8 @@ class WorldMorph extends FrameMorph
       eachMorph.destroy()
     @markedForDestruction = []
   
-  # World Morph display:
+  # World Morph broken rects debugging
+  # not using it anywhere
   brokenFor: (aMorph) ->
     # private
     fb = aMorph.fullBounds()
