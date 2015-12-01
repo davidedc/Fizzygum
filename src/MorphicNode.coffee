@@ -35,6 +35,9 @@ class MorphicNode
   rootCache: null
   rootCacheChecker: null
 
+  checkFirstFrameParentCache: null
+  cachedFirstFrameParent: null
+
   constructor: (@parent = null, @children = []) ->
 
   
@@ -354,6 +357,38 @@ class MorphicNode
         if theCount is n
           return eachChild
     return null
+
+  SLOWfirstFrameParent: (morphToStartFrom = @) ->
+    if morphToStartFrom.parent?
+      if morphToStartFrom.parent instanceof FrameMorph
+        return morphToStartFrom.parent
+      else
+        return morphToStartFrom.parent.SLOWfirstFrameParent()
+    else
+      return null
+
+  firstFrameParent: (morphToStartFrom = @) ->
+    if @checkFirstFrameParentCache == WorldMorph.numberOfAddsAndRemoves
+      if @cachedFirstFrameParent != @SLOWfirstFrameParent(morphToStartFrom)
+        debugger
+        alert "firstFrameParent is broken (cached)"
+
+    if morphToStartFrom.parent?
+      if morphToStartFrom.parent instanceof FrameMorph
+        result = morphToStartFrom.parent
+      else
+        result = morphToStartFrom.parent.firstFrameParent()
+    else
+      result =  null
+
+    if result != @SLOWfirstFrameParent(morphToStartFrom)
+      debugger
+      alert "firstFrameParent is broken (uncached)"
+
+    @checkFirstFrameParentCache = WorldMorph.numberOfAddsAndRemoves
+    @cachedFirstFrameParent = result
+
+
   
   # returns the first parent (going up from this node) that is of a particular class
   # (includes this particular node)
