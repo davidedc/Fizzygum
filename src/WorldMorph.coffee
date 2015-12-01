@@ -335,9 +335,8 @@ class WorldMorph extends FrameMorph
 
       unless brokenMorph.surelyNotShowingUpOnScreen()
         # @visibleBounds() should be smaller area
-        # and is cheaper to calculate than @fullBounds()
-        # cause it doesn't traverse the children and clips
-        # the area based on the clipping morphs up the
+        # than bounds because it clips
+        # the bounds based on the clipping morphs up the
         # hierarchy
         boundsToBeChanged = brokenMorph.visibleBounds()
 
