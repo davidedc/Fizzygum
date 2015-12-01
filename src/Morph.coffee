@@ -126,8 +126,8 @@ class Morph extends MorphicNode
   visibleBasedOnIsVisiblePropertyCache: null
   visibleBasedOnIsVisiblePropertyCacheChecker: ""
 
-  visibleBoundsCache: null
-  visibleBoundsCacheChecker: ""
+  clippedThroughBoundsCache: null
+  clippedThroughBoundsCacheChecker: ""
 
   clipThroughCache: null
   clipThroughCacheChecker: null
@@ -602,7 +602,7 @@ class Morph extends MorphicNode
   SLOWfullClippedBounds: ->
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       return Rectangle.EMPTY
-    result = @visibleBounds()
+    result = @clippedThroughBounds()
     @children.forEach (child) ->
       if child.visibleBasedOnIsVisibleProperty()
         result = result.merge(child.SLOWfullClippedBounds())
@@ -648,7 +648,7 @@ class Morph extends MorphicNode
             alert "fullClippedBounds is broken"
           return @cachedFullClippedBounds
 
-      result = @visibleBounds()
+      result = @clippedThroughBounds()
       @children.forEach (child) ->
         if child.visibleBasedOnIsVisibleProperty()
           result = result.merge(child.fullClippedBounds())
@@ -668,19 +668,19 @@ class Morph extends MorphicNode
         result = result.merge(child.fullBoundsNoShadow())
     result
 
-  visibleBounds: ->
+  clippedThroughBounds: ->
 
-    if @visibleBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
-      #console.log "cache hit @visibleBoundsCacheChecker"
-      return @visibleBoundsCache
+    if @clippedThroughBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+      #console.log "cache hit @clippedThroughBoundsCacheChecker"
+      return @clippedThroughBoundsCache
     #else
-    #  console.log "cache miss @visibleBoundsCacheChecker"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @visibleBoundsCacheChecker
+    #  console.log "cache miss @clippedThroughBoundsCacheChecker"
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clippedThroughBoundsCacheChecker
     #  #debugger
 
-    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-    @visibleBoundsCache = @boundingBox().intersect @clipThrough()
-    return @visibleBoundsCache
+    @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
+    return @clippedThroughBoundsCache
   
   clipThrough: ->
     # answer which part of me is not clipped by a Frame
@@ -696,20 +696,15 @@ class Morph extends MorphicNode
     #  #debugger
 
 
-    if @isOrphan()
-      visible = Rectangle.EMPTY
-      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-      @clipThroughCache = visible
+    firstFrameParent = @firstFrameParent()
+    if !firstFrameParent?
+      firstFrameParent = world
+    firstFrameClipThroughBounds = firstFrameParent.clipThrough()
+    @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    if @ instanceof FrameMorph
+      @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
     else
-      firstFrameParent = @firstFrameParent()
-      if !firstFrameParent?
-        firstFrameParent = world
-      firstFrameVisibleBounds = firstFrameParent.clipThrough()
-      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-      if @ instanceof FrameMorph
-        @clipThroughCache = @boundingBox().intersect firstFrameVisibleBounds
-      else
-        @clipThroughCache = firstFrameVisibleBounds
+      @clipThroughCache = firstFrameClipThroughBounds
 
 
     return @clipThroughCache
@@ -1016,14 +1011,20 @@ class Morph extends MorphicNode
           Math.round(h)
       aContext.restore()
 
-  preliminaryCheckNothingToDraw: (noShadow, clippingRectangle) ->
+  preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
     if clippingRectangle.isEmpty()
       return true
 
-    if !@visibleBasedOnIsVisibleProperty()
+    if !@isVisible
       return true
 
     if noShadow and (@ instanceof ShadowMorph)
+      return true
+
+    if (aContext == world.worldCanvas.getContext("2d")) and (@isOrphan())
+      return true
+
+    if (aContext == world.worldCanvas.getContext("2d")) and (!@visibleBasedOnIsVisibleProperty())
       return true
 
     return false
@@ -1031,7 +1032,7 @@ class Morph extends MorphicNode
   recordDrawnAreaForNextBrokenRects: ->
     if @childrenBoundsUpdatedAt < WorldMorph.frameCount
       @childrenBoundsUpdatedAt = WorldMorph.frameCount
-      @boundsWhenLastPainted = @visibleBounds()
+      @boundsWhenLastPainted = @clippedThroughBounds()
       #if (@ != world) and (@boundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
@@ -1043,7 +1044,7 @@ class Morph extends MorphicNode
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
 
-    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle
+    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle, aContext
       return
 
     # in general, the children of a Morph could be outside the

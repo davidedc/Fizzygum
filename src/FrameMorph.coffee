@@ -103,9 +103,9 @@ class FrameMorph extends Morph
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else if shadow?
-      result = @visibleBounds().merge(shadow.bounds)
+      result = @clippedThroughBounds().merge(shadow.bounds)
     else
-      result = @visibleBounds()
+      result = @clippedThroughBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
     result
@@ -146,9 +146,9 @@ class FrameMorph extends Morph
 
       shadow = @getShadowMorph()
       if shadow?
-        result = @visibleBounds().merge(shadow.bounds)
+        result = @clippedThroughBounds().merge(shadow.bounds)
       else
-        result = @visibleBounds()
+        result = @clippedThroughBounds()
 
     if !result.eq @SLOWfullClippedBounds()
       debugger
@@ -162,9 +162,9 @@ class FrameMorph extends Morph
     @bounds
 
   
-  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @visibleBounds(), noShadow = false) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @clippedThroughBounds(), noShadow = false) ->
 
-    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle
+    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle, aContext
       return
 
     # a FrameMorph has the special property that all of its children

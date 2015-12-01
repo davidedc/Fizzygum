@@ -322,10 +322,10 @@ class WorldMorph extends FrameMorph
     # and it's not attached to the WorldMorph.
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
-  visibleBounds: ->
-    @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-    @visibleBoundsCache = @boundingBox()
-    return @visibleBoundsCache
+  clippedThroughBounds: ->
+    @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @clippedThroughBoundsCache = @boundingBox()
+    return @clippedThroughBoundsCache
 
   clipThrough: ->
     @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
@@ -338,11 +338,11 @@ class WorldMorph extends FrameMorph
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
       unless brokenMorph.surelyNotShowingUpOnScreen()
-        # @visibleBounds() should be smaller area
+        # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
         # the bounds based on the clipping morphs up the
         # hierarchy
-        boundsToBeChanged = brokenMorph.visibleBounds()
+        boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
         if brokenMorph.boundsWhenLastPainted?
           if brokenMorph.boundsWhenLastPainted.isNotEmpty()

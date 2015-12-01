@@ -48,7 +48,7 @@ class PenMorph extends Morph
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
       if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
-        w.broken.push @visibleBounds().spread()
+        w.broken.push @clippedThroughBounds().spread()
       @parent.childChanged @  if @parent
   
   # This method only paints this very morph's "image",
@@ -156,7 +156,7 @@ class PenMorph extends Morph
       # unless we are the main desktop, then if the morph has no parent
       # don't add the broken rect since the morph is not visible
       if @isWarped is false and (@ instanceof WorldMorph or @parent?)
-        world.broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.visibleBounds()).spread()
+        world.broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.clippedThroughBounds()).spread()
   
   
   # PenMorph turtle ops:
