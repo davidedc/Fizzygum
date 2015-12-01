@@ -721,22 +721,23 @@ class Morph extends MorphicNode
     #  #debugger
 
 
-    chainFromRoot = @allParentsBottomToTop()
-
-    visible = world.bounds
-    for eachElement in chainFromRoot
-
-      if @isOrphan()
-        visible = Rectangle.EMPTY
-        eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-        eachElement.visibleBoundsCache = visible
-        eachElement.clipThroughBoundsCache = visible
+    if @isOrphan()
+      visible = Rectangle.EMPTY
+      @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @visibleBoundsCache = visible
+      @clipThroughBoundsCache = visible
+    else
+      firstFrameParent = @firstFrameParent()
+      if !firstFrameParent?
+        firstFrameParent = world
+      firstFrameVisibleBounds = firstFrameParent.visibleBounds()
+      @visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @visibleBoundsCache = @boundingBox().intersect firstFrameVisibleBounds
+      if @ instanceof FrameMorph
+        @clipThroughBoundsCache = @visibleBoundsCache
       else
-        if eachElement instanceof FrameMorph
-          visible = visible.intersect eachElement.bounds
-        eachElement.visibleBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-        eachElement.visibleBoundsCache = visible.intersect eachElement.bounds
-        eachElement.clipThroughBoundsCache = visible.copy()
+        @clipThroughBoundsCache = firstFrameVisibleBounds
+
 
     return @visibleBoundsCache
   
