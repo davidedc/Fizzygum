@@ -90,6 +90,9 @@ class FrameMorph extends Morph
     if morphCalling == @
       super @
   
+  # here is the magic of a Frame: the recursion
+  # stops and we can ignore the bounds of potentially
+  # hundreds of morphs that might be in here.
   SLOWfullBounds: ->
     shadow = @getShadowMorph()
     if shadow?
