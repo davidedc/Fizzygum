@@ -538,9 +538,12 @@ class Morph extends MorphicNode
   surelyNotShowingUpOnScreen: ->
     if @isOrphan()
       return true
+
     if !@visibleBasedOnIsVisibleProperty()
       return true
+
     return false
+
 
   SLOWvisibleBasedOnIsVisibleProperty: ->
     if !@isVisible
@@ -550,6 +553,7 @@ class Morph extends MorphicNode
     else
       return true
 
+  # doesn't check orphanage
   visibleBasedOnIsVisibleProperty: ->
     if !@isVisible
       # I'm not sure updating the cache here does
