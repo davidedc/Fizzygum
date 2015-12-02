@@ -660,6 +660,13 @@ class Morph extends MorphicNode
 
     @cachedFullBounds = result
 
+  # this one does take into account orphanage and
+  # visibility. The reason is that this is used to
+  # find the smallest broken rectangle created by
+  # a fullChanged(), which means that really we
+  # are interested in what's visible on screen so
+  # we do take into account orphanage and
+  # visibility.
   fullClippedBounds: ->
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
@@ -696,6 +703,13 @@ class Morph extends MorphicNode
         result = result.merge(child.fullBoundsNoShadow())
     result
 
+  # this one does take into account orphanage and
+  # visibility. The reason is that this is used to
+  # find the smallest broken rectangle created by
+  # a changed(), which means that really we
+  # are interested in what's visible on screen so
+  # we do take into account orphanage and
+  # visibility.
   clippedThroughBounds: ->
 
     if @clippedThroughBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
@@ -706,10 +720,22 @@ class Morph extends MorphicNode
     #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clippedThroughBoundsCacheChecker
     #  #debugger
 
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+      @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @clippedThroughBoundsCache = Rectangle.EMPTY
+      return @clippedThroughBoundsCache 
+
     @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
     return @clippedThroughBoundsCache
   
+  # this one does take into account orphanage and
+  # visibility. The reason is that this is used to
+  # find the "smallest broken rectangles"
+  # which means that really we
+  # are interested in what's visible on screen so
+  # we do take into account orphanage and
+  # visibility.
   clipThrough: ->
     # answer which part of me is not clipped by a Frame
     if @ == Window
@@ -723,6 +749,10 @@ class Morph extends MorphicNode
     #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clipThroughCacheChecker
     #  #debugger
 
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @clipThroughCache = Rectangle.EMPTY
+      return @clipThroughCache 
 
     firstFrameParent = @firstFrameParent()
     if !firstFrameParent?
