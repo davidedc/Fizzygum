@@ -569,7 +569,7 @@ class Morph extends MorphicNode
       @visibleBasedOnIsVisiblePropertyCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
       @visibleBasedOnIsVisiblePropertyCache = false
       result = @visibleBasedOnIsVisiblePropertyCache
-    else
+    else # @isVisible is true
       if !@parent?
         result = true
       else
@@ -588,15 +588,16 @@ class Morph extends MorphicNode
 
     return result
 
-  # Note that in a case of a move
+  # Note that in a case of a fullMove*
   # you should also invalidate all the morphs in
-  # the subtree
-  # as well. This happens indirectly as the
-  # fullMoveBy moves all the children too, so *that*
+  # the subtree as well.
+  # This happens indirectly as the fullMove* methods
+  # move all the children too, so *that*
   # invalidates them. Note that things might change
   # if you use a different coordinate system, in which
   # case you have to invalidate the caches in all the
-  # submorphs manually.
+  # submorphs manually or use some other cache
+  # invalidation mechanism.
   invalidateFullBoundsCache: ->
     if !@cachedFullBounds?
       return
@@ -612,6 +613,8 @@ class Morph extends MorphicNode
         @parent.invalidateFullClippedBoundsCache(@)
 
 
+  # doesn't take into account orphanage
+  # or visibility
   SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
@@ -667,6 +670,11 @@ class Morph extends MorphicNode
             debugger
             alert "fullClippedBounds is broken"
           return @cachedFullClippedBounds
+
+      # you'd be thinking this is the same as
+      #   result = @fullBounds().intersect @clipThrough()
+      # but it's not, because fullBounds doesn't
+      # take into account orphanage and visibility
 
       result = @clippedThroughBounds()
       @children.forEach (child) ->
