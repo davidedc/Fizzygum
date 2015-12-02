@@ -535,7 +535,15 @@ class Morph extends MorphicNode
 
   # both methods invoked in here
   # are cached
-  surelyNotShowingUpOnScreen: ->
+  # used in the method fleshOutBroken
+  # to skip the "destination" broken rects
+  # for morphs that marked themselves
+  # as broken but at moment of destination
+  # might be invisible
+  surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage: ->
+    if !@isVisible
+      return true
+
     if @isOrphan()
       return true
 
@@ -1004,7 +1012,7 @@ class Morph extends MorphicNode
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if !@visibleBasedOnIsVisibleProperty()
+    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
       return null
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

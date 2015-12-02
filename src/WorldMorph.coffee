@@ -337,30 +337,44 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
-      unless brokenMorph.surelyNotShowingUpOnScreen()
+      # let's see if this Morph that marked itself as broken
+      # was actually painted in the past frame.
+      # If it was then we have to clean up the "before" area
+      # even if the Morph is not visible anymore
+      if brokenMorph.boundsWhenLastPainted?
+        if brokenMorph.boundsWhenLastPainted.isNotEmpty()
+          @broken.push brokenMorph.boundsWhenLastPainted
+
+        if brokenMorph!= world and (brokenMorph.boundsWhenLastPainted.containsPoint (new Point(10,10)))
+          debugger
+
+      # for the "destination" broken rectangle we can actually
+      # check whether the Morph is still visible because we
+      # can skip the destination rectangle in that case
+      # (not the source one!)
+      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage()
         # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
         # the bounds based on the clipping morphs up the
         # hierarchy
         boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
-        if brokenMorph.boundsWhenLastPainted?
-          if brokenMorph.boundsWhenLastPainted.isNotEmpty()
-            @broken.push brokenMorph.boundsWhenLastPainted
+        if boundsToBeChanged.isNotEmpty()
+          # avoid to break two rectangles if the destination
+          # is same as the origin
+          skipDestinationBrokenRect = false
+          if brokenMorph.boundsWhenLastPainted?
+            if boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
+              skipDestinationBrokenRect = true
 
-          if brokenMorph!= world and (brokenMorph.boundsWhenLastPainted.containsPoint (new Point(10,10)))
-            debugger
-
-        # avoid to break two rectangles if the change
-        # is in-place
-        if !boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
-          if boundsToBeChanged.isNotEmpty()
+          if !skipDestinationBrokenRect
             @broken.push boundsToBeChanged.spread()
             if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
               debugger
 
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
+      brokenMorph.boundsWhenLastPainted = null
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
