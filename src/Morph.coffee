@@ -348,6 +348,14 @@ class Morph extends MorphicNode
   destroy: ->
     @breakNumberOfMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
+
+    # if there is anything being edited inside
+    # what we are destroying, then also
+    # invoke stopEditing()
+    if world.caret?
+      if @containedInParentsOf world.caret.target
+        world.stopEditing()
+
     # remove callback when user clicks outside
     # me or any of my children
     @onClickOutsideMeOrAnyOfMyChildren null
