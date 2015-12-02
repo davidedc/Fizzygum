@@ -1020,13 +1020,14 @@ class Morph extends MorphicNode
       aContext.restore()
 
   preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
-    if clippingRectangle.isEmpty()
-      return true
 
     if !@isVisible
       return true
 
     if noShadow and (@ instanceof ShadowMorph)
+      return true
+
+    if clippingRectangle.isEmpty()
       return true
 
     if (aContext == world.worldCanvas.getContext("2d")) and (@isOrphan())
