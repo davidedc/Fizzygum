@@ -341,11 +341,11 @@ class WorldMorph extends FrameMorph
       # was actually painted in the past frame.
       # If it was then we have to clean up the "before" area
       # even if the Morph is not visible anymore
-      if brokenMorph.boundsWhenLastPainted?
-        if brokenMorph.boundsWhenLastPainted.isNotEmpty()
-          @broken.push brokenMorph.boundsWhenLastPainted
+      if brokenMorph.clippedBoundsWhenLastPainted?
+        if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
+          @broken.push brokenMorph.clippedBoundsWhenLastPainted
 
-        if brokenMorph!= world and (brokenMorph.boundsWhenLastPainted.containsPoint (new Point(10,10)))
+        if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           debugger
 
       # for the "destination" broken rectangle we can actually
@@ -363,8 +363,8 @@ class WorldMorph extends FrameMorph
           # avoid to break two rectangles if the destination
           # is same as the origin
           skipDestinationBrokenRect = false
-          if brokenMorph.boundsWhenLastPainted?
-            if boundsToBeChanged.eq brokenMorph.boundsWhenLastPainted
+          if brokenMorph.clippedBoundsWhenLastPainted?
+            if boundsToBeChanged.eq brokenMorph.clippedBoundsWhenLastPainted
               skipDestinationBrokenRect = true
 
           if !skipDestinationBrokenRect
@@ -374,7 +374,7 @@ class WorldMorph extends FrameMorph
 
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
-      brokenMorph.boundsWhenLastPainted = null
+      brokenMorph.clippedBoundsWhenLastPainted = null
 
     window.morphsThatMaybeChangedGeometryOrPosition = []
 
@@ -383,23 +383,36 @@ class WorldMorph extends FrameMorph
     #  debugger
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
-      boundsToBeChanged = brokenMorph.fullClippedBounds()
-
       if brokenMorph.fullClippedBoundsWhenLastPainted?
-        @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
-        #if (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-        #  debugger
+        if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
+          @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
+          #if (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+          #  debugger
 
-      # avoid to break two rectangles if the change
-      # is in-place
-      if !boundsToBeChanged.eq brokenMorph.fullClippedBoundsWhenLastPainted
-        @broken.push boundsToBeChanged.spread()
-        #if (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
-        #  debugger
+      # for the "destination" broken rectangle we can actually
+      # check whether the Morph is still visible because we
+      # can skip the destination rectangle in that case
+      # (not the source one!)
+      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage()
 
+        boundsToBeChanged = brokenMorph.fullClippedBounds()
+
+        if boundsToBeChanged.isNotEmpty()
+          # avoid to break two rectangles if the destination
+          # is same as the origin
+          skipDestinationBrokenRect = false
+          if brokenMorph.fullClippedBoundsWhenLastPainted?
+            if boundsToBeChanged.eq brokenMorph.fullClippedBoundsWhenLastPainted
+              skipDestinationBrokenRect = true
+
+          if !skipDestinationBrokenRect
+            @broken.push boundsToBeChanged.spread()
+            if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+              debugger
       
    
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
+      brokenMorph.fullClippedBoundsWhenLastPainted = null
 
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
 

@@ -112,7 +112,7 @@ class Morph extends MorphicNode
   textDescription: null
 
   geometryOrPositionPossiblyChanged: false
-  boundsWhenLastPainted: null
+  clippedBoundsWhenLastPainted: null
 
   fullGeometryOrPositionPossiblyChanged: false
   fullClippedBoundsWhenLastPainted: null
@@ -1091,8 +1091,8 @@ class Morph extends MorphicNode
   recordDrawnAreaForNextBrokenRects: ->
     if @childrenBoundsUpdatedAt < WorldMorph.frameCount
       @childrenBoundsUpdatedAt = WorldMorph.frameCount
-      @boundsWhenLastPainted = @clippedThroughBounds()
-      #if (@ != world) and (@boundsWhenLastPainted.containsPoint (new Point(10,10)))
+      @clippedBoundsWhenLastPainted = @clippedThroughBounds()
+      #if (@ != world) and (@clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
       @fullClippedBoundsWhenLastPainted = @fullClippedBounds()
       #if (@ != world) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
