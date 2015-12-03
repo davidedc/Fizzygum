@@ -220,14 +220,18 @@ class FrameMorph extends Morph
     # if there is no dirty part in the frame then do nothing
     return null if dirtyPartOfFrame.isEmpty()
     
-    # this draws the background of the frame itself, which could
-    # contain an image or a pentrail
-    
     if aContext == world.worldCanvas.getContext("2d")
       @recordDrawnAreaForNextBrokenRects()
 
+    # this draws the background of the frame itself, which could
+    # contain an image or a pentrail    
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
     
+    # this mess for the shadow is because technically
+    # the shadow would be outside the clipping area
+    # of the Freame so it wouldn't be drawn.
+    # So just for the shadow we do regress to the clippingRectangle
+    # which doesn't clip the bounds of this Frame
     @children.forEach (child) =>
       if child instanceof ShadowMorph
         child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow

@@ -633,7 +633,7 @@ class Morph extends MorphicNode
     #  debugger
     result
 
-  # for FrameMorph scrolling support:
+  # for FrameMorph scrolling support
   subMorphsMergedFullBounds: ->
     result = null
     if @children.length
@@ -642,6 +642,7 @@ class Morph extends MorphicNode
         result = result.merge(child.fullBounds())
     result    
   
+  # does not take into account orphanage or visibility
   fullBounds: ->
     if @cachedFullBounds?
       if !@cachedFullBounds.eq @SLOWfullBounds()
