@@ -128,9 +128,10 @@ class MorphicNode
       @rootCache = theRoot
       result = @rootCache
 
-    if result != @SLOWroot()
-      debugger
-      alert "root is broken"
+    if world.doubleCheckCachedMethodsResults
+      if result != @SLOWroot()
+        debugger
+        alert "root is broken"
 
     return result
 
@@ -369,9 +370,10 @@ class MorphicNode
 
   firstFrameParent: (morphToStartFrom = @) ->
     if @checkFirstFrameParentCache == WorldMorph.numberOfAddsAndRemoves
-      if @cachedFirstFrameParent != @SLOWfirstFrameParent(morphToStartFrom)
-        debugger
-        alert "firstFrameParent is broken (cached)"
+      if world.doubleCheckCachedMethodsResults
+        if @cachedFirstFrameParent != @SLOWfirstFrameParent(morphToStartFrom)
+          debugger
+          alert "firstFrameParent is broken (cached)"
 
     if morphToStartFrom.parent?
       if morphToStartFrom.parent instanceof FrameMorph
@@ -381,9 +383,10 @@ class MorphicNode
     else
       result =  null
 
-    if result != @SLOWfirstFrameParent(morphToStartFrom)
-      debugger
-      alert "firstFrameParent is broken (uncached)"
+    if world.doubleCheckCachedMethodsResults
+      if result != @SLOWfirstFrameParent(morphToStartFrom)
+        debugger
+        alert "firstFrameParent is broken (uncached)"
 
     @checkFirstFrameParentCache = WorldMorph.numberOfAddsAndRemoves
     @cachedFirstFrameParent = result

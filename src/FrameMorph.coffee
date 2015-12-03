@@ -119,9 +119,10 @@ class FrameMorph extends Morph
   # traversal to find the bounds.
   fullBounds: ->
     if @cachedFullBounds?
-      if !@cachedFullBounds.eq @SLOWfullBounds()
-        debugger
-        alert "fullBounds is broken (cached)"
+      if world.doubleCheckCachedMethodsResults
+        if !@cachedFullBounds.eq @SLOWfullBounds()
+          debugger
+          alert "fullBounds is broken (cached)"
       return @cachedFullBounds
 
     shadow = @getShadowMorph()
@@ -130,9 +131,10 @@ class FrameMorph extends Morph
     else
       result = @bounds
 
-    if !result.eq @SLOWfullBounds()
-      debugger
-      alert "fullBounds is broken (uncached)"
+    if world.doubleCheckCachedMethodsResults
+      if !result.eq @SLOWfullBounds()
+        debugger
+        alert "fullBounds is broken (uncached)"
 
     @cachedFullBounds = result
 
@@ -142,9 +144,10 @@ class FrameMorph extends Morph
     else
       if @cachedFullClippedBounds?
         if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
-            debugger
-            alert "fullClippedBounds is broken"
+          if world.doubleCheckCachedMethodsResults
+            if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+              debugger
+              alert "fullClippedBounds is broken"
           return @cachedFullClippedBounds
 
       shadow = @getShadowMorph()
@@ -153,9 +156,10 @@ class FrameMorph extends Morph
       else
         result = @clippedThroughBounds()
 
-    if !result.eq @SLOWfullClippedBounds()
-      debugger
-      alert "fullClippedBounds is broken"
+    if world.doubleCheckCachedMethodsResults
+      if !result.eq @SLOWfullClippedBounds()
+        debugger
+        alert "fullClippedBounds is broken"
 
     @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @cachedFullClippedBounds = result

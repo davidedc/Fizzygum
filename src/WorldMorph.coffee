@@ -83,6 +83,7 @@ class WorldMorph extends FrameMorph
   @preferencesAndSettings: null
   @currentTime: null
   showRedraws: false
+  doubleCheckCachedMethodsResults: false
   systemTestsRecorderAndPlayer: null
 
   # this is the actual reference to the canvas

@@ -582,9 +582,10 @@ class Morph extends MorphicNode
           @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
           result = @visibleBasedOnIsVisiblePropertyCache
 
-    if result != @SLOWvisibleBasedOnIsVisibleProperty()
-      debugger
-      alert "visibleBasedOnIsVisibleProperty is broken"
+    if world.doubleCheckCachedMethodsResults
+      if result != @SLOWvisibleBasedOnIsVisibleProperty()
+        debugger
+        alert "visibleBasedOnIsVisibleProperty is broken"
 
     return result
 
@@ -645,9 +646,10 @@ class Morph extends MorphicNode
   # does not take into account orphanage or visibility
   fullBounds: ->
     if @cachedFullBounds?
-      if !@cachedFullBounds.eq @SLOWfullBounds()
-        debugger
-        alert "fullBounds is broken (cached)"
+      if world.doubleCheckCachedMethodsResults
+        if !@cachedFullBounds.eq @SLOWfullBounds()
+          debugger
+          alert "fullBounds is broken (cached)"
       return @cachedFullBounds
 
     result = @bounds
@@ -655,9 +657,10 @@ class Morph extends MorphicNode
       if child.visibleBasedOnIsVisibleProperty()
         result = result.merge(child.fullBounds())
 
-    if !result.eq @SLOWfullBounds()
-      debugger
-      alert "fullBounds is broken (uncached)"
+    if world.doubleCheckCachedMethodsResults
+      if !result.eq @SLOWfullBounds()
+        debugger
+        alert "fullBounds is broken (uncached)"
 
     @cachedFullBounds = result
 
@@ -673,9 +676,10 @@ class Morph extends MorphicNode
       result = Rectangle.EMPTY
     else
       if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-        if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
-          debugger
-          alert "fullClippedBounds is broken"
+        if world.doubleCheckCachedMethodsResults
+          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+            debugger
+            alert "fullClippedBounds is broken"
         return @cachedFullClippedBounds
 
       # you'd be thinking this is the same as
@@ -688,9 +692,10 @@ class Morph extends MorphicNode
         if child.visibleBasedOnIsVisibleProperty()
           result = result.merge(child.fullClippedBounds())
 
-    if !result.eq @SLOWfullClippedBounds()
-      debugger
-      alert "fullClippedBounds is broken"
+    if world.doubleCheckCachedMethodsResults
+      if !result.eq @SLOWfullClippedBounds()
+        debugger
+        alert "fullClippedBounds is broken"
 
     @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @cachedFullClippedBounds = result
