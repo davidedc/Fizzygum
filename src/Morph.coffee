@@ -120,17 +120,17 @@ class Morph extends MorphicNode
   cachedFullBounds: null
   childrenBoundsUpdatedAt: -1
 
-  checkFullClippedBoundsCache: null
   cachedFullClippedBounds: null
+  checkFullClippedBoundsCache: null
 
   visibleBasedOnIsVisiblePropertyCache: null
-  visibleBasedOnIsVisiblePropertyCacheChecker: ""
+  checkVisibleBasedOnIsVisiblePropertyCache: ""
 
   clippedThroughBoundsCache: null
-  clippedThroughBoundsCacheChecker: ""
+  checkClippedThroughBoundsCache: ""
 
   clipThroughCache: null
-  clipThroughCacheChecker: null
+  checkClipThroughCache: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -566,19 +566,19 @@ class Morph extends MorphicNode
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
-      @visibleBasedOnIsVisiblePropertyCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
       @visibleBasedOnIsVisiblePropertyCache = false
       result = @visibleBasedOnIsVisiblePropertyCache
     else # @isVisible is true
       if !@parent?
         result = true
       else
-        if @visibleBasedOnIsVisiblePropertyCacheChecker == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        if @checkVisibleBasedOnIsVisiblePropertyCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
           #console.log "cache hit visibleBasedOnIsVisibleProperty"
           result = @visibleBasedOnIsVisiblePropertyCache
         else
           #console.log "cache miss visibleBasedOnIsVisibleProperty"
-          @visibleBasedOnIsVisiblePropertyCacheChecker = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
           @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
           result = @visibleBasedOnIsVisiblePropertyCache
 
@@ -712,20 +712,20 @@ class Morph extends MorphicNode
   # visibility.
   clippedThroughBounds: ->
 
-    if @clippedThroughBoundsCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
-      #console.log "cache hit @clippedThroughBoundsCacheChecker"
+    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+      #console.log "cache hit @checkClippedThroughBoundsCache"
       return @clippedThroughBoundsCache
     #else
-    #  console.log "cache miss @clippedThroughBoundsCacheChecker"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clippedThroughBoundsCacheChecker
+    #  console.log "cache miss @checkClippedThroughBoundsCache"
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
       return @clippedThroughBoundsCache 
 
-    @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
     return @clippedThroughBoundsCache
   
@@ -741,16 +741,16 @@ class Morph extends MorphicNode
     if @ == Window
       debugger
 
-    if @clipThroughCacheChecker == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
-      #console.log "cache hit @clipThroughCacheChecker"
+    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+      #console.log "cache hit @checkClipThroughCache"
       return @clipThroughCache
     #else
-    #  console.log "cache miss @clipThroughCacheChecker"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @clipThroughCacheChecker
+    #  console.log "cache miss @checkClipThroughCache"
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @checkClipThroughCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache 
 
@@ -758,7 +758,7 @@ class Morph extends MorphicNode
     if !firstFrameParent?
       firstFrameParent = world
     firstFrameClipThroughBounds = firstFrameParent.clipThrough()
-    @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     if @ instanceof FrameMorph
       @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
     else

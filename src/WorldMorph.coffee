@@ -323,12 +323,12 @@ class WorldMorph extends FrameMorph
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    @clippedThroughBoundsCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @clipThroughCacheChecker = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
