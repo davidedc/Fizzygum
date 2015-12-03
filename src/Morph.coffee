@@ -606,10 +606,10 @@ class Morph extends MorphicNode
         @parent.invalidateFullBoundsCache(@)
 
   invalidateFullClippedBoundsCache: ->
-    if !@cachedFullClippedBounds?
+    if !@checkFullClippedBoundsCache?
       return
-    @cachedFullClippedBounds = null
-    if @parent?.cachedFullClippedBounds?
+    @checkFullClippedBoundsCache = null
+    if @parent?.checkFullClippedBoundsCache?
         @parent.invalidateFullClippedBoundsCache(@)
 
 
@@ -672,12 +672,11 @@ class Morph extends MorphicNode
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else
-      if @cachedFullClippedBounds?
-        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
-          if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
-            debugger
-            alert "fullClippedBounds is broken"
-          return @cachedFullClippedBounds
+      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+        if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
+          debugger
+          alert "fullClippedBounds is broken"
+        return @cachedFullClippedBounds
 
       # you'd be thinking this is the same as
       #   result = @fullBounds().intersect @clipThrough()
