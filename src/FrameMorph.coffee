@@ -233,7 +233,7 @@ class FrameMorph extends Morph
     # So just for the shadow we do regress to the clippingRectangle
     # which doesn't clip the bounds of this Frame
     @children.forEach (child) =>
-      if child instanceof ShadowMorph
+      if (child instanceof ShadowMorph) and (!noShadow)
         child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
       else
         child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
