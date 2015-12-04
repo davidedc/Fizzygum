@@ -439,7 +439,7 @@ class WorldMorph extends FrameMorph
     #console.log "number of broken rectangles: " + @broken.length
     @fleshOutFullBroken()
     @fleshOutBroken()
-    ProfilingDataCollector.profileBrokenRects @broken.length
+    ProfilingDataCollector.profileBrokenRects @broken
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Morphs are traversed
