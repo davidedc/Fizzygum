@@ -1402,35 +1402,4 @@ class WorldMorph extends FrameMorph
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = null
     @worldCanvas.focus()
-  
-  slide: (@aStringMorphOrTextMorph) ->
-    # display a slider for numeric text entries
-    val = parseFloat(@aStringMorphOrTextMorph.text)
-    val = 0  if isNaN(val)
-    menu = new MenuMorph(false)
-    slider = new SliderMorph(val - 25, val + 25, val, 10, "horizontal")
-    slider.alpha = 1
-    slider.color = new Color(225, 225, 225)
-    slider.button.color = new Color 60,60,60
-    slider.button.highlightColor = slider.button.color.copy()
-    slider.button.highlightColor.b += 100
-    slider.button.pressColor = slider.button.color.copy()
-    slider.button.pressColor.b += 150
-    slider.silentSetHeight WorldMorph.preferencesAndSettings.scrollBarSize
-    slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
-    slider.setLayoutBeforeUpdatingBackBuffer()
-    slider.updateBackBuffer()
-    slider.action = "reactToSlide"
-    menu.items.push slider
-    menu.popup @, @aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
-  
-  reactToSlide: (num) ->
-    @aStringMorphOrTextMorph.text = Math.round(num).toString()
-    @aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackBuffer()
-    @aStringMorphOrTextMorph.updateBackBuffer()
-    @aStringMorphOrTextMorph.changed()
-    @aStringMorphOrTextMorph.escalateEvent(
-        'reactToSliderEdit',
-        @aStringMorphOrTextMorph
-    )
-  
+    
