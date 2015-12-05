@@ -352,9 +352,10 @@ class WorldMorph extends FrameMorph
       # even if the Morph is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          @broken.push brokenMorph.clippedBoundsWhenLastPainted
           if @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()]?
             @numberOfDuplicatedBrokenRects++
+          else
+            @broken.push brokenMorph.clippedBoundsWhenLastPainted
           @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()] = true
 
         if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
@@ -381,9 +382,10 @@ class WorldMorph extends FrameMorph
 
           if !skipDestinationBrokenRect
             rectangleToBeBroken = boundsToBeChanged.spread()
-            @broken.push rectangleToBeBroken
             if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
               @numberOfDuplicatedBrokenRects++
+            else
+              @broken.push rectangleToBeBroken
             @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
             if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
               debugger
@@ -401,9 +403,10 @@ class WorldMorph extends FrameMorph
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
           if @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()]?
             @numberOfDuplicatedBrokenRects++
+          else
+            @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
           @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()] = true
           #if (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           #  debugger
@@ -426,9 +429,10 @@ class WorldMorph extends FrameMorph
 
           if !skipDestinationBrokenRect
             rectangleToBeBroken = boundsToBeChanged.spread()
-            @broken.push rectangleToBeBroken
             if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
               @numberOfDuplicatedBrokenRects++
+            else
+              @broken.push rectangleToBeBroken
             @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
             if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
               debugger
