@@ -23,6 +23,10 @@ class ProfilingDataCollector
   @overallSessionCumulativeTotalAreaOfBrokenRects: 0
   @shortSessionMaxTotalAreaOfBrokenRects: 0
   @overallSessionMaxTotalAreaOfBrokenRects: 0
+  @shortSessionCumulativeDuplicatedBrokenRects: 0
+  @overallSessionCumulativeDuplicatedBrokenRects: 0
+  @shortSessionMaxDuplicatedBrokenRects: 0
+  @overallSessionMaxDuplicatedBrokenRects: 0
 
   @shortSessionCumulativeNumberOfAllocatedCanvases: 0
   @shortSessionMaxNumberOfAllocatedCanvases: 0
@@ -50,7 +54,7 @@ class ProfilingDataCollector
   @disableBrokenRectsProfiling: ->
     @brokenRectsProfilingEnabled = false
 
-  @profileBrokenRects: (brokenRectsArray) ->
+  @profileBrokenRects: (brokenRectsArray, numberOfDuplicatedBrokenRects) ->
     if !@overallProfilingEnabled or !@brokenRectsProfilingEnabled
       return
 
@@ -86,5 +90,18 @@ class ProfilingDataCollector
     @overallSessionMaxTotalAreaOfBrokenRects
       @overallSessionMaxTotalAreaOfBrokenRects =
         totalAreaOfBrokenRects
+
+    @shortSessionCumulativeDuplicatedBrokenRects += \
+      numberOfDuplicatedBrokenRects
+    @overallSessionCumulativeDuplicatedBrokenRects += \
+      numberOfDuplicatedBrokenRects
+    if numberOfDuplicatedBrokenRects > \
+    @shortSessionMaxDuplicatedBrokenRects
+      @shortSessionMaxDuplicatedBrokenRects =
+        numberOfDuplicatedBrokenRects
+    if numberOfDuplicatedBrokenRects > \
+    @overallSessionMaxDuplicatedBrokenRects
+      @overallSessionMaxDuplicatedBrokenRects =
+        numberOfDuplicatedBrokenRects
 
 

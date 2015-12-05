@@ -138,6 +138,11 @@ class WorldMorph extends FrameMorph
   @numberOfVisibilityFlagsChanges: 0
   @numberOfMovesAndResizes: 0
 
+  broken: null
+  duplicatedBrokenRectsTracker: null
+  numberOfDuplicatedBrokenRects: 0
+
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -168,7 +173,6 @@ class WorldMorph extends FrameMorph
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
     @isDevMode = false
-    @broken = []
     @hand = new HandMorph(@)
     @keyboardEventsReceiver = null
     @lastEditedText = null
@@ -192,6 +196,10 @@ class WorldMorph extends FrameMorph
     # boot-up state machine
     console.log "booting"
     WorldMorph.bootState = WorldMorph.JUST_STARTED
+
+    ProfilingDataCollector.enableProfiling()
+    ProfilingDataCollector.enableBrokenRectsProfiling()
+
     WorldMorph.ongoingUrlActionNumber= 0
     startupActions = getParameterByName('startupActions');
     console.log "startupActions: " + startupActions
@@ -345,6 +353,9 @@ class WorldMorph extends FrameMorph
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
           @broken.push brokenMorph.clippedBoundsWhenLastPainted
+          if @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()]?
+            @numberOfDuplicatedBrokenRects++
+          @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()] = true
 
         if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           debugger
@@ -369,7 +380,11 @@ class WorldMorph extends FrameMorph
               skipDestinationBrokenRect = true
 
           if !skipDestinationBrokenRect
-            @broken.push boundsToBeChanged.spread()
+            rectangleToBeBroken = boundsToBeChanged.spread()
+            @broken.push rectangleToBeBroken
+            if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
+              @numberOfDuplicatedBrokenRects++
+            @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
             if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
               debugger
 
@@ -387,6 +402,9 @@ class WorldMorph extends FrameMorph
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
           @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
+          if @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()]?
+            @numberOfDuplicatedBrokenRects++
+          @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()] = true
           #if (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           #  debugger
 
@@ -407,7 +425,11 @@ class WorldMorph extends FrameMorph
               skipDestinationBrokenRect = true
 
           if !skipDestinationBrokenRect
-            @broken.push boundsToBeChanged.spread()
+            rectangleToBeBroken = boundsToBeChanged.spread()
+            @broken.push rectangleToBeBroken
+            if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
+              @numberOfDuplicatedBrokenRects++
+            @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
             if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
               debugger
       
@@ -437,9 +459,13 @@ class WorldMorph extends FrameMorph
 
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
+    @broken = []
+    @duplicatedBrokenRectsTracker = {}
+    @numberOfDuplicatedBrokenRects = 0
+
     @fleshOutFullBroken()
     @fleshOutBroken()
-    ProfilingDataCollector.profileBrokenRects @broken
+    ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Morphs are traversed
@@ -455,7 +481,11 @@ class WorldMorph extends FrameMorph
       @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     if world.showRedraws
       @showBrokenRects(@worldCanvas.getContext("2d"))
+
     @broken = []
+    @duplicatedBrokenRectsTracker = {}
+    @numberOfDuplicatedBrokenRects = 0
+
     window.healingRectanglesPhase = false
     if trackChanges.length != 1 and trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
