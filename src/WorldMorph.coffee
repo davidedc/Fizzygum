@@ -457,6 +457,8 @@ class WorldMorph extends FrameMorph
       @showBrokenRects(@worldCanvas.getContext("2d"))
     @broken = []
     window.healingRectanglesPhase = false
+    if trackChanges.length != 1 and trackChanges[0] != true
+      alert "trackChanges array should have only one element (true)"
   
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
