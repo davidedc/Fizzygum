@@ -1,11 +1,11 @@
 # ShadowMorph /////////////////////////////////////////////////////////
-# REQUIRES BackingStoreMixin
+# REQUIRES BackBufferMixin
 
 class ShadowMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
-  @augmentWith BackingStoreMixin
+  @augmentWith BackBufferMixin
 
   targetMorph: null
   offset: null

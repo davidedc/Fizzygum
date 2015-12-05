@@ -2,14 +2,14 @@
 
 # A StringMorph is a single line of text. It can only be left-aligned.
 # REQUIRES WorldMorph
-# REQUIRES BackingStoreMixin
+# REQUIRES BackBufferMixin
 
 class StringMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  @augmentWith BackingStoreMixin
+  @augmentWith BackBufferMixin
 
   text: ""
   fontSize: null

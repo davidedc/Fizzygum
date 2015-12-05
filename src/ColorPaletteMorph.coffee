@@ -1,6 +1,6 @@
 # ColorPaletteMorph ///////////////////////////////////////////////////
 # REQUIRES ControllerMixin
-# REQUIRES BackingStoreMixin
+# REQUIRES BackBufferMixin
 
 class ColorPaletteMorph extends Morph
   # this is so we can create objects from the object class name 
@@ -8,7 +8,7 @@ class ColorPaletteMorph extends Morph
   namedClasses[@name] = @prototype
 
   @augmentWith ControllerMixin
-  @augmentWith BackingStoreMixin
+  @augmentWith BackBufferMixin
 
   target: null
   targetSetter: "color"

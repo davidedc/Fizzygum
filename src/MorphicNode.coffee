@@ -9,7 +9,7 @@
 # image buffers, dirty rectangles, events,
 # position and extent (and hence bounds).
 # Please no invocations to changed or fullChanged
-# or updateBackingStore in here, and no
+# or updateBackBuffer in here, and no
 # touching of any of the out-of-scope properties
 # mentioned.
 

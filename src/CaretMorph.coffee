@@ -208,7 +208,7 @@ class CaretMorph extends BlinkerMorph
     # needed because clearSelection runs them
     # already, but I'm leaving them here
     # until I understand better this changed
-    # vs. updateBackingStore semantics.
+    # vs. updateBackBuffer semantics.
     @target.reLayout()    
     @target.changed()
 

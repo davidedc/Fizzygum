@@ -4,7 +4,7 @@
 # REQUIRES globalFunctions
 # REQUIRES BackBufferValidityChecker
 
-# A BackingStore is a canvas that a morph can keep for
+# A BackBuffer is a canvas that a morph can keep for
 # two reasons:
 #   1) as a cache
 #   2) because the morph has inherently a "raster" nature
@@ -32,7 +32,7 @@
 # automatic, driven perhaps by dynamic considerations,
 # but we are not there yet.
 
-BackingStoreMixin =
+BackBufferMixin =
   # klass properties here:
   # none
 

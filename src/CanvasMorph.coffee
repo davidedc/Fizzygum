@@ -1,5 +1,5 @@
 # CanvasMorph //////////////////////////////////////////////////////////
-# REQUIRES BackingStoreMixin
+# REQUIRES BackBufferMixin
 # 
 # I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
 # and event handling. 
@@ -12,7 +12,7 @@ class CanvasMorph extends FrameMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
-  @augmentWith BackingStoreMixin
+  @augmentWith BackBufferMixin
 
 
   # Morph pen trails:

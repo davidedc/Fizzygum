@@ -980,16 +980,16 @@ class Morph extends MorphicNode
   # Morph displaying ---------------------------------------------------------
 
   # There are three fundamental methods for rendering and displaying anything.
-  # * updateBackingStore: this one creates/updates the local canvas of this morph only
+  # * updateBackBuffer: this one creates/updates the local canvas of this morph only
   #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
   #   contains three children Morphs (a color palette, a greyscale palette and
-  #   a feedback). The updateBackingStore method of ColorPickerMorph only creates
+  #   a feedback). The updateBackBuffer method of ColorPickerMorph only creates
   #   a canvas for the container Morph. So that's just a canvas with a
   #   solid color. As the
   #   ColorPickerMorph constructor runs, the three childredn Morphs will
-  #   run their own updateBackingStore method, so each child will have its own
+  #   run their own updateBackBuffer method, so each child will have its own
   #   canvas with their own contents.
-  #   Note that updateBackingStore should be called sparingly. A morph should repaint
+  #   Note that updateBackBuffer should be called sparingly. A morph should repaint
   #   its buffer pretty much only *after* it's been added to its first parent and
   #   whenever it changes dimensions. Things like changing parent and updating
   #   the position shouldn't normally trigger an update of the buffer.

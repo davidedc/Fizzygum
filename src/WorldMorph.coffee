@@ -1418,16 +1418,16 @@ class WorldMorph extends FrameMorph
     slider.button.pressColor.b += 150
     slider.silentSetHeight WorldMorph.preferencesAndSettings.scrollBarSize
     slider.silentSetWidth WorldMorph.preferencesAndSettings.menuFontSize * 10
-    slider.setLayoutBeforeUpdatingBackingStore()
-    slider.updateBackingStore()
+    slider.setLayoutBeforeUpdatingBackBuffer()
+    slider.updateBackBuffer()
     slider.action = "reactToSlide"
     menu.items.push slider
     menu.popup @, @aStringMorphOrTextMorph.bottomLeft().add(new Point(0, 5))
   
   reactToSlide: (num) ->
     @aStringMorphOrTextMorph.text = Math.round(num).toString()
-    @aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackingStore()
-    @aStringMorphOrTextMorph.updateBackingStore()
+    @aStringMorphOrTextMorph.setLayoutBeforeUpdatingBackBuffer()
+    @aStringMorphOrTextMorph.updateBackBuffer()
     @aStringMorphOrTextMorph.changed()
     @aStringMorphOrTextMorph.escalateEvent(
         'reactToSliderEdit',
