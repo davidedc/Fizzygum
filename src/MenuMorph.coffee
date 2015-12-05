@@ -152,6 +152,12 @@ class MenuMorph extends BoxMorph
   reLayout: ->
     # console.log "menu update rendering"
     super()
+
+    # no point in breaking a rectangle for each menu entry,
+    # let's hold on the broken rects and then issue
+    # a fullChanged() at the end.
+    trackChanges.push false
+
     isLine = false
     @fullDestroyChildren()
 
@@ -237,6 +243,8 @@ class MenuMorph extends BoxMorph
     fb = @fullBounds()
     #console.log "fb: " + fb
     @silentSetExtent fb.extent().add(2)
+    trackChanges.pop()
+    @fullChanged()
   
   maxWidth: ->
     w = 0
