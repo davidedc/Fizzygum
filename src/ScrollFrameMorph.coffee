@@ -377,10 +377,23 @@ class ScrollFrameMorph extends FrameMorph
   # ScrollFrameMorph events:
   mouseScroll: (y, x) ->
     scrollbarJustChanged = false
+
+    # this paragraph prevents too much
+    # diagonal movement when the intention
+    # is clearly to just move vertically or
+    # horizontally. Doesn't need to be always
+    # the case though.
+    if Math.abs(y) < Math.abs(x)
+      y = 0
+    if Math.abs(x) < Math.abs(y)
+      x = 0
+
     if y
-      scrollbarJustChanged = scrollbarJustChanged || @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount
+      scrollbarJustChanged = true
+      @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount
     if x
-      scrollbarJustChanged = scrollbarJustChanged || @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  
+      scrollbarJustChanged = true
+      @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  
     if scrollbarJustChanged
       @adjustContentsBounds()
       @adjustScrollBars()
