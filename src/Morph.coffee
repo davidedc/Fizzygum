@@ -132,6 +132,9 @@ class Morph extends MorphicNode
   clipThroughCache: null
   checkClipThroughCache: null
 
+  srcBrokenRect: null
+  dstBrokenRect: null
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 

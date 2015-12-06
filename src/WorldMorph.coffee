@@ -342,25 +342,95 @@ class WorldMorph extends FrameMorph
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
-  pushBrokenRect: (theRect) ->
+  pushBrokenRect: (brokenMorph, theRect, isSrc) ->
     if @duplicatedBrokenRectsTracker[theRect.toString()]?
       @numberOfDuplicatedBrokenRects++
     else
+      if isSrc
+        brokenMorph.srcBrokenRect = (@broken.length)
+      else
+        brokenMorph.dstBrokenRect = (@broken.length)
+      if !theRect?
+        debugger
+      # if @broken.length == 0
+      #  debugger
       @broken.push theRect
     @duplicatedBrokenRectsTracker[theRect.toString()] = true
 
-  mergeBrokenRectsIfCloseOrPushBoth: (sourceBroken, destinationBroken) ->
+  mergeBrokenRectsIfCloseOrPushBoth: (brokenMorph, sourceBroken, destinationBroken) ->
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
     console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
     if mergedBrokenRectArea < (sumArea + sumArea/10)
-      @pushBrokenRect mergedBrokenRect
+      @pushBrokenRect brokenMorph, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
     else
-      @pushBrokenRect sourceBroken
-      @pushBrokenRect destinationBroken
+      @pushBrokenRect brokenMorph, sourceBroken, true
+      @pushBrokenRect brokenMorph, destinationBroken, false
 
+
+  checkARectWithHyerarchy: (aRect, brokenMorph, isSrc) ->
+    brokenMorphAncestor = brokenMorph
+
+    if brokenMorph instanceof SliderMorph
+      debugger
+
+    while brokenMorphAncestor.parent?
+      brokenMorphAncestor = brokenMorphAncestor.parent
+      if brokenMorphAncestor.srcBrokenRect?
+        if !@broken[brokenMorphAncestor.srcBrokenRect]?
+          debugger
+        if @broken[brokenMorphAncestor.srcBrokenRect].containsRectangle aRect
+          if isSrc
+            @broken[brokenMorph.srcBrokenRect] = null
+            brokenMorph.srcBrokenRect = null
+          else
+            @broken[brokenMorph.dstBrokenRect] = null
+            brokenMorph.dstBrokenRect = null
+        else if aRect.containsRectangle @broken[brokenMorphAncestor.srcBrokenRect]
+          @broken[brokenMorphAncestor.srcBrokenRect] = null
+          brokenMorphAncestor.srcBrokenRect = null
+
+      if brokenMorphAncestor.dstBrokenRect?
+        if !@broken[brokenMorphAncestor.dstBrokenRect]?
+          debugger
+        if @broken[brokenMorphAncestor.dstBrokenRect].containsRectangle aRect
+          if isSrc
+            @broken[brokenMorph.srcBrokenRect] = null
+            brokenMorph.srcBrokenRect = null
+          else
+            @broken[brokenMorph.dstBrokenRect] = null
+            brokenMorph.dstBrokenRect = null
+        else if aRect.containsRectangle @broken[brokenMorphAncestor.dstBrokenRect]
+          @broken[brokenMorphAncestor.dstBrokenRect] = null
+          brokenMorphAncestor.dstBrokenRect = null      
+
+
+  rectAlreadyIncludedInParentBrokenMorph: ->
+    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
+        if brokenMorph.srcBrokenRect?
+          aRect = @broken[brokenMorph.srcBrokenRect]
+          @checkARectWithHyerarchy aRect, brokenMorph, true
+        if brokenMorph.dstBrokenRect?
+          aRect = @broken[brokenMorph.dstBrokenRect]
+          @checkARectWithHyerarchy aRect, brokenMorph, false
+
+    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+        if brokenMorph.srcBrokenRect?
+          aRect = @broken[brokenMorph.srcBrokenRect]
+          @checkARectWithHyerarchy aRect, brokenMorph
+        if brokenMorph.dstBrokenRect?
+          aRect = @broken[brokenMorph.dstBrokenRect]
+          @checkARectWithHyerarchy aRect, brokenMorph
+
+  cleanupSrcAndDestRectsOfMorphs: ->
+    for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
+      brokenMorph.srcBrokenRect = null
+      brokenMorph.dstBrokenRect = null
+    for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+      brokenMorph.srcBrokenRect = null
+      brokenMorph.dstBrokenRect = null
 
 
   fleshOutBroken: ->
@@ -401,17 +471,17 @@ class WorldMorph extends FrameMorph
 
 
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth sourceBroken, destinationBroken
+        @mergeBrokenRectsIfCloseOrPushBoth brokenMorph, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect sourceBroken
+          @pushBrokenRect brokenMorph, sourceBroken, true
         else
-          @pushBrokenRect destinationBroken
+          @pushBrokenRect brokenMorph, destinationBroken, true
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
       brokenMorph.clippedBoundsWhenLastPainted = null
 
-    window.morphsThatMaybeChangedGeometryOrPosition = []
+    
 
   fleshOutFullBroken: ->
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
@@ -441,17 +511,16 @@ class WorldMorph extends FrameMorph
       
    
       if sourceBroken? and destinationBroken?
-        @mergeBrokenRectsIfCloseOrPushBoth sourceBroken, destinationBroken
+        @mergeBrokenRectsIfCloseOrPushBoth brokenMorph, sourceBroken, destinationBroken
       else if sourceBroken? or destinationBroken?
         if sourceBroken?
-          @pushBrokenRect sourceBroken
+          @pushBrokenRect brokenMorph, sourceBroken, true
         else
-          @pushBrokenRect destinationBroken
+          @pushBrokenRect brokenMorph, destinationBroken, true
 
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
       brokenMorph.fullClippedBoundsWhenLastPainted = null
 
-    window.morphsThatMaybeChangedFullGeometryOrPosition = []
 
   showBrokenRects: (aContext) ->
     aContext.save()
@@ -459,16 +528,16 @@ class WorldMorph extends FrameMorph
     aContext.scale pixelRatio, pixelRatio
  
     for eachBrokenRect in @broken
+      if eachBrokenRect?
+        randomR = Math.round(Math.random()*255)
+        randomG = Math.round(Math.random()*255)
+        randomB = Math.round(Math.random()*255)
 
-      randomR = Math.round(Math.random()*255)
-      randomG = Math.round(Math.random()*255)
-      randomB = Math.round(Math.random()*255)
-
-      aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
-      aContext.fillRect  Math.round(eachBrokenRect.origin.x),
-          Math.round(eachBrokenRect.origin.y),
-          Math.round(eachBrokenRect.width()),
-          Math.round(eachBrokenRect.height())
+        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        aContext.fillRect  Math.round(eachBrokenRect.origin.x),
+            Math.round(eachBrokenRect.origin.y),
+            Math.round(eachBrokenRect.width()),
+            Math.round(eachBrokenRect.height())
     aContext.restore()
 
   updateBroken: ->
@@ -480,7 +549,11 @@ class WorldMorph extends FrameMorph
 
     @fleshOutFullBroken()
     @fleshOutBroken()
-    ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
+    @rectAlreadyIncludedInParentBrokenMorph()
+    @cleanupSrcAndDestRectsOfMorphs()
+    window.morphsThatMaybeChangedGeometryOrPosition = []
+    window.morphsThatMaybeChangedFullGeometryOrPosition = []
+    #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Morphs are traversed
@@ -493,6 +566,8 @@ class WorldMorph extends FrameMorph
 
     window.healingRectanglesPhase = true
     @broken.forEach (rect) =>
+      if !rect?
+        return
       @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
     if world.showRedraws
       @showBrokenRects(@worldCanvas.getContext("2d"))

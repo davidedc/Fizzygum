@@ -89,7 +89,8 @@ class ScrollFrameMorph extends FrameMorph
   adjustScrollBars: ->
     hWidth = @width() - @scrollBarSize
     vHeight = @height() - @scrollBarSize
-    @changed()
+    unless @parent instanceof ListMorph
+      @changed()
 
     # this check is to see whether the bar actually belongs to this
     # scrollframe. The reason why the bar could belong to another

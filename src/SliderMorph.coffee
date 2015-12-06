@@ -154,7 +154,15 @@ class SliderMorph extends CircleBoxMorph
     
     @button.reLayout()
     
-    @changed()
+    # if the parent is the same as the target
+    # then issue a fullChanged on the parent.
+    # It's likely to be duplicate, which doesn't
+    # matter, but it will consolidate the updates
+    # of the scrollbars too
+    if @parent != @target
+      @changed()
+    else
+      @parent.fullChanged()
   
   setStart: (numOrMorphGivingNum) ->
 

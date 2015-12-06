@@ -80,8 +80,8 @@ class Rectangle
       return false
 
   debugIfFloats: ->
-    if !@onlyContainingIntegers()
-      debugger
+    #if !@onlyContainingIntegers()
+    #  debugger
 
   prepareBeforeSerialization: ->
     @debugIfFloats()
@@ -317,6 +317,11 @@ class Rectangle
   containsRectangle: (aRect) ->
     @debugIfFloats()
     aRect.origin.ge(@origin) and aRect.corner.le(@corner)
+
+  containsRectangleP1: (aRect) ->
+    @debugIfFloats()
+    NR = @growBy 2
+    aRect.origin.ge(NR.origin) and aRect.corner.le(NR.corner)
   
   isIntersecting: (aRect) ->
     @debugIfFloats()

@@ -80,7 +80,8 @@ class ProfilingDataCollector
 
     totalAreaOfBrokenRects = 0
     for eachRect in brokenRectsArray
-      totalAreaOfBrokenRects += eachRect.area()
+      if eachRect?
+        totalAreaOfBrokenRects += eachRect.area()
 
     @shortSessionCumulativeTotalAreaOfBrokenRects += \
       totalAreaOfBrokenRects
