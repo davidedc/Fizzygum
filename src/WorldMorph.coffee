@@ -141,6 +141,7 @@ class WorldMorph extends FrameMorph
   broken: null
   duplicatedBrokenRectsTracker: null
   numberOfDuplicatedBrokenRects: 0
+  numberOfMergedSourceAndDestination: 0
 
 
   constructor: (
@@ -341,9 +342,34 @@ class WorldMorph extends FrameMorph
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
+  pushBrokenRect: (theRect) ->
+    if @duplicatedBrokenRectsTracker[theRect.toString()]?
+      @numberOfDuplicatedBrokenRects++
+    else
+      @broken.push theRect
+    @duplicatedBrokenRectsTracker[theRect.toString()] = true
+
+  mergeBrokenRectsIfCloseOrPushBoth: (sourceBroken, destinationBroken) ->
+    mergedBrokenRect = sourceBroken.merge destinationBroken
+    mergedBrokenRectArea = mergedBrokenRect.area()
+    sumArea = sourceBroken.area() + destinationBroken.area()
+    console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
+    if mergedBrokenRectArea < (sumArea + sumArea/10)
+      @pushBrokenRect mergedBrokenRect
+      @numberOfMergedSourceAndDestination++
+    else
+      @pushBrokenRect sourceBroken
+      @pushBrokenRect destinationBroken
+
+
+
   fleshOutBroken: ->
     #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
     #  debugger
+
+    sourceBroken = null
+    destinationBroken = null
+
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
       # let's see if this Morph that marked itself as broken
@@ -352,11 +378,7 @@ class WorldMorph extends FrameMorph
       # even if the Morph is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          if @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()]?
-            @numberOfDuplicatedBrokenRects++
-          else
-            @broken.push brokenMorph.clippedBoundsWhenLastPainted
-          @duplicatedBrokenRectsTracker[brokenMorph.clippedBoundsWhenLastPainted.toString()] = true
+          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted
 
         if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
           debugger
@@ -373,23 +395,18 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          # avoid to break two rectangles if the destination
-          # is same as the origin
-          skipDestinationBrokenRect = false
-          if brokenMorph.clippedBoundsWhenLastPainted?
-            if boundsToBeChanged.eq brokenMorph.clippedBoundsWhenLastPainted
-              skipDestinationBrokenRect = true
+          destinationBroken = boundsToBeChanged.spread()
+          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+            debugger
 
-          if !skipDestinationBrokenRect
-            rectangleToBeBroken = boundsToBeChanged.spread()
-            if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
-              @numberOfDuplicatedBrokenRects++
-            else
-              @broken.push rectangleToBeBroken
-            @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
-            if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
-              debugger
 
+      if sourceBroken? and destinationBroken?
+        @mergeBrokenRectsIfCloseOrPushBoth sourceBroken, destinationBroken
+      else if sourceBroken? or destinationBroken?
+        if sourceBroken?
+          @pushBrokenRect sourceBroken
+        else
+          @pushBrokenRect destinationBroken
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
       brokenMorph.clippedBoundsWhenLastPainted = null
@@ -399,17 +416,15 @@ class WorldMorph extends FrameMorph
   fleshOutFullBroken: ->
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
+
+    sourceBroken = null
+    destinationBroken = null
+
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          if @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()]?
-            @numberOfDuplicatedBrokenRects++
-          else
-            @broken.push brokenMorph.fullClippedBoundsWhenLastPainted
-          @duplicatedBrokenRectsTracker[brokenMorph.fullClippedBoundsWhenLastPainted.toString()] = true
-          #if (brokenMorph.fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-          #  debugger
+          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted
 
       # for the "destination" broken rectangle we can actually
       # check whether the Morph is still visible because we
@@ -420,24 +435,19 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          # avoid to break two rectangles if the destination
-          # is same as the origin
-          skipDestinationBrokenRect = false
-          if brokenMorph.fullClippedBoundsWhenLastPainted?
-            if boundsToBeChanged.eq brokenMorph.fullClippedBoundsWhenLastPainted
-              skipDestinationBrokenRect = true
-
-          if !skipDestinationBrokenRect
-            rectangleToBeBroken = boundsToBeChanged.spread()
-            if @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()]?
-              @numberOfDuplicatedBrokenRects++
-            else
-              @broken.push rectangleToBeBroken
-            @duplicatedBrokenRectsTracker[rectangleToBeBroken.toString()] = true
-            if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
-              debugger
+          destinationBroken = boundsToBeChanged.spread()
+          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+            debugger
       
    
+      if sourceBroken? and destinationBroken?
+        @mergeBrokenRectsIfCloseOrPushBoth sourceBroken, destinationBroken
+      else if sourceBroken? or destinationBroken?
+        if sourceBroken?
+          @pushBrokenRect sourceBroken
+        else
+          @pushBrokenRect destinationBroken
+
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
       brokenMorph.fullClippedBoundsWhenLastPainted = null
 
@@ -466,10 +476,11 @@ class WorldMorph extends FrameMorph
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
+    @numberOfMergedSourceAndDestination = 0
 
     @fleshOutFullBroken()
     @fleshOutBroken()
-    ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects
+    ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
 
     # each broken rectangle requires traversing the scenegraph to
     # redraw what's overlapping it. Not all Morphs are traversed
@@ -489,6 +500,7 @@ class WorldMorph extends FrameMorph
     @broken = []
     @duplicatedBrokenRectsTracker = {}
     @numberOfDuplicatedBrokenRects = 0
+    @numberOfMergedSourceAndDestination = 0
 
     window.healingRectanglesPhase = false
     if trackChanges.length != 1 and trackChanges[0] != true

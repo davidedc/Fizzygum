@@ -27,6 +27,10 @@ class ProfilingDataCollector
   @overallSessionCumulativeDuplicatedBrokenRects: 0
   @shortSessionMaxDuplicatedBrokenRects: 0
   @overallSessionMaxDuplicatedBrokenRects: 0
+  @shortSessionCumulativeMergedSourceAndDestination: 0
+  @overallSessionCumulativeMergedSourceAndDestination: 0
+  @shortSessionMaxMergedSourceAndDestination: 0
+  @overallSessionMaxMergedSourceAndDestination: 0
 
   @shortSessionCumulativeNumberOfAllocatedCanvases: 0
   @shortSessionMaxNumberOfAllocatedCanvases: 0
@@ -54,7 +58,7 @@ class ProfilingDataCollector
   @disableBrokenRectsProfiling: ->
     @brokenRectsProfilingEnabled = false
 
-  @profileBrokenRects: (brokenRectsArray, numberOfDuplicatedBrokenRects) ->
+  @profileBrokenRects: (brokenRectsArray, numberOfDuplicatedBrokenRects, numberOfMergedSourceAndDestination) ->
     if !@overallProfilingEnabled or !@brokenRectsProfilingEnabled
       return
 
@@ -103,5 +107,18 @@ class ProfilingDataCollector
     @overallSessionMaxDuplicatedBrokenRects
       @overallSessionMaxDuplicatedBrokenRects =
         numberOfDuplicatedBrokenRects
+
+    @shortSessionCumulativeMergedSourceAndDestination += \
+      numberOfMergedSourceAndDestination
+    @overallSessionCumulativeMergedSourceAndDestination += \
+      numberOfMergedSourceAndDestination
+    if numberOfMergedSourceAndDestination > \
+    @shortSessionMaxMergedSourceAndDestination
+      @shortSessionMaxMergedSourceAndDestination =
+        numberOfMergedSourceAndDestination
+    if numberOfMergedSourceAndDestination > \
+    @overallSessionMaxMergedSourceAndDestination
+      @overallSessionMaxMergedSourceAndDestination =
+        numberOfMergedSourceAndDestination
 
 
