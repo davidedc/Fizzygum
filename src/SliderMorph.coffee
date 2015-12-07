@@ -44,7 +44,7 @@ class SliderMorph extends CircleBoxMorph
 
   setExtent: (a) -> 
     #console.log "move 17"
-    @breakNumberOfMovesAndResizesCaches()  
+    @breakNumberOfRawMovesAndResizesCaches()  
     super a
     # my backing store had just been updated
     # in the call of super, now

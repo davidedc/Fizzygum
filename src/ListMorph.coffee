@@ -90,7 +90,7 @@ class ListMorph extends ScrollFrameMorph
       )
 
     trackChanges.pop()
-    @listContents.silentFullMoveTo @contents.position()
+    @listContents.silentFullRawMoveTo @contents.position()
     @listContents.reLayout()
     
     @addContents @listContents
@@ -108,11 +108,11 @@ class ListMorph extends ScrollFrameMorph
   
   setExtent: (aPoint) ->
     #console.log "move 3"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     lb = @listContents.boundingBox()
     nb = @bounds.origin.corner(@bounds.origin.add(aPoint))
     if nb.right() > lb.right() and nb.width() <= lb.width()
-      @listContents.fullMoveRightSideTo nb.right()
+      @listContents.fullRawMoveRightSideTo nb.right()
     if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
       @listContents.fullMoveBottomSideTo nb.bottom()
     super aPoint

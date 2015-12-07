@@ -26,9 +26,9 @@ class ShadowMorph extends Morph
     fb = @targetMorph.fullBoundsNoShadow()
     @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      @silentFullMoveTo fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
+      @silentFullRawMoveTo fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
     else
-      @silentFullMoveTo fb.origin.add(@offset)
+      @silentFullRawMoveTo fb.origin.add(@offset)
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
     @children.forEach (child) ->

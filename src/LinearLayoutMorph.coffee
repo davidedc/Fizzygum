@@ -399,7 +399,7 @@ class LinearLayoutMorph extends LayoutMorph
 
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(10,10)
-    line.fullMoveWithin(world);
+    line.fullRawMoveWithin(world);
     world.add(line);
     line.changed();
 
@@ -423,7 +423,7 @@ class LinearLayoutMorph extends LayoutMorph
 
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(110,10)
-    line.fullMoveWithin(world);
+    line.fullRawMoveWithin(world);
     world.add(line);
     line.changed();
 
@@ -452,7 +452,7 @@ class LinearLayoutMorph extends LayoutMorph
     #line.addMorphProportionalWidth(rect7,1)
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(210,10)
-    line.fullMoveWithin(world)
+    line.fullRawMoveWithin(world)
     world.add(line)
     line.changed()
 
@@ -501,7 +501,7 @@ class LinearLayoutMorph extends LayoutMorph
  
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(310,10)
-    line.fullMoveWithin(world);
+    line.fullRawMoveWithin(world);
     world.add(line);
     line.changed();
 
@@ -527,7 +527,7 @@ class LinearLayoutMorph extends LayoutMorph
 
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(410,10)
-    line.fullMoveWithin(world);
+    line.fullRawMoveWithin(world);
     world.add(line);
     line.changed();
 
@@ -550,7 +550,7 @@ class LinearLayoutMorph extends LayoutMorph
 
     line.layoutSubmorphs()
     line.fullRawMoveTo new Point(510,10)
-    line.fullMoveWithin(world);
+    line.fullRawMoveWithin(world);
     world.add(line);
     line.changed();
 

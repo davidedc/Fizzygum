@@ -114,5 +114,5 @@ class MorphsListMorph extends BoxMorph
   
   setExtent: (aPoint) ->
     #console.log "move 14"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     super aPoint

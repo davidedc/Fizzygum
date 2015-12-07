@@ -33,12 +33,12 @@ class HandMorph extends Morph
     @silentSetBounds Rectangle.EMPTY
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
   
@@ -666,7 +666,7 @@ class HandMorph extends Morph
     if delta.isZero() then return
     trackChanges.push false
     #console.log "move 2"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     super delta
     trackChanges.pop()
     @fullChanged()

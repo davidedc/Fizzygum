@@ -284,7 +284,7 @@ class Morph extends MorphicNode
 
     @silentSetBounds Rectangle.EMPTY
     @minimumExtent = new Point 5,5
-    @silentFullMoveTo(new Point 0,0)
+    @silentFullRawMoveTo(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
     @silentSetExtent(new Point 50, 40)
 
@@ -349,7 +349,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
 
     # if there is anything being edited inside
@@ -468,12 +468,12 @@ class Morph extends MorphicNode
   setBounds: (newBounds) ->
     @bounds = newBounds
     @changed()
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
 
 
   silentSetBounds: (newBounds) ->
     @bounds = newBounds
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
   
   corners: ->
     @bounds.corners()
@@ -678,7 +678,7 @@ class Morph extends MorphicNode
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
       result = Rectangle.EMPTY
     else
-      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
         if world.doubleCheckCachedMethodsResults
           if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
             debugger
@@ -700,7 +700,7 @@ class Morph extends MorphicNode
         debugger
         alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
@@ -720,20 +720,20 @@ class Morph extends MorphicNode
   # visibility.
   clippedThroughBounds: ->
 
-    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
       #console.log "cache hit @checkClippedThroughBoundsCache"
       return @clippedThroughBoundsCache
     #else
     #  console.log "cache miss @checkClippedThroughBoundsCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
       return @clippedThroughBoundsCache 
 
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
     return @clippedThroughBoundsCache
   
@@ -749,16 +749,16 @@ class Morph extends MorphicNode
     if @ == Window
       debugger
 
-    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes)
+    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
       #console.log "cache hit @checkClipThroughCache"
       return @clipThroughCache
     #else
     #  console.log "cache miss @checkClipThroughCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes) + " cache: " + @checkClipThroughCache
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
     #  #debugger
 
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache 
 
@@ -766,7 +766,7 @@ class Morph extends MorphicNode
     if !firstFrameParent?
       firstFrameParent = world
     firstFrameClipThroughBounds = firstFrameParent.clipThrough()
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     if @ instanceof FrameMorph
       @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
     else
@@ -785,7 +785,7 @@ class Morph extends MorphicNode
     # position and the end position.
     # Both need to be repainted.
     #console.log "move 4"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.fullRawMoveBy delta
@@ -793,18 +793,18 @@ class Morph extends MorphicNode
 
   silentFullRawMoveBy: (delta) ->
     #console.log "move 5"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
   
-  breakNumberOfMovesAndResizesCaches: ->
+  breakNumberOfRawMovesAndResizesCaches: ->
     @invalidateFullBoundsCache(@)
     @invalidateFullClippedBoundsCache(@)
     if @ instanceof HandMorph
       if @children.length == 0
         return
-    WorldMorph.numberOfMovesAndResizes++
+    WorldMorph.numberOfRawMovesAndResizes++
 
   
   fullRawMoveTo: (aPoint) ->
@@ -812,20 +812,20 @@ class Morph extends MorphicNode
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       #console.log "move 6"
-      @breakNumberOfMovesAndResizesCaches()
+      @breakNumberOfRawMovesAndResizesCaches()
       @fullRawMoveBy delta
     @bounds.debugIfFloats()
   
-  silentFullMoveTo: (aPoint) ->
+  silentFullRawMoveTo: (aPoint) ->
     #console.log "move 7"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     delta = aPoint.toLocalCoordinatesOf @
     @silentFullRawMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   fullRawMoveLeftSideTo: (x) ->
     @fullRawMoveTo new Point(x, @top())
   
-  fullMoveRightSideTo: (x) ->
+  fullRawMoveRightSideTo: (x) ->
     @fullRawMoveTo new Point(x - @width(), @top())
   
   fullRawMoveTopSideTo: (y) ->
@@ -834,14 +834,14 @@ class Morph extends MorphicNode
   fullMoveBottomSideTo: (y) ->
     @fullRawMoveTo new Point(@left(), y - @height())
   
-  fullMoveCenterTo: (aPoint) ->
+  fullRawMoveCenterTo: (aPoint) ->
     @fullRawMoveTo aPoint.subtract(@extent().floorDivideBy(2))
   
   fullMoveFullCenterTo: (aPoint) ->
     @fullRawMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
-  fullMoveWithin: (aMorph) ->
+  fullRawMoveWithin: (aMorph) ->
     leftOff = @fullBounds().left() - aMorph.left()
     @fullRawMoveBy new Point(-leftOff, 0)  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
@@ -904,7 +904,7 @@ class Morph extends MorphicNode
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
     #console.log "move 8"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
@@ -923,7 +923,7 @@ class Morph extends MorphicNode
   silentSetExtent: (aPoint) ->
     aPoint = aPoint.round()
     #console.log "move 9"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
 
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
@@ -946,23 +946,23 @@ class Morph extends MorphicNode
   
   setWidth: (width) ->
     #console.log "move 10"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @setExtent new Point(width or 0, @height())
   
   silentSetWidth: (width) ->
     #console.log "move 11"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     w = Math.max(Math.round(width or 0), 0)
     @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + w, @bounds.corner.y)
   
   setHeight: (height) ->
     #console.log "move 12"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @setExtent new Point(@width(), height or 0)
   
   silentSetHeight: (height) ->
     #console.log "move 13"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     h = Math.max(Math.round(height or 0), 0)
     @bounds = new Rectangle @bounds.origin, new Point(@bounds.corner.x, @bounds.origin.y + h)
   
@@ -1785,7 +1785,7 @@ class Morph extends MorphicNode
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
     inspector.fullRawMoveTo world.hand.position()
-    inspector.fullMoveWithin world
+    inspector.fullRawMoveWithin world
     world.add inspector
     inspector.changed()
     

@@ -39,7 +39,7 @@ class MenuItemMorph extends TriggerMorph
       lbl = @createLabelString(@labelString[1])
       @label.add lbl
 
-      lbl.fullMoveCenterTo icon.center()
+      lbl.fullRawMoveCenterTo icon.center()
       lbl.fullRawMoveLeftSideTo icon.right() + 4
       @label.setBounds(icon.boundingBox().merge(lbl.boundingBox()))
     else # assume it's either a Morph or a Canvas
@@ -51,7 +51,7 @@ class MenuItemMorph extends TriggerMorph
     @silentSetExtent @label.extent().add(new Point(8, 0))
     @silentSetWidth w
     np = @position().add(new Point(4, 0))
-    @label.silentFullMoveTo np
+    @label.silentFullRawMoveTo np
   
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement

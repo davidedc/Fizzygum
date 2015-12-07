@@ -251,7 +251,7 @@ class TextMorph extends StringMorph
   
   setExtent: (aPoint) ->
     #console.log "move 18"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @maxWidth = Math.max(aPoint.x, 0)
     @reLayout()    
     @changed()

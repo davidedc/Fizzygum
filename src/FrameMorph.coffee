@@ -143,7 +143,7 @@ class FrameMorph extends Morph
       result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?
-        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
           if world.doubleCheckCachedMethodsResults
             if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
               debugger
@@ -161,7 +161,7 @@ class FrameMorph extends Morph
         debugger
         alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfMovesAndResizes
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
@@ -248,7 +248,7 @@ class FrameMorph extends Morph
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
     #console.log "move 1"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
     @changed()
@@ -275,4 +275,4 @@ class FrameMorph extends Morph
   
   keepAllSubmorphsWithin: ->
     @children.forEach (m) =>
-      m.fullMoveWithin @
+      m.fullRawMoveWithin @

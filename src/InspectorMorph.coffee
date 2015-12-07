@@ -124,7 +124,7 @@ class InspectorMorph extends BoxMorph
         return
       inspector = new InspectorMorph @currentProperty
       inspector.fullRawMoveTo world.hand.position()
-      inspector.fullMoveWithin world
+      inspector.fullRawMoveWithin world
       world.add inspector
       inspector.changed()
 
@@ -247,7 +247,7 @@ class InspectorMorph extends BoxMorph
       menu.addItem "in new inspector...", true, @, =>
         inspector = new @constructor(@currentProperty)
         inspector.fullRawMoveTo world.hand.position()
-        inspector.fullMoveWithin world
+        inspector.fullRawMoveWithin world
         world.add inspector
         inspector.changed()
 

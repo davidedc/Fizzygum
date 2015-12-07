@@ -128,7 +128,7 @@ class CaretMorph extends BlinkerMorph
         pos.x = left
       if @target.right() < right and right - @target.width() < left
         pos.x += right - @target.right()
-        @target.fullMoveRightSideTo right
+        @target.fullRawMoveRightSideTo right
     @show()
     @fullRawMoveTo pos
 

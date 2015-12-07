@@ -65,7 +65,7 @@ class SliderButtonMorph extends CircleBoxMorph
         posX = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
           @parent.width() - @width())
-      @silentFullMoveTo new Point(posX, posY).add(@parent.position())
+      @silentFullRawMoveTo new Point(posX, posY).add(@parent.position())
       @children.forEach (child) ->
         child.parentHasReLayouted()
 

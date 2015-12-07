@@ -163,7 +163,7 @@ class ScrollFrameMorph extends FrameMorph
   
   setExtent: (aPoint) ->
     #console.log "move 15"
-    @breakNumberOfMovesAndResizesCaches()
+    @breakNumberOfRawMovesAndResizesCaches()
     @contents.fullRawMoveTo @position()  if @isTextLineWrapping
     super aPoint
     @contents.setExtent(aPoint)
@@ -370,8 +370,8 @@ class ScrollFrameMorph extends FrameMorph
       @contents.fullRawMoveLeftSideTo @contents.left() + fl - caretMorph.left()
       caretMorph.fullRawMoveLeftSideTo fl
     else if caretMorph.right() > fr
-      @contents.fullMoveRightSideTo @contents.right() + fr - caretMorph.right()
-      caretMorph.fullMoveRightSideTo fr
+      @contents.fullRawMoveRightSideTo @contents.right() + fr - caretMorph.right()
+      caretMorph.fullRawMoveRightSideTo fr
     @adjustContentsBounds()
     @adjustScrollBars()
 

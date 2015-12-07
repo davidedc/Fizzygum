@@ -67,15 +67,15 @@ class HandleMorph extends Morph
   silentUpdateResizerHandlePosition: ->
     if @target
         if @type == "resize"
-          @silentFullMoveTo @target.bottomRight().subtract(@extent().add(@inset))
+          @silentFullRawMoveTo @target.bottomRight().subtract(@extent().add(@inset))
         else if @type == "move"
-          @silentFullMoveTo @target.topLeft().add(@inset)
+          @silentFullRawMoveTo @target.topLeft().add(@inset)
         else if @type == "resizeRight"
           offsetFromMiddlePoint = new Point(@extent().x + @inset.x, Math.floor(@extent().y/2))
-          @silentFullMoveTo @target.rightCenter().subtract(offsetFromMiddlePoint)
+          @silentFullRawMoveTo @target.rightCenter().subtract(offsetFromMiddlePoint)
         else if @type == "resizeDown"
           offsetFromMiddlePoint = new Point(Math.floor(@extent().x/2), @extent().y + @inset.y)
-          @silentFullMoveTo @target.bottomCenter().subtract(offsetFromMiddlePoint)
+          @silentFullRawMoveTo @target.bottomCenter().subtract(offsetFromMiddlePoint)
   
   
 
