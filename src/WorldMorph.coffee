@@ -1325,13 +1325,13 @@ class WorldMorph extends FrameMorph
     @create newMorph
   createNewAnimationDemo: ->
     foo = new BouncerMorph()
-    foo.fullMoveTo new Point(50, 20)
+    foo.fullRawMoveTo new Point(50, 20)
     foo.setExtent new Point(300, 200)
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerMorph()
     bar.setColor new Color(50, 50, 50)
-    bar.fullMoveTo new Point(80, 80)
+    bar.fullRawMoveTo new Point(80, 80)
     bar.setExtent new Point(80, 250)
     bar.type = "horizontal"
     bar.direction = "right"
@@ -1339,21 +1339,21 @@ class WorldMorph extends FrameMorph
     bar.speed = 5
     baz = new BouncerMorph()
     baz.setColor new Color(20, 20, 20)
-    baz.fullMoveTo new Point(90, 140)
+    baz.fullRawMoveTo new Point(90, 140)
     baz.setExtent new Point(40, 30)
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerMorph()
     garply.setColor new Color(200, 20, 20)
-    garply.fullMoveTo new Point(90, 140)
+    garply.fullRawMoveTo new Point(90, 140)
     garply.setExtent new Point(20, 20)
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerMorph()
     fred.setColor new Color(20, 200, 20)
-    fred.fullMoveTo new Point(120, 140)
+    fred.fullRawMoveTo new Point(120, 140)
     fred.setExtent new Point(20, 20)
     fred.type = "vertical"
     fred.direction = "down"

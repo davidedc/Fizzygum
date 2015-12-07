@@ -210,9 +210,9 @@ class LinearLayoutMorph extends LayoutMorph
         newExtent = new Point(h,Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent))
 
       if direction == "#horizontal"
-        m.fullMoveTo(new Point(mainDirectionCursor,t))
+        m.fullRawMoveTo(new Point(mainDirectionCursor,t))
       else if direction == "#vertical"
-        m.fullMoveTo(new Point(t,mainDirectionCursor))
+        m.fullRawMoveTo(new Point(t,mainDirectionCursor))
       #debugger
       m.setExtent(newExtent)
 
@@ -398,7 +398,7 @@ class LinearLayoutMorph extends LayoutMorph
       line.addMorphProportionalHeight(rect2,1)
 
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(10,10)
+    line.fullRawMoveTo new Point(10,10)
     line.fullMoveWithin(world);
     world.add(line);
     line.changed();
@@ -422,7 +422,7 @@ class LinearLayoutMorph extends LayoutMorph
       line.addMorphProportionalHeight(rect4,1)
 
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(110,10)
+    line.fullRawMoveTo new Point(110,10)
     line.fullMoveWithin(world);
     world.add(line);
     line.changed();
@@ -451,7 +451,7 @@ class LinearLayoutMorph extends LayoutMorph
 
     #line.addMorphProportionalWidth(rect7,1)
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(210,10)
+    line.fullRawMoveTo new Point(210,10)
     line.fullMoveWithin(world)
     world.add(line)
     line.changed()
@@ -500,7 +500,7 @@ class LinearLayoutMorph extends LayoutMorph
       line.addMorphProportionalHeight(rect7,1.0) # blue
  
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(310,10)
+    line.fullRawMoveTo new Point(310,10)
     line.fullMoveWithin(world);
     world.add(line);
     line.changed();
@@ -526,7 +526,7 @@ class LinearLayoutMorph extends LayoutMorph
       line.addAdjusterAndMorphFixedHeight(rect5,20) # red
 
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(410,10)
+    line.fullRawMoveTo new Point(410,10)
     line.fullMoveWithin(world);
     world.add(line);
     line.changed();
@@ -549,7 +549,7 @@ class LinearLayoutMorph extends LayoutMorph
       line.addMorphFixedHeight(rect5,20) # red
 
     line.layoutSubmorphs()
-    line.fullMoveTo new Point(510,10)
+    line.fullRawMoveTo new Point(510,10)
     line.fullMoveWithin(world);
     world.add(line);
     line.changed();

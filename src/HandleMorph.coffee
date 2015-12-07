@@ -214,7 +214,7 @@ class HandleMorph extends Morph
       # as the parent has re-layouted following the setExtent call just
       # made.
     else if @type is "move"
-      @target.fullMoveTo newPos.subtract @inset
+      @target.fullRawMoveTo newPos.subtract @inset
     else if @type is "resizeRight"
       newWidth = newPos.x + @extent().x + @inset.x - @target.left()
       @target.setWidth newWidth

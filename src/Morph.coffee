@@ -777,7 +777,7 @@ class Morph extends MorphicNode
   
   
   # Morph accessing - simple changes:
-  fullMoveBy: (delta) ->
+  fullRawMoveBy: (delta) ->
     if delta.isZero() then return
     # note that changed() is called two times
     # because there are two areas of the screens
@@ -788,15 +788,15 @@ class Morph extends MorphicNode
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
-      child.fullMoveBy delta
+      child.fullRawMoveBy delta
     @changed()
 
-  silentFullMoveBy: (delta) ->
+  silentFullRawMoveBy: (delta) ->
     #console.log "move 5"
     @breakNumberOfMovesAndResizesCaches()
     @bounds = @bounds.translateBy(delta)
     @children.forEach (child) ->
-      child.silentFullMoveBy delta
+      child.silentFullRawMoveBy delta
   
   breakNumberOfMovesAndResizesCaches: ->
     @invalidateFullBoundsCache(@)
@@ -807,49 +807,49 @@ class Morph extends MorphicNode
     WorldMorph.numberOfMovesAndResizes++
 
   
-  fullMoveTo: (aPoint) ->
+  fullRawMoveTo: (aPoint) ->
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
       #console.log "move 6"
       @breakNumberOfMovesAndResizesCaches()
-      @fullMoveBy delta
+      @fullRawMoveBy delta
     @bounds.debugIfFloats()
   
   silentFullMoveTo: (aPoint) ->
     #console.log "move 7"
     @breakNumberOfMovesAndResizesCaches()
     delta = aPoint.toLocalCoordinatesOf @
-    @silentFullMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
+    @silentFullRawMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
-  fullMoveLeftSideTo: (x) ->
-    @fullMoveTo new Point(x, @top())
+  fullRawMoveLeftSideTo: (x) ->
+    @fullRawMoveTo new Point(x, @top())
   
   fullMoveRightSideTo: (x) ->
-    @fullMoveTo new Point(x - @width(), @top())
+    @fullRawMoveTo new Point(x - @width(), @top())
   
-  fullMoveTopSideTo: (y) ->
-    @fullMoveTo new Point(@left(), y)
+  fullRawMoveTopSideTo: (y) ->
+    @fullRawMoveTo new Point(@left(), y)
   
   fullMoveBottomSideTo: (y) ->
-    @fullMoveTo new Point(@left(), y - @height())
+    @fullRawMoveTo new Point(@left(), y - @height())
   
   fullMoveCenterTo: (aPoint) ->
-    @fullMoveTo aPoint.subtract(@extent().floorDivideBy(2))
+    @fullRawMoveTo aPoint.subtract(@extent().floorDivideBy(2))
   
   fullMoveFullCenterTo: (aPoint) ->
-    @fullMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
+    @fullRawMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
   fullMoveWithin: (aMorph) ->
     leftOff = @fullBounds().left() - aMorph.left()
-    @fullMoveBy new Point(-leftOff, 0)  if leftOff < 0
+    @fullRawMoveBy new Point(-leftOff, 0)  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
-    @fullMoveBy new Point(-rightOff, 0)  if rightOff > 0
+    @fullRawMoveBy new Point(-rightOff, 0)  if rightOff > 0
     topOff = @fullBounds().top() - aMorph.top()
-    @fullMoveBy new Point(0, -topOff)  if topOff < 0
+    @fullRawMoveBy new Point(0, -topOff)  if topOff < 0
     bottomOff = @fullBounds().bottom() - aMorph.bottom()
-    @fullMoveBy new Point(0, -bottomOff)  if bottomOff > 0
+    @fullRawMoveBy new Point(0, -bottomOff)  if bottomOff > 0
 
   # normally morphs do nothing when the
   # parent is layouting, as they are
@@ -865,7 +865,7 @@ class Morph extends MorphicNode
   layoutInset: (morphStartingTheChange = null) ->
     if @insetMorph?
       if @insetMorph != morphStartingTheChange
-        @insetMorph.fullMoveTo @insetPosition()
+        @insetMorph.fullRawMoveTo @insetPosition()
         @insetMorph.setExtent @insetSpaceExtent(), @
   
   # the default of layoutSubmorphs
@@ -1395,7 +1395,7 @@ class Morph extends MorphicNode
     else
       @add aMorph, 0
 
-    aMorph.fullMoveTo @insetPosition()
+    aMorph.fullRawMoveTo @insetPosition()
     aMorph.setExtent @insetSpaceExtent(), @
 
 
@@ -1634,7 +1634,7 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @fullMoveTo world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
+    @fullRawMoveTo world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
   
   # note how this verified that
   # at *any point* up in the
@@ -1662,7 +1662,7 @@ class Morph extends MorphicNode
     oldFps = @fps
     @fps = 0
     @step = =>
-      @silentFullMoveBy new Point(xStep, yStep)
+      @silentFullRawMoveBy new Point(xStep, yStep)
       @fullChanged()
       stepCount += 1
       if stepCount is steps
@@ -1784,7 +1784,7 @@ class Morph extends MorphicNode
 
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph(inspectee)
-    inspector.fullMoveTo world.hand.position()
+    inspector.fullRawMoveTo world.hand.position()
     inspector.fullMoveWithin world
     world.add inspector
     inspector.changed()
@@ -2025,7 +2025,7 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["fullMoveLeftSideTo", "fullMoveTopSideTo", "setWidth", "setHeight", "setAlphaScaled"]
+    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "setWidth", "setHeight", "setAlphaScaled"]
   
   
   # Morph entry field tabbing //////////////////////////////////////////////

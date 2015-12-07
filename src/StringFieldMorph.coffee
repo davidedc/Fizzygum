@@ -46,7 +46,7 @@ class StringFieldMorph extends FrameMorph
     @fullDestroyChildren()
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     @text.isNumeric = @isNumeric # for whichever reason...
-    @text.fullMoveTo @position()
+    @text.fullRawMoveTo @position()
     @text.isEditable = @isEditable
     @text.isfloatDraggable = false
     @text.enableSelecting()    

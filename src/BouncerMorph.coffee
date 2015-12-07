@@ -32,7 +32,7 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
-    @fullMoveTo new Point(@parent.position().x, @parent.position().y)
+    @fullRawMoveTo new Point(@parent.position().x, @parent.position().y)
   
   
   # BouncerMorph moving.
@@ -46,27 +46,27 @@ class BouncerMorph extends Morph
   # even with many movements at once.
   moveUp: (silently) ->
     if silently
-      @silentFullMoveBy new Point(0, -@speed)
+      @silentFullRawMoveBy new Point(0, -@speed)
     else
-      @fullMoveBy new Point(0, -@speed)
+      @fullRawMoveBy new Point(0, -@speed)
   
   moveDown: (silently) ->
     if silently
-      @silentFullMoveBy new Point(0, @speed)
+      @silentFullRawMoveBy new Point(0, @speed)
     else
-      @fullMoveBy new Point(0, @speed)
+      @fullRawMoveBy new Point(0, @speed)
   
   moveRight: (silently) ->
     if silently
-      @silentFullMoveBy new Point(@speed, 0)
+      @silentFullRawMoveBy new Point(@speed, 0)
     else
-      @fullMoveBy new Point(@speed, 0)
+      @fullRawMoveBy new Point(@speed, 0)
   
   moveLeft: (silently) ->
     if silently
-      @silentFullMoveBy new Point(-@speed, 0)
+      @silentFullRawMoveBy new Point(-@speed, 0)
     else
-      @fullMoveBy new Point(-@speed, 0)
+      @fullRawMoveBy new Point(-@speed, 0)
 
   moveAccordingToBounce: (silently) ->
     if @type is "vertical"

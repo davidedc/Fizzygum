@@ -662,7 +662,7 @@ class HandMorph extends Morph
   
   
   # HandMorph floatDragging optimization
-  fullMoveBy: (delta) ->
+  fullRawMoveBy: (delta) ->
     if delta.isZero() then return
     trackChanges.push false
     #console.log "move 2"
@@ -674,7 +674,7 @@ class HandMorph extends Morph
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point(worldX, worldY)
-    @fullMoveTo pos
+    @fullRawMoveTo pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById('mousePointerIndicator')
@@ -730,7 +730,7 @@ class HandMorph extends Morph
           unless fb.containsPoint(pos)
             @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
             @grab morph
-            @fullMoveTo pos
+            @fullRawMoveTo pos
     #endProcessMouseMove = new Date().getTime()
     #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
     #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);

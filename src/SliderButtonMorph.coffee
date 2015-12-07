@@ -87,7 +87,7 @@ class SliderButtonMorph extends CircleBoxMorph
           @parent.right() - @width()), @parent.left())
       newPosition = new Point(newX, newY)
       if !oldButtonPosition.eq newPosition
-        @fullMoveTo newPosition
+        @fullRawMoveTo newPosition
         @parent.updateValue()
     
   

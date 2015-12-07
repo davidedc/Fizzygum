@@ -106,7 +106,7 @@ class CaretMorph extends BlinkerMorph
   
   # CaretMorph navigation - simple version
   #gotoSlot: (newSlot) ->
-  #  @fullMoveTo @target.slotCoordinates(newSlot)
+  #  @fullRawMoveTo @target.slotCoordinates(newSlot)
   #  @slot = Math.max(newSlot, 0)
 
   gotoSlot: (slot) ->
@@ -120,17 +120,17 @@ class CaretMorph extends BlinkerMorph
       right = @parent.right() - @viewPadding
       left = @parent.left() + @viewPadding
       if pos.x > right
-        @target.fullMoveLeftSideTo @target.left() + right - pos.x
+        @target.fullRawMoveLeftSideTo @target.left() + right - pos.x
         pos.x = right
       if pos.x < left
         left = Math.min(@parent.left(), left)
-        @target.fullMoveLeftSideTo @target.left() + left - pos.x
+        @target.fullRawMoveLeftSideTo @target.left() + left - pos.x
         pos.x = left
       if @target.right() < right and right - @target.width() < left
         pos.x += right - @target.right()
         @target.fullMoveRightSideTo right
     @show()
-    @fullMoveTo pos
+    @fullRawMoveTo pos
 
     if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
       @parent.parent.scrollCaretIntoView @

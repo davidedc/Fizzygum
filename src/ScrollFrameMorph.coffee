@@ -59,12 +59,12 @@ class ScrollFrameMorph extends FrameMorph
     @adjustScrollBars()
 
   adjustContentsBasedOnHBar: (num) ->
-    @contents.fullMoveTo new Point(@left() - num, @contents.position().y)
+    @contents.fullRawMoveTo new Point(@left() - num, @contents.position().y)
     @adjustContentsBounds()
     @adjustScrollBars()
 
   adjustContentsBasedOnVBar: (num) ->
-    @contents.fullMoveTo new Point(@contents.position().x, @top() - num)
+    @contents.fullRawMoveTo new Point(@contents.position().x, @top() - num)
     @adjustContentsBounds()
     @adjustScrollBars()
 
@@ -118,7 +118,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @hBar.parent == @
-          @hBar.fullMoveTo new Point(@left(), @bottom() - @hBar.height())
+          @hBar.fullRawMoveTo new Point(@left(), @bottom() - @hBar.height())
         stopValue = @contents.width() - @width()
         @hBar.updateSpecs(
           0, # start
@@ -138,7 +138,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @vBar.parent == @
-          @vBar.fullMoveTo new Point(@right() - @vBar.width(), @top())
+          @vBar.fullRawMoveTo new Point(@right() - @vBar.width(), @top())
         stopValue = @contents.height() - @height()
         @vBar.updateSpecs(
           0, # start
@@ -158,13 +158,13 @@ class ScrollFrameMorph extends FrameMorph
     @extraPadding = extraPadding
     @contents.fullDestroyChildren()
 
-    aMorph.fullMoveTo @position().add(@padding + @extraPadding)
+    aMorph.fullRawMoveTo @position().add(@padding + @extraPadding)
     @addContents aMorph
   
   setExtent: (aPoint) ->
     #console.log "move 15"
     @breakNumberOfMovesAndResizesCaches()
-    @contents.fullMoveTo @position()  if @isTextLineWrapping
+    @contents.fullRawMoveTo @position()  if @isTextLineWrapping
     super aPoint
     @contents.setExtent(aPoint)
     @adjustContentsBounds()
@@ -211,13 +211,13 @@ class ScrollFrameMorph extends FrameMorph
 
   keepContentsInScrollFrame: ->
     if @contents.left() > @left()
-      @contents.fullMoveBy new Point(@left() - @contents.left(), 0)
+      @contents.fullRawMoveBy new Point(@left() - @contents.left(), 0)
     if @contents.right() < @right()
-      @contents.fullMoveBy new Point(@right() - @contents.right(), 0)  
+      @contents.fullRawMoveBy new Point(@right() - @contents.right(), 0)  
     if @contents.top() > @top()
-      @contents.fullMoveBy new Point(0, @top() - @contents.top())  
+      @contents.fullRawMoveBy new Point(0, @top() - @contents.top())  
     if @contents.bottom() < @bottom()
-      @contents.fullMoveBy 0, new Point(@bottom() - @contents.bottom(), 0)
+      @contents.fullRawMoveBy 0, new Point(@bottom() - @contents.bottom(), 0)
   
   # ScrollFrameMorph scrolling by floatDragging:
   scrollX: (steps) ->
@@ -237,7 +237,7 @@ class ScrollFrameMorph extends FrameMorph
     # updates of the content and scrollbars
     # or not.
     if newX isnt cl
-      @contents.fullMoveLeftSideTo newX
+      @contents.fullRawMoveLeftSideTo newX
       return true
     else
       return false
@@ -262,7 +262,7 @@ class ScrollFrameMorph extends FrameMorph
     # updates of the content and scrollbars
     # or not.
     if newY isnt ct
-      @contents.fullMoveTopSideTo newY
+      @contents.fullRawMoveTopSideTo newY
       return true
     else
       return false
@@ -361,14 +361,14 @@ class ScrollFrameMorph extends FrameMorph
     fr = @right() - @padding
     @adjustContentsBounds()
     if caretMorph.top() < ft
-      @contents.fullMoveTopSideTo @contents.top() + ft - caretMorph.top()
-      caretMorph.fullMoveTopSideTo ft
+      @contents.fullRawMoveTopSideTo @contents.top() + ft - caretMorph.top()
+      caretMorph.fullRawMoveTopSideTo ft
     else if caretMorph.bottom() > fb
       @contents.fullMoveBottomSideTo @contents.bottom() + fb - caretMorph.bottom()
       caretMorph.fullMoveBottomSideTo fb
     if caretMorph.left() < fl
-      @contents.fullMoveLeftSideTo @contents.left() + fl - caretMorph.left()
-      caretMorph.fullMoveLeftSideTo fl
+      @contents.fullRawMoveLeftSideTo @contents.left() + fl - caretMorph.left()
+      caretMorph.fullRawMoveLeftSideTo fl
     else if caretMorph.right() > fr
       @contents.fullMoveRightSideTo @contents.right() + fr - caretMorph.right()
       caretMorph.fullMoveRightSideTo fr

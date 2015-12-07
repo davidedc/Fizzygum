@@ -244,13 +244,13 @@ class FrameMorph extends Morph
 
 
   # FrameMorph scrolling optimization:
-  fullMoveBy: (delta) ->
+  fullRawMoveBy: (delta) ->
     #console.log "moving all morphs in the frame"
     @bounds = @bounds.translateBy(delta)
     #console.log "move 1"
     @breakNumberOfMovesAndResizesCaches()
     @children.forEach (child) ->
-      child.silentFullMoveBy delta
+      child.silentFullRawMoveBy delta
     @changed()
 
   reactToDropOf: ->

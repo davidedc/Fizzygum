@@ -83,7 +83,7 @@ class TriggerMorph extends Morph
     if not @label?
       @createLabel()
     if @centered
-      @label.fullMoveTo @center().subtract(@label.extent().floorDivideBy(2))
+      @label.fullRawMoveTo @center().subtract(@label.extent().floorDivideBy(2))
 
   getTextDescription: ->
     if @textDescription?
