@@ -114,5 +114,5 @@ class ListMorph extends ScrollFrameMorph
     if nb.right() > lb.right() and nb.width() <= lb.width()
       @listContents.fullRawMoveRightSideTo nb.right()
     if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-      @listContents.fullMoveBottomSideTo nb.bottom()
+      @listContents.fullRawMoveBottomSideTo nb.bottom()
     super aPoint

@@ -364,8 +364,8 @@ class ScrollFrameMorph extends FrameMorph
       @contents.fullRawMoveTopSideTo @contents.top() + ft - caretMorph.top()
       caretMorph.fullRawMoveTopSideTo ft
     else if caretMorph.bottom() > fb
-      @contents.fullMoveBottomSideTo @contents.bottom() + fb - caretMorph.bottom()
-      caretMorph.fullMoveBottomSideTo fb
+      @contents.fullRawMoveBottomSideTo @contents.bottom() + fb - caretMorph.bottom()
+      caretMorph.fullRawMoveBottomSideTo fb
     if caretMorph.left() < fl
       @contents.fullRawMoveLeftSideTo @contents.left() + fl - caretMorph.left()
       caretMorph.fullRawMoveLeftSideTo fl

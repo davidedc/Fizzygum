@@ -831,13 +831,13 @@ class Morph extends MorphicNode
   fullRawMoveTopSideTo: (y) ->
     @fullRawMoveTo new Point(@left(), y)
   
-  fullMoveBottomSideTo: (y) ->
+  fullRawMoveBottomSideTo: (y) ->
     @fullRawMoveTo new Point(@left(), y - @height())
   
   fullRawMoveCenterTo: (aPoint) ->
     @fullRawMoveTo aPoint.subtract(@extent().floorDivideBy(2))
   
-  fullMoveFullCenterTo: (aPoint) ->
+  fullRawMoveFullCenterTo: (aPoint) ->
     @fullRawMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
   
   # make sure I am completely within another Morph's bounds
