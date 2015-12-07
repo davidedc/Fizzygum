@@ -52,7 +52,7 @@ class SliderButtonMorph extends CircleBoxMorph
       if @orientation is "vertical"
         bw = @parent.width() - 2
         bh = Math.max(bw, Math.round(@parent.height() * @parent.ratio()))
-        @silentSetExtent new Point(bw, bh)
+        @silentRawSetExtent new Point(bw, bh)
         posX = 1
         posY = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
@@ -60,7 +60,7 @@ class SliderButtonMorph extends CircleBoxMorph
       else
         bh = @parent.height() - 2
         bw = Math.max(bh, Math.round(@parent.width() * @parent.ratio()))
-        @silentSetExtent new Point(bw, bh)
+        @silentRawSetExtent new Point(bw, bh)
         posY = 1
         posX = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),

@@ -48,8 +48,8 @@ class MenuItemMorph extends TriggerMorph
     @add @label
   
     w = @width()
-    @silentSetExtent @label.extent().add(new Point(8, 0))
-    @silentSetWidth w
+    @silentRawSetExtent @label.extent().add(new Point(8, 0))
+    @silentRawSetWidth w
     np = @position().add(new Point(4, 0))
     @label.silentFullRawMoveTo np
   
@@ -68,8 +68,8 @@ class MenuItemMorph extends TriggerMorph
       icon.backBufferContext = icon.backBuffer.getContext("2d")
       icon.backBufferContext.drawImage src, 0, 0
 
-    icon.silentSetWidth icon.backBuffer.width
-    icon.silentSetHeight icon.backBuffer.height
+    icon.silentRawSetWidth icon.backBuffer.width
+    icon.silentRawSetHeight icon.backBuffer.height
     icon
 
   createLabelString: (string) ->

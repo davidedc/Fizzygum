@@ -28,7 +28,7 @@ class SliderMorph extends CircleBoxMorph
     super orientation # if null, then a vertical one will be created
     @alpha = 0.1
     @color = color or new Color(0, 0, 0)
-    @silentSetExtent new Point(20, 100)
+    @silentRawSetExtent new Point(20, 100)
     @silentAdd @button
 
   imBeingAddedTo: (newParentMorph) ->
@@ -42,7 +42,7 @@ class SliderMorph extends CircleBoxMorph
       
     @changed()
 
-  setExtent: (a) -> 
+  rawSetExtent: (a) -> 
     #console.log "move 17"
     @breakNumberOfRawMovesAndResizesCaches()  
     super a

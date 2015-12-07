@@ -106,7 +106,7 @@ class ListMorph extends ScrollFrameMorph
       else # assume it's a String
         @target[@action].call @target, item.labelString
   
-  setExtent: (aPoint) ->
+  rawSetExtent: (aPoint) ->
     #console.log "move 3"
     @breakNumberOfRawMovesAndResizesCaches()
     lb = @listContents.boundingBox()

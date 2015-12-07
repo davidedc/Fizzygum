@@ -17,5 +17,5 @@ class RectangleMorph extends Morph
 
   constructor: (extent, color) ->
     super()
-    @silentSetExtent(extent) if extent?
+    @silentRawSetExtent(extent) if extent?
     @color = color if color?

@@ -20,7 +20,7 @@ class PenMorph extends Morph
   constructor: ->
     @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
     super()
-    @setExtent new Point(@penSize, @penSize)
+    @rawSetExtent new Point(@penSize, @penSize)
     # todo we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
@@ -28,7 +28,7 @@ class PenMorph extends Morph
     # doesn't work cause coffeescript doesn't support static inheritance
     #alert @morphStaticMethod()
 
-    # no need to call  because @setExtent does it.
+    # no need to call  because @rawSetExtent does it.
     # (should it?)
     #
 

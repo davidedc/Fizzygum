@@ -13,7 +13,7 @@ class MorphsListMorph extends BoxMorph
   constructor: (target) ->
     super()
 
-    @silentSetExtent new Point(
+    @silentRawSetExtent new Point(
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @isfloatDraggable = true
@@ -88,9 +88,9 @@ class MorphsListMorph extends BoxMorph
     r = @right() - @cornerRadius
     w = r - x
     @label.fullRawMoveTo new Point(x, y)
-    @label.setWidth w
+    @label.rawSetWidth w
     if @label.height() > (@height() - 50)
-      @setHeight @label.height() + 50
+      @rawSetHeight @label.height() + 50
       @changed()
 
     # morphsList
@@ -100,7 +100,7 @@ class MorphsListMorph extends BoxMorph
     b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
     @morphsList.fullRawMoveTo new Point(x, y)
-    @morphsList.setExtent new Point(w, h)
+    @morphsList.rawSetExtent new Point(w, h)
 
     # close button
     x = @morphsList.left()
@@ -108,11 +108,11 @@ class MorphsListMorph extends BoxMorph
     h = WorldMorph.preferencesAndSettings.handleSize
     w = @morphsList.width() - h - @cornerRadius
     @buttonClose.fullRawMoveTo new Point(x, y)
-    @buttonClose.setExtent new Point(w, h)
+    @buttonClose.rawSetExtent new Point(w, h)
     trackChanges.pop()
     @changed()
   
-  setExtent: (aPoint) ->
+  rawSetExtent: (aPoint) ->
     #console.log "move 14"
     @breakNumberOfRawMovesAndResizesCaches()
     super aPoint

@@ -613,10 +613,10 @@ class WorldMorph extends FrameMorph
     clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft
     if @worldCanvas.width isnt clientWidth
       @worldCanvas.width = clientWidth
-      @setWidth clientWidth
+      @rawSetWidth clientWidth
     if @worldCanvas.height isnt clientHeight
       @worldCanvas.height = clientHeight
-      @setHeight clientHeight
+      @rawSetHeight clientHeight
     @children.forEach (child) =>
       child.reactToWorldResize? @boundingBox()
   
@@ -1269,18 +1269,18 @@ class WorldMorph extends FrameMorph
     @create new SliderMorph()
   createNewFrameMorph: ->
     newMorph = new FrameMorph()
-    newMorph.setExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point(350, 250)
     @create newMorph
   createNewScrollFrameMorph: ->
     newMorph = new ScrollFrameMorph()
     newMorph.contents.acceptsDrops = true
     newMorph.adjustContentsBounds()
     newMorph.adjustScrollBars()
-    newMorph.setExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point(350, 250)
     @create newMorph
   createNewCanvas: ->
     newMorph = new CanvasMorph()
-    newMorph.setExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point(350, 250)
     @create newMorph
   createNewHandle: ->
     @create new HandleMorph()
@@ -1321,18 +1321,18 @@ class WorldMorph extends FrameMorph
     newMorph.setColor new Color(230, 200, 100)
     newMorph.cornerRadius = 35
     newMorph.alpha = 0.2
-    newMorph.setExtent new Point(100, 100)
+    newMorph.rawSetExtent new Point(100, 100)
     @create newMorph
   createNewAnimationDemo: ->
     foo = new BouncerMorph()
     foo.fullRawMoveTo new Point(50, 20)
-    foo.setExtent new Point(300, 200)
+    foo.rawSetExtent new Point(300, 200)
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerMorph()
     bar.setColor new Color(50, 50, 50)
     bar.fullRawMoveTo new Point(80, 80)
-    bar.setExtent new Point(80, 250)
+    bar.rawSetExtent new Point(80, 250)
     bar.type = "horizontal"
     bar.direction = "right"
     bar.alpha = 0.9
@@ -1340,21 +1340,21 @@ class WorldMorph extends FrameMorph
     baz = new BouncerMorph()
     baz.setColor new Color(20, 20, 20)
     baz.fullRawMoveTo new Point(90, 140)
-    baz.setExtent new Point(40, 30)
+    baz.rawSetExtent new Point(40, 30)
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerMorph()
     garply.setColor new Color(200, 20, 20)
     garply.fullRawMoveTo new Point(90, 140)
-    garply.setExtent new Point(20, 20)
+    garply.rawSetExtent new Point(20, 20)
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerMorph()
     fred.setColor new Color(20, 200, 20)
     fred.fullRawMoveTo new Point(120, 140)
-    fred.setExtent new Point(20, 20)
+    fred.rawSetExtent new Point(20, 20)
     fred.type = "vertical"
     fred.direction = "down"
     fred.speed = 4

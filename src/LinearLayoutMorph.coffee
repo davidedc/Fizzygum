@@ -214,7 +214,7 @@ class LinearLayoutMorph extends LayoutMorph
       else if direction == "#vertical"
         m.fullRawMoveTo(new Point(t,mainDirectionCursor))
       #debugger
-      m.setExtent(newExtent)
+      m.rawSetExtent(newExtent)
 
       if mainDirectionSizeForThisMorph > 0
         # move on the cursor along the main direction

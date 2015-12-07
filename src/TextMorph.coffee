@@ -138,9 +138,9 @@ class TextMorph extends StringMorph
     shadowHeight = Math.abs(@shadowOffset.y)
     height = @lines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
     if @maxWidth is 0
-      @silentSetExtent(new Point(@maxLineWidth + shadowWidth, height))
+      @silentRawSetExtent(new Point(@maxLineWidth + shadowWidth, height))
     else
-      @silentSetExtent(new Point(@maxWidth + shadowWidth, height))
+      @silentRawSetExtent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @children.forEach (child) ->
       child.parentHasReLayouted()
@@ -249,7 +249,7 @@ class TextMorph extends StringMorph
 
 
   
-  setExtent: (aPoint) ->
+  rawSetExtent: (aPoint) ->
     #console.log "move 18"
     @breakNumberOfRawMovesAndResizesCaches()
     @maxWidth = Math.max(aPoint.x, 0)

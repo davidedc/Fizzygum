@@ -205,7 +205,7 @@ class HandMorph extends Morph
           morphToDrop.addFullShadow()
 
       @children = []
-      @setExtent new Point()
+      @rawSetExtent new Point()
       morphToDrop.justDropped? @
       if target.reactToDropOf
         target.reactToDropOf morphToDrop, @
@@ -728,7 +728,7 @@ class HandMorph extends Morph
         if morph
           fb = morph.fullBounds()
           unless fb.containsPoint(pos)
-            @setExtent(@extent().subtract fb.extent().floorDivideBy(2))
+            @rawSetExtent(@extent().subtract fb.extent().floorDivideBy(2))
             @grab morph
             @fullRawMoveTo pos
     #endProcessMouseMove = new Date().getTime()

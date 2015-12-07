@@ -9,7 +9,7 @@ class ReactiveValuesTestsRectangleMorph extends Morph
 
   constructor: (extent, color) ->
     super()
-    @silentSetExtent(extent) if extent?
+    @silentRawSetExtent(extent) if extent?
     @color = color if color?
 
     countValContent = {"content": @count, "signature": hashCode(@count + "")}

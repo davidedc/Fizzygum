@@ -23,7 +23,7 @@ class ColorPickerMorph extends Morph
     @choice = defaultColor or new Color(255, 255, 255)
     super()
     @color = new Color(255, 255, 255)
-    @setExtent new Point(80, 80)
+    @rawSetExtent new Point(80, 80)
 
   reLayout: ->
     super()

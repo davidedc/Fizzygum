@@ -286,7 +286,7 @@ class Morph extends MorphicNode
     @minimumExtent = new Point 5,5
     @silentFullRawMoveTo(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
-    @silentSetExtent(new Point 50, 40)
+    @silentRawSetExtent(new Point 50, 40)
 
     @color = @color or new Color(80, 80, 80)
     @lastTime = Date.now()
@@ -866,7 +866,7 @@ class Morph extends MorphicNode
     if @insetMorph?
       if @insetMorph != morphStartingTheChange
         @insetMorph.fullRawMoveTo @insetPosition()
-        @insetMorph.setExtent @insetSpaceExtent(), @
+        @insetMorph.rawSetExtent @insetSpaceExtent(), @
   
   # the default of layoutSubmorphs
   # is to do nothing apart from notifying
@@ -891,7 +891,7 @@ class Morph extends MorphicNode
   # change extent.
   childChangedExtent: (theMorphChangingTheExtent) ->
     if @insetMorph == theMorphChangingTheExtent
-      @setExtent(@extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent)
+      @rawSetExtent(@extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent)
 
   # more complex Morphs, e.g. layouts, might
   # do a more complex calculation to get the
@@ -902,7 +902,7 @@ class Morph extends MorphicNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Morph accessing - dimensional changes requiring a complete redraw
-  setExtent: (aPoint, morphStartingTheChange = null) ->
+  rawSetExtent: (aPoint, morphStartingTheChange = null) ->
     #console.log "move 8"
     @breakNumberOfRawMovesAndResizesCaches()
     if @ == morphStartingTheChange
@@ -911,7 +911,7 @@ class Morph extends MorphicNode
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq(@extent())
-      @silentSetExtent aPoint
+      @silentRawSetExtent aPoint
       @changed()
       @reLayout()
       
@@ -920,7 +920,7 @@ class Morph extends MorphicNode
         if @parent != morphStartingTheChange
           @parent.childChangedExtent(@)
   
-  silentSetExtent: (aPoint) ->
+  silentRawSetExtent: (aPoint) ->
     aPoint = aPoint.round()
     #console.log "move 9"
     @breakNumberOfRawMovesAndResizesCaches()
@@ -944,23 +944,23 @@ class Morph extends MorphicNode
     newHeight = Math.max(aPoint.y, 0)
     @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
   
-  setWidth: (width) ->
+  rawSetWidth: (width) ->
     #console.log "move 10"
     @breakNumberOfRawMovesAndResizesCaches()
-    @setExtent new Point(width or 0, @height())
+    @rawSetExtent new Point(width or 0, @height())
   
-  silentSetWidth: (width) ->
+  silentRawSetWidth: (width) ->
     #console.log "move 11"
     @breakNumberOfRawMovesAndResizesCaches()
     w = Math.max(Math.round(width or 0), 0)
     @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + w, @bounds.corner.y)
   
-  setHeight: (height) ->
+  rawSetHeight: (height) ->
     #console.log "move 12"
     @breakNumberOfRawMovesAndResizesCaches()
-    @setExtent new Point(@width(), height or 0)
+    @rawSetExtent new Point(@width(), height or 0)
   
-  silentSetHeight: (height) ->
+  silentRawSetHeight: (height) ->
     #console.log "move 13"
     @breakNumberOfRawMovesAndResizesCaches()
     h = Math.max(Math.round(height or 0), 0)
@@ -1396,7 +1396,7 @@ class Morph extends MorphicNode
       @add aMorph, 0
 
     aMorph.fullRawMoveTo @insetPosition()
-    aMorph.setExtent @insetSpaceExtent(), @
+    aMorph.rawSetExtent @insetSpaceExtent(), @
 
 
 
@@ -1732,7 +1732,7 @@ class Morph extends MorphicNode
       slider.button.highlightColor.b += 100
       slider.button.pressColor = slider.button.color.copy()
       slider.button.pressColor.b += 150
-      slider.silentSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
+      slider.silentRawSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = menu
       if isRounded
@@ -2025,7 +2025,7 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "setWidth", "setHeight", "setAlphaScaled"]
+    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled"]
   
   
   # Morph entry field tabbing //////////////////////////////////////////////

@@ -28,7 +28,7 @@ class HandleMorph extends Morph
     @color = new Color(255, 255, 255)
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
-    @silentSetExtent new Point(size, size)
+    @silentRawSetExtent new Point(size, size)
     if @target
       @target.add @
     @updateResizerHandlePosition()
@@ -208,19 +208,19 @@ class HandleMorph extends Morph
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resize"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.position())
-      @target.setExtent newExt
+      @target.rawSetExtent newExt
       # the position of this handle will be changed when the
       # parentHasReLayouted method of this handle will be called
-      # as the parent has re-layouted following the setExtent call just
+      # as the parent has re-layouted following the rawSetExtent call just
       # made.
     else if @type is "move"
       @target.fullRawMoveTo newPos.subtract @inset
     else if @type is "resizeRight"
       newWidth = newPos.x + @extent().x + @inset.x - @target.left()
-      @target.setWidth newWidth
+      @target.rawSetWidth newWidth
     else if @type is "resizeDown"
       newHeight = newPos.y + @extent().y + @inset.y - @target.top()
-      @target.setHeight newHeight
+      @target.rawSetHeight newHeight
   
   
   # HandleMorph floatDragging and dropping:

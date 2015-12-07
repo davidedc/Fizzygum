@@ -27,16 +27,16 @@ class StringFieldMorph extends FrameMorph
     super()
     @color = new Color(255, 255, 255)
 
-  setWidth: (newWidth)->
+  rawSetWidth: (newWidth)->
     super(newWidth)
-    @text.setWidth(newWidth)
+    @text.rawSetWidth(newWidth)
 
 
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
     text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     console.log "text morph extent: " + text.text + " : " + text.extent()
-    @setWidth(Math.max(@minWidth,text.width()))
+    @rawSetWidth(Math.max(@minWidth,text.width()))
     console.log "string fleid morph extent: " + @extent()
 
   reLayout: ->
@@ -50,7 +50,7 @@ class StringFieldMorph extends FrameMorph
     @text.isEditable = @isEditable
     @text.isfloatDraggable = false
     @text.enableSelecting()    
-    @silentSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
+    @silentRawSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
     @add @text
     @children.forEach (child) ->
       child.parentHasReLayouted()

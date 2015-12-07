@@ -39,14 +39,14 @@ class ScrollFrameMorph extends FrameMorph
     #@setAlphaScaled = @contents.setAlphaScaled
 
     @hBar = new SliderMorph(null, null, null, null, "horizontal", @sliderColor)
-    @hBar.setHeight @scrollBarSize
+    @hBar.rawSetHeight @scrollBarSize
 
     @hBar.isfloatDraggable = false
     @hBar.target = @
     @add @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
-    @vBar.setWidth @scrollBarSize
+    @vBar.rawSetWidth @scrollBarSize
     @vBar.isfloatDraggable = false
     @vBar.target = @
     @add @vBar
@@ -113,7 +113,7 @@ class ScrollFrameMorph extends FrameMorph
     if @hBar.target == @ 
       if @contents.width() >= @width() + 1
         @hBar.show()
-        @hBar.setWidth hWidth  if @hBar.width() isnt hWidth
+        @hBar.rawSetWidth hWidth  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
@@ -133,7 +133,7 @@ class ScrollFrameMorph extends FrameMorph
     if @vBar.target == @ 
       if @contents.height() >= @height() + 1
         @vBar.show()
-        @vBar.setHeight vHeight  if @vBar.height() isnt vHeight
+        @vBar.rawSetHeight vHeight  if @vBar.height() isnt vHeight
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
@@ -161,12 +161,12 @@ class ScrollFrameMorph extends FrameMorph
     aMorph.fullRawMoveTo @position().add(@padding + @extraPadding)
     @addContents aMorph
   
-  setExtent: (aPoint) ->
+  rawSetExtent: (aPoint) ->
     #console.log "move 15"
     @breakNumberOfRawMovesAndResizesCaches()
     @contents.fullRawMoveTo @position()  if @isTextLineWrapping
     super aPoint
-    @contents.setExtent(aPoint)
+    @contents.rawSetExtent(aPoint)
     @adjustContentsBounds()
     @adjustScrollBars()
 
@@ -193,9 +193,9 @@ class ScrollFrameMorph extends FrameMorph
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
           morph.maxWidth = 0
-          morph.setWidth @contents.width() - totalPadding
+          morph.rawSetWidth @contents.width() - totalPadding
           morph.maxWidth = @contents.width() - totalPadding
-          @contents.setHeight Math.max(morph.height(), @height() - totalPadding)
+          @contents.rawSetHeight Math.max(morph.height(), @height() - totalPadding)
 
     subBounds = @contents.subMorphsMergedFullBounds()
     if subBounds

@@ -24,7 +24,7 @@ class ShadowMorph extends Morph
     # console.log "shadow morph update rendering"
     super()
     fb = @targetMorph.fullBoundsNoShadow()
-    @silentSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
+    @silentRawSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
     if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
       @silentFullRawMoveTo fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
     else

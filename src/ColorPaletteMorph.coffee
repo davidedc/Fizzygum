@@ -16,7 +16,7 @@ class ColorPaletteMorph extends Morph
 
   constructor: (@target = null, sizePoint) ->
     super()
-    @silentSetExtent sizePoint or new Point(80, 50)
+    @silentRawSetExtent sizePoint or new Point(80, 50)
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

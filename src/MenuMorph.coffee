@@ -146,7 +146,7 @@ class MenuMorph extends BoxMorph
     if WorldMorph.preferencesAndSettings.isFlat
       @label.cornerRadius = 0
     @label.color = new Color 60,60,60
-    @label.setExtent text.extent().add(2) # here!
+    @label.rawSetExtent text.extent().add(2) # here!
     @label.text = text
 
   reLayout: ->
@@ -164,7 +164,7 @@ class MenuMorph extends BoxMorph
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
     @color = new Color(255, 255, 255)
-    @silentSetExtent new Point(0, 0)
+    @silentRawSetExtent new Point(0, 0)
     y = @top()
     x = @left() + 2
     @children.forEach (child) ->
@@ -200,7 +200,7 @@ class MenuMorph extends BoxMorph
         item = new Morph()
         item.setMinimumExtent new Point 5,1
         item.color = new Color 60,60,60
-        item.setHeight tuple[1]
+        item.rawSetHeight tuple[1]
       # menuItem
       else
         # console.log "menu creating MenuItemMorph "
@@ -242,7 +242,7 @@ class MenuMorph extends BoxMorph
     @adjustWidthsOfMenuEntries()
     fb = @fullBounds()
     #console.log "fb: " + fb
-    @silentSetExtent fb.extent().add(2)
+    @silentRawSetExtent fb.extent().add(2)
     trackChanges.pop()
     @fullChanged()
   
@@ -272,7 +272,7 @@ class MenuMorph extends BoxMorph
     #console.log "maxwidth " + w
     @children.forEach (item) =>
       trackChanges.push false
-      item.setWidth w
+      item.rawSetWidth w
       if item is @label
         item.text.fullRawMoveTo item.center().subtract(item.text.extent().floorDivideBy(2))
       #console.log "new width of " + item + " : " + item.width()

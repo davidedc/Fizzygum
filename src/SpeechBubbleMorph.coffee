@@ -87,8 +87,8 @@ class SpeechBubbleMorph extends BoxMorph
         "center")
     else if @contents instanceof HTMLCanvasElement
       @contentsMorph = new Morph()
-      @contentsMorph.silentSetWidth @contents.width
-      @contentsMorph.silentSetHeight @contents.height
+      @contentsMorph.silentRawSetWidth @contents.width
+      @contentsMorph.silentRawSetHeight @contents.height
       @contentsMorph.backBuffer = @contents
       @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext("2d")
     else
@@ -102,8 +102,8 @@ class SpeechBubbleMorph extends BoxMorph
     @add @contentsMorph
 
     # adjust my layout
-    @silentSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
-    @silentSetHeight @contentsMorph.height() + @cornerRadius + @padding * 2 + 2
+    @silentRawSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
+    @silentRawSetHeight @contentsMorph.height() + @cornerRadius + @padding * 2 + 2
 
     # draw my outline
     #super()

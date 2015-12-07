@@ -164,7 +164,7 @@ class LinearLayoutSpec
     if @fixedHeight?
       @fixedHeight = aNumber
     else
-      @morph.setHeight aNumber
+      @morph.rawSetHeight aNumber
     @proportionalHeight = null
 
   setFixedOrMorphWidth: (aNumber) ->
@@ -173,7 +173,7 @@ class LinearLayoutSpec
     if @fixedWidth?
       @fixedWidth = aNumber
     else
-      @morph.setWidth aNumber
+      @morph.rawSetWidth aNumber
     @proportionalWidth = null
 
   setFixedWidth: (aNumber) ->
