@@ -38,7 +38,7 @@ ContainerMixin =
           newBounds = @boundingBox()
 
         unless @boundingBox().eq(newBounds)
-          @silentSetBounds newBounds
+          @silentRawSetBounds newBounds
           @changed()
           @reLayout()
           

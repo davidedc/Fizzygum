@@ -204,7 +204,7 @@ class ScrollFrameMorph extends FrameMorph
       newBounds = @boundingBox()
 
     unless @contents.boundingBox().eq(newBounds)
-      @contents.silentSetBounds newBounds
+      @contents.silentRawSetBounds newBounds
       @contents.reLayout()
       
       @keepContentsInScrollFrame()

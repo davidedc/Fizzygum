@@ -282,7 +282,7 @@ class Morph extends MorphicNode
       if (arr.indexOf @constructor.name) == -1
         arr.push @constructor.name
 
-    @silentSetBounds Rectangle.EMPTY
+    @silentRawSetBounds Rectangle.EMPTY
     @minimumExtent = new Point 5,5
     @silentFullRawMoveTo(new Point 0,0)
     # [TODO] why is there this strange non-zero default extent?
@@ -465,13 +465,13 @@ class Morph extends MorphicNode
   boundingBox: ->
     @bounds
   
-  setBounds: (newBounds) ->
+  rawSetBounds: (newBounds) ->
     @bounds = newBounds
     @changed()
     @breakNumberOfRawMovesAndResizesCaches()
 
 
-  silentSetBounds: (newBounds) ->
+  silentRawSetBounds: (newBounds) ->
     @bounds = newBounds
     @breakNumberOfRawMovesAndResizesCaches()
   

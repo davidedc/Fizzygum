@@ -30,7 +30,7 @@ class HandMorph extends Morph
     @mouseOverList = []
     @temporaries = []
     super()
-    @silentSetBounds Rectangle.EMPTY
+    @silentRawSetBounds Rectangle.EMPTY
 
   clippedThroughBounds: ->
     @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
