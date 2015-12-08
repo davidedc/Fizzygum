@@ -104,6 +104,16 @@ class Point
   ceil: ->
     new @constructor(Math.ceil(@x), Math.ceil(@y))
   
+
+  # these two in theory don't make sense
+  # for a Point BUT it's handy because sometimes
+  # we store dimensions in Points
+  width: ->
+    return @x
+
+  height: ->
+    return @y
+
   
   # Point arithmetic:
   add: (other) ->
