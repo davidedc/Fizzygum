@@ -1079,6 +1079,7 @@ class WorldMorph extends FrameMorph
     
     @resizeEventListener = =>
       @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+    # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
     
     ###

@@ -1678,14 +1678,14 @@ class Morph extends MorphicNode
   
   # Morph utilities ////////////////////////////////////////////////////////
   
-  resize: ->
-    world.activeHandle.push new HandleMorph(@, "resizeRight")
-    world.activeHandle.push new HandleMorph(@, "resizeDown")
-    world.activeHandle.push new HandleMorph(@, "move")
-    world.activeHandle.push new HandleMorph(@, "resize")
+  showResizeAndMoveHandles: ->
+    world.activeHandle.push new HandleMorph(@, "resizeHorizontalHandle")
+    world.activeHandle.push new HandleMorph(@, "resizeVerticalHandle")
+    world.activeHandle.push new HandleMorph(@, "moveHandle")
+    world.activeHandle.push new HandleMorph(@, "resizeBothDimensionsHandle")
   
-  move: ->
-    world.activeHandle.push new HandleMorph(@, "move")
+  showMoveHandle: ->
+    world.activeHandle.push new HandleMorph(@, "moveHandle")
   
   hint: (msg) ->
     text = msg
@@ -1899,12 +1899,12 @@ class Morph extends MorphicNode
     menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
 
     menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize...", true, @, "resize", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+    menu.addItem "resize/move...", true, @, "showResizeAndMoveHandles", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
     menu.addLine()
     menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
     menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
     menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-    menu.addItem "move", true, @, "move", "show a handle\nwhich can be floatDragged\nto move this morph"
+    menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
     menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
 
     # A) normally, just take a picture of this morph

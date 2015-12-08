@@ -13,13 +13,13 @@ class HandleMorph extends Morph
 
   target: null
   inset: null
-  type: null # "resize" or "move"
+  type: null
 
   state: 0
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
-  constructor: (@target = null, @type = "resize") ->
+  constructor: (@target = null, @type = "resizeBothDimensionsHandle") ->
     if @target?.padding?
       @inset = new Point(@target.padding, @target.padding)
     else
@@ -42,19 +42,19 @@ class HandleMorph extends Morph
       # morph gets too small because they
       # become unusable anyways once they
       # overlap
-      if @type == "move"
+      if @type == "moveHandle"
         if @target.width() < 2 * @width()
           @hide()
           return
         else
           @show()
-      else if @type == "resizeRight"
+      else if @type == "resizeHorizontalHandle"
         if @target.height() < 3 * @height()
           @hide()
           return
         else
           @show()
-      else if @type == "resizeDown"
+      else if @type == "resizeVerticalHandle"
         if @target.width() < 3 * @width()
           @hide()
           return
@@ -66,14 +66,14 @@ class HandleMorph extends Morph
 
   silentUpdateResizerHandlePosition: ->
     if @target
-        if @type == "resize"
+        if @type == "resizeBothDimensionsHandle"
           @silentFullRawMoveTo @target.bottomRight().subtract(@extent().add(@inset))
-        else if @type == "move"
+        else if @type == "moveHandle"
           @silentFullRawMoveTo @target.topLeft().add(@inset)
-        else if @type == "resizeRight"
+        else if @type == "resizeHorizontalHandle"
           offsetFromMiddlePoint = new Point(@extent().x + @inset.x, Math.floor(@extent().y/2))
           @silentFullRawMoveTo @target.rightCenter().subtract(offsetFromMiddlePoint)
-        else if @type == "resizeDown"
+        else if @type == "resizeVerticalHandle"
           offsetFromMiddlePoint = new Point(Math.floor(@extent().x/2), @extent().y + @inset.y)
           @silentFullRawMoveTo @target.bottomCenter().subtract(offsetFromMiddlePoint)
   
@@ -133,7 +133,7 @@ class HandleMorph extends Morph
     context.stroke()
 
   drawHandle: (context) ->
-    if @type is "resizeRight" or @type is "move"
+    if @type is "resizeHorizontalHandle" or @type is "moveHandle"
       p0 = @bottomLeft().subtract(@position())
       p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
       
@@ -146,7 +146,7 @@ class HandleMorph extends Morph
       arrowPieceRightDown = new Point(-Math.ceil(@width()/5),Math.ceil(@height()/5))
       @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
-    if @type is "resizeDown" or @type is "move"
+    if @type is "resizeVerticalHandle" or @type is "moveHandle"
       p0 = @bottomCenter().subtract(@position())
       
       leftArrowPoint = p0.add(new Point(0,-Math.ceil(@height()/14)))
@@ -159,7 +159,7 @@ class HandleMorph extends Morph
       @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
 
-    if @type is "resize"
+    if @type is "resizeBothDimensionsHandle"
       leftArrowPoint = @extent().floorDivideBy(7)
       rightArrowPoint = @bottomRight().subtract(@position()).subtract( @extent().floorDivideBy(7) )
 
@@ -206,19 +206,19 @@ class HandleMorph extends Morph
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
-    if @type is "resize"
+    if @type is "resizeBothDimensionsHandle"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.position())
       @target.rawSetExtent newExt
       # the position of this handle will be changed when the
       # parentHasReLayouted method of this handle will be called
       # as the parent has re-layouted following the rawSetExtent call just
       # made.
-    else if @type is "move"
+    else if @type is "moveHandle"
       @target.fullRawMoveTo newPos.subtract @inset
-    else if @type is "resizeRight"
+    else if @type is "resizeHorizontalHandle"
       newWidth = newPos.x + @extent().x + @inset.x - @target.left()
       @target.rawSetWidth newWidth
-    else if @type is "resizeDown"
+    else if @type is "resizeVerticalHandle"
       newHeight = newPos.y + @extent().y + @inset.y - @target.top()
       @target.rawSetHeight newHeight
   
