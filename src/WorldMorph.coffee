@@ -1260,6 +1260,9 @@ class WorldMorph extends FrameMorph
     aMorph.isfloatDraggable = true
     aMorph.pickUp()
 
+  createNewLayoutableMorph: ->
+    @create new LayoutableMorph()
+
   createNewRectangleMorph: ->
     @create new RectangleMorph()
   createNewBoxMorph: ->
@@ -1413,6 +1416,7 @@ class WorldMorph extends FrameMorph
     menu = new MenuMorph(false, @, true, true, "Layout tests")
     menu.addItem "test set 1", true, LinearLayoutMorph, "testSet1"
     menu.addItem "test set 2", true, LinearLayoutMorph, "testSet2"
+    menu.addItem "layoutable morph", true, @, "createNewLayoutableMorph"
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
   

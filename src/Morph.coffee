@@ -1870,6 +1870,8 @@ class Morph extends MorphicNode
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
+    menu.addItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
+
     menu.popUpAtHand(@firstContainerMenu())
 
   serialiseToMemory: ->
@@ -1993,6 +1995,20 @@ class Morph extends MorphicNode
       # (as opposed to the content of a ScrollFrameMorph)
       theMorphToBeAttached.isfloatDraggable = false
 
+  newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
+    # this is what happens when "each" is
+    # selected: we attach the selected morph
+    @add theMorphToBeAttached, null, LayoutSpec.HORIZONTAL_STACK
+    if @ instanceof ScrollFrameMorph
+      @adjustContentsBounds()
+      @adjustScrollBars()
+    else
+      # you expect Morphs attached
+      # inside a FrameMorph
+      # to be floatDraggable out of it
+      # (as opposed to the content of a ScrollFrameMorph)
+      theMorphToBeAttached.isfloatDraggable = false
+
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs(@)
 
@@ -2007,6 +2023,32 @@ class Morph extends MorphicNode
       menu = new MenuMorph(false, @, true, true, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
         menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice"
+    else
+      # the ideal would be to not show the
+      # "attach" menu entry at all but for the
+      # time being it's quite costly to
+      # find the eligible morphs to attach
+      # to, so for now let's just calculate
+      # this list if the user invokes the
+      # command, and if there are no good
+      # morphs then show some kind of message.
+      menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
+    menu.popUpAtHand(@firstContainerMenu())
+
+  attachWithHorizLayout: ->
+    choices = world.plausibleTargetAndDestinationMorphs(@)
+
+    # my direct parent might be in the
+    # options which is silly, leave that one out
+    choicesExcludingParent = []
+    choices.forEach (each) =>
+      if each != @parent
+        choicesExcludingParent.push each
+
+    if choicesExcludingParent.length > 0
+      menu = new MenuMorph(false, @, true, true, "choose new parent:")
+      choicesExcludingParent.forEach (each) =>
+        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout"
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
