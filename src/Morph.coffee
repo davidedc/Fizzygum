@@ -12,6 +12,7 @@
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES DeepCopierMixin
+# REQUIRES LayoutSpec
 
 class Morph extends MorphicNode
   # this is so we can create objects from the object class name 
@@ -134,6 +135,9 @@ class Morph extends MorphicNode
 
   srcBrokenRect: null
   dstBrokenRect: null
+
+  layoutIsValid: true
+  layoutSpec: LayoutSpec.FREEFLOATING
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
