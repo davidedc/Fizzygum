@@ -471,6 +471,7 @@ trackChanges = [true]
 window.healingRectanglesPhase = false
 window.morphsThatMaybeChangedGeometryOrPosition = []
 window.morphsThatMaybeChangedFullGeometryOrPosition = []
+window.morphsThatMaybeChangedLayout = []
 
 continueBooting2 = ->
   # Add "false" as second parameter below

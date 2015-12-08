@@ -547,6 +547,7 @@ class WorldMorph extends FrameMorph
     @numberOfDuplicatedBrokenRects = 0
     @numberOfMergedSourceAndDestination = 0
 
+    @recalculateLayouts()
     @fleshOutFullBroken()
     @fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenMorph()

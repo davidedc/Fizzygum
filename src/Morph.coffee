@@ -596,6 +596,22 @@ class Morph extends MorphicNode
 
     return result
 
+  invalidateLayout: ->
+    if @layoutIsValid
+      window.morphsThatMaybeChangedLayout.push @
+    @layoutIsValid = false
+    if @parent?
+      @parent.invalidateLayout()
+
+  recalculateLayouts: ->
+    if @layoutIsValid
+      return
+    else
+      for eachChild in @children
+        if !eachChild.layoutIsValid
+          eachChild.doLayout()
+
+
   # Note that in a case of a fullMove*
   # you should also invalidate all the morphs in
   # the subtree as well.
