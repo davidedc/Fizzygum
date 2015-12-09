@@ -833,6 +833,13 @@ class Morph extends MorphicNode
       @breakNumberOfRawMovesAndResizesCaches()
       @fullRawMoveBy delta
     @bounds.debugIfFloats()
+
+  fullMoveTo: (aPoint) ->
+    if @layoutSpec != LayoutSpec.FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @fullRawMoveTo arguments...
   
   silentFullRawMoveTo: (aPoint) ->
     #console.log "move 7"
@@ -937,6 +944,15 @@ class Morph extends MorphicNode
       if @parent?
         if @parent != morphStartingTheChange
           @parent.childChangedExtent(@)
+
+  # Morph accessing - dimensional changes requiring a complete redraw
+  setExtent: (aPoint, morphStartingTheChange = null) ->
+    if @layoutSpec != LayoutSpec.FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @rawSetExtent arguments...
+
   
   silentRawSetExtent: (aPoint) ->
     aPoint = aPoint.round()
@@ -966,6 +982,13 @@ class Morph extends MorphicNode
     #console.log "move 10"
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(width or 0, @height())
+
+  setWidth: (width) ->
+    if @layoutSpec != LayoutSpec.FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @rawSetWidth arguments...
   
   silentRawSetWidth: (width) ->
     #console.log "move 11"
@@ -977,6 +1000,14 @@ class Morph extends MorphicNode
     #console.log "move 12"
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(@width(), height or 0)
+
+  setHeight: (height) ->
+    if @layoutSpec != LayoutSpec.FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @rawSetHeight arguments...
+
   
   silentRawSetHeight: (height) ->
     #console.log "move 13"

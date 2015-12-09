@@ -165,6 +165,7 @@ class LayoutableMorph extends Morph
       reductionFraction = newBounds.width() / min.width()
       childLeft = newBounds.left()
       for C in @children
+        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
@@ -181,6 +182,7 @@ class LayoutableMorph extends Morph
       fraction = (newBounds.width() - min.width()) / desiredMargin
       childLeft = newBounds.left()
       for C in @children
+        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
         minWidth = C.getMinDim().width()
         desWidth = C.getDesiredDim().width()
         childBounds = new Rectangle \
@@ -199,6 +201,7 @@ class LayoutableMorph extends Morph
         fraction = 0
       childLeft = newBounds.left()
       for C in @children
+        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
         maxWidth = C.getMaxDim().width()
         desWidth = C.getDesiredDim().width()
         childBounds = new Rectangle \

@@ -208,19 +208,19 @@ class HandleMorph extends Morph
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     if @type is "resizeBothDimensionsHandle"
       newExt = newPos.add(@extent().add(@inset)).subtract(@target.position())
-      @target.rawSetExtent newExt
+      @target.setExtent newExt
       # the position of this handle will be changed when the
       # parentHasReLayouted method of this handle will be called
       # as the parent has re-layouted following the rawSetExtent call just
       # made.
     else if @type is "moveHandle"
-      @target.fullRawMoveTo newPos.subtract @inset
+      @target.fullMoveTo newPos.subtract @inset
     else if @type is "resizeHorizontalHandle"
       newWidth = newPos.x + @extent().x + @inset.x - @target.left()
-      @target.rawSetWidth newWidth
+      @target.setWidth newWidth
     else if @type is "resizeVerticalHandle"
       newHeight = newPos.y + @extent().y + @inset.y - @target.top()
-      @target.rawSetHeight newHeight
+      @target.setHeight newHeight
   
   
   # HandleMorph floatDragging and dropping:
