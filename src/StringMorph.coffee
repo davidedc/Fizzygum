@@ -300,31 +300,37 @@ class StringMorph extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
@@ -339,7 +345,8 @@ class StringMorph extends Morph
     else
       newSize = parseFloat(size)
       @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
-    @reLayout()    
+    @reLayout()
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   # TODO this is invoked when for example you take a slider
@@ -353,6 +360,7 @@ class StringMorph extends Morph
     # for context menu demo purposes
     @text = Math.round(size).toString()
     @reLayout()    
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   numericalSetters: ->
@@ -376,6 +384,7 @@ class StringMorph extends Morph
     @currentlySelecting = false
     @startMark = null
     @endMark = null
+    @backBufferIsPotentiallyDirty = true
     @changed()
   
   deleteSelection: ->
@@ -383,6 +392,7 @@ class StringMorph extends Morph
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     @text = text.slice(0, start) + text.slice(stop)
+    @backBufferIsPotentiallyDirty = true
     @changed()
     @clearSelection()
   
