@@ -18,6 +18,7 @@ class LayoutableMorph extends Morph
     else
       super
       aMorph.layoutSpec = layoutSpec
+      @invalidateLayout()
 
   setDesiredDim: (@overridingDesiredDim) ->
     @invalidateLayout()
@@ -84,7 +85,7 @@ class LayoutableMorph extends Morph
     # the user might have forced the "desired" to
     # be smaller than the standard minimum set by
     # the widget
-    return Math.min(@minDimCache, @getDesiredDim())
+    return @minDimCache.min @getDesiredDim()
 
   getMaxDim: ->
     # TBD the exact shape of @checkMaxDimCache
@@ -116,10 +117,34 @@ class LayoutableMorph extends Morph
     # the user might have forced the "desired" to
     # be bigger than the standard maximum set by
     # the widget
-    return Math.max(@maxDimCache, @getDesiredDim())
+    return @maxDimCache.max @getDesiredDim()
 
-  doLayout: ->
-    newBounds = @boundingBox()
+  countOfChildrenToLayout: ->
+    count = 0
+    for C in @children
+      if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
+        count++
+    return count
+
+
+  doLayout: (newBounds = @boundingBox()) ->
+
+    # freefloating layouts never need
+    # adjusting. We marked the @layoutIsValid
+    # to false because it's an important breadcrumb
+    # for finding the morphs that actually have a
+    # layout to be recalculated but this Morph
+    # now needs to do nothing.
+    #if @layoutSpec == LayoutSpec.FREEFLOATING
+    #  @layoutIsValid = true
+    #  return
+    
+    # todo should we do a fullChanged here?
+    # rather than breaking what could be many
+    # rectangles?
+    debugger
+    @rawSetBounds newBounds
+
     min = @getMinDim()
     desired = @getDesiredDim()
     max = @getMaxDim()
@@ -168,9 +193,11 @@ class LayoutableMorph extends Morph
     else
       # allocate what remains based on maximum widths
       maxMargin = max.width()-desired.width()
-      fraction = (newBounds.width()-desired.width()) / maxMargin
+      if maxMargin != 0
+        fraction = (newBounds.width()-desired.width()) / maxMargin
+      else
+        fraction = 0
       childLeft = newBounds.left()
-      foreach C in @children
       for C in @children
         maxWidth = C.getMaxDim().width()
         desWidth = C.getDesiredDim().width()

@@ -470,9 +470,10 @@ class Morph extends MorphicNode
     @bounds
   
   rawSetBounds: (newBounds) ->
-    @bounds = newBounds
-    @changed()
-    @breakNumberOfRawMovesAndResizesCaches()
+    if !(@bounds.eq newBounds)
+      @bounds = newBounds
+      @changed()
+      @breakNumberOfRawMovesAndResizesCaches()
 
 
   silentRawSetBounds: (newBounds) ->
@@ -596,20 +597,17 @@ class Morph extends MorphicNode
 
     return result
 
+  doLayout: ->
+    @layoutIsValid = true
+    return
+
+
   invalidateLayout: ->
     if @layoutIsValid
       window.morphsThatMaybeChangedLayout.push @
     @layoutIsValid = false
     if @parent?
       @parent.invalidateLayout()
-
-  recalculateLayouts: ->
-    if @layoutIsValid
-      return
-    else
-      for eachChild in @children
-        if !eachChild.layoutIsValid
-          eachChild.doLayout()
 
 
   # Note that in a case of a fullMove*

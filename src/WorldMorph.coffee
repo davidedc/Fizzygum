@@ -540,6 +540,36 @@ class WorldMorph extends FrameMorph
             Math.round(eachBrokenRect.height())
     aContext.restore()
 
+  recalculateLayouts: ->
+
+    until morphsThatMaybeChangedLayout.length == 0
+
+      # find the first Morph which has a broken layout,
+      # take out of queue all the others
+      loop
+        tryThisMorph = morphsThatMaybeChangedLayout[morphsThatMaybeChangedLayout.length - 1]
+        if tryThisMorph.layoutIsValid
+          morphsThatMaybeChangedLayout.pop()
+          if morphsThatMaybeChangedLayout.length == 0
+            return
+        else
+          break
+
+      # now that you have a Morph with a broken layout
+      # go up the chain of broken layouts as much as
+      # possible
+      while tryThisMorph.parent?
+        if tryThisMorph.parent.layoutIsValid
+          break
+        tryThisMorph = tryThisMorph.parent
+
+      # so now you have a "top" element up a chain
+      # of morphs with broken layout. Go do a
+      # doLayout on it, so it might fix a bunch of those
+      # on the chain (but not all)
+      tryThisMorph.doLayout()
+
+
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
     @broken = []
@@ -547,7 +577,6 @@ class WorldMorph extends FrameMorph
     @numberOfDuplicatedBrokenRects = 0
     @numberOfMergedSourceAndDestination = 0
 
-    @recalculateLayouts()
     @fleshOutFullBroken()
     @fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenMorph()
@@ -588,6 +617,7 @@ class WorldMorph extends FrameMorph
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
+    @recalculateLayouts()
     @updateBroken()
     WorldMorph.frameCount++
   
