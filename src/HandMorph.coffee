@@ -119,8 +119,8 @@ class HandMorph extends Morph
     target
   
   grab: (aMorph) ->
-    oldParent = aMorph.parent
     return null  if aMorph instanceof WorldMorph
+    oldParent = aMorph.parent
     if !@floatDraggingSomething()
 
       @world.systemTestsRecorderAndPlayer.addGrabCommand()
