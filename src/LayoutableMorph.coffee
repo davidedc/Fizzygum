@@ -32,8 +32,8 @@ class LayoutableMorph extends Morph
     #if @checkDesiredDimCache
     #  return @desiredDimCache
 
-    desiredWidth = -1
-    desiredHeight = -1
+    desiredWidth = null
+    desiredHeight = null
     for C in @children
       if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
         childSize = C.getDesiredDim()
@@ -41,10 +41,10 @@ class LayoutableMorph extends Morph
         if desiredHeight < childSize.height()
           desiredHeight = childSize.height()
 
-    if desiredWidth == -1
+    if !desiredWidth?
       desiredWidth = 20
 
-    if desiredHeight == -1
+    if !desiredHeight?
       desiredHeight = 20
 
     # TBD the exact shape of @checkDesiredDimCache
@@ -62,8 +62,8 @@ class LayoutableMorph extends Morph
     #  # the widget
     #  return Math.min @minDimCache, @getDesiredDim()
 
-    minWidth = -1
-    minHeight = -1
+    minWidth = null
+    minHeight = null
     for C in @children
       if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
         childSize = C.getMinDim()
@@ -71,10 +71,10 @@ class LayoutableMorph extends Morph
         if minHeight < childSize.height()
           minHeight = childSize.height()
 
-    if minWidth == -1
+    if !minWidth?
       minWidth = 20
 
-    if minHeight == -1
+    if !minHeight?
       minHeight = 20
 
     # TBD the exact shape of @checkMinDimCache
@@ -94,8 +94,8 @@ class LayoutableMorph extends Morph
     #  # the widget
     #  return Math.max @maxDimCache, @getDesiredDim()
 
-    maxWidth = -1
-    maxHeight = -1
+    maxWidth = null
+    maxHeight = null
     for C in @children
       if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
         childSize = C.getMaxDim()
@@ -103,10 +103,10 @@ class LayoutableMorph extends Morph
         if maxHeight < childSize.height()
           maxHeight = childSize.height()
 
-    if maxWidth == -1
+    if !maxWidth?
       maxWidth = 20
 
-    if maxHeight == -1
+    if !maxHeight?
       maxHeight = 20
 
     # TBD the exact shape of @checkMaxDimCache
