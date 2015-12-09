@@ -209,7 +209,6 @@ class HandMorph extends Morph
       morphToDrop.justDropped? @
       if target.reactToDropOf
         target.reactToDropOf morphToDrop, @
-      @floatDragOrigin = null
   
   # HandMorph event dispatching:
   #
