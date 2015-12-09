@@ -10,16 +10,6 @@ class LayoutableMorph extends Morph
 
   overridingDesiredDim: null
 
-  # attaches submorph on top
-  add: (aMorph, position = null, layoutSpec = LayoutSpec.FREEFLOATING ) ->
-
-    if layoutSpec == LayoutSpec.FREEFLOATING
-      return super
-    else
-      super
-      aMorph.layoutSpec = layoutSpec
-      @invalidateLayout()
-
   setDesiredDim: (@overridingDesiredDim) ->
     @invalidateLayout()
 

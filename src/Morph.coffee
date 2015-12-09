@@ -1416,7 +1416,14 @@ class Morph extends MorphicNode
   #     being added to itself and the case of
   # ??? TODO a Morph being added to one of its
   #     children
-  add: (aMorph, position = null) ->
+  add: (aMorph, position = null, layoutSpec = LayoutSpec.FREEFLOATING) ->
+
+    aMorph.parent?.invalidateLayout()
+
+    if layoutSpec != LayoutSpec.FREEFLOATING
+      aMorph.layoutSpec = layoutSpec
+      @invalidateLayout()
+
     # the morph that is being
     # attached might be attached to
     # a clipping morph. So we
