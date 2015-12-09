@@ -48,7 +48,6 @@ class StringFieldMorph extends FrameMorph
     @text.isNumeric = @isNumeric # for whichever reason...
     @text.fullRawMoveTo @position()
     @text.isEditable = @isEditable
-    @text.isfloatDraggable = false
     @text.enableSelecting()    
     @silentRawSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
     @add @text

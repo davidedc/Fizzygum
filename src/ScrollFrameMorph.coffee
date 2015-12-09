@@ -41,13 +41,11 @@ class ScrollFrameMorph extends FrameMorph
     @hBar = new SliderMorph(null, null, null, null, "horizontal", @sliderColor)
     @hBar.rawSetHeight @scrollBarSize
 
-    @hBar.isfloatDraggable = false
     @hBar.target = @
     @add @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.rawSetWidth @scrollBarSize
-    @vBar.isfloatDraggable = false
     @vBar.target = @
     @add @vBar
 
@@ -85,6 +83,11 @@ class ScrollFrameMorph extends FrameMorph
     # contained frame
     @contents.setAlphaScaled alphaOrMorphGivingAlpha, morphGivingAlpha
     return alpha
+
+  anyScrollBarShowing: ->
+    if @hBar.visibleBasedOnIsVisibleProperty() or @vBar.visibleBasedOnIsVisibleProperty()
+      return true
+    return false
 
   adjustScrollBars: ->
     hWidth = @width() - @scrollBarSize

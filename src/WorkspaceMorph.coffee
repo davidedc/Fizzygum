@@ -20,7 +20,6 @@ class WorkspaceMorph extends BoxMorph
     @silentRawSetExtent new Point(
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
-    @isfloatDraggable = true
     @cornerRadius = 5
     @color = new Color(60, 60, 60)
     @buildAndConnectChildren()

@@ -222,7 +222,7 @@ class TriggerMorph extends Morph
   # User might still move the trigger itself though
   # (if it's unlocked)
   rootForGrab: ->
-    if @isfloatDraggable
+    if @isFloatDraggable()
       return super()
     null
   

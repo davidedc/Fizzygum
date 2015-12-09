@@ -23,7 +23,6 @@ class FrameMorph extends Morph
     @color = new Color(255, 250, 245)
     @acceptsDrops = true
     if @scrollFrame
-      @isfloatDraggable = false
       @noticesTransparentClick = false
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
@@ -258,6 +257,19 @@ class FrameMorph extends Morph
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars()
+
+  isFloatDraggable: ->
+    debugger
+    if @parent?
+
+      # otherwise you could detach a Frame contained in a
+      # ScrollFrameMorph which is very strange
+      if (@parent instanceof ScrollFrameMorph)
+        return false
+
+      if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)
+        return true
+    return false
   
   reactToGrabOf: ->
     if @parent?

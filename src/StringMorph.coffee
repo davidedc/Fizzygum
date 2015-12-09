@@ -290,12 +290,12 @@ class StringMorph extends Morph
     menu
   
   toggleIsfloatDraggable: ->
-    # for context menu demo purposes
-    @isfloatDraggable = not @isfloatDraggable
-    if @isfloatDraggable
-      @disableSelecting()
-    else
-      @enableSelecting()
+  #  # for context menu demo purposes
+  #  @isfloatDraggable = not @isfloatDraggable
+  #  if @isfloatDraggable
+  #    @disableSelecting()
+  #  else
+  #    @enableSelecting()
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
@@ -392,12 +392,6 @@ class StringMorph extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
 
-  mouseDownLeft: (pos) ->
-    if @isEditable
-      @clearSelection()
-    else
-      @escalateEvent "mouseDownLeft", pos
-
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
@@ -417,7 +411,7 @@ class StringMorph extends Morph
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
-      if @isEditable and (not @isfloatDraggable)
+      if @isEditable and (not @isFloatDraggable())
         @edit()
         world.caret.gotoPos pos
         @startMark = @slotAt(pos)
@@ -425,15 +419,18 @@ class StringMorph extends Morph
         @currentlySelecting = true
     
     @mouseMove = (pos) ->
-      if @isEditable and @currentlySelecting and (not @isfloatDraggable)
+      if @isEditable and @currentlySelecting
         newMark = @slotAt(pos)
         if newMark isnt @endMark
           @endMark = newMark
           
           @changed()
+      else
+        @disableSelecting()
   
   disableSelecting: ->
     # re-establish the original definition of the method
+    @clearSelection()
     @mouseDownLeft = StringMorph::mouseDownLeft
     delete @mouseMove
 

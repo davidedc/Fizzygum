@@ -123,16 +123,9 @@ class BoxMorph extends Morph
     # selected: we attach the selected morph
     debugger
     morphPickingUp.addInset @
-    @isfloatDraggable = false
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()
-    else
-      # you expect Morphs attached
-      # inside a FrameMorph
-      # to be floatDraggable out of it
-      # (as opposed to the content of a ScrollFrameMorph)
-      @isfloatDraggable = false
   
   # there is another method almost equal to this
   # todo refactor

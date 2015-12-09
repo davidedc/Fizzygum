@@ -143,6 +143,9 @@ class WorldMorph extends FrameMorph
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
+  isFloatDraggable: ->
+    return false
+
 
   constructor: (
       @worldCanvas,
@@ -169,7 +172,6 @@ class WorldMorph extends FrameMorph
     console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color(205, 205, 205) # (130, 130, 130)
     @alpha = 1
-    @isfloatDraggable = false
 
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
@@ -1288,7 +1290,6 @@ class WorldMorph extends FrameMorph
     menu.popUpAtHand(@firstContainerMenu())
 
   create: (aMorph) ->
-    aMorph.isfloatDraggable = true
     aMorph.pickUp()
 
   createNewLayoutableMorph: ->

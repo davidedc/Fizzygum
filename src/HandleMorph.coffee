@@ -33,6 +33,19 @@ class HandleMorph extends Morph
       @target.add @
     @updateResizerHandlePosition()
 
+  isFloatDraggable: ->
+    if @parent?
+
+      # an instance of ScrollFrameMorph is also an instance of FrameMorph
+      # so gotta do this check first ahead of next paragraph.
+      #if @parentThatIsA(ScrollFrameMorph)?
+      #  return false
+
+      if (@parent instanceof WorldMorph)
+        return true
+    return false
+
+
   parentHasReLayouted: ->
     @updateResizerHandlePosition()
 
@@ -239,7 +252,6 @@ class HandleMorph extends Morph
     @changed()
 
   makeHandleSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
-    @isfloatDraggable = false
     @target = morphAttachedTo
     @target.add @
     @updateResizerHandlePosition()

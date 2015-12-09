@@ -25,7 +25,6 @@ class MenuMorph extends BoxMorph
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren("destroy")
-    @isfloatDraggable = true
     super()
 
     if !@isListContents

@@ -707,7 +707,7 @@ class HandMorph extends Morph
 
       # if a morph is marked for grabbing, just grab it
       if @morphToGrab
-        if @morphToGrab.isfloatDraggable
+        if @morphToGrab.isFloatDraggable()
           morph = @morphToGrab
           @grab morph
         # templates create a copy of
@@ -715,7 +715,10 @@ class HandMorph extends Morph
         else if @morphToGrab.isTemplate
           morph = @morphToGrab.fullCopy()
           morph.isTemplate = false
-          morph.isfloatDraggable = true
+          # this flag is not used anymore but not sure
+          # if anything should replace this.
+          # keeping it as a comment as a breadcrumb
+          # morph.isfloatDraggable = true
           @grab morph
           @grabOrigin = @morphToGrab.situation()
         else

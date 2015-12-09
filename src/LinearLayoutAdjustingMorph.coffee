@@ -20,7 +20,6 @@ class LinearLayoutAdjustingMorph extends RectangleMorph
 
   constructor: ->
     super()
-    @isfloatDraggable = false
     @noticesTransparentClick = true
 
   # HandleMorph floatDragging and dropping:

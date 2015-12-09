@@ -34,7 +34,6 @@ class SliderButtonMorph extends CircleBoxMorph
   constructor: (orientation) ->
     super orientation
     @color = @normalColor.copy()
-    @isfloatDraggable = false
     @noticesTransparentClick = true
     @alpha = 0.4
 

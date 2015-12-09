@@ -88,8 +88,6 @@ class Morph extends MorphicNode
   # two separate flags.
   isVisible: true
 
-  isfloatDraggable: false
-
   # if a morph is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
   # it's a nice shortcut instead of doing
@@ -1623,15 +1621,30 @@ class Morph extends MorphicNode
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
+  isFloatDraggable: ->
+    debugger
+    if @parent?
+
+      # an instance of ScrollFrameMorph is also an instance of FrameMorph
+      # so gotta do this check first ahead of next paragraph.
+      maybeScrollFrameMorphAncestor = @parentThatIsA(ScrollFrameMorph)
+      if maybeScrollFrameMorphAncestor?
+        maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
+        if !maybeScrollFrameMorphAncestor.anyScrollBarShowing()
+          return true
+        else
+          return false
+
+      if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)
+        return true
+    return false
+
   rootForGrab: ->
     if @ instanceof ShadowMorph
       return @parent.rootForGrab()
-    if @parent instanceof ScrollFrameMorph
-      return @parent
     if @parent is null or
       @parent instanceof WorldMorph or
-      @parent instanceof FrameMorph or
-      @isfloatDraggable is true
+      ((@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph))
         return @  
     @parent.rootForGrab()
 
@@ -1746,7 +1759,6 @@ class Morph extends MorphicNode
     else
       text = "NULL"
     m = new MenuMorph(false, @, true, true, text)
-    m.isfloatDraggable = true
     m.popUpCenteredAtHand world
   
   inform: (msg) ->
@@ -1757,7 +1769,6 @@ class Morph extends MorphicNode
       text = "NULL"
     m = new MenuMorph(false, @, true, true, text)
     m.addItem "Ok"
-    m.isfloatDraggable = true
     m.popUpCenteredAtHand world
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
@@ -1802,7 +1813,6 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.isfloatDraggable = true
     menu.popUpAtHand(@firstContainerMenu())
     tempPromptEntryField.text.edit()
 
@@ -1832,7 +1842,6 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.isfloatDraggable = true
     menu.popUpAtHand(@firstContainerMenu())
 
   inspect: (anotherObject) ->
@@ -1995,7 +2004,7 @@ class Morph extends MorphicNode
     menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
     menu.addLine()
-    if @isfloatDraggable
+    if @isFloatDraggable()
       menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
     else
       menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
@@ -2040,12 +2049,6 @@ class Morph extends MorphicNode
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()
-    else
-      # you expect Morphs attached
-      # inside a FrameMorph
-      # to be floatDraggable out of it
-      # (as opposed to the content of a ScrollFrameMorph)
-      theMorphToBeAttached.isfloatDraggable = false
 
   newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
     # this is what happens when "each" is
@@ -2054,12 +2057,6 @@ class Morph extends MorphicNode
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()
-    else
-      # you expect Morphs attached
-      # inside a FrameMorph
-      # to be floatDraggable out of it
-      # (as opposed to the content of a ScrollFrameMorph)
-      theMorphToBeAttached.isfloatDraggable = false
 
   attach: ->
     choices = world.plausibleTargetAndDestinationMorphs(@)
@@ -2113,9 +2110,11 @@ class Morph extends MorphicNode
       menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
     menu.popUpAtHand(@firstContainerMenu())
   
+  # does nothing, keeping it for the peace of
+  # some tests
   toggleIsfloatDraggable: ->
-    # for context menu demo purposes
-    @isfloatDraggable = not @isfloatDraggable
+  #  # for context menu demo purposes
+  #  @isfloatDraggable = not @isfloatDraggable
   
   colorSetters: ->
     # for context menu demo purposes
