@@ -10,8 +10,9 @@ class LayoutableMorph extends Morph
 
   overridingDesiredDim: null
 
+  # attaches submorph on top
   add: (aMorph, position = null, layoutSpec = LayoutSpec.FREEFLOATING ) ->
-    
+
     if layoutSpec == LayoutSpec.FREEFLOATING
       return super
     else
@@ -146,8 +147,11 @@ class LayoutableMorph extends Morph
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
+    # the min is within the bounds but the desired is just
+    # equal or larger than the bounds.
     else if desired.width() >= newBounds.width()
-      # give min to all and proportional on what is available for desired
+      # give min to all and then what is left available
+      # redistribute proportionally based on desired1
       desiredMargin = desired.width() - min.width()
       fraction = (newBounds.width() - min.width()) / desiredMargin
       childLeft = newBounds.left()
