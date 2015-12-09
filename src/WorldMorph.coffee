@@ -361,7 +361,7 @@ class WorldMorph extends FrameMorph
     mergedBrokenRect = sourceBroken.merge destinationBroken
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
-    console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
+    #console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
     if mergedBrokenRectArea < (sumArea + sumArea/10)
       @pushBrokenRect brokenMorph, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
