@@ -87,7 +87,7 @@ class CaretMorph extends BlinkerMorph
         @deleteLeft()
         @keyDownEventUsed = true
       when 13
-        # we can't check the class using instanceOf
+        # we can't check the class using instanceof
         # because TextMorphs are instances of StringMorphs
         # but they want the enter to insert a carriage return.
         if @target.constructor.name == "StringMorph"
