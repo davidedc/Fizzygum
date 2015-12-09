@@ -26,7 +26,7 @@ class LayoutableMorph extends Morph
     desiredWidth = null
     desiredHeight = null
     for C in @children
-      if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
+      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getDesiredDim()
         desiredWidth += childSize.width()
         if desiredHeight < childSize.height()
@@ -56,7 +56,7 @@ class LayoutableMorph extends Morph
     minWidth = null
     minHeight = null
     for C in @children
-      if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
+      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getMinDim()
         minWidth += childSize.width()
         if minHeight < childSize.height()
@@ -88,7 +88,7 @@ class LayoutableMorph extends Morph
     maxWidth = null
     maxHeight = null
     for C in @children
-      if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
+      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getMaxDim()
         maxWidth += childSize.width()
         if maxHeight < childSize.height()
@@ -112,7 +112,7 @@ class LayoutableMorph extends Morph
   countOfChildrenToLayout: ->
     count = 0
     for C in @children
-      if C.layoutSpec == LayoutSpec.HORIZONTAL_STACK
+      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         count++
     return count
 
@@ -125,7 +125,7 @@ class LayoutableMorph extends Morph
     # for finding the morphs that actually have a
     # layout to be recalculated but this Morph
     # now needs to do nothing.
-    #if @layoutSpec == LayoutSpec.FREEFLOATING
+    #if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
     #  @layoutIsValid = true
     #  return
     
@@ -155,7 +155,7 @@ class LayoutableMorph extends Morph
       reductionFraction = newBounds.width() / min.width()
       childLeft = newBounds.left()
       for C in @children
-        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
+        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
@@ -172,7 +172,7 @@ class LayoutableMorph extends Morph
       fraction = (newBounds.width() - min.width()) / desiredMargin
       childLeft = newBounds.left()
       for C in @children
-        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
+        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
         minWidth = C.getMinDim().width()
         desWidth = C.getDesiredDim().width()
         childBounds = new Rectangle \
@@ -191,7 +191,7 @@ class LayoutableMorph extends Morph
         fraction = 0
       childLeft = newBounds.left()
       for C in @children
-        if C.layoutSpec != LayoutSpec.HORIZONTAL_STACK then continue
+        if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
         maxWidth = C.getMaxDim().width()
         desWidth = C.getDesiredDim().width()
         childBounds = new Rectangle \

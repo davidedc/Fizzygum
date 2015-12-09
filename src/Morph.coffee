@@ -135,7 +135,7 @@ class Morph extends MorphicNode
   dstBrokenRect: null
 
   layoutIsValid: true
-  layoutSpec: LayoutSpec.FREEFLOATING
+  layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
@@ -833,7 +833,7 @@ class Morph extends MorphicNode
     @bounds.debugIfFloats()
 
   fullMoveTo: (aPoint) ->
-    if @layoutSpec != LayoutSpec.FREEFLOATING
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
       @invalidateLayout()
@@ -945,7 +945,7 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
-    if @layoutSpec != LayoutSpec.FREEFLOATING
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
       @invalidateLayout()
@@ -982,7 +982,7 @@ class Morph extends MorphicNode
     @rawSetExtent new Point(width or 0, @height())
 
   setWidth: (width) ->
-    if @layoutSpec != LayoutSpec.FREEFLOATING
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
       @invalidateLayout()
@@ -1000,7 +1000,7 @@ class Morph extends MorphicNode
     @rawSetExtent new Point(@width(), height or 0)
 
   setHeight: (height) ->
-    if @layoutSpec != LayoutSpec.FREEFLOATING
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
       @invalidateLayout()
@@ -1414,11 +1414,11 @@ class Morph extends MorphicNode
   #     being added to itself and the case of
   # ??? TODO a Morph being added to one of its
   #     children
-  add: (aMorph, position = null, layoutSpec = LayoutSpec.FREEFLOATING) ->
+  add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
 
     aMorph.parent?.invalidateLayout()
 
-    if layoutSpec != LayoutSpec.FREEFLOATING
+    if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       aMorph.layoutSpec = layoutSpec
       @invalidateLayout()
 
@@ -2053,7 +2053,7 @@ class Morph extends MorphicNode
   newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
-    @add theMorphToBeAttached, null, LayoutSpec.HORIZONTAL_STACK
+    @add theMorphToBeAttached, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()
