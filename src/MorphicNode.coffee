@@ -343,6 +343,31 @@ class MorphicNode
         theCount++
     return theCount
 
+  lastSiblingBeforeMeSuchThat: (predicate) ->
+    theCount = 0
+    indexOfMorph = null
+    for eachSibling in @parent.children
+      if eachSibling == @
+        break
+      if predicate.call(null, eachSibling)
+        indexOfMorph = theCount
+      theCount++
+
+    if indexOfMorph?
+      return @parent.children[indexOfMorph]
+    else
+      return null
+
+  firstSiblingAfterMeSuchThat: (predicate) ->
+    searchActuallyOngoing = false
+    for eachSibling in @parent.children
+      if searchActuallyOngoing
+        if predicate.call(null, eachSibling)
+          return eachSibling
+      if eachSibling == @
+        searchActuallyOngoing = true
+    return null
+
   # find the nth child satisfying
   # a property.
   # This is used when finding

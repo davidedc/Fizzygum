@@ -384,6 +384,22 @@ class LinearLayoutMorph extends LayoutMorph
     @testScenario5("#vertical")
     @testScenario6("#vertical")
 
+  @testSet3: ->
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmAdj.setColor new Color(0, 255, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+
+    world.add(lmHolder)
+
   @testScenario1: (direction = "#horizontal")->
     rect1 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
     rect2 = new RectangleMorph(new Point(20,20), new Color(0,255,0));

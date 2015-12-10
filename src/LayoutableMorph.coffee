@@ -28,8 +28,10 @@ class LayoutableMorph extends Morph
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getDesiredDim()
+        if !desiredWidth? then desiredWidth = 0
         desiredWidth += childSize.width()
         if desiredHeight < childSize.height()
+          if !desiredHeight? then desiredHeight = 0
           desiredHeight = childSize.height()
 
     if !desiredWidth?
@@ -119,6 +121,7 @@ class LayoutableMorph extends Morph
 
   doLayout: (newBounds = @boundingBox()) ->
 
+    debugger
     # freefloating layouts never need
     # adjusting. We marked the @layoutIsValid
     # to false because it's an important breadcrumb
@@ -132,7 +135,6 @@ class LayoutableMorph extends Morph
     # todo should we do a fullChanged here?
     # rather than breaking what could be many
     # rectangles?
-    debugger
     @rawSetBounds newBounds
 
     min = @getMinDim()
@@ -142,6 +144,7 @@ class LayoutableMorph extends Morph
     # we are forced to be in a space smaller
     # than the minimum. We obey.
     if min.width() >= newBounds.width()
+      if @parent == world then console.log "case 1"
       # Give all children under minimum
       # this is unfortunate but
       # we don't want to rely on clipping what's
@@ -163,13 +166,18 @@ class LayoutableMorph extends Morph
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
+
     # the min is within the bounds but the desired is just
     # equal or larger than the bounds.
+    # give min to all and then what is left available
+    # redistribute proportionally based on desired1
     else if desired.width() >= newBounds.width()
-      # give min to all and then what is left available
-      # redistribute proportionally based on desired1
+      if @parent == world then console.log "case 2"
       desiredMargin = desired.width() - min.width()
-      fraction = (newBounds.width() - min.width()) / desiredMargin
+      if desiredMargin != 0
+        fraction = (newBounds.width() - min.width()) / desiredMargin
+      else
+        fraction = 0      
       childLeft = newBounds.left()
       for C in @children
         if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
@@ -178,17 +186,25 @@ class LayoutableMorph extends Morph
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
-          childLeft + minWidth + (desWidth-minWidth)*fraction,
+          childLeft + minWidth + (desWidth - minWidth)*fraction,
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
+
+    # min and desired are strictly less than the bounds
+    # hence we have more space than needed,
+    # allocate extra space based on maximum widths
     else
-      # allocate what remains based on maximum widths
       maxMargin = max.width()-desired.width()
+      if @parent == world then console.log "case 3 maxMargin: " + maxMargin
       if maxMargin != 0
         fraction = (newBounds.width()-desired.width()) / maxMargin
-      else
+      else if maxMargin == 0
         fraction = 0
+        absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
+        #absolute = 0
+      else
+        alert "maxMargin negative"
       childLeft = newBounds.left()
       for C in @children
         if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
@@ -197,7 +213,7 @@ class LayoutableMorph extends Morph
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
-          childLeft + maxWidth + (desWidth-maxWidth)*fraction,
+          childLeft + desWidth + (maxWidth - desWidth) * fraction + absolute,
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds

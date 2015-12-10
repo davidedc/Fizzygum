@@ -25,6 +25,9 @@ class HandMorph extends Morph
   doubleClickMorph: null
   nonFloatDraggedMorph: null
   nonFloatDragPositionWithinMorphAtStart: null
+  # this is useful during nonFloatDrags to pass the morph
+  # the delta position since the last invokation
+  previousNonFloatDraggingPos: null
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -209,6 +212,8 @@ class HandMorph extends Morph
       morphToDrop.justDropped? @
       if target.reactToDropOf
         target.reactToDropOf morphToDrop, @
+    #else
+    #  alert "if you never see this alert then you can delete the test"
   
   # HandMorph event dispatching:
   #
@@ -234,7 +239,6 @@ class HandMorph extends Morph
 
   destroyActiveHandleIfHandHasNotActionedIt: (actionedMorph) ->
     if @world.activeHandle.length > 0
-      debugger
       if @world.activeHandle.indexOf(actionedMorph) == -1
         for eachActiveHandle in @world.activeHandle
           eachActiveHandle.destroy()
@@ -372,6 +376,7 @@ class HandMorph extends Morph
     if @floatDraggingSomething()
       @drop()
     else
+      @previousNonFloatDraggingPos = null
       # let's check if the user clicked on a menu item,
       # in which case we add a special dedicated command
       # [TODO] you need to do some of this only if you
@@ -739,8 +744,14 @@ class HandMorph extends Morph
 
 
     if @nonFloatDraggingSomething()
-      console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
-      @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos)  if @mouseButton
+      #console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
+      if @mouseButton
+        if @previousNonFloatDraggingPos?
+          deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
+        else
+          deltaDragFromPreviousCall = null
+        @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
+        @previousNonFloatDraggingPos = pos
     
     #
     #	original, more cautious code for grabbing Morphs,

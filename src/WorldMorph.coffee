@@ -1294,6 +1294,8 @@ class WorldMorph extends FrameMorph
 
   createNewLayoutableMorph: ->
     @create new LayoutableMorph()
+  createNewStackElementsSizeAdjustingMorph: ->
+    @create new StackElementsSizeAdjustingMorph()
 
   createNewRectangleMorph: ->
     @create new RectangleMorph()
@@ -1449,6 +1451,8 @@ class WorldMorph extends FrameMorph
     menu.addItem "test set 1", true, LinearLayoutMorph, "testSet1"
     menu.addItem "test set 2", true, LinearLayoutMorph, "testSet2"
     menu.addItem "layoutable morph", true, @, "createNewLayoutableMorph"
+    menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
+    menu.addItem "test set 3", true, LinearLayoutMorph, "testSet3"
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
   
