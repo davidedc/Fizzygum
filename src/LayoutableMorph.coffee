@@ -10,7 +10,31 @@ class LayoutableMorph extends Morph
 
   overridingDesiredDim: null
 
-  setDesiredDim: (@overridingDesiredDim) ->
+  minWidth: 5
+  desiredWidth: 5
+  maxWidth: 5
+
+  minHeight: 5
+  desiredHeight: 5
+  maxHeight: 5
+
+  setDesiredDim: (overridingDesiredDim) ->
+    #@overridingDesiredDim = overridingDesiredDim
+
+    minWidthPerc = @minWidth / @desiredWidth
+    minHeightPerc = @minHeight / @desiredHeight
+    maxWidthPerc = @maxWidth / @desiredWidth
+    maxHeightPerc = @maxHeight / @desiredHeight
+
+
+    @desiredWidth = overridingDesiredDim.x
+    @desiredHeight = overridingDesiredDim.y
+
+    @maxWidth = @desiredWidth * maxWidthPerc
+    @maxHeight = @desiredHeight * maxHeightPerc
+    #@minWidth = @desiredWidth * minWidthPerc
+    #@minHeight = @desiredHeight * minHeightPerc
+
     @invalidateLayout()
 
 
@@ -35,10 +59,10 @@ class LayoutableMorph extends Morph
           desiredHeight = childSize.height()
 
     if !desiredWidth?
-      desiredWidth = 20
+      desiredWidth = @desiredWidth
 
     if !desiredHeight?
-      desiredHeight = 20
+      desiredHeight = @desiredHeight
 
     # TBD the exact shape of @checkDesiredDimCache
     @checkDesiredDimCache = true
@@ -65,10 +89,10 @@ class LayoutableMorph extends Morph
           minHeight = childSize.height()
 
     if !minWidth?
-      minWidth = 20
+      minWidth = @minWidth
 
     if !minHeight?
-      minHeight = 20
+      minHeight = @minHeight
 
     # TBD the exact shape of @checkMinDimCache
     @checkMinDimCache = true
@@ -97,10 +121,10 @@ class LayoutableMorph extends Morph
           maxHeight = childSize.height()
 
     if !maxWidth?
-      maxWidth = 20
+      maxWidth = @maxWidth
 
     if !maxHeight?
-      maxHeight = 20
+      maxHeight = @maxHeight
 
     # TBD the exact shape of @checkMaxDimCache
     @checkMaxDimCache = true
@@ -117,7 +141,6 @@ class LayoutableMorph extends Morph
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         count++
     return count
-
 
   doLayout: (newBounds = @boundingBox()) ->
 
@@ -196,24 +219,34 @@ class LayoutableMorph extends Morph
     # allocate extra space based on maximum widths
     else
       maxMargin = max.width()-desired.width()
+      extraSpace = newBounds.width() - desired.width()
       if @parent == world then console.log "case 3 maxMargin: " + maxMargin
-      if maxMargin != 0
+
+      if maxMargin > 0
         fraction = (newBounds.width()-desired.width()) / maxMargin
+        absolute = 0
+        #fraction = 0
+        #absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
       else if maxMargin == 0
         fraction = 0
-        absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
         #absolute = 0
+        absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
       else
         alert "maxMargin negative"
+
       childLeft = newBounds.left()
       for C in @children
         if C.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED then continue
         maxWidth = C.getMaxDim().width()
         desWidth = C.getDesiredDim().width()
+        if (maxWidth - desWidth) > 0
+          xtra = extraSpace * ((maxWidth - desWidth)/maxMargin)
+        else
+          xtra = 0
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
-          childLeft + desWidth + (maxWidth - desWidth) * fraction + absolute,
+          childLeft + desWidth + xtra + absolute,
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds

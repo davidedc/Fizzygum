@@ -41,14 +41,15 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
       lmdd = leftMorph.getDesiredDim()
       rmdd = rightMorph.getDesiredDim()
  
-      if (lmdd.x + deltaDragFromPreviousCall.x > 0) and (rmdd.x - deltaDragFromPreviousCall.x > 0)
-        leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
-        rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
-
-      #if (lmdd.x + deltaDragFromPreviousCall.x > 0)
+      #if (lmdd.x + deltaDragFromPreviousCall.x > 0) and (rmdd.x - deltaDragFromPreviousCall.x > 0)
       #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
-      #if (rmdd.x - deltaDragFromPreviousCall.x > 0)
       #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
+
+      deltaDragFromPreviousCall.x = deltaDragFromPreviousCall.x / 4
+      if (lmdd.x + deltaDragFromPreviousCall.x > 0)
+        leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
+      if (rmdd.x - deltaDragFromPreviousCall.x > 0)
+        rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
 
   #SliderButtonMorph events:

@@ -398,6 +398,75 @@ class LinearLayoutMorph extends LayoutMorph
     lmAdj.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
 
+    lmContent1.minHeight = 10
+    lmContent1.desiredHeight = 20
+    lmContent1.maxHeight = 30
+
+    lmContent1.minWidth = 10
+    lmContent1.desiredWidth = 20
+    lmContent1.maxWidth = 30
+
+    lmAdj.minHeight = 5
+    lmAdj.desiredHeight = 5
+    lmAdj.maxHeight = 5
+
+    lmAdj.minWidth = 5
+    lmAdj.desiredWidth = 5
+    lmAdj.maxWidth = 5
+
+    lmContent2.minHeight = 10
+    lmContent2.desiredHeight = 20
+    lmContent2.maxHeight = 40
+
+    lmContent2.minWidth = 10
+    lmContent2.desiredWidth = 20
+    lmContent2.maxWidth = 40
+
+    lmHolder.fullRawMoveTo new Point(10,10)
+
+    world.add(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmAdj.setColor new Color(0, 255, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+
+    lmContent1.minHeight = 10
+    lmContent1.desiredHeight = 10
+    lmContent1.maxHeight = 10
+
+    lmContent1.minWidth = 10
+    lmContent1.desiredWidth = 10
+    lmContent1.maxWidth = 10
+
+    lmAdj.minHeight = 5
+    lmAdj.desiredHeight = 5
+    lmAdj.maxHeight = 5
+
+    lmAdj.minWidth = 5
+    lmAdj.desiredWidth = 5
+    lmAdj.maxWidth = 5
+
+    lmContent2.minHeight = 10
+    lmContent2.desiredHeight = 10
+    lmContent2.maxHeight = 10
+
+    lmContent2.minWidth = 10
+    lmContent2.desiredWidth = 10
+    lmContent2.maxWidth = 10
+
+    lmHolder.fullRawMoveTo new Point(70,10)
+
     world.add(lmHolder)
 
   @testScenario1: (direction = "#horizontal")->
