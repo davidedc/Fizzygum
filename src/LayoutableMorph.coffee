@@ -219,18 +219,21 @@ class LayoutableMorph extends Morph
     # allocate extra space based on maximum widths
     else
       maxMargin = max.width()-desired.width()
+      totDesWidth = desired.width()
       extraSpace = newBounds.width() - desired.width()
       if @parent == world then console.log "case 3 maxMargin: " + maxMargin
 
       if maxMargin > 0
         fraction = (newBounds.width()-desired.width()) / maxMargin
         absolute = 0
+        ssss = 0
         #fraction = 0
         #absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
       else if maxMargin == 0
         fraction = 0
         #absolute = 0
         absolute = (newBounds.width()-desired.width()) / @countOfChildrenToLayout()
+        ssss = 1
       else
         alert "maxMargin negative"
 
@@ -246,7 +249,7 @@ class LayoutableMorph extends Morph
         childBounds = new Rectangle \
           childLeft,
           newBounds.top(),
-          childLeft + desWidth + xtra + absolute,
+          childLeft + desWidth + xtra + ssss * (newBounds.width()-desired.width()) * (desWidth / totDesWidth),
           newBounds.top() + newBounds.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
