@@ -18,6 +18,19 @@ class LayoutableMorph extends Morph
   desiredHeight: 20
   maxHeight: 100
 
+  setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
+    @minWidth = minBounds.x
+    @minHeight = minBounds.y
+
+    @desiredWidth = desiredBounds.x
+    @desiredHeight = desiredBounds.y
+
+    @maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
+    @maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
+
+    @invalidateLayout()
+
+
   setMaxDim: (overridingMaxDim) ->
     @overridingMaxDim = overridingMaxDim
     @invalidateLayout()
