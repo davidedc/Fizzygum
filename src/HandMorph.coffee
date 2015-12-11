@@ -745,6 +745,16 @@ class HandMorph extends Morph
 
     if @nonFloatDraggingSomething()
       #console.log "nonFloatDraggedMorph: " + @nonFloatDraggedMorph
+
+      # OK so this is an interesting choice. You can avoid
+      # this next line and have ZK to behave like OSX where you
+      # can scroll on a pane without bringing its window in the
+      # foreground. OR you can have the window to automatically
+      # pop into the foreground. I'm liking the OSX style
+      # so I'm leaving this commented-out, but it's there.
+      # TODO this could be a setting somewhere in ZK.
+      # @nonFloatDraggedMorph.bringToForegroud()
+
       if @mouseButton
         if @previousNonFloatDraggingPos?
           deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
