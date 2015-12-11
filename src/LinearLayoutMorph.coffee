@@ -419,11 +419,9 @@ class LinearLayoutMorph extends LayoutMorph
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color(255, 0, 0)
-    lmAdj.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmAdj.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
     lmHolder.fullRawMoveTo new Point(70,10)
@@ -445,12 +443,10 @@ class LinearLayoutMorph extends LayoutMorph
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color(255, 0, 0)
-    lmAdj.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
     lmContent3.setColor new Color(255, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmAdj.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
@@ -475,15 +471,11 @@ class LinearLayoutMorph extends LayoutMorph
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color(255, 0, 0)
-    lmAdj.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmAdj2.setColor new Color(0, 255, 0)
     lmContent3.setColor new Color(255, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmAdj.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
-    lmAdj2.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
     lmHolder.fullRawMoveTo new Point(190,10)

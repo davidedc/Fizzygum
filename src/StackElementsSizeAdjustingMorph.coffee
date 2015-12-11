@@ -7,13 +7,17 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
+
   hand: null
   indicator: null
   category: 'Morphic-Layouts'
 
+
   constructor: ->
     super()
     @noticesTransparentClick = true
+    @setColor new Color(0, 255, 0)
+    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
 
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->
