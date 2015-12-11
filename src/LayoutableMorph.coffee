@@ -10,17 +10,22 @@ class LayoutableMorph extends Morph
 
   overridingDesiredDim: null
 
-  minWidth: 5
-  desiredWidth: 5
-  maxWidth: 5
+  minWidth: 10
+  desiredWidth: 20
+  maxWidth: 100
 
-  minHeight: 5
-  desiredHeight: 5
-  maxHeight: 5
+  minHeight: 10
+  desiredHeight: 20
+  maxHeight: 100
+
+  setMaxDim: (overridingMaxDim) ->
+    @overridingMaxDim = overridingMaxDim
+    @invalidateLayout()
 
   setDesiredDim: (overridingDesiredDim) ->
-    #@overridingDesiredDim = overridingDesiredDim
+    @overridingDesiredDim = overridingDesiredDim
 
+    ###
     minWidthPerc = @minWidth / @desiredWidth
     minHeightPerc = @minHeight / @desiredHeight
     maxWidthPerc = @maxWidth / @desiredWidth
@@ -34,6 +39,7 @@ class LayoutableMorph extends Morph
     @maxHeight = @desiredHeight * maxHeightPerc
     #@minWidth = @desiredWidth * minWidthPerc
     #@minHeight = @desiredHeight * minHeightPerc
+    ###
 
     @invalidateLayout()
 
@@ -68,7 +74,7 @@ class LayoutableMorph extends Morph
     @checkDesiredDimCache = true
     @desiredDimCache = new Dimension desiredWidth, desiredHeight
 
-    return @desiredDimCache
+    return @desiredDimCache.min @getMaxDim()
 
 
   getMinDim: ->
@@ -101,9 +107,12 @@ class LayoutableMorph extends Morph
     # the user might have forced the "desired" to
     # be smaller than the standard minimum set by
     # the widget
-    return @minDimCache.min @getDesiredDim()
+    return @minDimCache.min @getMaxDim()
 
   getMaxDim: ->
+    if @overridingMaxDim?
+      return @overridingMaxDim
+
     # TBD the exact shape of @checkMaxDimCache
     #if @checkMaxDimCache
     #  # the user might have forced the "desired" to
@@ -133,7 +142,7 @@ class LayoutableMorph extends Morph
     # the user might have forced the "desired" to
     # be bigger than the standard maximum set by
     # the widget
-    return @maxDimCache.max @getDesiredDim()
+    return @maxDimCache
 
   countOfChildrenToLayout: ->
     count = 0

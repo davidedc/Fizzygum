@@ -400,27 +400,27 @@ class LinearLayoutMorph extends LayoutMorph
 
     lmContent1.minHeight = 10
     lmContent1.desiredHeight = 20
-    lmContent1.maxHeight = 30
+    lmContent1.maxHeight = 100
 
     lmContent1.minWidth = 10
     lmContent1.desiredWidth = 20
-    lmContent1.maxWidth = 30
+    lmContent1.maxWidth = 100
 
     lmAdj.minHeight = 5
     lmAdj.desiredHeight = 5
-    lmAdj.maxHeight = 5
+    lmAdj.maxHeight = 6
 
     lmAdj.minWidth = 5
     lmAdj.desiredWidth = 5
-    lmAdj.maxWidth = 5
+    lmAdj.maxWidth = 6
 
     lmContent2.minHeight = 10
     lmContent2.desiredHeight = 20
-    lmContent2.maxHeight = 40
+    lmContent2.maxHeight = 180
 
     lmContent2.minWidth = 10
     lmContent2.desiredWidth = 20
-    lmContent2.maxWidth = 40
+    lmContent2.maxWidth = 180
 
     lmHolder.fullRawMoveTo new Point(10,10)
 
@@ -443,27 +443,27 @@ class LinearLayoutMorph extends LayoutMorph
 
     lmContent1.minHeight = 10
     lmContent1.desiredHeight = 10
-    lmContent1.maxHeight = 10
+    lmContent1.maxHeight = 100
 
     lmContent1.minWidth = 10
     lmContent1.desiredWidth = 10
-    lmContent1.maxWidth = 10
+    lmContent1.maxWidth = 100
 
     lmAdj.minHeight = 5
     lmAdj.desiredHeight = 5
-    lmAdj.maxHeight = 5
+    lmAdj.maxHeight = 6
 
     lmAdj.minWidth = 5
     lmAdj.desiredWidth = 5
-    lmAdj.maxWidth = 5
+    lmAdj.maxWidth = 6
 
     lmContent2.minHeight = 10
     lmContent2.desiredHeight = 10
-    lmContent2.maxHeight = 10
+    lmContent2.maxHeight = 100
 
     lmContent2.minWidth = 10
     lmContent2.desiredWidth = 10
-    lmContent2.maxWidth = 10
+    lmContent2.maxWidth = 100
 
     lmHolder.fullRawMoveTo new Point(70,10)
 

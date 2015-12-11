@@ -38,18 +38,28 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
       m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
     if leftMorph? and rightMorph?
-      lmdd = leftMorph.getDesiredDim()
-      rmdd = rightMorph.getDesiredDim()
+      lmdd = leftMorph.getMaxDim()
+      rmdd = rightMorph.getMaxDim()
  
       #if (lmdd.x + deltaDragFromPreviousCall.x > 0) and (rmdd.x - deltaDragFromPreviousCall.x > 0)
       #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
       #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
-      deltaDragFromPreviousCall.x = deltaDragFromPreviousCall.x / 4
+      deltaDragFromPreviousCall.x = deltaDragFromPreviousCall.x
       if (lmdd.x + deltaDragFromPreviousCall.x > 0)
-        leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
-      if (rmdd.x - deltaDragFromPreviousCall.x > 0)
-        rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
+        if (rmdd.x - deltaDragFromPreviousCall.x > 0)
+          prev = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+          leftMorph.setMaxDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
+          rightMorph.setMaxDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
+          newone = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+          if prev != newone
+            leftMorph.setMaxDim lmdd
+            rightMorph.setMaxDim rmdd
+          #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x 
+          #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
+          #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
+          #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x 
+          console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
 
 
   #SliderButtonMorph events:
