@@ -329,7 +329,7 @@ class LayoutableMorph extends Morph
 
     @layoutIsValid = true
 
-  @testSet1: ->
+  @setupTestScreen1: ->
     lmHolder = new LayoutableMorph()
     lmContent1 = new LayoutableMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
