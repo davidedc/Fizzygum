@@ -17,7 +17,7 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
     super()
     @noticesTransparentClick = true
     @setColor new Color(0, 255, 0)
-    @setMinAndMaxBoundsAndSpreadability (new Point 1,1) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
+    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
 
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->

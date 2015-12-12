@@ -11,7 +11,6 @@ class LayoutableMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-
   minWidth: 10
   desiredWidth: 20
   maxWidth: 100
@@ -32,20 +31,23 @@ class LayoutableMorph extends Morph
     @desiredWidth = desiredBounds.x
     @desiredHeight = desiredBounds.y
 
-    @maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
-    @maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
+    maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
+    maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
+    @setMaxDim new Dimension maxWidth, maxHeight
 
     @invalidateLayout()
 
 
   setMaxDim: (overridingMaxDim) ->
 
-    currentMax = @getMaxDim()
+    ###
+    currentMax = @getRecursiveMaxDim()
     ratio = currentMax.x / overridingMaxDim.x
 
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-        C.setMaxDim C.getMaxDim().divideBy ratio
+        C.setMaxDim C.getRecursiveMaxDim().divideBy ratio
+    ###
 
 
     @maxWidth = overridingMaxDim.x
@@ -53,8 +55,37 @@ class LayoutableMorph extends Morph
 
     @invalidateLayout()
 
-
   getDesiredDim: ->
+    desiredDim = new Dimension @desiredWidth, @desiredHeight
+    return desiredDim.min @getMaxDim()
+  getMinDim: ->
+    minDim = new Dimension @minWidth, @minHeight
+    return minDim.min @getMaxDim()
+  getMaxDim: ->
+    maxDim = new Dimension @maxWidth, @maxHeight
+    return maxDim
+
+  # if you use this paragraph, then the container of further
+  # layouts will have a minimum equal to the sum of minimums
+  # of the contents. I think we shouldn't do this.
+  # Rather, we have a system where you CAN easily resize things to any
+  # size, so to have maximum flexibility we are not binding the
+  # minimum of a container to the minimums of the contents.
+  # Rather, you can just set any minimum you want to the container.
+  # If you want to make then zero, then be it, the minimums of the
+  # contents won't matter.
+  ###
+  getDesiredDim: ->
+    @getRecursiveDesiredDim()
+  getMinDim: ->
+    @getRecursiveMinDim()
+  getMaxDim: ->
+    maxDim = new Dimension @maxWidth, @maxHeight
+    return maxDim.max @getDesiredDim()
+  ###
+
+
+  getRecursiveDesiredDim: ->
     
     # TBD the exact shape of @checkDesiredDimCache
     #if @checkDesiredDimCache
@@ -81,16 +112,16 @@ class LayoutableMorph extends Morph
     @checkDesiredDimCache = true
     @desiredDimCache = new Dimension desiredWidth, desiredHeight
 
-    return @desiredDimCache.min @getMaxDim()
+    return @desiredDimCache.min @getRecursiveMaxDim()
 
 
-  getMinDim: ->
+  getRecursiveMinDim: ->
     # TBD the exact shape of @checkMinDimCache
     #if @checkMinDimCache
     #  # the user might have forced the "desired" to
     #  # be smaller than the standard minimum set by
     #  # the widget
-    #  return Math.min @minDimCache, @getDesiredDim()
+    #  return Math.min @minDimCache, @getRecursiveDesiredDim()
 
     minWidth = null
     minHeight = null
@@ -114,16 +145,16 @@ class LayoutableMorph extends Morph
     # the user might have forced the "desired" to
     # be smaller than the standard minimum set by
     # the widget
-    return @minDimCache.min @getMaxDim()
+    return @minDimCache.min @getRecursiveMaxDim()
 
-  getMaxDim: ->
+  getRecursiveMaxDim: ->
 
     # TBD the exact shape of @checkMaxDimCache
     #if @checkMaxDimCache
     #  # the user might have forced the "desired" to
     #  # be bigger than the standard maximum set by
     #  # the widget
-    #  return Math.max @maxDimCache, @getDesiredDim()
+    #  return Math.max @maxDimCache, @getRecursiveDesiredDim()
 
     maxWidth = null
     maxHeight = null
@@ -176,9 +207,9 @@ class LayoutableMorph extends Morph
     # rectangles?
     @rawSetBounds newBoundsForThisLayout
 
-    min = @getMinDim()
-    desired = @getDesiredDim()
-    max = @getMaxDim()
+    min = @getRecursiveMinDim()
+    desired = @getRecursiveDesiredDim()
+    max = @getRecursiveMaxDim()
     
     # we are forced to be in a space smaller
     # than the minimum. We obey.
