@@ -1448,11 +1448,9 @@ class WorldMorph extends FrameMorph
 
   layoutTestsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph(false, @, true, true, "Layout tests")
-    menu.addItem "test set 1", true, LinearLayoutMorph, "testSet1"
-    menu.addItem "test set 2", true, LinearLayoutMorph, "testSet2"
     menu.addItem "layoutable morph", true, @, "createNewLayoutableMorph"
     menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
-    menu.addItem "test set 3", true, LinearLayoutMorph, "testSet3"
+    menu.addItem "test set 1", true, LayoutableMorph, "testSet1"
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
   

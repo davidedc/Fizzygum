@@ -327,3 +327,214 @@ class LayoutableMorph extends Morph
         C.doLayout childBounds
 
     @layoutIsValid = true
+
+  @testSet1: ->
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmAdj.setColor new Color(0, 255, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
+    lmAdj.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
+
+    lmHolder.fullRawMoveTo new Point(10,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+
+    lmHolder.fullRawMoveTo new Point(70,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmContent3 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+
+    lmHolder.fullRawMoveTo new Point(130,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmAdj2 = new StackElementsSizeAdjustingMorph()
+    lmContent3 = new LayoutableMorph()
+
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
+
+    lmHolder.fullRawMoveTo new Point(190,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+
+    lmSpacer1 = new LayoutSpacerMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj2 = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmAdj3 = new StackElementsSizeAdjustingMorph()
+    lmContent3 = new LayoutableMorph()
+    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer2 = new LayoutSpacerMorph()
+
+    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+
+    lmHolder.fullRawMoveTo new Point(190 + 60,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+
+    lmSpacer1 = new LayoutSpacerMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj2 = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmAdj3 = new StackElementsSizeAdjustingMorph()
+    lmContent3 = new LayoutableMorph()
+    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer2 = new LayoutSpacerMorph 2
+
+    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+
+    lmHolder.fullRawMoveTo new Point(190 + 120,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+
+    lmSpacer1 = new LayoutSpacerMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj2 = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmAdj3 = new StackElementsSizeAdjustingMorph()
+    lmContent3 = new LayoutableMorph()
+    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer2 = new LayoutSpacerMorph 2
+
+    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+
+    lmHolder.fullRawMoveTo new Point(190 + 180,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
