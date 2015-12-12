@@ -67,15 +67,16 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
       console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
 
 
-  #SliderButtonMorph events:
+  # TODO: this mechanism to show the right cursor is 90%
+  # there but could be better. The cursor changes to normal
+  # as soon as the pointer gets out of the adjuster, which
+  # happens while nonFloatDragging. It's not a big deal
+  # and it's simpler, but something one could improve.
   mouseEnter: ->
-  #  if @parent.direction == "#horizontal"
-  #    document.getElementById("world").style.cursor = "col-resize"
-  #  else if @parent.direction == "#vertical"
-  #    document.getElementById("world").style.cursor = "row-resize"
+    document.getElementById("world").style.cursor = "col-resize"
   
   mouseLeave: ->
-  #  document.getElementById("world").style.cursor = "auto"
+    document.getElementById("world").style.cursor = "auto"
 
   ###
   adoptWidgetsColor: (paneColor) ->
