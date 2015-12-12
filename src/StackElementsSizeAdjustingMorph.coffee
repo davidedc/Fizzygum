@@ -17,7 +17,7 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
     super()
     @noticesTransparentClick = true
     @setColor new Color(0, 255, 0)
-    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
+    @setMinAndMaxBoundsAndSpreadability (new Point 1,1) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
 
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->
@@ -28,7 +28,6 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
     return false
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
-    debugger
 
     # the user is in the process of dragging but didn't
     # actually move the mouse yet
@@ -49,21 +48,23 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
       #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
       #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
-      deltaDragFromPreviousCall.x = deltaDragFromPreviousCall.x
-      if (lmdd.x + deltaDragFromPreviousCall.x > 0)
-        if (rmdd.x - deltaDragFromPreviousCall.x > 0)
-          prev = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
-          leftMorph.setMaxDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
-          rightMorph.setMaxDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
-          newone = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
-          if prev != newone
-            leftMorph.setMaxDim lmdd
-            rightMorph.setMaxDim rmdd
-          #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x 
-          #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
-          #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
-          #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x 
-          console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+      deltaX = deltaDragFromPreviousCall.x / 2
+
+      until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
+        deltaX = deltaX / 2
+
+      prev = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+      leftMorph.setMaxDim new Point((lmdd.x + deltaX), lmdd.y)
+      rightMorph.setMaxDim new Point((rmdd.x - deltaX), rmdd.y)
+      newone = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+      if prev != newone
+        leftMorph.setMaxDim lmdd
+        rightMorph.setMaxDim rmdd
+      #console.log "leftMorph.getMaxDim().x : " + leftMorph.getMaxDim().x 
+      #console.log "leftMorph.getDesiredDim().x: " + leftMorph.getDesiredDim().x
+      #console.log "rightMorph.getMaxDim().x: " + rightMorph.getMaxDim().x
+      #console.log "rightMorph.getDesiredDim().x: " + rightMorph.getDesiredDim().x 
+      console.log "should be constant: " + (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
 
 
   #SliderButtonMorph events:

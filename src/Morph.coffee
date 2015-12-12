@@ -351,6 +351,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+    @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
 
@@ -1622,7 +1623,6 @@ class Morph extends MorphicNode
   # Morph floatDragging and dropping /////////////////////////////////////////
   
   isFloatDraggable: ->
-    debugger
     if @parent?
 
       # an instance of ScrollFrameMorph is also an instance of FrameMorph

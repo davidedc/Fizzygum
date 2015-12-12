@@ -760,8 +760,8 @@ class HandMorph extends Morph
           deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
         else
           deltaDragFromPreviousCall = null
+        @previousNonFloatDraggingPos = pos.copy()
         @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
-        @previousNonFloatDraggingPos = pos
     
     #
     #	original, more cautious code for grabbing Morphs,
