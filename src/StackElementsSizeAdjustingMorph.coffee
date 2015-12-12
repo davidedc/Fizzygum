@@ -17,7 +17,7 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
     super()
     @noticesTransparentClick = true
     @setColor new Color(0, 255, 0)
-    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
+    @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
 
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->
@@ -48,7 +48,7 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
       #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
       #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
-      deltaX = deltaDragFromPreviousCall.x / 2
+      deltaX = deltaDragFromPreviousCall.x
 
       until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
         deltaX = deltaX / 2
