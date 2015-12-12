@@ -5,6 +5,30 @@
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES LayoutSpec
 
+# So layouts in ZK work the following way:
+#  1) Any Morph can contain a number of other morphs
+#     according to a number of layouts *simultaneously*
+#     e.g. you can have two morphs being horizontally stacked
+#     and two other morphs being inset for example
+#  2) There is no need for an explicit special container. Any
+#     Morph can be a container when needed.
+#  3) The default attaching of Morphs to a Morph puts them
+#     under the effect of the most basic layout: the FREEFLOATING
+#     layout.
+#  3) You can only do a high-level-resize or move to a FREEFLOATING
+#     Morph. All other Morphs are under the effect of more complex
+#     layout strategies so they can't be moved willy nilly.
+#     Control of size and placement can be done but in other
+#     means below.
+#  4) You CAN control the size and location of Morphs under the
+#     effect of complex layouts by programmatically changing their
+#     layout spec properties.
+#  5) You CAN also manually control the size and location of Morphs
+#     under the effect of complex layouts by using special Adjusting
+#     Morphs, which are provided by the container, and give handles
+#     to manually control the content. These manual controls
+#     under the courtains go and programmatically modify the layout
+#     spec properties of the content.
 
 class LayoutableMorph extends Morph
   # this is so we can create objects from the object class name 
