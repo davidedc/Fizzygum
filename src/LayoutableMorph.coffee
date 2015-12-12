@@ -539,3 +539,40 @@ class LayoutableMorph extends Morph
     world.add(lmHolder)
     new HandleMorph(lmHolder)
 
+    ################################################
+
+    lmHolder = new LayoutableMorph()
+
+    lmSpacer1 = new LayoutSpacerMorph()
+    lmAdj = new StackElementsSizeAdjustingMorph()
+    lmContent1 = new LayoutableMorph()
+    lmAdj2 = new StackElementsSizeAdjustingMorph()
+    lmContent2 = new LayoutableMorph()
+    lmAdj3 = new StackElementsSizeAdjustingMorph()
+    lmContent3 = new LayoutableMorph()
+    lmAdj4 = new StackElementsSizeAdjustingMorph()
+    lmSpacer2 = new LayoutSpacerMorph 2
+
+    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    
+    lmContent1.setColor new Color(255, 0, 0)
+    lmContent2.setColor new Color(0, 0, 255)
+    lmContent3.setColor new Color(255, 0, 255)
+
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
+
+    lmHolder.fullRawMoveTo new Point(190 + 180 + 60,10)
+
+    world.add(lmHolder)
+    new HandleMorph(lmHolder)
+
