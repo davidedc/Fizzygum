@@ -12,5 +12,5 @@ class LayoutSpacerMorph extends LayoutableMorph
   constructor: (spacerWeight = 1) ->
     super()
     @setColor new Color(0, 0, 0)
-    @setMinAndMaxBoundsAndSpreadability (new Point 1,1) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_HIGH
+    @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_HIGH
 
