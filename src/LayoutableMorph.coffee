@@ -287,7 +287,8 @@ class LayoutableMorph extends Morph
 
     # min and desired are strictly less than the bounds
     # hence we have more space than needed,
-    # allocate extra space based on maximum widths
+    # allocate all the desired spaces, and on top of that
+    # give extra space based on maximum widths
     else
       maxMargin = max.width()-desired.width()
       totDesWidth = desired.width()
