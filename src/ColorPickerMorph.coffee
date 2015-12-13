@@ -28,8 +28,7 @@ class ColorPickerMorph extends Morph
   reLayout: ->
     super()
     @buildSubmorphs()
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
 
   buildSubmorphs: ->
     @fullDestroyChildren()

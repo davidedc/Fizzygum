@@ -31,8 +31,7 @@ class ShadowMorph extends Morph
       @silentFullRawMoveTo fb.origin.add(@offset)
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
 
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

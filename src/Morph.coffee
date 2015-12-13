@@ -875,6 +875,11 @@ class Morph extends MorphicNode
     bottomOff = @fullBounds().bottom() - aMorph.bottom()
     @fullRawMoveBy new Point(0, -bottomOff)  if bottomOff > 0
 
+
+  notifyChildrenThatParentHasReLayouted: ->
+    for child in @children.slice()
+      child.parentHasReLayouted()
+
   # normally morphs do nothing when the
   # parent is layouting, as they are
   # placed with absolute positioning.
@@ -904,7 +909,7 @@ class Morph extends MorphicNode
   layoutSubmorphs: (morphStartingTheChange = null) ->
     @layoutInset morphStartingTheChange
 
-    @children.forEach (child) ->
+    for child in @children.slice()
       if morphStartingTheChange != child
         child.parentHasReLayouted()
   
@@ -1671,6 +1676,10 @@ class Morph extends MorphicNode
       @parent instanceof WorldMorph
         return @  
     @parent.rootForFocus()
+
+  moveInFrontOfSiblings: ->
+    @moveAsLastChild()
+    @fullChanged()
 
   bringToForegroud: ->
     @rootForFocus()?.moveAsLastChild()

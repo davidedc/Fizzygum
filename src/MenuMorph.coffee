@@ -166,8 +166,7 @@ class MenuMorph extends BoxMorph
     @silentRawSetExtent new Point(0, 0)
     y = @top()
     x = @left() + 2
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
 
 
     unless @isListContents

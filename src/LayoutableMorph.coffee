@@ -328,6 +328,7 @@ class LayoutableMorph extends Morph
         C.doLayout childBounds
 
     @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
 
   @setupTestScreen1: ->
     lmHolder = new LayoutableMorph()

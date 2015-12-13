@@ -51,8 +51,7 @@ class StringFieldMorph extends FrameMorph
     @text.enableSelecting()    
     @silentRawSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
     @add @text
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
 
   
   getValue: ->

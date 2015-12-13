@@ -70,17 +70,20 @@ class MorphicNode
     
     @addChild aMorphicNode, 0
 
-  # used for example when you
+  # used from bringToForegroud method
+  # for example when you
   # click morphs around... they
   # pop to the foreground
   moveAsLastChild: ->
-    return unless @parent
+    return unless @parent?
     idx = @parent.children.indexOf(@)
+    if idx == -1
+      return
     # check if already last child
     # i.e. topmost
     if idx == @parent.children.length - 1
       return
-    @parent.children.splice idx, 1  if idx isnt -1
+    @parent.children.splice idx, 1
     @parent.children.push @
     # whoever invoked this should probably
     # do a fullChanged() we don't do it

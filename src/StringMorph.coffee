@@ -113,8 +113,7 @@ class StringMorph extends Morph
     super()
     width = @calculateExtentBasedOnText()
     @silentRawSetExtent(new Point( width, fontHeight(@fontSize)))
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return

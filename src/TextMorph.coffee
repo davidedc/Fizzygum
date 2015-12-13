@@ -142,8 +142,7 @@ class TextMorph extends StringMorph
     else
       @silentRawSetExtent(new Point(@maxWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
-    @children.forEach (child) ->
-      child.parentHasReLayouted()
+    @notifyChildrenThatParentHasReLayouted()
 
   # no changes of position or extent
   repaintBackBufferIfNeeded: ->

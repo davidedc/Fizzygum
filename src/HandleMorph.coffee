@@ -47,7 +47,15 @@ class HandleMorph extends Morph
 
 
   parentHasReLayouted: ->
-    @updateResizerHandlePosition()
+    if @parent.layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      # you can't resize a morph that is subject to a
+      # non-trivial freefloating layout.
+      # rather, you have to use specialised adjusters.
+      # so this handle has to go away now.
+      @destroy()
+    else
+      @updateResizerHandlePosition()
+      @moveInFrontOfSiblings()
 
   updateResizerHandlePosition: ->
     if @target
