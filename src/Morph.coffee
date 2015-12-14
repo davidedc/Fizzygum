@@ -1413,7 +1413,14 @@ class Morph extends MorphicNode
 
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
-    
+
+  addAsSiblingAfterMe: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+    myPosition = @positionAmongSiblings()
+    @parent.add aMorph, (myPosition + 1), layoutSpec
+
+  addAsSiblingBeforeMe: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+    myPosition = @positionAmongSiblings()
+    @parent.add aMorph, myPosition, layoutSpec
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
