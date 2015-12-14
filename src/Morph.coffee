@@ -2609,7 +2609,7 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
@@ -2631,7 +2631,7 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -2655,9 +2655,9 @@ class Morph extends MorphicNode
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -2683,9 +2683,9 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
@@ -2720,9 +2720,9 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -2757,9 +2757,9 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
@@ -2794,9 +2794,9 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
@@ -2831,9 +2831,9 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(255, 0, 0)
+    lmContent1.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 0, 255)
+    lmContent3.setColor new Color(255, 255, 0)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
