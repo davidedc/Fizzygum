@@ -6,7 +6,7 @@ class StringFieldMorph extends FrameMorph
   namedClasses[@name] = @prototype
 
   defaultContents: null
-  minWidth: null
+  minTextWidth: null
   fontSize: null
   fontStyle: null
   isBold: null
@@ -17,7 +17,7 @@ class StringFieldMorph extends FrameMorph
 
   constructor: (
       @defaultContents = "",
-      @minWidth = 100,
+      @minTextWidth = 100,
       @fontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,
@@ -36,7 +36,7 @@ class StringFieldMorph extends FrameMorph
     txt = (if @text then @getValue() else @defaultContents)
     text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     console.log "text morph extent: " + text.text + " : " + text.extent()
-    @rawSetWidth(Math.max(@minWidth,text.width()))
+    @rawSetWidth(Math.max(@minTextWidth,text.width()))
     console.log "string fleid morph extent: " + @extent()
 
   reLayout: ->
@@ -49,7 +49,7 @@ class StringFieldMorph extends FrameMorph
     @text.fullRawMoveTo @position()
     @text.isEditable = @isEditable
     @text.enableSelecting()    
-    @silentRawSetExtent new Point(Math.max(@width(), @minWidth), @text.height())
+    @silentRawSetExtent new Point(Math.max(@width(), @minTextWidth), @text.height())
     @add @text
     @notifyChildrenThatParentHasReLayouted()
 

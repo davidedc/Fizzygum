@@ -1292,8 +1292,6 @@ class WorldMorph extends FrameMorph
   create: (aMorph) ->
     aMorph.pickUp()
 
-  createNewLayoutableMorph: ->
-    @create new LayoutableMorph()
   createNewStackElementsSizeAdjustingMorph: ->
     @create new StackElementsSizeAdjustingMorph()
 
@@ -1343,7 +1341,7 @@ class WorldMorph extends FrameMorph
       "am Ende Schiffer und Kahn, und das hat mit ihrem " +
       "Singen, die Loreley getan.")
     newMorph.isEditable = true
-    newMorph.maxWidth = 300
+    newMorph.maxTextWidth = 300
     @create newMorph
   createNewSpeechBubbleMorph: ->
     newMorph = new SpeechBubbleMorph("Hello, World!")
@@ -1448,9 +1446,8 @@ class WorldMorph extends FrameMorph
 
   layoutTestsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph(false, @, true, true, "Layout tests")
-    menu.addItem "layoutable morph", true, @, "createNewLayoutableMorph"
     menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
-    menu.addItem "test screen 1", true, LayoutableMorph, "setupTestScreen1"
+    menu.addItem "test screen 1", true, Morph, "setupTestScreen1"
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
   

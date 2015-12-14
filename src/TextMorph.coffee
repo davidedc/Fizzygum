@@ -37,7 +37,7 @@ class TextMorph extends StringMorph
   lines: []
   lineSlots: []
   alignment: null
-  maxWidth: null
+  maxTextWidth: null
   maxLineWidth: 0
   backgroundColor: null
 
@@ -46,7 +46,7 @@ class TextMorph extends StringMorph
 
   constructor: (
     text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,
-    @isItalic = false, @alignment = "left", @maxWidth = 0, fontName, shadowOffset,
+    @isItalic = false, @alignment = "left", @maxTextWidth = 0, fontName, shadowOffset,
     @shadowColor = null
     ) ->
 
@@ -103,13 +103,13 @@ class TextMorph extends StringMorph
         @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
         currentLine = ""
       else
-        if @maxWidth > 0
+        if @maxTextWidth > 0
           # there is a width limit, so we need
           # to check whether we overflowed it. So create
           # a prospective line and then check its width.
           lineForOverflowTest = currentLine + word + " "
           w = Math.ceil(context.measureText(lineForOverflowTest).width)
-          if w > @maxWidth
+          if w > @maxTextWidth
             # ok we just overflowed the available space,
             # so we need to push the old line and its
             # "slot" number to the respective arrays.
@@ -137,10 +137,10 @@ class TextMorph extends StringMorph
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
     height = @lines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    if @maxWidth is 0
+    if @maxTextWidth is 0
       @silentRawSetExtent(new Point(@maxLineWidth + shadowWidth, height))
     else
-      @silentRawSetExtent(new Point(@maxWidth + shadowWidth, height))
+      @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @notifyChildrenThatParentHasReLayouted()
 
@@ -251,7 +251,7 @@ class TextMorph extends StringMorph
   rawSetExtent: (aPoint) ->
     #console.log "move 18"
     @breakNumberOfRawMovesAndResizesCaches()
-    @maxWidth = Math.max(aPoint.x, 0)
+    @maxTextWidth = Math.max(aPoint.x, 0)
     @reLayout()    
     @changed()
   

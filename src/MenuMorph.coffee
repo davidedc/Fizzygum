@@ -244,7 +244,7 @@ class MenuMorph extends BoxMorph
     trackChanges.pop()
     @fullChanged()
   
-  maxWidth: ->
+  maxWidthOfMenuEntries: ->
     w = 0
     #if @parent instanceof FrameMorph
     #  if @parent.scrollFrame instanceof ScrollFrameMorph
@@ -256,18 +256,18 @@ class MenuMorph extends BoxMorph
         (item instanceof ColorPickerMorph) or
         (item instanceof SliderMorph)
           w = Math.max(w, item.width())
-      #console.log "maxWidth: width of item " + item + " : " + w
+      #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
 
     if @label
       w = Math.max(w, @label.width())
-      #console.log "maxWidth: label width : " + w
+      #console.log "maxWidthOfMenuEntries: label width : " + w
     w
   
   # makes all the elements of this menu the
   # right width.
   adjustWidthsOfMenuEntries: ->
-    w = @maxWidth()
-    #console.log "maxwidth " + w
+    w = @maxWidthOfMenuEntries()
+    #console.log "maxWidthOfMenuEntries " + w
     @children.forEach (item) =>
       trackChanges.push false
       item.rawSetWidth w

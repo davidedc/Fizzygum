@@ -195,9 +195,9 @@ class ScrollFrameMorph extends FrameMorph
           # this re-layouts the text to fit the width.
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
-          morph.maxWidth = 0
+          morph.maxTextWidth = 0
           morph.rawSetWidth @contents.width() - totalPadding
-          morph.maxWidth = @contents.width() - totalPadding
+          morph.maxTextWidth = @contents.width() - totalPadding
           @contents.rawSetHeight Math.max(morph.height(), @height() - totalPadding)
 
     subBounds = @contents.subMorphsMergedFullBounds()
