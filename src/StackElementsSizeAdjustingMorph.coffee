@@ -48,10 +48,21 @@ class StackElementsSizeAdjustingMorph extends Morph
       #  leftMorph.setDesiredDim new Point((lmdd.x + deltaDragFromPreviousCall.x), lmdd.y)
       #  rightMorph.setDesiredDim new Point((rmdd.x - deltaDragFromPreviousCall.x), rmdd.y)
 
-      deltaX = deltaDragFromPreviousCall.x
+      
+
+      # the factor "Math.max(lmdd.x,rmdd.x)/100" here below is because
+      # spacers have huge max factors, so we need to scale the
+      # change based on how much the biggest max factor is.
+      console.log " deltax 1 : " + deltaX
+      deltaX = (deltaDragFromPreviousCall.x * Math.max(lmdd.x,rmdd.x)) * 20
+      console.log " deltax 2 : " + deltaX
+      deltaX = deltaX / (@parent.width() * 8)
+      console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX
 
       until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
         deltaX = deltaX / 2
+
+      console.log " deltax 4 : " + deltaX
 
       prev = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
       leftMorph.setMaxDim new Point((lmdd.x + deltaX), lmdd.y)
