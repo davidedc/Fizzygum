@@ -1752,7 +1752,7 @@ class Morph extends MorphicNode
   
   # Morph utilities ////////////////////////////////////////////////////////
   
-  showResizeAndMoveHandles: ->
+  showResizeAndMoveHandlesAndLayoutAdjusters: ->
     world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeHorizontalHandle")
     world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeVerticalHandle")
     world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
@@ -1971,7 +1971,7 @@ class Morph extends MorphicNode
     menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
 
     menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize/move...", true, @, "showResizeAndMoveHandles", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+    menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
     menu.addLine()
     menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
     menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
