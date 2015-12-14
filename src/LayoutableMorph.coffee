@@ -57,7 +57,7 @@ class LayoutableMorph extends Morph
 
     maxWidth = desiredBounds.x + spreadability * desiredBounds.x/100
     maxHeight = desiredBounds.y + spreadability * desiredBounds.y/100
-    @setMaxDim new Dimension maxWidth, maxHeight
+    @setMaxDim new Point maxWidth, maxHeight
 
     @invalidateLayout()
 
@@ -85,13 +85,13 @@ class LayoutableMorph extends Morph
   # minimum of a container to the minimums of the contents.
   ###
   getDesiredDim: ->
-    desiredDim = new Dimension @desiredWidth, @desiredHeight
+    desiredDim = new Point @desiredWidth, @desiredHeight
     return desiredDim.min @getMaxDim()
   getMinDim: ->
-    minDim = new Dimension @minWidth, @minHeight
+    minDim = new Point @minWidth, @minHeight
     return minDim.min @getMaxDim()
   getMaxDim: ->
-    maxDim = new Dimension @maxWidth, @maxHeight
+    maxDim = new Point @maxWidth, @maxHeight
     return maxDim
   ###
 
@@ -103,7 +103,7 @@ class LayoutableMorph extends Morph
   getMinDim: ->
     @getRecursiveMinDim()
   getMaxDim: ->
-    maxDim = new Dimension @maxWidth, @maxHeight
+    maxDim = new Point @maxWidth, @maxHeight
     return maxDim.max @getDesiredDim()
 
 
@@ -132,7 +132,7 @@ class LayoutableMorph extends Morph
 
     # TBD the exact shape of @checkDesiredDimCache
     @checkDesiredDimCache = true
-    @desiredDimCache = new Dimension desiredWidth, desiredHeight
+    @desiredDimCache = new Point desiredWidth, desiredHeight
 
     return @desiredDimCache.min @getRecursiveMaxDim()
 
@@ -162,7 +162,7 @@ class LayoutableMorph extends Morph
 
     # TBD the exact shape of @checkMinDimCache
     @checkMinDimCache = true
-    @minDimCache = new Dimension minWidth, minHeight
+    @minDimCache = new Point minWidth, minHeight
 
     # the user might have forced the "desired" to
     # be smaller than the standard minimum set by
@@ -195,7 +195,7 @@ class LayoutableMorph extends Morph
 
     # TBD the exact shape of @checkMaxDimCache
     @checkMaxDimCache = true
-    @maxDimCache = new Dimension maxWidth, maxHeight
+    @maxDimCache = new Point maxWidth, maxHeight
 
     # the user might have forced the "desired" to
     # be bigger than the standard maximum set by
