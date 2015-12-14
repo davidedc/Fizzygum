@@ -2588,6 +2588,18 @@ class Morph extends MorphicNode
     @notifyChildrenThatParentHasReLayouted()
 
   @setupTestScreen1: ->
+
+    ## draw some reference patterns to see the sizes
+
+    for i in [0..5]
+      lmHolder = new Morph()
+      lmHolder.setExtent new Point 10 + i*10,10 + i*10
+      lmHolder.fullRawMoveTo new Point(10 + 60 * i, 10 + 50 * 0)
+
+      world.add(lmHolder)
+
+    ################################################
+
     lmHolder = new Morph()
     lmContent1 = new Morph()
     lmAdj = new StackElementsSizeAdjustingMorph()
@@ -2598,14 +2610,12 @@ class Morph extends MorphicNode
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color(255, 0, 0)
-    lmAdj.setColor new Color(0, 255, 0)
     lmContent2.setColor new Color(0, 0, 255)
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
-    lmAdj.setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point(10,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 0, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2627,7 +2637,7 @@ class Morph extends MorphicNode
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(70,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 1, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2653,7 +2663,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(130,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 2, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2681,7 +2691,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(190,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 3, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2718,7 +2728,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point(190 + 60,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 4, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2755,7 +2765,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point(190 + 120,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 5, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2788,11 +2798,11 @@ class Morph extends MorphicNode
     lmContent2.setColor new Color(0, 0, 255)
     lmContent3.setColor new Color(255, 0, 255)
 
-    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
-    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
-    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+    lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
+    lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
+    lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point(190 + 180,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 6, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
@@ -2829,7 +2839,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
 
-    lmHolder.fullRawMoveTo new Point(190 + 180 + 60,10)
+    lmHolder.fullRawMoveTo new Point(10 + 60 * 7, 30 + 50 * 1)
 
     world.add(lmHolder)
     new HandleMorph(lmHolder)
