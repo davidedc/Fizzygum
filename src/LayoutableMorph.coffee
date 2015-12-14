@@ -79,6 +79,11 @@ class LayoutableMorph extends Morph
 
     @invalidateLayout()
 
+  # if you use this paragraph, then
+  # we have a system where you CAN easily resize things to any
+  # size, so to have maximum flexibility we are not binding the
+  # minimum of a container to the minimums of the contents.
+  ###
   getDesiredDim: ->
     desiredDim = new Dimension @desiredWidth, @desiredHeight
     return desiredDim.min @getMaxDim()
@@ -88,17 +93,11 @@ class LayoutableMorph extends Morph
   getMaxDim: ->
     maxDim = new Dimension @maxWidth, @maxHeight
     return maxDim
+  ###
 
   # if you use this paragraph, then the container of further
   # layouts will have a minimum equal to the sum of minimums
-  # of the contents. I think we shouldn't do this.
-  # Rather, we have a system where you CAN easily resize things to any
-  # size, so to have maximum flexibility we are not binding the
-  # minimum of a container to the minimums of the contents.
-  # Rather, you can just set any minimum you want to the container.
-  # If you want to make then zero, then be it, the minimums of the
-  # contents won't matter.
-  ###
+  # of the contents.
   getDesiredDim: ->
     @getRecursiveDesiredDim()
   getMinDim: ->
@@ -106,7 +105,6 @@ class LayoutableMorph extends Morph
   getMaxDim: ->
     maxDim = new Dimension @maxWidth, @maxHeight
     return maxDim.max @getDesiredDim()
-  ###
 
 
   getRecursiveDesiredDim: ->

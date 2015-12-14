@@ -1753,13 +1753,13 @@ class Morph extends MorphicNode
   # Morph utilities ////////////////////////////////////////////////////////
   
   showResizeAndMoveHandles: ->
-    world.activeHandle.push new HandleMorph(@, "resizeHorizontalHandle")
-    world.activeHandle.push new HandleMorph(@, "resizeVerticalHandle")
-    world.activeHandle.push new HandleMorph(@, "moveHandle")
-    world.activeHandle.push new HandleMorph(@, "resizeBothDimensionsHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeHorizontalHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeVerticalHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeBothDimensionsHandle")
   
   showMoveHandle: ->
-    world.activeHandle.push new HandleMorph(@, "moveHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
   
   hint: (msg) ->
     text = msg

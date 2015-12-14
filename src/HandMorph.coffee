@@ -79,7 +79,7 @@ class HandMorph extends Morph
     # removed that event as we collapsed the down and up
     # into this coalesced higher-level event,
     # but we still need to make these checks and actions
-    @destroyActiveHandleIfHandHasNotActionedIt morphTheMenuIsAbout
+    @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -237,12 +237,12 @@ class HandMorph extends Morph
   # rather than a multifaceted and sometimes browser-specific
   # event object.
 
-  destroyActiveHandleIfHandHasNotActionedIt: (actionedMorph) ->
-    if @world.activeHandle.length > 0
-      if @world.activeHandle.indexOf(actionedMorph) == -1
-        for eachActiveHandle in @world.activeHandle
-          eachActiveHandle.destroy()
-        @world.activeHandle = []
+  destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedMorph) ->
+    if @world.temporaryHandlesAndLayoutAdjusters.length > 0
+      if @world.temporaryHandlesAndLayoutAdjusters.indexOf(actionedMorph) == -1
+        for eachTemporaryHandlesAndLayoutAdjusters in @world.temporaryHandlesAndLayoutAdjusters
+          eachTemporaryHandlesAndLayoutAdjusters.destroy()
+        @world.temporaryHandlesAndLayoutAdjusters = []
 
   stopEditingIfActionIsElsewhere: (actionedMorph) ->
     if @world.caret?
@@ -298,7 +298,7 @@ class HandMorph extends Morph
       @mouseButton = null
     else
       morph = @topMorphUnderPointer()
-      @destroyActiveHandleIfHandHasNotActionedIt morph
+      @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
       @stopEditingIfActionIsElsewhere morph
 
       @morphToGrab = morph.rootForGrab()
