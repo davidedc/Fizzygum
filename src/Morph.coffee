@@ -1761,10 +1761,24 @@ class Morph extends MorphicNode
   # Morph utilities ////////////////////////////////////////////////////////
   
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeHorizontalHandle")
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeVerticalHandle")
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeBothDimensionsHandle")
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeHorizontalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeVerticalHandle")
+      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
+      world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeBothDimensionsHandle")
+    else
+      world.temporaryHandlesAndLayoutAdjusters.push \
+        @addAsSiblingBeforeMe \
+          (new StackElementsSizeAdjustingMorph()),
+          null,
+          LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      world.temporaryHandlesAndLayoutAdjusters.push \
+        @addAsSiblingAfterMe \
+          (new StackElementsSizeAdjustingMorph()),
+          null,
+          LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      if @parent?
+        @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
   
   showMoveHandle: ->
     world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
