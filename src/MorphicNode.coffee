@@ -57,7 +57,7 @@ class MorphicNode
     if !position?
       @children.push aMorphicNode
     else
-      @children.splice position, null, aMorphicNode
+      @children.splice position, 0, aMorphicNode
     aMorphicNode.parent = @
     ## @connectValuesToAddedChild aMorphicNode
   
