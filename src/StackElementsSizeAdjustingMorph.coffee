@@ -53,10 +53,9 @@ class StackElementsSizeAdjustingMorph extends Morph
       # the factor "Math.max(lmdd.x,rmdd.x)/100" here below is because
       # spacers have huge max factors, so we need to scale the
       # change based on how much the biggest max factor is.
-      console.log " deltax 1 : " + deltaX
-      deltaX = (deltaDragFromPreviousCall.x * Math.max(lmdd.x,rmdd.x)) * 20
-      console.log " deltax 2 : " + deltaX
-      deltaX = deltaX / (@parent.width() * 8)
+      deltaX = (deltaDragFromPreviousCall.x * Math.pow(Math.max(lmdd.x,rmdd.x),1.1)) * 700
+      console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
+      deltaX = deltaX / (@parent.width() * 500)
       console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX
 
       until (lmdd.x + deltaX > 0) and (rmdd.x - deltaX > 0)
