@@ -329,6 +329,13 @@ class MorphicNode
     siblings.splice(index, 1)
     return siblings
 
+  positionAmongSiblings: ->
+    theCount = 0
+    for eachSibling in @parent.children
+      if eachSibling == @
+        return theCount
+      theCount++
+
   # find how many siblings before me
   # satisfy a property
   # This is used when figuring out
