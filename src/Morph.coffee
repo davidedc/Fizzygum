@@ -1446,6 +1446,7 @@ class Morph extends MorphicNode
       aMorph.changed()
     @silentAdd(aMorph, true, position)
     aMorph.imBeingAddedTo @
+    return aMorph
 
   addInset: (aMorph) ->
 
