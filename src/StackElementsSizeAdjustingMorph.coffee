@@ -16,7 +16,7 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
   constructor: ->
     super()
     @noticesTransparentClick = true
-    @setColor new Color(0, 255, 0)
+    #@setColor new Color(0, 255, 0)
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
 
   # HandleMorph floatDragging and dropping:
@@ -89,3 +89,46 @@ class StackElementsSizeAdjustingMorph extends LayoutableMorph
     else
       Cursor.resizeTop()
   ###
+
+
+  # This method only paints this very morph's "image",
+  # it doesn't descend the children
+  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
+  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
+  # Note that this morph might paint something on the screen even if
+  # it's not a "leaf".
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+
+    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
+      return
+
+    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
+    if area.isNotEmpty()
+      if w < 1 or h < 1
+        return null
+
+      aContext.save()
+
+      # clip out the dirty rectangle as we are
+      # going to paint the whole of the box
+      aContext.clipToRectangle al,at,w,h
+
+      aContext.globalAlpha = @alpha
+
+      aContext.scale pixelRatio, pixelRatio
+      morphPosition = @position()
+      aContext.translate morphPosition.x, morphPosition.y
+      aContext.fillStyle = @color.toString()
+      
+      centerX = @bounds.width() / 2
+      centerY = @bounds.height() / 2
+      radius = Math.min centerX, centerY
+      radius = radius - radius / 20
+      aContext.beginPath()
+      aContext.arc(centerX, centerY, radius, 0, 2 * Math.PI, false)
+      aContext.fillStyle = 'Gray'
+      aContext.fill()
+      aContext.closePath()
+
+      aContext.restore()
+
