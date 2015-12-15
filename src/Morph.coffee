@@ -470,10 +470,17 @@ class Morph extends MorphicNode
     @bounds
   
   rawSetBounds: (newBounds) ->
-    if !(@bounds.eq newBounds)
-      @bounds = newBounds
-      @changed()
-      @breakNumberOfRawMovesAndResizesCaches()
+    if @bounds.eq newBounds
+      return
+
+    oldExtent = @bounds.extent()
+    newExtent = newBounds.extent()
+    @bounds = newBounds
+    @changed()
+    @breakNumberOfRawMovesAndResizesCaches()
+
+    if !oldExtent.eq newExtent
+      @reLayout()
 
 
   silentRawSetBounds: (newBounds) ->
