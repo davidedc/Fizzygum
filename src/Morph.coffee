@@ -1768,16 +1768,21 @@ class Morph extends MorphicNode
       world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
       world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "resizeBothDimensionsHandle")
     else
-      world.temporaryHandlesAndLayoutAdjusters.push \
-        @addAsSiblingBeforeMe \
-          (new StackElementsSizeAdjustingMorph()),
-          null,
-          LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-      world.temporaryHandlesAndLayoutAdjusters.push \
-        @addAsSiblingAfterMe \
-          (new StackElementsSizeAdjustingMorph()),
-          null,
-          LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
+        world.temporaryHandlesAndLayoutAdjusters.push \
+          @addAsSiblingBeforeMe \
+            (new StackElementsSizeAdjustingMorph()),
+            null,
+            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+
+      console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
+
+      if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
+        world.temporaryHandlesAndLayoutAdjusters.push \
+          @addAsSiblingAfterMe \
+            (new StackElementsSizeAdjustingMorph()),
+            null,
+            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
   

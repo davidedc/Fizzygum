@@ -329,12 +329,37 @@ class MorphicNode
     siblings.splice(index, 1)
     return siblings
 
+  amITheFirstSibling: ->
+    if @parent.children[0] == @
+      return true
+    return false
+
+  amITheLastSibling: ->
+    if @parent.children[@parent.children.length - 1] == @
+      return true
+    return false
+
   positionAmongSiblings: ->
     theCount = 0
     for eachSibling in @parent.children
       if eachSibling == @
         return theCount
       theCount++
+
+  siblingBeforeMeIsA: (theConstructor) ->
+    if @amITheFirstSibling()
+      return false
+    if @parent.children[@positionAmongSiblings()-1] instanceof theConstructor
+      return true
+    return false
+
+  siblingAfterMeIsA: (theConstructor) ->
+    if @amITheLastSibling()
+      return false
+    if @parent.children[@positionAmongSiblings()+1] instanceof theConstructor
+      return true
+    return false
+
 
   # find how many siblings before me
   # satisfy a property
