@@ -1427,8 +1427,8 @@ class Morph extends MorphicNode
 
     aMorph.parent?.invalidateLayout()
 
+    aMorph.layoutSpec = layoutSpec
     if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      aMorph.layoutSpec = layoutSpec
       @invalidateLayout()
 
     # the morph that is being
