@@ -117,7 +117,7 @@ class StackElementsSizeAdjustingMorph extends Morph
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-
+    super # draws the background
     if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
       return
 
