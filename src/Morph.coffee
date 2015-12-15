@@ -597,13 +597,6 @@ class Morph extends MorphicNode
 
     return result
 
-  invalidateLayout: ->
-    if @layoutIsValid
-      window.morphsThatMaybeChangedLayout.push @
-    @layoutIsValid = false
-    if @parent?
-      @parent.invalidateLayout()
-
 
   # Note that in a case of a fullMove*
   # you should also invalidate all the morphs in
@@ -2308,6 +2301,13 @@ class Morph extends MorphicNode
   minHeight: 10
   desiredHeight: 20
   maxHeight: 100
+
+  invalidateLayout: ->
+    if @layoutIsValid
+      window.morphsThatMaybeChangedLayout.push @
+    @layoutIsValid = false
+    if @parent?
+      @parent.invalidateLayout()
 
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
     @minWidth = minBounds.x
