@@ -597,11 +597,6 @@ class Morph extends MorphicNode
 
     return result
 
-  doLayout: ->
-    @layoutIsValid = true
-    return
-
-
   invalidateLayout: ->
     if @layoutIsValid
       window.morphsThatMaybeChangedLayout.push @
