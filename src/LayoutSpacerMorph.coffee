@@ -8,11 +8,24 @@ class LayoutSpacerMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
+  thisSpacerIsTransparent: false
 
   constructor: (spacerWeight = 1) ->
     super()
     @setColor new Color(0, 0, 0)
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_SPACERS
+
+  makeSpacersTransparent: ->
+    if !@thisSpacerIsTransparent
+      @thisSpacerIsTransparent = true
+      @changed()
+    super
+
+  makeSpacersOpaque: ->
+    if @thisSpacerIsTransparent
+      @thisSpacerIsTransparent = false
+      @changed()
+    super
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -21,6 +34,9 @@ class LayoutSpacerMorph extends Morph
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+
+    if @thisSpacerIsTransparent
+      return
 
     super
 

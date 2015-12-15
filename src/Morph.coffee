@@ -1964,6 +1964,8 @@ class Morph extends MorphicNode
     menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
     menu.addItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
+    menu.addItem "make spacers transparent", true, @, "makeSpacersTransparent"
+    menu.addItem "make spacers opaque", true, @, "makeSpacersOpaque"
 
     menu.popUpAtHand(@firstContainerMenu())
 
@@ -2308,6 +2310,14 @@ class Morph extends MorphicNode
   minHeight: 10
   desiredHeight: 20
   maxHeight: 100
+
+  makeSpacersTransparent: ->
+    for C in @children
+      C.makeSpacersTransparent()
+
+  makeSpacersOpaque: ->
+    for C in @children
+      C.makeSpacersOpaque()
 
   invalidateLayout: ->
     if @layoutIsValid
