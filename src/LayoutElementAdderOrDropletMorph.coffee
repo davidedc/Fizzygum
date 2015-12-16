@@ -50,13 +50,19 @@ class LayoutElementAdderOrDropletMorph extends Morph
       aContext.restore()
 
   drawHandle: (context) ->
+    height = @height()
+    width = @width()
+
+
     p0 = @bottomLeft().subtract(@position())
-    p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
+    p0 = p0.subtract(new Point(0, Math.ceil(height/2)))
+
+    squareDim = Math.min width, height
     
-    plusSignLeft = p0.add(new Point(Math.ceil(@width()/15),0))
-    plusSignRight = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
-    plusSignTop = p0.add new Point(Math.ceil(@width()/2),-Math.ceil(@height()/3))
-    plusSignBottom = p0.add new Point(Math.ceil(@width()/2),Math.ceil(@height()/3))
+    plusSignLeft = p0.add(new Point(Math.ceil(squareDim/15),0))
+    plusSignRight = p0.add(new Point(squareDim - Math.ceil(squareDim/14), 0))
+    plusSignTop = p0.add new Point(Math.ceil(squareDim/2),-Math.ceil(squareDim/3))
+    plusSignBottom = p0.add new Point(Math.ceil(squareDim/2),Math.ceil(squareDim/3))
 
     context.beginPath()
     context.moveTo 0.5 + plusSignLeft.x, 0.5 + plusSignLeft.y
