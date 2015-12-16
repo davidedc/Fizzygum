@@ -1295,6 +1295,9 @@ class WorldMorph extends FrameMorph
   createNewStackElementsSizeAdjustingMorph: ->
     @create new StackElementsSizeAdjustingMorph()
 
+  createNewLayoutElementAdderOrDropletMorph: ->
+    @create new LayoutElementAdderOrDropletMorph()
+
   createNewRectangleMorph: ->
     @create new RectangleMorph()
   createNewBoxMorph: ->
@@ -1447,6 +1450,7 @@ class WorldMorph extends FrameMorph
   layoutTestsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph(false, @, true, true, "Layout tests")
     menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
+    menu.addItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
     menu.addItem "test screen 1", true, Morph, "setupTestScreen1"
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
     
