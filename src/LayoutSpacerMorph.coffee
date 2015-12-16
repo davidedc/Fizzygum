@@ -98,7 +98,7 @@ class LayoutSpacerMorph extends Morph
     context.closePath()
     context.stroke()
 
-  drawHandle: (context) ->
+  drawReplacerMorph: (context) ->
     p0 = @bottomLeft().subtract(@position())
     p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
     
@@ -123,8 +123,8 @@ class LayoutSpacerMorph extends Morph
     # darker color.
     context.save()
     context.strokeStyle = shadowColor.toString()
-    @drawHandle(context)
+    @drawReplacerMorph(context)
     context.restore()
 
     context.strokeStyle = color.toString()
-    @drawHandle(context)
+    @drawReplacerMorph(context)
