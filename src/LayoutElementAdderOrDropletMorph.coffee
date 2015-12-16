@@ -102,4 +102,10 @@ class LayoutElementAdderOrDropletMorph extends Morph
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED    
     @destroy()
 
+  mouseEnter: ->
+    @setColor new Color(100, 100, 100)
+  
+  mouseLeave: ->
+    @setColor new Color(0, 0, 0)
+
 
