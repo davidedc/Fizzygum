@@ -1968,6 +1968,8 @@ class Morph extends MorphicNode
     menu.addItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
     menu.addItem "make spacers transparent", true, @, "makeSpacersTransparent"
     menu.addItem "make spacers opaque", true, @, "makeSpacersOpaque"
+    menu.addItem "show adders", true, @, "showAdders"
+    menu.addItem "remove adders", true, @, "removeAdders"
 
     menu.popUpAtHand(@firstContainerMenu())
 
@@ -2605,6 +2607,84 @@ class Morph extends MorphicNode
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
+
+  removeAdders: ->
+    allAddersToBeDestroyed =
+      @collectAllChildrenBottomToTopSuchThat(
+        (m) ->
+          m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+          m instanceof LayoutElementAdderOrDropletMorph
+      )
+    for C in allAddersToBeDestroyed
+      C.destroy()
+
+  showAdders: ->
+    debugger
+
+    if @children.length == 0
+      @add \
+        (new LayoutElementAdderOrDropletMorph()),
+        null,
+        LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+
+    while true
+      leftToDo = @firstChildSuchThat(
+        (m) ->
+          if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+            return false
+          if m instanceof LayoutElementAdderOrDropletMorph
+            return false
+          debugger
+          kkk = m.lastSiblingBeforeMeSuchThat(
+              (mm) ->
+                mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+            )
+          debugger
+          if !kkk?
+            return true
+          if kkk instanceof LayoutElementAdderOrDropletMorph
+            return false
+          return true            
+      )
+      debugger
+      if !leftToDo?
+        break
+      leftToDo.addAsSiblingBeforeMe \
+            (new LayoutElementAdderOrDropletMorph()),
+            null,
+            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+
+    # this code is duplicate of the one above and is only needed for
+    # adding the last adder/droplet.
+
+    while true
+      leftToDo = @firstChildSuchThat(
+        (m) ->
+          if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+            return false
+          if m instanceof LayoutElementAdderOrDropletMorph
+            return false
+          debugger
+          kkk = m.firstSiblingAfterMeSuchThat(
+              (mm) ->
+                mm.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+            )
+          debugger
+          if !kkk?
+            return true
+          if kkk instanceof LayoutElementAdderOrDropletMorph
+            return false
+          return true            
+      )
+      debugger
+      if !leftToDo?
+        break
+      leftToDo.addAsSiblingAfterMe \
+            (new LayoutElementAdderOrDropletMorph()),
+            null,
+            LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+
+
 
   @setupTestScreen1: ->
 
