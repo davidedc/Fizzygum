@@ -207,7 +207,7 @@ class TriggerMorph extends Morph
     @changed()
   
   mouseClickLeft: ->
-    super()
+    super
     @state = @STATE_HIGHLIGHTED
     @changed()
     if @closesUnpinnedMenus
