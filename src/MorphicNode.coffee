@@ -329,6 +329,12 @@ class MorphicNode
     siblings.splice(index, 1)
     return siblings
 
+  firstSiblingsSuchThat: (predicate) ->
+    for eachSibling in @parent.children
+      if predicate.call(null, eachSibling)
+        return eachSibling
+    return null
+
   amITheFirstSibling: ->
     if @parent.children[0] == @
       return true
@@ -418,6 +424,9 @@ class MorphicNode
         if theCount is n
           return eachChild
     return null
+
+  firstChildSuchThat: (predicate) ->
+    @nthChildSuchThat 1, predicate
 
   SLOWfirstFrameParent: (morphToStartFrom = @) ->
     if morphToStartFrom.parent?
