@@ -86,13 +86,20 @@ class LayoutElementAdderOrDropletMorph extends Morph
 
   mouseClickLeft: ->
     super
+
+    # if the adder/droplet is on its own, free floating, then
+    # put a supporting morph underneath it and put the adder/droplet
+    # in a layout.
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      return
-    if !(@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED) instanceof LayoutElementAdderOrDropletMorph)
-      @addAsSiblingAfterMe \
-        (new LayoutElementAdderOrDropletMorph()),
-        null,
-        LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      newMorph = new Morph()
+      @parent.add newMorph
+      newMorph.rawSetBounds @boundingBox()
+      newMorph.add @, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+
+    @addAsSiblingAfterMe \
+      (new LayoutElementAdderOrDropletMorph()),
+      null,
+      LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
   reactToDropOf: (morphBeingDropped) ->
     @addAsSiblingAfterMe \
