@@ -8,13 +8,12 @@ class LayoutElementAdderOrDropletMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
-  acceptsDrops: true
+  _acceptsDrops: true
 
   constructor: ->
     super()
     @setColor new Color(0, 0, 0)
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
-
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children

@@ -1160,11 +1160,7 @@ class WorldMorph extends FrameMorph
   
   mouseDownRight: ->
     noOperation
-    
-  wantsDropOf: ->
-    # allow handle drops if any drops are allowed
-    @acceptsDrops
-  
+      
   droppedImage: ->
     null
 
@@ -1312,7 +1308,6 @@ class WorldMorph extends FrameMorph
     @create newMorph
   createNewScrollFrameMorph: ->
     newMorph = new ScrollFrameMorph()
-    newMorph.contents.acceptsDrops = true
     newMorph.adjustContentsBounds()
     newMorph.adjustScrollBars()
     newMorph.rawSetExtent new Point(350, 250)

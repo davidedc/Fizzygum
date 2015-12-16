@@ -135,7 +135,7 @@ class InspectorMorph extends BoxMorph
       @filterProperties(staticProperties, targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
-    @list.acceptsDrops = false
+    @list.disableDrops()
 
     # we know that the content of this list in this pane is not going to need the
     # step function, so we disable that from here by setting it to null, which
@@ -156,8 +156,8 @@ class InspectorMorph extends BoxMorph
 
     # details pane
     @detail = new ScrollFrameMorph()
-    @detail.acceptsDrops = false
-    @detail.contents.acceptsDrops = false
+    @detail.disableDrops()
+    @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
     @detail.color = new Color(255, 255, 255)
     ctrl = new TextMorph("")
@@ -169,8 +169,8 @@ class InspectorMorph extends BoxMorph
 
     # work ('evaluation') pane
     @work = new ScrollFrameMorph()
-    @work.acceptsDrops = false
-    @work.contents.acceptsDrops = false
+    @work.disableDrops()
+    @work.contents.disableDrops()
     @work.isTextLineWrapping = true
     @work.color = new Color(255, 255, 255)
     ev = new TextMorph("")

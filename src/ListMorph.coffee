@@ -38,7 +38,7 @@ class ListMorph extends ScrollFrameMorph
     #
     #debugger
     super()
-    @contents.acceptsDrops = false
+    @contents.disableDrops()
     @color = new Color(255, 255, 255)
     @labelGetter = labelGetter or (element) ->
         return element  if isString(element)

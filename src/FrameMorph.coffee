@@ -15,13 +15,13 @@ class FrameMorph extends Morph
 
   scrollFrame: null
   extraPadding: 0
+  _acceptsDrops: true
 
   # if this frame belongs to a scrollFrame, then
   # the @scrollFrame points to it
   constructor: (@scrollFrame = null) ->
     super()
     @color = new Color(255, 250, 245)
-    @acceptsDrops = true
     if @scrollFrame
       @noticesTransparentClick = false
 

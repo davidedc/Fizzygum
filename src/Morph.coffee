@@ -93,7 +93,7 @@ class Morph extends MorphicNode
   # it's a nice shortcut instead of doing
   # right click and then "duplicate..."
   isTemplate: false
-  acceptsDrops: false
+  _acceptsDrops: false
   noticesTransparentClick: false
   fps: 0
   customContextMenu: null
@@ -1708,11 +1708,13 @@ class Morph extends MorphicNode
         world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.splice index, 1
 
   wantsDropOf: (aMorph) ->
-    # default is to answer the general flag - change for my heirs
-    if (aMorph instanceof HandleMorph) or
-      (aMorph instanceof MenuMorph)
-        return false  
-    @acceptsDrops
+    return @_acceptsDrops
+
+  enableDrops: ->
+    @_acceptsDrops = true
+
+  disableDrops: ->
+    @_acceptsDrops = false
   
   pickUp: ->
     world.hand.grab @
