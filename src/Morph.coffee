@@ -471,6 +471,8 @@ class Morph extends MorphicNode
   boundingBox: ->
     @bounds
   
+  # note that using this one, the children
+  # morphs attached as floating don't move
   rawSetBounds: (newBounds) ->
     if @bounds.eq newBounds
       return
@@ -486,6 +488,8 @@ class Morph extends MorphicNode
 
 
   silentRawSetBounds: (newBounds) ->
+    if @bounds?.eq newBounds
+      return
     @bounds = newBounds
     @breakNumberOfRawMovesAndResizesCaches()
   
@@ -2512,6 +2516,10 @@ class Morph extends MorphicNode
     # rather than breaking what could be many
     # rectangles?
 
+    # the fullRawMoveTo makes sure that all children
+    # that are float-attached move together with the
+    # morph.
+    @fullRawMoveTo newBoundsForThisLayout.origin
     @rawSetBounds newBoundsForThisLayout
 
     if @countOfChildrenToLayout() != 0
