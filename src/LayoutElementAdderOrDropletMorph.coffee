@@ -53,13 +53,13 @@ class LayoutElementAdderOrDropletMorph extends Morph
     height = @height()
     width = @width()
 
-    squareDim = Math.min width, height
+    squareDim = Math.min width/2, height/2
 
     # p0 is the origin, the origin being in the bottom-left corner
     p0 = @bottomLeft().subtract(@position())
 
-    # now the origin if on the left edge, in the middle height of the morph
-    p0 = p0.subtract(new Point(0, Math.ceil(height/2)))
+    # now the origin if on the left edge, in the top 2/3 of the morph
+    p0 = p0.subtract(new Point(0, Math.ceil(2*height/3)))
     
     # now the origin is in the middle height of the morph,
     # on the left edge of the square incribed in the morph
@@ -76,6 +76,23 @@ class LayoutElementAdderOrDropletMorph extends Morph
     context.lineTo 0.5 + plusSignRight.x, 0.5 + plusSignRight.y
     context.moveTo 0.5 + plusSignTop.x, 0.5 + plusSignTop.y
     context.lineTo 0.5 + plusSignBottom.x, 0.5 + plusSignBottom.y
+
+    # now the new origin is in the lower part of the morph, so
+    # we can put an arrow there.
+    p0 = p0.add(new Point(0, Math.ceil(1*height/3)))
+    arrowFlapSize = Math.ceil squareDim/8
+    arrowSignLeft = p0.add(new Point(arrowFlapSize,0))
+    arrowSignRight = p0.add(new Point(squareDim - arrowFlapSize, 0))
+    arrowUp = arrowSignRight.add(new Point(- arrowFlapSize, - arrowFlapSize))
+    arrowDown = arrowSignRight.add(new Point(- arrowFlapSize, + arrowFlapSize))
+    context.moveTo 0.5 + arrowSignLeft.x, 0.5 + arrowSignLeft.y
+    context.lineTo 0.5 + arrowSignRight.x, 0.5 + arrowSignRight.y
+
+    context.lineTo 0.5 + arrowUp.x, 0.5 + arrowUp.y
+    context.moveTo 0.5 + arrowSignRight.x, 0.5 + arrowSignRight.y
+    context.lineTo 0.5 + arrowDown.x, 0.5 + arrowDown.y
+
+
     context.closePath()
     context.stroke()
 
