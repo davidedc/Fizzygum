@@ -53,14 +53,21 @@ class LayoutElementAdderOrDropletMorph extends Morph
     height = @height()
     width = @width()
 
-
-    p0 = @bottomLeft().subtract(@position())
-    p0 = p0.subtract(new Point(0, Math.ceil(height/2)))
-
     squareDim = Math.min width, height
+
+    # p0 is the origin, the origin being in the bottom-left corner
+    p0 = @bottomLeft().subtract(@position())
+
+    # now the origin if on the left edge, in the middle height of the morph
+    p0 = p0.subtract(new Point(0, Math.ceil(height/2)))
+    
+    # now the origin is in the middle height of the morph,
+    # on the left edge of the square incribed in the morph
+    p0 = p0.add new Point (width -  squareDim)/2,0
+
     
     plusSignLeft = p0.add(new Point(Math.ceil(squareDim/15),0))
-    plusSignRight = p0.add(new Point(squareDim - Math.ceil(squareDim/14), 0))
+    plusSignRight = p0.add(new Point(squareDim - Math.ceil(squareDim/15), 0))
     plusSignTop = p0.add new Point(Math.ceil(squareDim/2),-Math.ceil(squareDim/3))
     plusSignBottom = p0.add new Point(Math.ceil(squareDim/2),Math.ceil(squareDim/3))
 
