@@ -137,6 +137,8 @@ class Morph extends MorphicNode
   layoutIsValid: true
   layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
 
+  _showsAdders: false
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -2509,7 +2511,12 @@ class Morph extends MorphicNode
     # todo should we do a fullChanged here?
     # rather than breaking what could be many
     # rectangles?
+
     @rawSetBounds newBoundsForThisLayout
+
+    if @countOfChildrenToLayout() != 0
+      @addOrRemoveAdders()
+
 
     min = @getRecursiveMinDim()
     desired = @getRecursiveDesiredDim()
@@ -2609,17 +2616,30 @@ class Morph extends MorphicNode
     @notifyChildrenThatParentHasReLayouted()
 
   removeAdders: ->
-    allAddersToBeDestroyed =
-      @collectAllChildrenBottomToTopSuchThat(
-        (m) ->
-          m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
-          m instanceof LayoutElementAdderOrDropletMorph
-      )
-    for C in allAddersToBeDestroyed
-      C.destroy()
+    @_showsAdders = false
+    @invalidateLayout()
 
   showAdders: ->
-    debugger
+    @_showsAdders = true
+    if @children.length == 0
+      @add \
+        (new LayoutElementAdderOrDropletMorph()),
+        null,
+        LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @invalidateLayout()
+
+  addOrRemoveAdders: ->
+
+    if !@_showsAdders
+      allAddersToBeDestroyed =
+        @collectAllChildrenBottomToTopSuchThat(
+          (m) ->
+            m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+            m instanceof LayoutElementAdderOrDropletMorph
+        )
+      for C in allAddersToBeDestroyed
+        C.destroy()
+      return
 
     if @children.length == 0
       @add \

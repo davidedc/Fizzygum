@@ -101,6 +101,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
       @parent.add newMorph
       newMorph.rawSetBounds @boundingBox()
       newMorph.add @, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      newMorph.showAdders()
 
     @addAsSiblingAfterMe \
       (new LayoutElementAdderOrDropletMorph()),
