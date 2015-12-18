@@ -1153,9 +1153,10 @@ class Morph extends MorphicNode
     if area.isNotEmpty()
       if w < 1 or h < 1
         return null
-      aContext.globalAlpha = @alpha
 
       aContext.save()
+      aContext.globalAlpha = @alpha
+
       if !@color?
         debugger
       @paintBackgroundRectangle aContext, al, at, w, h
