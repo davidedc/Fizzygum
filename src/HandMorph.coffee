@@ -133,7 +133,7 @@ class HandMorph extends Morph
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "grab"
         arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
-        if (arr.indexOf action) == -1
+        if action not in arr
           arr.push action
 
 
@@ -180,7 +180,7 @@ class HandMorph extends Morph
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "drop"
         arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
-        if (arr.indexOf action) == -1
+        if action not in arr
           arr.push action
 
       morphToDrop = @children[0]
@@ -242,7 +242,7 @@ class HandMorph extends Morph
 
   destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem: (actionedMorph) ->
     if @world.temporaryHandlesAndLayoutAdjusters.length > 0
-      if @world.temporaryHandlesAndLayoutAdjusters.indexOf(actionedMorph) == -1
+      if actionedMorph not in @world.temporaryHandlesAndLayoutAdjusters
         for eachTemporaryHandlesAndLayoutAdjusters in @world.temporaryHandlesAndLayoutAdjusters
           eachTemporaryHandlesAndLayoutAdjusters.destroy()
         @world.temporaryHandlesAndLayoutAdjusters = []

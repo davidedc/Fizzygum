@@ -845,7 +845,7 @@ class WorldMorph extends FrameMorph
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "floatDrag"
         arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
-        if (arr.indexOf action) == -1
+        if action not in arr
           arr.push action
     
     @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething())

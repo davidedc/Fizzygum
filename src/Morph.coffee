@@ -289,7 +289,7 @@ class Morph extends MorphicNode
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
-      if (arr.indexOf @constructor.name) == -1
+      if @constructor.name not in arr
         arr.push @constructor.name
 
     @silentRawSetBounds Rectangle.EMPTY
