@@ -1981,7 +1981,7 @@ class Morph extends MorphicNode
     parents.forEach (each) ->
       if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice(0, 50)
-        menu.addItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu"
+        menu.addItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
 
     menu
 
@@ -2151,7 +2151,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph(false, @, true, true, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice"
+        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

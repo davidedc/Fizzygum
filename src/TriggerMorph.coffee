@@ -41,6 +41,10 @@ class TriggerMorph extends Morph
   pressColor: new Color(128, 128, 128)
   centered: false
   closesUnpinnedMenus: true
+  
+  # tells if the button represents a morph, in which
+  # case we are going to highlight the Morph on hover
+  representsAMorph: false
 
   state: 0
   STATE_NORMAL: 0
@@ -63,7 +67,8 @@ class TriggerMorph extends Morph
       @labelItalic = false,
       @doubleClickAction = null,
       @argumentToAction1 = null,
-      @argumentToAction2 = null
+      @argumentToAction2 = null,
+      @representsAMorph = false
       ) ->
 
     # additional properties:

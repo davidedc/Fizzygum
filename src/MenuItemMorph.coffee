@@ -8,9 +8,9 @@ class MenuItemMorph extends TriggerMorph
   namedClasses[@name] = @prototype
 
   # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
-  constructor: (closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2) ->
+  constructor: (closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
-    super closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2 
+    super closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
 
   getTextDescription: ->
     if @textDescription?
@@ -81,7 +81,14 @@ class MenuItemMorph extends TriggerMorph
   # MenuItemMorph events:
   mouseEnter: ->
     #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-    if @labelString.indexOf("a ") == 0 then @target.turnOnHighlight()
+    
+    # this could be a way to catch menu entries that should cause
+    # an highlighting but don't
+    #if @labelString.indexOf("a ") == 0 and !@representsAMorph
+    #  debugger
+
+    if @representsAMorph
+      @target.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @changed()
@@ -89,7 +96,8 @@ class MenuItemMorph extends TriggerMorph
       @startCountdownForBubbleHelp @hint
   
   mouseLeave: ->
-    if @labelString.indexOf("a ") == 0 then @target.turnOffHighlight()
+    if @representsAMorph
+      @target.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()

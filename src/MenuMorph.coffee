@@ -69,7 +69,8 @@ class MenuMorph extends BoxMorph
       italic = false,
       doubleClickAction, # optional, when used as list contents
       argumentToAction1,
-      argumentToAction2
+      argumentToAction2,
+      representsAMorph = false
       ) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
@@ -87,7 +88,8 @@ class MenuMorph extends BoxMorph
       italic,
       doubleClickAction,
       argumentToAction1,
-      argumentToAction2
+      argumentToAction2,
+      representsAMorph
     ]
 
   prependItem: (
@@ -101,7 +103,8 @@ class MenuMorph extends BoxMorph
       italic = false,
       doubleClickAction, # optional, when used as list contents
       argumentToAction1,
-      argumentToAction2
+      argumentToAction2,
+      representsAMorph
       ) ->
     # labelString is normally a single-line string. But it can also be one
     # of the following:
@@ -119,7 +122,8 @@ class MenuMorph extends BoxMorph
       italic,
       doubleClickAction,
       argumentToAction1,
-      argumentToAction2
+      argumentToAction2,
+      representsAMorph
     ]
   
 
@@ -218,7 +222,8 @@ class MenuMorph extends BoxMorph
           tuple[7], # italic
           tuple[8],  # doubleclick action
           tuple[9],  # argument to action 1
-          tuple[10]  # argument to action 2
+          tuple[10],  # argument to action 2
+          tuple[11]  # does it represent a Morph?
           )
         if !@environment?
           item.dataSourceMorphForTarget = item
