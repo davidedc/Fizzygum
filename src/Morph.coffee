@@ -140,6 +140,10 @@ class Morph extends MorphicNode
   _showsAdders: false
 
   highlighted: false
+  # if this morph has the purpose of highlighting
+  # another morph, then this field points to the
+  # morph that this morph is supposed to highlight
+  morphThisMorphIsHighlighting: null
 
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @

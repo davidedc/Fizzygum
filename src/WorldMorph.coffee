@@ -634,13 +634,13 @@ class WorldMorph extends FrameMorph
   
   addHighlightingMorphs: ->
     for eachHighlightingMorph in @currentHighlightingMorphs.slice()
-      if eachHighlightingMorph.highlightedMorph in @morphsToBeHighlighted
-        if eachHighlightingMorph.highlightedMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
-          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.highlightedMorph.clippedThroughBounds()
+      if eachHighlightingMorph.morphThisMorphIsHighlighting in @morphsToBeHighlighted
+        if eachHighlightingMorph.morphThisMorphIsHighlighting in window.morphsThatMaybeChangedFullGeometryOrPosition
+          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.morphThisMorphIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingMorphs.remove eachHighlightingMorph
-        @morphsBeingHighlighted.remove eachHighlightingMorph.highlightedMorph
-        eachHighlightingMorph.highlightedMorph = null
+        @morphsBeingHighlighted.remove eachHighlightingMorph.morphThisMorphIsHighlighting
+        eachHighlightingMorph.morphThisMorphIsHighlighting = null
         eachHighlightingMorph.destroy()
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
@@ -648,7 +648,7 @@ class WorldMorph extends FrameMorph
       if eachMorphNeedingHighlight not in @morphsBeingHighlighted
         hM = new Morph()
         world.add hM
-        hM.highlightedMorph = eachMorphNeedingHighlight
+        hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
         hM.setColor new Color(0, 0, 255) 
         hM.setAlphaScaled 50
