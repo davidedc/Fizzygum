@@ -375,8 +375,8 @@ class WorldMorph extends FrameMorph
   checkARectWithHyerarchy: (aRect, brokenMorph, isSrc) ->
     brokenMorphAncestor = brokenMorph
 
-    if brokenMorph instanceof SliderMorph
-      debugger
+    #if brokenMorph instanceof SliderMorph
+    #  debugger
 
     while brokenMorphAncestor.parent?
       brokenMorphAncestor = brokenMorphAncestor.parent
@@ -508,8 +508,8 @@ class WorldMorph extends FrameMorph
 
         if boundsToBeChanged.isNotEmpty()
           destinationBroken = boundsToBeChanged.spread()
-          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
-            debugger
+          #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+          #  debugger
       
    
       if sourceBroken? and destinationBroken?
