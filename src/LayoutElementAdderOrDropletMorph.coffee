@@ -23,8 +23,6 @@ class LayoutElementAdderOrDropletMorph extends Morph
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    super
-
     if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
       return
 
@@ -42,6 +40,9 @@ class LayoutElementAdderOrDropletMorph extends Morph
       aContext.globalAlpha = @alpha
 
       aContext.scale pixelRatio, pixelRatio
+
+      @paintBackgroundRectangle aContext, al, at, w, h
+
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 

@@ -1105,6 +1105,13 @@ class Morph extends MorphicNode
       h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
     return [area,sl,st,al,at,w,h]
 
+  paintBackgroundRectangle: (aContext, al, at, w, h) ->
+      aContext.fillStyle = @color.toString()
+      aContext.fillRect  Math.round(al),
+          Math.round(at),
+          Math.round(w),
+          Math.round(h)
+
   # This method only paints this very morph
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
@@ -1125,11 +1132,8 @@ class Morph extends MorphicNode
       aContext.save()
       if !@color?
         debugger
-      aContext.fillStyle = @color.toString()
-      aContext.fillRect  Math.round(al),
-          Math.round(at),
-          Math.round(w),
-          Math.round(h)
+      @paintBackgroundRectangle aContext, al, at, w, h
+
       aContext.restore()
 
   preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->

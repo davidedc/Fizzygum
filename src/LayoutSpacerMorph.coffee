@@ -38,7 +38,6 @@ class LayoutSpacerMorph extends Morph
     if @thisSpacerIsTransparent
       return
 
-    super
 
     if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
       return
@@ -57,6 +56,9 @@ class LayoutSpacerMorph extends Morph
       aContext.globalAlpha = @alpha
 
       aContext.scale pixelRatio, pixelRatio
+
+      @paintBackgroundRectangle aContext, al, at, w, h
+
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 
