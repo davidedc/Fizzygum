@@ -81,6 +81,7 @@ class BoxMorph extends Morph
       aContext.fill()
 
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 
 
   

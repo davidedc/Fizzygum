@@ -117,3 +117,4 @@ BackBufferMixin =
             Math.round(h)
 
           aContext.restore()
+          @paintHighlight aContext, al, at, w, h

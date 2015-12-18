@@ -80,6 +80,7 @@ class MenuItemMorph extends TriggerMorph
 
   # MenuItemMorph events:
   mouseEnter: ->
+    if @labelString.indexOf("a ") == 0 then @target.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @changed()
@@ -87,6 +88,7 @@ class MenuItemMorph extends TriggerMorph
       @startCountdownForBubbleHelp @hint
   
   mouseLeave: ->
+    if @labelString.indexOf("a ") == 0 then @target.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()

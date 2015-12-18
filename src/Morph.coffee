@@ -139,6 +139,8 @@ class Morph extends MorphicNode
 
   _showsAdders: false
 
+  highlighted: false
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -1105,6 +1107,30 @@ class Morph extends MorphicNode
       h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
     return [area,sl,st,al,at,w,h]
 
+  turnOnHighlight: ->
+    if @highlighted == false
+      @highlighted = true
+      @changed()
+  turnOffHighlight: ->
+    if @highlighted == true
+      @highlighted = false
+      @changed()
+
+  paintHighlight: (aContext, al, at, w, h) ->
+    if !@highlighted
+      return
+
+    aContext.save()
+    aContext.scale pixelRatio, pixelRatio
+    aContext.globalAlpha = 0.5
+    aContext.fillStyle = "orange"
+    aContext.fillRect  Math.round(al),
+        Math.round(at),
+        Math.round(w),
+        Math.round(h)
+    aContext.restore()
+
+
   paintBackgroundRectangle: (aContext, al, at, w, h) ->
       aContext.fillStyle = @color.toString()
       aContext.fillRect  Math.round(al),
@@ -1135,6 +1161,8 @@ class Morph extends MorphicNode
       @paintBackgroundRectangle aContext, al, at, w, h
 
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
+
 
   preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
 

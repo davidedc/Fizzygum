@@ -65,6 +65,7 @@ class LayoutSpacerMorph extends Morph
       @spacerMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
 
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 
   doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()

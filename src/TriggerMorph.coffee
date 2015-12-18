@@ -146,7 +146,9 @@ class TriggerMorph extends Morph
           Math.round(at),
           Math.round(w),
           Math.round(h)
+
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 
   createLabel: ->
     # bold

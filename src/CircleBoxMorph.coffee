@@ -106,6 +106,7 @@ class CircleBoxMorph extends Morph
       aContext.fill()
 
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 
   
   # CircleBoxMorph menu:

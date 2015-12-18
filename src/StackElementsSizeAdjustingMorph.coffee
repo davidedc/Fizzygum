@@ -152,4 +152,5 @@ class StackElementsSizeAdjustingMorph extends Morph
       aContext.closePath()
 
       aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 

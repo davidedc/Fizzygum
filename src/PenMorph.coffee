@@ -113,7 +113,8 @@ class PenMorph extends Morph
       aContext.fill()
       @wantsRedraw = false
 
-      aContext.restore()  
+      aContext.restore()
+      @paintHighlight aContext, al, at, w, h
 
   
   
