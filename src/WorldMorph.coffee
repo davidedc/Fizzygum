@@ -542,6 +542,21 @@ class WorldMorph extends FrameMorph
             Math.round(eachBrokenRect.height())
     aContext.restore()
 
+
+  # layouts are recalculated like so:
+  # there will be several subtrees
+  # that will need relayout.
+  # So take the head of any subtree and re-layout it
+  # The relayout might or might not all the subnodes
+  # of the subtree, because you might have a subtree
+  # that lives inside a floating morph, in which
+  # case it's not re-layout.
+  # So, a subtree might not be healed in one go,
+  # rather we keep track of what's left to heal and
+  # we apply the same process: we heal from the head node
+  # and take out of the list what's healed in that step,
+  # and we continue doing so until there is nothing else
+  # to heal.
   recalculateLayouts: ->
 
     until morphsThatMaybeChangedLayout.length == 0
