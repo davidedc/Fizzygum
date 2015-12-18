@@ -87,6 +87,14 @@ Array::chunk = (chunkSize) ->
     if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
   )
 
+Array::remove = (args...) ->
+  output = []
+  for arg in args
+    index = @indexOf arg
+    output.push @splice(index, 1) if index isnt -1
+  output = output[0] if args.length is 1
+  output
+
 # from https://gist.github.com/vjt/827679
 String::camelize = ->
   @replace /(?:^|[-])(\w)/g, (_, c) ->
