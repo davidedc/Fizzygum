@@ -101,6 +101,9 @@ BackBufferMixin =
         if area.isNotEmpty()
           if w < 1 or h < 1
             return null
+
+          aContext.save()
+
           aContext.globalAlpha = @alpha
 
           aContext.drawImage @backBuffer,
@@ -112,3 +115,5 @@ BackBufferMixin =
             Math.round(at),
             Math.round(w),
             Math.round(h)
+
+          aContext.restore()
