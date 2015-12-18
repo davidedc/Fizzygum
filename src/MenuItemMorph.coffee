@@ -80,6 +80,7 @@ class MenuItemMorph extends TriggerMorph
 
   # MenuItemMorph events:
   mouseEnter: ->
+    #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
     if @labelString.indexOf("a ") == 0 then @target.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED

@@ -176,6 +176,7 @@ class TriggerMorph extends Morph
         debugger
         @action.call @target, @dataSourceMorphForTarget
       else # assume it's a String
+        #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
         @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
 
   triggerDoubleClick: ->
