@@ -1110,10 +1110,13 @@ class Morph extends MorphicNode
   turnOnHighlight: ->
     if @highlighted == false
       @highlighted = true
+      world.morphsToBeHighlighted.push @
       @changed()
+
   turnOffHighlight: ->
     if @highlighted == true
       @highlighted = false
+      world.morphsToBeHighlighted.remove @
       @changed()
 
   paintHighlight: (aContext, al, at, w, h) ->

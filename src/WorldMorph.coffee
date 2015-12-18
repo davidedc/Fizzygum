@@ -143,6 +143,10 @@ class WorldMorph extends FrameMorph
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
+  morphsToBeHighlighted: []
+  currentHighlightingMorphs: []
+  morphsBeingHighlighted: []
+
   isFloatDraggable: ->
     return false
 
@@ -628,6 +632,30 @@ class WorldMorph extends FrameMorph
     if trackChanges.length != 1 and trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
   
+  addHighlightingMorphs: ->
+    for eachHighlightingMorph in @currentHighlightingMorphs.slice()
+      if eachHighlightingMorph.highlightedMorph in @morphsToBeHighlighted
+        if eachHighlightingMorph.highlightedMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+          eachHighlightingMorph.rawSetBounds eachHighlightingMorph.highlightedMorph.clippedThroughBounds()
+      else
+        @currentHighlightingMorphs.remove eachHighlightingMorph
+        @morphsBeingHighlighted.remove eachHighlightingMorph.highlightedMorph
+        eachHighlightingMorph.highlightedMorph = null
+        eachHighlightingMorph.destroy()
+
+    for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
+      debugger
+      if eachMorphNeedingHighlight not in @morphsBeingHighlighted
+        hM = new Morph()
+        world.add hM
+        hM.highlightedMorph = eachMorphNeedingHighlight
+        hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
+        hM.setColor new Color(0, 0, 255) 
+        hM.setAlphaScaled 50
+        @currentHighlightingMorphs.push hM
+        @morphsBeingHighlighted.push eachMorphNeedingHighlight
+
+
   doOneCycle: ->
     WorldMorph.currentTime = Date.now();
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
@@ -635,6 +663,7 @@ class WorldMorph extends FrameMorph
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @recalculateLayouts()
+    @addHighlightingMorphs()
     @updateBroken()
     WorldMorph.frameCount++
   

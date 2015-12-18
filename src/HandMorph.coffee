@@ -51,7 +51,10 @@ class HandMorph extends Morph
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
-        (m not instanceof ShadowMorph)
+        (m not instanceof ShadowMorph) and
+        # exclude morphs we use for highlighting
+        # other morphs
+        !m.highlightedMorph?
     if result?
       return result
     else
