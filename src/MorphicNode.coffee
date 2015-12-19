@@ -96,8 +96,7 @@ class MorphicNode
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache(@)
     @invalidateFullClippedBoundsCache(@)
-    idx = @children.indexOf(aMorphicNode)
-    @children.splice idx, 1  if idx isnt -1
+    @children.remove aMorphicNode
     aMorphicNode.parent = null
     ## @disconnectValuesFromRemovedChild aMorphicNode
   
@@ -325,8 +324,7 @@ class MorphicNode
     return []  unless @parent
     siblings = arrayShallowCopy @parent.children
     # now remove myself
-    index = siblings.indexOf(@)
-    siblings.splice(index, 1)
+    siblings.remove @
     return siblings
 
   firstSiblingsSuchThat: (predicate) ->

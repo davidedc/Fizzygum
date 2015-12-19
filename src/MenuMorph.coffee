@@ -292,9 +292,7 @@ class MenuMorph extends BoxMorph
     WorldMorph.numberOfAddsAndRemoves++
     super()
     if !@isListContents
-      index = world.openMenus.indexOf @
-      if index >= 0
-        world.openMenus.splice index, 1
+      world.openMenus.remove @
 
 
   itemSelected: ->

@@ -1745,13 +1745,11 @@ class Morph extends MorphicNode
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
       @clickOutsideMeOrAnyOfMeChildrenCallback = [functionName, arg1, arg2, arg3]
-      if (world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @) < 0
+      if @ not in world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
         world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.push @
     else
       console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
-      index = world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.indexOf @
-      if index >= 0
-        world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.splice index, 1
+      world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops

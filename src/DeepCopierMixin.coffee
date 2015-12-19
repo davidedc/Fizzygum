@@ -18,7 +18,7 @@ DeepCopierMixin =
             return "$" + haveIBeenCopiedAlready
           else
             return objectClones[haveIBeenCopiedAlready]
-        if (@ instanceof Morph) and (allMorphsInStructure.indexOf(@) < 0)
+        if (@ instanceof Morph) and (@ not in allMorphsInStructure)
           if doSerialize
             return "$EXTERNAL" + @uniqueIDString()
           else

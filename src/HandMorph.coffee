@@ -503,10 +503,10 @@ class HandMorph extends Morph
     # so we need to do a shallow copy to avoid to mangle the for loop
     morphsDetectingClickOutsideMeOrAnyOfMeChildren = arrayShallowCopy world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
     for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
-      if (world.hierarchyOfClickedMorphs.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) < 0
+      if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if (world.freshlyCreatedMenus.indexOf eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren) < 0
+        if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedMenus
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
@@ -665,7 +665,7 @@ class HandMorph extends Morph
     @temporaries.forEach (morph) =>
       unless morph.isClickable and morph.boundsContainPoint(@position())
         morph = morph.destroy()
-        @temporaries.splice @temporaries.indexOf(morph), 1
+        @temporaries.remove morph
   
   
   # HandMorph floatDragging optimization
