@@ -87,6 +87,9 @@ Array::chunk = (chunkSize) ->
     if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
   )
 
+# from http://stackoverflow.com/a/13895743
+# removes the elements IN PLACE, i.e. the
+# array IS modified
 Array::remove = (args...) ->
   output = []
   for arg in args
