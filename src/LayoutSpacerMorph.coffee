@@ -14,6 +14,7 @@ class LayoutSpacerMorph extends Morph
     super()
     @setColor new Color(0, 0, 0)
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_SPACERS
+    @minimumExtent = new Point 0,0
 
   makeSpacersTransparent: ->
     if !@thisSpacerIsTransparent

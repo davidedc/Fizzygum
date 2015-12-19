@@ -974,6 +974,7 @@ class Morph extends MorphicNode
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
+
     if @aspectRatio?
       if @aspectRatio >= 1
         if aPoint.y >= aPoint.x
@@ -2558,10 +2559,20 @@ class Morph extends MorphicNode
     # that are float-attached move together with the
     # morph.
     @fullRawMoveTo newBoundsForThisLayout.origin
-    @rawSetBounds newBoundsForThisLayout
+    
+    # bad kludge here but I think there will be more
+    # of these as we move over to the new layouts, we'll
+    # probably have split Morphs for the new layouts mechanism
+    if @ instanceof TextMorph
+      @rawSetBounds newBoundsForThisLayout
+    else
+      @rawSetExtent newBoundsForThisLayout.extent()
 
-    if @countOfChildrenToLayout() != 0
-      @addOrRemoveAdders()
+    if @countOfChildrenToLayout() == 0
+      @layoutIsValid = true
+      return
+
+    @addOrRemoveAdders()
 
 
     min = @getRecursiveMinDim()

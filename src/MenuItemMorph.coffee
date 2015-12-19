@@ -22,6 +22,12 @@ class MenuItemMorph extends TriggerMorph
     else
       return super()
   
+  # in theory this would be the right thing to do
+  # but a bunch of tests break and it's not worth it
+  # as we are going to remake the whole layout system anyways
+  #reLayout: ->
+  #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
+
   createLabel: ->
     # console.log "menuitem createLabel"
     if @label?

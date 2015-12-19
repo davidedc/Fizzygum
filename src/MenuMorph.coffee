@@ -245,6 +245,7 @@ class MenuMorph extends BoxMorph
     @adjustWidthsOfMenuEntries()
     fb = @fullBounds()
     #console.log "fb: " + fb
+    # add some padding to the right and bottom of the menu
     @silentRawSetExtent fb.extent().add(2)
     trackChanges.pop()
     @fullChanged()
