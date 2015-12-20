@@ -1129,7 +1129,11 @@ class Morph extends MorphicNode
       return
 
     aContext.save()
-    aContext.scale pixelRatio, pixelRatio
+
+    # Don't need this scale because
+    # al,at,w,h already account for that.
+    #aContext.scale pixelRatio, pixelRatio
+
     aContext.globalAlpha = 0.5
     aContext.fillStyle = "orange"
     aContext.fillRect  Math.round(al),
