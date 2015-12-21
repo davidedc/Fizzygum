@@ -66,6 +66,8 @@ class StringMorph extends Morph
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
 
+  fontInUse: ->
+    @fontSize
   
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
