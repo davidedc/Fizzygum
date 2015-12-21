@@ -226,7 +226,7 @@ class CaretMorph extends BlinkerMorph
     if symbol is "\t"
       @target.escalateEvent 'reactToEdit', @target
       if shiftKey
-        return @target.backTab(@target);
+        return @target.backTab(@target)
       return @target.tab(@target)
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or contains(["-", "."], symbol)
       if @target.selection() isnt ""
