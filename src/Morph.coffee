@@ -2184,7 +2184,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph(false, @, true, true, "choose new parent:")
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout"
+        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
