@@ -2009,6 +2009,11 @@ class Morph extends MorphicNode
       100,
       true
 
+  createNewStringMorph2: ->
+    newMorph = new StringMorph2("Hello⎲ƒ⎳⎷ ⎸⎹ World!",null,null,null,null,null,null,null, new Color(0, 255, 0), 0.5)
+    newMorph.isEditable = true
+    world.create newMorph
+
   testMenu: (ignored,targetMorph)->
     menu = new MenuMorph(false, targetMorph, true, true, null)
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
@@ -2019,6 +2024,7 @@ class Morph extends MorphicNode
     menu.addItem "make spacers opaque", true, @, "makeSpacersOpaque"
     menu.addItem "show adders", true, @, "showAdders"
     menu.addItem "remove adders", true, @, "removeAdders"
+    menu.addItem "StringMorph2", true, @, "createNewStringMorph2"
 
     menu.popUpAtHand(@firstContainerMenu())
 
@@ -2216,7 +2222,7 @@ class Morph extends MorphicNode
   
   allEntryFields: ->
     @collectAllChildrenBottomToTopSuchThat (each) ->
-      each.isEditable && (each instanceof StringMorph || each instanceof TextMorph);
+      each.isEditable && (each instanceof StringMorph || each instanceof StringMorph2 || each instanceof TextMorph)
   
   
   nextEntryField: (current) ->

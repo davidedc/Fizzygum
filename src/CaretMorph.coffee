@@ -97,7 +97,7 @@ class CaretMorph extends BlinkerMorph
         # we can't check the class using instanceof
         # because TextMorphs are instances of StringMorphs
         # but they want the enter to insert a carriage return.
-        if @target.constructor.name == "StringMorph"
+        if @target.constructor.name == "StringMorph" or @target.constructor.name == "StringMorph2"
           @accept()
         else
           @insert "\n"
