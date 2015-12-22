@@ -246,30 +246,7 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
-  
-  renderWithBlanks: (context, startX, y) ->
-    # create the blank form
-    drawBlank = ->
-      context.drawImage blank, Math.round(x), 0
-      x += space
-    space = Math.ceil(context.measureText(" ").width)
-    blank = newCanvas(new Point(space, @height()).scaleBy pixelRatio)
-    ctx = blank.getContext("2d")
-    words = @text.split(" ")
-    x = startX or 0
-    isFirst = true
-    ctx.fillStyle = @blanksColor.toString()
-    ctx.arc space / 2, blank.height / 2, space / 2, degreesToRadians(0), degreesToRadians(360)
-    ctx.fill()
-
-    # render my text inserting blanks
-    words.forEach (word) ->
-      drawBlank()  unless isFirst
-      isFirst = false
-      if word isnt ""
-        context.fillText word, x, y
-        x += Math.ceil(context.measureText(word).width)
-  
+    
   
   # StringMorph2 measuring:
   slotCoordinates: (slot) ->
