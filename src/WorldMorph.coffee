@@ -90,6 +90,7 @@ class WorldMorph extends FrameMorph
   # on the html page, where the world is
   # finally painted to.
   worldCanvas: null
+  worldCanvasContext: null
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -196,6 +197,8 @@ class WorldMorph extends FrameMorph
 
     @initEventListeners()
     @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
+
+    @worldCanvasContext = @worldCanvas.getContext("2d")
 
     @changed()
 
@@ -619,9 +622,9 @@ class WorldMorph extends FrameMorph
     @broken.forEach (rect) =>
       if !rect?
         return
-      @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvas.getContext("2d"), rect  if rect.isNotEmpty()
+      @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect  if rect.isNotEmpty()
     if world.showRedraws
-      @showBrokenRects(@worldCanvas.getContext("2d"))
+      @showBrokenRects @worldCanvasContext
 
     @broken = []
     @duplicatedBrokenRectsTracker = {}
@@ -725,7 +728,7 @@ class WorldMorph extends FrameMorph
     # The suggestion solution appears to work, since the settings are
     # applied globally.
     #
-    dta = @worldCanvas.getContext("2d").getImageData(point.x, point.y, 1, 1).data
+    dta = @worldCanvasContext.getImageData(point.x, point.y, 1, 1).data
     new Color(dta[0], dta[1], dta[2])
   
   

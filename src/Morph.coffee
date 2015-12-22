@@ -1188,10 +1188,10 @@ class Morph extends MorphicNode
     if clippingRectangle.isEmpty()
       return true
 
-    if (aContext == world.worldCanvas.getContext("2d")) and (@isOrphan())
+    if (aContext == world.worldCanvasContext) and (@isOrphan())
       return true
 
-    if (aContext == world.worldCanvas.getContext("2d")) and (!@visibleBasedOnIsVisibleProperty())
+    if (aContext == world.worldCanvasContext) and (!@visibleBasedOnIsVisibleProperty())
       return true
 
     return false
@@ -1228,7 +1228,7 @@ class Morph extends MorphicNode
     # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
     
 
-    if aContext == world.worldCanvas.getContext("2d")
+    if aContext == world.worldCanvasContext
       @recordDrawnAreaForNextBrokenRects()
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->

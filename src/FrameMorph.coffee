@@ -223,7 +223,7 @@ class FrameMorph extends Morph
     # if there is no dirty part in the frame then do nothing
     return null if dirtyPartOfFrame.isEmpty()
     
-    if aContext == world.worldCanvas.getContext("2d")
+    if aContext == world.worldCanvasContext
       @recordDrawnAreaForNextBrokenRects()
 
     # this draws the background of the frame itself, which could
