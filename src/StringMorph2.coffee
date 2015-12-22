@@ -73,7 +73,11 @@ class StringMorph2 extends Morph
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
 
-  fontInUse: ->
+  # the actual font size used might be
+  # different than the one specified originally
+  # because this morph has to be able to fit
+  # any extent by shrinking.
+  actualFontSizeUsedInRendering: ->
     @maybeTransformedFontSize
   
   toString: ->

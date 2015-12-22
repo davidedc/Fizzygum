@@ -29,7 +29,7 @@ class CaretMorph extends BlinkerMorph
     @updateCaretDimension()
 
   updateCaretDimension: ->
-    ls = fontHeight(@target.fontInUse())
+    ls = fontHeight(@target.actualFontSizeUsedInRendering())
     @rawSetExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
   
   # CaretMorph event processing:
