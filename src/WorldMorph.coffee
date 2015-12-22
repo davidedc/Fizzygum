@@ -92,6 +92,9 @@ class WorldMorph extends FrameMorph
   worldCanvas: null
   worldCanvasContext: null
 
+  canvasForTextMeasurements: null
+  canvasContextForTextMeasurements: null
+
   # By default the world will always fill
   # the entire page, also when browser window
   # is resized.
@@ -199,6 +202,12 @@ class WorldMorph extends FrameMorph
     @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
 
     @worldCanvasContext = @worldCanvas.getContext("2d")
+
+    @canvasForTextMeasurements = newCanvas()
+    @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext("2d")
+    @canvasContextForTextMeasurements.scale pixelRatio, pixelRatio
+    @canvasContextForTextMeasurements.textAlign = "left"
+    @canvasContextForTextMeasurements.textBaseline = "bottom"
 
     @changed()
 

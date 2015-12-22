@@ -154,15 +154,9 @@ class StringMorph2 extends Morph
 
     doesTextFitInExtent = (text = @text, overrideFontSize) =>
       text = (if @isPassword then @password("*", text.length) else text)
-      # initialize my surface property
-      measuringCanvas = newCanvas()
-      measuringCanvasContext = measuringCanvas.getContext("2d")
-      measuringCanvasContext.scale pixelRatio, pixelRatio
-      measuringCanvasContext.font = @font(overrideFontSize)
-      measuringCanvasContext.textAlign = "left"
-      measuringCanvasContext.textBaseline = "bottom"
 
-      thisFitsInto = new Point(Math.ceil(Math.max(measuringCanvasContext.measureText(text).width, 1)), fontHeight(overrideFontSize))
+      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
       if thisFitsInto.le @extent()
         return 0
       else
@@ -174,16 +168,8 @@ class StringMorph2 extends Morph
 
   calculateExtentBasedOnText: (text = @text, overrideFontSize)->
     text = (if @isPassword then @password("*", text.length) else text)
-    # initialize my surface property
-    measuringCanvas = newCanvas()
-    measuringCanvasContext = measuringCanvas.getContext("2d")
-    measuringCanvasContext.scale pixelRatio, pixelRatio
-    measuringCanvasContext.font = @font(overrideFontSize)
-    measuringCanvasContext.textAlign = "left"
-    measuringCanvasContext.textBaseline = "bottom"
-
-    # set my extent based on the size of the text
-    return Math.ceil(Math.max(measuringCanvasContext.measureText(text).width, 1))
+    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+    return Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
 
   reLayout: ->
     super()
