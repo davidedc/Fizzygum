@@ -113,20 +113,28 @@ class StringMorph2 extends Morph
   # current extent.
   searchLargestFittingFont: (functionZeroesFollowedByOnes, textToFit) ->
 
+    # decimalFloatFigures allows you to go into sub-points
+    # in the font size. This is so the resizing of the
+    # text is less "jumpy".
+    # "1" seems to be perfect in terms of jumpiness,
+    # but obviously this routine gets quite a bit more
+    # expensive.
+    decimalFloatFigures = 0
+
     start = 0    # minimum font size that we are gonna examine
-    stop  = 200  # maximum font size that we are gonna examine
+    stop  = Math.round(200 * Math.pow(10,decimalFloatFigures))  # maximum font size that we are gonna examine
     
     if functionZeroesFollowedByOnes(textToFit, start) != 0
        return -1
 
     if functionZeroesFollowedByOnes(textToFit, stop) == 0
-       return stop
+       return stop / Math.pow(10,decimalFloatFigures)
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      valueAtPivot = functionZeroesFollowedByOnes(textToFit, pivot)
+      valueAtPivot = functionZeroesFollowedByOnes(textToFit, pivot / Math.pow(10,decimalFloatFigures))
 
       if valueAtPivot == 0
         # bring forward the start since there are still
@@ -137,7 +145,7 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    start
+    start / Math.pow(10,decimalFloatFigures)
 
   fitToExtent: ->
 
