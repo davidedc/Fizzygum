@@ -315,10 +315,6 @@ class StringMorph2 extends Morph
     # answer the slot (index) indicating the EOL for the given slot
     @text.length
 
-  rawHeight: ->
-    # answer my corrected fontSize
-    @height() / 1.2
-    
   fontSizePopup: (menuItem)->
     @prompt menuItem.parent.title + "\nfont\nsize:",
       @,
