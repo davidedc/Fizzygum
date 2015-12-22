@@ -249,8 +249,11 @@ degreesToRadians = (degrees) ->
 radiansToDegrees = (radians) ->
   radians * 180 / Math.PI
 
-fontHeight = (height) ->
-  minHeight = Math.max(height, WorldMorph.preferencesAndSettings.minimumFontHeight)
+# this fontHeight is too thin.
+# tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
+# but hey they look cut also in this text editor I'm using.
+fontHeight = (fontSize) ->
+  minHeight = Math.max(fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight)
   Math.ceil(minHeight * 1.2) # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->
