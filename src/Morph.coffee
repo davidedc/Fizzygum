@@ -2009,8 +2009,13 @@ class Morph extends MorphicNode
       100,
       true
 
-  createNewStringMorph2: ->
+  createNewStringMorph2WithBackground: ->
     newMorph = new StringMorph2("Hello⎲ƒ⎳⎷ ⎸⎹ World!",null,null,null,null,null,null,null, new Color(0, 255, 0), 0.5)
+    newMorph.isEditable = true
+    world.create newMorph
+
+  createNewStringMorph2WithoutBackground: ->
+    newMorph = new StringMorph2("Hello⎲ƒ⎳⎷ ⎸⎹ World!")
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2024,7 +2029,8 @@ class Morph extends MorphicNode
     menu.addItem "make spacers opaque", true, @, "makeSpacersOpaque"
     menu.addItem "show adders", true, @, "showAdders"
     menu.addItem "remove adders", true, @, "removeAdders"
-    menu.addItem "StringMorph2", true, @, "createNewStringMorph2"
+    menu.addItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
+    menu.addItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
 
     menu.popUpAtHand(@firstContainerMenu())
 
