@@ -111,6 +111,9 @@ class StringMorph2 extends Morph
   # does a binary search to see which font size
   # we need to apply to the text to fit to the
   # current extent.
+  # If this gets slow: all kinds of optimisation can be done.
+  # for example keeping an LRU cache inside functionZeroesFollowedByOnes
+  # keyed on the text and the size
   searchLargestFittingFont: (functionZeroesFollowedByOnes, textToFit) ->
 
     # decimalFloatFigures allows you to go into sub-points
