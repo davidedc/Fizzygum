@@ -192,9 +192,25 @@ class StringMorph2 extends Morph
         return
 
     text = (if @isPassword then @password("*", @text.length) else @text)
-    # initialize my surface property
-    width = @calculateExtentBasedOnText()
-    @backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
+    # Initialize my surface property.
+    # If don't have to paint the background then the surface is just as
+    # big as the text - which is likely to be smaller than the whole morph
+    # (because it needs to fit in both height and width, it's likely that
+    # it's gonna be smaller in one of the two dimensions).
+    # If, on the other hand, we have to paint the background then the surface is
+    # as big as the whole morph,
+    # so potentially we could be wasting some space as the string might
+    # be really small so to fit, say, the width, while a lot of height of
+    # the morph could be "wasted" in memory.
+    # This could be optimised but it's unclear if it's worth it.
+    if @backgroundColor?
+      width = @width()
+      height = @height()
+    else
+      width = @calculateExtentBasedOnText()
+      height = fontHeight(@maybeTransformedFontSize)
+    @backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
+
     @backBufferContext = @backBuffer.getContext("2d")
 
     # changing the canvas size resets many of
@@ -212,14 +228,11 @@ class StringMorph2 extends Morph
       @backBufferContext.fillStyle = @backgroundColor.toString()
       if @backgroundTransparency?
         @backBufferContext.globalAlpha = @backgroundTransparency
-      @backBufferContext.fillRect  0,0, width*pixelRatio, @height()*pixelRatio
+      @backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
       @backBufferContext.restore()
 
     @backBufferContext.fillStyle = @color.toString()
-    if @isShowingBlanks
-      @renderWithBlanks @backBufferContext, 0, fontHeight(@maybeTransformedFontSize)
-    else
-      @backBufferContext.fillText text, 0, fontHeight(@maybeTransformedFontSize)
+    @backBufferContext.fillText text, 0, fontHeight(@maybeTransformedFontSize)
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
