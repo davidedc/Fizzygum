@@ -15,6 +15,7 @@ class StringMorph2 extends Morph
   @augmentWith BackBufferMixin
 
   text: ""
+  textActuallyShown: ""
 
   maybeTransformedFontSize: null
   originallySetFontSize: null
@@ -56,6 +57,7 @@ class StringMorph2 extends Morph
   verticalAlignment: AlignmentSpec.TOP
 
   scaleAboveOriginallyAssignedFontSize: false
+  cropWritingWhenTooBig: true
 
   constructor: (
       text = "",
@@ -71,6 +73,7 @@ class StringMorph2 extends Morph
       ) ->
     # additional properties:
     @text = text or ((if (text is "") then "" else "StringMorph2"))
+    @textActuallyShown = @text
     @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
 
     super()
@@ -189,6 +192,34 @@ class StringMorph2 extends Morph
 
     start / Math.pow(10,decimalFloatFigures)
 
+  searchLargestFittingText: (functionZeroesFollowedByOnes, textToFit) ->
+
+
+    start = 0    # minimum font size that we are gonna examine
+    stop  = textToFit.length
+    
+    if functionZeroesFollowedByOnes(@text, @originallySetFontSize) == 0
+       return @text
+
+    # since we round the pivot to the floor, we
+    # always end up start and pivot coinciding
+    while start != (pivot = Math.floor (start + stop) / 2)
+
+      valueAtPivot = functionZeroesFollowedByOnes(@text.substring(0, pivot), @originallySetFontSize)
+      console.log "  what fits: " + @text.substring(0, pivot) + " fits: " + valueAtPivot
+
+      if valueAtPivot == 0
+        # bring forward the start since there are still
+        # zeroes at the pivot
+        start = pivot
+      else
+        # bring backwards the stop since there is already
+        # a one at the pivot
+        stop = pivot
+
+    console.log "what fits: " + @text.substring(0, start)
+    @text.substring(0, start)
+
   fitToExtent: ->
 
     doesTextFitInExtent = (text = @text, overrideFontSize) =>
@@ -201,11 +232,30 @@ class StringMorph2 extends Morph
       else
         return 1
 
-     return @searchLargestFittingFont(doesTextFitInExtent, @text)
+    
+
+    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    if largestFittingFontSize > @originallySetFontSize
+      if @scaleAboveOriginallyAssignedFontSize
+        return largestFittingFontSize
+      else
+        if @cropWritingWhenTooBig
+          @textActuallyShown = @text
+          return @originallySetFontSize
+        else
+          return largestFittingFontSize
+    else
+      if @cropWritingWhenTooBig
+        @textActuallyShown = @searchLargestFittingText(doesTextFitInExtent, @text)
+        return @originallySetFontSize
+      else
+        return largestFittingFontSize
 
 
 
-  calculateExtentBasedOnText: (text = @text, overrideFontSize) ->
+
+
+  calculateExtentBasedOnText: (text = @textActuallyShown, overrideFontSize) ->
     text = (if @isPassword then @password("*", text.length) else text)
     world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
     return (Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
@@ -227,15 +277,19 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.textAlign == @alignment and
       @backBufferValidityChecker.color == @color.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
+      @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
       @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
       @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
-      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize
+      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize and
+      @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
 
-    text = (if @isPassword then @password("*", @text.length) else @text)
+    text = (if @isPassword then @password("*", @textActuallyShown.length) else @text)
+    if !@cropWritingWhenTooBig
+      @textActuallyShown = @text
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
     # big as the text - which is likely to be smaller than the whole morph
@@ -299,12 +353,13 @@ class StringMorph2 extends Morph
     stop = Math.max(@startMark, @endMark)
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
-      c = text.charAt(i)
-      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil(@backBufferContext.measureText(c).width) + 1,
-        fontHeight(@maybeTransformedFontSize)
-      @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, textVerticalPosition
+      if p?
+        c = text.charAt(i)
+        @backBufferContext.fillStyle = @markedBackgoundColor.toString()
+        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil(@backBufferContext.measureText(c).width) + 1,
+          fontHeight(@maybeTransformedFontSize)
+        @backBufferContext.fillStyle = @markedTextColor.toString()
+        @backBufferContext.fillText c, p.x, textVerticalPosition
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
@@ -314,21 +369,29 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.textActuallyShownHash = hashCode(@textActuallyShown)
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment
     @backBufferValidityChecker.verticalAlignment = @verticalAlignment
     @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize
+    @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
     
   
   # StringMorph2 measuring:
   slotCoordinates: (slot) ->
+    
+    if @text != @textActuallyShown and @cropWritingWhenTooBig
+      world.stopEditing()
+      @edit()
+      return null
+
     # answer the position point of the given index ("slot")
     # where the caret should be placed
-    text = (if @isPassword then @password("*", @text.length) else @text)
+    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
     dest = Math.min(Math.max(slot, 0), text.length)
 
     xOffset = Math.ceil(@calculateExtentBasedOnText(text.substring(0,dest)))
@@ -377,7 +440,7 @@ class StringMorph2 extends Morph
 
     # answer the slot (index) closest to the given point
     # so the caret can be moved accordingly
-    text = (if @isPassword then @password("*", @text.length) else @text)
+    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
     idx = 0
     charX = 0
 
@@ -403,7 +466,7 @@ class StringMorph2 extends Morph
   
   endOfLine: ->
     # answer the slot (index) indicating the EOL for the given slot
-    @text.length
+    @textActuallyShown.length
 
   fontSizePopup: (menuItem)->
     @prompt menuItem.parent.title + "\nfont\nsize:",
@@ -412,14 +475,31 @@ class StringMorph2 extends Morph
       @originallySetFontSize.toString(),
       null, 6, 500, true
 
+  editPopup: (menuItem)->
+    debugger
+    if menuItem?
+      title = menuItem.parent.title + "\nedit:"
+    else
+      title = "edit:"
+
+    @prompt title,
+      @,
+      "setContent",
+      @text,
+      null, 6, null, true
+
+
   # StringMorph2 menus:
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", true, @, "edit"
+    menu.addItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
-    menu.addItem "serif", true, @, "setSerif"  if @fontStyle isnt "serif"
-    menu.addItem "sans-serif", true, @, "setSansSerif"  if @fontStyle isnt "sans-serif"
+
+    if @fontStyle is "serif"
+      menu.addItem "sans-serif", true, @, "setSansSerif"  if @fontStyle isnt "sans-serif"
+    else
+      menu.addItem "serif", true, @, "setSerif" 
 
     if @isBold
       menu.addItem "normal weight", true, @, "toggleWeight"
@@ -430,11 +510,6 @@ class StringMorph2 extends Morph
       menu.addItem "normal style", true, @, "toggleItalic"
     else
       menu.addItem "italic", true, @, "toggleItalic"
-
-    if @isShowingBlanks
-      menu.addItem "hide blanks", true, @, "toggleShowBlanks"
-    else
-      menu.addItem "show blanks", true, @, "toggleShowBlanks"
 
     if @isPassword
       menu.addItem "show characters", true, @, "toggleIsPassword"
@@ -454,11 +529,23 @@ class StringMorph2 extends Morph
     menu.addLine()
 
     if @scaleAboveOriginallyAssignedFontSize
-      menu.addItem "don't scale big", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+      menu.addItem "don't expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
     else
-      menu.addItem "scale big", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+      menu.addItem "expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+
+    if @cropWritingWhenTooBig
+      menu.addItem "shrink to fit", true, @, "toggleCropWritingWhenTooBig"
+    else
+      menu.addItem "crop to fit", true, @, "toggleCropWritingWhenTooBig"
 
     menu
+
+  toggleCropWritingWhenTooBig: ->
+    @cropWritingWhenTooBig = not @cropWritingWhenTooBig
+    @reLayout()
+    @backBufferIsPotentiallyDirty = true
+    @changed()
+    world.stopEditing()
 
   toggleScaleAboveOriginallyAssignedFontSize: ->
     world.stopEditing()
@@ -510,6 +597,32 @@ class StringMorph2 extends Morph
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
+
+  setContent: (theTextContent,a) ->
+    debugger
+    if a?
+      theTextContent = a.text.text
+
+    doesTextFitInExtent = (text = @text, overrideFontSize) =>
+      text = (if @isPassword then @password("*", text.length) else text)
+
+      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
+      if thisFitsInto.le @extent()
+        return 0
+      else
+        return 1
+
+    @text = theTextContent
+    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
+      console.log "texts synched"
+      @textActuallyShown = @text
+    else
+      console.log "texts non-synched"
+    @reLayout()
+    @backBufferIsPotentiallyDirty = true
+    @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
@@ -535,8 +648,10 @@ class StringMorph2 extends Morph
   # in a different way though, "setText"'s obvious
   # meaning is very different from this...
   setText: (size) ->
+    alert "this is strange"
     # for context menu demo purposes
     @text = Math.round(size).toString()
+    @textActuallyShown = @text
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -548,12 +663,18 @@ class StringMorph2 extends Morph
   
   # StringMorph2 editing:
   edit: ->
-    world.edit @
+    if @textActuallyShown == @text
+      debugger
+      world.edit @
+      return true
+    else
+      @editPopup()
+      return null
 
   selection: ->
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
-    @text.slice start, stop
+    @textActuallyShown.slice start, stop
   
   selectionStartSlot: ->
     Math.min @startMark, @endMark
@@ -562,6 +683,7 @@ class StringMorph2 extends Morph
     @currentlySelecting = false
     @startMark = null
     @endMark = null
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
@@ -570,13 +692,15 @@ class StringMorph2 extends Morph
     start = Math.min(@startMark, @endMark)
     stop = Math.max(@startMark, @endMark)
     @text = text.slice(0, start) + text.slice(stop)
+    @textActuallyShown = @text
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
     @clearSelection()
   
   selectAll: ->
     @startMark = 0
-    @endMark = @text.length
+    @endMark = @textActuallyShown.length
     @backBufferIsPotentiallyDirty = true
     @changed()
 
@@ -586,10 +710,12 @@ class StringMorph2 extends Morph
     super
     caret = world.caret;
     if @isEditable
-      @edit()  unless @currentlySelecting
-      if caret then caret.gotoPos pos
-      world.caret.gotoPos pos
-      @currentlySelecting = true
+      if !@currentlySelecting
+        editResult = @edit()
+      if editResult?
+        if caret then caret.gotoPos pos
+        world.caret.gotoPos pos
+        @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos
   

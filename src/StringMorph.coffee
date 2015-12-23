@@ -66,6 +66,15 @@ class StringMorph extends Morph
     @color = color or new Color(0, 0, 0)
     @noticesTransparentClick = true
 
+  setContent: (theTextContent,a) ->
+    if a?
+      theTextContent = a.text.text
+    if @text != theTextContent
+      @text = theTextContent
+      @reLayout()
+      @backBufferIsPotentiallyDirty = true
+      @changed()
+
   actualFontSizeUsedInRendering: ->
     @fontSize
   

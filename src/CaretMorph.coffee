@@ -124,25 +124,26 @@ class CaretMorph extends BlinkerMorph
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
 
     pos = @target.slotCoordinates(@slot)
-    if @parent and @target.isScrollable
-      right = @parent.right() - @viewPadding
-      left = @parent.left() + @viewPadding
-      if pos.x > right
-        @target.fullRawMoveLeftSideTo @target.left() + right - pos.x
-        pos.x = right
-      if pos.x < left
-        left = Math.min(@parent.left(), left)
-        @target.fullRawMoveLeftSideTo @target.left() + left - pos.x
-        pos.x = left
-      if @target.right() < right and right - @target.width() < left
-        pos.x += right - @target.right()
-        @target.fullRawMoveRightSideTo right
-    #console.log "moving caret to: " + pos
-    @show()
-    @fullRawMoveTo pos.floor()
+    if pos?
+      if @parent and @target.isScrollable
+        right = @parent.right() - @viewPadding
+        left = @parent.left() + @viewPadding
+        if pos.x > right
+          @target.fullRawMoveLeftSideTo @target.left() + right - pos.x
+          pos.x = right
+        if pos.x < left
+          left = Math.min(@parent.left(), left)
+          @target.fullRawMoveLeftSideTo @target.left() + left - pos.x
+          pos.x = left
+        if @target.right() < right and right - @target.width() < left
+          pos.x += right - @target.right()
+          @target.fullRawMoveRightSideTo right
+      #console.log "moving caret to: " + pos
+      @show()
+      @fullRawMoveTo pos.floor()
 
-    if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
-      @parent.parent.scrollCaretIntoView @
+      if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
+        @parent.parent.scrollCaretIntoView @
   
   goLeft: (shift) ->
     @updateSelection shift
@@ -210,7 +211,7 @@ class CaretMorph extends BlinkerMorph
   # all the changes and sort-of-resetting the
   # state of the target.
   undo: ->
-    @target.text = @originalContents
+    @target.setContent @originalContents
     @target.clearSelection()
     
     # in theory these three lines are not
@@ -235,10 +236,7 @@ class CaretMorph extends BlinkerMorph
         @target.deleteSelection()
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
-      @target.text = text
-      @target.reLayout()
-      
-      @target.changed()
+      @target.setContent text
       @goRight false, symbol.length
       @updateCaretDimension()
   
@@ -288,8 +286,7 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.text = text
-    @target.reLayout()
+      @target.setContent text
     
   
   deleteLeft: ->
@@ -299,9 +296,8 @@ class CaretMorph extends BlinkerMorph
     else
       text = @target.text
       @target.changed()
-      @target.text = text.substring(0, @slot - 1) + text.substr(@slot)
-    @target.reLayout()
-    
+      @target.setContent text.substring(0, @slot - 1) + text.substr(@slot)
+
     @goLeft()
 
   # CaretMorph destroying:
