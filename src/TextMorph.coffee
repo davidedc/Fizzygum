@@ -252,7 +252,7 @@ class TextMorph extends StringMorph
     #console.log "move 18"
     @breakNumberOfRawMovesAndResizesCaches()
     @maxTextWidth = Math.max(aPoint.x, 0)
-    @reLayout()    
+    @reLayout()
     @changed()
   
   # TextMorph measuring ////
@@ -339,7 +339,7 @@ class TextMorph extends StringMorph
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @reLayout()    
+    @reLayout()
     @changed()
   
   setAlignmentToRight: ->

@@ -90,7 +90,7 @@ class StringMorph2 extends Morph
     if @horizontalAlignment != newAlignment
       world.stopEditing()
       @horizontalAlignment = newAlignment
-      @reLayout()    
+      @reLayout()
       @backBufferIsPotentiallyDirty = true
       @changed()
 
@@ -98,7 +98,7 @@ class StringMorph2 extends Morph
     if @verticalAlignment != newAlignment
       world.stopEditing()
       @verticalAlignment = newAlignment
-      @reLayout()    
+      @reLayout()
       @backBufferIsPotentiallyDirty = true
       @changed()
 
@@ -463,7 +463,7 @@ class StringMorph2 extends Morph
   toggleScaleAboveOriginallyAssignedFontSize: ->
     world.stopEditing()
     @scaleAboveOriginallyAssignedFontSize = not @scaleAboveOriginallyAssignedFontSize
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
 
@@ -477,37 +477,37 @@ class StringMorph2 extends Morph
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
@@ -537,7 +537,7 @@ class StringMorph2 extends Morph
   setText: (size) ->
     # for context menu demo purposes
     @text = Math.round(size).toString()
-    @reLayout()    
+    @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
   
