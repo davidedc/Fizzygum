@@ -5,6 +5,7 @@
 # behave well in layouts.
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
+# REQUIRES AlignmentSpec
 
 class StringMorph2 extends Morph
   # this is so we can create objects from the object class name 
@@ -51,6 +52,9 @@ class StringMorph2 extends Morph
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
   markedBackgoundColor: new Color(60, 60, 120)
 
+  horizontalAlignment: AlignmentSpec.LEFT
+  verticalAlignment: AlignmentSpec.TOP
+
   constructor: (
       text = "",
       @originallySetFontSize = 12,
@@ -79,6 +83,16 @@ class StringMorph2 extends Morph
   # any extent by shrinking.
   actualFontSizeUsedInRendering: ->
     @maybeTransformedFontSize
+
+  setHorizontalAlignment: (newAlignment) ->
+    if @horizontalAlignment != newAlignment
+      @horizontalAlignment = newAlignment
+      @change
+
+  setVerticalAlignment: (newAlignment) ->
+    if @verticalAlignment != newAlignment
+      @verticalAlignment = newAlignment
+      @change
   
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
@@ -176,6 +190,7 @@ class StringMorph2 extends Morph
     @maybeTransformedFontSize = @fitToExtent()
 
   repaintBackBufferIfNeeded: ->
+
     if !@backBufferIsPotentiallyDirty then return
     @backBufferIsPotentiallyDirty = false
 
@@ -189,8 +204,12 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.textHash == hashCode(@text) and
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
+      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
+      @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
+      @backBufferValidityChecker.verticalAlignment == @verticalAlignment
         return
+
+    #@verticalAlignment = AlignmentSpec.BOTTOM
 
     text = (if @isPassword then @password("*", @text.length) else @text)
     # Initialize my surface property.
@@ -204,7 +223,7 @@ class StringMorph2 extends Morph
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
     # This could be optimised but it's unclear if it's worth it.
-    if @backgroundColor?
+    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT
       width = @width()
       height = @height()
     else
@@ -232,8 +251,15 @@ class StringMorph2 extends Morph
       @backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
       @backBufferContext.restore()
 
+    if @verticalAlignment == AlignmentSpec.TOP
+      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+    else if @verticalAlignment == AlignmentSpec.CENTER
+      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+    else if @verticalAlignment == AlignmentSpec.BOTTOM
+      textVerticalPosition = @height()
+
     @backBufferContext.fillStyle = @color.toString()
-    @backBufferContext.fillText text, 0, fontHeight(@maybeTransformedFontSize)
+    @backBufferContext.fillText text, 0, textVerticalPosition
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -243,9 +269,9 @@ class StringMorph2 extends Morph
       c = text.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
       @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1,
-        fontHeight(@maybeTransformedFontSize)
+        textVerticalPosition
       @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, fontHeight(@maybeTransformedFontSize)
+      @backBufferContext.fillText c, p.x, textVerticalPosition
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
@@ -258,6 +284,8 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
+    @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment
+    @backBufferValidityChecker.verticalAlignment = @verticalAlignment
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
     
