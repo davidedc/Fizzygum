@@ -3,7 +3,8 @@
 
 class AlignmentSpec
   @LEFT: 0
-  @RIGHT: 1
-  @CENTER: 2
+  @CENTER: 1
+  @RIGHT: 2
   @TOP: 3
-  @BOTTOM: 4
+  @MIDDLE: 4
+  @BOTTOM: 5

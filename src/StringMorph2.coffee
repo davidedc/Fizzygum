@@ -55,6 +55,8 @@ class StringMorph2 extends Morph
   horizontalAlignment: AlignmentSpec.LEFT
   verticalAlignment: AlignmentSpec.TOP
 
+  scaleAboveOriginallyAssignedFontSize: false
+
   constructor: (
       text = "",
       @originallySetFontSize = 12,
@@ -86,13 +88,32 @@ class StringMorph2 extends Morph
 
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
+      world.stopEditing()
       @horizontalAlignment = newAlignment
-      @change
+      @reLayout()    
+      @backBufferIsPotentiallyDirty = true
+      @changed()
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
+      world.stopEditing()
       @verticalAlignment = newAlignment
-      @change
+      @reLayout()    
+      @backBufferIsPotentiallyDirty = true
+      @changed()
+
+  alignLeft: ->
+    @setHorizontalAlignment AlignmentSpec.LEFT
+  alignCenter: ->
+    @setHorizontalAlignment AlignmentSpec.CENTER
+  alignRight: ->
+    @setHorizontalAlignment AlignmentSpec.RIGHT
+  alignTop: ->
+    @setVerticalAlignment AlignmentSpec.TOP
+  alignMiddle: ->
+    @setVerticalAlignment AlignmentSpec.MIDDLE
+  alignBottom: ->
+    @setVerticalAlignment AlignmentSpec.BOTTOM
   
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
@@ -130,6 +151,10 @@ class StringMorph2 extends Morph
   # keyed on the text and the size
   searchLargestFittingFont: (functionZeroesFollowedByOnes, textToFit) ->
 
+
+    if !@scaleAboveOriginallyAssignedFontSize
+      if functionZeroesFollowedByOnes(textToFit, @originallySetFontSize) == 0
+        return @originallySetFontSize
     # decimalFloatFigures allows you to go into sub-points
     # in the font size. This is so the resizing of the
     # text is less "jumpy".
@@ -180,10 +205,10 @@ class StringMorph2 extends Morph
 
 
 
-  calculateExtentBasedOnText: (text = @text, overrideFontSize)->
+  calculateExtentBasedOnText: (text = @text, overrideFontSize) ->
     text = (if @isPassword then @password("*", text.length) else text)
     world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-    return Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
+    return (Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
 
   reLayout: ->
     super()
@@ -206,10 +231,9 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.endMark == @endMark and
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
       @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
-      @backBufferValidityChecker.verticalAlignment == @verticalAlignment
+      @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
+      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize
         return
-
-    #@verticalAlignment = AlignmentSpec.BOTTOM
 
     text = (if @isPassword then @password("*", @text.length) else @text)
     # Initialize my surface property.
@@ -223,11 +247,12 @@ class StringMorph2 extends Morph
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
     # This could be optimised but it's unclear if it's worth it.
-    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT
+    widthOfText = @calculateExtentBasedOnText()
+    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT or !@scaleAboveOriginallyAssignedFontSize
       width = @width()
       height = @height()
     else
-      width = @calculateExtentBasedOnText()
+      width = widthOfText
       height = fontHeight(@maybeTransformedFontSize)
     @backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
@@ -253,13 +278,21 @@ class StringMorph2 extends Morph
 
     if @verticalAlignment == AlignmentSpec.TOP
       textVerticalPosition = fontHeight(@maybeTransformedFontSize)
-    else if @verticalAlignment == AlignmentSpec.CENTER
+    else if @verticalAlignment == AlignmentSpec.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
       textVerticalPosition = @height()
 
+    if @horizontalAlignment == AlignmentSpec.LEFT
+      textHorizontalPosition = 0
+    else if @horizontalAlignment == AlignmentSpec.CENTER
+      textHorizontalPosition = @width()/2 - widthOfText/2
+    else if @horizontalAlignment == AlignmentSpec.RIGHT
+      textHorizontalPosition = @width() - widthOfText
+
+
     @backBufferContext.fillStyle = @color.toString()
-    @backBufferContext.fillText text, 0, textVerticalPosition
+    @backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
 
     # draw the selection
     start = Math.min(@startMark, @endMark)
@@ -268,8 +301,8 @@ class StringMorph2 extends Morph
       p = @slotCoordinates(i).subtract(@position())
       c = text.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1,
-        textVerticalPosition
+      @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil(@backBufferContext.measureText(c).width) + 1,
+        fontHeight(@maybeTransformedFontSize)
       @backBufferContext.fillStyle = @markedTextColor.toString()
       @backBufferContext.fillText c, p.x, textVerticalPosition
 
@@ -286,6 +319,7 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment
     @backBufferValidityChecker.verticalAlignment = @verticalAlignment
+    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
     
@@ -301,9 +335,46 @@ class StringMorph2 extends Morph
     @pos = dest
     x = @left() + xOffset
     y = @top()
+
+    widthOfText = @calculateExtentBasedOnText()
+    if @verticalAlignment == AlignmentSpec.TOP
+      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+    else if @verticalAlignment == AlignmentSpec.MIDDLE
+      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+    else if @verticalAlignment == AlignmentSpec.BOTTOM
+      textVerticalPosition = @height()
+
+    if @horizontalAlignment == AlignmentSpec.LEFT
+      textHorizontalPosition = 0
+    else if @horizontalAlignment == AlignmentSpec.CENTER
+      textHorizontalPosition = @width()/2 - widthOfText/2
+    else if @horizontalAlignment == AlignmentSpec.RIGHT
+      textHorizontalPosition = @width() - widthOfText
+
+    x += textHorizontalPosition
+    y += textVerticalPosition - fontHeight(@maybeTransformedFontSize)
+
     new Point(x, y)
   
   slotAt: (aPoint) ->
+
+    widthOfText = @calculateExtentBasedOnText()
+    if @verticalAlignment == AlignmentSpec.TOP
+      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+    else if @verticalAlignment == AlignmentSpec.MIDDLE
+      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+    else if @verticalAlignment == AlignmentSpec.BOTTOM
+      textVerticalPosition = @height()
+
+    if @horizontalAlignment == AlignmentSpec.LEFT
+      textHorizontalPosition = 0
+    else if @horizontalAlignment == AlignmentSpec.CENTER
+      textHorizontalPosition = @width()/2 - widthOfText/2
+    else if @horizontalAlignment == AlignmentSpec.RIGHT
+      textHorizontalPosition = @width() - widthOfText
+
+    aPoint = new Point aPoint.x - textHorizontalPosition, aPoint.y - textVerticalPosition
+
     # answer the slot (index) closest to the given point
     # so the caret can be moved accordingly
     text = (if @isPassword then @password("*", @text.length) else @text)
@@ -311,10 +382,10 @@ class StringMorph2 extends Morph
     charX = 0
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@calculateExtentBasedOnText(text[idx]))
+      charX += (@calculateExtentBasedOnText(text[idx]))
       idx += 1
       if idx is text.length
-        if (Math.ceil(@calculateExtentBasedOnText(text)) - (Math.ceil(@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
+        if ((@calculateExtentBasedOnText(text)) - ((@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   
@@ -370,8 +441,32 @@ class StringMorph2 extends Morph
     else
       menu.addItem "hide characters", true, @, "toggleIsPassword"
 
+    menu.addLine()
+    menu.addItem "align left", true, @, "alignLeft"
+    menu.addItem "align center", true, @, "alignCenter"
+    menu.addItem "align right", true, @, "alignRight"
+
+    menu.addLine()
+    menu.addItem "align top", true, @, "alignTop"
+    menu.addItem "align middle", true, @, "alignMiddle"
+    menu.addItem "align bottom", true, @, "alignBottom"
+
+    menu.addLine()
+
+    if @scaleAboveOriginallyAssignedFontSize
+      menu.addItem "don't scale big", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+    else
+      menu.addItem "scale big", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+
     menu
-  
+
+  toggleScaleAboveOriginallyAssignedFontSize: ->
+    world.stopEditing()
+    @scaleAboveOriginallyAssignedFontSize = not @scaleAboveOriginallyAssignedFontSize
+    @reLayout()    
+    @backBufferIsPotentiallyDirty = true
+    @changed()
+
   toggleIsfloatDraggable: ->
   #  # for context menu demo purposes
   #  @isfloatDraggable = not @isfloatDraggable

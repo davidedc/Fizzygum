@@ -137,8 +137,9 @@ class CaretMorph extends BlinkerMorph
       if @target.right() < right and right - @target.width() < left
         pos.x += right - @target.right()
         @target.fullRawMoveRightSideTo right
+    #console.log "moving caret to: " + pos
     @show()
-    @fullRawMoveTo pos
+    @fullRawMoveTo pos.floor()
 
     if @parent and @parent.parent instanceof ScrollFrameMorph and @target.isScrollable
       @parent.parent.scrollCaretIntoView @
