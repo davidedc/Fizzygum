@@ -1958,7 +1958,7 @@ class Morph extends MorphicNode
     #    return @hierarchyMenu()
     if @customContextMenu
       return @customContextMenu()
-    if world and world.isDevMode
+    if world.isDevMode
       if @parent is world
         return @developersMenu()
       return @hierarchyMenu()

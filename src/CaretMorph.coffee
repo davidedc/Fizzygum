@@ -196,13 +196,13 @@ class CaretMorph extends BlinkerMorph
 
   # User presses enter on a stringMorph
   accept: ->
-    world.stopEditing()  if world
+    world.stopEditing()
     @escalateEvent "accept", null
   
   # User presses ESC
   cancel: ->
     @undo()
-    world.stopEditing()  if world
+    world.stopEditing()
     @escalateEvent 'cancel', null
     
   # User presses CTRL-Z or CMD-Z
