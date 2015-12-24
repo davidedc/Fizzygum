@@ -195,10 +195,10 @@ class CaretMorph extends BlinkerMorph
       else if @target.endMark isnt @slot
         @target.endMark = @slot
         @target.reLayout()
-        
+
         @target.changed()
     else
-      @target.clearSelection()  
+      @target.clearSelection()
   
   # CaretMorph editing.
 
