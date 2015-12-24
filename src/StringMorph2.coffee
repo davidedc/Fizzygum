@@ -192,11 +192,16 @@ class StringMorph2 extends Morph
 
     start / Math.pow(10,decimalFloatFigures)
 
+  generateTextWithEllipsis: (startingText) ->
+    if startingText != ""
+      return startingText + "…"
+    return ""
+
   searchLargestFittingText: (functionZeroesFollowedByOnes, textToFit) ->
 
 
     start = 0    # minimum font size that we are gonna examine
-    stop  = textToFit.length
+    stop  = @generateTextWithEllipsis(@text).length
     
     if functionZeroesFollowedByOnes(@text, @originallySetFontSize) == 0
        return @text
@@ -205,8 +210,8 @@ class StringMorph2 extends Morph
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      valueAtPivot = functionZeroesFollowedByOnes(@text.substring(0, pivot), @originallySetFontSize)
-      console.log "  what fits: " + @text.substring(0, pivot) + " fits: " + valueAtPivot
+      valueAtPivot = functionZeroesFollowedByOnes(@generateTextWithEllipsis(@text.substring(0, pivot)), @originallySetFontSize)
+      console.log "  what fits: " + @generateTextWithEllipsis(@text.substring(0, pivot)) + " fits: " + valueAtPivot
 
       if valueAtPivot == 0
         # bring forward the start since there are still
@@ -217,8 +222,14 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    console.log "what fits: " + @text.substring(0, start)
-    @text.substring(0, start)
+    console.log "what fits: " + @generateTextWithEllipsis(@text.substring(0, start))
+    if start == 0
+      if functionZeroesFollowedByOnes("…", @originallySetFontSize) == 0
+        return "…"
+      else
+        return ""
+    else
+      return @generateTextWithEllipsis(@text.substring(0, start))
 
   synchroniseTextAndActualText: ->
 
