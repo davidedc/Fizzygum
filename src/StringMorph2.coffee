@@ -220,6 +220,24 @@ class StringMorph2 extends Morph
     console.log "what fits: " + @text.substring(0, start)
     @text.substring(0, start)
 
+  synchroniseTextAndActualText: ->
+    doesTextFitInExtent = (text = @text, overrideFontSize) =>
+      text = (if @isPassword then @password("*", text.length) else text)
+
+      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
+      if thisFitsInto.le @extent()
+        return 0
+      else
+        return 1    
+
+    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    if largestFittingFontSize > @originallySetFontSize
+      @textActuallyShown = @text
+    else
+      if !@cropWritingWhenTooBig
+        @textActuallyShown = @text
+
   fitToExtent: ->
 
     doesTextFitInExtent = (text = @text, overrideFontSize) =>
@@ -236,19 +254,17 @@ class StringMorph2 extends Morph
 
     largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
+      @textActuallyShown = @text
       if @scaleAboveOriginallyAssignedFontSize
         return largestFittingFontSize
       else
-        if @cropWritingWhenTooBig
-          @textActuallyShown = @text
-          return @originallySetFontSize
-        else
-          return largestFittingFontSize
+        return @originallySetFontSize
     else
       if @cropWritingWhenTooBig
         @textActuallyShown = @searchLargestFittingText(doesTextFitInExtent, @text)
         return @originallySetFontSize
       else
+        @textActuallyShown = @text
         return largestFittingFontSize
 
 
@@ -548,6 +564,7 @@ class StringMorph2 extends Morph
 
   toggleCropWritingWhenTooBig: ->
     @cropWritingWhenTooBig = not @cropWritingWhenTooBig
+    @synchroniseTextAndActualText()
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -556,6 +573,7 @@ class StringMorph2 extends Morph
   toggleScaleAboveOriginallyAssignedFontSize: ->
     world.stopEditing()
     @scaleAboveOriginallyAssignedFontSize = not @scaleAboveOriginallyAssignedFontSize
+    @synchroniseTextAndActualText()
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
