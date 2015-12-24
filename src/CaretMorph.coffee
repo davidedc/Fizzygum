@@ -153,6 +153,7 @@ class CaretMorph extends BlinkerMorph
       @updateSelection shift
       @gotoSlot @slot - 1
       @updateSelection shift
+      @clearSelectionIfStartAndEndMeet shift
   
   goRight: (shift, howMany) ->
     if !shift and @target.selectionEndSlot()?
@@ -162,30 +163,43 @@ class CaretMorph extends BlinkerMorph
       @updateSelection shift
       @gotoSlot @slot + (howMany || 1)
       @updateSelection shift
+      @clearSelectionIfStartAndEndMeet shift
   
   goUp: (shift) ->
     @updateSelection shift
     @gotoSlot @target.upFrom(@slot)
     @updateSelection shift
+    @clearSelectionIfStartAndEndMeet shift
   
   goDown: (shift) ->
     @updateSelection shift
     @gotoSlot @target.downFrom(@slot)
     @updateSelection shift
+    @clearSelectionIfStartAndEndMeet shift
   
   goHome: (shift) ->
     @updateSelection shift
     @gotoSlot @target.startOfLine(@slot)
     @updateSelection shift
+    @clearSelectionIfStartAndEndMeet shift
   
   goEnd: (shift) ->
     @updateSelection shift
     @gotoSlot @target.endOfLine(@slot)
     @updateSelection shift
+    @clearSelectionIfStartAndEndMeet shift
   
   gotoPos: (aPoint) ->
     @gotoSlot @target.slotAt(aPoint)
     @show()
+
+  clearSelectionIfStartAndEndMeet: (shift) ->
+    if shift
+      #console.log "@target.startMark: " + @target.startMark + " @target.endMark: " + @target.endMark
+      if @target.startMark == @target.endMark
+        #console.log "clearSelectionIfStartAndEndMeet clearing selection"
+        @target.clearSelection()
+        @target.changed()
 
   updateSelection: (shift) ->
     if shift
