@@ -234,9 +234,11 @@ class StringMorph2 extends Morph
     largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
+      console.log "@textActuallyShown = @text 1"
     else
       if !@cropWritingWhenTooBig
         @textActuallyShown = @text
+        console.log "@textActuallyShown = @text 2"
 
   fitToExtent: ->
 
@@ -255,6 +257,7 @@ class StringMorph2 extends Morph
     largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
+      console.log "@textActuallyShown = @text 3"
       if @scaleAboveOriginallyAssignedFontSize
         return largestFittingFontSize
       else
@@ -265,6 +268,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
       else
         @textActuallyShown = @text
+        console.log "@textActuallyShown = @text 4"
         return largestFittingFontSize
 
 
@@ -303,9 +307,8 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
 
-    text = (if @isPassword then @password("*", @textActuallyShown.length) else @text)
-    if !@cropWritingWhenTooBig
-      @textActuallyShown = @text
+    @synchroniseTextAndActualText()
+    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
     # big as the text - which is likely to be smaller than the whole morph
@@ -642,6 +645,7 @@ class StringMorph2 extends Morph
     if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
       console.log "texts synched"
       @textActuallyShown = @text
+      console.log "@textActuallyShown = @text 5"
     else
       console.log "texts non-synched"
     @reLayout()
@@ -676,6 +680,7 @@ class StringMorph2 extends Morph
     # for context menu demo purposes
     @text = Math.round(size).toString()
     @textActuallyShown = @text
+    console.log "@textActuallyShown = @text 6"
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -717,6 +722,7 @@ class StringMorph2 extends Morph
     stop = Math.max(@startMark, @endMark)
     @text = text.slice(0, start) + text.slice(stop)
     @textActuallyShown = @text
+    console.log "@textActuallyShown = @text 6"
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
