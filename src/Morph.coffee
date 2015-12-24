@@ -2010,7 +2010,7 @@ class Morph extends MorphicNode
       true
 
   createNewStringMorph2WithBackground: ->
-    newMorph = new StringMorph2("Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(0, 255, 0), 0.5)
+    newMorph = new StringMorph2("Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5)
     newMorph.isEditable = true
     world.create newMorph
 
