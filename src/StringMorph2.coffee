@@ -221,17 +221,8 @@ class StringMorph2 extends Morph
     @text.substring(0, start)
 
   synchroniseTextAndActualText: ->
-    doesTextFitInExtent = (text = @text, overrideFontSize) =>
-      text = (if @isPassword then @password("*", text.length) else text)
 
-      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
-      if thisFitsInto.le @extent()
-        return 0
-      else
-        return 1    
-
-    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
       console.log "@textActuallyShown = @text 1"
@@ -240,21 +231,22 @@ class StringMorph2 extends Morph
         @textActuallyShown = @text
         console.log "@textActuallyShown = @text 2"
 
+  doesTextFitInExtent: (text = @text, overrideFontSize) =>
+    text = (if @isPassword then @password("*", text.length) else text)
+
+    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+    thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
+    if thisFitsInto.le @extent()
+      return 0
+    else
+      return 1
+
   fitToExtent: ->
 
-    doesTextFitInExtent = (text = @text, overrideFontSize) =>
-      text = (if @isPassword then @password("*", text.length) else text)
-
-      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
-      if thisFitsInto.le @extent()
-        return 0
-      else
-        return 1
 
     
 
-    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
       console.log "@textActuallyShown = @text 3"
@@ -264,7 +256,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @cropWritingWhenTooBig
-        @textActuallyShown = @searchLargestFittingText(doesTextFitInExtent, @text)
+        @textActuallyShown = @searchLargestFittingText(@doesTextFitInExtent, @text)
         return @originallySetFontSize
       else
         @textActuallyShown = @text
@@ -630,18 +622,9 @@ class StringMorph2 extends Morph
     if a?
       theTextContent = a.text.text
 
-    doesTextFitInExtent = (text = @text, overrideFontSize) =>
-      text = (if @isPassword then @password("*", text.length) else text)
-
-      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-      thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
-      if thisFitsInto.le @extent()
-        return 0
-      else
-        return 1
 
     @text = theTextContent
-    largestFittingFontSize = @searchLargestFittingFont(doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
       console.log "texts synched"
       @textActuallyShown = @text
