@@ -517,14 +517,20 @@ class StringMorph2 extends Morph
       menu.addItem "hide characters", true, @, "toggleIsPassword"
 
     menu.addLine()
-    menu.addItem "← align left", true, @, "alignLeft"
-    menu.addItem "∸ align center", true, @, "alignCenter"
-    menu.addItem "→ align right", true, @, "alignRight"
+    if @horizontalAlignment != AlignmentSpec.LEFT
+      menu.addItem "← align left", true, @, "alignLeft"
+    if @horizontalAlignment != AlignmentSpec.CENTER
+      menu.addItem "∸ align center", true, @, "alignCenter"
+    if @horizontalAlignment != AlignmentSpec.RIGHT
+      menu.addItem "→ align right", true, @, "alignRight"
 
     menu.addLine()
-    menu.addItem "↑ align top", true, @, "alignTop"
-    menu.addItem "⍿ align middle", true, @, "alignMiddle"
-    menu.addItem "↓ align bottom", true, @, "alignBottom"
+    if @verticalAlignment != AlignmentSpec.TOP
+      menu.addItem "↑ align top", true, @, "alignTop"
+    if @verticalAlignment != AlignmentSpec.MIDDLE
+      menu.addItem "⍿ align middle", true, @, "alignMiddle"
+    if @verticalAlignment != AlignmentSpec.BOTTOM
+      menu.addItem "↓ align bottom", true, @, "alignBottom"
 
     menu.addLine()
 
