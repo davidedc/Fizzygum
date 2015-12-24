@@ -231,6 +231,7 @@ class StringMorph2 extends Morph
         @textActuallyShown = @text
         console.log "@textActuallyShown = @text 2"
 
+  # notice the think arrow here!
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 
@@ -241,10 +242,7 @@ class StringMorph2 extends Morph
     else
       return 1
 
-  fitToExtent: ->
-
-
-    
+  fitToExtent: ->    
 
     largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
@@ -262,10 +260,6 @@ class StringMorph2 extends Morph
         @textActuallyShown = @text
         console.log "@textActuallyShown = @text 4"
         return largestFittingFontSize
-
-
-
-
 
   calculateExtentBasedOnText: (text = @textActuallyShown, overrideFontSize) ->
     text = (if @isPassword then @password("*", text.length) else text)
