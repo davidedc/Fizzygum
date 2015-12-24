@@ -146,14 +146,22 @@ class CaretMorph extends BlinkerMorph
         @parent.parent.scrollCaretIntoView @
   
   goLeft: (shift) ->
-    @updateSelection shift
-    @gotoSlot @slot - 1
-    @updateSelection shift
+    if !shift and @target.selectionStartSlot()?
+      @gotoSlot @target.selectionStartSlot()
+      @updateSelection shift
+    else
+      @updateSelection shift
+      @gotoSlot @slot - 1
+      @updateSelection shift
   
   goRight: (shift, howMany) ->
-    @updateSelection shift
-    @gotoSlot @slot + (howMany || 1)
-    @updateSelection shift
+    if !shift and @target.selectionEndSlot()?
+      @gotoSlot @target.selectionEndSlot()
+      @updateSelection shift
+    else
+      @updateSelection shift
+      @gotoSlot @slot + (howMany || 1)
+      @updateSelection shift
   
   goUp: (shift) ->
     @updateSelection shift

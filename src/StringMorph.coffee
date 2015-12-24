@@ -234,13 +234,11 @@ class StringMorph extends Morph
     idx - 1
   
   upFrom: (slot) ->
-    # answer the slot above the given one
-    slot
+    @startOfLine()
   
   downFrom: (slot) ->
-    # answer the slot below the given one
-    slot
-  
+    @endOfLine()
+
   startOfLine: ->
     # answer the first slot (index) of the line for the given slot
     0
@@ -377,7 +375,15 @@ class StringMorph extends Morph
   
   selectionStartSlot: ->
     Math.min @startMark, @endMark
-  
+    if !@startMark? or !@endMark?
+      return null
+    return Math.min @startMark, @endMark
+
+  selectionEndSlot: ->
+    if !@startMark? or !@endMark?
+      return null
+    return Math.max @startMark, @endMark
+
   clearSelection: ->
     @currentlySelecting = false
     @startMark = null
