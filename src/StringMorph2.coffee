@@ -507,7 +507,7 @@ class StringMorph2 extends Morph
       menu.addItem "bold", true, @, "toggleWeight"
 
     if @isItalic
-      menu.addItem "normal style", true, @, "toggleItalic"
+      menu.addItem "non-italic", true, @, "toggleItalic"
     else
       menu.addItem "italic", true, @, "toggleItalic"
 
@@ -517,26 +517,26 @@ class StringMorph2 extends Morph
       menu.addItem "hide characters", true, @, "toggleIsPassword"
 
     menu.addLine()
-    menu.addItem "align left", true, @, "alignLeft"
-    menu.addItem "align center", true, @, "alignCenter"
-    menu.addItem "align right", true, @, "alignRight"
+    menu.addItem "← align left", true, @, "alignLeft"
+    menu.addItem "∸ align center", true, @, "alignCenter"
+    menu.addItem "→ align right", true, @, "alignRight"
 
     menu.addLine()
-    menu.addItem "align top", true, @, "alignTop"
-    menu.addItem "align middle", true, @, "alignMiddle"
-    menu.addItem "align bottom", true, @, "alignBottom"
+    menu.addItem "↑ align top", true, @, "alignTop"
+    menu.addItem "⍿ align middle", true, @, "alignMiddle"
+    menu.addItem "↓ align bottom", true, @, "alignBottom"
 
     menu.addLine()
 
     if @scaleAboveOriginallyAssignedFontSize
-      menu.addItem "don't expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+      menu.addItem "←☓→ don't expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
     else
-      menu.addItem "expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+      menu.addItem "←→ expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
 
     if @cropWritingWhenTooBig
-      menu.addItem "shrink to fit", true, @, "toggleCropWritingWhenTooBig"
+      menu.addItem "→← shrink to fit", true, @, "toggleCropWritingWhenTooBig"
     else
-      menu.addItem "crop to fit", true, @, "toggleCropWritingWhenTooBig"
+      menu.addItem "→⋯← crop to fit", true, @, "toggleCropWritingWhenTooBig"
 
     menu
 
