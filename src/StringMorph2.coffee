@@ -242,12 +242,17 @@ class StringMorph2 extends Morph
         @textActuallyShown = @text
         #console.log "@textActuallyShown = @text 2"
 
+
+  measureText: (overrideFontSize = @fontSize, text) ->
+    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+    return Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)
+
   # notice the think arrow here!
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 
-    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-    thisFitsInto = new Point(Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)), fontHeight(overrideFontSize))
+    thisFitsInto = new Point(Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize))
+
     if thisFitsInto.le @extent()
       return 0
     else
@@ -274,8 +279,7 @@ class StringMorph2 extends Morph
 
   calculateExtentBasedOnText: (text = @textActuallyShown, overrideFontSize) ->
     text = (if @isPassword then @password("*", text.length) else text)
-    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-    return (Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
+    return @measureText overrideFontSize, text
 
   reLayout: ->
     super()
@@ -372,7 +376,8 @@ class StringMorph2 extends Morph
       if p?
         c = text.charAt(i)
         @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil(@backBufferContext.measureText(c).width) + 1,
+        
+        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil((@measureText @maybeTransformedFontSize, c)) + 1,
           fontHeight(@maybeTransformedFontSize)
         @backBufferContext.fillStyle = @markedTextColor.toString()
         @backBufferContext.fillText c, p.x, textVerticalPosition
