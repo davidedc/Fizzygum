@@ -7,7 +7,7 @@ class DoubleLinkedList
 
   remove: (node) ->
     if node.pre
-      node.pre = node.next
+      node.pre.next = node.next
     else
       @headNode = node.next
 
