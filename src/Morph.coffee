@@ -2019,6 +2019,33 @@ class Morph extends MorphicNode
     newMorph.isEditable = true
     world.create newMorph
 
+  createNewTextMorph2WithBackground: ->
+    newMorph = new TextMorph2(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.")
+    newMorph.isEditable = true
+    newMorph.maxTextWidth = 300
+    world.create newMorph
+
   testMenu: (ignored,targetMorph)->
     menu = new MenuMorph(false, targetMorph, true, true, null)
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
@@ -2031,6 +2058,7 @@ class Morph extends MorphicNode
     menu.addItem "remove adders", true, @, "removeAdders"
     menu.addItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
+    menu.addItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
 
     menu.popUpAtHand(@firstContainerMenu())
 
