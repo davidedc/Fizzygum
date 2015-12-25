@@ -5,6 +5,10 @@ class DoubleLinkedList
   constructor:  ->
     @headNode = @tailNode = null
 
+  # removes the last element. Since
+  # we move used elements to head, the last
+  # element is *probably* a relatively
+  # unused one.
   remove: (node) ->
     if node.pre
       node.pre.next = node.next

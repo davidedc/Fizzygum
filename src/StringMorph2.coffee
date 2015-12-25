@@ -259,7 +259,7 @@ class StringMorph2 extends Morph
     #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
     return cacheEntry
 
-  # notice the think arrow here!
+  # notice the thick arrow here!
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 
