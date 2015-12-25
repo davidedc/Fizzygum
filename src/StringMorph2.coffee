@@ -210,8 +210,9 @@ class StringMorph2 extends Morph
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      valueAtPivot = functionZeroesFollowedByOnes(@generateTextWithEllipsis(@text.substring(0, pivot)), @originallySetFontSize)
-      console.log "  what fits: " + @generateTextWithEllipsis(@text.substring(0, pivot)) + " fits: " + valueAtPivot
+      textAtPivot = @generateTextWithEllipsis(@text.substring(0, pivot))
+      valueAtPivot = functionZeroesFollowedByOnes(textAtPivot, @originallySetFontSize)
+      #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
       if valueAtPivot == 0
         # bring forward the start since there are still
@@ -222,14 +223,15 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    console.log "what fits: " + @generateTextWithEllipsis(@text.substring(0, start))
+    fittingText = @generateTextWithEllipsis(@text.substring(0, start))
+    #console.log "what fits: " + fittingText
     if start == 0
       if functionZeroesFollowedByOnes("…", @originallySetFontSize) == 0
         return "…"
       else
         return ""
     else
-      return @generateTextWithEllipsis(@text.substring(0, start))
+      return fittingText
 
   synchroniseTextAndActualText: ->
 
@@ -243,9 +245,19 @@ class StringMorph2 extends Morph
         #console.log "@textActuallyShown = @text 2"
 
 
-  measureText: (overrideFontSize = @fontSize, text) ->
-    world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-    return Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)
+  measureText: (overrideFontSize = @maybeTransformedFontSize, text) ->
+    cacheKey = hashCode(overrideFontSize + "-" + text)
+    cacheHit = world.cacheForTextMeasurements.get cacheKey
+    if cacheHit?
+      return cacheHit
+    else
+      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
+      cacheEntry = Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)
+      world.cacheForTextMeasurements.set cacheKey, cacheEntry
+    #if cacheHit?
+    #  if cacheHit != cacheEntry
+    #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
+    return cacheEntry
 
   # notice the think arrow here!
   doesTextFitInExtent: (text = @text, overrideFontSize) =>

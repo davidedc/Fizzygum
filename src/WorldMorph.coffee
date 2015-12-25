@@ -94,6 +94,7 @@ class WorldMorph extends FrameMorph
 
   canvasForTextMeasurements: null
   canvasContextForTextMeasurements: null
+  cacheForTextMeasurements: null
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -208,6 +209,8 @@ class WorldMorph extends FrameMorph
     @canvasContextForTextMeasurements.scale pixelRatio, pixelRatio
     @canvasContextForTextMeasurements.textAlign = "left"
     @canvasContextForTextMeasurements.textBaseline = "bottom"
+
+    @cacheForTextMeasurements = new LRUCache 300, 1000*60*60*24
 
     @changed()
 
