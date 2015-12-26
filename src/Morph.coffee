@@ -2043,7 +2043,7 @@ class Morph extends MorphicNode
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.")
     newMorph.isEditable = true
-    newMorph.maxTextWidth = 300
+    #newMorph.maxTextWidth = 300
     world.create newMorph
 
   testMenu: (ignored,targetMorph)->

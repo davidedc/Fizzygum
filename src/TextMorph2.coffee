@@ -38,9 +38,12 @@ class TextMorph2 extends StringMorph2
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
   
+
   breakTextIntoLines: ->
     ## remember to cache also here at the top level
     ## based on text, fontsize and width.
+
+    console.log "@maxTextWidth: " + @maxTextWidth
 
     
     ## // this section only needs to be re-done when @text changes ////
@@ -197,8 +200,10 @@ class TextMorph2 extends StringMorph2
 
   reLayout: ->
     super()
+    @maxTextWidth = @width()
     @breakTextIntoLines()
 
+    ###
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
     height = @wrappedLines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
@@ -208,6 +213,7 @@ class TextMorph2 extends StringMorph2
       @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
     if @parent?.layoutChanged
       @parent.layoutChanged()
+    ###
     @notifyChildrenThatParentHasReLayouted()
 
   # no changes of position or extent
@@ -314,12 +320,14 @@ class TextMorph2 extends StringMorph2
 
 
   
+  ###
   rawSetExtent: (aPoint) ->
     @breakNumberOfRawMovesAndResizesCaches()
     @maxTextWidth = Math.max(aPoint.x, 0)
     @reLayout()
     @changed()
-  
+  ###
+
   # TextMorph measuring ////
 
   # answer the logical position point of the given index ("slot")
