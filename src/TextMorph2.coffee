@@ -379,9 +379,6 @@ class TextMorph2 extends StringMorph2
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addItem "align center", true, @, "setAlignmentToCenter"  if @alignment isnt "center"
     menu.addItem "run contents", true, @, "doContents"
     menu
   
