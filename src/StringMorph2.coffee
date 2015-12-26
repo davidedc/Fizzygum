@@ -150,13 +150,13 @@ class StringMorph2 extends Morph
   # we need to apply to the text to fit to the
   # current extent.
   # If this gets slow: all kinds of optimisation can be done.
-  # for example keeping an LRU cache inside functionZeroesFollowedByOnes
+  # for example keeping an LRU cache inside fittingTestFunction
   # keyed on the text and the size
-  searchLargestFittingFont: (functionZeroesFollowedByOnes, textToFit) ->
+  searchLargestFittingFont: (fittingTestFunction, textToFit) ->
 
 
     if !@scaleAboveOriginallyAssignedFontSize
-      if functionZeroesFollowedByOnes(textToFit, @originallySetFontSize) == 0
+      if fittingTestFunction(textToFit, @originallySetFontSize)
         return @originallySetFontSize
     # decimalFloatFigures allows you to go into sub-points
     # in the font size. This is so the resizing of the
@@ -169,19 +169,19 @@ class StringMorph2 extends Morph
     start = 0    # minimum font size that we are gonna examine
     stop  = Math.round(200 * Math.pow(10,decimalFloatFigures))  # maximum font size that we are gonna examine
     
-    if functionZeroesFollowedByOnes(textToFit, start) != 0
+    if !fittingTestFunction(textToFit, start)
        return -1
 
-    if functionZeroesFollowedByOnes(textToFit, stop) == 0
+    if fittingTestFunction(textToFit, stop)
        return stop / Math.pow(10,decimalFloatFigures)
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      valueAtPivot = functionZeroesFollowedByOnes(textToFit, pivot / Math.pow(10,decimalFloatFigures))
+      itFitsAtPivot = fittingTestFunction(textToFit, pivot / Math.pow(10,decimalFloatFigures))
 
-      if valueAtPivot == 0
+      if itFitsAtPivot
         # bring forward the start since there are still
         # zeroes at the pivot
         start = pivot
@@ -197,13 +197,13 @@ class StringMorph2 extends Morph
       return startingText + "…"
     return ""
 
-  searchLargestFittingText: (functionZeroesFollowedByOnes, textToFit) ->
+  searchLargestFittingText: (fittingTestFunction, textToFit) ->
 
 
     start = 0    # minimum font size that we are gonna examine
     stop  = @generateTextWithEllipsis(@text).length
     
-    if functionZeroesFollowedByOnes(@text, @originallySetFontSize) == 0
+    if fittingTestFunction(@text, @originallySetFontSize)
        return @text
 
     # since we round the pivot to the floor, we
@@ -211,10 +211,10 @@ class StringMorph2 extends Morph
     while start != (pivot = Math.floor (start + stop) / 2)
 
       textAtPivot = @generateTextWithEllipsis(@text.substring(0, pivot))
-      valueAtPivot = functionZeroesFollowedByOnes(textAtPivot, @originallySetFontSize)
+      itFitsAtPivot = fittingTestFunction(textAtPivot, @originallySetFontSize)
       #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
-      if valueAtPivot == 0
+      if itFitsAtPivot
         # bring forward the start since there are still
         # zeroes at the pivot
         start = pivot
@@ -226,7 +226,7 @@ class StringMorph2 extends Morph
     fittingText = @generateTextWithEllipsis(@text.substring(0, start))
     #console.log "what fits: " + fittingText
     if start == 0
-      if functionZeroesFollowedByOnes("…", @originallySetFontSize) == 0
+      if fittingTestFunction("…", @originallySetFontSize)
         return "…"
       else
         return ""
@@ -266,9 +266,9 @@ class StringMorph2 extends Morph
     thisFitsInto = new Point(Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize))
 
     if thisFitsInto.le @extent()
-      return 0
+      return true
     else
-      return 1
+      return false
 
   fitToExtent: ->    
 
