@@ -2,31 +2,7 @@
 # these comments below needed to figure out dependencies between classes
 # REQUIRES BackBufferValidityChecker
 
-# I am a multi-line, word-wrapping String
-
-# Note that in the original Jens' Morphic.js version he
-# has made this quasi-inheriting from StringMorph i.e. he is copying
-# over manually the following methods like so:
-#
-#  TextMorph::font = StringMorph::font
-#  TextMorph::edit = StringMorph::edit
-#  TextMorph::selection = StringMorph::selection
-#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot
-#  TextMorph::clearSelection = StringMorph::clearSelection
-#  TextMorph::deleteSelection = StringMorph::deleteSelection
-#  TextMorph::selectAll = StringMorph::selectAll
-#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft
-#  TextMorph::enableSelecting = StringMorph::enableSelecting 
-#  TextMorph::disableSelecting = StringMorph::disableSelecting
-#  TextMorph::toggleIsfloatDraggable = StringMorph::toggleIsfloatDraggable
-#  TextMorph::toggleWeight = StringMorph::toggleWeight
-#  TextMorph::toggleItalic = StringMorph::toggleItalic
-#  TextMorph::setSerif = StringMorph::setSerif
-#  TextMorph::setSansSerif = StringMorph::setSansSerif
-#  TextMorph::setText = StringMorph::setText
-#  TextMorph::setFontSize = StringMorph::setFontSize
-#  TextMorph::numericalSetters = StringMorph::numericalSetters
-
+# A multi-line, word-wrapping String
 
 class TextMorph2 extends StringMorph2
   # this is so we can create objects from the object class name 
@@ -61,22 +37,57 @@ class TextMorph2 extends StringMorph2
       @noticesTransparentClick = true
   
   breakTextIntoLines: ->
-    paragraphs = @text.split("\n")
-    canvas = newCanvas()
-    context = canvas.getContext("2d")
-    context.scale pixelRatio, pixelRatio
+    ## remember to cache also here at the top level
+    ## based on text, fontsize and width.
+
     currentLine = ""
     slot = 0
-    context.font = @font()
     @maxLineWidth = 0
     @lines = []
     @lineSlots = [0]
     @words = []
     
+    ## // this section only needs to be re-done when @text changes ////
     # put all the text in an array, word by word
+    # >>> avoid to do this double-split, jus split by spacing and then
+    # you'll find and remove the newline in the running code
+    # below.
+    # put all the text in an array, word by word
+
+    paragraphs = @text.split("\n")
     paragraphs.forEach (p) =>
       @words = @words.concat(p.split(" "))
       @words.push "\n"
+    ## ////////////////////////////////////////////////////////////////
+
+    ## You want this method to be FAST because it would be done
+    ## a dozen times for each resize (while the painting is
+    ## only done once!)
+    ## you can have the words per paragraph, and cache all
+    ## operations below by paragraph (and font size and width),
+    ## the cache would return
+    ## two arrays "linesHit" and "lineslotsHit" AND the
+    ## "maxlinewidthHit" which you can
+    ## concatenate to the "running" ones
+    ## basically a) make two nested forach, outer by paragraph and
+    ## inner by words.
+    ## Then cache the hell out of each loop.
+
+    ## LATER FOR ANOTHER TIME IS TO MAKE THE PAINTING ALSO FAST.
+    ## You'd also love to cache the bitmap of each paragraph
+    ## rather than keeping one huge bitmap.
+    ## so this wouldn't be a BackBuffer anymore
+    ## SO you need to REMOVE the mixin from this class.
+    ## cause there would be a paint method and it would
+    ## compose the 
+    ## it would be much better to handle AND in theory
+    ## the single bitmaps per paragraph would be easy
+    ## to cache and could be created
+    ## only on demand if they ever get damaged.
+    ## GET THE stringMorph2 to cache the actual bitmap that they
+    ## generate so you can use that too from here, cause there
+    ## might be a lot of reuse rather than re-painting the
+    ## text all the times or even a paragraph.
 
     # takes the text, word by word, and re-flows
     # it according to the available width for the
@@ -100,15 +111,15 @@ class TextMorph2 extends StringMorph2
         # slots count in the arrays
         @lines.push currentLine
         @lineSlots.push slot
-        @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
+        @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(@measureText null, currentLine))
         currentLine = ""
       else
-        if @maxTextWidth > 0
+        if @maxTextWidth > 0 # there is a width limit, we might have to wrap
           # there is a width limit, so we need
           # to check whether we overflowed it. So create
           # a prospective line and then check its width.
           lineForOverflowTest = currentLine + word + " "
-          w = Math.ceil(context.measureText(lineForOverflowTest).width)
+          w = Math.ceil @measureText null, lineForOverflowTest
           if w > @maxTextWidth
             # ok we just overflowed the available space,
             # so we need to push the old line and its
@@ -117,21 +128,18 @@ class TextMorph2 extends StringMorph2
             # word that has caused the overflow.
             @lines.push currentLine
             @lineSlots.push slot
-            @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
+            @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(@measureText null, currentLine))
             currentLine = word + " "
           else
             # no overflow happened, so just proceed as normal
             currentLine = lineForOverflowTest
-        else
+        else # there is no width limit, we never have to wrap
           currentLine = currentLine + word + " "
         slot += word.length + 1
   
 
   reLayout: ->
     super()
-    ANimage = newCanvas()
-    context = ANimage.getContext("2d")
-    context.font = @font()
     @breakTextIntoLines()
 
     shadowWidth = Math.abs(@shadowOffset.x)
@@ -141,7 +149,8 @@ class TextMorph2 extends StringMorph2
       @silentRawSetExtent(new Point(@maxLineWidth + shadowWidth, height))
     else
       @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
-    @parent.layoutChanged()  if @parent.layoutChanged  if @parent
+    if @parent?.layoutChanged
+      @parent.layoutChanged()
     @notifyChildrenThatParentHasReLayouted()
 
   # no changes of position or extent
@@ -193,7 +202,7 @@ class TextMorph2 extends StringMorph2
       @backBufferContext.fillStyle = @shadowColor.toString()
       i = 0
       for line in @lines
-        width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
+        width = Math.ceil(@measureText null, line) + shadowWidth
         if @alignment is "right"
           x = @width() - width
         else if @alignment is "center"
@@ -211,7 +220,7 @@ class TextMorph2 extends StringMorph2
     @backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @lines
-      width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
+      width = Math.ceil(@measureText null, line) + shadowWidth
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
@@ -231,7 +240,7 @@ class TextMorph2 extends StringMorph2
       p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil(fontHeight(@fontSize))
       @backBufferContext.fillStyle = @markedTextColor.toString()
       @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
 
@@ -249,7 +258,6 @@ class TextMorph2 extends StringMorph2
 
   
   rawSetExtent: (aPoint) ->
-    #console.log "move 18"
     @breakNumberOfRawMovesAndResizesCaches()
     @maxTextWidth = Math.max(aPoint.x, 0)
     @reLayout()
@@ -283,7 +291,7 @@ class TextMorph2 extends StringMorph2
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     shadowHeight = Math.abs(@shadowOffset.y)
     yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    xOffset = Math.ceil(@backBufferContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
+    xOffset = Math.ceil @measureText null, (@lines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -299,7 +307,7 @@ class TextMorph2 extends StringMorph2
     row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@backBufferContext.measureText(@lines[row - 1][col]).width)
+      charX += Math.ceil @measureText null, @lines[row - 1][col]
       col += 1
     @lineSlots[Math.max(row - 1, 0)] + col - 1
   
