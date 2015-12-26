@@ -1,6 +1,8 @@
 # TextMorph2 ///////////////////////////////////////////////////////////
+
 # these comments below needed to figure out dependencies between classes
 # REQUIRES BackBufferValidityChecker
+# REQUIRES LRUCache
 
 # A multi-line, word-wrapping String
 

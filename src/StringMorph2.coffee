@@ -6,6 +6,7 @@
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
 # REQUIRES AlignmentSpec
+# REQUIRES LRUCache
 
 class StringMorph2 extends Morph
   # this is so we can create objects from the object class name 
