@@ -42,8 +42,6 @@ class TextMorph2 extends StringMorph2
     ## remember to cache also here at the top level
     ## based on text, fontsize and width.
 
-    currentLine = ""
-    slot = 0
     
     ## // this section only needs to be re-done when @text changes ////
     # put all the text in an array, word by word
@@ -57,6 +55,9 @@ class TextMorph2 extends StringMorph2
       paragraphsCacheEntry = @text.split("\n")
       world.cacheForTextParagraphSplits.set hashCode(@text), paragraphsCacheEntry
       paragraphs = paragraphsCacheEntry
+
+    cumulativeSlotAcrossText = 0
+    previousCumulativeSlotAcrossText = 0
 
     textWrappingData = world.cacheForTextWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
     if !textWrappingData?
@@ -128,13 +129,16 @@ class TextMorph2 extends StringMorph2
           wrappedLineSlotsOfThisParagraph = []
           maxWrappedLineWidthOfThisParagraph = 0
 
+          currentLine = ""
+          slotsInParagraph = 0
+
           for word in wordsOfThisParagraph
             if word is "\n"
               # we reached the end of the line in the
               # original text, so push the line and the
-              # slots count in the arrays
+              # slotsInParagraph count in the arrays
               wrappedLinesOfThisParagraph.push currentLine
-              wrappedLineSlotsOfThisParagraph.push slot
+              wrappedLineSlotsOfThisParagraph.push slotsInParagraph
               maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
               currentLine = ""
             else
@@ -147,11 +151,11 @@ class TextMorph2 extends StringMorph2
                 if w > @maxTextWidth
                   # ok we just overflowed the available space,
                   # so we need to push the old line and its
-                  # "slot" number to the respective arrays.
+                  # "slotsInParagraph" number to the respective arrays.
                   # the new line is going to only contain the
                   # word that has caused the overflow.
                   wrappedLinesOfThisParagraph.push currentLine
-                  wrappedLineSlotsOfThisParagraph.push slot
+                  wrappedLineSlotsOfThisParagraph.push slotsInParagraph
                   maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
                   currentLine = word + " "
                 else
@@ -159,25 +163,37 @@ class TextMorph2 extends StringMorph2
                   currentLine = lineForOverflowTest
               else # there is no width limit, we never have to wrap
                 currentLine = currentLine + word + " "
-              slot += word.length + 1
+              slotsInParagraph += word.length + 1
 
-          wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph]
+          # words of this paragraph have been scanned
+          wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph, slotsInParagraph]
           world.cacheForParagraphsWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
           wrappingData = wrappingDataCacheEntry
 
-        [wrappedLinesOfThisParagraph, wrappedLineSlotsOfThisParagraph, maxWrappedLineWidthOfThisParagraph] = wrappingData
+        # we either cache-hit wrappingData or we re-built it
+        [wrappedLinesOfThisParagraph, wrappedLineSlotsOfThisParagraph, maxWrappedLineWidthOfThisParagraph, slotsInParagraph] = wrappingData
 
+        previousCumulativeSlotAcrossText = cumulativeSlotAcrossText
+        cumulativeSlotAcrossText += slotsInParagraph
         wrappedLinesOfWholeText = wrappedLinesOfWholeText.concat wrappedLinesOfThisParagraph
-        wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat wrappedLineSlotsOfThisParagraph
+        advancedWrappedLineSlotsOfThisParagraph =  wrappedLineSlotsOfThisParagraph.map (i) -> i + previousCumulativeSlotAcrossText
+        #alert "unadvanced wrappedLineSlotsOfThisParagraph: " + wrappedLineSlotsOfThisParagraph + " advanced: " + advancedWrappedLineSlotsOfThisParagraph
+        wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat advancedWrappedLineSlotsOfThisParagraph
         maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
+        #cumulativeSlotAcrossText += wrappedLineSlotsOfThisParagraph.reduce (t, s) -> t + s
 
+      # here all paragraphs have been visited
+      #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
       textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
       world.cacheForTextWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
       textWrappingData = textWrappingDataCacheEntry
 
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = textWrappingData
 
+  edit: ->
+    world.edit @
+    return true
 
   reLayout: ->
     super()
@@ -335,6 +351,7 @@ class TextMorph2 extends StringMorph2
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
+    #alert "slotCoordinates|| slot:" + slot + " x,y: " + x + ", " + y
     new Point(x, y)
   
   # Returns the slot (index) closest to the given point
@@ -348,9 +365,14 @@ class TextMorph2 extends StringMorph2
     row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += Math.ceil @measureText null, @wrappedLines[row - 1][col]
+      charX += @measureText null, @wrappedLines[row - 1][col]
       col += 1
-    @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
+    returnedSlot = @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
+
+    #[slotRow, slotColumn] = @slotRowAndColumn(returnedSlot)
+    #alert "SLOTAT|| returnedSlot: " + returnedSlot + " row and column: " + slotRow + " " + slotColumn + " line start: " + (@wrappedLines[slotRow]).substring(0,slotColumn)
+
+    returnedSlot
   
   upFrom: (slot) ->
     # answer the slot above the given one
