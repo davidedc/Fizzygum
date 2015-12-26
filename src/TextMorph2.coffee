@@ -43,9 +43,6 @@ class TextMorph2 extends StringMorph2
 
     currentLine = ""
     slot = 0
-    @maxLineWidth = 0
-    @lines = []
-    @lineSlots = [0]
     
     ## // this section only needs to be re-done when @text changes ////
     # put all the text in an array, word by word
@@ -60,6 +57,10 @@ class TextMorph2 extends StringMorph2
       world.cacheForTextParagraphSplits.set hashCode(@text), paragraphsCacheEntry
       paragraphs = paragraphsCacheEntry
 
+
+    linesOfWholeText = []
+    lineSlotsOfWholeText = [0]
+    maxLineWidthOfWholeText = 0
 
     for eachParagraph in paragraphs
 
@@ -117,39 +118,60 @@ class TextMorph2 extends StringMorph2
       # Note that this algorithm doesn't work in case
       # of single non-spaced words that are longer than
       # the allowed width.
-      for word in wordsOfThisParagraph
-        if word is "\n"
-          # we reached the end of the line in the
-          # original text, so push the line and the
-          # slots count in the arrays
-          @lines.push currentLine
-          @lineSlots.push slot
-          @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(@measureText null, currentLine))
-          currentLine = ""
-        else
-          if @maxTextWidth > 0 # there is a width limit, we might have to wrap
-            # there is a width limit, so we need
-            # to check whether we overflowed it. So create
-            # a prospective line and then check its width.
-            lineForOverflowTest = currentLine + word + " "
-            w = Math.ceil @measureText null, lineForOverflowTest
-            if w > @maxTextWidth
-              # ok we just overflowed the available space,
-              # so we need to push the old line and its
-              # "slot" number to the respective arrays.
-              # the new line is going to only contain the
-              # word that has caused the overflow.
-              @lines.push currentLine
-              @lineSlots.push slot
-              @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(@measureText null, currentLine))
-              currentLine = word + " "
-            else
-              # no overflow happened, so just proceed as normal
-              currentLine = lineForOverflowTest
-          else # there is no width limit, we never have to wrap
-            currentLine = currentLine + word + " "
-          slot += word.length + 1
-  
+      
+      wrappingData = world.cacheForParagraphsWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
+
+      if wrappingData?
+        [linesOfThisParagraph, lineSlotsOfThisParagraph, maxLineWidthOfThisParagraph] = wrappingData
+      else
+        linesOfThisParagraph = []
+        lineSlotsOfThisParagraph = []
+        maxLineWidthOfThisParagraph = 0
+
+        for word in wordsOfThisParagraph
+          if word is "\n"
+            # we reached the end of the line in the
+            # original text, so push the line and the
+            # slots count in the arrays
+            linesOfThisParagraph.push currentLine
+            lineSlotsOfThisParagraph.push slot
+            maxLineWidthOfThisParagraph = Math.max(maxLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+            currentLine = ""
+          else
+            if @maxTextWidth > 0 # there is a width limit, we might have to wrap
+              # there is a width limit, so we need
+              # to check whether we overflowed it. So create
+              # a prospective line and then check its width.
+              lineForOverflowTest = currentLine + word + " "
+              w = Math.ceil @measureText null, lineForOverflowTest
+              if w > @maxTextWidth
+                # ok we just overflowed the available space,
+                # so we need to push the old line and its
+                # "slot" number to the respective arrays.
+                # the new line is going to only contain the
+                # word that has caused the overflow.
+                linesOfThisParagraph.push currentLine
+                lineSlotsOfThisParagraph.push slot
+                maxLineWidthOfThisParagraph = Math.max(maxLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+                currentLine = word + " "
+              else
+                # no overflow happened, so just proceed as normal
+                currentLine = lineForOverflowTest
+            else # there is no width limit, we never have to wrap
+              currentLine = currentLine + word + " "
+            slot += word.length + 1
+
+        wrappingDataCacheEntry = [linesOfThisParagraph,lineSlotsOfThisParagraph,maxLineWidthOfThisParagraph]
+        world.cacheForParagraphsWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
+        wrappingData = wrappingDataCacheEntry
+
+      linesOfWholeText = linesOfWholeText.concat linesOfThisParagraph
+      lineSlotsOfWholeText = lineSlotsOfWholeText.concat lineSlotsOfThisParagraph
+      maxLineWidthOfWholeText = Math.max maxLineWidthOfWholeText, maxLineWidthOfThisParagraph
+
+
+    [@lines,@lineSlots,@maxLineWidth] = [linesOfWholeText, lineSlotsOfWholeText, maxLineWidthOfWholeText]
+
 
   reLayout: ->
     super()
