@@ -11,11 +11,12 @@ class TextMorph2 extends StringMorph2
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  lines: []
-  lineSlots: []
+  wrappedLines: []
+  wrappedLineSlots: []
+  maxWrappedLineWidth: 0
+
   alignment: null
   maxTextWidth: null
-  maxLineWidth: 0
   backgroundColor: null
 
   #additional properties for ad-hoc evaluation:
@@ -59,9 +60,9 @@ class TextMorph2 extends StringMorph2
 
     textWrappingData = world.cacheForTextWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
     if !textWrappingData?
-      linesOfWholeText = []
-      lineSlotsOfWholeText = [0]
-      maxLineWidthOfWholeText = 0
+      wrappedLinesOfWholeText = []
+      wrappedLineSlotsOfWholeText = [0]
+      maxWrappedLineWidthOfWholeText = 0
 
       for eachParagraph in paragraphs
 
@@ -108,35 +109,33 @@ class TextMorph2 extends StringMorph2
         # it according to the available width for the
         # text (if there is such limit).
         # The end result is an array of lines
-        # called @lines, which contains the string for
+        # called @wrappedLines, which contains the string for
         # each line (excluding the end of lines).
         # Also another array is created, called
-        # @lineSlots, which memorises how many characters
+        # @wrappedLineSlots, which memorises how many characters
         # of the text have been consumed up to each line
         #  example: original text: "Hello\nWorld"
-        # then @lines[0] = "Hello" @lines[1] = "World"
-        # and @lineSlots[0] = 6, @lineSlots[1] = 11
+        # then @wrappedLines[0] = "Hello" @wrappedLines[1] = "World"
+        # and @wrappedLineSlots[0] = 6, @wrappedLineSlots[1] = 11
         # Note that this algorithm doesn't work in case
         # of single non-spaced words that are longer than
         # the allowed width.
         
         wrappingData = world.cacheForParagraphsWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
 
-        if wrappingData?
-          [linesOfThisParagraph, lineSlotsOfThisParagraph, maxLineWidthOfThisParagraph] = wrappingData
-        else
-          linesOfThisParagraph = []
-          lineSlotsOfThisParagraph = []
-          maxLineWidthOfThisParagraph = 0
+        if !wrappingData?
+          wrappedLinesOfThisParagraph = []
+          wrappedLineSlotsOfThisParagraph = []
+          maxWrappedLineWidthOfThisParagraph = 0
 
           for word in wordsOfThisParagraph
             if word is "\n"
               # we reached the end of the line in the
               # original text, so push the line and the
               # slots count in the arrays
-              linesOfThisParagraph.push currentLine
-              lineSlotsOfThisParagraph.push slot
-              maxLineWidthOfThisParagraph = Math.max(maxLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+              wrappedLinesOfThisParagraph.push currentLine
+              wrappedLineSlotsOfThisParagraph.push slot
+              maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
               currentLine = ""
             else
               if @maxTextWidth > 0 # there is a width limit, we might have to wrap
@@ -151,9 +150,9 @@ class TextMorph2 extends StringMorph2
                   # "slot" number to the respective arrays.
                   # the new line is going to only contain the
                   # word that has caused the overflow.
-                  linesOfThisParagraph.push currentLine
-                  lineSlotsOfThisParagraph.push slot
-                  maxLineWidthOfThisParagraph = Math.max(maxLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+                  wrappedLinesOfThisParagraph.push currentLine
+                  wrappedLineSlotsOfThisParagraph.push slot
+                  maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
                   currentLine = word + " "
                 else
                   # no overflow happened, so just proceed as normal
@@ -162,20 +161,22 @@ class TextMorph2 extends StringMorph2
                 currentLine = currentLine + word + " "
               slot += word.length + 1
 
-          wrappingDataCacheEntry = [linesOfThisParagraph,lineSlotsOfThisParagraph,maxLineWidthOfThisParagraph]
+          wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph]
           world.cacheForParagraphsWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
           wrappingData = wrappingDataCacheEntry
 
-        linesOfWholeText = linesOfWholeText.concat linesOfThisParagraph
-        lineSlotsOfWholeText = lineSlotsOfWholeText.concat lineSlotsOfThisParagraph
-        maxLineWidthOfWholeText = Math.max maxLineWidthOfWholeText, maxLineWidthOfThisParagraph
+        [wrappedLinesOfThisParagraph, wrappedLineSlotsOfThisParagraph, maxWrappedLineWidthOfThisParagraph] = wrappingData
+
+        wrappedLinesOfWholeText = wrappedLinesOfWholeText.concat wrappedLinesOfThisParagraph
+        wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat wrappedLineSlotsOfThisParagraph
+        maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
 
-      textWrappingDataCacheEntry = [linesOfWholeText, lineSlotsOfWholeText, maxLineWidthOfWholeText]
+      textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
       world.cacheForTextWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
       textWrappingData = textWrappingDataCacheEntry
 
-    [@lines,@lineSlots,@maxLineWidth] = textWrappingData
+    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = textWrappingData
 
 
   reLayout: ->
@@ -184,9 +185,9 @@ class TextMorph2 extends StringMorph2
 
     shadowWidth = Math.abs(@shadowOffset.x)
     shadowHeight = Math.abs(@shadowOffset.y)
-    height = @lines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
+    height = @wrappedLines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
     if @maxTextWidth is 0
-      @silentRawSetExtent(new Point(@maxLineWidth + shadowWidth, height))
+      @silentRawSetExtent(new Point(@maxWrappedLineWidth + shadowWidth, height))
     else
       @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
     if @parent?.layoutChanged
@@ -241,7 +242,7 @@ class TextMorph2 extends StringMorph2
       #console.log 'shadow x: ' + offx + " y: " + offy
       @backBufferContext.fillStyle = @shadowColor.toString()
       i = 0
-      for line in @lines
+      for line in @wrappedLines
         width = Math.ceil(@measureText null, line) + shadowWidth
         if @alignment is "right"
           x = @width() - width
@@ -259,7 +260,7 @@ class TextMorph2 extends StringMorph2
     #console.log 'maintext x: ' + offx + " y: " + offy
     @backBufferContext.fillStyle = @color.toString()
     i = 0
-    for line in @lines
+    for line in @wrappedLines
       width = Math.ceil(@measureText null, line) + shadowWidth
       if @alignment is "right"
         x = @width() - width
@@ -312,16 +313,16 @@ class TextMorph2 extends StringMorph2
     # Note that this solution scans all the characters
     # in all the rows up to the slot. This could be
     # done a lot quicker by stopping at the first row
-    # such that @lineSlots[theRow] <= slot
+    # such that @wrappedLineSlots[theRow] <= slot
     # You could even do a binary search if one really
-    # wanted to, because the contents of @lineSlots are
+    # wanted to, because the contents of @wrappedLineSlots are
     # in order, as they contain a cumulative count...
-    for row in [0...@lines.length]
-      idx = @lineSlots[row]
-      for col in [0...@lines[row].length]
+    for row in [0...@wrappedLines.length]
+      idx = @wrappedLineSlots[row]
+      for col in [0...@wrappedLines[row].length]
         return [row, col]  if idx is slot
         idx += 1
-    [@lines.length - 1, @lines[@lines.length - 1].length - 1]
+    [@wrappedLines.length - 1, @wrappedLines[@wrappedLines.length - 1].length - 1]
   
   # Answer the position (in pixels) of the given index ("slot")
   # where the caret should be placed.
@@ -331,7 +332,7 @@ class TextMorph2 extends StringMorph2
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     shadowHeight = Math.abs(@shadowOffset.y)
     yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    xOffset = Math.ceil @measureText null, (@lines[slotRow]).substring(0,slotColumn)
+    xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
     new Point(x, y)
@@ -347,33 +348,33 @@ class TextMorph2 extends StringMorph2
     row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
-      charX += Math.ceil @measureText null, @lines[row - 1][col]
+      charX += Math.ceil @measureText null, @wrappedLines[row - 1][col]
       col += 1
-    @lineSlots[Math.max(row - 1, 0)] + col - 1
+    @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
   
   upFrom: (slot) ->
     # answer the slot above the given one
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     return slot  if slotRow < 1
-    above = @lines[slotRow - 1]
-    return @lineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1
-    @lineSlots[slotRow - 1] + slotColumn
+    above = @wrappedLines[slotRow - 1]
+    return @wrappedLineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1
+    @wrappedLineSlots[slotRow - 1] + slotColumn
   
   downFrom: (slot) ->
     # answer the slot below the given one
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
-    return slot  if slotRow > @lines.length - 2
-    below = @lines[slotRow + 1]
-    return @lineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1
-    @lineSlots[slotRow + 1] + slotColumn
+    return slot  if slotRow > @wrappedLines.length - 2
+    below = @wrappedLines[slotRow + 1]
+    return @wrappedLineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1
+    @wrappedLineSlots[slotRow + 1] + slotColumn
   
   startOfLine: (slot) ->
     # answer the first slot (index) of the line for the given slot
-    @lineSlots[@slotRowAndColumn(slot).y]
+    @wrappedLineSlots[@slotRowAndColumn(slot).y]
   
   endOfLine: (slot) ->
     # answer the slot (index) indicating the EOL for the given slot
-    @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1
+    @startOfLine(slot) + @wrappedLines[@slotRowAndColumn(slot).y].length - 1
   
   # TextMorph menus:
   developersMenu: ->
