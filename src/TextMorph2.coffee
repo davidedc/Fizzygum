@@ -56,10 +56,31 @@ class TextMorph2 extends StringMorph2
     # below.
     # put all the text in an array, word by word
 
-    paragraphs = @text.split("\n")
-    paragraphs.forEach (p) =>
-      @words = @words.concat(p.split(" "))
-      @words.push "\n"
+    paragraphs = world.cacheForTextParagraphSplits.get hashCode(@text)
+    if !paragraphs?
+      paragraphsCacheEntry = @text.split("\n")
+      world.cacheForTextParagraphSplits.set hashCode(@text), paragraphsCacheEntry
+      paragraphs = paragraphsCacheEntry
+
+
+    @words = world.cacheForParagraphsWordsSplits.get hashCode(@text)
+    if !@words?
+      wordsOfWholeTextCacheEntry = []
+
+      for eachParagraph in paragraphs
+        wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get hashCode eachParagraph
+        if !wordsOfThisParagraph?
+          wordsOfThisParagraphCacheEntry = eachParagraph.split(" ")
+          world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraphCacheEntry
+          wordsOfThisParagraph = wordsOfThisParagraphCacheEntry
+
+
+        wordsOfWholeTextCacheEntry = wordsOfWholeTextCacheEntry.concat wordsOfThisParagraph
+        wordsOfWholeTextCacheEntry.push "\n"
+
+      world.cacheForParagraphsWordsSplits.set hashCode(@text), wordsOfWholeTextCacheEntry
+      @words = wordsOfWholeTextCacheEntry
+
     ## ////////////////////////////////////////////////////////////////
 
     ## You want this method to be FAST because it would be done
@@ -106,7 +127,7 @@ class TextMorph2 extends StringMorph2
     # Note that this algorithm doesn't work in case
     # of single non-spaced words that are longer than
     # the allowed width.
-    @words.forEach (word) =>
+    for word in @words
       if word is "\n"
         # we reached the end of the line in the
         # original text, so push the line and the
