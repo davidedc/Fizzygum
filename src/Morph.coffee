@@ -163,7 +163,7 @@ class Morph extends MorphicNode
     position = allCandidateMorphsWithSameTextDescription.indexOf @
 
     theLenght = allCandidateMorphsWithSameTextDescription.length
-    console.log [myTextDescription, position, theLenght]
+    #console.log [myTextDescription, position, theLenght]
     return [myTextDescription, position, theLenght]
 
   setTextDescription: (@textDescription) ->
@@ -1753,7 +1753,7 @@ class Morph extends MorphicNode
       if @ not in world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
         world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.push @
     else
-      console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
+      #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
   wantsDropOf: (aMorph) ->

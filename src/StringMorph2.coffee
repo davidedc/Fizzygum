@@ -18,7 +18,7 @@ class StringMorph2 extends Morph
   text: ""
   textActuallyShown: ""
 
-  maybeTransformedFontSize: null
+  fittingFontSize: null
   originallySetFontSize: null
 
   fontName: null
@@ -88,7 +88,7 @@ class StringMorph2 extends Morph
   # because this morph has to be able to fit
   # any extent by shrinking.
   actualFontSizeUsedInRendering: ->
-    @maybeTransformedFontSize
+    @fittingFontSize
 
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
@@ -140,7 +140,7 @@ class StringMorph2 extends Morph
       ans += letter
     ans
 
-  font: (overrideFontSize = @maybeTransformedFontSize) ->
+  font: (overrideFontSize = @fittingFontSize) ->
     # answer a font string, e.g. 'bold italic 12px sans-serif'
     font = ""
     font = font + "bold "  if @isBold
@@ -246,7 +246,7 @@ class StringMorph2 extends Morph
         #console.log "@textActuallyShown = @text 2"
 
 
-  measureText: (overrideFontSize = @maybeTransformedFontSize, text) ->
+  measureText: (overrideFontSize = @fittingFontSize, text) ->
     cacheKey = hashCode(overrideFontSize + "-" + text)
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit?
@@ -273,6 +273,7 @@ class StringMorph2 extends Morph
 
   fitToExtent: ->    
 
+    debugger
     largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
@@ -296,7 +297,8 @@ class StringMorph2 extends Morph
 
   reLayout: ->
     super()
-    @maybeTransformedFontSize = @fitToExtent()
+    @fittingFontSize = @fitToExtent()
+    console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
   repaintBackBufferIfNeeded: ->
 
@@ -340,7 +342,7 @@ class StringMorph2 extends Morph
       height = @height()
     else
       width = widthOfText
-      height = fontHeight(@maybeTransformedFontSize)
+      height = fontHeight(@fittingFontSize)
     @backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
     @backBufferContext = @backBuffer.getContext("2d")
@@ -364,9 +366,9 @@ class StringMorph2 extends Morph
       @backBufferContext.restore()
 
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+      textVerticalPosition = fontHeight(@fittingFontSize)
     else if @verticalAlignment == AlignmentSpec.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
       textVerticalPosition = @height()
 
@@ -390,8 +392,8 @@ class StringMorph2 extends Morph
         c = text.charAt(i)
         @backBufferContext.fillStyle = @markedBackgoundColor.toString()
         
-        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@maybeTransformedFontSize), Math.ceil((@measureText @maybeTransformedFontSize, c)) + 1,
-          fontHeight(@maybeTransformedFontSize)
+        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@fittingFontSize), Math.ceil((@measureText @fittingFontSize, c)) + 1,
+          fontHeight(@fittingFontSize)
         @backBufferContext.fillStyle = @markedTextColor.toString()
         @backBufferContext.fillText c, p.x, textVerticalPosition
 
@@ -435,9 +437,9 @@ class StringMorph2 extends Morph
 
     widthOfText = @calculateExtentBasedOnText()
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+      textVerticalPosition = fontHeight(@fittingFontSize)
     else if @verticalAlignment == AlignmentSpec.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
       textVerticalPosition = @height()
 
@@ -449,7 +451,7 @@ class StringMorph2 extends Morph
       textHorizontalPosition = @width() - widthOfText
 
     x += textHorizontalPosition
-    y += textVerticalPosition - fontHeight(@maybeTransformedFontSize)
+    y += textVerticalPosition - fontHeight(@fittingFontSize)
 
     new Point(x, y)
   
@@ -457,9 +459,9 @@ class StringMorph2 extends Morph
 
     widthOfText = @calculateExtentBasedOnText()
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@maybeTransformedFontSize)
+      textVerticalPosition = fontHeight(@fittingFontSize)
     else if @verticalAlignment == AlignmentSpec.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@maybeTransformedFontSize)/2
+      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
       textVerticalPosition = @height()
 

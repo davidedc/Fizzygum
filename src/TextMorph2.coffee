@@ -16,34 +16,46 @@ class TextMorph2 extends StringMorph2
   maxWrappedLineWidth: 0
 
   alignment: null
-  maxTextWidth: null
   backgroundColor: null
 
   #additional properties for ad-hoc evaluation:
   receiver: null
 
   constructor: (
-    text, @fontSize = 12, @fontStyle = "sans-serif", @isBold = false,
-    @isItalic = false, @alignment = "left", @maxTextWidth = 0, fontName, shadowOffset,
+    text, @originallySetFontSize = 12, @fontStyle = "sans-serif", @isBold = false,
+    @isItalic = false, @alignment = "left", fontName, shadowOffset,
     @shadowColor = null
     ) ->
 
-      super(text, @fontSize, @fontStyle, @isBold, @isItalic, null, shadowOffset, @shadowColor,null,fontName)
+      super(text, @originallySetFontSize, @fontStyle, @isBold, @isItalic)
       # override inherited properties:
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       @text = text or ((if text is "" then text else "TextMorph"))
       @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
-      @shadowOffset = shadowOffset or new Point(0, 0)
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
+
+      @scaleAboveOriginallyAssignedFontSize = true
   
 
-  breakTextIntoLines: ->
+  # notice the thick arrow here!
+  doesTextFitInExtent: (text = @text, overrideFontSize) =>
+    textSize = @breakTextIntoLines text, overrideFontSize
+    thisFitsInto = new Point @width(), textSize[1]
+
+    if thisFitsInto.le @extent()
+      return true
+    else
+      return false
+
+  breakTextIntoLines: (text = @text, overrideFontSize) ->
     ## remember to cache also here at the top level
     ## based on text, fontsize and width.
 
-    console.log "@maxTextWidth: " + @maxTextWidth
+    maxTextWidth = @width()
+
+    console.log "breakTextIntoLines // " + " maxTextWidth: " + maxTextWidth + " overrideFontSize: " + overrideFontSize
 
     
     ## // this section only needs to be re-done when @text changes ////
@@ -53,16 +65,16 @@ class TextMorph2 extends StringMorph2
     # below.
     # put all the text in an array, word by word
 
-    paragraphs = world.cacheForTextParagraphSplits.get hashCode(@text)
+    paragraphs = world.cacheForTextParagraphSplits.get hashCode(text)
     if !paragraphs?
-      paragraphsCacheEntry = @text.split("\n")
-      world.cacheForTextParagraphSplits.set hashCode(@text), paragraphsCacheEntry
+      paragraphsCacheEntry = text.split("\n")
+      world.cacheForTextParagraphSplits.set hashCode(text), paragraphsCacheEntry
       paragraphs = paragraphsCacheEntry
 
     cumulativeSlotAcrossText = 0
     previousCumulativeSlotAcrossText = 0
 
-    textWrappingData = world.cacheForTextWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
+    textWrappingData = world.cacheForTextWrappingData.get hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph)
     if !textWrappingData?
       wrappedLinesOfWholeText = []
       wrappedLineSlotsOfWholeText = [0]
@@ -125,7 +137,7 @@ class TextMorph2 extends StringMorph2
         # of single non-spaced words that are longer than
         # the allowed width.
         
-        wrappingData = world.cacheForParagraphsWrappingData.get hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph)
+        wrappingData = world.cacheForParagraphsWrappingData.get hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph)
 
         if !wrappingData?
           wrappedLinesOfThisParagraph = []
@@ -142,16 +154,16 @@ class TextMorph2 extends StringMorph2
               # slotsInParagraph count in the arrays
               wrappedLinesOfThisParagraph.push currentLine
               wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-              maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+              maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText overrideFontSize, currentLine))
               currentLine = ""
             else
-              if @maxTextWidth > 0 # there is a width limit, we might have to wrap
+              if maxTextWidth > 0 # there is a width limit, we might have to wrap
                 # there is a width limit, so we need
                 # to check whether we overflowed it. So create
                 # a prospective line and then check its width.
                 lineForOverflowTest = currentLine + word + " "
-                w = Math.ceil @measureText null, lineForOverflowTest
-                if w > @maxTextWidth
+                w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
+                if w > maxTextWidth
                   # ok we just overflowed the available space,
                   # so we need to push the old line and its
                   # "slotsInParagraph" number to the respective arrays.
@@ -159,7 +171,7 @@ class TextMorph2 extends StringMorph2
                   # word that has caused the overflow.
                   wrappedLinesOfThisParagraph.push currentLine
                   wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-                  maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText null, currentLine))
+                  maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText overrideFontSize, currentLine))
                   currentLine = word + " "
                 else
                   # no overflow happened, so just proceed as normal
@@ -170,7 +182,7 @@ class TextMorph2 extends StringMorph2
 
           # words of this paragraph have been scanned
           wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph, slotsInParagraph]
-          world.cacheForParagraphsWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
+          world.cacheForParagraphsWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
           wrappingData = wrappingDataCacheEntry
 
         # we either cache-hit wrappingData or we re-built it
@@ -189,35 +201,34 @@ class TextMorph2 extends StringMorph2
       # here all paragraphs have been visited
       #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
       textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
-      world.cacheForTextWrappingData.set hashCode(@fontSize + "-" + @maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
+      world.cacheForTextWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
       textWrappingData = textWrappingDataCacheEntry
 
-    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = textWrappingData
+    [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
+    height = wrappedLines.length * (Math.ceil(fontHeight(overrideFontSize)))
+    return [textWrappingData, height]
 
   edit: ->
     world.edit @
     return true
 
+  ###
   reLayout: ->
     super()
-    @maxTextWidth = @width()
-    @breakTextIntoLines()
+    @fittingFontSize = @fitToExtent()
+    @fontsize = @fittingFontSize
+    console.log "reLayout // fontSize: " + @fontSize + " fittingFontSize: " + @fittingFontSize
 
-    ###
-    shadowWidth = Math.abs(@shadowOffset.x)
-    shadowHeight = Math.abs(@shadowOffset.y)
-    height = @wrappedLines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    if @maxTextWidth is 0
-      @silentRawSetExtent(new Point(@maxWrappedLineWidth + shadowWidth, height))
-    else
-      @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
-    if @parent?.layoutChanged
-      @parent.layoutChanged()
-    ###
+    #super()
+    #@maxTextWidth = @width()
+    #@breakTextIntoLines()
+
     @notifyChildrenThatParentHasReLayouted()
+  ###
 
   # no changes of position or extent
   repaintBackBufferIfNeeded: ->
+    console.log "repaintBackBufferIfNeeded // fontSize: " + @originallySetFontSize + " fittingFontSize: " + @fittingFontSize
     if !@backBufferIsPotentiallyDirty then return
     @backBufferIsPotentiallyDirty = false
 
@@ -233,13 +244,12 @@ class TextMorph2 extends StringMorph2
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
         return
 
+    rrr = @breakTextIntoLines @text, @fittingFontSize
+    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = rrr[0]
+
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext("2d")
     @backBufferContext.font = @font()
-
-    shadowWidth = Math.abs(@shadowOffset.x)
-    shadowHeight = Math.abs(@shadowOffset.y)
-
 
     @backBuffer.width = @width() * pixelRatio
     @backBuffer.height = @height() * pixelRatio
@@ -257,40 +267,22 @@ class TextMorph2 extends StringMorph2
       @backBufferContext.fillStyle = @backgroundColor.toString()
       @backBufferContext.fillRect 0, 0, @width(), @height()
 
-    # draw the shadow, if any
-    if @shadowColor
-      offx = Math.max(@shadowOffset.x, 0)
-      offy = Math.max(@shadowOffset.y, 0)
-      #console.log 'shadow x: ' + offx + " y: " + offy
-      @backBufferContext.fillStyle = @shadowColor.toString()
-      i = 0
-      for line in @wrappedLines
-        width = Math.ceil(@measureText null, line) + shadowWidth
-        if @alignment is "right"
-          x = @width() - width
-        else if @alignment is "center"
-          x = (@width() - width) / 2
-        else # 'left'
-          x = 0
-        y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
-        i++
-        @backBufferContext.fillText line, x + offx, y + offy
 
     # now draw the actual text
-    offx = Math.abs(Math.min(@shadowOffset.x, 0))
-    offy = Math.abs(Math.min(@shadowOffset.y, 0))
+    offx = 0
+    offy = 0
     #console.log 'maintext x: ' + offx + " y: " + offy
     @backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @wrappedLines
-      width = Math.ceil(@measureText null, line) + shadowWidth
+      width = Math.ceil(@measureText null, line)
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
         x = (@width() - width) / 2
       else # 'left'
         x = 0
-      y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
+      y = (i + 1) * (Math.ceil(fontHeight(@fittingFontSize)))
       i++
       @backBufferContext.fillText line, x + offx, y + offy
 
@@ -303,9 +295,9 @@ class TextMorph2 extends StringMorph2
       p = @slotCoordinates(i).subtract(@position())
       c = @text.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil(fontHeight(@fittingFontSize))
       @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fittingFontSize))
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
@@ -354,8 +346,7 @@ class TextMorph2 extends StringMorph2
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
-    shadowHeight = Math.abs(@shadowOffset.y)
-    yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
+    yOffset = slotRow * (Math.ceil(fontHeight(@fittingFontSize)))
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
@@ -369,8 +360,7 @@ class TextMorph2 extends StringMorph2
     charX = 0
     row = 0
     col = 0
-    shadowHeight = Math.abs(@shadowOffset.y)
-    row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
+    row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
       charX += @measureText null, @wrappedLines[row - 1][col]
