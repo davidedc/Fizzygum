@@ -23,8 +23,7 @@ class TextMorph2 extends StringMorph2
 
   constructor: (
     text, @originallySetFontSize = 12, @fontStyle = "sans-serif", @isBold = false,
-    @isItalic = false, @alignment = "left", fontName, shadowOffset,
-    @shadowColor = null
+    @isItalic = false, @alignment = "left", fontName
     ) ->
 
       super(text, @originallySetFontSize, @fontStyle, @isBold, @isItalic)
@@ -32,11 +31,13 @@ class TextMorph2 extends StringMorph2
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
       @text = text or ((if text is "" then text else "TextMorph"))
+      @textActuallyShown = @text
       @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
       @color = new Color(0, 0, 0)
       @noticesTransparentClick = true
 
       @scaleAboveOriginallyAssignedFontSize = true
+      @cropWritingWhenTooBig = true
   
 
   # notice the thick arrow here!
@@ -236,15 +237,20 @@ class TextMorph2 extends StringMorph2
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.font == @font() and
       @backBufferValidityChecker.textAlign == @alignment and
+      @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
       @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
       @backBufferValidityChecker.color == @color.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
+      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
+      @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
+      @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
+      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize and
+      @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
 
-    rrr = @breakTextIntoLines @text, @fittingFontSize
+    rrr = @breakTextIntoLines @textActuallyShown, @fittingFontSize
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = rrr[0]
 
     @backBuffer = newCanvas()
@@ -293,7 +299,7 @@ class TextMorph2 extends StringMorph2
     stop = Math.max(@startMark, @endMark)
     for i in [start...stop]
       p = @slotCoordinates(i).subtract(@position())
-      c = @text.charAt(i)
+      c = @textActuallyShown.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
       @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil(fontHeight(@fittingFontSize))
       @backBufferContext.fillStyle = @markedTextColor.toString()
@@ -306,9 +312,14 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.textActuallyShownHash = hashCode(@textActuallyShown) and
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
+    @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment and
+    @backBufferValidityChecker.verticalAlignment = @verticalAlignment and
+    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize and
+    @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
 
 
   
