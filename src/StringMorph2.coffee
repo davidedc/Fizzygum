@@ -480,6 +480,11 @@ class StringMorph2 extends Morph
     idx = 0
     charX = 0
 
+    # if pointer is below the line, the slot is at
+    # the last character.
+    if aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))))
+      return text.length
+
     while aPoint.x - @left() > charX
       charX += (@calculateExtentBasedOnText(text[idx]))
       idx += 1
