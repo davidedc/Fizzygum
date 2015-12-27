@@ -640,6 +640,8 @@ class StringMorph2 extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
 
+  reflowText: ->
+
   setContent: (theTextContent,a) ->
     debugger
     if a?
@@ -655,6 +657,7 @@ class StringMorph2 extends Morph
     else
       console.log "texts non-synched"
     @reLayout()
+    @reflowText()
     @backBufferIsPotentiallyDirty = true
     @changed()
   

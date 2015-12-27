@@ -227,6 +227,10 @@ class TextMorph2 extends StringMorph2
     @notifyChildrenThatParentHasReLayouted()
   ###
 
+  reflowText: ->
+    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] =
+    (@breakTextIntoLines @textActuallyShown, @fittingFontSize)[0]
+
   # no changes of position or extent
   repaintBackBufferIfNeeded: ->
     console.log "repaintBackBufferIfNeeded // fontSize: " + @originallySetFontSize + " fittingFontSize: " + @fittingFontSize
@@ -250,8 +254,7 @@ class TextMorph2 extends StringMorph2
       @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
 
-    rrr = @breakTextIntoLines @textActuallyShown, @fittingFontSize
-    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = rrr[0]
+    @reflowText()
 
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext("2d")
