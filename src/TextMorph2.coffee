@@ -374,9 +374,14 @@ class TextMorph2 extends StringMorph2
     charX = 0
     row = 0
     col = 0
-    row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
+    while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
+      row += 1
     row = Math.max(row, 1)
     while aPoint.x - @left() > charX
+      if col > @wrappedLines[row - 1].length - 1
+        # if pointer is beyond the end of the line, the slot is at
+        # the last character of the line.
+        break
       charX += @measureText null, @wrappedLines[row - 1][col]
       col += 1
     returnedSlot = @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
