@@ -15,18 +15,36 @@ class TextMorph2 extends StringMorph2
   wrappedLineSlots: []
   maxWrappedLineWidth: 0
 
-  alignment: null
   backgroundColor: null
 
   #additional properties for ad-hoc evaluation:
   receiver: null
 
   constructor: (
-    text, @originallySetFontSize = 12, @fontStyle = "sans-serif", @isBold = false,
-    @isItalic = false, @alignment = "left", fontName
+    text = "",
+    @originallySetFontSize = 12,
+    @fontStyle = "sans-serif",
+    @isBold = false,
+    @isItalic = false,
+    #@isNumeric = false,
+    color,
+    fontName,
+    @backgroundColor = null,
+    @backgroundTransparency = null
     ) ->
 
-      super(text, @originallySetFontSize, @fontStyle, @isBold, @isItalic)
+      super(
+        text,
+        @originallySetFontSize,
+        @fontStyle,
+        @isBold,
+        @isItalic,
+        false, # isNumeric
+        color,
+        fontName
+        @backgroundColor,
+        @backgroundTransparency
+        )
       # override inherited properties:
       @markedTextColor = new Color(255, 255, 255)
       @markedBackgoundColor = new Color(60, 60, 120)
@@ -228,8 +246,9 @@ class TextMorph2 extends StringMorph2
   ###
 
   reflowText: ->
-    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] =
-    (@breakTextIntoLines @textActuallyShown, @fittingFontSize)[0]
+    tmp = (@breakTextIntoLines @textActuallyShown, @fittingFontSize)
+    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
+    return tmp[1]
 
   # no changes of position or extent
   repaintBackBufferIfNeeded: ->
@@ -240,7 +259,6 @@ class TextMorph2 extends StringMorph2
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.font == @font() and
-      @backBufferValidityChecker.textAlign == @alignment and
       @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
       @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
       @backBufferValidityChecker.color == @color.toString() and
@@ -254,7 +272,7 @@ class TextMorph2 extends StringMorph2
       @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
 
-    @reflowText()
+    contentHeight = @reflowText()
 
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext("2d")
@@ -271,29 +289,47 @@ class TextMorph2 extends StringMorph2
     @backBufferContext.textAlign = "left"
     @backBufferContext.textBaseline = "bottom"
 
-    # fill the background, if desired
-    if @backgroundColor
+    # paint the background so we have a better sense of
+    # where the text is fitting into.
+    if @backgroundColor?
+      @backBufferContext.save()
       @backBufferContext.fillStyle = @backgroundColor.toString()
-      @backBufferContext.fillRect 0, 0, @width(), @height()
+      if @backgroundTransparency?
+        @backBufferContext.globalAlpha = @backgroundTransparency
+      @backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
+      @backBufferContext.restore()
 
+
+    if @verticalAlignment == AlignmentSpec.TOP
+      textVerticalPosition = 0
+    else if @verticalAlignment == AlignmentSpec.MIDDLE
+      textVerticalPosition = @height()/2 - contentHeight/2
+    else if @verticalAlignment == AlignmentSpec.BOTTOM
+      textVerticalPosition = @height() - contentHeight
+
+    ###
+    if @horizontalAlignment == AlignmentSpec.LEFT
+      textHorizontalPosition = 0
+    else if @horizontalAlignment == AlignmentSpec.CENTER
+      textHorizontalPosition = @width()/2 - widthOfText/2
+    else if @horizontalAlignment == AlignmentSpec.RIGHT
+      textHorizontalPosition = @width() - widthOfText
+    ###
 
     # now draw the actual text
-    offx = 0
-    offy = 0
-    #console.log 'maintext x: ' + offx + " y: " + offy
     @backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
-      if @alignment is "right"
+      if @horizontalAlignment == AlignmentSpec.RIGHT
         x = @width() - width
-      else if @alignment is "center"
+      else if @horizontalAlignment == AlignmentSpec.CENTER
         x = (@width() - width) / 2
       else # 'left'
         x = 0
       y = (i + 1) * (Math.ceil(fontHeight(@fittingFontSize)))
       i++
-      @backBufferContext.fillText line, x + offx, y + offy
+      @backBufferContext.fillText line, x, y + textVerticalPosition
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
@@ -311,7 +347,6 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.font = @font()
-    @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode(@text)
