@@ -783,6 +783,7 @@ class StringMorph2 extends Morph
     super
     caret = world.caret;
     if @isEditable
+      @clearSelection()
       # doesn't matter what we set editResult to initially,
       # just not undefined or null cause that's
       # going to be significant
