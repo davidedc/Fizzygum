@@ -60,6 +60,8 @@ class StringMorph2 extends Morph
   scaleAboveOriginallyAssignedFontSize: false
   cropWritingWhenTooBig: true
 
+  caretHorizPositionForVertMovement: null
+
   constructor: (
       text = "",
       @originallySetFontSize = 12,
@@ -781,7 +783,6 @@ class StringMorph2 extends Morph
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
     super
-    caret = world.caret;
     if @isEditable
       @clearSelection()
       # doesn't matter what we set editResult to initially,
@@ -791,8 +792,9 @@ class StringMorph2 extends Morph
       if !@currentlySelecting
         editResult = @edit()
       if editResult?
-        if caret then caret.gotoPos pos
         world.caret.gotoPos pos
+        @caretHorizPositionForVertMovement = world.caret.left()
+
         @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos

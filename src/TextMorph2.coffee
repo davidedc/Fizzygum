@@ -403,18 +403,11 @@ class TextMorph2 extends StringMorph2
     y = @top() + yOffset
     #alert "slotCoordinates|| slot:" + slot + " x,y: " + x + ", " + y
     new Point(x, y)
-  
-  # Returns the slot (index) closest to the given point
-  # so the caret can be moved accordingly
-  # This function assumes that the text is left-justified.
-  slotAt: (aPoint) ->
-    charX = 0
-    row = 0
-    col = 0
-    while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
-      row += 1
-    row = Math.max(row, 1)
 
+
+  slotAtRow: (row, xPosition) ->
+    charX = 0
+    col = 0
     # This code to pick the correct slot works but it's
     # way too convoluted, as I arrived to this
     # tweaking it by trial and error rather than by smarts.
@@ -427,10 +420,10 @@ class TextMorph2 extends StringMorph2
         # the last character of the line.
         return returnedSlot
 
-      if charX > aPoint.x - @left()
-        console.log "aPoint.x - @left(): " + (aPoint.x - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
-        console.log "Math.abs(aPoint.x - @left() - charXMinusOne) " + Math.abs(aPoint.x - @left() - charXMinusOne) + "  Math.abs(aPoint.x - @left() - charX) " + Math.abs(aPoint.x - @left() - charX) 
-        if Math.abs(aPoint.x - @left() - charXMinusOne) < Math.abs(aPoint.x - @left() - charX)
+      if charX > xPosition - @left()
+        console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
+        console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
+        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
           return returnedSlot
         break
 
@@ -449,11 +442,24 @@ class TextMorph2 extends StringMorph2
 
     returnedSlot + 1
   
+  # Returns the slot (index) closest to the given point
+  # so the caret can be moved accordingly
+  # This function assumes that the text is left-justified.
+  slotAt: (aPoint) ->
+    row = 0
+    while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
+      row += 1
+    row = Math.max(row, 1)
+
+    return @slotAtRow row, aPoint.x
+
+  
   upFrom: (slot) ->
     # answer the slot above the given one
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     if slotRow < 1
       return 0
+    return @slotAtRow(slotRow, @caretHorizPositionForVertMovement)
     above = @wrappedLines[slotRow - 1]
     if above.length < slotColumn - 1
       return @wrappedLineSlots[slotRow - 1] + above.length
@@ -464,6 +470,7 @@ class TextMorph2 extends StringMorph2
     [slotRow, slotColumn] = @slotRowAndColumn(slot)
     if slotRow > @wrappedLines.length - 2
       return @textActuallyShown.length
+    return @slotAtRow(slotRow+2, @caretHorizPositionForVertMovement)
     below = @wrappedLines[slotRow + 1]
     if below.length < slotColumn - 1
       return @wrappedLineSlots[slotRow + 1] + below.length
