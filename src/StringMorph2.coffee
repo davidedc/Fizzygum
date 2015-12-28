@@ -271,9 +271,7 @@ class StringMorph2 extends Morph
     else
       return false
 
-  fitToExtent: ->    
-
-    debugger
+  fitToExtent: ->
     largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
@@ -485,13 +483,31 @@ class StringMorph2 extends Morph
     if aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))))
       return text.length
 
-    while aPoint.x - @left() > charX
+    # This code to pick the correct slot works but it's
+    # way too convoluted, as I arrived to this
+    # tweaking it by trial and error rather than by smarts.
+    # TODO Probably need a little patience to rewrite, I got
+    # other parts to move on to now.
+    while true
+      if charX > aPoint.x - @left()
+        console.log "aPoint.x - @left(): " + (aPoint.x - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
+        console.log "Math.abs(aPoint.x - @left() - charXMinusOne) " + Math.abs(aPoint.x - @left() - charXMinusOne) + "  Math.abs(aPoint.x - @left() - charX) " + Math.abs(aPoint.x - @left() - charX) 
+        if Math.abs(aPoint.x - @left() - charXMinusOne) < Math.abs(aPoint.x - @left() - charX)
+          return idx - 1
+        break
+
+      if charX?
+        charXMinusOne = charX
+      else
+        charXMinusOne = 0
+
       charX += (@calculateExtentBasedOnText(text[idx]))
+
       idx += 1
       if idx is text.length
         if ((@calculateExtentBasedOnText(text)) - ((@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
           return idx
-    idx - 1
+    idx
   
   upFrom: (slot) ->
     @startOfLine()
@@ -515,7 +531,6 @@ class StringMorph2 extends Morph
       null, 6, 500, true
 
   editPopup: (menuItem)->
-    debugger
     if menuItem?
       title = menuItem.parent.title + "\nedit:"
     else
@@ -648,7 +663,6 @@ class StringMorph2 extends Morph
   reflowText: ->
 
   setContent: (theTextContent,a) ->
-    debugger
     if a?
       theTextContent = a.text.text
 
@@ -707,7 +721,6 @@ class StringMorph2 extends Morph
   # StringMorph2 editing:
   edit: ->
     if @textActuallyShown == @text
-      debugger
       world.edit @
       return true
     else
@@ -761,6 +774,10 @@ class StringMorph2 extends Morph
     super
     caret = world.caret;
     if @isEditable
+      # doesn't matter what we set editResult to initially,
+      # just not undefined or null cause that's
+      # going to be significant
+      editResult = true
       if !@currentlySelecting
         editResult = @edit()
       if editResult?
