@@ -227,9 +227,6 @@ class TextMorph2 extends StringMorph2
     height = wrappedLines.length * (Math.ceil(fontHeight(overrideFontSize)))
     return [textWrappingData, height]
 
-  edit: ->
-    world.edit @
-    return true
 
   ###
   reLayout: ->
@@ -256,6 +253,12 @@ class TextMorph2 extends StringMorph2
     if !@backBufferIsPotentiallyDirty then return
     @backBufferIsPotentiallyDirty = false
 
+    verticalAlignment = @verticalAlignment
+    horizontalAlignment = @horizontalAlignment
+    if world.caret?.target ?= @
+      verticalAlignment = AlignmentSpec.TOP
+      horizontalAlignment = AlignmentSpec.LEFT
+
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.font == @font() and
@@ -266,8 +269,8 @@ class TextMorph2 extends StringMorph2
       @backBufferValidityChecker.startMark == @startMark and
       @backBufferValidityChecker.endMark == @endMark and
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
-      @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
-      @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
+      @backBufferValidityChecker.horizontalAlignment == horizontalAlignment and
+      @backBufferValidityChecker.verticalAlignment == verticalAlignment and
       @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize and
       @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
         return
@@ -299,20 +302,19 @@ class TextMorph2 extends StringMorph2
       @backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
       @backBufferContext.restore()
 
-
-    if @verticalAlignment == AlignmentSpec.TOP
+    if verticalAlignment == AlignmentSpec.TOP
       textVerticalPosition = 0
-    else if @verticalAlignment == AlignmentSpec.MIDDLE
+    else if verticalAlignment == AlignmentSpec.MIDDLE
       textVerticalPosition = @height()/2 - contentHeight/2
-    else if @verticalAlignment == AlignmentSpec.BOTTOM
+    else if verticalAlignment == AlignmentSpec.BOTTOM
       textVerticalPosition = @height() - contentHeight
 
     ###
-    if @horizontalAlignment == AlignmentSpec.LEFT
+    if horizontalAlignment == AlignmentSpec.LEFT
       textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpec.CENTER
+    else if horizontalAlignment == AlignmentSpec.CENTER
       textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpec.RIGHT
+    else if horizontalAlignment == AlignmentSpec.RIGHT
       textHorizontalPosition = @width() - widthOfText
     ###
 
@@ -321,9 +323,9 @@ class TextMorph2 extends StringMorph2
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
-      if @horizontalAlignment == AlignmentSpec.RIGHT
+      if horizontalAlignment == AlignmentSpec.RIGHT
         x = @width() - width
-      else if @horizontalAlignment == AlignmentSpec.CENTER
+      else if horizontalAlignment == AlignmentSpec.CENTER
         x = (@width() - width) / 2
       else # 'left'
         x = 0
@@ -354,8 +356,8 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-    @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment and
-    @backBufferValidityChecker.verticalAlignment = @verticalAlignment and
+    @backBufferValidityChecker.horizontalAlignment = horizontalAlignment and
+    @backBufferValidityChecker.verticalAlignment = verticalAlignment and
     @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize and
     @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
 
@@ -489,6 +491,7 @@ class TextMorph2 extends StringMorph2
       menu.prependItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
       menu.prependItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
+
 
   selectAllAndEdit: ->
     @edit()

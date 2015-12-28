@@ -166,16 +166,24 @@ class CaretMorph extends BlinkerMorph
       @clearSelectionIfStartAndEndMeet shift
   
   goUp: (shift) ->
-    @updateSelection shift
-    @gotoSlot @target.upFrom(@slot)
-    @updateSelection shift
-    @clearSelectionIfStartAndEndMeet shift
+    if !shift and @target.selectionEndSlot()?
+      @gotoSlot @target.selectionStartSlot()
+      @updateSelection shift
+    else
+      @updateSelection shift
+      @gotoSlot @target.upFrom(@slot)
+      @updateSelection shift
+      @clearSelectionIfStartAndEndMeet shift
   
   goDown: (shift) ->
-    @updateSelection shift
-    @gotoSlot @target.downFrom(@slot)
-    @updateSelection shift
-    @clearSelectionIfStartAndEndMeet shift
+    if !shift and @target.selectionEndSlot()?
+      @gotoSlot @target.selectionEndSlot()
+      @updateSelection shift
+    else
+      @updateSelection shift
+      @gotoSlot @target.downFrom(@slot)
+      @updateSelection shift
+      @clearSelectionIfStartAndEndMeet shift
   
   goHome: (shift) ->
     @updateSelection shift
