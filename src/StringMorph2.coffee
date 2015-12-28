@@ -308,7 +308,6 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.isPassword == @isPassword and
       @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
       @backBufferValidityChecker.font == @font() and
-      @backBufferValidityChecker.textAlign == @alignment and
       @backBufferValidityChecker.color == @color.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
       @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
@@ -400,7 +399,6 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.isPassword = @isPassword
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
     @backBufferValidityChecker.font = @font()
-    @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode(@text)
     @backBufferValidityChecker.textActuallyShownHash = hashCode(@textActuallyShown)
