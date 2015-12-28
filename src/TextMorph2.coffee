@@ -414,19 +414,40 @@ class TextMorph2 extends StringMorph2
     while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
       row += 1
     row = Math.max(row, 1)
-    while aPoint.x - @left() > charX
+
+    # This code to pick the correct slot works but it's
+    # way too convoluted, as I arrived to this
+    # tweaking it by trial and error rather than by smarts.
+    # TODO Probably need a little patience to rewrite, I got
+    # other parts to move on to now.
+
+    while true
       if col > @wrappedLines[row - 1].length - 1
         # if pointer is beyond the end of the line, the slot is at
         # the last character of the line.
+        return returnedSlot
+
+      if charX > aPoint.x - @left()
+        console.log "aPoint.x - @left(): " + (aPoint.x - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
+        console.log "Math.abs(aPoint.x - @left() - charXMinusOne) " + Math.abs(aPoint.x - @left() - charXMinusOne) + "  Math.abs(aPoint.x - @left() - charX) " + Math.abs(aPoint.x - @left() - charX) 
+        if Math.abs(aPoint.x - @left() - charXMinusOne) < Math.abs(aPoint.x - @left() - charX)
+          return returnedSlot
         break
+
+      if charX?
+        charXMinusOne = charX
+      else
+        charXMinusOne = 0
+
+
       charX += @measureText null, @wrappedLines[row - 1][col]
       col += 1
-    returnedSlot = @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
+      returnedSlot = @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
 
     #[slotRow, slotColumn] = @slotRowAndColumn(returnedSlot)
     #alert "SLOTAT|| returnedSlot: " + returnedSlot + " row and column: " + slotRow + " " + slotColumn + " line start: " + (@wrappedLines[slotRow]).substring(0,slotColumn)
 
-    returnedSlot
+    returnedSlot + 1
   
   upFrom: (slot) ->
     # answer the slot above the given one
