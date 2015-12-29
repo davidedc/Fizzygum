@@ -950,6 +950,20 @@ class WorldMorph extends FrameMorph
     if event?
       event.preventDefault()
 
+  processCut: (event) ->
+    @systemTestsRecorderAndPlayer.addCutCommand
+    console.log "processing cut"
+    if @caret
+      selectedText = @caret.target.selection()
+      if event.clipboardData
+        event.preventDefault()
+        setStatus = event.clipboardData.setData("text/plain", selectedText)
+
+      if window.clipboardData
+        event.returnValue = false
+        setStatus = window.clipboardData.setData "Text", selectedText
+      window.setTimeout ( => @caret.deleteLeft()), 50, true
+
   processCopy: (event) ->
     @systemTestsRecorderAndPlayer.addCopyCommand
     console.log "processing copy"
@@ -1112,6 +1126,10 @@ class WorldMorph extends FrameMorph
     # local memory. So the OS clipboard wouldn't be used, but at least there would
     # be some copy/paste working. Also one would need to intercept the copy/paste
     # key combinations manually instead of from the copy/paste events.
+
+    @cutEventListener = (event) =>
+      @processCut event
+    document.body.addEventListener "cut", @cutEventListener, false
     
     @copyEventListener = (event) =>
       @processCopy event
@@ -1212,6 +1230,7 @@ class WorldMorph extends FrameMorph
     canvas.removeEventListener 'keypress', @keypressEventListener
     canvas.removeEventListener 'mousewheel', @mousewheelEventListener
     canvas.removeEventListener 'DOMMouseScroll', @DOMMouseScrollEventListener
+    canvas.removeEventListener 'cut', @cutEventListener
     canvas.removeEventListener 'copy', @copyEventListener
     canvas.removeEventListener 'paste', @pasteEventListener
     Mousetrap.reset()

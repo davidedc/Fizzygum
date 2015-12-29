@@ -363,9 +363,15 @@ class AutomatorRecorderAndPlayer
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  addCutCommand: () ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandCut @
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
   addCopyCommand: () ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandCopy @
+    systemTestCommand = new AutomatorCommandCopy null, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 

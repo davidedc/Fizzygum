@@ -405,6 +405,9 @@ class StringMorph2 extends Morph
         @backBufferContext.fillStyle = @markedTextColor.toString()
         @backBufferContext.fillText c, p.x, textVerticalPosition
 
+    if world.caret?
+      world.caret.updateCaretDimension()
+
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.isPassword = @isPassword
@@ -781,7 +784,8 @@ class StringMorph2 extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
     @clearSelection()
-  
+    @reflowText()
+
   selectAll: ->
     @startMark = 0
     @endMark = @textActuallyShown.length

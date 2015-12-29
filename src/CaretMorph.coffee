@@ -318,8 +318,7 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setContent text
-    
+      @target.setContent text    
   
   deleteLeft: ->
     if @target.selection()
@@ -329,8 +328,15 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       @target.changed()
       @target.setContent text.substring(0, @slot - 1) + text.substr(@slot)
+      @goLeft()
+    @target.reflowText()
 
-    @goLeft()
+    @updateSelection false
+    @gotoSlot @slot
+    @updateSelection false
+    @clearSelectionIfStartAndEndMeet false
+
+    @changed()
 
   # CaretMorph destroying:
   destroy: ->

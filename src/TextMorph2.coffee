@@ -346,6 +346,9 @@ class TextMorph2 extends StringMorph2
       @backBufferContext.fillStyle = @markedTextColor.toString()
       @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fittingFontSize))
 
+    if world.caret?
+      world.caret.updateCaretDimension()
+
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.font = @font()
