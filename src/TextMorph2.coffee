@@ -416,6 +416,9 @@ class TextMorph2 extends StringMorph2
     charX = 0
     col = 0
 
+    if row > @wrappedLines.length - 1
+      return @textActuallyShown.length
+
     while true
       if col > @wrappedLines[row - 1].length - 1
         # if pointer is beyond the end of the line, the slot is at
@@ -452,7 +455,6 @@ class TextMorph2 extends StringMorph2
     while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
       row += 1
     row = Math.max(row, 1)
-    row = Math.min(row, @wrappedLines.length)
 
     return @slotAtRow row, aPoint.x
 
