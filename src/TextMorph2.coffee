@@ -405,14 +405,16 @@ class TextMorph2 extends StringMorph2
     new Point(x, y)
 
 
+  # This code to pick the correct slot works but it's
+  #  1) way too convoluted, as I arrived to this
+  #     tweaking it by trial and error rather than by smarts.
+  #  2) largely duplicated in StringMorph2
+  # TODO Probably need a little patience to rewrite and
+  # refactor against the StringMorph2 version, I got
+  # other parts to move on to now.
   slotAtRow: (row, xPosition) ->
     charX = 0
     col = 0
-    # This code to pick the correct slot works but it's
-    # way too convoluted, as I arrived to this
-    # tweaking it by trial and error rather than by smarts.
-    # TODO Probably need a little patience to rewrite, I got
-    # other parts to move on to now.
 
     while true
       if col > @wrappedLines[row - 1].length - 1
