@@ -450,6 +450,7 @@ class TextMorph2 extends StringMorph2
     while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
       row += 1
     row = Math.max(row, 1)
+    row = Math.min(row, @wrappedLines.length)
 
     return @slotAtRow row, aPoint.x
 
