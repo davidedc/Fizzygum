@@ -43,6 +43,7 @@ class WorldMorph extends FrameMorph
   DOMMouseScrollEventListener: null
   copyEventListener: null
   pasteEventListener: null
+  clipboardTextIfTestRunning: null
 
   # the string for the last serialised morph
   # is kept in here, to make serialization
@@ -950,12 +951,11 @@ class WorldMorph extends FrameMorph
     if event?
       event.preventDefault()
 
-  processCut: (event) ->
-    @systemTestsRecorderAndPlayer.addCutCommand
+  processCut: (event, clipboardTextIfTestRunning) ->
     console.log "processing cut"
     if @caret
       selectedText = @caret.target.selection()
-      if event.clipboardData
+      if event?.clipboardData
         event.preventDefault()
         setStatus = event.clipboardData.setData("text/plain", selectedText)
 
@@ -964,18 +964,24 @@ class WorldMorph extends FrameMorph
         setStatus = window.clipboardData.setData "Text", selectedText
       window.setTimeout ( => @caret.deleteLeft()), 50, true
 
-  processCopy: (event) ->
-    @systemTestsRecorderAndPlayer.addCopyCommand
+    @systemTestsRecorderAndPlayer.addCutCommand selectedText
+
+  processCopy: (event, clipboardTextIfTestRunning) ->
     console.log "processing copy"
     if @caret
-      selectedText = @caret.target.selection()
-      if event.clipboardData
+      if clipboardTextIfTestRunning?
+        selectedText = clipboardTextIfTestRunning
+      else
+        selectedText = @caret.target.selection()
+      if event?.clipboardData
         event.preventDefault()
         setStatus = event.clipboardData.setData("text/plain", selectedText)
 
       if window.clipboardData
         event.returnValue = false
         setStatus = window.clipboardData.setData "Text", selectedText
+
+    @systemTestsRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (event, text) ->
     if @caret

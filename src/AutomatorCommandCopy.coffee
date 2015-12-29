@@ -3,8 +3,10 @@
 
 class AutomatorCommandCopy extends AutomatorCommand
 
+  clipboardText: ""
+
   @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.worldMorph.processCopy null
+    systemTestsRecorderAndPlayer.worldMorph.processCopy null, commandBeingPlayed.clipboardText
 
   constructor: (@clipboardText, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)

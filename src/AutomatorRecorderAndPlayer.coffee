@@ -365,7 +365,7 @@ class AutomatorRecorderAndPlayer
 
   addCutCommand: () ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandCut @
+    systemTestCommand = new AutomatorCommandCut null, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
