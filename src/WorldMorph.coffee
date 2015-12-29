@@ -157,6 +157,10 @@ class WorldMorph extends FrameMorph
   currentHighlightingMorphs: []
   morphsBeingHighlighted: []
 
+  morphsToBePinouted: []
+  currentPinoutingMorphs: []
+  morphsBeingPinouted: []
+
   isFloatDraggable: ->
     return false
 
@@ -655,11 +659,37 @@ class WorldMorph extends FrameMorph
     window.healingRectanglesPhase = false
     if trackChanges.length != 1 and trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
+
+  addPinoutingMorphs: ->
+    for eachPinoutingMorph in @currentPinoutingMorphs.slice()
+      if eachPinoutingMorph.morphThisMorphIsPinouting in @morphsToBePinouted
+        if eachPinoutingMorph.morphThisMorphIsPinouting.hasMaybeChangedGeometryOrPosition()
+          # reposition the pinout morph if needed
+          peekThroughBox = eachPinoutingMorph.morphThisMorphIsPinouting.clippedThroughBounds()
+          eachPinoutingMorph.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+
+      else
+        @currentPinoutingMorphs.remove eachPinoutingMorph
+        @morphsBeingPinouted.remove eachPinoutingMorph.morphThisMorphIsPinouting
+        eachPinoutingMorph.morphThisMorphIsPinouting = null
+        eachPinoutingMorph.destroy()
+
+    for eachMorphNeedingPinout in @morphsToBePinouted.slice()
+      if eachMorphNeedingPinout not in @morphsBeingPinouted
+        hM = new StringMorph2(eachMorphNeedingPinout.toString())
+        world.add hM
+        hM.morphThisMorphIsPinouting = eachMorphNeedingPinout
+        peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
+        hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
+        hM.setColor new Color(0, 0, 255)
+        hM.setWidth 400
+        @currentPinoutingMorphs.push hM
+        @morphsBeingPinouted.push eachMorphNeedingPinout
   
   addHighlightingMorphs: ->
     for eachHighlightingMorph in @currentHighlightingMorphs.slice()
       if eachHighlightingMorph.morphThisMorphIsHighlighting in @morphsToBeHighlighted
-        if eachHighlightingMorph.morphThisMorphIsHighlighting in window.morphsThatMaybeChangedFullGeometryOrPosition
+        if eachHighlightingMorph.morphThisMorphIsHighlighting.hasMaybeChangedGeometryOrPosition()
           eachHighlightingMorph.rawSetBounds eachHighlightingMorph.morphThisMorphIsHighlighting.clippedThroughBounds()
       else
         @currentHighlightingMorphs.remove eachHighlightingMorph
@@ -668,7 +698,6 @@ class WorldMorph extends FrameMorph
         eachHighlightingMorph.destroy()
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
-      debugger
       if eachMorphNeedingHighlight not in @morphsBeingHighlighted
         hM = new Morph()
         world.add hM
@@ -687,6 +716,7 @@ class WorldMorph extends FrameMorph
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @recalculateLayouts()
+    @addPinoutingMorphs()
     @addHighlightingMorphs()
     @updateBroken()
     WorldMorph.frameCount++

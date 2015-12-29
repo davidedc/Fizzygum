@@ -110,9 +110,40 @@ class Morph extends MorphicNode
 
   textDescription: null
 
+  # note that not all the changed morphs have this flag set
+  # because if a parent does a fullChange, we don't set this
+  # flag in the children. This is intentionally so,
+  # as we don't want to navigate the children too many times.
+  # If you want to know whether a morph has changed its
+  # position, use the hasMaybeChangedGeometryOrPosition:
+  # method instead, which looks at this flag (and another one).
+  # See comment below on fullGeometryOrPositionPossiblyChanged
+  # for more information.
   geometryOrPositionPossiblyChanged: false
   clippedBoundsWhenLastPainted: null
 
+  # you'd be tempted to check this flag to figure out
+  # whether any morph has possibly changed position but
+  # you can't. If a PARENT has done a fullChanged, the
+  # children are NOT set this flag. This flag is set
+  # only for the parent morph, and it's important that
+  # it stays that way for how the mechanism for fleshing out
+  # the broken rectangles works. We flesh out the rectangles
+  # of the "fully broken" morphs separately looking at this
+  # flag, and we remove the rectangles of the sub-morphs that
+  # have a parent with this flag since we know that they are
+  # already covered.
+  # If you want to figure out whether a morph has changed,
+  # use the hasMaybeChangedGeometryOrPosition: method,
+  # which checks recursively with the parents both the
+  # fullGeometryOrPositionPossiblyChanged flag and the
+  # geometryOrPositionPossiblyChanged flag.
+  # Another way of doing this is to mark with a special flag
+  # all the morph that touch their bounds or positions, but
+  # then it's sort of costly to un-set such flag in all such
+  # morphs, as we'd have to keep the "changed" morphs in a special
+  # array to do that. Seems quite a bit more work and complication,
+  # so just use the method.
   fullGeometryOrPositionPossiblyChanged: false
   fullClippedBoundsWhenLastPainted: null
 
@@ -1442,7 +1473,23 @@ class Morph extends MorphicNode
         @geometryOrPositionPossiblyChanged = true
 
     @parent.childChanged @  if @parent
+
+  # to actually make sure if a morph has changed
+  # position, you need to check it and all its
+  # parents.
+  # See comment on the fullGeometryOrPositionPossiblyChanged
+  # property above for more info.
+  hasMaybeChangedGeometryOrPosition: ->
+    if @fullGeometryOrPositionPossiblyChanged or @geometryOrPositionPossiblyChanged
+      return true
+    else
+      if @parent?
+        return @parent.hasMaybeChangedGeometryOrPosition()
+      else
+        return false
   
+  # See comment on the fullGeometryOrPositionPossiblyChanged
+  # property above for more info.
   fullChanged: ->
     if trackChanges[trackChanges.length - 1]
       if !@fullGeometryOrPositionPossiblyChanged
@@ -2046,6 +2093,12 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
+  showOutputPins: (a,b,c,d) ->
+    world.morphsToBePinouted.push b
+
+  removeOutputPins: (a,b,c,d) ->
+    world.morphsToBePinouted.remove b
+
   testMenu: (ignored,targetMorph)->
     menu = new MenuMorph(false, targetMorph, true, true, null)
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
@@ -2059,6 +2112,10 @@ class Morph extends MorphicNode
     menu.addItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    if targetMorph in world.morphsToBePinouted
+      menu.addItem "remove output pins", true, @, "removeOutputPins"
+    else
+      menu.addItem "show output pins", true, @, "showOutputPins"
 
     menu.popUpAtHand(@firstContainerMenu())
 

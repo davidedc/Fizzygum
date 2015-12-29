@@ -54,7 +54,8 @@ class HandMorph extends Morph
         (m not instanceof ShadowMorph) and
         # exclude morphs we use for highlighting
         # other morphs
-        !m.morphThisMorphIsHighlighting?
+        !m.morphThisMorphIsHighlighting? and
+        !m.morphThisMorphIsPinouting?
     if result?
       return result
     else
