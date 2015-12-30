@@ -85,7 +85,8 @@ class ScrollFrameMorph extends FrameMorph
     return alpha
 
   anyScrollBarShowing: ->
-    if @hBar.visibleBasedOnIsVisibleProperty() or @vBar.visibleBasedOnIsVisibleProperty()
+    if (@hBar.visibleBasedOnIsVisibleProperty() and !@hBar.isCollapsed()) or
+    (@vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isCollapsed())
       return true
     return false
 
@@ -285,11 +286,13 @@ class ScrollFrameMorph extends FrameMorph
         (!world.hand.floatDraggingSomething()) and
         (@boundsContainPoint(world.hand.position()))
           newPos = world.hand.position()
-          if @hBar.visibleBasedOnIsVisibleProperty()
+          if @hBar.visibleBasedOnIsVisibleProperty() and
+          !@hBar.isCollapsed()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
               scrollbarJustChanged = scrollbarJustChanged || @scrollX deltaX
-          if @vBar.visibleBasedOnIsVisibleProperty()
+          if @vBar.visibleBasedOnIsVisibleProperty() and
+          !@vBar.isCollapsed()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
               scrollbarJustChanged = scrollbarJustChanged || @scrollY deltaY
@@ -301,11 +304,13 @@ class ScrollFrameMorph extends FrameMorph
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
           else
-            if @hBar.visibleBasedOnIsVisibleProperty()
+            if @hBar.visibleBasedOnIsVisibleProperty() and
+            !@hBar.isCollapsed()
               deltaX = deltaX * friction
               if deltaX isnt 0
                 scrollbarJustChanged = scrollbarJustChanged || @scrollX Math.round(deltaX)
-            if @vBar.visibleBasedOnIsVisibleProperty()
+            if @vBar.visibleBasedOnIsVisibleProperty() and
+            !@vBar.isCollapsed()
               deltaY = deltaY * friction
               if deltaY isnt 0
                 scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)

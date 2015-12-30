@@ -94,7 +94,9 @@ BackBufferMixin =
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
         @repaintBackBufferIfNeeded()
-        if !@visibleBasedOnIsVisibleProperty() or !@backBuffer?
+        if !@visibleBasedOnIsVisibleProperty() or
+        @isCollapsed() or
+        !@backBuffer?
           return null
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

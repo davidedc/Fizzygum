@@ -59,6 +59,7 @@ class FrameMorph extends Morph
     # control the properties of one of its submorphs)
     result = []
     if @visibleBasedOnIsVisibleProperty() and
+        !@isCollapsed() and
         !theMorph.containedInParentsOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -102,7 +103,7 @@ class FrameMorph extends Morph
 
   SLOWfullClippedBounds: ->
     shadow = @getShadowMorph()
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
     else if shadow?
       result = @clippedThroughBounds().merge(shadow.bounds)
@@ -138,11 +139,11 @@ class FrameMorph extends Morph
     @cachedFullBounds = result
 
   fullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
     else
       if @cachedFullClippedBounds?
-        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+        if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
           if world.doubleCheckCachedMethodsResults
             if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
               debugger
@@ -160,7 +161,7 @@ class FrameMorph extends Morph
         debugger
         alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->

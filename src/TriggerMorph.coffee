@@ -127,7 +127,7 @@ class TriggerMorph extends Morph
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if !@visibleBasedOnIsVisibleProperty()
+    if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       return null
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

@@ -36,12 +36,12 @@ class HandMorph extends Morph
     @silentRawSetBounds Rectangle.EMPTY
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
   
@@ -50,6 +50,7 @@ class HandMorph extends Morph
     result = @world.topMorphSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
         m.visibleBasedOnIsVisibleProperty() and
+        !m.isCollapsed() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
         (m not instanceof ShadowMorph) and
         # exclude morphs we use for highlighting
@@ -64,7 +65,9 @@ class HandMorph extends Morph
   menuAtPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
-        m.visibleBasedOnIsVisibleProperty() and (m.noticesTransparentClick or
+        m.visibleBasedOnIsVisibleProperty() and
+        !m.isCollapsed() and
+        (m.noticesTransparentClick or
         (not m.isTransparentAt(@position()))) and (m instanceof MenuMorph)
     return result
 
@@ -105,7 +108,9 @@ class HandMorph extends Morph
   # not used in ZK yet
   allMorphsAtPointer: ->
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
-      m.visibleBasedOnIsVisibleProperty() and m.clippedThroughBounds().containsPoint(@position())
+      m.visibleBasedOnIsVisibleProperty() and
+      !m.isCollapsed() and
+      m.clippedThroughBounds().containsPoint(@position())
   
   
   

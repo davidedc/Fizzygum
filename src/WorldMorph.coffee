@@ -146,6 +146,7 @@ class WorldMorph extends FrameMorph
   @frameCount: 0
   @numberOfAddsAndRemoves: 0
   @numberOfVisibilityFlagsChanges: 0
+  @numberOfCollapseFlagsChanges: 0
   @numberOfRawMovesAndResizes: 0
 
   broken: null
@@ -367,12 +368,12 @@ class WorldMorph extends FrameMorph
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
 
   clippedThroughBounds: ->
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox()
     return @clippedThroughBoundsCache
 
   clipThrough: ->
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clipThroughCache = @boundingBox()
     return @clipThroughCache
 
@@ -491,7 +492,7 @@ class WorldMorph extends FrameMorph
       # check whether the Morph is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage()
+      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
         # @clippedThroughBounds() should be smaller area
         # than bounds because it clips
         # the bounds based on the clipping morphs up the
@@ -534,7 +535,7 @@ class WorldMorph extends FrameMorph
       # check whether the Morph is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
-      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage()
+      unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
 
         boundsToBeChanged = brokenMorph.fullClippedBounds()
 
@@ -1581,7 +1582,9 @@ class WorldMorph extends FrameMorph
   
   showAllMinimised: ->
     @forAllChildrenBottomToTop (child) ->
-      child.unminimise() if !child.visibleBasedOnIsVisibleProperty()
+      if !child.visibleBasedOnIsVisibleProperty() or
+      child.isCollapsed()
+        child.unminimise()
   
   about: ->
     @inform "Zombie Kernel\n\n" +

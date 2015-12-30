@@ -87,6 +87,7 @@ class Morph extends MorphicNode
   # painted on screen, so it makes sense to have
   # two separate flags.
   isVisible: true
+  collapsed: false
 
   # if a morph is a "template" it means that
   # when you floatDrag it, it creates a copy of itself.
@@ -580,6 +581,7 @@ class Morph extends MorphicNode
     # control the properties of one of its submorphs)
     result = []
     if @visibleBasedOnIsVisibleProperty() and
+        !@isCollapsed() and
         !theMorph.containedInParentsOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -598,7 +600,7 @@ class Morph extends MorphicNode
   # for morphs that marked themselves
   # as broken but at moment of destination
   # might be invisible
-  surelyNotShowingUpOnScreenBasedOnVisibilityAndOrphanage: ->
+  surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage: ->
     if !@isVisible
       return true
 
@@ -606,6 +608,9 @@ class Morph extends MorphicNode
       return true
 
     if !@visibleBasedOnIsVisibleProperty()
+      return true
+
+    if @isCollapsed()
       return true
 
     return false
@@ -624,19 +629,19 @@ class Morph extends MorphicNode
     if !@isVisible
       # I'm not sure updating the cache here does
       # anything but it's two lines so let's do it
-      @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+      @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
       @visibleBasedOnIsVisiblePropertyCache = false
       result = @visibleBasedOnIsVisiblePropertyCache
     else # @isVisible is true
       if !@parent?
         result = true
       else
-        if @checkVisibleBasedOnIsVisiblePropertyCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+        if @checkVisibleBasedOnIsVisiblePropertyCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
           #console.log "cache hit visibleBasedOnIsVisibleProperty"
           result = @visibleBasedOnIsVisiblePropertyCache
         else
           #console.log "cache miss visibleBasedOnIsVisibleProperty"
-          @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges
+          @checkVisibleBasedOnIsVisiblePropertyCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges
           @visibleBasedOnIsVisiblePropertyCache = @parent.visibleBasedOnIsVisibleProperty()
           result = @visibleBasedOnIsVisiblePropertyCache
 
@@ -678,16 +683,17 @@ class Morph extends MorphicNode
   SLOWfullBounds: ->
     result = @bounds
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty()
+      if child.visibleBasedOnIsVisibleProperty() and
+      !child.isCollapsed()
         result = result.merge(child.SLOWfullBounds())
     result
 
   SLOWfullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       return Rectangle.EMPTY
     result = @clippedThroughBounds()
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty()
+      if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
         result = result.merge(child.SLOWfullClippedBounds())
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
@@ -713,7 +719,7 @@ class Morph extends MorphicNode
 
     result = @bounds
     @children.forEach (child) ->
-      if child.visibleBasedOnIsVisibleProperty()
+      if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
         result = result.merge(child.fullBounds())
 
     if world.doubleCheckCachedMethodsResults
@@ -731,10 +737,10 @@ class Morph extends MorphicNode
   # we do take into account orphanage and
   # visibility.
   fullClippedBounds: ->
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
     else
-      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+      if @checkFullClippedBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
         if world.doubleCheckCachedMethodsResults
           if !@cachedFullClippedBounds.eq @SLOWfullClippedBounds()
             debugger
@@ -748,7 +754,7 @@ class Morph extends MorphicNode
 
       result = @clippedThroughBounds()
       @children.forEach (child) ->
-        if child.visibleBasedOnIsVisibleProperty()
+        if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
           result = result.merge(child.fullClippedBounds())
 
     if world.doubleCheckCachedMethodsResults
@@ -756,14 +762,14 @@ class Morph extends MorphicNode
         debugger
         alert "fullClippedBounds is broken"
 
-    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
   fullBoundsNoShadow: ->
     # answer my full bounds but ignore any shadow
     result = @bounds
     @children.forEach (child) ->
-      if (child not instanceof ShadowMorph) and (child.visibleBasedOnIsVisibleProperty())
+      if (child not instanceof ShadowMorph) and (child.visibleBasedOnIsVisibleProperty()) and (!child.isCollapsed()) 
         result = result.merge(child.fullBoundsNoShadow())
     result
 
@@ -776,20 +782,20 @@ class Morph extends MorphicNode
   # visibility.
   clippedThroughBounds: ->
 
-    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
+    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
       #console.log "cache hit @checkClippedThroughBoundsCache"
       return @clippedThroughBoundsCache
     #else
     #  console.log "cache miss @checkClippedThroughBoundsCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClippedThroughBoundsCache
     #  #debugger
 
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+      @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clippedThroughBoundsCache = Rectangle.EMPTY
       return @clippedThroughBoundsCache 
 
-    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClippedThroughBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @clippedThroughBoundsCache = @boundingBox().intersect @clipThrough()
     return @clippedThroughBoundsCache
   
@@ -805,16 +811,16 @@ class Morph extends MorphicNode
     if @ == Window
       debugger
 
-    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
+    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
       #console.log "cache hit @checkClipThroughCache"
       return @clipThroughCache
     #else
     #  console.log "cache miss @checkClipThroughCache"
-    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
+    #  #console.log (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes) + " cache: " + @checkClipThroughCache
     #  #debugger
 
-    if @isOrphan() or !@visibleBasedOnIsVisibleProperty()
-      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
+      @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache 
 
@@ -822,7 +828,7 @@ class Morph extends MorphicNode
     if !firstFrameParent?
       firstFrameParent = world
     firstFrameClipThroughBounds = firstFrameParent.clipThrough()
-    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
+    @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     if @ instanceof FrameMorph
       @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
     else
@@ -1225,6 +1231,9 @@ class Morph extends MorphicNode
     if (aContext == world.worldCanvasContext) and (!@visibleBasedOnIsVisibleProperty())
       return true
 
+    if (aContext == world.worldCanvasContext) and (@isCollapsed())
+      return true
+
     return false
 
   recordDrawnAreaForNextBrokenRects: ->
@@ -1274,6 +1283,8 @@ class Morph extends MorphicNode
     @fullChanged()
 
   show: ->
+    if @isVisible
+      return
     if @visibleBasedOnIsVisibleProperty() == true
       return
     @isVisible = true
@@ -1282,20 +1293,48 @@ class Morph extends MorphicNode
     @invalidateFullClippedBoundsCache(@)
     @fullChanged()
   
-  minimise: ->
-    @hide()
-  
-  unminimise: ->
-    @show()
-  
-  
   toggleVisibility: ->
     @isVisible = (not @isVisible)
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache(@)
     @invalidateFullClippedBoundsCache(@)
     @fullChanged()
+
+  collapse: ->
+    @collapsed = true
+    WorldMorph.numberOfCollapseFlagsChanges++
+    @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
+    @invalidateLayout()
+    @fullChanged()
+
+  unCollapse: ->
+    if !@collapsed
+      return
+    if !@isCollapsed()
+      return
+    @collapsed = false
+    WorldMorph.numberOfCollapseFlagsChanges++
+    @invalidateFullBoundsCache(@)
+    @invalidateFullClippedBoundsCache(@)
+    @invalidateLayout()
+    @fullChanged()
+
   
+  isCollapsed: ->
+    if @collapsed
+      return true
+    else
+      if @parent?
+        return @parent.isCollapsed()
+      else
+        return false
+  
+  minimise: ->
+    @hide()
+  
+  unminimise: ->
+    @show()  
   
   # Morph full image:
   
@@ -2116,6 +2155,10 @@ class Morph extends MorphicNode
       menu.addItem "remove output pins", true, @, "removeOutputPins"
     else
       menu.addItem "show output pins", true, @, "showOutputPins"
+    if targetMorph.collapsed
+      menu.addItem "un-collapse", true, @, "unCollapse"
+    else
+      menu.addItem "collapse", true, @, "collapse"
 
     menu.popUpAtHand(@firstContainerMenu())
 
@@ -2527,15 +2570,19 @@ class Morph extends MorphicNode
   # layouts will have a minimum equal to the sum of minimums
   # of the contents.
   getDesiredDim: ->
+    if @isCollapsed() then return new Point 0,0
     @getRecursiveDesiredDim()
   getMinDim: ->
+    if @isCollapsed() then return new Point 0,0
     @getRecursiveMinDim()
   getMaxDim: ->
+    if @isCollapsed() then return new Point 0,0
     maxDim = new Point @maxWidth, @maxHeight
     return maxDim.max @getDesiredDim()
 
 
   getRecursiveDesiredDim: ->
+    if @isCollapsed() then return new Point 0,0
     
     # TBD the exact shape of @checkDesiredDimCache
     #if @checkDesiredDimCache
@@ -2566,6 +2613,7 @@ class Morph extends MorphicNode
 
 
   getRecursiveMinDim: ->
+    if @isCollapsed() then return new Point 0,0
     # TBD the exact shape of @checkMinDimCache
     #if @checkMinDimCache
     #  # the user might have forced the "desired" to
@@ -2598,6 +2646,7 @@ class Morph extends MorphicNode
     return @minDimCache.min @getRecursiveMaxDim()
 
   getRecursiveMaxDim: ->
+    if @isCollapsed() then return new Point 0,0
 
     # TBD the exact shape of @checkMaxDimCache
     #if @checkMaxDimCache
@@ -2631,13 +2680,19 @@ class Morph extends MorphicNode
     return @maxDimCache
 
   countOfChildrenToLayout: ->
+    if @isCollapsed() then return 0
     count = 0
     for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+      !C.isCollapsed()
         count++
     return count
 
   doLayout: (newBoundsForThisLayout = @boundingBox()) ->
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
 
     #if (@ instanceof LayoutableMorph) and (newBoundsForThisLayout.eq @boundingBox())
     #  debugger
