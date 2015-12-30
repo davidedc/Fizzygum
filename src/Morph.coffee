@@ -177,6 +177,8 @@ class Morph extends MorphicNode
   # morph that this morph is supposed to highlight
   morphThisMorphIsHighlighting: null
 
+  destroyed: false
+
   mouseClickRight: ->
     world.hand.openContextMenuAtPointer @
 
@@ -392,6 +394,7 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+    @destroyed = true
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
@@ -1331,11 +1334,17 @@ class Morph extends MorphicNode
         return false
   
   minimise: ->
-    @hide()
-  
-  unminimise: ->
-    @show()  
-  
+    debugger
+    myPosition = @positionAmongSiblings()
+    morphToAdd = new UnMinimiserMorph2 @
+    @parent.add morphToAdd, myPosition
+    morphToAdd.fullMoveTo @position()
+    morphToAdd.setExtent new Point 150, 20
+    morphToAdd.fullChanged()
+    @parent.removeChild @
+    @fullChanged()
+
+    
   # Morph full image:
   
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
@@ -2155,10 +2164,15 @@ class Morph extends MorphicNode
       menu.addItem "remove output pins", true, @, "removeOutputPins"
     else
       menu.addItem "show output pins", true, @, "showOutputPins"
+    
+    # unclear whether the "un-collapse" entry would ever be
+    # visible.
     if targetMorph.collapsed
       menu.addItem "un-collapse", true, @, "unCollapse"
     else
       menu.addItem "collapse", true, @, "collapse"
+
+    menu.addItem "minimise", true, @, "minimise"
 
     menu.popUpAtHand(@firstContainerMenu())
 
@@ -2173,7 +2187,7 @@ class Morph extends MorphicNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
 
-  developersMenu: ->
+  developersMenuOfMorph: ->
     # 'name' is not an official property of a function, hence:
     userMenu = @userMenu() or (@parent and @parent.userMenu())
     menu = new MenuMorph(false, 
@@ -2235,13 +2249,15 @@ class Morph extends MorphicNode
       menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
     else
       menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
-    menu.addItem "hide", true, @, "minimise"
+    menu.addItem "hide", true, @, "hide"
     menu.addItem "delete", true, @, "destroy"
     menu
+
+  developersMenu: ->
+    return @developersMenuOfMorph()
   
   userMenu: ->
-    null
-  
+    null  
   
   # Morph menu actions
   calculateAlphaScaled: (alpha) ->
