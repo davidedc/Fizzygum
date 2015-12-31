@@ -52,10 +52,11 @@ class DestroyIconMorph extends Morph
       else
         aContext.translate 0,(height-squareDim)/2
 
-      aContext.scale squareDim/100, squareDim/100
+      squareSize = 100
+      aContext.scale squareDim/squareSize, squareDim/squareSize
 
-      ## at this point, you draw in a 100x100 canvas,
-      ## and it gets painted in a square that fits
+      ## at this point, you draw in a squareSize x squareSize
+      ## canvas, and it gets painted in a square that fits
       ## the morph, right in the middle.
       @drawingIconInSquare aContext
 
