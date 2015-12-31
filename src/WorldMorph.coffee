@@ -1522,8 +1522,9 @@ class WorldMorph extends FrameMorph
     @create foo
   createNewPenMorph: ->
     @create new PenMorph()
-  viewAll: ->
-    newMorph = new MorphsListMorph()
+  underTheCarpet: ->
+    #newMorph = new MorphsListMorph()
+    newMorph = new UnderTheCarpetMorph()
     @create newMorph
   closingWindow: ->
     newMorph = new WorkspaceMorph()
@@ -1560,7 +1561,7 @@ class WorldMorph extends FrameMorph
     menu.addLine()
     menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
     menu.addLine()
-    menu.addItem "view all...", true, @, "viewAll"
+    menu.addItem "under the carpet", true, @, "underTheCarpet"
     menu.addItem "closing window", true, @, "closingWindow"
     
     menu.popUpAtHand(a.firstContainerMenu())
