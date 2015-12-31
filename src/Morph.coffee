@@ -2147,6 +2147,15 @@ class Morph extends MorphicNode
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
 
+  createUncollapsedStateIconMorph: ->
+    world.create new UncollapsedStateIconMorph()
+
+  createCollapsedStateIconMorph: ->
+    world.create new CollapsedStateIconMorph()
+
+  createCloseIconMorph: ->
+    world.create new CloseIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2188,6 +2197,9 @@ class Morph extends MorphicNode
     menu = new MenuMorph(false, @, true, true, "some icons")
     menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
     menu.addItem "UnderCarpetIconMorph", true, @, "createUnderCarpetIconMorph"
+    menu.addItem "CollapsedStateIconMorph", true, @, "createCollapsedStateIconMorph"
+    menu.addItem "UncollapsedStateIconMorph", true, @, "createUncollapsedStateIconMorph"
+    menu.addItem "CloseIconMorph", true, @, "createCloseIconMorph"
 
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
 
