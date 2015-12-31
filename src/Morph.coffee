@@ -2144,6 +2144,9 @@ class Morph extends MorphicNode
   createDestroyIconMorph: ->
     world.create new DestroyIconMorph()
 
+  createUnderCarpetIconMorph: ->
+    world.create new UnderCarpetIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2184,6 +2187,8 @@ class Morph extends MorphicNode
   popUpIconsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph(false, @, true, true, "some icons")
     menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
+    menu.addItem "UnderCarpetIconMorph", true, @, "createUnderCarpetIconMorph"
+
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
 
   serialiseToMemory: ->
