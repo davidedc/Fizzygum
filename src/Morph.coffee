@@ -2147,7 +2147,7 @@ class Morph extends MorphicNode
   removeOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.remove b
 
-  testMenu: (ignored,targetMorph)->
+  testMenu: (a,targetMorph)->
     menu = new MenuMorph(false, targetMorph, true, true, null)
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
@@ -2174,7 +2174,8 @@ class Morph extends MorphicNode
 
     menu.addItem "minimise", true, @, "minimise"
 
-    menu.popUpAtHand(@firstContainerMenu())
+
+    menu.popUpAtHand(a.firstContainerMenu())
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
