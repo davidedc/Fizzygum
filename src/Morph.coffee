@@ -2141,6 +2141,9 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
+  createDestroyIconMorph: ->
+    world.create new DestroyIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2173,9 +2176,15 @@ class Morph extends MorphicNode
       menu.addItem "collapse", true, @, "collapse"
 
     menu.addItem "minimise", true, @, "minimise"
+    menu.addItem "icons ➜", false, @, "popUpIconsMenu", "some icons"
 
 
     menu.popUpAtHand(a.firstContainerMenu())
+
+  popUpIconsMenu: (morphTriggeringThis) ->
+    menu = new MenuMorph(false, @, true, true, "some icons")
+    menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
+    menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
