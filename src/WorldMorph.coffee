@@ -1106,6 +1106,28 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "contextmenu", @contextmenuEventListener, false
     
     @keydownEventListener = (event) =>
+
+      # this paragraph is to prevent the browser going
+      # "back button" when the user presses delete backspace.
+      # taken from http://stackoverflow.com/a/2768256
+      doPrevent = false
+      if event.keyCode == 8
+        d = event.srcElement or event.target
+        if d.tagName.toUpperCase() == 'INPUT' and
+        (d.type.toUpperCase() == 'TEXT' or
+          d.type.toUpperCase() == 'PASSWORD' or
+          d.type.toUpperCase() == 'FILE' or
+          d.type.toUpperCase() == 'SEARCH' or
+          d.type.toUpperCase() == 'EMAIL' or
+          d.type.toUpperCase() == 'NUMBER' or
+          d.type.toUpperCase() == 'DATE') or
+        d.tagName.toUpperCase() == 'TEXTAREA'
+          doPrevent = d.readOnly or d.disabled
+        else
+          doPrevent = true
+      if doPrevent
+        event.preventDefault()
+
       @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keydown", @keydownEventListener, false
 
