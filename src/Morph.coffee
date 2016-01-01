@@ -2196,18 +2196,22 @@ class Morph extends MorphicNode
       menu.addItem "collapse", true, @, "collapse"
 
     menu.addItem "minimise", true, @, "minimise"
-    menu.addItem "icons ➜", false, @, "popUpIconsMenu", "some icons"
+    menu.addItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
     menu.popUpAtHand(a.firstContainerMenu())
 
-  popUpIconsMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph(false, @, true, true, "some icons")
+  underTheCarpetIconAndText: ->
+    world.create new UnderTheCarpetOpenerMorph()
+
+  popUpSecondMenu: (morphTriggeringThis) ->
+    menu = new MenuMorph(false, @, true, true, "others")
     menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
     menu.addItem "UnderCarpetIconMorph", true, @, "createUnderCarpetIconMorph"
     menu.addItem "CollapsedStateIconMorph", true, @, "createCollapsedStateIconMorph"
     menu.addItem "UncollapsedStateIconMorph", true, @, "createUncollapsedStateIconMorph"
     menu.addItem "CloseIconMorph", true, @, "createCloseIconMorph"
+    menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
 
