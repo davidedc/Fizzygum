@@ -1839,8 +1839,9 @@ class Morph extends MorphicNode
     if @parent?
       @parent.propagateKillMenus()
 
-  mouseClickLeft: ->
+  mouseClickLeft: (pos) ->
     @bringToForegroud()
+    @escalateEvent("mouseClickLeft", pos)
 
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?

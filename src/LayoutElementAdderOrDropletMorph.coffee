@@ -117,8 +117,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
     @drawHandle(context)
 
   mouseClickLeft: ->
-    super
-
+    @bringToForegroud()
     # if the adder/droplet is on its own, free floating, then
     # put a supporting morph underneath it and put the adder/droplet
     # in a layout.

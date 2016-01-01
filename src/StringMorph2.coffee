@@ -795,7 +795,7 @@ class StringMorph2 extends Morph
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
-    super
+    @bringToForegroud()
     if @isEditable
       @clearSelection()
       # doesn't matter what we set editResult to initially,

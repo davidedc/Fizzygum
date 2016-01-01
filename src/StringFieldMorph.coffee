@@ -58,7 +58,7 @@ class StringFieldMorph extends FrameMorph
     @text.text
   
   mouseClickLeft: (pos)->
-    super()
+    @bringToForegroud()
     if @isEditable
       @text.edit()
     else
