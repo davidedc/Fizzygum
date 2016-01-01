@@ -390,6 +390,12 @@ class Morph extends MorphicNode
   toStringWithoutGeometry: ->
     "a " +
       @uniqueIDString()
+
+  close: ->
+    if world.underTheCarpetMorph?
+      world.underTheCarpetMorph.scrollFrame.addContents @
+    else
+      world.inform "There is no\ncarpet to go under!"
   
   
   # Morph deleting:
@@ -1342,7 +1348,7 @@ class Morph extends MorphicNode
 
   minimise: ->
     myPosition = @positionAmongSiblings()
-    morphToAdd = new UnMinimiserMorph2 @
+    morphToAdd = new UnMinimiserMorph3 @
     @parent.add morphToAdd, myPosition
     morphToAdd.fullMoveTo @position()
     morphToAdd.setExtent new Point 150, 20

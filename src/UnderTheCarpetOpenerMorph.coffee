@@ -9,7 +9,6 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
   scrollFrame: null
   buttonClose: null
   resizer: null
-  underTheCarpetMorph: null
 
   constructor: (target) ->
     super()
@@ -30,16 +29,18 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
     @fullRawMoveTo new Point(10 + 60 * 0, 30 + 50 * 1)
+    if !world.underTheCarpetMorph?
+      world.underTheCarpetMorph = new UnderTheCarpetMorph()
 
     new HandleMorph @
 
   mouseClickLeft: ->
-    if @underTheCarpetMorph?.destroyed
-      @underTheCarpetMorph = null
+    if world.underTheCarpetMorph?.destroyed
+      world.underTheCarpetMorph = null
 
-    if @underTheCarpetMorph?
-      @underTheCarpetMorph.pickUp()
+    if world.underTheCarpetMorph?
+      world.underTheCarpetMorph.pickUp()
       return
 
-    @underTheCarpetMorph = new UnderTheCarpetMorph()
-    world.create @underTheCarpetMorph
+    world.underTheCarpetMorph = new UnderTheCarpetMorph()
+    world.create world.underTheCarpetMorph

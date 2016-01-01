@@ -6,10 +6,10 @@ class CloseIconMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  #constructor: ->
-  #  super()
-  #  @setColor new Color(0, 0, 0)
+  target: null
 
+  constructor: (@target) ->
+    super()
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -75,3 +75,6 @@ class CloseIconMorph extends Morph
     context.strokeStyle = blackColor
     context.lineWidth = 1
     context.stroke()
+
+  mouseClickLeft: ->
+    @target.close()

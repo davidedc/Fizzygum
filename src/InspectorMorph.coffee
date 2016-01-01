@@ -205,7 +205,7 @@ class InspectorMorph extends BoxMorph
     @buttonClose = new TriggerMorph(true, @)
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
-    @buttonClose.action = "destroy"
+    @buttonClose.action = "close"
     @add @buttonClose
 
     # resizer

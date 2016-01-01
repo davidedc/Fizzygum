@@ -162,6 +162,8 @@ class WorldMorph extends FrameMorph
   currentPinoutingMorphs: []
   morphsBeingPinouted: []
 
+  underTheCarpetMorph: null
+
   isFloatDraggable: ->
     return false
 
@@ -231,6 +233,7 @@ class WorldMorph extends FrameMorph
   boot: ->
     # boot-up state machine
     console.log "booting"
+    @underTheCarpetMorph = new UnderTheCarpetMorph()
     WorldMorph.bootState = WorldMorph.JUST_STARTED
 
     ProfilingDataCollector.enableProfiling()
