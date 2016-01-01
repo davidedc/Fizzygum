@@ -14,6 +14,7 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
   constructor: (target) ->
     super()
 
+    @color = new Color(160, 160, 160)
     @noticesTransparentClick = true
 
     lmContent1 = new UnderCarpetIconMorph()
