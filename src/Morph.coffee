@@ -1334,7 +1334,6 @@ class Morph extends MorphicNode
         return false
   
   minimise: ->
-    debugger
     myPosition = @positionAmongSiblings()
     morphToAdd = new UnMinimiserMorph2 @
     @parent.add morphToAdd, myPosition

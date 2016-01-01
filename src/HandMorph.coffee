@@ -368,7 +368,6 @@ class HandMorph extends Morph
    # note that the button param is not used,
    # but adding it for consistency...
   processMouseUp: (button) ->
-
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
         fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime());
