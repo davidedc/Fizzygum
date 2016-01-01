@@ -1637,7 +1637,8 @@ class Morph extends MorphicNode
     # is outside the clipping Morph gets
     # painted over.
     owner = aMorph.parent
-    owner.removeChild aMorph  if owner?
+    if owner?
+      owner.removeChild aMorph
     aMorph.isMarkedForDestruction = false
     @addChild aMorph, position
     if !avoidExtentCalculation
