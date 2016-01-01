@@ -1333,6 +1333,13 @@ class Morph extends MorphicNode
       else
         return false
   
+  removeFromTree: ->
+    @parent?.invalidateLayout()
+    @breakNumberOfRawMovesAndResizesCaches()
+    WorldMorph.numberOfAddsAndRemoves++
+    @parent.removeChild @
+    @fullChanged()
+
   minimise: ->
     myPosition = @positionAmongSiblings()
     morphToAdd = new UnMinimiserMorph2 @
@@ -1340,8 +1347,7 @@ class Morph extends MorphicNode
     morphToAdd.fullMoveTo @position()
     morphToAdd.setExtent new Point 150, 20
     morphToAdd.fullChanged()
-    @parent.removeChild @
-    @fullChanged()
+    @removeFromTree()
 
     
   # Morph full image:

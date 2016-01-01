@@ -48,7 +48,7 @@ class UnderTheCarpetMorph extends BoxMorph
     # close button
     @buttonClose = new TriggerMorph(true, @)
     @buttonClose.setLabel "close"
-    @buttonClose.action = "destroy"
+    @buttonClose.action = "removeFromTree"
 
     @add @buttonClose
 
