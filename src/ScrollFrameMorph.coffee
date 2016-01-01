@@ -19,6 +19,16 @@ class ScrollFrameMorph extends FrameMorph
   vBar: null
   hBar: null
 
+  # there are several ways in which we allow
+  # scrolling when a scrollframe is scrollable
+  # (i.e. the scrollbars are showing).
+  # You can coose to scroll it by dragging the
+  # contents or by dragging the background,
+  # independently. Which could be useful for
+  # example when showing a geographic map.
+  canScrollByDraggingBackground: false
+  canScrollByDraggingForeground: false
+
   constructor: (@contents, scrollBarSize, @sliderColor) ->
     # super() paints the scrollframe, which we don't want,
     # so we set 0 opacity here.
@@ -89,6 +99,11 @@ class ScrollFrameMorph extends FrameMorph
     (@vBar.visibleBasedOnIsVisibleProperty() and !@vBar.isCollapsed())
       return true
     return false
+
+  isFloatDraggable: ->
+    if @canScrollByDraggingBackground and @anyScrollBarShowing()
+      return false
+    true
 
   adjustScrollBars: ->
     hWidth = @width() - @scrollBarSize

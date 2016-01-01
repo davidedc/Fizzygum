@@ -1785,10 +1785,11 @@ class Morph extends MorphicNode
       maybeScrollFrameMorphAncestor = @parentThatIsA(ScrollFrameMorph)
       if maybeScrollFrameMorphAncestor?
         maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
-        if !maybeScrollFrameMorphAncestor.anyScrollBarShowing()
-          return true
-        else
+        if maybeScrollFrameMorphAncestor.canScrollByDraggingForeground and
+        maybeScrollFrameMorphAncestor.anyScrollBarShowing()
           return false
+        else
+          return true
 
       if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)
         return true

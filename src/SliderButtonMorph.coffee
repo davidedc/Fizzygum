@@ -67,7 +67,8 @@ class SliderButtonMorph extends CircleBoxMorph
       @silentFullRawMoveTo new Point(posX, posY).add(@parent.position())
       @notifyChildrenThatParentHasReLayouted()
 
-
+  isFloatDraggable: ->
+    false
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart
