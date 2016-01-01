@@ -22,7 +22,7 @@ class ScrollFrameMorph extends FrameMorph
   # there are several ways in which we allow
   # scrolling when a scrollframe is scrollable
   # (i.e. the scrollbars are showing).
-  # You can coose to scroll it by dragging the
+  # You can choose to scroll it by dragging the
   # contents or by dragging the background,
   # independently. Which could be useful for
   # example when showing a geographic map.
