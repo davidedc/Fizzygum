@@ -1600,15 +1600,7 @@ class Morph extends MorphicNode
     if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       @invalidateLayout()
 
-    # the morph that is being
-    # attached might be attached to
-    # a clipping morph. So we
-    # need to do a "changed" here
-    # to make sure that anything that
-    # is outside the clipping Morph gets
-    # painted over.
-    if aMorph.parent?
-      aMorph.changed()
+    aMorph.fullChanged()
     @silentAdd(aMorph, true, position)
     aMorph.imBeingAddedTo @
     return aMorph
