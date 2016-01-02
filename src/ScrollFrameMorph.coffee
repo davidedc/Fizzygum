@@ -37,7 +37,7 @@ class ScrollFrameMorph extends FrameMorph
     @scrollBarSize = scrollBarSize or WorldMorph.preferencesAndSettings.scrollBarSize
 
     @contents = new FrameMorph(@) unless @contents?
-    @add @contents
+    @addRaw @contents
 
     # the scrollFrame is never going to paint itself,
     # but its values are going to mimick the values of the
@@ -52,12 +52,12 @@ class ScrollFrameMorph extends FrameMorph
     @hBar.rawSetHeight @scrollBarSize
 
     @hBar.target = @
-    @add @hBar
+    @addRaw @hBar
 
     @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
     @vBar.rawSetWidth @scrollBarSize
     @vBar.target = @
-    @add @vBar
+    @addRaw @vBar
 
     @hBar.target = @
     @hBar.action = "adjustContentsBasedOnHBar"
@@ -168,7 +168,7 @@ class ScrollFrameMorph extends FrameMorph
       else
         @vBar.hide()
   
-  addContents: (aMorph) ->
+  add: (aMorph) ->
     @contents.add aMorph
     @adjustContentsBounds()
     @adjustScrollBars()
@@ -176,7 +176,7 @@ class ScrollFrameMorph extends FrameMorph
   # puts the morph in the scrollframe
   # in some sparse manner and keeping it
   # "in view"
-  addContentsInPseudoRandomPosition: (aMorph) ->
+  addInPseudoRandomPosition: (aMorph) ->
     @contents.add aMorph
     posx = Math.abs(hashCode(aMorph.toString())) % @width()
     posy = Math.abs(hashCode(aMorph.toString() + "x")) % @height()
@@ -192,7 +192,7 @@ class ScrollFrameMorph extends FrameMorph
     @contents.fullDestroyChildren()
 
     aMorph.fullRawMoveTo @position().add(@padding + @extraPadding)
-    @addContents aMorph
+    @add aMorph
   
   rawSetExtent: (aPoint) ->
     #console.log "move 15"

@@ -393,7 +393,7 @@ class Morph extends MorphicNode
 
   close: ->
     if world.underTheCarpetMorph?
-      world.underTheCarpetMorph.scrollFrame.addContentsInPseudoRandomPosition @
+      world.underTheCarpetMorph.scrollFrame.addInPseudoRandomPosition @
     else
       world.inform "There is no\ncarpet to go under!"
   
@@ -1574,13 +1574,25 @@ class Morph extends MorphicNode
   addAsSiblingBeforeMe: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent.add aMorph, myPosition, layoutSpec
+
+  # this level of indirection is needed because
+  # you have a "raw" "tree" need of adding stuff
+  # and a higher level way to "add".
+  # For example, a ScrollFrameMorph does a "high-level"
+  # add of things in a different way, as it actually adds
+  # stuff to a frame inside it. Hence a need to have
+  # both a high-level and a low-level.
+  # For most morphs the two things coincide, and the
+  # high-level just calls the low-level.
+  add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+    @addRaw arguments...
   
   # attaches submorph on top
   # ??? TODO you should handle the case of Morph
   #     being added to itself and the case of
   # ??? TODO a Morph being added to one of its
   #     children
-  add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addRaw: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
 
     aMorph.parent?.invalidateLayout()
 

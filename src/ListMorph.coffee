@@ -93,7 +93,7 @@ class ListMorph extends ScrollFrameMorph
     @listContents.silentFullRawMoveTo @contents.position()
     @listContents.reLayout()
     
-    @addContents @listContents
+    @add @listContents
   
   select: (item, trigger) ->
     @selected = item
