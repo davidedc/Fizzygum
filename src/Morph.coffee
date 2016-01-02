@@ -2051,10 +2051,10 @@ class Morph extends MorphicNode
     inspector.changed()
 
   spawnNextTo: (morphToBeNextTo) ->
+    morphToBeNextTo.parent.add @
     @fullRawMoveTo \
       morphToBeNextTo.topRight().translateBy new Point 5, -5
     @fullRawMoveWithin morphToBeNextTo.parent
-    morphToBeNextTo.parent.add @
     
   
   # Morph menus ////////////////////////////////////////////////////////////////
