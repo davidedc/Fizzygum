@@ -2170,6 +2170,9 @@ class Morph extends MorphicNode
   createCloseIconMorph: ->
     world.create new CloseIconMorph()
 
+  createScratchAreaIconMorph: ->
+    world.create new ScratchAreaIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2217,6 +2220,7 @@ class Morph extends MorphicNode
     menu.addItem "CollapsedStateIconMorph", true, @, "createCollapsedStateIconMorph"
     menu.addItem "UncollapsedStateIconMorph", true, @, "createUncollapsedStateIconMorph"
     menu.addItem "CloseIconMorph", true, @, "createCloseIconMorph"
+    menu.addItem "ScratchAreaIconMorph", true, @, "createScratchAreaIconMorph"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
     menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
