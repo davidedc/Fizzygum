@@ -445,23 +445,26 @@ class HandMorph extends Morph
           morph[expectedClick] @position()
           # also send doubleclick if the
           # two clicks happen on the same morph
-          unless @doubleClickMorph?
-            @doubleClickMorph = morph
-            setTimeout (=>
-              if @doubleClickMorph?
-                console.log "single click"
-              @doubleClickMorph = null
-              return false
-            ), 300
-          else
+          if @doubleClickMorph?
             if @doubleClickMorph == morph
               @doubleClickMorph = null
-              console.log "double click"
               @processDoubleClick()
-
+            else
+              @rememberDoubleClickMorphsForAWhile morph
+          else
+            @rememberDoubleClickMorphsForAWhile morph
 
       @cleanupMenuMorphs(expectedClick, morph)
     @mouseButton = null
+
+  rememberDoubleClickMorphsForAWhile: (morph) ->
+    @doubleClickMorph = morph
+    setTimeout (=>
+      if @doubleClickMorph?
+        console.log "single click"
+      @doubleClickMorph = null
+      return false
+    ), 300
 
   cleanupMenuMorphs: (expectedClick, morph)->
 
