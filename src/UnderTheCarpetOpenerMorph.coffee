@@ -34,13 +34,13 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
 
     new HandleMorph @
 
-  mouseClickLeft: ->
+  mouseDoubleClick: ->
+    if !world.underTheCarpetMorph?
+      world.underTheCarpetMorph = new UnderTheCarpetMorph()
+
     if world.underTheCarpetMorph?.destroyed
-      world.underTheCarpetMorph = null
+      world.underTheCarpetMorph = new UnderTheCarpetMorph()
 
-    if world.underTheCarpetMorph?
-      world.underTheCarpetMorph.pickUp()
-      return
+    world.underTheCarpetMorph.spawnNextTo @
 
-    world.underTheCarpetMorph = new UnderTheCarpetMorph()
-    world.create world.underTheCarpetMorph
+

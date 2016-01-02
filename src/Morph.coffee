@@ -2045,6 +2045,12 @@ class Morph extends MorphicNode
     inspector.fullRawMoveWithin world
     world.add inspector
     inspector.changed()
+
+  spawnNextTo: (morphToBeNextTo) ->
+    @fullRawMoveTo \
+      morphToBeNextTo.topRight().translateBy new Point 5, -5
+    @fullRawMoveWithin morphToBeNextTo.parent
+    morphToBeNextTo.parent.add @
     
   
   # Morph menus ////////////////////////////////////////////////////////////////
