@@ -13,9 +13,7 @@ class UnderTheCarpetMorph extends BoxMorph
   constructor: (target) ->
     super()
 
-    @silentRawSetExtent new Point(
-      WorldMorph.preferencesAndSettings.handleSize * 10,
-      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
+    @silentRawSetExtent new Point 340, 270
     @color = new Color(60, 60, 60)
     @padding = 5
     @buildAndConnectChildren()

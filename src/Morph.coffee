@@ -393,7 +393,7 @@ class Morph extends MorphicNode
 
   close: ->
     if world.underTheCarpetMorph?
-      world.underTheCarpetMorph.scrollFrame.addContents @
+      world.underTheCarpetMorph.scrollFrame.addContentsInPseudoRandomPosition @
     else
       world.inform "There is no\ncarpet to go under!"
   
