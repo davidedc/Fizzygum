@@ -19,9 +19,9 @@ class BoxMorph extends Morph
       return true
  
     thisMorphPosition = @position()
-    radius = Math.max(@cornerRadius, 0)
+    radius = Math.max @cornerRadius, 0
  
-    relativePoint = new Point(aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y)
+    relativePoint = new Point aPoint.x - thisMorphPosition.x, aPoint.y - thisMorphPosition.y
 
     # top left corner
     if relativePoint.x < radius and relativePoint.y < radius
@@ -76,7 +76,7 @@ class BoxMorph extends Morph
       aContext.fillStyle = @color.toString()
       
       aContext.beginPath()
-      @outlinePath aContext, Math.max(@cornerRadius, 0)
+      @outlinePath aContext, Math.max @cornerRadius, 0
       aContext.closePath()
       aContext.fill()
 
@@ -131,7 +131,7 @@ class BoxMorph extends Morph
   # there is another method almost equal to this
   # todo refactor
   pickInset: ->
-    choices = world.plausibleTargetAndDestinationMorphs(@)
+    choices = world.plausibleTargetAndDestinationMorphs @
 
     # my direct parent might be in the
     # options which is silly, leave that one out
@@ -141,7 +141,7 @@ class BoxMorph extends Morph
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph(false, @, true, true, "choose Morph to put as inset:")
+      menu = new MenuMorph false, @, true, true, "choose Morph to put as inset:"
       choicesExcludingParent.forEach (each) =>
         menu.addItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
     else
@@ -153,8 +153,8 @@ class BoxMorph extends Morph
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph(false, @, true, true, "no morphs to pick")
-    menu.popUpAtHand(@firstContainerMenu())
+      menu = new MenuMorph false, @, true, true, "no morphs to pick"
+    menu.popUpAtHand @firstContainerMenu()
 
 
   # BoxMorph menus:
@@ -175,10 +175,11 @@ class BoxMorph extends Morph
 
     # for context menu demo purposes
     if typeof radius is "number"
-      @cornerRadius = Math.max(radius, 0)
+      @cornerRadius = Math.max radius, 0
     else
-      newRadius = parseFloat(radius)
-      @cornerRadius = Math.max(newRadius, 0)  unless isNaN(newRadius)
+      newRadius = parseFloat radius
+      if !isNaN newRadius
+        @cornerRadius = Math.max newRadius, 0
     @layoutInset()
     @changed()
   
