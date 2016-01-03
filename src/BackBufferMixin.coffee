@@ -70,7 +70,7 @@ BackBufferMixin =
 
       isTransparentAt: (aPoint) ->
         @bounds.debugIfFloats()
-        if @boundsContainPoint(aPoint)
+        if @boundsContainPoint aPoint
           return false  if @texture
           data = @getPixelColor aPoint
           # check the 4th byte - the Alpha (RGBA)
@@ -81,8 +81,8 @@ BackBufferMixin =
       getPixelColor: (aPoint) ->
         @repaintBackBufferIfNeeded()
         point = aPoint.toLocalCoordinatesOf @
-        data = @backBufferContext.getImageData(point.x * pixelRatio, point.y * pixelRatio, 1, 1)
-        new Color(data.data[0], data.data[1], data.data[2], data.data[3])
+        data = @backBufferContext.getImageData point.x * pixelRatio, point.y * pixelRatio, 1, 1
+        new Color data.data[0], data.data[1], data.data[2], data.data[3]
 
 
       # This method only paints this very morph's "image",
