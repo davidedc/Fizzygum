@@ -16,7 +16,7 @@ class ColorPaletteMorph extends Morph
 
   constructor: (@target = null, sizePoint) ->
     super()
-    @silentRawSetExtent sizePoint or new Point(80, 50)
+    @silentRawSetExtent sizePoint or new Point 80, 50
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return
@@ -27,8 +27,8 @@ class ColorPaletteMorph extends Morph
         return
 
     extent = @extent()
-    @backBuffer = newCanvas(extent.scaleBy pixelRatio)
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBufferContext = @backBuffer.getContext "2d"
     @backBufferContext.scale pixelRatio, pixelRatio
     @choice = new Color()
     for x in [0..extent.x]
@@ -60,11 +60,11 @@ class ColorPaletteMorph extends Morph
     return null
   
   mouseMove: (pos) ->
-    @choice = @getPixelColor(pos)
+    @choice = @getPixelColor pos
     @updateTarget()
   
   mouseDownLeft: (pos) ->
-    @choice = @getPixelColor(pos)
+    @choice = @getPixelColor pos
     @updateTarget()
   
   updateTarget: ->
@@ -91,10 +91,10 @@ class ColorPaletteMorph extends Morph
 
   setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.colorSetters()
-    menu = new MenuMorph(false, @, true, true, "choose target property:")
+    menu = new MenuMorph false, @, true, true, "choose target property:"
     choices.forEach (each) =>
       menu.addItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
 
     if choices.length == 0
-      menu = new MenuMorph(false, @, true, true, "no target properties available")
-    menu.popUpAtHand(@firstContainerMenu())
+      menu = new MenuMorph false, @, true, true, "no target properties available"
+    menu.popUpAtHand @firstContainerMenu()
