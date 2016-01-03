@@ -355,13 +355,13 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode(@text)
-    @backBufferValidityChecker.textActuallyShownHash = hashCode(@textActuallyShown) and
+    @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-    @backBufferValidityChecker.horizontalAlignment = horizontalAlignment and
-    @backBufferValidityChecker.verticalAlignment = verticalAlignment and
-    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize and
+    @backBufferValidityChecker.horizontalAlignment = horizontalAlignment
+    @backBufferValidityChecker.verticalAlignment = verticalAlignment
+    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize
     @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
 
 
