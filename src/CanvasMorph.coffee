@@ -42,8 +42,8 @@ class CanvasMorph extends FrameMorph
         return
 
     extent = @extent()
-    @backBuffer = newCanvas(extent.scaleBy pixelRatio)
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBufferContext = @backBuffer.getContext "2d"
     @backBufferContext.scale pixelRatio, pixelRatio
 
     @backBufferContext.fillStyle = @color.toString()
