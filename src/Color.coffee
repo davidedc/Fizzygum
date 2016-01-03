@@ -192,7 +192,7 @@ class Color
   
   # Color copying:
   copy: ->
-    new @constructor(@r, @g, @b, @a)
+    new @constructor @r, @g, @b, @a
   
   # Color comparison:
   eq: (aColor) ->
@@ -206,8 +206,8 @@ class Color
     rr = @r / 255
     gg = @g / 255
     bb = @b / 255
-    max = Math.max(rr, gg, bb)
-    min = Math.min(rr, gg, bb)
+    max = Math.max rr, gg, bb
+    min = Math.min rr, gg, bb
     h = max
     s = max
     v = max
@@ -218,7 +218,7 @@ class Color
     else
       switch max
         when rr
-          h = (gg - bb) / d + ((if gg < bb then 6 else 0))
+          h = (gg - bb) / d + (if gg < bb then 6 else 0)
         when gg
           h = (bb - rr) / d + 2
         when bb
@@ -267,7 +267,7 @@ class Color
   # Color mixing:
   mixed: (proportion, otherColor) ->
     # answer a copy of this color mixed with another color, ignore alpha
-    frac1 = Math.min(Math.max(proportion, 0), 1)
+    frac1 = Math.min Math.max(proportion, 0), 1
     frac2 = 1 - frac1
     new @constructor(
       @r * frac1 + otherColor.r * frac2,
@@ -278,22 +278,22 @@ class Color
     # return an rgb-interpolated darker copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new @constructor(0, 0, 0)
+    @mixed fract, new @constructor 0, 0, 0
   
   lighter: (percent) ->
     # return an rgb-interpolated lighter copy of me, ignore alpha
     fract = 0.8333
     fract = (100 - percent) / 100  if percent
-    @mixed fract, new @constructor(255, 255, 255)
+    @mixed fract, new @constructor 255, 255, 255
   
   dansDarker: ->
     # return an hsv-interpolated darker copy of me, ignore alpha
     hsv = @hsv()
     result = new @constructor()
-    vv = Math.max(hsv[2] - 0.16, 0)
+    vv = Math.max hsv[2] - 0.16, 0
     result.set_hsv hsv[0], hsv[1], vv
     result
 
   @transparent: ->
-    return new @(0,0,0,0)
+    return new @ 0,0,0,0
 
