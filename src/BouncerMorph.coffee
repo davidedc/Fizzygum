@@ -32,7 +32,7 @@ class BouncerMorph extends Morph
       @direction = "down"
     else
       @direction = "right"
-    @fullRawMoveTo new Point(@parent.position().x, @parent.position().y)
+    @fullRawMoveTo new Point @parent.position().x, @parent.position().y
   
   
   # BouncerMorph moving.
@@ -46,41 +46,41 @@ class BouncerMorph extends Morph
   # even with many movements at once.
   moveUp: (silently) ->
     if silently
-      @silentFullRawMoveBy new Point(0, -@speed)
+      @silentFullRawMoveBy new Point 0, -@speed
     else
-      @fullRawMoveBy new Point(0, -@speed)
+      @fullRawMoveBy new Point 0, -@speed
   
   moveDown: (silently) ->
     if silently
-      @silentFullRawMoveBy new Point(0, @speed)
+      @silentFullRawMoveBy new Point 0, @speed
     else
-      @fullRawMoveBy new Point(0, @speed)
+      @fullRawMoveBy new Point 0, @speed
   
   moveRight: (silently) ->
     if silently
-      @silentFullRawMoveBy new Point(@speed, 0)
+      @silentFullRawMoveBy new Point @speed, 0
     else
-      @fullRawMoveBy new Point(@speed, 0)
+      @fullRawMoveBy new Point @speed, 0
   
   moveLeft: (silently) ->
     if silently
-      @silentFullRawMoveBy new Point(-@speed, 0)
+      @silentFullRawMoveBy new Point -@speed, 0
     else
-      @fullRawMoveBy new Point(-@speed, 0)
+      @fullRawMoveBy new Point -@speed, 0
 
   moveAccordingToBounce: (silently) ->
     if @type is "vertical"
       if @direction is "down"
-        @moveDown(silently)
+        @moveDown silently
       else
-        @moveUp(silently)
+        @moveUp silently
       @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
       @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
     else if @type is "horizontal"
       if @direction is "right"
-        @moveRight(silently)
+        @moveRight silently
       else
-        @moveLeft(silently)
+        @moveLeft silently
       @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
       @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
   
@@ -103,14 +103,14 @@ class BouncerMorph extends Morph
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           @resetPosition()
           for i in [0... window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence.length]
-            @moveAccordingToBounce(true)
+            @moveAccordingToBounce true
           @parent.changed()
           return
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
           @resetPosition()
           for i in [0... window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence]
-            @moveAccordingToBounce(true)
+            @moveAccordingToBounce true
           @parent.changed()
           return
 
-      @moveAccordingToBounce(false)
+      @moveAccordingToBounce false
