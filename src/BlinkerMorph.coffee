@@ -9,7 +9,7 @@ class BlinkerMorph extends Morph
 
   constructor: (@fps = 2) ->
     super()
-    @color = new Color(0, 0, 0)
+    @color = new Color 0, 0, 0
   
   # BlinkerMorph stepping:
   step: ->
