@@ -12,7 +12,7 @@ class CircleBoxMorph extends Morph
 
   constructor: (@orientation = "vertical") ->
     super()
-    @silentRawSetExtent new Point(20, 100)
+    @silentRawSetExtent new Point 20, 100
 
   
   autoOrientation: ->
@@ -128,6 +128,6 @@ class CircleBoxMorph extends Morph
       @orientation = "horizontal"
     else
       @orientation = "vertical"
-    @silentRawSetExtent new Point(@height(), @width())
+    @silentRawSetExtent new Point @height(), @width()
     @fullRawMoveCenterTo center
     @changed()
