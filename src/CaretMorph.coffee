@@ -29,8 +29,8 @@ class CaretMorph extends BlinkerMorph
     @updateCaretDimension()
 
   updateCaretDimension: ->
-    ls = fontHeight(@target.actualFontSizeUsedInRendering())
-    @rawSetExtent new Point(Math.max(Math.floor(ls / 20), 1), ls)
+    ls = fontHeight @target.actualFontSizeUsedInRendering()
+    @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
@@ -54,7 +54,7 @@ class CaretMorph extends BlinkerMorph
     @updateCaretDimension()
   
   processKeyDown: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    # this.inspectKeyEvent(event);
+    # @inspectKeyEvent event
     @keyDownEventUsed = false
     if ctrlKey
       @ctrl scanCode
@@ -70,22 +70,22 @@ class CaretMorph extends BlinkerMorph
       return
     switch scanCode
       when 37
-        @goLeft(shiftKey)
+        @goLeft shiftKey
         @keyDownEventUsed = true
       when 39
-        @goRight(shiftKey)
+        @goRight shiftKey
         @keyDownEventUsed = true
       when 38
-        @goUp(shiftKey)
+        @goUp shiftKey
         @keyDownEventUsed = true
       when 40
-        @goDown(shiftKey)
+        @goDown shiftKey
         @keyDownEventUsed = true
       when 36
-        @goHome(shiftKey)
+        @goHome shiftKey
         @keyDownEventUsed = true
       when 35
-        @goEnd(shiftKey)
+        @goEnd shiftKey
         @keyDownEventUsed = true
       when 46
         @deleteRight()
@@ -106,7 +106,7 @@ class CaretMorph extends BlinkerMorph
         @cancel()
         @keyDownEventUsed = true
       else
-    # this.inspectKeyEvent(event);
+    # @inspectKeyEvent event
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
     @updateCaretDimension()
@@ -115,7 +115,7 @@ class CaretMorph extends BlinkerMorph
   # CaretMorph navigation - simple version
   #gotoSlot: (newSlot) ->
   #  @fullRawMoveTo @target.slotCoordinates(newSlot)
-  #  @slot = Math.max(newSlot, 0)
+  #  @slot = Math.max newSlot, 0
 
   gotoSlot: (slot) ->
     # check that slot is within the allowed boundaries of
@@ -123,7 +123,7 @@ class CaretMorph extends BlinkerMorph
     length = @target.text.length
     @slot = (if slot < 0 then 0 else (if slot > length then length else slot))
 
-    pos = @target.slotCoordinates(@slot)
+    pos = @target.slotCoordinates @slot
     if pos?
       if @parent and @target.isScrollable
         right = @parent.right() - @viewPadding
@@ -132,7 +132,7 @@ class CaretMorph extends BlinkerMorph
           @target.fullRawMoveLeftSideTo @target.left() + right - pos.x
           pos.x = right
         if pos.x < left
-          left = Math.min(@parent.left(), left)
+          left = Math.min @parent.left(), left
           @target.fullRawMoveLeftSideTo @target.left() + left - pos.x
           pos.x = left
         if @target.right() < right and right - @target.width() < left
@@ -173,7 +173,7 @@ class CaretMorph extends BlinkerMorph
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @target.upFrom(@slot)
+      @gotoSlot @target.upFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
   
@@ -183,24 +183,24 @@ class CaretMorph extends BlinkerMorph
       @updateSelection shift
     else
       @updateSelection shift
-      @gotoSlot @target.downFrom(@slot)
+      @gotoSlot @target.downFrom @slot
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
   
   goHome: (shift) ->
     @updateSelection shift
-    @gotoSlot @target.startOfLine(@slot)
+    @gotoSlot @target.startOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
   
   goEnd: (shift) ->
     @updateSelection shift
-    @gotoSlot @target.endOfLine(@slot)
+    @gotoSlot @target.endOfLine @slot
     @updateSelection shift
     @clearSelectionIfStartAndEndMeet shift
   
   gotoPos: (aPoint) ->
-    @gotoSlot @target.slotAt(aPoint)
+    @gotoSlot @target.slotAt aPoint
     @show()
 
   clearSelectionIfStartAndEndMeet: (shift) ->
@@ -260,8 +260,8 @@ class CaretMorph extends BlinkerMorph
     if symbol is "\t"
       @target.escalateEvent 'reactToEdit', @target
       if shiftKey
-        return @target.backTab(@target)
-      return @target.tab(@target)
+        return @target.backTab @target
+      return @target.tab @target
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or contains(["-", "."], symbol)
       if @target.selection() isnt ""
         @gotoSlot @target.selectionStartSlot()
