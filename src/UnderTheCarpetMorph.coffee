@@ -14,7 +14,7 @@ class UnderTheCarpetMorph extends BoxMorph
     super()
 
     @silentRawSetExtent new Point 340, 270
-    @color = new Color(60, 60, 60)
+    @color = new Color 60, 60, 60
     @padding = 5
     @buildAndConnectChildren()
   
@@ -30,10 +30,10 @@ class UnderTheCarpetMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph("Under the carpet")
+    @label = new TextMorph "Under the carpet"
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
-    @label.color = new Color(255, 255, 255)
+    @label.color = new Color 255, 255, 255
     @add @label
 
     # Check which objects end with the word Morph
@@ -44,14 +44,14 @@ class UnderTheCarpetMorph extends BoxMorph
     @add @scrollFrame
 
     # close button
-    @buttonClose = new TriggerMorph(true, @)
+    @buttonClose = new TriggerMorph true, @
     @buttonClose.setLabel "close"
     @buttonClose.action = "removeFromTree"
 
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@)
+    @resizer = new HandleMorph @
 
     # update layout
     @layoutSubmorphs()
@@ -65,7 +65,7 @@ class UnderTheCarpetMorph extends BoxMorph
     y = @top() + @cornerRadius
     r = @right() - @cornerRadius
     w = r - x
-    @label.fullRawMoveTo new Point(x, y)
+    @label.fullRawMoveTo new Point x, y
     @label.rawSetWidth w
     if @label.height() > (@height() - 50)
       @rawSetHeight @label.height() + 50
@@ -77,16 +77,16 @@ class UnderTheCarpetMorph extends BoxMorph
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
-    @scrollFrame.fullRawMoveTo new Point(x, y)
-    @scrollFrame.rawSetExtent new Point(w, h)
+    @scrollFrame.fullRawMoveTo new Point x, y
+    @scrollFrame.rawSetExtent new Point w, h
 
     # close button
     x = @scrollFrame.left()
     y = @scrollFrame.bottom() + @cornerRadius
     h = WorldMorph.preferencesAndSettings.handleSize
     w = @scrollFrame.width() - h - @cornerRadius
-    @buttonClose.fullRawMoveTo new Point(x, y)
-    @buttonClose.rawSetExtent new Point(w, h)
+    @buttonClose.fullRawMoveTo new Point x, y
+    @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
     @changed()
   

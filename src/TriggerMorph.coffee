@@ -32,13 +32,13 @@ class TriggerMorph extends Morph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  highlightColor: new Color(192, 192, 192)
+  highlightColor: new Color 192, 192, 192
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  pressColor: new Color(128, 128, 128)
+  pressColor: new Color 128, 128, 128
   centered: false
   closesUnpinnedMenus: true
   
@@ -74,12 +74,12 @@ class TriggerMorph extends Morph
     # additional properties:
     @fontSize = fontSize or WorldMorph.preferencesAndSettings.menuFontSize
     @fontStyle = fontStyle or "sans-serif"
-    @labelColor = labelColor or new Color(0, 0, 0)
+    @labelColor = labelColor or new Color 0, 0, 0
 
     super()
 
-    #@color = new Color(255, 152, 152)
-    @color = new Color(255, 255, 255)
+    #@color = new Color 255, 152, 152
+    @color = new Color 255, 255, 255
     if @labelString?
       @layoutSubmorphs()
   
@@ -88,14 +88,14 @@ class TriggerMorph extends Morph
     if not @label?
       @createLabel()
     if @centered
-      @label.fullRawMoveTo @center().subtract(@label.extent().floorDivideBy(2))
+      @label.fullRawMoveTo @center().subtract @label.extent().floorDivideBy 2
 
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of button)"
     if @labelString
-      textWithoutLocationOrInstanceNo = @labelString.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
-      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+      textWithoutLocationOrInstanceNo = @labelString.replace  /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
+      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
       return textWithoutLocationOrInstanceNo + " (text in button)"
     else
       return super()
