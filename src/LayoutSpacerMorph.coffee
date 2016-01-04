@@ -12,7 +12,7 @@ class LayoutSpacerMorph extends Morph
 
   constructor: (spacerWeight = 1) ->
     super()
-    @setColor new Color(0, 0, 0)
+    @setColor new Color 0, 0, 0
     @setMinAndMaxBoundsAndSpreadability (new Point 0,0) , (new Point 1,1), spacerWeight * LayoutSpec.SPREADABILITY_SPACERS
     @minimumExtent = new Point 0,0
 
@@ -38,7 +38,6 @@ class LayoutSpacerMorph extends Morph
 
     if @thisSpacerIsTransparent
       return
-
 
     if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
       return
@@ -81,7 +80,7 @@ class LayoutSpacerMorph extends Morph
     context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
     context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y
 
-    spaceInBetweenArrowAndMiddle =  Math.abs(@width()/2 - (0.5 + leftArrowPoint.x + arrowPieceLeftUp.x))
+    spaceInBetweenArrowAndMiddle =  Math.abs @width()/2 - (0.5 + leftArrowPoint.x + arrowPieceLeftUp.x)
 
     ## the squiggly part
     context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x + 1*spaceInBetweenArrowAndMiddle/3, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y/2
@@ -103,16 +102,16 @@ class LayoutSpacerMorph extends Morph
     context.stroke()
 
   drawReplacerMorph: (context) ->
-    p0 = @bottomLeft().subtract(@position())
-    p0 = p0.subtract(new Point(0, Math.ceil(@height()/2)))
+    p0 = @bottomLeft().subtract @position()
+    p0 = p0.subtract new Point 0, Math.ceil @height()/2
     
-    leftArrowPoint = p0.add(new Point(Math.ceil(@width()/15),0))
+    leftArrowPoint = p0.add new Point Math.ceil(@width()/15), 0
 
-    rightArrowPoint = p0.add(new Point(@width() - Math.ceil(@width()/14), 0))
-    arrowPieceLeftUp = new Point(Math.ceil(@width()/5),-Math.ceil(@height()/5))
-    arrowPieceLeftDown = new Point(Math.ceil(@width()/5),Math.ceil(@height()/5))
-    arrowPieceRightUp = new Point(-Math.ceil(@width()/5),-Math.ceil(@height()/5))
-    arrowPieceRightDown = new Point(-Math.ceil(@width()/5),Math.ceil(@height()/5))
+    rightArrowPoint = p0.add new Point @width() - Math.ceil(@width()/14), 0
+    arrowPieceLeftUp = new Point Math.ceil(@width()/5), -Math.ceil(@height()/5)
+    arrowPieceLeftDown = new Point Math.ceil(@width()/5), Math.ceil(@height()/5)
+    arrowPieceRightUp = new Point -Math.ceil(@width()/5), -Math.ceil(@height()/5)
+    arrowPieceRightDown = new Point -Math.ceil(@width()/5), Math.ceil(@height()/5)
     @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
 
 
@@ -127,8 +126,8 @@ class LayoutSpacerMorph extends Morph
     # darker color.
     context.save()
     context.strokeStyle = shadowColor.toString()
-    @drawReplacerMorph(context)
+    @drawReplacerMorph context
     context.restore()
 
     context.strokeStyle = color.toString()
-    @drawReplacerMorph(context)
+    @drawReplacerMorph context

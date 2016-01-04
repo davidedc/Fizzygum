@@ -18,7 +18,7 @@ class HashCalculator
       return hash  if theString.length is 0
 
       for i in [0...theString.length]
-        chr = theString.charCodeAt(i)
+        chr = theString.charCodeAt i
         hash = ((hash << 5) - hash) + chr
         hash |= 0 # Convert to 32bit integer
         i++

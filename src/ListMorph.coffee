@@ -39,9 +39,9 @@ class ListMorph extends ScrollFrameMorph
     #debugger
     super()
     @contents.disableDrops()
-    @color = new Color(255, 255, 255)
+    @color = new Color 255, 255, 255
     @labelGetter = labelGetter or (element) ->
-        return element  if isString(element)
+        return element  if isString element
         return element.toSource()  if element.toSource
         element.toString()
     @buildAndConnectChildren() # builds the list contents
@@ -53,7 +53,7 @@ class ListMorph extends ScrollFrameMorph
   buildAndConnectChildren: ->
     if @listContents
       @listContents = @listContents.destroy()
-    @listContents = new MenuMorph(true, @, false, false, null, null)
+    @listContents = new MenuMorph true, @, false, false, null, null
     @elements = ["(empty)"]  if !@elements.length
     trackChanges.push false
     @elements.forEach (element) =>
@@ -61,7 +61,7 @@ class ListMorph extends ScrollFrameMorph
       bold = false
       italic = false
       @format.forEach (pair) ->
-        if pair[1].call(null, element)
+        if pair[1].call null, element
           if pair[0] == 'bold'
             bold = true
           else if pair[0] == 'italic'
@@ -110,7 +110,7 @@ class ListMorph extends ScrollFrameMorph
     #console.log "move 3"
     @breakNumberOfRawMovesAndResizesCaches()
     lb = @listContents.boundingBox()
-    nb = @bounds.origin.corner(@bounds.origin.add(aPoint))
+    nb = @bounds.origin.corner @bounds.origin.add aPoint
     if nb.right() > lb.right() and nb.width() <= lb.width()
       @listContents.fullRawMoveRightSideTo nb.right()
     if nb.bottom() > lb.bottom() and nb.height() <= lb.height()

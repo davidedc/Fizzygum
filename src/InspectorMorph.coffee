@@ -27,7 +27,7 @@ class InspectorMorph extends BoxMorph
     @silentRawSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
     @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
-    @color = new Color(60, 60, 60)
+    @color = new Color 60, 60, 60
     @buildAndConnectChildren()  if @target
   
   setTarget: (target) ->
@@ -47,10 +47,10 @@ class InspectorMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph(@target.toString())
+    @label = new TextMorph @target.toString()
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
-    @label.color = new Color(255, 255, 255)
+    @label.color = new Color 255, 255, 255
     @add @label
     
     # properties list. Note that this picks up ALL properties
@@ -72,13 +72,13 @@ class InspectorMorph extends BoxMorph
       # dummy condition, to be refined
       attribs.push property  if property
     if @showing is "attributes"
-      attribs = attribs.filter((prop) =>
+      attribs = attribs.filter (prop) =>
         not isFunction @target[prop]
-      )
+
     else if @showing is "methods"
-      attribs = attribs.filter((prop) =>
+      attribs = attribs.filter (prop) =>
         isFunction @target[prop]
-      )
+
     # otherwise show all properties
     # label getter
     # format list
@@ -86,40 +86,40 @@ class InspectorMorph extends BoxMorph
     
     staticProperties = Object.getOwnPropertyNames(@target.constructor)
     # get rid of all the standard fuff properties that are in classes
-    staticProperties = staticProperties.filter((prop) =>
+    staticProperties = staticProperties.filter (prop) =>
         prop not in ["name","length","prototype","caller","__super__","arguments"]
-    )
+
     if @showing is "attributes"
       staticFunctions = []
-      staticAttributes = staticProperties.filter((prop) =>
-        not isFunction(@target.constructor[prop])
-      )
+      staticAttributes = staticProperties.filter (prop) =>
+        not isFunction @target.constructor[prop]
+
     else if @showing is "methods"
-      staticFunctions = staticProperties.filter((prop) =>
-        isFunction(@target.constructor[prop])
-      )
+      staticFunctions = staticProperties.filter (prop) =>
+        isFunction @target.constructor[prop]
+
       staticAttributes = []
     else
-      staticFunctions = staticProperties.filter((prop) =>
-        isFunction(@target.constructor[prop])
-      )
-      staticAttributes = staticProperties.filter((prop) =>
+      staticFunctions = staticProperties.filter (prop) =>
+        isFunction @target.constructor[prop]
+
+      staticAttributes = staticProperties.filter (prop) =>
         prop not in staticFunctions
-      )
+
     #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes
     attribs = (attribs.concat staticFunctions).concat staticAttributes
     #alert " all attribs " + attribs
     
     # caches the own methods of the object
     if @markOwnershipOfProperties
-      targetOwnMethods = Object.getOwnPropertyNames(@target.constructor::)
+      targetOwnMethods = Object.getOwnPropertyNames @target.constructor::
       #alert targetOwnMethods
 
     # open a new inspector, just on objects so
     # the idea is that you can view / change
     # its fields
     doubleClickAction = =>
-      if (!isObject(@currentProperty))
+      if !isObject @currentProperty
         return
       inspector = new InspectorMorph @currentProperty
       inspector.fullRawMoveTo world.hand.position()
@@ -159,8 +159,8 @@ class InspectorMorph extends BoxMorph
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
-    @detail.color = new Color(255, 255, 255)
-    ctrl = new TextMorph("")
+    @detail.color = new Color 255, 255, 255
+    ctrl = new TextMorph ""
     ctrl.isEditable = true
     ctrl.enableSelecting()
     ctrl.setReceiver @target
@@ -172,8 +172,8 @@ class InspectorMorph extends BoxMorph
     @work.disableDrops()
     @work.contents.disableDrops()
     @work.isTextLineWrapping = true
-    @work.color = new Color(255, 255, 255)
-    ev = new TextMorph("")
+    @work.color = new Color 255, 255, 255
+    ev = new TextMorph ""
     ev.isEditable = true
     ev.enableSelecting()
     ev.setReceiver @target
@@ -181,28 +181,28 @@ class InspectorMorph extends BoxMorph
     @add @work
 
     # properties button
-    @buttonSubset = new TriggerMorph(true, @)
+    @buttonSubset = new TriggerMorph true, @
     @buttonSubset.setLabel "show..."
     @buttonSubset.alignCenter()
     @buttonSubset.action = "openShowMenu"
     @add @buttonSubset
 
     # inspect button
-    @buttonInspect = new TriggerMorph(true, @)
+    @buttonInspect = new TriggerMorph true, @
     @buttonInspect.setLabel "inspect"
     @buttonInspect.alignCenter()
     @buttonInspect.action = "openInspectorMenu"
     @add @buttonInspect
 
     # edit button
-    @buttonEdit = new TriggerMorph(true, @)
+    @buttonEdit = new TriggerMorph true, @
     @buttonEdit.setLabel "edit..."
     @buttonEdit.alignCenter()
     @buttonEdit.action = "openEditMenu"
     @add @buttonEdit
 
     # close button
-    @buttonClose = new TriggerMorph(true, @)
+    @buttonClose = new TriggerMorph true, @
     @buttonClose.setLabel "close"
     @buttonClose.alignCenter()
     @buttonClose.action = "close"
@@ -232,19 +232,19 @@ class InspectorMorph extends BoxMorph
 
 
   openShowMenu: ->
-    menu = new MenuMorph(false)
+    menu = new MenuMorph false
     menu.addItem "attributes", true, @, "showAttributes"
     menu.addItem "methods", true, @, "showMethods"
     menu.addItem "all", true, @, "showAttributesAndMethods"
     menu.addLine()
     menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, "highlightOwnershipOfProperties", "highlight\nownership of properties"
-    menu.popUpAtHand(@firstContainerMenu())
+    menu.popUpAtHand @firstContainerMenu()
 
   openInspectorMenu: ->
-    if isObject(@currentProperty)
-      menu = new MenuMorph(false)
+    if isObject @currentProperty
+      menu = new MenuMorph false
       menu.addItem "in new inspector...", true, @, =>
-        inspector = new @constructor(@currentProperty)
+        inspector = new @constructor @currentProperty
         inspector.fullRawMoveTo world.hand.position()
         inspector.fullRawMoveWithin world
         world.add inspector
@@ -253,18 +253,18 @@ class InspectorMorph extends BoxMorph
       menu.addItem "here...", true, @, =>
         @setTarget @currentProperty
 
-      menu.popUpAtHand(@firstContainerMenu())
+      menu.popUpAtHand @firstContainerMenu()
     else
       @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
 
   openEditMenu: ->
-    menu = new MenuMorph(false)
+    menu = new MenuMorph false
     menu.addItem "save", true, @, "save", "accept changes"
     menu.addLine()
     menu.addItem "add property...", true, @, "addPropertyPopout"
     menu.addItem "rename...", true, @, "renamePropertyPopout"
     menu.addItem "remove", true, @, "removeProperty"
-    menu.popUpAtHand(@firstContainerMenu())
+    menu.popUpAtHand @firstContainerMenu()
 
 
   filterProperties: (staticProperties, targetOwnMethods)->
@@ -316,7 +316,7 @@ class InspectorMorph extends BoxMorph
       return null
 
   selectionFromList: (selected) ->
-    if (selected == undefined) then return
+    if selected == undefined then return
     val = @target[selected]
     # this is for finding the static variables
     if val is undefined
@@ -324,18 +324,18 @@ class InspectorMorph extends BoxMorph
     @currentProperty = val
     if val is null
       txt = "null"
-    else if isString(val)
+    else if isString val
       txt = '"'+val+'"'
     else
       txt = val.toString()
-    cnts = new TextMorph(txt)
+    cnts = new TextMorph txt
     cnts.isEditable = true
     cnts.enableSelecting()
     cnts.setReceiver @target
     @detail.setContents cnts, 2
   
   layoutSubmorphs: (morphStartingTheChange = null) ->
-    super(morphStartingTheChange)
+    super morphStartingTheChange
     console.log "fixing the layout of the inspector"
 
     # here we are disabling all the broken
@@ -355,9 +355,9 @@ class InspectorMorph extends BoxMorph
     labelRight = @right() - @padding
     labelWidth = labelRight - labelLeft
     if @label.parent == @
-      @label.fullRawMoveTo new Point(labelLeft, labelTop)
+      @label.fullRawMoveTo new Point labelLeft, labelTop
       @label.rawSetWidth labelWidth
-      if @label.height() > (@height() - 50)
+      if @label.height() > @height() - 50
         @silentRawSetHeight @label.height() + 50
         @reLayout()
         
@@ -372,21 +372,21 @@ class InspectorMorph extends BoxMorph
     listHeight = b - labelBottom
     listBottom = labelBottom + listHeight
     if @list.parent == @
-      @list.fullRawMoveTo new Point(labelLeft, labelBottom)
-      @list.rawSetExtent new Point(listWidth, listHeight)
+      @list.fullRawMoveTo new Point labelLeft, labelBottom
+      @list.rawSetExtent new Point listWidth, listHeight
 
     # detail
     detailLeft = labelLeft + listWidth + @padding
     detailRight = @right() - @padding
     detailWidth = detailRight - detailLeft
     if @detail.parent == @
-      @detail.fullRawMoveTo new Point(detailLeft, labelBottom)
+      @detail.fullRawMoveTo new Point detailLeft, labelBottom
       @detail.rawSetExtent new Point(detailWidth, (listHeight * 2 / 3) - @padding).round()
 
     # work
-    workTop = Math.round(labelBottom + (listHeight * 2 / 3))
+    workTop = Math.round labelBottom + (listHeight * 2 / 3)
     if @work.parent == @
-      @work.fullRawMoveTo new Point(detailLeft, workTop)
+      @work.fullRawMoveTo new Point detailLeft, workTop
       @work.rawSetExtent new Point(detailWidth, listHeight / 3).round()
 
     # properties button
@@ -395,32 +395,32 @@ class InspectorMorph extends BoxMorph
     propertiesWidth = listWidth
     propertiesHeight = WorldMorph.preferencesAndSettings.handleSize
     if @buttonSubset.parent == @
-      @buttonSubset.fullRawMoveTo new Point(propertiesLeft, propertiesTop)
-      @buttonSubset.rawSetExtent new Point(propertiesWidth, propertiesHeight)
+      @buttonSubset.fullRawMoveTo new Point propertiesLeft, propertiesTop
+      @buttonSubset.rawSetExtent new Point propertiesWidth, propertiesHeight
 
     # inspect button
     inspectLeft = detailLeft
     inspectWidth = detailWidth - @padding - WorldMorph.preferencesAndSettings.handleSize
-    inspectWidth = Math.round(inspectWidth / 3 - @padding / 3)
+    inspectWidth = Math.round inspectWidth / 3 - @padding / 3
     inspectRight = inspectLeft + inspectWidth
     if @buttonInspect.parent == @
-      @buttonInspect.fullRawMoveTo new Point(inspectLeft, propertiesTop)
-      @buttonInspect.rawSetExtent new Point(inspectWidth, propertiesHeight)
+      @buttonInspect.fullRawMoveTo new Point inspectLeft, propertiesTop
+      @buttonInspect.rawSetExtent new Point inspectWidth, propertiesHeight
 
     # edit button
     editLeft = inspectRight + @padding
     editRight = editLeft + inspectWidth
     if @buttonEdit.parent == @
-      @buttonEdit.fullRawMoveTo new Point(editLeft, propertiesTop)
-      @buttonEdit.rawSetExtent new Point(inspectWidth, propertiesHeight)
+      @buttonEdit.fullRawMoveTo new Point editLeft, propertiesTop
+      @buttonEdit.rawSetExtent new Point inspectWidth, propertiesHeight
 
     # close button
     closeLeft = editRight + @padding
     closeRight = detailRight - @padding - WorldMorph.preferencesAndSettings.handleSize
     closeWidth = closeRight - closeLeft
     if @buttonClose.parent == @
-      @buttonClose.fullRawMoveTo new Point(closeLeft, propertiesTop)
-      @buttonClose.rawSetExtent new Point(closeWidth, propertiesHeight)
+      @buttonClose.fullRawMoveTo new Point closeLeft, propertiesTop
+      @buttonClose.rawSetExtent new Point closeWidth, propertiesHeight
 
     trackChanges.pop()
     @changed()
@@ -435,7 +435,7 @@ class InspectorMorph extends BoxMorph
     propertyName = @list.selected.labelString
 
     try
-      # this.target[propertyName] = evaluate(txt);
+      # this.target[propertyName] = evaluate txt
       @target.evaluateString "this." + propertyName + " = " + txt
       @target.reLayout?()      
       @target.changed?()
@@ -461,7 +461,7 @@ class InspectorMorph extends BoxMorph
     if prop.getValue?
       prop = prop.getValue()
     try
-      delete (@target[propertyName])
+      delete @target[propertyName]
       @target[prop] = @currentProperty
     catch err
       @inform err
@@ -476,7 +476,7 @@ class InspectorMorph extends BoxMorph
   removeProperty: ->
     propertyName = @list.selected.labelString
     try
-      delete (@target[propertyName])
+      delete @target[propertyName]
 
       @currentProperty = null
       @buildAndConnectChildren()

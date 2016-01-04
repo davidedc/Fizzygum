@@ -24,7 +24,7 @@ class MenuMorph extends BoxMorph
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants
-        @onClickOutsideMeOrAnyOfMyChildren("destroy")
+        @onClickOutsideMeOrAnyOfMyChildren "destroy"
     super()
 
     if !@isListContents
@@ -141,7 +141,7 @@ class MenuMorph extends BoxMorph
       @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
       WorldMorph.preferencesAndSettings.menuFontName, true, false, "center")
     text.alignment = "center"
-    text.color = new Color(255, 255, 255)
+    text.color = new Color 255, 255, 255
     text.backgroundColor = new Color 60,60,60
 
     @label = new BoxMorph 3
@@ -149,7 +149,7 @@ class MenuMorph extends BoxMorph
     if WorldMorph.preferencesAndSettings.isFlat
       @label.cornerRadius = 0
     @label.color = new Color 60,60,60
-    @label.rawSetExtent text.extent().add(2) # here!
+    @label.rawSetExtent text.extent().add 2
     @label.text = text
 
   reLayout: ->
@@ -166,8 +166,8 @@ class MenuMorph extends BoxMorph
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
-    @color = new Color(255, 255, 255)
-    @silentRawSetExtent new Point(0, 0)
+    @color = new Color 255, 255, 255
+    @silentRawSetExtent new Point 0, 0
     y = @top()
     x = @left() + 2
     @notifyChildrenThatParentHasReLayouted()
@@ -176,7 +176,7 @@ class MenuMorph extends BoxMorph
     unless @isListContents
       if @title
         @createLabel()
-        @label.fullRawMoveTo @position().add(2)
+        @label.fullRawMoveTo @position().add 2
         @add @label
         y = @label.bottom()
       else
@@ -232,7 +232,7 @@ class MenuMorph extends BoxMorph
         #  debugger
         #  item.environment = item
       y += 1  if isLine
-      item.fullRawMoveTo new Point(x, y)
+      item.fullRawMoveTo new Point x, y
       # we do a silentAdd here because we are going
       # to update all the morphs again later in
       # adjustWidthsOfMenuEntries
@@ -246,7 +246,7 @@ class MenuMorph extends BoxMorph
     fb = @fullBounds()
     #console.log "fb: " + fb
     # add some padding to the right and bottom of the menu
-    @silentRawSetExtent fb.extent().add(2)
+    @silentRawSetExtent fb.extent().add 2
     trackChanges.pop()
     @fullChanged()
   
@@ -256,16 +256,16 @@ class MenuMorph extends BoxMorph
     #  if @parent.scrollFrame instanceof ScrollFrameMorph
     #    w = @parent.scrollFrame.width()    
     @children.forEach (item) ->
-      if (item instanceof MenuItemMorph)
+      if item instanceof MenuItemMorph
         w = Math.max(w, item.children[0].width() + 8)
       else if (item instanceof StringFieldMorph) or
         (item instanceof ColorPickerMorph) or
         (item instanceof SliderMorph)
-          w = Math.max(w, item.width())
+          w = Math.max w, item.width()
       #console.log "maxWidthOfMenuEntries: width of item " + item + " : " + w
 
     if @label
-      w = Math.max(w, @label.width())
+      w = Math.max w, @label.width()
       #console.log "maxWidthOfMenuEntries: label width : " + w
     w
   
@@ -278,14 +278,15 @@ class MenuMorph extends BoxMorph
       trackChanges.push false
       item.rawSetWidth w
       if item is @label
-        item.text.fullRawMoveTo item.center().subtract(item.text.extent().floorDivideBy(2))
+        item.text.fullRawMoveTo item.center().subtract item.text.extent().floorDivideBy 2
       #console.log "new width of " + item + " : " + item.width()
       trackChanges.pop()
 
   
   unselectAllItems: ->
     @children.forEach (item) ->
-      item.state = item.STATE_NORMAL  if item instanceof MenuItemMorph
+      if item instanceof MenuItemMorph
+        item.state = item.STATE_NORMAL
 
     @changed()
 
@@ -333,8 +334,8 @@ class MenuMorph extends BoxMorph
     @popup morphToAttachTo, world.hand.position()
   
   popUpCenteredAtHand: (world) ->
-    @popup world, world.hand.position().subtract(@extent().floorDivideBy(2))
+    @popup world, world.hand.position().subtract @extent().floorDivideBy 2
   
   popUpCenteredInWorld: (world) ->
-    @popup world, world.center().subtract(@extent().floorDivideBy(2))
+    @popup world, world.center().subtract @extent().floorDivideBy 2
 

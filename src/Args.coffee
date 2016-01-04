@@ -127,7 +127,7 @@ class Args
     existingArg = @argById[parentOrChildVal.id]
     if existingArg?
       existingArg.markedForRemoval = false
-      existingArg.valContainingThisArg.argMightHaveChanged(parentOrChildVal)
+      existingArg.valContainingThisArg.argMightHaveChanged parentOrChildVal
       return existingArg
     return null
 
@@ -153,7 +153,7 @@ class Args
     @childrenArgByNameCount[childVal.valName]?= 0
     @childrenArgByNameCount[childVal.valName]++
     if childVal.directlyOrIndirectlyDependsOnAParentVal
-      @valContainingTheseArgs.stainValCalculatedFromParent(childVal)
+      @valContainingTheseArgs.stainValCalculatedFromParent childVal
     argumentToBeConnected.args.argFromChildMightHaveChanged childVal
 
   # connects a val depending on a parent val to a parent val.

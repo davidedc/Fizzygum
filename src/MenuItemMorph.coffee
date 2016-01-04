@@ -16,8 +16,8 @@ class MenuItemMorph extends TriggerMorph
     if @textDescription?
       return @textDescription + " (adhoc description of menu item)"
     if @labelString
-      textWithoutLocationOrInstanceNo = @labelString.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
-      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+      textWithoutLocationOrInstanceNo = @labelString.replace /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
+      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
       return textWithoutLocationOrInstanceNo + " (text in button)"
     else
       return super()
@@ -33,37 +33,37 @@ class MenuItemMorph extends TriggerMorph
     if @label?
       @label = @label.destroy()
 
-    if isString(@labelString)
-      @label = @createLabelString(@labelString)
+    if isString @labelString
+      @label = @createLabelString @labelString
     else if @labelString instanceof Array      
       # assume its pattern is: [icon, string] 
       @label = new Morph()
       @label.alpha = 0 # transparent
 
-      icon = @createIcon(@labelString[0])
+      icon = @createIcon @labelString[0]
       @label.add icon
-      lbl = @createLabelString(@labelString[1])
+      lbl = @createLabelString @labelString[1]
       @label.add lbl
 
       lbl.fullRawMoveCenterTo icon.center()
       lbl.fullRawMoveLeftSideTo icon.right() + 4
-      @label.rawSetBounds(icon.boundingBox().merge(lbl.boundingBox()))
+      @label.rawSetBounds icon.boundingBox().merge lbl.boundingBox()
     else # assume it's either a Morph or a Canvas
-      @label = @createIcon(@labelString)
+      @label = @createIcon @labelString
 
     @add @label
   
     w = @width()
-    @silentRawSetExtent @label.extent().add(new Point(8, 0))
+    @silentRawSetExtent @label.extent().add new Point 8, 0
     @silentRawSetWidth w
-    np = @position().add(new Point(4, 0))
+    np = @position().add new Point 4, 0
     @label.silentFullRawMoveTo np
   
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement
     icon = new Morph()
     icon.backBuffer = (if source instanceof Morph then source.fullImage() else source)
-    icon.backBufferContext = icon.backBuffer.getContext("2d")
+    icon.backBufferContext = icon.backBuffer.getContext "2d"
 
     # adjust shadow dimensions
     if source instanceof Morph and source.getShadowMorph()
@@ -71,7 +71,7 @@ class MenuItemMorph extends TriggerMorph
       icon.backBuffer = newCanvas(
         source.fullBounds().extent().subtract(
           @shadowBlur * ((if WorldMorph.preferencesAndSettings.useBlurredShadows then 1 else 2))).scaleBy pixelRatio)
-      icon.backBufferContext = icon.backBuffer.getContext("2d")
+      icon.backBufferContext = icon.backBuffer.getContext "2d"
       icon.backBufferContext.drawImage src, 0, 0
 
     icon.silentRawSetWidth icon.backBuffer.width
@@ -80,7 +80,7 @@ class MenuItemMorph extends TriggerMorph
 
   createLabelString: (string) ->
     # console.log "menuitem createLabelString"
-    lbl = new TextMorph(string, @fontSize, @fontStyle)
+    lbl = new TextMorph string, @fontSize, @fontStyle
     lbl.setColor @labelColor
     lbl  
 

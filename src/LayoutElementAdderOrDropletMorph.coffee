@@ -12,7 +12,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
 
   constructor: ->
     super()
-    @setColor new Color(0, 0, 0)
+    @setColor new Color 0, 0, 0
     @setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
   # This method only paints this very morph's "image",
@@ -61,17 +61,17 @@ class LayoutElementAdderOrDropletMorph extends Morph
     p0 = @bottomLeft().subtract(@position())
 
     # now the origin if on the left edge, in the top 2/3 of the morph
-    p0 = p0.subtract(new Point(0, Math.ceil(2*height/3)))
+    p0 = p0.subtract new Point 0, Math.ceil 2 * height/3
     
     # now the origin is in the middle height of the morph,
     # on the left edge of the square incribed in the morph
-    p0 = p0.add new Point (width -  squareDim)/2,0
+    p0 = p0.add new Point (width -  squareDim)/2, 0
 
     
-    plusSignLeft = p0.add(new Point(Math.ceil(squareDim/15),0))
-    plusSignRight = p0.add(new Point(squareDim - Math.ceil(squareDim/15), 0))
-    plusSignTop = p0.add new Point(Math.ceil(squareDim/2),-Math.ceil(squareDim/3))
-    plusSignBottom = p0.add new Point(Math.ceil(squareDim/2),Math.ceil(squareDim/3))
+    plusSignLeft = p0.add new Point Math.ceil(squareDim/15), 0
+    plusSignRight = p0.add new Point squareDim - Math.ceil(squareDim/15), 0
+    plusSignTop = p0.add new Point Math.ceil(squareDim/2), -Math.ceil(squareDim/3)
+    plusSignBottom = p0.add new Point Math.ceil(squareDim/2), Math.ceil(squareDim/3)
 
     context.beginPath()
     context.moveTo 0.5 + plusSignLeft.x, 0.5 + plusSignLeft.y
@@ -81,12 +81,12 @@ class LayoutElementAdderOrDropletMorph extends Morph
 
     # now the new origin is in the lower part of the morph, so
     # we can put an arrow there.
-    p0 = p0.add(new Point(0, Math.ceil(1*height/3)))
+    p0 = p0.add new Point 0, Math.ceil 1*height/3
     arrowFlapSize = Math.ceil squareDim/8
-    arrowSignLeft = p0.add(new Point(arrowFlapSize,0))
-    arrowSignRight = p0.add(new Point(squareDim - arrowFlapSize, 0))
-    arrowUp = arrowSignRight.add(new Point(- arrowFlapSize, - arrowFlapSize))
-    arrowDown = arrowSignRight.add(new Point(- arrowFlapSize, + arrowFlapSize))
+    arrowSignLeft = p0.add new Point arrowFlapSize, 0
+    arrowSignRight = p0.add new Point squareDim - arrowFlapSize, 0
+    arrowUp = arrowSignRight.add new Point -arrowFlapSize, -arrowFlapSize
+    arrowDown = arrowSignRight.add new Point -arrowFlapSize, arrowFlapSize
     context.moveTo 0.5 + arrowSignLeft.x, 0.5 + arrowSignLeft.y
     context.lineTo 0.5 + arrowSignRight.x, 0.5 + arrowSignRight.y
 
@@ -110,11 +110,11 @@ class LayoutElementAdderOrDropletMorph extends Morph
     # darker color.
     context.save()
     context.strokeStyle = shadowColor.toString()
-    @drawHandle(context)
+    @drawHandle context
     context.restore()
 
     context.strokeStyle = color.toString()
-    @drawHandle(context)
+    @drawHandle context
 
   mouseClickLeft: ->
     @bringToForegroud()
@@ -141,9 +141,9 @@ class LayoutElementAdderOrDropletMorph extends Morph
     @destroy()
 
   mouseEnter: ->
-    @setColor new Color(100, 100, 100)
+    @setColor new Color 100, 100, 100
   
   mouseLeave: ->
-    @setColor new Color(0, 0, 0)
+    @setColor new Color 0, 0, 0
 
 

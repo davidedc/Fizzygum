@@ -13,7 +13,7 @@ class LRUCache
 
   values: ->
     values = @keys().map (key) =>
-      @get(key)
+      @get key
     return values.filter (v) -> v isnt undefined
 
   remove: (key) ->

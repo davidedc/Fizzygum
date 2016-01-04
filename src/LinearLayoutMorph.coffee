@@ -190,7 +190,7 @@ class LinearLayoutMorph extends LayoutMorph
     startingSpaceInMainDirection = ((usableMainDirectionSpace - sumOfMainDirections) * @float + Math.max(separationInMainDirection, 0)) +  mainDirectionStart
     mainDirectionCursor = startingSpaceInMainDirection
 
-    usableMinorDirection = minorDirectionBoundsExtent - Math.max(2*separationInMinorDirection,0)
+    usableMinorDirection = minorDirectionBoundsExtent - Math.max 2*separationInMinorDirection, 0
     
     for i in [childrenWithLinearLayoutSpec.length-1 .. 0]
       m = childrenWithLinearLayoutSpec[i]
@@ -205,20 +205,20 @@ class LinearLayoutMorph extends LayoutMorph
       # self flag: #jmvVer2.
       # should extent be set in m's coordinate system? what if its scale is not 1?
       if direction == "#horizontal"
-        newExtent = new Point(Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent),h)
+        newExtent = new Point Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent), h
       else if direction == "#vertical"
-        newExtent = new Point(h,Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent))
+        newExtent = new Point h, Math.min mainDirectionSizeForThisMorph, mainDirectionBoundsExtent
 
       if direction == "#horizontal"
-        m.fullRawMoveTo(new Point(mainDirectionCursor,t))
+        m.fullRawMoveTo new Point mainDirectionCursor, t
       else if direction == "#vertical"
-        m.fullRawMoveTo(new Point(t,mainDirectionCursor))
+        m.fullRawMoveTo new Point t, mainDirectionCursor
       #debugger
-      m.rawSetExtent(newExtent)
+      m.rawSetExtent newExtent
 
       if mainDirectionSizeForThisMorph > 0
         # move on the cursor along the main direction
-        mainDirectionCursor = Math.min(mainDirectionCursor + mainDirectionSizeForThisMorph + separationInMainDirection, mainDirectionEnd)
+        mainDirectionCursor = Math.min mainDirectionCursor + mainDirectionSizeForThisMorph + separationInMainDirection, mainDirectionEnd
 
 
   # So the user can adjust layout
@@ -259,15 +259,15 @@ class LinearLayoutMorph extends LayoutMorph
         else if @direction == "#vertical"
           sumOfProportional += child.linearLinearLayoutSpec.getProportionalHeight()
 
-    return 1.0/Math.max(sumOfProportional, 1.0)
+    return 1.0 / Math.max sumOfProportional, 1.0
 
 
   adjustByAt: (aLayoutAdjustMorph, aPoint) ->
     # | delta l lls r rs lNewWidth rNewWidth i lCurrentWidth rCurrentWidth doNotResizeBelow |
 
-    i = @children.indexOf(aLayoutAdjustMorph)
+    i = @children.indexOf aLayoutAdjustMorph
 
-    l = @children[i+1]
+    l = @children[i + 1]
     r = @children[i - 1]
 
     lls = l.linearLinearLayoutSpec
@@ -291,13 +291,13 @@ class LinearLayoutMorph extends LayoutMorph
       getProportionalSizeVarName = "getProportionalHeight"
       setFixedSizeVarName = "setFixedOrMorphHeight"
 
-    lCurrentWidth = Math.max(lSize,1) # avoid division by zero
+    lCurrentWidth = Math.max lSize, 1 # avoid division by zero
 
     rs = r.linearLinearLayoutSpec
-    rCurrentWidth = Math.max(rSize,1) # avoid division by zero
+    rCurrentWidth = Math.max rSize, 1 # avoid division by zero
 
-    delta = Math.max(delta, doNotResizeBelow - lCurrentWidth)
-    delta = Math.min(delta, rCurrentWidth - doNotResizeBelow)
+    delta = Math.max delta, doNotResizeBelow - lCurrentWidth
+    delta = Math.min delta, rCurrentWidth - doNotResizeBelow
     if delta == 0 then return @
     lNewWidth = lCurrentWidth + delta
     rNewWidth = rCurrentWidth - delta
@@ -319,10 +319,10 @@ class LinearLayoutMorph extends LayoutMorph
   #####################
 
   addAdjusterAndMorphFixedWidth: (aMorph,aNumber) ->
-    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedWidth aNumber)
+    @addAdjusterAndMorphLinearLayoutSpec aMorph, LinearLayoutSpec.newWithFixedWidth aNumber
 
   addAdjusterAndMorphFixedHeight: (aMorph,aNumber) ->
-    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedHeight aNumber)
+    @addAdjusterAndMorphLinearLayoutSpec aMorph, LinearLayoutSpec.newWithFixedHeight aNumber
 
   addAdjusterAndMorphLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
     #Add a submorph, at the bottom or right, with aLinearLayoutSpec"
@@ -330,16 +330,16 @@ class LinearLayoutMorph extends LayoutMorph
     @addMorphWithLinearLayoutSpec aMorph, aLinearLayoutSpec
 
   addAdjusterAndMorphProportionalHeight: (aMorph, aNumber) ->
-    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalHeight(aNumber))
+    @addAdjusterAndMorphLinearLayoutSpec aMorph, LinearLayoutSpec.newWithProportionalHeight aNumber
 
   addAdjusterAndMorphProportionalWidth: (aMorph, aNumber) ->
-    @addAdjusterAndMorphLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalWidth(aNumber))
+    @addAdjusterAndMorphLinearLayoutSpec aMorph, LinearLayoutSpec.newWithProportionalWidth aNumber
 
   addMorphFixedHeight: (aMorph, aNumber) ->
-    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedHeight(aNumber))
+    @addMorphWithLinearLayoutSpec aMorph, LinearLayoutSpec.newWithFixedHeight aNumber
 
   addMorphFixedWidth: (aMorph, aNumber) ->
-    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithFixedWidth(aNumber))
+    @addMorphWithLinearLayoutSpec aMorph, LinearLayoutSpec.newWithFixedWidth aNumber
 
   addMorphWithLinearLayoutSpec: (aMorph, aLinearLayoutSpec) ->
     # Add a submorph, at the bottom or right, with aLinearLayoutSpec
@@ -347,21 +347,21 @@ class LinearLayoutMorph extends LayoutMorph
     @add aMorph
 
   addMorphProportionalHeight: (aMorph, aNumber) ->
-    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalHeight(aNumber))
+    @addMorphWithLinearLayoutSpec aMorph, LinearLayoutSpec.newWithProportionalHeight aNumber
 
   addMorphProportionalWidth: (aMorph, aNumber) ->
-    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.newWithProportionalWidth(aNumber))
+    @addMorphWithLinearLayoutSpec aMorph, LinearLayoutSpec.newWithProportionalWidth aNumber
 
   addMorphUseAll: (aMorph) ->
-    @addMorphWithLinearLayoutSpec(aMorph, LinearLayoutSpec.useAll())
+    @addMorphWithLinearLayoutSpec aMorph, LinearLayoutSpec.useAll()
 
   addMorphs: (morphs) ->
     morphs.forEach (morph) =>
-      @addMorphProportionalWidth(morph,1)
+      @addMorphProportionalWidth morph, 1
 
   addMorphsWidthProportionalTo: (morphs, widths) ->
     morphs.forEach (morph) =>
-      @addMorphProportionalWidth(morph, widths)
+      @addMorphProportionalWidth morph, widths
 
   # unclear how to translate this one for the time being
   is: (aSymbol) ->
@@ -369,97 +369,97 @@ class LinearLayoutMorph extends LayoutMorph
 
 
   @testSet1: ->
-    @testScenario1("#horizontal")
-    @testScenario2("#horizontal")
-    @testScenario3("#horizontal")
-    @testScenario4("#horizontal")
-    @testScenario5("#horizontal")
-    @testScenario6("#horizontal")
+    @testScenario1 "#horizontal"
+    @testScenario2 "#horizontal"
+    @testScenario3 "#horizontal"
+    @testScenario4 "#horizontal"
+    @testScenario5 "#horizontal"
+    @testScenario6 "#horizontal"
 
   @testSet2: ->
-    @testScenario1("#vertical")
-    @testScenario2("#vertical")
-    @testScenario3("#vertical")
-    @testScenario4("#vertical")
-    @testScenario5("#vertical")
-    @testScenario6("#vertical")
+    @testScenario1 "#vertical"
+    @testScenario2 "#vertical"
+    @testScenario3 "#vertical"
+    @testScenario4 "#vertical"
+    @testScenario5 "#vertical"
+    @testScenario6 "#vertical"
 
 
   @testScenario1: (direction = "#horizontal")->
-    rect1 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect2 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
+    rect1 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect2 = new RectangleMorph new Point(20,20), new Color(0,255,0)
     
-    if direction == "#horizontal"      
+    if direction == "#horizontal"
       line = LinearLayoutMorph.newRow()
-      line.addMorphProportionalWidth(rect1,2)
-      line.addMorphProportionalWidth(rect2,1)
+      line.addMorphProportionalWidth rect1, 2
+      line.addMorphProportionalWidth rect2, 1
     else
       line = LinearLayoutMorph.newColumn()
-      line.addMorphProportionalHeight(rect1,2)
-      line.addMorphProportionalHeight(rect2,1)
+      line.addMorphProportionalHeight rect1, 2
+      line.addMorphProportionalHeight rect2, 1
 
     line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(10,10)
-    line.fullRawMoveWithin(world);
-    world.add(line);
-    line.changed();
-
-    # attach a HandleMorph to it so that
-    # we can check how it resizes
-    new HandleMorph(line)
-
-
-  @testScenario2: (direction = "#horizontal")->
-    rect3 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect4 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-
-    if direction == "#horizontal"      
-      line = LinearLayoutMorph.newRow()
-      line.addMorphFixedWidth(rect3,10)
-      line.addMorphProportionalWidth(rect4,1)
-    else
-      line = LinearLayoutMorph.newColumn()
-      line.addMorphFixedHeight(rect3,10)
-      line.addMorphProportionalHeight(rect4,1)
-
-    line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(110,10)
-    line.fullRawMoveWithin(world);
-    world.add(line);
-    line.changed();
-
-    # attach a HandleMorph to it so that
-    # we can check how it resizes
-    new HandleMorph(line)
-
-  @testScenario3: (direction = "#horizontal")->
-    rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-    rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
-
-    if direction == "#horizontal"      
-      line = LinearLayoutMorph.newRow()
-      line.addMorphProportionalWidth(rect6,2) # green
-      line.addAdjusterAndMorphProportionalWidth(rect7,1) # blue
-      line.addMorphProportionalWidth(rect5,3) # red
-      #line.addMorphFixedWidth(rect5,10) # red
-    else
-      line = LinearLayoutMorph.newColumn()
-      line.addMorphProportionalHeight(rect6,2) # green
-      line.addAdjusterAndMorphProportionalHeight(rect7,1) # blue
-      line.addMorphProportionalHeight(rect5,3) # red
-      #line.addMorphFixedHeight(rect5,10) # red
-
-    #line.addMorphProportionalWidth(rect7,1)
-    line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(210,10)
-    line.fullRawMoveWithin(world)
-    world.add(line)
+    line.fullRawMoveTo new Point 10, 10
+    line.fullRawMoveWithin world
+    world.add line
     line.changed()
 
     # attach a HandleMorph to it so that
     # we can check how it resizes
-    new HandleMorph(line)
+    new HandleMorph line
+
+
+  @testScenario2: (direction = "#horizontal")->
+    rect3 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect4 = new RectangleMorph new Point(20,20), new Color(0,255,0)
+
+    if direction == "#horizontal"      
+      line = LinearLayoutMorph.newRow()
+      line.addMorphFixedWidth rect3, 10
+      line.addMorphProportionalWidth rect4, 1
+    else
+      line = LinearLayoutMorph.newColumn()
+      line.addMorphFixedHeight rect3, 10
+      line.addMorphProportionalHeight rect4, 1
+
+    line.layoutSubmorphs()
+    line.fullRawMoveTo new Point 110, 10
+    line.fullRawMoveWithin world
+    world.add line
+    line.changed()
+
+    # attach a HandleMorph to it so that
+    # we can check how it resizes
+    new HandleMorph line
+
+  @testScenario3: (direction = "#horizontal")->
+    rect5 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect6 = new RectangleMorph new Point(20,20), new Color(0,255,0)
+    rect7 = new RectangleMorph new Point(20,20), new Color(0,0,255)
+
+    if direction == "#horizontal"      
+      line = LinearLayoutMorph.newRow()
+      line.addMorphProportionalWidth rect6, 2 # green
+      line.addAdjusterAndMorphProportionalWidth rect7, 1 # blue
+      line.addMorphProportionalWidth rect5, 3 # red
+      #line.addMorphFixedWidth rect5, 10 # red
+    else
+      line = LinearLayoutMorph.newColumn()
+      line.addMorphProportionalHeight rect6, 2 # green
+      line.addAdjusterAndMorphProportionalHeight rect7, 1 # blue
+      line.addMorphProportionalHeight rect5, 3 # red
+      #line.addMorphFixedHeight rect5, 10 # red
+
+    #line.addMorphProportionalWidth rect7, 1
+    line.layoutSubmorphs()
+    line.fullRawMoveTo new Point 210,10
+    line.fullRawMoveWithin world
+    world.add line
+    line.changed()
+
+    # attach a HandleMorph to it so that
+    # we can check how it resizes
+    new HandleMorph line
 
   @testScenario4: (direction = "#horizontal")->
     # //////////////////////////////////////////////////
@@ -485,76 +485,76 @@ class LinearLayoutMorph extends LayoutMorph
     #   morphExtent: 180 @ 100
     # //////////////////////////////////////////////////
 
-    rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-    rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
+    rect5 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect6 = new RectangleMorph new Point(20,20), new Color(0,255,0)
+    rect7 = new RectangleMorph new Point(20,20), new Color(0,0,255)
 
     if direction == "#horizontal"
       line = LinearLayoutMorph.newRow()
-      line.addMorphProportionalWidth(rect6,0.5) # green
-      line.addMorphFixedWidth(rect5,20) # red
-      line.addMorphProportionalWidth(rect7,1.0) # blue
+      line.addMorphProportionalWidth rect6, 0.5 # green
+      line.addMorphFixedWidth rect5, 20 # red
+      line.addMorphProportionalWidth rect7, 1.0 # blue
     else
       line = LinearLayoutMorph.newColumn()
-      line.addMorphProportionalHeight(rect6,0.5) # green
-      line.addMorphFixedHeight(rect5,20) # red
-      line.addMorphProportionalHeight(rect7,1.0) # blue
+      line.addMorphProportionalHeight rect6, 0.5 # green
+      line.addMorphFixedHeight rect5, 20 # red
+      line.addMorphProportionalHeight rect7, 1.0 # blue
  
     line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(310,10)
-    line.fullRawMoveWithin(world);
-    world.add(line);
-    line.changed();
+    line.fullRawMoveTo new Point 310, 10
+    line.fullRawMoveWithin world
+    world.add line
+    line.changed()
 
     # attach a HandleMorph to it so that
     # we can check how it resizes
-    new HandleMorph(line)
+    new HandleMorph line
 
   @testScenario5: (direction = "#horizontal")->
-    rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
-    rect7 = new RectangleMorph(new Point(20,20), new Color(0,0,255));
+    rect5 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect6 = new RectangleMorph new Point(20,20), new Color(0,255,0)
+    rect7 = new RectangleMorph new Point(20,20), new Color(0,0,255)
 
     if direction == "#horizontal"
       line = LinearLayoutMorph.newRow()
-      line.addMorphProportionalWidth(rect6,0.5) # green
-      line.addMorphProportionalWidth(rect7,1.0) # blue
-      line.addAdjusterAndMorphFixedWidth(rect5,20) # red
+      line.addMorphProportionalWidth rect6, 0.5 # green
+      line.addMorphProportionalWidth rect7, 1.0 # blue
+      line.addAdjusterAndMorphFixedWidth rect5, 20 # red
     else
       line = LinearLayoutMorph.newColumn()
-      line.addMorphProportionalHeight(rect6,0.5) # green
-      line.addMorphProportionalHeight(rect7,1.0) # blue
-      line.addAdjusterAndMorphFixedHeight(rect5,20) # red
+      line.addMorphProportionalHeight rect6, 0.5 # green
+      line.addMorphProportionalHeight rect7, 1.0 # blue
+      line.addAdjusterAndMorphFixedHeight rect5, 20 # red
 
     line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(410,10)
-    line.fullRawMoveWithin(world);
-    world.add(line);
-    line.changed();
+    line.fullRawMoveTo new Point 410, 10
+    line.fullRawMoveWithin world
+    world.add line
+    line.changed()
 
     # attach a HandleMorph to it so that
     # we can check how it resizes
-    new HandleMorph(line)
+    new HandleMorph line
 
   @testScenario6: (direction = "#horizontal")->
-    rect5 = new RectangleMorph(new Point(20,20), new Color(255,0,0));
-    rect6 = new RectangleMorph(new Point(20,20), new Color(0,255,0));
+    rect5 = new RectangleMorph new Point(20,20), new Color(255,0,0)
+    rect6 = new RectangleMorph new Point(20,20), new Color(0,255,0)
 
     if direction == "#horizontal"
       line = LinearLayoutMorph.newRow()
-      line.addMorphProportionalWidth(rect6,0.5) # green
-      line.addMorphFixedWidth(rect5,20) # red
+      line.addMorphProportionalWidth rect6, 0.5 # green
+      line.addMorphFixedWidth rect5, 20 # red
     else
       line = LinearLayoutMorph.newColumn()
-      line.addMorphProportionalHeight(rect6,0.5) # green
-      line.addMorphFixedHeight(rect5,20) # red
+      line.addMorphProportionalHeight rect6, 0.5 # green
+      line.addMorphFixedHeight rect5, 20 # red
 
     line.layoutSubmorphs()
-    line.fullRawMoveTo new Point(510,10)
-    line.fullRawMoveWithin(world);
-    world.add(line);
-    line.changed();
+    line.fullRawMoveTo new Point 510, 10
+    line.fullRawMoveWithin world
+    world.add line
+    line.changed()
 
     # attach a HandleMorph to it so that
     # we can check how it resizes
-    new HandleMorph(line)
+    new HandleMorph line

@@ -191,9 +191,9 @@ class Morph extends MorphicNode
   identifyViaTextLabel: ->
     myTextDescription = @getTextDescription()
     allCandidateMorphsWithSameTextDescription = 
-      world.allChildrenTopToBottomSuchThat( (m) ->
+      world.allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == myTextDescription
-      )
+
     position = allCandidateMorphsWithSameTextDescription.indexOf @
 
     theLenght = allCandidateMorphsWithSameTextDescription.length
@@ -285,7 +285,7 @@ class Morph extends MorphicNode
     @morphClassString() + "#" + @instanceNumericID
 
   morphClassString: ->
-    (@constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
+    @constructor.name or @constructor.toString().split(" ")[1].split("(")[0]
 
   @morphFromUniqueIDString: (theUniqueID) ->
     result = world.topMorphSuchThat (m) =>
@@ -313,9 +313,9 @@ class Morph extends MorphicNode
     console.log "@roundNumericIDsToNextThousand"
     # this if is because zero and multiples of 1000
     # don't go up to 1000
-    if @lastBuiltInstanceNumericID %1000 == 0
+    if @lastBuiltInstanceNumericID % 1000 == 0
       @lastBuiltInstanceNumericID++
-    @lastBuiltInstanceNumericID = 1000*Math.ceil(@lastBuiltInstanceNumericID/1000)
+    @lastBuiltInstanceNumericID = 1000 * Math.ceil @lastBuiltInstanceNumericID / 1000
 
   constructor: ->
     super()
@@ -328,11 +328,11 @@ class Morph extends MorphicNode
 
     @silentRawSetBounds Rectangle.EMPTY
     @minimumExtent = new Point 5,5
-    @silentFullRawMoveTo(new Point 0,0)
+    @silentFullRawMoveTo new Point 0,0
     # [TODO] why is there this strange non-zero default extent?
-    @silentRawSetExtent(new Point 50, 40)
+    @silentRawSetExtent new Point 50, 40
 
-    @color = @color or new Color(80, 80, 80)
+    @color = @color or new Color 80, 80, 80
     @lastTime = Date.now()
     # Note that we don't call 
     # that's because the actual extending morph will probably
@@ -467,7 +467,7 @@ class Morph extends MorphicNode
       if @onNextStep
         nxt = @onNextStep
         @onNextStep = null
-        nxt.call(@)
+        nxt.call @
       @step()
       @children.forEach (child) ->
         if !child.runChildrensStepFunction?
@@ -677,14 +677,14 @@ class Morph extends MorphicNode
       return
     @cachedFullBounds = null
     if @parent?.cachedFullBounds?
-        @parent.invalidateFullBoundsCache(@)
+        @parent.invalidateFullBoundsCache @
 
   invalidateFullClippedBoundsCache: ->
     if !@checkFullClippedBoundsCache?
       return
     @checkFullClippedBoundsCache = null
     if @parent?.checkFullClippedBoundsCache?
-        @parent.invalidateFullClippedBoundsCache(@)
+        @parent.invalidateFullClippedBoundsCache @
 
 
   # doesn't take into account orphanage
@@ -694,7 +694,7 @@ class Morph extends MorphicNode
     @children.forEach (child) ->
       if child.visibleBasedOnIsVisibleProperty() and
       !child.isCollapsed()
-        result = result.merge(child.SLOWfullBounds())
+        result = result.merge child.SLOWfullBounds()
     result
 
   SLOWfullClippedBounds: ->
@@ -703,7 +703,7 @@ class Morph extends MorphicNode
     result = @clippedThroughBounds()
     @children.forEach (child) ->
       if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
-        result = result.merge(child.SLOWfullClippedBounds())
+        result = result.merge child.SLOWfullClippedBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
     #  debugger
     result
@@ -714,7 +714,7 @@ class Morph extends MorphicNode
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
-        result = result.merge(child.fullBounds())
+        result = result.merge child.fullBounds()
     result    
   
   # does not take into account orphanage or visibility
@@ -729,7 +729,7 @@ class Morph extends MorphicNode
     result = @bounds
     @children.forEach (child) ->
       if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
-        result = result.merge(child.fullBounds())
+        result = result.merge child.fullBounds()
 
     if world.doubleCheckCachedMethodsResults
       if !result.eq @SLOWfullBounds()
@@ -764,7 +764,7 @@ class Morph extends MorphicNode
       result = @clippedThroughBounds()
       @children.forEach (child) ->
         if child.visibleBasedOnIsVisibleProperty() and !child.isCollapsed()
-          result = result.merge(child.fullClippedBounds())
+          result = result.merge child.fullClippedBounds()
 
     if world.doubleCheckCachedMethodsResults
       if !result.eq @SLOWfullClippedBounds()
@@ -779,7 +779,7 @@ class Morph extends MorphicNode
     result = @bounds
     @children.forEach (child) ->
       if (child not instanceof ShadowMorph) and (child.visibleBasedOnIsVisibleProperty()) and (!child.isCollapsed()) 
-        result = result.merge(child.fullBoundsNoShadow())
+        result = result.merge child.fullBoundsNoShadow()
     result
 
   # this one does take into account orphanage and
@@ -791,7 +791,7 @@ class Morph extends MorphicNode
   # visibility.
   clippedThroughBounds: ->
 
-    if @checkClippedThroughBoundsCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
+    if @checkClippedThroughBoundsCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       #console.log "cache hit @checkClippedThroughBoundsCache"
       return @clippedThroughBoundsCache
     #else
@@ -820,7 +820,7 @@ class Morph extends MorphicNode
     if @ == Window
       debugger
 
-    if @checkClipThroughCache == (WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes)
+    if @checkClipThroughCache == WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
       #console.log "cache hit @checkClipThroughCache"
       return @clipThroughCache
     #else
@@ -857,7 +857,7 @@ class Morph extends MorphicNode
     # Both need to be repainted.
     #console.log "move 4"
     @breakNumberOfRawMovesAndResizesCaches()
-    @bounds = @bounds.translateBy(delta)
+    @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
       child.fullRawMoveBy delta
     @changed()
@@ -865,13 +865,13 @@ class Morph extends MorphicNode
   silentFullRawMoveBy: (delta) ->
     #console.log "move 5"
     @breakNumberOfRawMovesAndResizesCaches()
-    @bounds = @bounds.translateBy(delta)
+    @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
   
   breakNumberOfRawMovesAndResizesCaches: ->
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     if @ instanceof HandMorph
       if @children.length == 0
         return
@@ -901,33 +901,33 @@ class Morph extends MorphicNode
     @silentFullRawMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   fullRawMoveLeftSideTo: (x) ->
-    @fullRawMoveTo new Point(x, @top())
+    @fullRawMoveTo new Point x, @top()
   
   fullRawMoveRightSideTo: (x) ->
-    @fullRawMoveTo new Point(x - @width(), @top())
+    @fullRawMoveTo new Point x - @width(), @top()
   
   fullRawMoveTopSideTo: (y) ->
-    @fullRawMoveTo new Point(@left(), y)
+    @fullRawMoveTo new Point @left(), y
   
   fullRawMoveBottomSideTo: (y) ->
-    @fullRawMoveTo new Point(@left(), y - @height())
+    @fullRawMoveTo new Point @left(), y - @height()
   
   fullRawMoveCenterTo: (aPoint) ->
-    @fullRawMoveTo aPoint.subtract(@extent().floorDivideBy(2))
+    @fullRawMoveTo aPoint.subtract @extent().floorDivideBy 2
   
   fullRawMoveFullCenterTo: (aPoint) ->
-    @fullRawMoveTo aPoint.subtract(@fullBounds().extent().floorDivideBy(2))
+    @fullRawMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Morph's bounds
   fullRawMoveWithin: (aMorph) ->
     leftOff = @fullBounds().left() - aMorph.left()
-    @fullRawMoveBy new Point(-leftOff, 0)  if leftOff < 0
+    @fullRawMoveBy new Point -leftOff, 0  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
-    @fullRawMoveBy new Point(-rightOff, 0)  if rightOff > 0
+    @fullRawMoveBy new Point -rightOff, 0  if rightOff > 0
     topOff = @fullBounds().top() - aMorph.top()
-    @fullRawMoveBy new Point(0, -topOff)  if topOff < 0
+    @fullRawMoveBy new Point 0, -topOff  if topOff < 0
     bottomOff = @fullBounds().bottom() - aMorph.bottom()
-    @fullRawMoveBy new Point(0, -bottomOff)  if bottomOff > 0
+    @fullRawMoveBy new Point 0, -bottomOff  if bottomOff > 0
 
 
   notifyChildrenThatParentHasReLayouted: ->
@@ -974,7 +974,7 @@ class Morph extends MorphicNode
   # change extent.
   childChangedExtent: (theMorphChangingTheExtent) ->
     if @insetMorph == theMorphChangingTheExtent
-      @rawSetExtent(@extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent)
+      @rawSetExtent @extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent
 
   # more complex Morphs, e.g. layouts, might
   # do a more complex calculation to get the
@@ -993,15 +993,15 @@ class Morph extends MorphicNode
     if morphStartingTheChange == null
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
-    unless aPoint.eq(@extent())
+    unless aPoint.eq @extent()
       @silentRawSetExtent aPoint
       @changed()
       @reLayout()
       
-      @layoutSubmorphs(morphStartingTheChange)
+      @layoutSubmorphs morphStartingTheChange
       if @parent?
         if @parent != morphStartingTheChange
-          @parent.childChangedExtent(@)
+          @parent.childChangedExtent @
 
   # Morph accessing - dimensional changes requiring a complete redraw
   setExtent: (aPoint, morphStartingTheChange = null) ->
@@ -1033,9 +1033,9 @@ class Morph extends MorphicNode
         else
           aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
 
-    newWidth = Math.max(aPoint.x, 0)
-    newHeight = Math.max(aPoint.y, 0)
-    @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + newWidth, @bounds.origin.y + newHeight)
+    newWidth = Math.max aPoint.x, 0
+    newHeight = Math.max aPoint.y, 0
+    @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
   
   rawSetWidth: (width) ->
     #console.log "move 10"
@@ -1052,8 +1052,8 @@ class Morph extends MorphicNode
   silentRawSetWidth: (width) ->
     #console.log "move 11"
     @breakNumberOfRawMovesAndResizesCaches()
-    w = Math.max(Math.round(width or 0), 0)
-    @bounds = new Rectangle @bounds.origin, new Point(@bounds.origin.x + w, @bounds.corner.y)
+    w = Math.max Math.round(width or 0), 0
+    @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
   rawSetHeight: (height) ->
     #console.log "move 12"
@@ -1071,8 +1071,8 @@ class Morph extends MorphicNode
   silentRawSetHeight: (height) ->
     #console.log "move 13"
     @breakNumberOfRawMovesAndResizesCaches()
-    h = Math.max(Math.round(height or 0), 0)
-    @bounds = new Rectangle @bounds.origin, new Point(@bounds.corner.x, @bounds.origin.y + h)
+    h = Math.max Math.round(height or 0), 0
+    @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     if morphGivingColor?.getColor?
@@ -1080,7 +1080,7 @@ class Morph extends MorphicNode
     else
       aColor = aColorOrAMorphGivingAColor
     if aColor
-      unless @color.eq(aColor)
+      unless @color.eq aColor
         @color = aColor
         if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
         @changed()
@@ -1117,9 +1117,9 @@ class Morph extends MorphicNode
   # tiles the texture
   drawCachedTexture: ->
     bg = @cachedTexture
-    cols = Math.floor(@backBuffer.width / bg.width)
-    lines = Math.floor(@backBuffer.height / bg.height)
-    context = @backBuffer.getContext("2d")
+    cols = Math.floor @backBuffer.width / bg.width
+    lines = Math.floor @backBuffer.height / bg.height
+    context = @backBuffer.getContext "2d"
     for y in [0..lines]
       for x in [0..cols]
         context.drawImage bg, Math.round(x * bg.width), Math.round(y * bg.height)
@@ -1234,13 +1234,13 @@ class Morph extends MorphicNode
     if clippingRectangle.isEmpty()
       return true
 
-    if (aContext == world.worldCanvasContext) and (@isOrphan())
+    if aContext == world.worldCanvasContext and @isOrphan()
       return true
 
-    if (aContext == world.worldCanvasContext) and (!@visibleBasedOnIsVisibleProperty())
+    if aContext == world.worldCanvasContext and !@visibleBasedOnIsVisibleProperty()
       return true
 
-    if (aContext == world.worldCanvasContext) and (@isCollapsed())
+    if aContext == world.worldCanvasContext and @isCollapsed()
       return true
 
     return false
@@ -1287,8 +1287,8 @@ class Morph extends MorphicNode
   hide: ->
     @isVisible = false
     WorldMorph.numberOfVisibilityFlagsChanges++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @fullChanged()
 
   show: ->
@@ -1298,22 +1298,22 @@ class Morph extends MorphicNode
       return
     @isVisible = true
     WorldMorph.numberOfVisibilityFlagsChanges++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @fullChanged()
   
   toggleVisibility: ->
-    @isVisible = (not @isVisible)
+    @isVisible = not @isVisible
     WorldMorph.numberOfVisibilityFlagsChanges++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @fullChanged()
 
   collapse: ->
     @collapsed = true
     WorldMorph.numberOfCollapseFlagsChanges++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @invalidateLayout()
     @fullChanged()
 
@@ -1324,8 +1324,8 @@ class Morph extends MorphicNode
       return
     @collapsed = false
     WorldMorph.numberOfCollapseFlagsChanges++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @invalidateLayout()
     @fullChanged()
 
@@ -1364,8 +1364,8 @@ class Morph extends MorphicNode
     if !bounds?
       bounds = @fullBounds()
 
-    img = newCanvas(bounds.extent().scaleBy pixelRatio)
-    ctx = img.getContext("2d")
+    img = newCanvas bounds.extent().scaleBy pixelRatio
+    ctx = img.getContext "2d"
     # ctx.scale pixelRatio, pixelRatio
     # we are going to draw this morph and its children into "img".
     # note that the children are not necessarily geometrically
@@ -1381,13 +1381,13 @@ class Morph extends MorphicNode
 
   fullImageNoShadow: ->
     boundsWithNoShadow = @fullBoundsNoShadow()
-    return @fullImage(boundsWithNoShadow, true)
+    return @fullImage boundsWithNoShadow, true
 
   fullImageData: ->
     # returns a string like "data:image/png;base64,iVBORw0KGgoAA..."
     # note that "image/png" below could be omitted as it's
     # the default, but leaving it here for clarity.
-    @fullImage().toDataURL("image/png")
+    @fullImage().toDataURL "image/png"
 
   # the way we take a picture here is different
   # than the way we usually take a picture.
@@ -1420,7 +1420,7 @@ class Morph extends MorphicNode
     return destCanvas.toDataURL "image/png"
 
   fullImageHashCode: ->
-    return hashCode(@fullImageData())
+    return hashCode @fullImageData()
   
   # Morph shadow.
   # The canvas with the shadow is completely
@@ -1440,10 +1440,10 @@ class Morph extends MorphicNode
   # *will* contain some semi-transparent fill of
   # the box.
   shadowImage: (off_, color, blurred) ->
-    offset = off_ or new Point(7, 7)
+    offset = off_ or new Point 7, 7
     blur = @shadowBlur
-    clr = color or new Color(0, 0, 0)
-    fb = @fullBoundsNoShadow().extent().add(blur * 2)
+    clr = color or new Color 0, 0, 0
+    fb = @fullBoundsNoShadow().extent().add blur * 2
 
     # take "the image" which is the image of all the
     # morphs. This image contains no shadows, the shadow
@@ -1452,8 +1452,8 @@ class Morph extends MorphicNode
 
     # draw the image in special "shadowBlur" mode
     # http://www.w3schools.com/tags/canvas_shadowblur.asp
-    sha = newCanvas(fb.scaleBy pixelRatio)
-    ctx = sha.getContext("2d")
+    sha = newCanvas fb.scaleBy pixelRatio
+    ctx = sha.getContext "2d"
     #ctx.scale pixelRatio, pixelRatio
     ctx.shadowOffsetX = offset.x * pixelRatio
     ctx.shadowOffsetY = offset.y * pixelRatio
@@ -1498,7 +1498,7 @@ class Morph extends MorphicNode
     shadow
 
   silentAddFullShadow: (offset, alpha, color) ->
-    shadow = new ShadowMorph(@, offset, alpha, color)
+    shadow = new ShadowMorph @, offset, alpha, color
     @addChildFirst shadow
     shadow
   
@@ -1601,7 +1601,7 @@ class Morph extends MorphicNode
       @invalidateLayout()
 
     aMorph.fullChanged()
-    @silentAdd(aMorph, true, position)
+    @silentAdd aMorph, true, position
     aMorph.imBeingAddedTo @
     return aMorph
 
@@ -1697,7 +1697,7 @@ class Morph extends MorphicNode
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     if copiedMorph instanceof MenuMorph
-      copiedMorph.onClickOutsideMeOrAnyOfMyChildren(null)
+      copiedMorph.onClickOutsideMeOrAnyOfMyChildren null
       copiedMorph.killThisMenuIfClickOnDescendantsTriggers = false
       copiedMorph.killThisMenuIfClickOutsideDescendants = false
 
@@ -1726,7 +1726,7 @@ class Morph extends MorphicNode
   deserialize: (serializationString) ->
     # this is to ignore all the comment strings
     # that might be there for reading purposes
-    objectsSerializations = serializationString.split(/^\/\/.*$/gm)
+    objectsSerializations = serializationString.split /^\/\/.*$/gm
     # the serialization ends with a comment so
     # last element is empty, pop it
     objectsSerializations.pop()
@@ -1742,7 +1742,7 @@ class Morph extends MorphicNode
       #console.log "with:" + namedClasses[eachMorph.className]
       if eachObject.className == "Canvas"
         theClone = newCanvas new Point eachObject.width, eachObject.height
-        ctx = theClone.getContext("2d");
+        ctx = theClone.getContext "2d"
 
         image = new Image();
         image.src = eachObject.data
@@ -1751,10 +1751,10 @@ class Morph extends MorphicNode
         # would actually be asynchronous, in theory
         # you'd have to do the drawImage in a callback
         # on onLoad of the image...
-        ctx.drawImage(image, 0, 0)
+        ctx.drawImage image, 0, 0
 
       else if eachObject.constructor != Array
-        theClone = Object.create(namedClasses[eachObject.className])
+        theClone = Object.create namedClasses[eachObject.className]
         if theClone.assignUniqueID?
           theClone.assignUniqueID()
       else
@@ -1798,7 +1798,7 @@ class Morph extends MorphicNode
 
       # an instance of ScrollFrameMorph is also an instance of FrameMorph
       # so gotta do this check first ahead of next paragraph.
-      maybeScrollFrameMorphAncestor = @parentThatIsA(ScrollFrameMorph)
+      maybeScrollFrameMorphAncestor = @parentThatIsA ScrollFrameMorph
       if maybeScrollFrameMorphAncestor?
         maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
         if maybeScrollFrameMorphAncestor.canScrollByDraggingForeground and
@@ -1858,7 +1858,7 @@ class Morph extends MorphicNode
 
   mouseClickLeft: (pos) ->
     @bringToForegroud()
-    @escalateEvent("mouseClickLeft", pos)
+    @escalateEvent "mouseClickLeft", pos
 
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
     if functionName?
@@ -1880,7 +1880,7 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @fullRawMoveTo world.hand.position().subtract(@fullBoundsNoShadow().extent().floorDivideBy(2))
+    @fullRawMoveTo world.hand.position().subtract @fullBoundsNoShadow().extent().floorDivideBy 2
   
   # note how this verified that
   # at *any point* up in the
@@ -1894,13 +1894,13 @@ class Morph extends MorphicNode
     if @parent
       return (
         origin: @parent
-        position: @position().subtract(@parent.position())
+        position: @position().subtract @parent.position()
       )
     null
   
   slideBackTo: (situation, inSteps) ->
     steps = inSteps or 5
-    pos = situation.origin.position().add(situation.position)
+    pos = situation.origin.position().add situation.position
     xStep = -(@left() - pos.x) / steps
     yStep = -(@top() - pos.y) / steps
     stepCount = 0
@@ -1908,7 +1908,7 @@ class Morph extends MorphicNode
     oldFps = @fps
     @fps = 0
     @step = =>
-      @silentFullRawMoveBy new Point(xStep, yStep)
+      @silentFullRawMoveBy new Point xStep, yStep
       @fullChanged()
       stepCount += 1
       if stepCount is steps
@@ -1930,7 +1930,7 @@ class Morph extends MorphicNode
       if (@lastSiblingBeforeMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingBeforeMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.push \
           @addAsSiblingBeforeMe \
-            (new StackElementsSizeAdjustingMorph()),
+            new StackElementsSizeAdjustingMorph(),
             null,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -1939,14 +1939,14 @@ class Morph extends MorphicNode
       if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.push \
           @addAsSiblingAfterMe \
-            (new StackElementsSizeAdjustingMorph()),
+            new StackElementsSizeAdjustingMorph(),
             null,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
   
   showMoveHandle: ->
-    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph(@, "moveHandle")
+    world.temporaryHandlesAndLayoutAdjusters.push new HandleMorph @, "moveHandle"
   
   hint: (msg) ->
     text = msg
@@ -1954,7 +1954,7 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph(false, @, true, true, text)
+    m = new MenuMorph false, @, true, true, text
     m.popUpCenteredAtHand world
   
   inform: (msg) ->
@@ -1963,7 +1963,7 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph(false, @, true, true, text)
+    m = new MenuMorph false, @, true, true, text
     m.addItem "Ok"
     m.popUpCenteredAtHand world
 
@@ -1978,7 +1978,7 @@ class Morph extends MorphicNode
       false,
       false,
       isNumeric)
-    menu = new MenuMorph(false, target, true, true, msg or "", tempPromptEntryField)
+    menu = new MenuMorph false, target, true, true, msg or "", tempPromptEntryField
     menu.tempPromptEntryField = tempPromptEntryField
     menu.items.push tempPromptEntryField
     if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
@@ -1989,7 +1989,7 @@ class Morph extends MorphicNode
         Math.floor((ceilingNum - floorNum) / 4),
         "horizontal")
       slider.alpha = 1
-      slider.color = new Color(225, 225, 225)
+      slider.color = new Color 225, 225, 225
       slider.button.color = new Color 60,60,60
       slider.button.highlightColor = slider.button.color.copy()
       slider.button.highlightColor.b += 100
@@ -2009,7 +2009,7 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.popUpAtHand(@firstContainerMenu())
+    menu.popUpAtHand @firstContainerMenu()
     tempPromptEntryField.text.edit()
 
   reactToSliderAction1: (num, theMenu) ->
@@ -2029,8 +2029,8 @@ class Morph extends MorphicNode
     theMenu.tempPromptEntryField.text.changed()
   
   pickColor: (msg, callback, defaultContents) ->
-    colorPicker = new ColorPickerMorph(defaultContents)
-    menu = new MenuMorph(false, @, true, true, msg or "", colorPicker)
+    colorPicker = new ColorPickerMorph defaultContents
+    menu = new MenuMorph false, @, true, true, msg or "", colorPicker
     menu.items.push colorPicker
     menu.addLine 2
     menu.addItem "Ok", true, @, callback
@@ -2038,13 +2038,13 @@ class Morph extends MorphicNode
     menu.addItem "Cancel", true, @, ->
       null
 
-    menu.popUpAtHand(@firstContainerMenu())
+    menu.popUpAtHand @firstContainerMenu()
 
   inspect: (anotherObject) ->
     @spawnInspector @
 
   spawnInspector: (inspectee) ->
-    inspector = new InspectorMorph(inspectee)
+    inspector = new InspectorMorph inspectee
     inspector.fullRawMoveTo world.hand.position()
     inspector.fullRawMoveWithin world
     world.add inspector
@@ -2101,18 +2101,18 @@ class Morph extends MorphicNode
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
-    menu = new MenuMorph(false, @, true, true, null)
+    menu = new MenuMorph false, @, true, true, null
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
-        textLabelForMorph = each.toString().slice(0, 50)
+        textLabelForMorph = each.toString().slice 0, 50
         menu.addItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
 
     menu
 
   popupDeveloperMenu: (morphTriggeringThis)->
-    @developersMenu().popUpAtHand(morphTriggeringThis.firstContainerMenu())
+    @developersMenu().popUpAtHand morphTriggeringThis.firstContainerMenu()
 
 
   popUpColorSetter: ->
@@ -2129,12 +2129,12 @@ class Morph extends MorphicNode
       true
 
   createNewStringMorph2WithBackground: ->
-    newMorph = new StringMorph2("Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5)
+    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
     newMorph.isEditable = true
     world.create newMorph
 
   createNewStringMorph2WithoutBackground: ->
-    newMorph = new StringMorph2("Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa")
+    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa"
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2190,7 +2190,7 @@ class Morph extends MorphicNode
     world.morphsToBePinouted.remove b
 
   testMenu: (a,targetMorph)->
-    menu = new MenuMorph(false, targetMorph, true, true, null)
+    menu = new MenuMorph false, targetMorph, true, true, null
     menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
@@ -2218,13 +2218,13 @@ class Morph extends MorphicNode
     menu.addItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
-    menu.popUpAtHand(a.firstContainerMenu())
+    menu.popUpAtHand a.firstContainerMenu()
 
   underTheCarpetIconAndText: ->
     world.create new UnderTheCarpetOpenerMorph()
 
   popUpSecondMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph(false, @, true, true, "others")
+    menu = new MenuMorph false, @, true, true, "others"
     menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
     menu.addItem "UnderCarpetIconMorph", true, @, "createUnderCarpetIconMorph"
     menu.addItem "CollapsedStateIconMorph", true, @, "createCollapsedStateIconMorph"
@@ -2233,7 +2233,7 @@ class Morph extends MorphicNode
     menu.addItem "ScratchAreaIconMorph", true, @, "createScratchAreaIconMorph"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
-    menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
+    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
@@ -2256,7 +2256,7 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     if userMenu
       menu.addItem "user features...", true, @, ->
-        userMenu.popUpAtHand(@firstContainerMenu())
+        userMenu.popUpAtHand @firstContainerMenu()
 
       menu.addLine()
     menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
@@ -2285,7 +2285,7 @@ class Morph extends MorphicNode
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         # While recording a test, just trigger for
         # the takeScreenshot command to be recorded. 
-        window.world.systemTestsRecorderAndPlayer.takeScreenshot(@)
+        window.world.systemTestsRecorderAndPlayer.takeScreenshot @
       else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
         # While playing a test, this command puts the
         # screenshot of this morph in a special
@@ -2322,12 +2322,12 @@ class Morph extends MorphicNode
   calculateAlphaScaled: (alpha) ->
     if typeof alpha is "number"
       unscaled = alpha / 100
-      return Math.min(Math.max(unscaled, 0.1), 1)
+      return Math.min Math.max(unscaled, 0.1), 1
     else
-      newAlpha = parseFloat(alpha)
-      unless isNaN(newAlpha)
+      newAlpha = parseFloat alpha
+      unless isNaN newAlpha
         unscaled = newAlpha / 100
-        return Math.min(Math.max(unscaled, 0.1), 1)
+        return Math.min Math.max(unscaled, 0.1), 1
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
     if morphGivingAlpha?.getValue?
@@ -2336,7 +2336,7 @@ class Morph extends MorphicNode
       alpha = alphaOrMorphGivingAlpha
 
     if alpha
-      alpha = @calculateAlphaScaled(alpha)
+      alpha = @calculateAlphaScaled alpha
       unless @alpha == alpha
         @alpha = alpha
         if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
@@ -2361,7 +2361,7 @@ class Morph extends MorphicNode
       @adjustScrollBars()
 
   attach: ->
-    choices = world.plausibleTargetAndDestinationMorphs(@)
+    choices = world.plausibleTargetAndDestinationMorphs @
 
     # my direct parent might be in the
     # options which is silly, leave that one out
@@ -2371,7 +2371,7 @@ class Morph extends MorphicNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph(false, @, true, true, "choose new parent:")
+      menu = new MenuMorph false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
     else
@@ -2383,11 +2383,11 @@ class Morph extends MorphicNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
-    menu.popUpAtHand(@firstContainerMenu())
+      menu = new MenuMorph false, @, true, true, "no morphs to attach to"
+    menu.popUpAtHand @firstContainerMenu()
 
   attachWithHorizLayout: ->
-    choices = world.plausibleTargetAndDestinationMorphs(@)
+    choices = world.plausibleTargetAndDestinationMorphs @
 
     # my direct parent might be in the
     # options which is silly, leave that one out
@@ -2397,7 +2397,7 @@ class Morph extends MorphicNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph(false, @, true, true, "choose new parent:")
+      menu = new MenuMorph false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
     else
@@ -2409,8 +2409,8 @@ class Morph extends MorphicNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph(false, @, true, true, "no morphs to attach to")
-    menu.popUpAtHand(@firstContainerMenu())
+      menu = new MenuMorph false, @, true, true, "no morphs to attach to"
+    menu.popUpAtHand @firstContainerMenu()
   
   # does nothing, keeping it for the peace of
   # some tests
@@ -2436,7 +2436,7 @@ class Morph extends MorphicNode
   
   nextEntryField: (current) ->
     fields = @allEntryFields()
-    idx = fields.indexOf(current)
+    idx = fields.indexOf current
     if idx isnt -1
       if fields.length > (idx + 1)
         return fields[idx + 1]
@@ -2444,7 +2444,7 @@ class Morph extends MorphicNode
   
   previousEntryField: (current) ->
     fields = @allEntryFields()
-    idx = fields.indexOf(current)
+    idx = fields.indexOf current
     if idx isnt -1
       if idx > 0
         return fields[idx - 1]
@@ -2505,7 +2505,7 @@ class Morph extends MorphicNode
   # Morph eval. Used by the Inspector and the TextMorph.
   evaluateString: (code) ->
     try
-      result = eval(code)
+      result = eval code
       @reLayout()
       
       @changed()
@@ -2517,7 +2517,7 @@ class Morph extends MorphicNode
   # Morph collision detection - not used anywhere at the moment ////////////////////////
   
   isTouching: (otherMorph) ->
-    oImg = @overlappingImage(otherMorph)
+    oImg = @overlappingImage otherMorph
     data = oImg.getContext("2d").getImageData(1, 1, oImg.width, oImg.height).data
     detect(data, (each) ->
       each isnt 0
@@ -2527,11 +2527,11 @@ class Morph extends MorphicNode
     fb = @fullBounds()
     otherFb = otherMorph.fullBounds()
     oRect = fb.intersect(otherFb)
-    oImg = newCanvas(oRect.extent().scaleBy pixelRatio)
-    ctx = oImg.getContext("2d")
+    oImg = newCanvas oRect.extent().scaleBy pixelRatio
+    ctx = oImg.getContext "2d"
     ctx.scale pixelRatio, pixelRatio
     if oRect.width() < 1 or oRect.height() < 1
-      return newCanvas((new Point(1, 1)).scaleBy pixelRatio)
+      return newCanvas (new Point 1, 1).scaleBy pixelRatio
     ctx.drawImage @fullImage(),
       Math.round(oRect.origin.x - fb.origin.x),
       Math.round(oRect.origin.y - fb.origin.y)
@@ -2831,7 +2831,7 @@ class Morph extends MorphicNode
         childBounds = new Rectangle \
           childLeft,
           newBoundsForThisLayout.top(),
-          childLeft +  C.getMinDim().width() * reductionFraction,
+          childLeft + C.getMinDim().width() * reductionFraction,
           newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
@@ -2855,7 +2855,7 @@ class Morph extends MorphicNode
         childBounds = new Rectangle \
           childLeft,
           newBoundsForThisLayout.top(),
-          childLeft + minWidth + (desWidth - minWidth)*fraction,
+          childLeft + minWidth + (desWidth - minWidth) * fraction,
           newBoundsForThisLayout.top() + newBoundsForThisLayout.height()
         childLeft += childBounds.width()
         C.doLayout childBounds
@@ -2865,7 +2865,7 @@ class Morph extends MorphicNode
     # allocate all the desired spaces, and on top of that
     # give extra space based on maximum widths
     else
-      maxMargin = max.width()-desired.width()
+      maxMargin = max.width() - desired.width()
       totDesWidth = desired.width()
       maxWidth = null
       desWidth = null
@@ -2911,7 +2911,7 @@ class Morph extends MorphicNode
     @_showsAdders = true
     if @children.length == 0
       @add \
-        (new LayoutElementAdderOrDropletMorph()),
+        new LayoutElementAdderOrDropletMorph(),
         null,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @invalidateLayout()
@@ -2931,7 +2931,7 @@ class Morph extends MorphicNode
 
     if @children.length == 0
       @add \
-        (new LayoutElementAdderOrDropletMorph()),
+        new LayoutElementAdderOrDropletMorph(),
         null,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -2958,7 +2958,7 @@ class Morph extends MorphicNode
       if !leftToDo?
         break
       leftToDo.addAsSiblingBeforeMe \
-            (new LayoutElementAdderOrDropletMorph()),
+            new LayoutElementAdderOrDropletMorph(),
             null,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -2988,7 +2988,7 @@ class Morph extends MorphicNode
       if !leftToDo?
         break
       leftToDo.addAsSiblingAfterMe \
-            (new LayoutElementAdderOrDropletMorph()),
+            new LayoutElementAdderOrDropletMorph(),
             null,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
@@ -3001,9 +3001,9 @@ class Morph extends MorphicNode
     for i in [0..5]
       lmHolder = new Morph()
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
-      lmHolder.fullRawMoveTo new Point(10 + 60 * i, 10 + 50 * 0)
+      lmHolder.fullRawMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
-      world.add(lmHolder)
+      world.add lmHolder
 
     ################################################
 
@@ -3016,16 +3016,16 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 0, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder 
 
     ################################################
 
@@ -3038,16 +3038,16 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 1, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3062,18 +3062,18 @@ class Morph extends MorphicNode
     lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 2, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3090,18 +3090,18 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 3, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3127,18 +3127,18 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 4, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3164,18 +3164,18 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 5, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3201,18 +3201,18 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 6, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
 
     ################################################
 
@@ -3238,15 +3238,15 @@ class Morph extends MorphicNode
     lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
-    lmContent1.setColor new Color(0, 255, 0)
-    lmContent2.setColor new Color(0, 0, 255)
-    lmContent3.setColor new Color(255, 255, 0)
+    lmContent1.setColor new Color 0, 255, 0
+    lmContent2.setColor new Color 0, 0, 255
+    lmContent3.setColor new Color 255, 255, 0
 
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
 
-    lmHolder.fullRawMoveTo new Point(10 + 60 * 7, 30 + 50 * 1)
+    lmHolder.fullRawMoveTo new Point 10 + 60 * 7, 30 + 50 * 1 
 
-    world.add(lmHolder)
-    new HandleMorph(lmHolder)
+    world.add lmHolder
+    new HandleMorph lmHolder
