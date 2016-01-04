@@ -50,20 +50,20 @@ class TextMorph extends StringMorph
     @shadowColor = null
     ) ->
 
-      super(text, @fontSize, @fontStyle, @isBold, @isItalic, null, shadowOffset, @shadowColor,null,fontName)
+      super text, @fontSize, @fontStyle, @isBold, @isItalic, null, shadowOffset, @shadowColor, null, fontName
       # override inherited properties:
-      @markedTextColor = new Color(255, 255, 255)
-      @markedBackgoundColor = new Color(60, 60, 120)
+      @markedTextColor = new Color 255, 255, 255
+      @markedBackgoundColor = new Color 60, 60, 120
       @text = text or ((if text is "" then text else "TextMorph"))
       @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
-      @shadowOffset = shadowOffset or new Point(0, 0)
-      @color = new Color(0, 0, 0)
+      @shadowOffset = shadowOffset or new Point 0, 0
+      @color = new Color 0, 0, 0
       @noticesTransparentClick = true
   
   breakTextIntoLines: ->
-    paragraphs = @text.split("\n")
+    paragraphs = @text.split "\n"
     canvas = newCanvas()
-    context = canvas.getContext("2d")
+    context = canvas.getContext "2d"
     context.scale pixelRatio, pixelRatio
     currentLine = ""
     slot = 0
@@ -75,7 +75,7 @@ class TextMorph extends StringMorph
     
     # put all the text in an array, word by word
     paragraphs.forEach (p) =>
-      @words = @words.concat(p.split(" "))
+      @words = @words.concat p.split " "
       @words.push "\n"
 
     # takes the text, word by word, and re-flows
@@ -100,7 +100,7 @@ class TextMorph extends StringMorph
         # slots count in the arrays
         @lines.push currentLine
         @lineSlots.push slot
-        @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
+        @maxLineWidth = Math.max @maxLineWidth, Math.ceil context.measureText(currentLine).width
         currentLine = ""
       else
         if @maxTextWidth > 0
@@ -117,7 +117,7 @@ class TextMorph extends StringMorph
             # word that has caused the overflow.
             @lines.push currentLine
             @lineSlots.push slot
-            @maxLineWidth = Math.max(@maxLineWidth, Math.ceil(context.measureText(currentLine).width))
+            @maxLineWidth = Math.max @maxLineWidth, Math.ceil context.measureText(currentLine).width
             currentLine = word + " "
           else
             # no overflow happened, so just proceed as normal
@@ -130,17 +130,17 @@ class TextMorph extends StringMorph
   reLayout: ->
     super()
     ANimage = newCanvas()
-    context = ANimage.getContext("2d")
+    context = ANimage.getContext "2d"
     context.font = @font()
     @breakTextIntoLines()
 
-    shadowWidth = Math.abs(@shadowOffset.x)
-    shadowHeight = Math.abs(@shadowOffset.y)
-    height = @lines.length * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
+    shadowWidth = Math.abs @shadowOffset.x
+    shadowHeight = Math.abs @shadowOffset.y
+    height = @lines.length * (Math.ceil(fontHeight @fontSize) + shadowHeight)
     if @maxTextWidth is 0
-      @silentRawSetExtent(new Point(@maxLineWidth + shadowWidth, height))
+      @silentRawSetExtent new Point @maxLineWidth + shadowWidth, height
     else
-      @silentRawSetExtent(new Point(@maxTextWidth + shadowWidth, height))
+      @silentRawSetExtent new Point @maxTextWidth + shadowWidth, height
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @notifyChildrenThatParentHasReLayouted()
 
@@ -162,11 +162,11 @@ class TextMorph extends StringMorph
         return
 
     @backBuffer = newCanvas()
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext = @backBuffer.getContext "2d"
     @backBufferContext.font = @font()
 
-    shadowWidth = Math.abs(@shadowOffset.x)
-    shadowHeight = Math.abs(@shadowOffset.y)
+    shadowWidth = Math.abs @shadowOffset.x
+    shadowHeight = Math.abs @shadowOffset.y
 
 
     @backBuffer.width = @width() * pixelRatio
@@ -187,8 +187,8 @@ class TextMorph extends StringMorph
 
     # draw the shadow, if any
     if @shadowColor
-      offx = Math.max(@shadowOffset.x, 0)
-      offy = Math.max(@shadowOffset.y, 0)
+      offx = Math.max @shadowOffset.x, 0
+      offy = Math.max @shadowOffset.y, 0
       #console.log 'shadow x: ' + offx + " y: " + offy
       @backBufferContext.fillStyle = @shadowColor.toString()
       i = 0
@@ -200,13 +200,13 @@ class TextMorph extends StringMorph
           x = (@width() - width) / 2
         else # 'left'
           x = 0
-        y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
+        y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
         i++
         @backBufferContext.fillText line, x + offx, y + offy
 
     # now draw the actual text
-    offx = Math.abs(Math.min(@shadowOffset.x, 0))
-    offy = Math.abs(Math.min(@shadowOffset.y, 0))
+    offx = Math.abs Math.min @shadowOffset.x, 0
+    offy = Math.abs Math.min @shadowOffset.y, 0
     #console.log 'maintext x: ' + offx + " y: " + offy
     @backBufferContext.fillStyle = @color.toString()
     i = 0
@@ -218,22 +218,22 @@ class TextMorph extends StringMorph
         x = (@width() - width) / 2
       else # 'left'
         x = 0
-      y = (i + 1) * (Math.ceil(fontHeight(@fontSize)) + shadowHeight) - shadowHeight
+      y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
       i++
       @backBufferContext.fillText line, x + offx, y + offy
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
     # a background rectangle.
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     for i in [start...stop]
-      p = @slotCoordinates(i).subtract(@position())
-      c = @text.charAt(i)
+      p = @slotCoordinates(i).subtract @position()
+      c = @text.charAt i
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight @fontSize)
       @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fontSize))
+      @backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fontSize
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
@@ -241,7 +241,7 @@ class TextMorph extends StringMorph
     @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.textHash = hashCode @text
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
@@ -251,7 +251,7 @@ class TextMorph extends StringMorph
   rawSetExtent: (aPoint) ->
     #console.log "move 18"
     @breakNumberOfRawMovesAndResizesCaches()
-    @maxTextWidth = Math.max(aPoint.x, 0)
+    @maxTextWidth = Math.max aPoint.x, 0
     @reLayout()
     @changed()
   
@@ -280,13 +280,13 @@ class TextMorph extends StringMorph
   # This is in absolute world coordinates.
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
-    shadowHeight = Math.abs(@shadowOffset.y)
-    yOffset = slotRow * (Math.ceil(fontHeight(@fontSize)) + shadowHeight)
-    xOffset = Math.ceil(@backBufferContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width)
+    [slotRow, slotColumn] = @slotRowAndColumn slot
+    shadowHeight = Math.abs @shadowOffset.y
+    yOffset = slotRow * (Math.ceil(fontHeight @fontSize) + shadowHeight)
+    xOffset = Math.ceil @backBufferContext.measureText((@lines[slotRow]).substring(0,slotColumn)).width
     x = @left() + xOffset
     y = @top() + yOffset
-    new Point(x, y)
+    new Point x, y
   
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
@@ -295,17 +295,17 @@ class TextMorph extends StringMorph
     charX = 0
     row = 0
     col = 0
-    shadowHeight = Math.abs(@shadowOffset.y)
-    row += 1  while aPoint.y - @top() > ((Math.ceil(fontHeight(@fontSize)) + shadowHeight) * row)
-    row = Math.max(row, 1)
+    shadowHeight = Math.abs @shadowOffset.y
+    row += 1  while aPoint.y - @top() > (Math.ceil(fontHeight @fontSize) + shadowHeight) * row
+    row = Math.max row, 1
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@backBufferContext.measureText(@lines[row - 1][col]).width)
+      charX += Math.ceil @backBufferContext.measureText(@lines[row - 1][col]).width
       col += 1
     @lineSlots[Math.max(row - 1, 0)] + col - 1
   
   upFrom: (slot) ->
     # answer the slot above the given one
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    [slotRow, slotColumn] = @slotRowAndColumn slot
     return slot  if slotRow < 1
     above = @lines[slotRow - 1]
     return @lineSlots[slotRow - 1] + above.length  if above.length < slotColumn - 1
@@ -313,7 +313,7 @@ class TextMorph extends StringMorph
   
   downFrom: (slot) ->
     # answer the slot below the given one
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    [slotRow, slotColumn] = @slotRowAndColumn slot
     return slot  if slotRow > @lines.length - 2
     below = @lines[slotRow + 1]
     return @lineSlots[slotRow + 1] + below.length  if below.length < slotColumn - 1
@@ -400,11 +400,11 @@ class TextMorph extends StringMorph
       @evaluateString @text
 
   showSelection: ->
-    result = @receiver.evaluateString(@selection())
+    result = @receiver.evaluateString @selection()
     if result? then @inform result
   
   inspectSelection: ->
     # evaluateString is a pimped-up eval in
     # the Morph class.
-    result = @receiver.evaluateString(@selection())
+    result = @receiver.evaluateString @selection()
     if result? then @spawnInspector result

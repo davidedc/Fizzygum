@@ -46,12 +46,12 @@ class TextMorph2 extends StringMorph2
         @backgroundTransparency
         )
       # override inherited properties:
-      @markedTextColor = new Color(255, 255, 255)
-      @markedBackgoundColor = new Color(60, 60, 120)
+      @markedTextColor = new Color 255, 255, 255
+      @markedBackgoundColor = new Color 60, 60, 120
       @text = text or ((if text is "" then text else "TextMorph"))
       @textActuallyShown = @text
       @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
-      @color = new Color(0, 0, 0)
+      @color = new Color 0, 0, 0
       @noticesTransparentClick = true
 
       @scaleAboveOriginallyAssignedFontSize = true
@@ -84,16 +84,16 @@ class TextMorph2 extends StringMorph2
     # below.
     # put all the text in an array, word by word
 
-    paragraphs = world.cacheForTextParagraphSplits.get hashCode(text)
+    paragraphs = world.cacheForTextParagraphSplits.get hashCode text
     if !paragraphs?
-      paragraphsCacheEntry = text.split("\n")
+      paragraphsCacheEntry = text.split "\n"
       world.cacheForTextParagraphSplits.set hashCode(text), paragraphsCacheEntry
       paragraphs = paragraphsCacheEntry
 
     cumulativeSlotAcrossText = 0
     previousCumulativeSlotAcrossText = 0
 
-    textWrappingData = world.cacheForTextWrappingData.get hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph)
+    textWrappingData = world.cacheForTextWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
     if !textWrappingData?
       wrappedLinesOfWholeText = []
       wrappedLineSlotsOfWholeText = [0]
@@ -103,7 +103,7 @@ class TextMorph2 extends StringMorph2
 
         wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get hashCode eachParagraph
         if !wordsOfThisParagraph?
-          wordsOfThisParagraphCacheEntry = eachParagraph.split(" ")
+          wordsOfThisParagraphCacheEntry = eachParagraph.split " "
           wordsOfThisParagraphCacheEntry.push "\n"
           world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraphCacheEntry
           wordsOfThisParagraph = wordsOfThisParagraphCacheEntry
@@ -156,7 +156,7 @@ class TextMorph2 extends StringMorph2
         # of single non-spaced words that are longer than
         # the allowed width.
         
-        wrappingData = world.cacheForParagraphsWrappingData.get hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph)
+        wrappingData = world.cacheForParagraphsWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
 
         if !wrappingData?
           wrappedLinesOfThisParagraph = []
@@ -173,7 +173,7 @@ class TextMorph2 extends StringMorph2
               # slotsInParagraph count in the arrays
               wrappedLinesOfThisParagraph.push currentLine
               wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-              maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText overrideFontSize, currentLine))
+              maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
               currentLine = ""
             else
               if maxTextWidth > 0 # there is a width limit, we might have to wrap
@@ -190,7 +190,7 @@ class TextMorph2 extends StringMorph2
                   # word that has caused the overflow.
                   wrappedLinesOfThisParagraph.push currentLine
                   wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-                  maxWrappedLineWidthOfThisParagraph = Math.max(maxWrappedLineWidthOfThisParagraph, Math.ceil(@measureText overrideFontSize, currentLine))
+                  maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
                   currentLine = word + " "
                 else
                   # no overflow happened, so just proceed as normal
@@ -224,7 +224,7 @@ class TextMorph2 extends StringMorph2
       textWrappingData = textWrappingDataCacheEntry
 
     [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
-    height = wrappedLines.length * (Math.ceil(fontHeight(overrideFontSize)))
+    height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
     return [textWrappingData, height]
 
 
@@ -243,7 +243,7 @@ class TextMorph2 extends StringMorph2
   ###
 
   reflowText: ->
-    tmp = (@breakTextIntoLines @textActuallyShown, @fittingFontSize)
+    tmp = @breakTextIntoLines @textActuallyShown, @fittingFontSize
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
     return tmp[1]
 
@@ -278,7 +278,7 @@ class TextMorph2 extends StringMorph2
     contentHeight = @reflowText()
 
     @backBuffer = newCanvas()
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext = @backBuffer.getContext "2d"
     @backBufferContext.font = @font()
 
     @backBuffer.width = @width() * pixelRatio
@@ -329,22 +329,22 @@ class TextMorph2 extends StringMorph2
         x = (@width() - width) / 2
       else # 'left'
         x = 0
-      y = (i + 1) * (Math.ceil(fontHeight(@fittingFontSize)))
+      y = (i + 1) * Math.ceil fontHeight @fittingFontSize
       i++
       @backBufferContext.fillText line, x, y + textVerticalPosition
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
     # a background rectangle.
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     for i in [start...stop]
-      p = @slotCoordinates(i).subtract(@position())
+      p = @slotCoordinates(i).subtract @position()
       c = @textActuallyShown.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil(fontHeight(@fittingFontSize))
+      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
       @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, p.y + Math.ceil(fontHeight(@fittingFontSize))
+      @backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
 
     if world.caret?
       world.caret.updateCaretDimension()
@@ -354,7 +354,7 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.font = @font()
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.textHash = hashCode @text
     @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
@@ -399,13 +399,13 @@ class TextMorph2 extends StringMorph2
   # This is in absolute world coordinates.
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
-    yOffset = slotRow * (Math.ceil(fontHeight(@fittingFontSize)))
+    [slotRow, slotColumn] = @slotRowAndColumn slot
+    yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
     #alert "slotCoordinates|| slot:" + slot + " x,y: " + x + ", " + y
-    new Point(x, y)
+    new Point x, y
 
 
   # This code to pick the correct slot works but it's
@@ -431,7 +431,7 @@ class TextMorph2 extends StringMorph2
       if charX > xPosition - @left()
         console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
         console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
-        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
+        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs xPosition - @left() - charX
           return returnedSlot
         break
 
@@ -455,19 +455,19 @@ class TextMorph2 extends StringMorph2
   # This function assumes that the text is left-justified.
   slotAt: (aPoint) ->
     row = 0
-    while aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))) * row)
+    while aPoint.y - @top() > row * Math.ceil fontHeight @fittingFontSize
       row += 1
-    row = Math.max(row, 1)
+    row = Math.max row, 1
 
     return @slotAtRow row, aPoint.x
 
   
   upFrom: (slot) ->
     # answer the slot above the given one
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow < 1
       return 0
-    return @slotAtRow(slotRow, @caretHorizPositionForVertMovement)
+    return @slotAtRow slotRow, @caretHorizPositionForVertMovement
     above = @wrappedLines[slotRow - 1]
     if above.length < slotColumn - 1
       return @wrappedLineSlots[slotRow - 1] + above.length
@@ -475,7 +475,7 @@ class TextMorph2 extends StringMorph2
   
   downFrom: (slot) ->
     # answer the slot below the given one
-    [slotRow, slotColumn] = @slotRowAndColumn(slot)
+    [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow > @wrappedLines.length - 2
       return @textActuallyShown.length
     return @slotAtRow(slotRow+2, @caretHorizPositionForVertMovement)
@@ -563,11 +563,11 @@ class TextMorph2 extends StringMorph2
       @evaluateString @text
 
   showSelection: ->
-    result = @receiver.evaluateString(@selection())
+    result = @receiver.evaluateString @selection()
     if result? then @inform result
   
   inspectSelection: ->
     # evaluateString is a pimped-up eval in
     # the Morph class.
-    result = @receiver.evaluateString(@selection())
+    result = @receiver.evaluateString @selection()
     if result? then @spawnInspector result

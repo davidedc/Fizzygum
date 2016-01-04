@@ -46,50 +46,50 @@ class SystemInfo
     nVer = navigator.appVersion
     nAgt = navigator.userAgent
     browser = navigator.appName
-    version = '' + parseFloat(navigator.appVersion)
-    majorVersion = parseInt(navigator.appVersion, 10)
+    version = '' + parseFloat navigator.appVersion
+    majorVersion = parseInt navigator.appVersion, 10
     nameOffset = undefined
     verOffset = undefined
     ix = undefined
     # Opera
-    if (verOffset = nAgt.indexOf('Opera')) != -1
+    if (verOffset = nAgt.indexOf 'Opera') != -1
       browser = 'Opera'
-      version = nAgt.substring(verOffset + 6)
-      if (verOffset = nAgt.indexOf('Version')) != -1
-        version = nAgt.substring(verOffset + 8)
-    else if (verOffset = nAgt.indexOf('MSIE')) != -1
+      version = nAgt.substring verOffset + 6
+      if (verOffset = nAgt.indexOf 'Version') != -1
+        version = nAgt.substring verOffset + 8
+    else if (verOffset = nAgt.indexOf 'MSIE') != -1
       browser = 'Microsoft Internet Explorer'
-      version = nAgt.substring(verOffset + 5)
-    else if (verOffset = nAgt.indexOf('Chrome')) != -1
+      version = nAgt.substring verOffset + 5
+    else if (verOffset = nAgt.indexOf 'Chrome') != -1
       browser = 'Chrome'
-      version = nAgt.substring(verOffset + 7)
-    else if (verOffset = nAgt.indexOf('Safari')) != -1
+      version = nAgt.substring verOffset + 7
+    else if (verOffset = nAgt.indexOf 'Safari') != -1
       browser = 'Safari'
-      version = nAgt.substring(verOffset + 7)
-      if (verOffset = nAgt.indexOf('Version')) != -1
-        version = nAgt.substring(verOffset + 8)
-    else if (verOffset = nAgt.indexOf('Firefox')) != -1
+      version = nAgt.substring verOffset + 7
+      if (verOffset = nAgt.indexOf 'Version') != -1
+        version = nAgt.substring verOffset + 8
+    else if (verOffset = nAgt.indexOf 'Firefox') != -1
       browser = 'Firefox'
-      version = nAgt.substring(verOffset + 8)
+      version = nAgt.substring verOffset + 8
     else if nAgt.indexOf('Trident/') != -1
       browser = 'Microsoft Internet Explorer'
       version = nAgt.substring(nAgt.indexOf('rv:') + 3)
     else if (nameOffset = nAgt.lastIndexOf(' ') + 1) < (verOffset = nAgt.lastIndexOf('/'))
-      browser = nAgt.substring(nameOffset, verOffset)
-      version = nAgt.substring(verOffset + 1)
+      browser = nAgt.substring nameOffset, verOffset
+      version = nAgt.substring verOffset + 1
       if browser.toLowerCase() == browser.toUpperCase()
         browser = navigator.appName
     # trim the version string
-    if (ix = version.indexOf(';')) != -1
-      version = version.substring(0, ix)
-    if (ix = version.indexOf(' ')) != -1
-      version = version.substring(0, ix)
-    if (ix = version.indexOf(')')) != -1
-      version = version.substring(0, ix)
-    majorVersion = parseInt('' + version, 10)
-    if isNaN(majorVersion)
-      version = '' + parseFloat(navigator.appVersion)
-      majorVersion = parseInt(navigator.appVersion, 10)
+    if (ix = version.indexOf ';') != -1
+      version = version.substring 0, ix
+    if (ix = version.indexOf ' ') != -1
+      version = version.substring 0, ix
+    if (ix = version.indexOf ')') != -1
+      version = version.substring 0, ix
+    majorVersion = parseInt '' + version, 10
+    if isNaN majorVersion
+      version = '' + parseFloat navigator.appVersion
+      majorVersion = parseInt navigator.appVersion, 10
     # mobile version
     mobile = /Mobile|mini|Fennec|Android|iP(ad|od|hone)/.test(nVer)
     # cookie
@@ -207,7 +207,7 @@ class SystemInfo
     ]
     for id of clientStrings
       cs = clientStrings[id]
-      if cs.r.test(nAgt)
+      if cs.r.test nAgt
         os = cs.s
         break
     osVersion = unknown
