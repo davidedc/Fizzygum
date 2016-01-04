@@ -20,10 +20,10 @@ class ColorPickerMorph extends Morph
   grayPalette: null
 
   constructor: (defaultColor) ->
-    @choice = defaultColor or new Color(255, 255, 255)
+    @choice = defaultColor or new Color 255, 255, 255
     super()
-    @color = new Color(255, 255, 255)
-    @rawSetExtent new Point(80, 80)
+    @color = new Color 255, 255, 255
+    @rawSetExtent new Point 80, 80
 
   reLayout: ->
     super()
@@ -32,16 +32,16 @@ class ColorPickerMorph extends Morph
 
   buildSubmorphs: ->
     @fullDestroyChildren()
-    @feedback = new RectangleMorph(new Point(20, 20), @choice)
-    @colorPalette = new ColorPaletteMorph(@feedback, new Point(@width(), 50))
-    @grayPalette = new GrayPaletteMorph(@feedback, new Point(@width(), 5))
+    @feedback = new RectangleMorph new Point(20, 20), @choice
+    @colorPalette = new ColorPaletteMorph @feedback, new Point @width(), 50
+    @grayPalette = new GrayPaletteMorph @feedback, new Point @width(), 5
     @colorPalette.fullRawMoveTo @position()
     @add @colorPalette
     @grayPalette.fullRawMoveTo @colorPalette.bottomLeft()
     @add @grayPalette
-    x = (@grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2))
+    x = @grayPalette.left() + Math.floor((@grayPalette.width() - @feedback.width()) / 2)
     y = @grayPalette.bottom() + Math.floor((@bottom() - @grayPalette.bottom() - @feedback.height()) / 2)
-    @feedback.fullRawMoveTo new Point(x, y)
+    @feedback.fullRawMoveTo new Point x, y
     @add @feedback
 
   imBeingAddedTo: (newParentMorph) ->

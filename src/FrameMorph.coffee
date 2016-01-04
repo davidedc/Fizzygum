@@ -21,7 +21,7 @@ class FrameMorph extends Morph
   # the @scrollFrame points to it
   constructor: (@scrollFrame = null) ->
     super()
-    @color = new Color(255, 250, 245)
+    @color = new Color 255, 250, 245
     if @scrollFrame
       @noticesTransparentClick = false
 
@@ -31,7 +31,7 @@ class FrameMorph extends Morph
     # if there is one. Note that the container scrollFrame
     # is actually not painted.
     if @scrollFrame
-      unless @scrollFrame.color.eq(aColor)
+      unless @scrollFrame.color.eq aColor
         @scrollFrame.color = aColor
     return aColor
 
@@ -72,9 +72,9 @@ class FrameMorph extends Morph
     # hence *actually* not overlapping with theMorph.
     # So continue checking the children only if the
     # frame itself actually overlaps.
-    if @areBoundsIntersecting(theMorph)
+    if @areBoundsIntersecting theMorph
       @children.forEach (child) ->
-        result = result.concat(child.plausibleTargetAndDestinationMorphs(theMorph))
+        result = result.concat child.plausibleTargetAndDestinationMorphs theMorph
 
     return result
 
@@ -96,7 +96,7 @@ class FrameMorph extends Morph
   SLOWfullBounds: ->
     shadow = @getShadowMorph()
     if shadow?
-      result = @bounds.merge(shadow.bounds)
+      result = @bounds.merge shadow.bounds
     else
       result = @bounds
     result
@@ -106,7 +106,7 @@ class FrameMorph extends Morph
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
     else if shadow?
-      result = @clippedThroughBounds().merge(shadow.bounds)
+      result = @clippedThroughBounds().merge shadow.bounds
     else
       result = @clippedThroughBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
@@ -127,7 +127,7 @@ class FrameMorph extends Morph
 
     shadow = @getShadowMorph()
     if shadow?
-      result = @bounds.merge(shadow.bounds)
+      result = @bounds.merge shadow.bounds
     else
       result = @bounds
 
@@ -152,7 +152,7 @@ class FrameMorph extends Morph
 
       shadow = @getShadowMorph()
       if shadow?
-        result = @clippedThroughBounds().merge(shadow.bounds)
+        result = @clippedThroughBounds().merge shadow.bounds
       else
         result = @clippedThroughBounds()
 
@@ -219,7 +219,7 @@ class FrameMorph extends Morph
     # since the whole point of the frame is to clip everything to a specific
     # rectangle.
     # So, check which part of the Frame should be redrawn:
-    dirtyPartOfFrame = @boundingBox().intersect(clippingRectangle)
+    dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
     
     # if there is no dirty part in the frame then do nothing
     return null if dirtyPartOfFrame.isEmpty()
@@ -246,7 +246,7 @@ class FrameMorph extends Morph
   # FrameMorph scrolling optimization:
   fullRawMoveBy: (delta) ->
     #console.log "moving all morphs in the frame"
-    @bounds = @bounds.translateBy(delta)
+    @bounds = @bounds.translateBy delta
     #console.log "move 1"
     @breakNumberOfRawMovesAndResizesCaches()
     @children.forEach (child) ->
@@ -264,7 +264,7 @@ class FrameMorph extends Morph
 
       # otherwise you could detach a Frame contained in a
       # ScrollFrameMorph which is very strange
-      if (@parent instanceof ScrollFrameMorph)
+      if @parent instanceof ScrollFrameMorph
         return false
 
       if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)

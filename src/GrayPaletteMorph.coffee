@@ -6,7 +6,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   namedClasses[@name] = @prototype
 
   constructor: (@target = null, sizePoint) ->
-    super @target, sizePoint or new Point(80, 10)
+    super @target, sizePoint or new Point 80, 10
   
   repaintBackBufferIfNeeded: ->
     if !@backBufferIsPotentiallyDirty then return
@@ -17,11 +17,11 @@ class GrayPaletteMorph extends ColorPaletteMorph
         return
 
     extent = @extent()
-    @backBuffer = newCanvas(extent.scaleBy pixelRatio)
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBufferContext = @backBuffer.getContext "2d"
     @backBufferContext.scale pixelRatio, pixelRatio
     @choice = new Color()
-    gradient = @backBufferContext.createLinearGradient(0, 0, extent.x, extent.y)
+    gradient = @backBufferContext.createLinearGradient 0, 0, extent.x, extent.y
     gradient.addColorStop 0, "black"
     gradient.addColorStop 1, "white"
     @backBufferContext.fillStyle = gradient

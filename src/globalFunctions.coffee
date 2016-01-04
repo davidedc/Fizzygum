@@ -15,7 +15,7 @@ namedClasses = {}
 
 HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
-  if (haveIBeenCopiedAlready >= 0)
+  if  haveIBeenCopiedAlready >= 0
     if doSerialize
       return "$" + haveIBeenCopiedAlready
     else
@@ -23,9 +23,9 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
   positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
-  cloneOfMe = newCanvas new Point(@width, @height)
+  cloneOfMe = newCanvas new Point @width, @height
 
-  ctx = cloneOfMe.getContext("2d")
+  ctx = cloneOfMe.getContext "2d"
   ctx.drawImage @, 0, 0
 
   if doSerialize
@@ -44,17 +44,17 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   return cloneOfMe
 
 CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName) ->
-  objectIBelongTo[myPropertyName] = @canvas.getContext("2d")
+  objectIBelongTo[myPropertyName] = @canvas.getContext "2d"
 
 # Extending Array's prototype if 'filter' doesn't exist
 # already
 unless Array::filter
   Array::filter = (callback) ->
-    element for element in this when callback(element)
+    element for element in this when callback element
 
 Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
-  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
-  if (haveIBeenCopiedAlready >= 0)
+  haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
+  if haveIBeenCopiedAlready >= 0
     if doSerialize
       return "$" + haveIBeenCopiedAlready
     else
@@ -83,9 +83,8 @@ Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorp
 
 Array::chunk = (chunkSize) ->
   array = this
-  [].concat.apply [], array.map((elem, i) ->
+  [].concat.apply [], array.map (elem, i) ->
     if i % chunkSize then [] else [ array.slice(i, i + chunkSize) ]
-  )
 
 # from http://stackoverflow.com/a/13895743
 # removes the elements IN PLACE, i.e. the
@@ -94,7 +93,7 @@ Array::remove = (args...) ->
   output = []
   for arg in args
     index = @indexOf arg
-    output.push @splice(index, 1) if index isnt -1
+    output.push @splice index, 1 if index isnt -1
   output = output[0] if args.length is 1
   output
 
@@ -107,11 +106,11 @@ String::camelize = ->
 # to the dirty rectangle.
 CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
   @beginPath()
-  @moveTo(Math.round(al), Math.round(at))
-  @lineTo(Math.round(al) + Math.round(w), Math.round(at))
-  @lineTo(Math.round(al) + Math.round(w), Math.round(at) + Math.round(h))
-  @lineTo(Math.round(al), Math.round(at) + Math.round(h))
-  @lineTo(Math.round(al), Math.round(at))
+  @moveTo Math.round(al), Math.round(at)
+  @lineTo Math.round(al) + Math.round(w), Math.round(at)
+  @lineTo Math.round(al) + Math.round(w), Math.round(at) + Math.round(h)
+  @lineTo Math.round(al), Math.round(at) + Math.round(h)
+  @lineTo Math.round(al), Math.round(at)
   @closePath()
   @clip()
 
@@ -123,7 +122,7 @@ CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->
 fade = (eid, initOp, finalOp, TimeToFade, time) ->
   if initOp == 0
     document.getElementById(eid).style.visibility = 'visible'
-  curTick = (new Date).getTime()
+  curTick = new Date().getTime()
   elapsedTicks = curTick - time
   newOp = initOp + (finalOp - initOp) * elapsedTicks / TimeToFade
   if Math.abs(newOp - initOp) > Math.abs(finalOp - initOp)
@@ -141,17 +140,17 @@ fade = (eid, initOp, finalOp, TimeToFade, time) ->
 
 decamelize = (str, sep) ->
   if (typeof str) != 'string'
-    throw new TypeError('Expected a string')
+    throw new TypeError "Expected a string"
   str.replace(/([a-z\d])([A-Z])/g, '$1' + (sep or '_') + '$2').toLowerCase()
 
 ## -------------------------------------------------------
 
 getParameterByName = (name) ->
   name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]')
-  regex = new RegExp('[\\?&]' + name + '=([^&#]*)')
-  results = regex.exec(location.search)
+  regex = new RegExp '[\\?&]' + name + '=([^&#]*)'
+  results = regex.exec location.search
   if results?
-    return decodeURIComponent(results[1].replace(/\+/g, ' '))
+    return decodeURIComponent results[1].replace(/\+/g, ' ')
   else
     return null
 
@@ -163,7 +162,7 @@ getParameterByName = (name) ->
 Object::augmentWith = (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
-  obj.onceAddedClassProperties?.apply(@)
+  obj.onceAddedClassProperties?.apply @
   this
 
 # adds instance properties
@@ -172,7 +171,7 @@ Object::addInstanceProperties= (obj) ->
   for key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype
     @::[key] = value
-  obj.included?.apply(@)
+  obj.included?.apply @
   this
 ##--------------- end of mixins methods -------------------
 
@@ -193,7 +192,7 @@ hashCode = (stringToBeHashed) ->
   hash = 0
   return hash  if stringToBeHashed.length is 0
   for i in [0...stringToBeHashed.length]
-    char = stringToBeHashed.charCodeAt(i)
+    char = stringToBeHashed.charCodeAt i
     hash = ((hash << 5) - hash) + char
     hash = hash & hash # Convert to 32bit integer
   hash
@@ -226,7 +225,7 @@ detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null
   for element in list
-    return element  if predicate.call(null, element)
+    return element  if predicate.call null, element
   null
 
 sizeOf = (object) ->
@@ -234,7 +233,7 @@ sizeOf = (object) ->
   size = 0
   key = undefined
   for key of object
-    size += 1  if Object::hasOwnProperty.call(object, key)
+    size += 1  if Object::hasOwnProperty.call object, key
   size
 
 isString = (target) ->
@@ -253,8 +252,8 @@ radiansToDegrees = (radians) ->
 # tall characters such as ⎲ƒ⎳⎷ ⎸⎹ are cut
 # but hey they look cut also in this text editor I'm using.
 fontHeight = (fontSize) ->
-  minHeight = Math.max(fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight)
-  Math.ceil(minHeight * 1.2) # assuming 1/5 font size for ascenders
+  minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
+  Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
 newCanvas = (extentPoint) ->
   extentPoint?.debugIfFloats()
@@ -262,7 +261,7 @@ newCanvas = (extentPoint) ->
   ext = extentPoint or
     x: 0
     y: 0
-  canvas = document.createElement("canvas")
+  canvas = document.createElement "canvas"
   canvas.width = Math.ceil ext.x
   canvas.height = Math.ceil  ext.y
   canvas
@@ -271,18 +270,18 @@ getMinimumFontHeight = ->
   # answer the height of the smallest font renderable in pixels
   str = "I"
   size = 50
-  canvas = document.createElement("canvas")
+  canvas = document.createElement "canvas"
   canvas.width = size
   canvas.height = size
-  ctx = canvas.getContext("2d")
+  ctx = canvas.getContext "2d"
   ctx.font = "1px serif"
-  maxX = Math.ceil(ctx.measureText(str).width)
+  maxX = Math.ceil ctx.measureText(str).width
   ctx.fillStyle = "black"
   ctx.textBaseline = "bottom"
   ctx.fillText str, 0, size
   for y in [0...size]
     for x in [0...maxX]
-      data = ctx.getImageData(x, y, 1, 1)
+      data = ctx.getImageData x, y, 1, 1
       return size - y + 1  if data.data[3] isnt 0
   0
 
@@ -290,19 +289,19 @@ getMinimumFontHeight = ->
 getBlurredShadowSupport = ->
   # check for Chrome issue 90001
   # http://code.google.com/p/chromium/issues/detail?id=90001
-  source = document.createElement("canvas")
+  source = document.createElement "canvas"
   source.width = 10
   source.height = 10
-  ctx = source.getContext("2d")
+  ctx = source.getContext "2d"
   ctx.fillStyle = "rgb(255, 0, 0)"
   ctx.beginPath()
   ctx.arc 5, 5, 5, 0, Math.PI * 2, true
   ctx.closePath()
   ctx.fill()
-  target = document.createElement("canvas")
+  target = document.createElement "canvas"
   target.width = 10
   target.height = 10
-  ctx = target.getContext("2d")
+  ctx = target.getContext "2d"
   ctx.shadowBlur = 10
   ctx.shadowColor = "rgba(0, 0, 255, 1)"
   ctx.drawImage source, 0, 0
@@ -344,7 +343,7 @@ aSourceHasBeenLoaded = ->
 loadAllSources = ->
   for eachClass in sourcesManifests
 
-    script = document.createElement('script')
+    script = document.createElement "script"
     script.src = "js/sourceCode/" + eachClass + ".js"
 
     script.onload = =>
@@ -359,22 +358,20 @@ aTestScriptHasBeenLoaded = ->
 
 
 loadAllTestManifests = ->
-    script = document.createElement('script')
+    script = document.createElement "script"
     script.src = "js/tests/testsManifest.js"
     script.onload = =>
       aTestScriptHasBeenLoaded()
     document.head.appendChild script
 
-    script2 = document.createElement('script')
+    script2 = document.createElement "script"
     script2.src = "js/tests/testsAssetsManifest.js"
     script2.onload = =>
       aTestScriptHasBeenLoaded()
     document.head.appendChild script2
 
 
-
 boot = ->
-
   loadAllSources()
 
 
@@ -391,8 +388,8 @@ visit = (dependencies, klass, inclusion_order) ->
   if dependencies[klass]?
     for key in dependencies[klass]
       if key in inclusion_order
-        break;
-      visit(dependencies, key, inclusion_order)
+        break
+      visit dependencies, key, inclusion_order
   inclusion_order.push klass
 
 # we still need to evaluate the classes in the
@@ -407,7 +404,7 @@ generate_inclusion_order = (dependencies) ->
 
 
   for key of dependencies
-    if (key == 'length' || !dependencies.hasOwnProperty(key))
+    if key == 'length' || !dependencies.hasOwnProperty key
       continue
     #value = dependencies[key]
     #console.log value
@@ -429,11 +426,11 @@ continueBooting = ->
   #debugger
   for eachClass in sourcesManifests
 
-    eachClass = eachClass.replace("_coffeSource","")
+    eachClass = eachClass.replace "_coffeSource",""
     #if namedClasses.hasOwnProperty eachClass
     console.log eachClass + " - "
     dependencies[eachClass] = []
-    lines = window[eachClass + "_coffeSource"].split('\n')
+    lines = window[eachClass + "_coffeSource"].split '\n'
     i = 0
     while i < lines.length
       #console.log lines[i]
@@ -466,12 +463,12 @@ continueBooting = ->
       if eachClass + "_coffeSource" in sourcesManifests
         console.log "loading " + eachClass + " from souce code"
         # give life to the loaded and translated coffeescript klass now!
-        eval.call(window,CoffeeScript.compile(window[eachClass + "_coffeSource"],{"bare":true}));
+        eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
 
   loadAllTestManifests()
 
 
-world = {}; # we make "world" global
+world = {} # we make "world" global
 
 # we use the trackChanges array as a stack to
 # keep track whether a whole segment of code
@@ -496,9 +493,9 @@ continueBooting2 = ->
     # the user is here to record a system test so
     # don't fill entire page cause there are some
     # controls on the right side of the canvas
-    world = new WorldMorph(worldCanvas, false)
+    world = new WorldMorph worldCanvas, false
   else
-    world = new WorldMorph(worldCanvas, true)
+    world = new WorldMorph worldCanvas, true
   world.isDevMode = true
   # shim layer with setTimeout fallback
   window.requestAnimFrame = do ->

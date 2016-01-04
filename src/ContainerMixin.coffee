@@ -19,25 +19,25 @@ ContainerMixin =
   onceAddedClassProperties: ->
     @addInstanceProperties
       setTarget: ->
-        choices = world.plausibleTargetAndDestinationMorphs(@)
+        choices = world.plausibleTargetAndDestinationMorphs @
         if choices.length > 0
-          menu = new MenuMorph(false, @, true, true, "choose target:")
+          menu = new MenuMorph false, @, true, true, "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
             menu.addItem each.toString().slice(0, 50) + " ➜", false, @, "setTargetSetter", null, null, null, null, null,each
         else
-          menu = new MenuMorph(false, @, true, true, "no targets available")
-        menu.popUpAtHand(@firstContainerMenu())
+          menu = new MenuMorph false, @, true, true, "no targets available"
+        menu.popUpAtHand @firstContainerMenu()
 
       adjustBounds: ->
         newBounds = @subMorphsMergedFullBounds()
         if newBounds
           if @padding?
-            newBounds = newBounds.expandBy(@padding)
+            newBounds = newBounds.expandBy @padding
         else
           newBounds = @boundingBox()
 
-        unless @boundingBox().eq(newBounds)
+        unless @boundingBox().eq newBounds
           @silentRawSetBounds newBounds
           @changed()
           @reLayout()

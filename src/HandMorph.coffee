@@ -90,19 +90,19 @@ class HandMorph extends Morph
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+      fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       setTimeout \
         =>
-          fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime())
+          fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
         , 100
     
     contextMenu = morphTheMenuIsAbout.contextMenu()
-    while (not contextMenu) and morphTheMenuIsAbout.parent
+    while !contextMenu and morphTheMenuIsAbout.parent
       morphTheMenuIsAbout = morphTheMenuIsAbout.parent
       contextMenu = morphTheMenuIsAbout.contextMenu()
 
     if contextMenu 
-      contextMenu.popUpAtHand(morphTheMenuIsAbout.firstContainerMenu()) 
+      contextMenu.popUpAtHand morphTheMenuIsAbout.firstContainerMenu()
 
 
   # not used in ZK yet
@@ -110,7 +110,7 @@ class HandMorph extends Morph
     return @world.collectAllChildrenBottomToTopSuchThat (m) =>
       m.visibleBasedOnIsVisibleProperty() and
       !m.isCollapsed() and
-      m.clippedThroughBounds().containsPoint(@position())
+      m.clippedThroughBounds().containsPoint @position()
   
   
   
@@ -126,7 +126,7 @@ class HandMorph extends Morph
   #
   dropTargetFor: (aMorph) ->
     target = @topMorphUnderPointer()
-    until target.wantsDropOf(aMorph)
+    until target.wantsDropOf aMorph
       target = target.parent
     target
   
@@ -162,7 +162,7 @@ class HandMorph extends Morph
       # so they all seem to float at a particular height)
       # but here when we grab morphs we
       # specify a particular look for the shadow.
-      aMorph.addFullShadow(new Point(7,7),0.2)
+      aMorph.addFullShadow new Point(7, 7), 0.2
       
       #debugger
       @fullChanged()
@@ -190,15 +190,15 @@ class HandMorph extends Morph
           arr.push action
 
       morphToDrop = @children[0]
-      target = @dropTargetFor(morphToDrop)
+      target = @dropTargetFor morphToDrop
       @fullChanged()
       target.add morphToDrop
       morphToDrop.fullChanged()
 
       doRemoveShadow = true
-      if (morphToDrop instanceof MenuMorph)
+      if morphToDrop instanceof MenuMorph
         console.log "dropping menu morph which with pinned status: " + morphToDrop.isPinned()
-        if (morphToDrop.isPinned())
+        if morphToDrop.isPinned()
           doRemoveShadow = true
         else
           doRemoveShadow = false
@@ -270,7 +270,7 @@ class HandMorph extends Morph
         # caret is attached to
         mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
         if mostRecentlyCreatedMenu?
-          unless mostRecentlyCreatedMenu.containedInParentsOf(actionedMorph)
+          unless mostRecentlyCreatedMenu.containedInParentsOf actionedMorph
             # only dismiss editing if the actionedMorph the user
             # clicked on is not part of a menu.
             @world.stopEditing()
@@ -296,9 +296,9 @@ class HandMorph extends Morph
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
-        fade('rightMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+        fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
-        fade('leftMouseButtonIndicator', 0, 1, 10, new Date().getTime());
+        fade 'leftMouseButtonIndicator', 0, 1, 10, new Date().getTime()
 
     # check whether we are in the middle
     # of a floatDrag/drop operation
@@ -370,9 +370,9 @@ class HandMorph extends Morph
   processMouseUp: (button) ->
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
-        fade('rightMouseButtonIndicator', 1, 0, 500, new Date().getTime());
+        fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
       else
-        fade('leftMouseButtonIndicator', 1, 0, 500, new Date().getTime());
+        fade 'leftMouseButtonIndicator', 1, 0, 500, new Date().getTime()
 
     morph = @topMorphUnderPointer()
     alreadyRecordedLeftOrRightClickOnMenuItem = false
@@ -392,7 +392,7 @@ class HandMorph extends Morph
       # these steps...
       #debugger
       ignored = null
-      toDestructure = morph.parentThatIsA(MenuItemMorph)
+      toDestructure = morph.parentThatIsA MenuItemMorph
       if toDestructure?
         [menuItemMorph, ignored]= toDestructure
         if menuItemMorph
@@ -454,7 +454,7 @@ class HandMorph extends Morph
           else
             @rememberDoubleClickMorphsForAWhile morph
 
-      @cleanupMenuMorphs(expectedClick, morph)
+      @cleanupMenuMorphs expectedClick, morph
     @mouseButton = null
 
   rememberDoubleClickMorphsForAWhile: (morph) ->
@@ -585,7 +585,7 @@ class HandMorph extends Morph
       frd = new FileReader()
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       pic.onload = ->
-        canvas = newCanvas(new Point(pic.width, pic.height))
+        canvas = newCanvas new Point pic.width, pic.height
         canvas.getContext("2d").drawImage pic, 0, 0
         targetDrop.droppedImage canvas, aFile.name
 
@@ -621,13 +621,13 @@ class HandMorph extends Morph
 
     parseImgURL = (html) ->
       url = ""
-      start = html.indexOf("<img src=\"")
+      start = html.indexOf "<img src=\""
       return null  if start is -1
       start += 10
       for i in [start...html.length]
         c = html[i]
         return url  if c is "\""
-        url = url.concat(c)
+        url = url.concat c
       null
     
     if files.length
@@ -647,7 +647,7 @@ class HandMorph extends Morph
         target = target.parent  until target.droppedImage
         img = new Image()
         img.onload = ->
-          canvas = newCanvas(new Point(img.width, img.height))
+          canvas = newCanvas new Point img.width, img.height
           canvas.getContext("2d").drawImage img, 0, 0
           target.droppedImage canvas
         img.src = url
@@ -655,10 +655,10 @@ class HandMorph extends Morph
       targetDrop = targetDrop.parent  until targetDrop.droppedImage
       img = new Image()
       img.onload = ->
-        canvas = newCanvas(new Point(img.width, img.height))
+        canvas = newCanvas new Point img.width, img.height
         canvas.getContext("2d").drawImage img, 0, 0
         targetDrop.droppedImage canvas
-      src = parseImgURL(txt)
+      src = parseImgURL txt
       img.src = src  if src
   
   
@@ -671,7 +671,7 @@ class HandMorph extends Morph
     #	to display tools tips of speech bubble help.
     #
     @temporaries.forEach (morph) =>
-      unless morph.isClickable and morph.boundsContainPoint(@position())
+      unless morph.isClickable and morph.boundsContainPoint @position()
         morph = morph.destroy()
         @temporaries.remove morph
   
@@ -688,13 +688,13 @@ class HandMorph extends Morph
 
   processMouseMove: (worldX, worldY) ->
     #startProcessMouseMove = new Date().getTime()
-    pos = new Point(worldX, worldY)
+    pos = new Point worldX, worldY
     @fullRawMoveTo pos
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      mousePointerIndicator = document.getElementById('mousePointerIndicator')
+      mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
-      posInDocument = getDocumentPositionOf(@world.worldCanvas)
+      posInDocument = getDocumentPositionOf @world.worldCanvas
       mousePointerIndicator.style.left = (posInDocument.x + worldX - (mousePointerIndicator.clientWidth/2)) + 'px'
       mousePointerIndicator.style.top = (posInDocument.y + worldY - (mousePointerIndicator.clientHeight/2)) + 'px'
 
@@ -745,13 +745,13 @@ class HandMorph extends Morph
         # if the mouse has left its fullBounds, center it
         if morph
           fb = morph.fullBounds()
-          unless fb.containsPoint(pos)
-            @rawSetExtent(@extent().subtract fb.extent().floorDivideBy(2))
+          unless fb.containsPoint pos
+            @rawSetExtent @extent().subtract fb.extent().floorDivideBy 2
             @grab morph
             @fullRawMoveTo pos
     #endProcessMouseMove = new Date().getTime()
-    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove;
-    #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove);
+    #timeProcessMouseMove = endProcessMouseMove - startProcessMouseMove
+    #console.log('Execution time ProcessMouseMove: ' + timeProcessMouseMove)
 
 
     if @nonFloatDraggingSomething()
@@ -812,7 +812,7 @@ class HandMorph extends Morph
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarSize * 3
-                ).containsPoint(@position())
-                  newMorph.startAutoScrolling();
+                ).containsPoint @position()
+                  newMorph.startAutoScrolling()
 
     @mouseOverList = mouseOverNew

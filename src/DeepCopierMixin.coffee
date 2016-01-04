@@ -12,8 +12,8 @@ DeepCopierMixin =
   onceAddedClassProperties: ->
     @addInstanceProperties
       deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
-        haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
-        if (haveIBeenCopiedAlready >= 0)
+        haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
+        if haveIBeenCopiedAlready >= 0
           if doSerialize
             return "$" + haveIBeenCopiedAlready
           else
@@ -26,7 +26,7 @@ DeepCopierMixin =
      
         positionInObjClonesArray = objOriginalsClonedAlready.length
         objOriginalsClonedAlready.push @
-        cloneOfMe = @createPristineObjOfSameTypeAsThisOne(doSerialize)
+        cloneOfMe = @createPristineObjOfSameTypeAsThisOne doSerialize
         objectClones.push  cloneOfMe
 
         for property of @
@@ -34,7 +34,7 @@ DeepCopierMixin =
             continue
 
           # also includes the "parent" property
-          if @hasOwnProperty(property)
+          if @hasOwnProperty property
 
             if property == "backBufferContext"
               debugger
@@ -58,7 +58,7 @@ DeepCopierMixin =
           return "$" + positionInObjClonesArray
 
         # see comment in the method
-        cloneOfMe.rebuildDerivedValues(@)
+        cloneOfMe.rebuildDerivedValues @
 
         return cloneOfMe
 
@@ -68,7 +68,7 @@ DeepCopierMixin =
       rebuildDerivedValues: (theOriginal)->
         for property of @
           # also includes the "parent" property
-          if @hasOwnProperty(property)
+          if @hasOwnProperty property
             # OK so we look at the original value
             # and check whether it has a rebuildDerivedValue
             # method. If it does, we invoke that method,
