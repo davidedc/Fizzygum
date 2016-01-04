@@ -45,7 +45,7 @@ class Point
   
   # Point copying:
   copy: ->
-    new @constructor(@x, @y)
+    new @constructor @x, @y
 
   # Point comparison:
   isZero: (aPoint) ->
@@ -75,34 +75,34 @@ class Point
   
   max: (aPoint) ->
     @debugIfFloats()
-    new @constructor(Math.max(@x, aPoint.x), Math.max(@y, aPoint.y))
+    new @constructor Math.max(@x, aPoint.x), Math.max(@y, aPoint.y)
   
   min: (aPoint) ->
     @debugIfFloats()
-    new @constructor(Math.min(@x, aPoint.x), Math.min(@y, aPoint.y))
+    new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
   
   
   # Point conversion:
   round: ->
-    new @constructor(Math.round(@x), Math.round(@y))
+    new @constructor Math.round(@x), Math.round(@y)
   
   abs: ->
     @debugIfFloats()
-    new @constructor(Math.abs(@x), Math.abs(@y))
+    new @constructor Math.abs(@x), Math.abs(@y)
   
   neg: ->
     @debugIfFloats()
-    new @constructor(-@x, -@y)
+    new @constructor -@x, -@y
   
   mirror: ->
     @debugIfFloats()
-    new @constructor(@y, @x)
+    new @constructor @y, @x 
   
   floor: ->
-    new @constructor(Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0))
+    new @constructor Math.max(Math.floor(@x), 0), Math.max(Math.floor(@y), 0)
   
   ceil: ->
-    new @constructor(Math.ceil(@x), Math.ceil(@y))
+    new @constructor Math.ceil(@x), Math.ceil(@y)
   
 
   # these two in theory don't make sense
@@ -118,36 +118,36 @@ class Point
   # Point arithmetic:
   add: (other) ->
     @debugIfFloats()
-    return new @constructor(@x + other.x, @y + other.y)  if other instanceof Point
-    new @constructor(@x + other, @y + other)
+    return new @constructor @x + other.x, @y + other.y  if other instanceof Point
+    new @constructor @x + other, @y + other
   
   subtract: (other) ->
     @debugIfFloats()
-    return new @constructor(@x - other.x, @y - other.y)  if other instanceof Point
-    new @constructor(@x - other, @y - other)
+    return new @constructor @x - other.x, @y - other.y  if other instanceof Point
+    new @constructor @x - other, @y - other
   
   multiplyBy: (other) ->
     @debugIfFloats()
-    return new @constructor(@x * other.x, @y * other.y)  if other instanceof Point
-    new @constructor(@x * other, @y * other)
+    return new @constructor @x * other.x, @y * other.y  if other instanceof Point
+    new @constructor @x * other, @y * other
   
   divideBy: (other) ->
     @debugIfFloats()
-    return new @constructor(@x / other.x, @y / other.y)  if other instanceof Point
-    new @constructor(@x / other, @y / other)
+    return new @constructor @x / other.x, @y / other.y  if other instanceof Point
+    new @constructor @x / other, @y / other
   
   floorDivideBy: (other) ->
     @debugIfFloats()
     if other instanceof Point
-      return new @constructor(Math.floor(@x / other.x), Math.floor(@y / other.y))
-    new @constructor(Math.floor(@x / other), Math.floor(@y / other))
+      return new @constructor Math.floor(@x / other.x), Math.floor(@y / other.y)
+    new @constructor Math.floor(@x / other), Math.floor(@y / other)
   
   toLocalCoordinatesOf: (aMorph) ->
-    new @constructor(@x - aMorph.left(),@y - aMorph.top())
+    new @constructor @x - aMorph.left(), @y - aMorph.top()
   
   # Point polar coordinates:
   r: ->
-    t = (@multiplyBy(@))
+    t = @multiplyBy @
     Math.sqrt t.x + t.y
   
   degrees: ->
@@ -159,11 +159,11 @@ class Point
       return 90  if @y >= 0
       return 270
     tan = @y / @x
-    theta = Math.atan(tan)
+    theta = Math.atan tan
     if @x >= 0
-      return radiansToDegrees(theta)  if @y >= 0
-      return 360 + (radiansToDegrees(theta))
-    180 + radiansToDegrees(theta)
+      return radiansToDegrees theta  if @y >= 0
+      return 360 + radiansToDegrees theta
+    180 + radiansToDegrees theta
   
   theta: ->
     #
@@ -171,8 +171,8 @@ class Point
     #    Right is 0, down is 90
     #
     if @x is 0
-      return degreesToRadians(90)  if @y >= 0
-      return degreesToRadians(270)
+      return degreesToRadians 90  if @y >= 0
+      return degreesToRadians 270
     tan = @y / @x
     theta = Math.atan(tan)
     if @x >= 0
@@ -183,11 +183,11 @@ class Point
   
   # Point functions:
   distanceTo: (aPoint) ->
-    (aPoint.subtract(@)).r()
+    aPoint.subtract(@).r()
   
   rotate: (direction, center) ->
     # direction must be 'right', 'left' or 'pi'
-    offset = @subtract(center)
+    offset = @subtract center
     return new @constructor(-offset.y, offset.y).add(center)  if direction is "right"
     return new @constructor(offset.y, -offset.y).add(center)  if direction is "left"
 
@@ -196,10 +196,10 @@ class Point
   
   flip: (direction, center) ->
     # direction must be 'vertical' or 'horizontal'
-    return new @constructor(@x, center.y * 2 - @y)  if direction is "vertical"
+    return new @constructor @x, center.y * 2 - @y  if direction is "vertical"
 
     # direction === 'horizontal'
-    new @constructor(center.x * 2 - @x, @y)
+    new @constructor center.x * 2 - @x, @y
   
   distanceAngle: (dist, angle) ->
     deg = angle
@@ -209,10 +209,10 @@ class Point
     if -90 <= deg and deg <= 90
       x = Math.sin(degreesToRadians(deg)) * dist
       y = Math.sqrt((dist * dist) - (x * x))
-      return new @constructor(x + @x, @y - y)
+      return new @constructor x + @x, @y - y
     x = Math.sin(degreesToRadians(180 - deg)) * dist
     y = Math.sqrt((dist * dist) - (x * x))
-    new @constructor(x + @x, @y + y)
+    new @constructor x + @x, @y + y
   
   
   # Point transforming:
@@ -223,11 +223,11 @@ class Point
     @add deltaPoint
   
   rotateBy: (angle, centerPoint) ->
-    center = centerPoint or new @constructor(0, 0)
-    p = @subtract(center)
+    center = centerPoint or new @constructor 0, 0
+    p = @subtract center
     r = p.r()
     theta = angle - p.theta()
-    new @constructor(center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta)))
+    new @constructor center.x + (r * Math.cos(theta)), center.y - (r * Math.sin(theta))
   
   
   # Point conversion:
@@ -237,15 +237,15 @@ class Point
   # creating Rectangle instances from Points:
   corner: (cornerPoint) ->
     # answer a new Rectangle
-    new Rectangle(@x, @y, cornerPoint.x, cornerPoint.y)
+    new Rectangle @x, @y, cornerPoint.x, cornerPoint.y
   
   rectangle: (aPoint) ->
     # answer a new Rectangle
-    org = @min(aPoint)
-    crn = @max(aPoint)
-    new Rectangle(org.x, org.y, crn.x, crn.y)
+    org = @min aPoint
+    crn = @max aPoint
+    new Rectangle org.x, org.y, crn.x, crn.y
   
   extent: (aPoint) ->
     #answer a new Rectangle
-    crn = @add(aPoint)
-    new Rectangle(@x, @y, crn.x, crn.y)
+    crn = @add aPoint
+    new Rectangle @x, @y, crn.x, crn.y

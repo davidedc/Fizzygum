@@ -50,18 +50,18 @@ class Rectangle
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
     
     if (typeof(left) is "number") and (typeof(top) is "number") and (typeof(right) is "number") and (typeof(bottom) is "number")
-      @origin = new Point(left, top)
-      @corner = new Point(right, bottom)
+      @origin = new Point left, top
+      @corner = new Point right, bottom
     else if (left instanceof Point) and (typeof(top) is "number") and (typeof(right) is "number")
       @origin = left
-      @corner = new Point(top, right)
+      @corner = new Point top, right
     else if (typeof(left) is "number") and (typeof(top) is "number") and (right instanceof Point)
-      @origin = new Point(left, top)
+      @origin = new Point left, top
       @corner = right
     else if (left instanceof Point) and (top instanceof Point)
       @origin = left
       @corner = top
-    else if (left instanceof Rectangle)
+    else if left instanceof Rectangle
       @origin = left.origin
       @corner = top.origin
   
@@ -98,7 +98,7 @@ class Rectangle
   # Rectangle copying:
   copy: ->
     @debugIfFloats()
-    new @constructor(@left(), @top(), @right(), @bottom())
+    new @constructor @left(), @top(), @right(), @bottom()
   
   # Rectangle accessing - setting:
   setTo: (left, top, right, bottom) ->
@@ -125,11 +125,11 @@ class Rectangle
   
   bottomCenter: ->
     @debugIfFloats()
-    new Point(@center().x, @bottom())
+    new Point @center().x, @bottom()
   
   bottomLeft: ->
     @debugIfFloats()
-    new Point(@origin.x, @corner.y)
+    new Point @origin.x, @corner.y
   
   bottomRight: ->
     @debugIfFloats()
@@ -168,7 +168,7 @@ class Rectangle
   
   leftCenter: ->
     @debugIfFloats()
-    new Point(@left(), @center().y)
+    new Point @left(), @center().y
   
   right: ->
     @debugIfFloats()
@@ -176,7 +176,7 @@ class Rectangle
   
   rightCenter: ->
     @debugIfFloats()
-    new Point(@right(), @center().y)
+    new Point @right(), @center().y
   
   top: ->
     @debugIfFloats()
@@ -184,7 +184,7 @@ class Rectangle
   
   topCenter: ->
     @debugIfFloats()
-    new Point(@center().x, @top())
+    new Point @center().x, @top()
   
   topLeft: ->
     @debugIfFloats()
@@ -192,7 +192,7 @@ class Rectangle
   
   topRight: ->
     @debugIfFloats()
-    new Point(@corner.x, @origin.y)
+    new Point @corner.x, @origin.y
   
   width: ->
     @debugIfFloats()
@@ -211,7 +211,7 @@ class Rectangle
   abs: ->
     @debugIfFloats()
     newOrigin = @origin.abs()
-    newCorner = @corner.max(newOrigin)
+    newCorner = @corner.max newOrigin
     newOrigin.corner newCorner
   
   # Rectangle functions:
@@ -219,8 +219,8 @@ class Rectangle
     @debugIfFloats()
     # delta can be either a Point or a Number
     result = new @constructor()
-    result.origin = @origin.add(delta)
-    result.corner = @corner.subtract(delta)
+    result.origin = @origin.add delta
+    result.corner = @corner.subtract delta
     result.debugIfFloats()
     result
   
@@ -228,8 +228,8 @@ class Rectangle
     @debugIfFloats()
     # delta can be either a Point or a Number
     result = new @constructor()
-    result.origin = @origin.subtract(delta)
-    result.corner = @corner.add(delta)
+    result.origin = @origin.subtract delta
+    result.corner = @corner.add delta
     result.debugIfFloats()
     result
   
@@ -238,7 +238,7 @@ class Rectangle
     # delta can be either a Point or a Number
     result = new @constructor()
     result.origin = @origin.copy()
-    result.corner = @corner.add(delta)
+    result.corner = @corner.add delta
     result.debugIfFloats()
     result
   
@@ -253,8 +253,8 @@ class Rectangle
     if a.isEmpty() or b.isEmpty()
       return @constructor.EMPTY
     result = new @constructor()
-    result.origin = a.origin.max(b.origin)
-    result.corner = a.corner.min(b.corner)
+    result.origin = a.origin.max b.origin
+    result.corner = a.corner.min b.corner
     result = result.zeroIfNegative()
     result.debugIfFloats()
     result
@@ -274,8 +274,8 @@ class Rectangle
     if b.isEmpty()
       return a
     result = new @constructor()
-    result.origin = a.origin.min(b.origin)
-    result.corner = a.corner.max(aRect.corner)
+    result.origin = a.origin.min b.origin
+    result.corner = a.corner.max aRect.corner
     result.debugIfFloats()
     result
   
@@ -304,10 +304,10 @@ class Rectangle
     dy = aRect.bottom() - @bottom()  if @bottom() > aRect.bottom()
     dx = aRect.left() - @left()  if (@left() + dx) < aRect.left()
     dy = aRect.top() - @top()  if (@top() + dy) < aRect.top()
-    new Point(dx, dy)
+    new Point dx, dy
   
   toLocalCoordinatesOf: (aMorph) ->
-    new @constructor(@origin.x - aMorph.left(),@origin.y - aMorph.top(),@corner.x - aMorph.left(),@corner.y - aMorph.top())
+    new @constructor @origin.x - aMorph.left(),@origin.y - aMorph.top(),@corner.x - aMorph.left(),@corner.y - aMorph.top()
   
   # Rectangle testing:
   containsPoint: (aPoint) ->
@@ -322,26 +322,26 @@ class Rectangle
     @debugIfFloats()
     ro = aRect.origin
     rc = aRect.corner
-    (rc.x >= @origin.x) and
-      (rc.y >= @origin.y) and
-      (ro.x <= @corner.x) and
-      (ro.y <= @corner.y)
+    rc.x >= @origin.x and
+      rc.y >= @origin.y and
+      ro.x <= @corner.x and
+      ro.y <= @corner.y
   
   
   # Rectangle transforming:
   scaleBy: (scale) ->
     @debugIfFloats()
     # scale can be either a Point or a scalar
-    o = @origin.multiplyBy(scale)
-    c = @corner.multiplyBy(scale)
-    new @constructor(o.x, o.y, c.x, c.y)
+    o = @origin.multiplyBy scale
+    c = @corner.multiplyBy scale
+    new @constructor o.x, o.y, c.x, c.y
   
   translateBy: (factor) ->
     @debugIfFloats()
     # factor can be either a Point or a scalar
-    o = @origin.add(factor)
-    c = @corner.add(factor)
-    new @constructor(o.x, o.y, c.x, c.y)
+    o = @origin.add factor
+    c = @corner.add factor
+    new @constructor o.x, o.y, c.x, c.y
   
   
   # Rectangle converting:

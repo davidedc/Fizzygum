@@ -367,7 +367,7 @@ _handleCharacter = (character, e) ->
       
       # as we loop through keep track of the max
       # any sequence at a lower level will be discarded
-      maxLevel = Math.max(maxLevel, callbacks[i].level)
+      maxLevel = Math.max maxLevel, callbacks[i].level
       
       # keep a list of which sequences were matches for later
       doNotReset[callbacks[i].seq] = 1

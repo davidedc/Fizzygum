@@ -8,7 +8,7 @@ class MouseSensorMorph extends BoxMorph
 
   constructor: (@cornerRadius = 4) ->
     super
-    @color = new Color(255, 255, 255)
+    @color = new Color 255, 255, 255
     @isTouched = false
     @upStep = 0.05
     @downStep = 0.02

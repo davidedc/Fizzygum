@@ -17,7 +17,7 @@ class MorphsListMorph extends BoxMorph
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @cornerRadius = 5
-    @color = new Color(60, 60, 60)
+    @color = new Color 60, 60, 60
     @buildAndConnectChildren()
   
   setTarget: (target) ->
@@ -32,10 +32,10 @@ class MorphsListMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph("Morphs List")
+    @label = new TextMorph "Morphs List"
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
-    @label.color = new Color(255, 255, 255)
+    @label.color = new Color 255, 255, 255
     @add @label
 
     # Check which objects end with the word Morph
@@ -65,14 +65,14 @@ class MorphsListMorph extends BoxMorph
     @add @morphsList
 
     # close button
-    @buttonClose = new TriggerMorph(true, @)
+    @buttonClose = new TriggerMorph true, @
     @buttonClose.setLabel "close"
     @buttonClose.action = "destroy"
 
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@)
+    @resizer = new HandleMorph @
 
     # update layout
     @layoutSubmorphs()
@@ -86,7 +86,7 @@ class MorphsListMorph extends BoxMorph
     y = @top() + @cornerRadius
     r = @right() - @cornerRadius
     w = r - x
-    @label.fullRawMoveTo new Point(x, y)
+    @label.fullRawMoveTo new Point x, y
     @label.rawSetWidth w
     if @label.height() > (@height() - 50)
       @rawSetHeight @label.height() + 50
@@ -98,16 +98,16 @@ class MorphsListMorph extends BoxMorph
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
-    @morphsList.fullRawMoveTo new Point(x, y)
-    @morphsList.rawSetExtent new Point(w, h)
+    @morphsList.fullRawMoveTo new Point x, y
+    @morphsList.rawSetExtent new Point w, h
 
     # close button
     x = @morphsList.left()
     y = @morphsList.bottom() + @cornerRadius
     h = WorldMorph.preferencesAndSettings.handleSize
     w = @morphsList.width() - h - @cornerRadius
-    @buttonClose.fullRawMoveTo new Point(x, y)
-    @buttonClose.rawSetExtent new Point(w, h)
+    @buttonClose.fullRawMoveTo new Point x, y
+    @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
     @changed()
   

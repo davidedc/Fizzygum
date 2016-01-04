@@ -15,7 +15,7 @@ class ReactiveValuesTests
     if ProfilerData.reactiveValues_createdBasicCalculatedValues != 1
       console.log "ERROR createdBasicCalculatedValues should be 1 it's " +
         ProfilerData.reactiveValues_createdBasicCalculatedValues
-    firstReactValRect.fullRawMoveTo new Point(10, 10)
+    firstReactValRect.fullRawMoveTo new Point 10, 10
     world.add firstReactValRect
 
     # create second rectangle, slightly displaced to verlap
@@ -26,7 +26,7 @@ class ReactiveValuesTests
     if ProfilerData.reactiveValues_createdBasicCalculatedValues != 2
       console.log "ERROR createdBasicCalculatedValues should be 2 it's " +
         ProfilerData.reactiveValues_createdBasicCalculatedValues
-    secondReactValRect.fullRawMoveTo new Point(40, 40)
+    secondReactValRect.fullRawMoveTo new Point 40, 40
     world.add secondReactValRect
 
     if firstReactValRect.countOfDirectRectangleChildren.lastCalculatedValContentMaybeOutdated != true

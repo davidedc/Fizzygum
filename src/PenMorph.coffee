@@ -20,7 +20,7 @@ class PenMorph extends Morph
   constructor: ->
     @penSize = WorldMorph.preferencesAndSettings.handleSize * 4
     super()
-    @rawSetExtent new Point(@penSize, @penSize)
+    @rawSetExtent new Point @penSize, @penSize
     # todo we need to change the size two times, for getting the right size
     # of the arrow and of the line. Probably should make the two distinct
     @penSize = 1
@@ -130,7 +130,7 @@ class PenMorph extends Morph
     if !@parent.penTrails?
       return
 
-    context = @parent.penTrails().getContext("2d")
+    context = @parent.penTrails().getContext "2d"
     # by default penTrails() is to answer the normal
     # morph image.
     # The implication is that by default every Morph in the system
@@ -143,8 +143,8 @@ class PenMorph extends Morph
     # it keeps a separate offscreen canvas for pen trails
     # (and doesn't lose these on redraw).
 
-    from = start.subtract(@parent.position())
-    to = dest.subtract(@parent.position())
+    from = start.subtract @parent.position()
+    to = dest.subtract @parent.position()
     if @isDown
       context.lineWidth = @penSize
       context.strokeStyle = @color.toString()
@@ -162,13 +162,13 @@ class PenMorph extends Morph
   
   # PenMorph turtle ops:
   turn: (degrees) ->
-    @setHeading @heading + parseFloat(degrees)
+    @setHeading @heading + parseFloat degrees
   
   forward: (steps) ->
     start = @center()
-    dist = parseFloat(steps)
+    dist = parseFloat steps
     if dist >= 0
-      dest = @position().distanceAngle(dist, @heading)
+      dest = @position().distanceAngle dist, @heading
     else
       dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
     @fullRawMoveTo dest.round()

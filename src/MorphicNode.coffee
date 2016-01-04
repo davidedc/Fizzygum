@@ -47,13 +47,13 @@ class MorphicNode
 
   # currently unused in ZK
   childrenTopToBottom: ->
-    arrayShallowCopyAndReverse(@children)  
+    arrayShallowCopyAndReverse @children
   
   # MorphicNode accessing:
   addChild: (aMorphicNode, position = null) ->
     WorldMorph.numberOfAddsAndRemoves++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     if !position?
       @children.push aMorphicNode
     else
@@ -76,7 +76,7 @@ class MorphicNode
   # pop to the foreground
   moveAsLastChild: ->
     return unless @parent?
-    idx = @parent.children.indexOf(@)
+    idx = @parent.children.indexOf @
     if idx == -1
       return
     # check if already last child
@@ -94,8 +94,8 @@ class MorphicNode
     # remove the array element from the
     # array
     WorldMorph.numberOfAddsAndRemoves++
-    @invalidateFullBoundsCache(@)
-    @invalidateFullClippedBoundsCache(@)
+    @invalidateFullBoundsCache @
+    @invalidateFullClippedBoundsCache @
     @children.remove aMorphicNode
     aMorphicNode.parent = null
     ## @disconnectValuesFromRemovedChild aMorphicNode
@@ -152,9 +152,9 @@ class MorphicNode
         lengthOfChildrenArrays: []
 
     if @parent?
-      pathSoFar.actualPath.push @parent.children.indexOf(@)
+      pathSoFar.actualPath.push @parent.children.indexOf @
       pathSoFar.lengthOfChildrenArrays.push @parent.children.length
-      @parent.pathOfChildrenPositionsRelativeToWorld(pathSoFar)
+      @parent.pathOfChildrenPositionsRelativeToWorld pathSoFar
     else
       if @ == world
         pathSoFar.actualPath.reverse()
@@ -177,11 +177,11 @@ class MorphicNode
   allChildrenBottomToTop: ->
     result = [@] # includes myself
     @children.forEach (child) ->
-      result = result.concat(child.allChildrenBottomToTop())
+      result = result.concat child.allChildrenBottomToTop()
     result
 
   allChildrenTopToBottom: ->
-    return allChildrenTopToBottomSuchThat(-> true)
+    return allChildrenTopToBottomSuchThat -> true
 
   # the easiest way here would be to just return
   #   arrayShallowCopyAndReverse(@allChildrenBottomToTop())
@@ -203,7 +203,7 @@ class MorphicNode
     # children, we add ourselves to the last position
     # of the list since this node is at the bottom of all of
     # its children...
-    if predicate.call(null, @)
+    if predicate.call null, @
       collected.push @ # include myself
 
     return collected
@@ -237,7 +237,7 @@ class MorphicNode
       return [@]
     result = []
     @children.forEach (child) ->
-      result = result.concat(child.allLeafsBottomToTop())
+      result = result.concat child.allLeafsBottomToTop()
     return result
 
   # Return all "parent" nodes from the root up to this node (including both)
@@ -269,17 +269,17 @@ class MorphicNode
   allParentsBottomToTopSuchThat: (predicate) ->
     result = []
     if @parent?
-      result = @parent.allParentsBottomToTopSuchThat(predicate)
+      result = @parent.allParentsBottomToTopSuchThat predicate
     if predicate.call(null, @)
       result.push @
     result
 
   allParentsTopToBottomSuchThat: (predicate) ->
     collected = []
-    if predicate.call(null, @)
+    if predicate.call null, @
       collected = [@] # include myself
     if @parent?
-      collected = collected.concat(@parent.allParentsTopToBottomSuchThat(predicate))
+      collected = collected.concat @parent.allParentsTopToBottomSuchThat predicate
     return collected
 
   # quicker version that doesn't need us
@@ -329,7 +329,7 @@ class MorphicNode
 
   firstSiblingsSuchThat: (predicate) ->
     for eachSibling in @parent.children
-      if predicate.call(null, eachSibling)
+      if predicate.call null, eachSibling
         return eachSibling
     return null
 
@@ -378,7 +378,7 @@ class MorphicNode
     for eachSibling in @parent.children
       if eachSibling == @
         return theCount
-      if predicate.call(null, eachSibling)
+      if predicate.call null, eachSibling
         theCount++
     return theCount
 
@@ -388,7 +388,7 @@ class MorphicNode
     for eachSibling in @parent.children
       if eachSibling == @
         break
-      if predicate.call(null, eachSibling)
+      if predicate.call null, eachSibling
         indexOfMorph = theCount
       theCount++
 
@@ -401,7 +401,7 @@ class MorphicNode
     searchActuallyOngoing = false
     for eachSibling in @parent.children
       if searchActuallyOngoing
-        if predicate.call(null, eachSibling)
+        if predicate.call null, eachSibling
           return eachSibling
       if eachSibling == @
         searchActuallyOngoing = true
@@ -417,7 +417,7 @@ class MorphicNode
   nthChildSuchThat: (n, predicate) ->
     theCount = 0
     for eachChild in @children
-      if predicate.call(null, eachChild)
+      if predicate.call null, eachChild
         theCount++
         if theCount is n
           return eachChild
@@ -438,7 +438,7 @@ class MorphicNode
   firstFrameParent: (morphToStartFrom = @) ->
     if @checkFirstFrameParentCache == WorldMorph.numberOfAddsAndRemoves
       if world.doubleCheckCachedMethodsResults
-        if @cachedFirstFrameParent != @SLOWfirstFrameParent(morphToStartFrom)
+        if @cachedFirstFrameParent != @SLOWfirstFrameParent morphToStartFrom
           debugger
           alert "firstFrameParent is broken (cached)"
 
@@ -451,7 +451,7 @@ class MorphicNode
       result =  null
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWfirstFrameParent(morphToStartFrom)
+      if result != @SLOWfirstFrameParent morphToStartFrom
         debugger
         alert "firstFrameParent is broken (uncached)"
 
@@ -469,7 +469,7 @@ class MorphicNode
       if @ instanceof eachConstructor
         return [@, eachConstructor]
     return null  unless @parent
-    @parent.parentThatIsA(constructors...)
+    @parent.parentThatIsA constructors...
 
   # checks whether the morph is a child,
   # directly or indirectly, of a specified
@@ -496,7 +496,7 @@ class MorphicNode
     # the predicate on myself and return myself
     # if I satisfy, else I return null
     if @children.length == 0
-      if predicate.call(null, @)
+      if predicate.call null, @
         return @
       else
         return null
@@ -508,11 +508,11 @@ class MorphicNode
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      foundMorph = morph.topMorphSuchThat(predicate)
+      foundMorph = morph.topMorphSuchThat predicate
       if foundMorph?
         return foundMorph
     # now that all children are tested, test myself
-    if predicate.call(null, @)
+    if predicate.call null, @
       return @
     else
       return null
@@ -529,7 +529,7 @@ class MorphicNode
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      if predicate.call(null, morph)
+      if predicate.call null, morph
         return morph
     # ok none of my children test positive,
     # so return null.

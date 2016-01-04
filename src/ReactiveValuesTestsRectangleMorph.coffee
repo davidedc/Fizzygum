@@ -12,10 +12,10 @@ class ReactiveValuesTestsRectangleMorph extends Morph
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
 
-    countValContent = {"content": @count, "signature": hashCode(@count + "")}
+    countValContent = {"content": @count, "signature": hashCode @count + "" }
     @countVal = new GroundVal("countVal", countValContent, @)
 
-    countOfDirectRectangleChildrenContent = {"content": 0, "signature": hashCode(0 + "")}
+    countOfDirectRectangleChildrenContent = {"content": 0, "signature": hashCode 0 + "" }
 
     functionToRecalculate = (argById, localArgByName, parentArgByName, childrenArgByName, childrenArgByNameCount) ->
         theCount = 0
@@ -26,7 +26,7 @@ class ReactiveValuesTestsRectangleMorph extends Morph
 
         return {
             "content": theCount,
-            "signature": hashCode(theCount + "")
+            "signature": hashCode theCount + ""
             }
 
     #constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph)
