@@ -26,7 +26,7 @@ class SpeechBubbleMorph extends BoxMorph
     @padding = 0,
     @isThought = false) ->
       # console.log "bubble super"
-      @color = color or new Color(230, 230, 230)
+      @color = color or new Color 230, 230, 230
       super(cornerRadius or 6)
       # console.log @color
   
@@ -36,9 +36,9 @@ class SpeechBubbleMorph extends BoxMorph
     # bubble is about is still actually there
     # and the mouse is still over it, otherwise
     # do nothing.
-    if (morphInvokingThis.root() == world) and morphInvokingThis.boundsContainPoint(world.hand.position())
-      theBubble = new @(localize(contents), morphInvokingThis, null, null)
-      theBubble.popUp theBubble.morphInvokingThis.rightCenter().add(new Point(-8, 0))
+    if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
+      theBubble = new @ localize(contents), morphInvokingThis, null, null
+      theBubble.popUp theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInMorph"
@@ -54,7 +54,7 @@ class SpeechBubbleMorph extends BoxMorph
   # SpeechBubbleMorph invoking:
   popUp: (pos, isClickable) ->
     # console.log "bubble popup"
-    @fullRawMoveTo pos.subtract(new Point(0, @height()))
+    @fullRawMoveTo pos.subtract new Point 0, @height()
     @fullRawMoveWithin world
 
     @buildAndConnectChildren()
@@ -77,7 +77,7 @@ class SpeechBubbleMorph extends BoxMorph
       @contentsMorph = @contentsMorph.destroy()
     if @contents instanceof Morph
       @contentsMorph = @contents
-    else if isString(@contents)
+    else if isString @contents
       @contentsMorph = new TextMorph(
         @contents,
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
@@ -90,7 +90,7 @@ class SpeechBubbleMorph extends BoxMorph
       @contentsMorph.silentRawSetWidth @contents.width
       @contentsMorph.silentRawSetHeight @contents.height
       @contentsMorph.backBuffer = @contents
-      @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext("2d")
+      @contentsMorph.backBufferContext = @contentsMorph.backBuffer.getContext "2d"
     else
       @contentsMorph = new TextMorph(
         @contents.toString(),

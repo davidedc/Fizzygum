@@ -36,7 +36,7 @@ class ScrollFrameMorph extends FrameMorph
     super()
     @scrollBarSize = scrollBarSize or WorldMorph.preferencesAndSettings.scrollBarSize
 
-    @contents = new FrameMorph(@) unless @contents?
+    @contents = new FrameMorph @ unless @contents?
     @addRaw @contents
 
     # the scrollFrame is never going to paint itself,
@@ -48,13 +48,13 @@ class ScrollFrameMorph extends FrameMorph
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph(null, null, null, null, "horizontal", @sliderColor)
+    @hBar = new SliderMorph null, null, null, null, "horizontal", @sliderColor
     @hBar.rawSetHeight @scrollBarSize
 
     @hBar.target = @
     @addRaw @hBar
 
-    @vBar = new SliderMorph(null, null, null, null, "vertical", @sliderColor)
+    @vBar = new SliderMorph null, null, null, null, "vertical", @sliderColor
     @vBar.rawSetWidth @scrollBarSize
     @vBar.target = @
     @addRaw @vBar
@@ -67,17 +67,17 @@ class ScrollFrameMorph extends FrameMorph
     @adjustScrollBars()
 
   adjustContentsBasedOnHBar: (num) ->
-    @contents.fullRawMoveTo new Point(@left() - num, @contents.position().y)
+    @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
     @adjustContentsBounds()
     @adjustScrollBars()
 
   adjustContentsBasedOnVBar: (num) ->
-    @contents.fullRawMoveTo new Point(@contents.position().x, @top() - num)
+    @contents.fullRawMoveTo new Point @contents.position().x, @top() - num
     @adjustContentsBounds()
     @adjustScrollBars()
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
-    aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
+    aColor = super
     # keep in synch the color of the content.
     # Note that the container scrollFrame.
     # is actually not painted.
@@ -85,8 +85,7 @@ class ScrollFrameMorph extends FrameMorph
     return aColor
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
-    debugger
-    alpha = super(alphaOrMorphGivingAlpha, morphGivingAlpha)
+    alpha = super
     # update the alpha of the scrollFrame - note
     # that we are never going to paint the scrollFrame
     # we are updating the alpha so that its value is the same as the
@@ -137,7 +136,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @hBar.parent == @
-          @hBar.fullRawMoveTo new Point(@left(), @bottom() - @hBar.height())
+          @hBar.fullRawMoveTo new Point @left(), @bottom() - @hBar.height()
         stopValue = @contents.width() - @width()
         @hBar.updateSpecs(
           0, # start
@@ -157,7 +156,7 @@ class ScrollFrameMorph extends FrameMorph
         # attached then we possibly move it, together with the
         # scrollframe, otherwise we don't move it.
         if @vBar.parent == @
-          @vBar.fullRawMoveTo new Point(@right() - @vBar.width(), @top())
+          @vBar.fullRawMoveTo new Point @right() - @vBar.width(), @top()
         stopValue = @contents.height() - @height()
         @vBar.updateSpecs(
           0, # start
@@ -191,7 +190,7 @@ class ScrollFrameMorph extends FrameMorph
     @extraPadding = extraPadding
     @contents.fullDestroyChildren()
 
-    aMorph.fullRawMoveTo @position().add(@padding + @extraPadding)
+    aMorph.fullRawMoveTo @position().add @padding + @extraPadding
     @add aMorph
   
   rawSetExtent: (aPoint) ->
@@ -199,7 +198,7 @@ class ScrollFrameMorph extends FrameMorph
     @breakNumberOfRawMovesAndResizesCaches()
     @contents.fullRawMoveTo @position()  if @isTextLineWrapping
     super aPoint
-    @contents.rawSetExtent(aPoint)
+    @contents.rawSetExtent aPoint
     @adjustContentsBounds()
     @adjustScrollBars()
 
@@ -221,14 +220,14 @@ class ScrollFrameMorph extends FrameMorph
     if @isTextLineWrapping
       @contents.children.forEach (morph) =>
         if morph instanceof TextMorph
-          totalPadding =  2*(@extraPadding + @padding)
+          totalPadding = 2*(@extraPadding + @padding)
           # this re-layouts the text to fit the width.
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
           morph.maxTextWidth = 0
           morph.rawSetWidth @contents.width() - totalPadding
           morph.maxTextWidth = @contents.width() - totalPadding
-          @contents.rawSetHeight Math.max(morph.height(), @height() - totalPadding)
+          @contents.rawSetHeight Math.max morph.height(), @height() - totalPadding
 
     subBounds = @contents.subMorphsMergedFullBounds()
     if subBounds
@@ -236,7 +235,7 @@ class ScrollFrameMorph extends FrameMorph
     else
       newBounds = @boundingBox()
 
-    unless @contents.boundingBox().eq(newBounds)
+    unless @contents.boundingBox().eq newBounds
       @contents.silentRawSetBounds newBounds
       @contents.reLayout()
       
@@ -244,13 +243,13 @@ class ScrollFrameMorph extends FrameMorph
 
   keepContentsInScrollFrame: ->
     if @contents.left() > @left()
-      @contents.fullRawMoveBy new Point(@left() - @contents.left(), 0)
+      @contents.fullRawMoveBy new Point @left() - @contents.left(), 0
     if @contents.right() < @right()
-      @contents.fullRawMoveBy new Point(@right() - @contents.right(), 0)  
+      @contents.fullRawMoveBy new Point @right() - @contents.right(), 0
     if @contents.top() > @top()
-      @contents.fullRawMoveBy new Point(0, @top() - @contents.top())  
+      @contents.fullRawMoveBy new Point 0, @top() - @contents.top()
     if @contents.bottom() < @bottom()
-      @contents.fullRawMoveBy 0, new Point(@bottom() - @contents.bottom(), 0)
+      @contents.fullRawMoveBy 0, new Point @bottom() - @contents.bottom(), 0
   
   # ScrollFrameMorph scrolling by floatDragging:
   scrollX: (steps) ->
@@ -312,8 +311,8 @@ class ScrollFrameMorph extends FrameMorph
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
-        (!world.hand.floatDraggingSomething()) and
-        (@boundsContainPoint(world.hand.position()))
+        !world.hand.floatDraggingSomething() and
+        @boundsContainPoint(world.hand.position())
           newPos = world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and
           !@hBar.isCollapsed()
@@ -354,10 +353,10 @@ class ScrollFrameMorph extends FrameMorph
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     @step = =>
       pos = hand.position()
-      inner = @boundingBox().insetBy(inset)
-      if (@boundsContainPoint(pos)) and
-        (not (inner.containsPoint(pos))) and
-        (hand.floatDraggingSomething())
+      inner = @boundingBox().insetBy inset
+      if @boundsContainPoint(pos) and
+        !inner.containsPoint(pos) and
+        hand.floatDraggingSomething()
           @autoScroll pos
       else
         @step = noOperation
@@ -366,20 +365,20 @@ class ScrollFrameMorph extends FrameMorph
   autoScroll: (pos) ->
     return null  if Date.now() - @autoScrollTrigger < 500
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
-    area = @topLeft().extent(new Point(@width(), inset))
+    area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)
       scrollbarJustChanged = scrollbarJustChanged ||
         @scrollY inset - (pos.y - @top())
-    area = @topLeft().extent(new Point(inset, @height()))
+    area = @topLeft().extent new Point inset, @height()
     if area.containsPoint(pos)
       scrollbarJustChanged = scrollbarJustChanged ||
         @scrollX inset - (pos.x - @left())
-    area = (new Point(@right() - inset, @top())).extent(new Point(inset, @height()))
+    area = (new Point(@right() - inset, @top())).extent new Point inset, @height()
     if area.containsPoint(pos)
       scrollbarJustChanged = scrollbarJustChanged ||
         @scrollX -(inset - (@right() - pos.x))
-    area = (new Point(@left(), @bottom() - inset)).extent(new Point(@width(), inset))
+    area = (new Point(@left(), @bottom() - inset)).extent new Point @width(), inset
     if area.containsPoint(pos)
       scrollbarJustChanged = scrollbarJustChanged ||
         @scrollY -(inset - (@bottom() - pos.y))
@@ -391,7 +390,7 @@ class ScrollFrameMorph extends FrameMorph
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretMorph) ->
     txt = caretMorph.target
-    offset = txt.position().subtract(@contents.position())
+    offset = txt.position().subtract @contents.position()
     ft = @top() + @padding
     fb = @bottom() - @padding
     fl = @left() + @padding

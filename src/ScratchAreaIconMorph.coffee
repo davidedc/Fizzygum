@@ -9,7 +9,7 @@ class ScratchAreaIconMorph extends Morph
 
   #constructor: ->
   #  super()
-  #  @setColor new Color(0, 0, 0)
+  #  @setColor new Color 0, 0, 0
 
 
   # This method only paints this very morph's "image",

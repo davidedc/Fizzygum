@@ -43,7 +43,7 @@ class StringMorph2 extends Morph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  blanksColor: new Color(180, 140, 140)
+  blanksColor: new Color 180, 140, 140
 
   # Properties for text-editing
   isScrollable: true
@@ -55,13 +55,13 @@ class StringMorph2 extends Morph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  markedTextColor: new Color(255, 255, 255)
+  markedTextColor: new Color 255, 255, 255
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  markedBackgoundColor: new Color(60, 60, 120)
+  markedBackgoundColor: new Color 60, 60, 120
 
   horizontalAlignment: AlignmentSpec.LEFT
   verticalAlignment: AlignmentSpec.TOP
@@ -91,7 +91,7 @@ class StringMorph2 extends Morph
     super()
 
     # override inherited properties:
-    @color = color or new Color(0, 0, 0)
+    @color = color or new Color 0, 0, 0
     @noticesTransparentClick = true
 
   # the actual font size used might be
@@ -141,8 +141,8 @@ class StringMorph2 extends Morph
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of string)"
-    textWithoutLocationOrInstanceNo = @text.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
-    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+    textWithoutLocationOrInstanceNo = @text.replace /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
+    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
   password: (letter, length) ->
@@ -168,7 +168,7 @@ class StringMorph2 extends Morph
 
 
     if !@scaleAboveOriginallyAssignedFontSize
-      if fittingTestFunction(textToFit, @originallySetFontSize)
+      if fittingTestFunction textToFit, @originallySetFontSize
         return @originallySetFontSize
     # decimalFloatFigures allows you to go into sub-points
     # in the font size. This is so the resizing of the
@@ -179,19 +179,19 @@ class StringMorph2 extends Morph
     decimalFloatFigures = 0
 
     start = 0    # minimum font size that we are gonna examine
-    stop  = Math.round(200 * Math.pow(10,decimalFloatFigures))  # maximum font size that we are gonna examine
+    stop  = Math.round 200 * Math.pow 10, decimalFloatFigures  # maximum font size that we are gonna examine
     
-    if !fittingTestFunction(textToFit, start)
+    if !fittingTestFunction textToFit, start
        return -1
 
-    if fittingTestFunction(textToFit, stop)
-       return stop / Math.pow(10,decimalFloatFigures)
+    if fittingTestFunction textToFit, stop
+       return stop / Math.pow 10, decimalFloatFigures
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      itFitsAtPivot = fittingTestFunction(textToFit, pivot / Math.pow(10,decimalFloatFigures))
+      itFitsAtPivot = fittingTestFunction textToFit, pivot / Math.pow 10, decimalFloatFigures
 
       if itFitsAtPivot
         # bring forward the start since there are still
@@ -202,7 +202,7 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    start / Math.pow(10,decimalFloatFigures)
+    start / Math.pow 10, decimalFloatFigures
 
   generateTextWithEllipsis: (startingText) ->
     if startingText != ""
@@ -222,8 +222,8 @@ class StringMorph2 extends Morph
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      textAtPivot = @generateTextWithEllipsis(@text.substring(0, pivot))
-      itFitsAtPivot = fittingTestFunction(textAtPivot, @originallySetFontSize)
+      textAtPivot = @generateTextWithEllipsis @text.substring 0, pivot
+      itFitsAtPivot = fittingTestFunction textAtPivot, @originallySetFontSize
       #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
       if itFitsAtPivot
@@ -235,10 +235,10 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    fittingText = @generateTextWithEllipsis(@text.substring(0, start))
+    fittingText = @generateTextWithEllipsis @text.substring 0, start
     #console.log "what fits: " + fittingText
     if start == 0
-      if fittingTestFunction("…", @originallySetFontSize)
+      if fittingTestFunction "…", @originallySetFontSize
         return "…"
       else
         return ""
@@ -247,7 +247,7 @@ class StringMorph2 extends Morph
 
   synchroniseTextAndActualText: ->
 
-    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 1"
@@ -258,13 +258,13 @@ class StringMorph2 extends Morph
 
 
   measureText: (overrideFontSize = @fittingFontSize, text) ->
-    cacheKey = hashCode(overrideFontSize + "-" + text)
+    cacheKey = hashCode overrideFontSize + "-" + text
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit?
       return cacheHit
     else
-      world.canvasContextForTextMeasurements.font = @font(overrideFontSize)
-      cacheEntry = Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1)
+      world.canvasContextForTextMeasurements.font = @font overrideFontSize
+      cacheEntry = Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
       world.cacheForTextMeasurements.set cacheKey, cacheEntry
     #if cacheHit?
     #  if cacheHit != cacheEntry
@@ -275,7 +275,7 @@ class StringMorph2 extends Morph
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 
-    thisFitsInto = new Point(Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize))
+    thisFitsInto = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
 
     if thisFitsInto.le @extent()
       return true
@@ -283,7 +283,7 @@ class StringMorph2 extends Morph
       return false
 
   fitToExtent: ->
-    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 3"
@@ -293,7 +293,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @cropWritingWhenTooBig
-        @textActuallyShown = @searchLargestFittingText(@doesTextFitInExtent, @text)
+        @textActuallyShown = @searchLargestFittingText @doesTextFitInExtent, @text
         return @originallySetFontSize
       else
         @textActuallyShown = @text
@@ -350,10 +350,10 @@ class StringMorph2 extends Morph
       height = @height()
     else
       width = widthOfText
-      height = fontHeight(@fittingFontSize)
+      height = fontHeight @fittingFontSize
     @backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext = @backBuffer.getContext "2d"
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
@@ -374,7 +374,7 @@ class StringMorph2 extends Morph
       @backBufferContext.restore()
 
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@fittingFontSize)
+      textVerticalPosition = fontHeight @fittingFontSize
     else if @verticalAlignment == AlignmentSpec.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
@@ -392,10 +392,10 @@ class StringMorph2 extends Morph
     @backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
 
     # draw the selection
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     for i in [start...stop]
-      p = @slotCoordinates(i).subtract(@position())
+      p = @slotCoordinates(i).subtract @position()
       if p?
         c = text.charAt(i)
         @backBufferContext.fillStyle = @markedBackgoundColor.toString()
@@ -414,8 +414,8 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
     @backBufferValidityChecker.font = @font()
     @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode(@text)
-    @backBufferValidityChecker.textActuallyShownHash = hashCode(@textActuallyShown)
+    @backBufferValidityChecker.textHash = hashCode @text
+    @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
@@ -438,16 +438,16 @@ class StringMorph2 extends Morph
     # answer the position point of the given index ("slot")
     # where the caret should be placed
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
-    dest = Math.min(Math.max(slot, 0), text.length)
+    dest = Math.min Math.max(slot, 0), text.length
 
-    xOffset = Math.ceil(@calculateExtentBasedOnText(text.substring(0,dest)))
+    xOffset = Math.ceil @calculateExtentBasedOnText text.substring 0, dest
     @pos = dest
     x = @left() + xOffset
     y = @top()
 
     widthOfText = @calculateExtentBasedOnText()
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@fittingFontSize)
+      textVerticalPosition = fontHeight @fittingFontSize
     else if @verticalAlignment == AlignmentSpec.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
@@ -461,15 +461,15 @@ class StringMorph2 extends Morph
       textHorizontalPosition = @width() - widthOfText
 
     x += textHorizontalPosition
-    y += textVerticalPosition - fontHeight(@fittingFontSize)
+    y += textVerticalPosition - fontHeight @fittingFontSize
 
-    new Point(x, y)
+    new Point x, y
   
   slotAt: (aPoint) ->
 
     widthOfText = @calculateExtentBasedOnText()
     if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight(@fittingFontSize)
+      textVerticalPosition = fontHeight @fittingFontSize
     else if @verticalAlignment == AlignmentSpec.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
     else if @verticalAlignment == AlignmentSpec.BOTTOM
@@ -492,7 +492,7 @@ class StringMorph2 extends Morph
 
     # if pointer is below the line, the slot is at
     # the last character.
-    if aPoint.y - @top() > ((Math.ceil(fontHeight(@fittingFontSize))))
+    if aPoint.y - @top() > Math.ceil fontHeight @fittingFontSize
       return text.length
 
     # This code to pick the correct slot works but it's
@@ -513,7 +513,7 @@ class StringMorph2 extends Morph
       else
         charXMinusOne = 0
 
-      charX += (@calculateExtentBasedOnText(text[idx]))
+      charX += @calculateExtentBasedOnText text[idx]
 
       idx += 1
       if idx is text.length
@@ -680,7 +680,7 @@ class StringMorph2 extends Morph
 
 
     @text = theTextContent
-    largestFittingFontSize = @searchLargestFittingFont(@doesTextFitInExtent, @text)
+    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
     if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
       console.log "texts synched"
       @textActuallyShown = @text
@@ -700,10 +700,10 @@ class StringMorph2 extends Morph
 
     # for context menu demo purposes
     if typeof size is "number"
-      @originallySetFontSize = Math.round(Math.min(Math.max(size, 4), 500))
+      @originallySetFontSize = Math.round Math.min Math.max(size, 4), 500
     else
-      newSize = parseFloat(size)
-      @originallySetFontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
+      newSize = parseFloat size
+      @originallySetFontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -751,8 +751,8 @@ class StringMorph2 extends Morph
       return null
 
   selection: ->
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     @textActuallyShown.slice start, stop
   
   selectionStartSlot: ->
@@ -775,8 +775,8 @@ class StringMorph2 extends Morph
   
   deleteSelection: ->
     text = @text
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     @text = text.slice(0, start) + text.slice(stop)
     @textActuallyShown = @text
     #console.log "@textActuallyShown = @text 6"
@@ -818,16 +818,16 @@ class StringMorph2 extends Morph
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
-      if @isEditable and (not @isFloatDraggable())
+      if @isEditable and !@isFloatDraggable()
         @edit()
         world.caret.gotoPos pos
-        @startMark = @slotAt(pos)
+        @startMark = @slotAt pos
         @endMark = @startMark
         @currentlySelecting = true
     
     @mouseMove = (pos) ->
       if @isEditable and @currentlySelecting
-        newMark = @slotAt(pos)
+        newMark = @slotAt pos
         if newMark isnt @endMark
           @endMark = newMark
           

@@ -16,14 +16,14 @@ class SliderButtonMorph extends CircleBoxMorph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  highlightColor: new Color(110, 110, 110)
+  highlightColor: new Color 110, 110, 110
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  pressColor: new Color(100, 100, 100)
-  normalColor: new Color(0, 0, 0)
+  pressColor: new Color 100, 100, 100
+  normalColor: new Color 0, 0, 0
   is3D: false
 
   state: 0
@@ -50,21 +50,21 @@ class SliderButtonMorph extends CircleBoxMorph
       @orientation = @parent.orientation
       if @orientation is "vertical"
         bw = @parent.width() - 2
-        bh = Math.max(bw, Math.round(@parent.height() * @parent.ratio()))
-        @silentRawSetExtent new Point(bw, bh)
+        bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
+        @silentRawSetExtent new Point bw, bh
         posX = 1
         posY = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
           @parent.height() - @height())
       else
         bh = @parent.height() - 2
-        bw = Math.max(bh, Math.round(@parent.width() * @parent.ratio()))
-        @silentRawSetExtent new Point(bw, bh)
+        bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
+        @silentRawSetExtent new Point bw, bh
         posY = 1
         posX = Math.min(
           Math.round((@parent.value - @parent.start) * @parent.unitSize()),
           @parent.width() - @width())
-      @silentFullRawMoveTo new Point(posX, posY).add(@parent.position())
+      @silentFullRawMoveTo new Point(posX, posY).add @parent.position()
       @notifyChildrenThatParentHasReLayouted()
 
   isFloatDraggable: ->
@@ -86,7 +86,7 @@ class SliderButtonMorph extends CircleBoxMorph
         newX = Math.max(
           Math.min(@offset.x,
           @parent.right() - @width()), @parent.left())
-      newPosition = new Point(newX, newY)
+      newPosition = new Point newX, newY
       if !oldButtonPosition.eq newPosition
         @fullRawMoveTo newPosition
         @parent.updateValue()

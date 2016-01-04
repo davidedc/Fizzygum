@@ -27,8 +27,8 @@ class SliderMorph extends CircleBoxMorph
     @button = new SliderButtonMorph()
     super orientation # if null, then a vertical one will be created
     @alpha = 0.1
-    @color = color or new Color(0, 0, 0)
-    @silentRawSetExtent new Point(20, 100)
+    @color = color or new Color 0, 0, 0
+    @silentRawSetExtent new Point 20, 100
     @silentAdd @button
 
   imBeingAddedTo: (newParentMorph) ->
@@ -85,7 +85,7 @@ class SliderMorph extends CircleBoxMorph
       relPos = @button.top() - @top()
     else
       relPos = @button.left() - @left()
-    newvalue = Math.round(relPos / @unitSize() + @start)
+    newvalue = Math.round relPos / @unitSize() + @start
     if @value != newvalue
       @value = newvalue
       @updateTarget()
@@ -140,7 +140,7 @@ class SliderMorph extends CircleBoxMorph
   
   userSetStart: (num) ->
     # for context menu demo purposes
-    @start = Math.max(num, @stop)
+    @start = Math.max num, @stop
 
   
   # once you set all the properties of a slider you
@@ -173,11 +173,11 @@ class SliderMorph extends CircleBoxMorph
 
     # for context menu demo purposes
     if typeof num is "number"
-      @start = Math.min(Math.max(num, 0), @stop - @size)
+      @start = Math.min Math.max(num, 0), @stop - @size
     else
-      newStart = parseFloat(num)
-      @start = Math.min(Math.max(newStart, 0), @stop - @size)  unless isNaN(newStart)
-    @value = Math.max(@value, @start)
+      newStart = parseFloat num
+      @start = Math.min Math.max(newStart, 0), @stop - @size  unless isNaN newStart
+    @value = Math.max @value, @start
     @updateTarget()
     @reLayout()
     
@@ -194,11 +194,11 @@ class SliderMorph extends CircleBoxMorph
 
     # for context menu demo purposes
     if typeof num is "number"
-      @stop = Math.max(num, @start + @size)
+      @stop = Math.max num, @start + @size
     else
-      newStop = parseFloat(num)
-      @stop = Math.max(newStop, @start + @size)  unless isNaN(newStop)
-    @value = Math.min(@value, @stop)
+      newStop = parseFloat num
+      @stop = Math.max newStop, @start + @size  unless isNaN newStop
+    @value = Math.min @value, @stop
     @updateTarget()
     @reLayout()
     
@@ -214,11 +214,11 @@ class SliderMorph extends CircleBoxMorph
 
     # for context menu demo purposes
     if typeof size is "number"
-      @size = Math.min(Math.max(size, 1), @stop - @start)
+      @size = Math.min Math.max(size, 1), @stop - @start
     else
-      newSize = parseFloat(size)
-      @size = Math.min(Math.max(newSize, 1), @stop - @start)  unless isNaN(newSize)
-    @value = Math.min(@value, @stop - @size)
+      newSize = parseFloat size
+      @size = Math.min Math.max(newSize, 1), @stop - @start  unless isNaN newSize
+    @value = Math.min @value, @stop - @size
     # it just so happens that, as hoped but somewhat
     # unexpectedly, as the slider resizes,
     # the resize mechanism is such that the
@@ -239,12 +239,12 @@ class SliderMorph extends CircleBoxMorph
   
   setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.numericalSetters()
-    menu = new MenuMorph(false, @, true, true, "choose target property:")
+    menu = new MenuMorph false, @, true, true, "choose target property:"
     choices.forEach (each) =>
       menu.addItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
     if choices.length == 0
-      menu = new MenuMorph(false, @, true, true, "no target properties available")
-    menu.popUpAtHand(@firstContainerMenu())
+      menu = new MenuMorph false, @, true, true, "no target properties available"
+    menu.popUpAtHand @firstContainerMenu()
 
   
   numericalSetters: ->

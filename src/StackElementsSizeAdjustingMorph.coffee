@@ -16,7 +16,7 @@ class StackElementsSizeAdjustingMorph extends Morph
   constructor: ->
     super()
     @noticesTransparentClick = true
-    #@setColor new Color(0, 255, 0)
+    #@setColor new Color 0, 255, 0
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
@@ -54,7 +54,7 @@ class StackElementsSizeAdjustingMorph extends Morph
       # the factor "Math.max(lmdd.x,rmdd.x)/100" here below is because
       # spacers have huge max factors, so we need to scale the
       # change based on how much the biggest max factor is.
-      biggestMaxOfTheTwo = Math.max(Math.abs(lmdd.x),Math.abs(rmdd.x))
+      biggestMaxOfTheTwo = Math.max Math.abs(lmdd.x), Math.abs(rmdd.x)
       deltaX = (deltaDragFromPreviousCall.x * Math.pow(biggestMaxOfTheTwo,1.07)) * 500
       console.log " deltax 2 : " + deltaX + " lmdd.x: " + lmdd.x + " rmdd.x: " + rmdd.x
       deltaX = deltaX / (@parent.width() * 700)
@@ -73,10 +73,10 @@ class StackElementsSizeAdjustingMorph extends Morph
 
       console.log " deltax 4 : " + deltaX
 
-      prev = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
-      leftMorph.setMaxDim new Point((lmdd.x + deltaX), lmdd.y)
-      rightMorph.setMaxDim new Point((rmdd.x - deltaX), rmdd.y)
-      newone = (leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x)
+      prev = leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x
+      leftMorph.setMaxDim new Point lmdd.x + deltaX, lmdd.y
+      rightMorph.setMaxDim new Point rmdd.x - deltaX, rmdd.y
+      newone = leftMorph.getMaxDim().x - leftMorph.getDesiredDim().x + rightMorph.getMaxDim().x - rightMorph.getDesiredDim().x
       if prev != newone
         leftMorph.setMaxDim lmdd
         rightMorph.setMaxDim rmdd
@@ -147,7 +147,7 @@ class StackElementsSizeAdjustingMorph extends Morph
       radius = Math.min centerX, centerY
       radius = radius - radius / 20
       aContext.beginPath()
-      aContext.arc(centerX, centerY, radius, 0, 2 * Math.PI, false)
+      aContext.arc centerX, centerY, radius, 0, 2 * Math.PI, false
       aContext.fillStyle = 'Gray'
       aContext.fill()
       aContext.closePath()

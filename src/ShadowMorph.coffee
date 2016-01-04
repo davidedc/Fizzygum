@@ -24,11 +24,11 @@ class ShadowMorph extends Morph
     # console.log "shadow morph update rendering"
     super()
     fb = @targetMorph.fullBoundsNoShadow()
-    @silentRawSetExtent fb.extent().add(@targetMorph.shadowBlur * 2)
-    if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      @silentFullRawMoveTo fb.origin.add(@offset).subtract(@targetMorph.shadowBlur)
+    @silentRawSetExtent fb.extent().add @targetMorph.shadowBlur * 2
+    if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+      @silentFullRawMoveTo fb.origin.add(@offset).subtract @targetMorph.shadowBlur
     else
-      @silentFullRawMoveTo fb.origin.add(@offset)
+      @silentFullRawMoveTo fb.origin.add @offset
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
     @notifyChildrenThatParentHasReLayouted()
@@ -42,11 +42,11 @@ class ShadowMorph extends Morph
         return
 
     @bounds.debugIfFloats()
-    if WorldMorph.preferencesAndSettings.useBlurredShadows and  !WorldMorph.preferencesAndSettings.isFlat
-      @backBuffer = @targetMorph.shadowImage(@offset, @color, true)
+    if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+      @backBuffer = @targetMorph.shadowImage @offset, @color, true
     else
-      @backBuffer = @targetMorph.shadowImage(@offset, @color, false)
-    @backBufferContext =  @backBuffer.getContext("2d")
+      @backBuffer = @targetMorph.shadowImage @offset, @color, false
+    @backBufferContext =  @backBuffer.getContext "2d"
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 

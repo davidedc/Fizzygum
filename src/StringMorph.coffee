@@ -26,7 +26,7 @@ class StringMorph extends Morph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  blanksColor: new Color(180, 140, 140)
+  blanksColor: new Color 180, 140, 140
 
   # Properties for text-editing
   isScrollable: true
@@ -38,13 +38,13 @@ class StringMorph extends Morph
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  markedTextColor: new Color(255, 255, 255)
+  markedTextColor: new Color 255, 255, 255
   # careful: this Color object is shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
   # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
-  markedBackgoundColor: new Color(60, 60, 120)
+  markedBackgoundColor: new Color 60, 60, 120
 
   constructor: (
       text = "",
@@ -63,7 +63,7 @@ class StringMorph extends Morph
     super()
 
     # override inherited properties:
-    @color = color or new Color(0, 0, 0)
+    @color = color or new Color 0, 0, 0
     @noticesTransparentClick = true
 
   setContent: (theTextContent,a) ->
@@ -89,8 +89,8 @@ class StringMorph extends Morph
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of string)"
-    textWithoutLocationOrInstanceNo = @text.replace(/\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/,"")
-    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace(/#\d*/,"")
+    textWithoutLocationOrInstanceNo = @text.replace /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
+    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
   password: (letter, length) ->
@@ -110,12 +110,12 @@ class StringMorph extends Morph
   calculateExtentBasedOnText: (text = @text)->
     text = (if @isPassword then @password("*", text.length) else text)
     world.canvasContextForTextMeasurements.font = @font()
-    return Math.ceil(Math.max(world.canvasContextForTextMeasurements.measureText(text).width, 1))
+    return Math.ceil Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
 
   reLayout: ->
     super()
     width = @calculateExtentBasedOnText()
-    @silentRawSetExtent(new Point( width, fontHeight(@fontSize)))
+    @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
   
   repaintBackBufferIfNeeded: ->
@@ -139,7 +139,7 @@ class StringMorph extends Morph
     # initialize my surface property
     width = @calculateExtentBasedOnText()
     @backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
-    @backBufferContext = @backBuffer.getContext("2d")
+    @backBufferContext = @backBuffer.getContext "2d"
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
@@ -151,21 +151,21 @@ class StringMorph extends Morph
 
     @backBufferContext.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks @backBufferContext, 0, fontHeight(@fontSize)
+      @renderWithBlanks @backBufferContext, 0, fontHeight @fontSize
     else
-      @backBufferContext.fillText text, 0, fontHeight(@fontSize)
+      @backBufferContext.fillText text, 0, fontHeight @fontSize
 
     # draw the selection
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     for i in [start...stop]
-      p = @slotCoordinates(i).subtract(@position())
+      p = @slotCoordinates(i).subtract @position()
       c = text.charAt(i)
       @backBufferContext.fillStyle = @markedBackgoundColor.toString()
       @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1,
-        fontHeight(@fontSize)
+        fontHeight @fontSize
       @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, fontHeight(@fontSize)
+      @backBufferContext.fillText c, p.x, fontHeight @fontSize
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
@@ -174,7 +174,7 @@ class StringMorph extends Morph
     @backBufferValidityChecker.font = @font()
     @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode(@text)
+    @backBufferValidityChecker.textHash = hashCode @text
     @backBufferValidityChecker.startMark = @startMark
     @backBufferValidityChecker.endMark = @endMark
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
@@ -186,10 +186,10 @@ class StringMorph extends Morph
     drawBlank = ->
       context.drawImage blank, Math.round(x), 0
       x += space
-    space = Math.ceil(context.measureText(" ").width)
-    blank = newCanvas(new Point(space, @height()).scaleBy pixelRatio)
-    ctx = blank.getContext("2d")
-    words = @text.split(" ")
+    space = Math.ceil context.measureText(" ").width
+    blank = newCanvas new Point(space, @height()).scaleBy pixelRatio
+    ctx = blank.getContext "2d"
+    words = @text.split " "
     x = startX or 0
     isFirst = true
     ctx.fillStyle = @blanksColor.toString()
@@ -202,7 +202,7 @@ class StringMorph extends Morph
       isFirst = false
       if word isnt ""
         context.fillText word, x, y
-        x += Math.ceil(context.measureText(word).width)
+        x += Math.ceil context.measureText(word).width
   
   
   # StringMorph measuring:
@@ -210,13 +210,13 @@ class StringMorph extends Morph
     # answer the position point of the given index ("slot")
     # where the caret should be placed
     text = (if @isPassword then @password("*", @text.length) else @text)
-    dest = Math.min(Math.max(slot, 0), text.length)
+    dest = Math.min Math.max(slot, 0), text.length
 
-    xOffset = Math.ceil(@calculateExtentBasedOnText(text.substring(0,dest)))
+    xOffset = Math.ceil @calculateExtentBasedOnText text.substring 0, dest
     @pos = dest
     x = @left() + xOffset
     y = @top()
-    new Point(x, y)
+    new Point x, y
   
   slotAt: (aPoint) ->
     # answer the slot (index) closest to the given point
@@ -226,7 +226,7 @@ class StringMorph extends Morph
     charX = 0
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil(@calculateExtentBasedOnText(text[idx]))
+      charX += Math.ceil @calculateExtentBasedOnText text[idx]
       idx += 1
       if idx is text.length
         if (Math.ceil(@calculateExtentBasedOnText(text)) - (Math.ceil(@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
@@ -339,8 +339,8 @@ class StringMorph extends Morph
     if typeof size is "number"
       @fontSize = Math.round(Math.min(Math.max(size, 4), 500))
     else
-      newSize = parseFloat(size)
-      @fontSize = Math.round(Math.min(Math.max(newSize, 4), 500))  unless isNaN(newSize)
+      newSize = parseFloat size
+      @fontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -369,8 +369,8 @@ class StringMorph extends Morph
     world.edit @
 
   selection: ->
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     @text.slice start, stop
   
   selectionStartSlot: ->
@@ -393,8 +393,8 @@ class StringMorph extends Morph
   
   deleteSelection: ->
     text = @text
-    start = Math.min(@startMark, @endMark)
-    stop = Math.max(@startMark, @endMark)
+    start = Math.min @startMark, @endMark
+    stop = Math.max @startMark, @endMark
     @text = text.slice(0, start) + text.slice(stop)
     @backBufferIsPotentiallyDirty = true
     @changed()
@@ -410,7 +410,7 @@ class StringMorph extends Morph
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
     @bringToForegroud()
-    caret = world.caret;
+    caret = world.caret
     if @isEditable
       @edit()  unless @currentlySelecting
       if caret then caret.gotoPos pos
@@ -425,16 +425,16 @@ class StringMorph extends Morph
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
-      if @isEditable and (not @isFloatDraggable())
+      if @isEditable and !@isFloatDraggable()
         @edit()
         world.caret.gotoPos pos
-        @startMark = @slotAt(pos)
+        @startMark = @slotAt pos
         @endMark = @startMark
         @currentlySelecting = true
     
     @mouseMove = (pos) ->
       if @isEditable and @currentlySelecting
-        newMark = @slotAt(pos)
+        newMark = @slotAt pos
         if newMark isnt @endMark
           @endMark = newMark
           
