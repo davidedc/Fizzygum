@@ -2189,6 +2189,9 @@ class Morph extends MorphicNode
   createScooterIconMorph: ->
     world.create new ScooterIconMorph()
 
+  createHeartIconMorph: ->
+    world.create new HeartIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2231,15 +2234,17 @@ class Morph extends MorphicNode
 
   popUpSecondMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "others"
-    menu.addItem "DestroyIconMorph", true, @, "createDestroyIconMorph"
-    menu.addItem "UnderCarpetIconMorph", true, @, "createUnderCarpetIconMorph"
-    menu.addItem "CollapsedStateIconMorph", true, @, "createCollapsedStateIconMorph"
-    menu.addItem "UncollapsedStateIconMorph", true, @, "createUncollapsedStateIconMorph"
-    menu.addItem "CloseIconMorph", true, @, "createCloseIconMorph"
-    menu.addItem "ScratchAreaIconMorph", true, @, "createScratchAreaIconMorph"
-    menu.addItem "FloraIconMorph", true, @, "createFloraIconMorph"
-    menu.addItem "ScooterIconMorph", true, @, "createScooterIconMorph"
+    menu.addItem "Destroy icon", true, @, "createDestroyIconMorph"
+    menu.addItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
+    menu.addItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
+    menu.addItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
+    menu.addItem "Close icon", true, @, "createCloseIconMorph"
+    menu.addItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
+    menu.addItem "Flora icon", true, @, "createFloraIconMorph"
+    menu.addItem "Scooter icon", true, @, "createScooterIconMorph"
+    menu.addItem "Heart icon", true, @, "createHeartIconMorph"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
+
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
