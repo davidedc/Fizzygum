@@ -200,8 +200,10 @@ class CaretMorph extends BlinkerMorph
     @clearSelectionIfStartAndEndMeet shift
   
   gotoPos: (aPoint) ->
-    @gotoSlot @target.slotAt aPoint
+    slotToGoTo = @target.slotAt aPoint
+    @gotoSlot slotToGoTo
     @show()
+    return slotToGoTo
 
   clearSelectionIfStartAndEndMeet: (shift) ->
     if shift

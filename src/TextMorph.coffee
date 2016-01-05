@@ -381,7 +381,8 @@ class TextMorph extends StringMorph
     @edit()
     @selectAll()
     @doSelection()
-   
+    @clearSelection()
+
   # this is set by the inspector. It tells the TextMorph
   # that any following doSelection/showSelection/inspectSelection action needs to be
   # done apropos a particular obj

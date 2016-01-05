@@ -47,7 +47,6 @@ class StringMorph2 extends Morph
 
   # Properties for text-editing
   isScrollable: true
-  currentlySelecting: false
   startMark: null
   endMark: null
   # careful: this Color object is shared with all the instances of this class.
@@ -764,9 +763,13 @@ class StringMorph2 extends Morph
     if !@startMark? or !@endMark?
       return null
     return Math.max @startMark, @endMark
+
+  currentlySelecting: ->
+    if !@startMark? and !@endMark?
+     return false
+    return true
   
   clearSelection: ->
-    @currentlySelecting = false
     @startMark = null
     @endMark = null
     @reLayout()
@@ -792,23 +795,47 @@ class StringMorph2 extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
 
+  startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
+    @startMark = previousCaretSlot
+    @endMark = slotToExtendTo
+    @reLayout()
+    @backBufferIsPotentiallyDirty = true
+    @changed()
+
+  extendSelectionUpToSlot: (slotToExtendTo) ->
+    @endMark = slotToExtendTo
+    @reLayout()
+    @backBufferIsPotentiallyDirty = true
+    @changed()
+
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
-  mouseClickLeft: (pos) ->
+  mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForegroud()
     if @isEditable
-      @clearSelection()
       # doesn't matter what we set editResult to initially,
       # just not undefined or null cause that's
       # going to be significant
       editResult = true
-      if !@currentlySelecting
+      previousCaretSlot = world.caret?.slot
+      if !@currentlySelecting()
         editResult = @edit()
+      slotUserClickedOn = @slotAt pos
+
+      if shiftKey
+        if @currentlySelecting()
+          @extendSelectionUpToSlot slotUserClickedOn
+        else
+          if previousCaretSlot?
+            @startSelectionUpToSlot previousCaretSlot, slotUserClickedOn
+      else
+        @clearSelection()
+
       if editResult?
-        world.caret.gotoPos pos
+        world.caret.gotoSlot slotUserClickedOn
+        world.caret.show()
         @caretHorizPositionForVertMovement = world.caret.left()
 
-        @currentlySelecting = true
     else
       @escalateEvent "mouseClickLeft", pos
   
@@ -823,10 +850,9 @@ class StringMorph2 extends Morph
         world.caret.gotoPos pos
         @startMark = @slotAt pos
         @endMark = @startMark
-        @currentlySelecting = true
     
     @mouseMove = (pos) ->
-      if @isEditable and @currentlySelecting
+      if @isEditable and @currentlySelecting()
         newMark = @slotAt pos
         if newMark isnt @endMark
           @endMark = newMark

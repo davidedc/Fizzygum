@@ -290,7 +290,7 @@ class HandMorph extends Morph
     relativePos = @position().toLocalCoordinatesOf theMorph
     return [relativePos.x, relativePos.y]
 
-  processMouseDown: (button, ctrlKey) ->
+  processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     @destroyTemporaries()
     @morphToGrab = null
 
@@ -367,7 +367,7 @@ class HandMorph extends Morph
   
    # note that the button param is not used,
    # but adding it for consistency...
-  processMouseUp: (button) ->
+  processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
         fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
@@ -442,7 +442,7 @@ class HandMorph extends Morph
             pointerAndMorphInfo = world.getPointerAndMorphInfo()
             world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
-          morph[expectedClick] @position()
+          morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           # also send doubleclick if the
           # two clicks happen on the same morph
           if @doubleClickMorph?
@@ -686,7 +686,7 @@ class HandMorph extends Morph
     trackChanges.pop()
     @fullChanged()
 
-  processMouseMove: (worldX, worldY) ->
+  processMouseMove: (worldX, worldY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     #startProcessMouseMove = new Date().getTime()
     pos = new Point worldX, worldY
     @fullRawMoveTo pos
