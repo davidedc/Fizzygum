@@ -290,15 +290,15 @@ class AutomatorRecorderAndPlayer
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
 
-  addMouseMoveCommand: (pageX, pageY, floatDraggingSomething) ->
+  addMouseMoveCommand: (pageX, pageY, floatDraggingSomething, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, floatDraggingSomething, @
+    systemTestCommand = new AutomatorCommandMouseMove pageX, pageY, floatDraggingSomething, button, buttons, ctrlKey, shiftKey, altKey, metaKey, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
-  addMouseChangeCommand: (upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
+  addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandMouseButtonChange upOrDown, button, ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
+    systemTestCommand = new AutomatorCommandMouseButtonChange upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
     @lastMouseDownCommand = systemTestCommand
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()

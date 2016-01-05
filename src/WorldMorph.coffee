@@ -864,12 +864,12 @@ class WorldMorph extends FrameMorph
     return [ topMorphUnderPointer.uniqueIDString(), morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph]
 
 
-  addMouseChangeCommand: (upOrDown, button, ctrlKey) ->
+  addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     pointerAndMorphInfo = @getPointerAndMorphInfo()
-    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDown, button, ctrlKey, pointerAndMorphInfo...
+    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
 
 
-  processMouseDown: (button, ctrlKey) ->
+  processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     # the recording of the test command (in case we are
     # recording a test) is handled inside the function
     # here below.
@@ -879,20 +879,18 @@ class WorldMorph extends FrameMorph
     # or user left or right-clicks on a menu,
     # in which case we record a more specific test
     # commands.
-    @addMouseChangeCommand "down", button, ctrlKey
+    @addMouseChangeCommand "down", button, buttons, ctrlKey, shiftKey, altKey, metaKey
+    @hand.processMouseDown button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-
-    @hand.processMouseDown button, ctrlKey
-
-  processMouseUp: (button) ->
+  processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     # event.preventDefault()
 
-    @addMouseChangeCommand "up"
+    @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-    @hand.processMouseUp button
+    @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
-  processMouseMove: (pageX, pageY) ->
-    @hand.processMouseMove  pageX, pageY
+  processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
+    @hand.processMouseMove pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey
     # "@hand.processMouseMove" could cause a Grab
     # command to be issued, so we want to
     # add the mouse move command here *after* the
@@ -905,7 +903,7 @@ class WorldMorph extends FrameMorph
         if action not in arr
           arr.push action
     
-    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething())
+    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
   # event.type must be keypress
   getChar: (event) ->
@@ -1063,7 +1061,7 @@ class WorldMorph extends FrameMorph
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
-      @processMouseDown event.button, event.ctrlKey
+      @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
     canvas.addEventListener "mousedown", @mousedownEventListener, false
 
     @touchstartEventListener = (event) =>
@@ -1071,7 +1069,7 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchstart", @touchstartEventListener , false
     
     @mouseupEventListener = (event) =>
-      @processMouseUp event.button
+      @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
     canvas.addEventListener "mouseup", @mouseupEventListener, false
     
     @touchendEventListener = (event) =>
@@ -1085,7 +1083,7 @@ class WorldMorph extends FrameMorph
       # instead.
       worldX = event.pageX - posInDocument.x
       worldY = event.pageY - posInDocument.y
-      @processMouseMove worldX, worldY
+      @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>
@@ -1629,8 +1627,10 @@ class WorldMorph extends FrameMorph
     if @caret
       # empty the previously ongoing selection
       # if there was one.
+      previouslyEditedText = @lastEditedText
       @lastEditedText = @caret.target
-      @lastEditedText.clearSelection()  if @lastEditedText
+      if @lastEditedText != previouslyEditedText
+        @lastEditedText.clearSelection()
       @caret = @caret.destroy()
 
     # create the new Caret

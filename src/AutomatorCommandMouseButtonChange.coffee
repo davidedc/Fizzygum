@@ -5,6 +5,12 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
   upOrDown: null
   button: null
   ctrlKey: null
+
+  buttons: null
+  shiftKey: null
+  altKey: null
+  metaKey: null
+
   morphIdentifierViaTextLabel: null
   pointerPositionFractionalInMorph: null
   pointerPositionPixelsInMorph: null
@@ -29,14 +35,27 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
 
     if commandBeingPlayed.upOrDown == "up"
       # the mouse up doesn't need the control key info
-      systemTestsRecorderAndPlayer.handMorph.processMouseUp(button)
+      systemTestsRecorderAndPlayer.handMorph.processMouseUp \
+        button,
+        commandBeingPlayed.buttons,
+        commandBeingPlayed.ctrlKey,
+        commandBeingPlayed.shiftKey,
+        commandBeingPlayed.altKey,
+        commandBeingPlayed.metaKey
     else
-      systemTestsRecorderAndPlayer.handMorph.processMouseDown(button, commandBeingPlayed.ctrlKey)
+      systemTestsRecorderAndPlayer.handMorph.processMouseDown \
+      button,
+      commandBeingPlayed.buttons,
+      commandBeingPlayed.ctrlKey,
+      commandBeingPlayed.shiftKey,
+      commandBeingPlayed.altKey,
+      commandBeingPlayed.metaKey
+
 
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@upOrDown, button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
+  constructor: (@upOrDown, button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
 
     if button == 0
