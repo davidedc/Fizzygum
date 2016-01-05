@@ -2186,6 +2186,9 @@ class Morph extends MorphicNode
   createFloraIconMorph: ->
     world.create new FloraIconMorph()
 
+  createScooterIconMorph: ->
+    world.create new ScooterIconMorph()
+
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
 
@@ -2235,6 +2238,7 @@ class Morph extends MorphicNode
     menu.addItem "CloseIconMorph", true, @, "createCloseIconMorph"
     menu.addItem "ScratchAreaIconMorph", true, @, "createScratchAreaIconMorph"
     menu.addItem "FloraIconMorph", true, @, "createFloraIconMorph"
+    menu.addItem "ScooterIconMorph", true, @, "createScooterIconMorph"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
