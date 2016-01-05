@@ -21,7 +21,7 @@ class WorkspaceMorph extends BoxMorph
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @cornerRadius = 5
-    @color = new Color(60, 60, 60)
+    @color = new Color 60, 60, 60
     @buildAndConnectChildren()
   
   setTarget: (target) ->
@@ -36,17 +36,17 @@ class WorkspaceMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph("Morphs List")
+    @label = new TextMorph "Morphs List"
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
-    @label.color = new Color(255, 255, 255)
+    @label.color = new Color 255, 255, 255
     @add @label
 
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
     ListOfMorphs = (Object.keys(window)).filter (i) ->
       i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
-    @morphsList = new ListMorph(ListOfMorphs, null)
+    @morphsList = new ListMorph ListOfMorphs, null
 
     # so far nothing happens when items are selected
     #@morphsList.action = (selected) ->
@@ -58,7 +58,7 @@ class WorkspaceMorph extends BoxMorph
     #    txt = val
     #  else
     #    txt = val.toString()
-    #  cnts = new TextMorph(txt)
+    #  cnts = new TextMorph txt
     #  cnts.isEditable = true
     #  cnts.enableSelecting()
     #  cnts.setReceiver myself.target
@@ -69,14 +69,14 @@ class WorkspaceMorph extends BoxMorph
     @add @morphsList
 
     # close button
-    @buttonClose = new TriggerMorph(true, @)
+    @buttonClose = new TriggerMorph true, @
     @buttonClose.setLabel "close"
     @buttonClose.action = "destroy"
 
     @add @buttonClose
 
     # resizer
-    @resizer = new HandleMorph(@, @cornerRadius, @cornerRadius)
+    @resizer = new HandleMorph @, @cornerRadius, @cornerRadius
 
     # update layout
     @layoutSubmorphs()
@@ -85,7 +85,7 @@ class WorkspaceMorph extends BoxMorph
     super()
     trackChanges.push false
 
-    handleSize = WorldMorph.preferencesAndSettings.handleSize;
+    handleSize = WorldMorph.preferencesAndSettings.handleSize
 
     x = @left() + @cornerRadius
     y = @top() + @cornerRadius
@@ -93,9 +93,9 @@ class WorkspaceMorph extends BoxMorph
     w = r - x
 
     # label
-    @label.fullRawMoveTo new Point(x + handleSize * 2/3 + @cornerRadius, y - @cornerRadius/2)
+    @label.fullRawMoveTo new Point x + handleSize * 2/3 + @cornerRadius, y - @cornerRadius/2
     @label.rawSetWidth w
-    if @label.height() > (@height() - 50)
+    if @label.height() > @height() - 50
       @rawSetHeight @label.height() + 50
       @changed()
 
@@ -105,16 +105,16 @@ class WorkspaceMorph extends BoxMorph
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - handleSize
     h = b - y
-    @morphsList.fullRawMoveTo new Point(x, y)
-    @morphsList.rawSetExtent new Point(w, h)
+    @morphsList.fullRawMoveTo new Point x, y
+    @morphsList.rawSetExtent new Point w, h
 
     # close button
     x = @morphsList.left()
     y = @morphsList.bottom() + @cornerRadius
     h = handleSize
     w = @morphsList.width() - h - @cornerRadius
-    @buttonClose.fullRawMoveTo new Point(x, y)
-    @buttonClose.rawSetExtent new Point(w, h)
+    @buttonClose.fullRawMoveTo new Point x, y
+    @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
     @changed()
   

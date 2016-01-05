@@ -183,7 +183,7 @@ class WorldMorph extends FrameMorph
     # color class on why this piece of code
     # is here instead of somewhere else.
     for colorName, colorValue of Color.colourNamesValues
-      Color["#{colorName}"] = new Color(colorValue[0],colorValue[1], colorValue[2])
+      Color["#{colorName}"] = new Color colorValue[0], colorValue[1], colorValue[2]
     # The colourNamesValues data structure is
     # redundant at this point.
     delete Color.colourNamesValues
@@ -191,13 +191,13 @@ class WorldMorph extends FrameMorph
     super()
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     console.log WorldMorph.preferencesAndSettings.menuFontName
-    @color = new Color(205, 205, 205) # (130, 130, 130)
+    @color = new Color 205, 205, 205 # (130, 130, 130)
     @alpha = 1
 
     # additional properties:
     @stamp = Date.now() # reference in multi-world setups
     @isDevMode = false
-    @hand = new HandMorph(@)
+    @hand = new HandMorph @
     @keyboardEventsReceiver = null
     @lastEditedText = null
     @caret = null
@@ -209,15 +209,15 @@ class WorldMorph extends FrameMorph
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
-    @silentRawSetBounds new Rectangle(0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio)
+    @silentRawSetBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
 
     @initEventListeners()
-    @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer(@, @hand)
+    @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
 
-    @worldCanvasContext = @worldCanvas.getContext("2d")
+    @worldCanvasContext = @worldCanvas.getContext "2d"
 
     @canvasForTextMeasurements = newCanvas()
-    @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext("2d")
+    @canvasContextForTextMeasurements = @canvasForTextMeasurements.getContext "2d"
     @canvasContextForTextMeasurements.scale pixelRatio, pixelRatio
     @canvasContextForTextMeasurements.textAlign = "left"
     @canvasContextForTextMeasurements.textBaseline = "bottom"
@@ -240,7 +240,7 @@ class WorldMorph extends FrameMorph
     ProfilingDataCollector.enableBrokenRectsProfiling()
 
     WorldMorph.ongoingUrlActionNumber= 0
-    startupActions = getParameterByName('startupActions');
+    startupActions = getParameterByName "startupActions"
     console.log "startupActions: " + startupActions
     if startupActions?
       @nextStartupAction()
@@ -255,11 +255,11 @@ class WorldMorph extends FrameMorph
   #file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
 
   nextStartupAction: ->
-    startupActions = JSON.parse(getParameterByName('startupActions'))
+    startupActions = JSON.parse getParameterByName "startupActions"
 
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
-      WorldMorph.ongoingUrlActionNumber= 0
+      WorldMorph.ongoingUrlActionNumber = 0
       if window.location.href.indexOf("worldWithSystemTestHarness") != -1
         if @systemTestsRecorderAndPlayer.atLeastOneTestHasBeenRun
           if @systemTestsRecorderAndPlayer.allTestsPassedSoFar
@@ -297,9 +297,9 @@ class WorldMorph extends FrameMorph
 
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
     allCandidateMorphsWithSameTextDescription = 
-      @allChildrenTopToBottomSuchThat( (m) ->
+      @allChildrenTopToBottomSuchThat (m) ->
         m.getTextDescription() == textDescription
-      )
+
     return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
 
   mostRecentlyCreatedMenu: ->
@@ -334,8 +334,7 @@ class WorldMorph extends FrameMorph
         i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
       for eachMorphClass in listOfMorphsClasses
         console.log "bumping up ID of class: " + eachMorphClass
-        if window[eachMorphClass].roundNumericIDsToNextThousand?
-          window[eachMorphClass].roundNumericIDsToNextThousand()
+        window[eachMorphClass].roundNumericIDsToNextThousand?()
 
   destroyMorphsMarkedForDestruction: ->
     for eachMorph in @markedForDestruction
@@ -385,9 +384,9 @@ class WorldMorph extends FrameMorph
       @numberOfDuplicatedBrokenRects++
     else
       if isSrc
-        brokenMorph.srcBrokenRect = (@broken.length)
+        brokenMorph.srcBrokenRect = @broken.length
       else
-        brokenMorph.dstBrokenRect = (@broken.length)
+        brokenMorph.dstBrokenRect = @broken.length
       if !theRect?
         debugger
       # if @broken.length == 0
@@ -400,7 +399,7 @@ class WorldMorph extends FrameMorph
     mergedBrokenRectArea = mergedBrokenRect.area()
     sumArea = sourceBroken.area() + destinationBroken.area()
     #console.log "mergedBrokenRectArea: " + mergedBrokenRectArea + " (sumArea + sumArea/10): " + (sumArea + sumArea/10)
-    if mergedBrokenRectArea < (sumArea + sumArea/10)
+    if mergedBrokenRectArea < sumArea + sumArea/10
       @pushBrokenRect brokenMorph, mergedBrokenRect, true
       @numberOfMergedSourceAndDestination++
     else
@@ -504,7 +503,7 @@ class WorldMorph extends FrameMorph
 
         if boundsToBeChanged.isNotEmpty()
           destinationBroken = boundsToBeChanged.spread()
-          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
+          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
             debugger
 
 
@@ -567,11 +566,11 @@ class WorldMorph extends FrameMorph
  
     for eachBrokenRect in @broken
       if eachBrokenRect?
-        randomR = Math.round(Math.random()*255)
-        randomG = Math.round(Math.random()*255)
-        randomB = Math.round(Math.random()*255)
+        randomR = Math.round Math.random() * 255
+        randomG = Math.round Math.random() * 255
+        randomB = Math.round Math.random() * 255
 
-        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")";
+        aContext.fillStyle = "rgb("+randomR+","+randomG+","+randomB+")"
         aContext.fillRect  Math.round(eachBrokenRect.origin.x),
             Math.round(eachBrokenRect.origin.y),
             Math.round(eachBrokenRect.width()),
@@ -680,12 +679,12 @@ class WorldMorph extends FrameMorph
 
     for eachMorphNeedingPinout in @morphsToBePinouted.slice()
       if eachMorphNeedingPinout not in @morphsBeingPinouted
-        hM = new StringMorph2(eachMorphNeedingPinout.toString())
+        hM = new StringMorph2 eachMorphNeedingPinout.toString()
         world.add hM
         hM.morphThisMorphIsPinouting = eachMorphNeedingPinout
         peekThroughBox = eachMorphNeedingPinout.clippedThroughBounds()
         hM.fullRawMoveTo new Point(peekThroughBox.right() + 10,peekThroughBox.top())
-        hM.setColor new Color(0, 0, 255)
+        hM.setColor new Color 0, 0, 255
         hM.setWidth 400
         @currentPinoutingMorphs.push hM
         @morphsBeingPinouted.push eachMorphNeedingPinout
@@ -707,14 +706,14 @@ class WorldMorph extends FrameMorph
         world.add hM
         hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
-        hM.setColor new Color(0, 0, 255) 
+        hM.setColor new Color 0, 0, 255
         hM.setAlphaScaled 50
         @currentHighlightingMorphs.push hM
         @morphsBeingHighlighted.push eachMorphNeedingHighlight
 
 
   doOneCycle: ->
-    WorldMorph.currentTime = Date.now();
+    WorldMorph.currentTime = Date.now()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
     @runOtherTasksStepFunction()
     @runChildrensStepFunction()
@@ -731,7 +730,7 @@ class WorldMorph extends FrameMorph
       task()
 
   stretchWorldToFillEntirePage: ->
-    pos = getDocumentPositionOf(@worldCanvas)
+    pos = getDocumentPositionOf @worldCanvas
     clientHeight = window.innerHeight
     clientWidth = window.innerWidth
     if pos.x > 0
@@ -784,7 +783,7 @@ class WorldMorph extends FrameMorph
     # applied globally.
     #
     dta = @worldCanvasContext.getImageData(point.x, point.y, 1, 1).data
-    new Color(dta[0], dta[1], dta[2])
+    new Color dta[0], dta[1], dta[2]
   
   
   # WorldMorph events:
@@ -794,7 +793,7 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboard = null
     unless (WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard)
       return
-    @inputDOMElementForVirtualKeyboard = document.createElement("input")
+    @inputDOMElementForVirtualKeyboard = document.createElement "input"
     @inputDOMElementForVirtualKeyboard.type = "text"
     @inputDOMElementForVirtualKeyboard.style.color = "transparent"
     @inputDOMElementForVirtualKeyboard.style.backgroundColor = "transparent"
@@ -991,7 +990,7 @@ class WorldMorph extends FrameMorph
       selectedText = @caret.target.selection()
       if event?.clipboardData
         event.preventDefault()
-        setStatus = event.clipboardData.setData("text/plain", selectedText)
+        setStatus = event.clipboardData.setData "text/plain", selectedText
 
       if window.clipboardData
         event.returnValue = false
@@ -1009,7 +1008,7 @@ class WorldMorph extends FrameMorph
         selectedText = @caret.target.selection()
       if event?.clipboardData
         event.preventDefault()
-        setStatus = event.clipboardData.setData("text/plain", selectedText)
+        setStatus = event.clipboardData.setData "text/plain", selectedText
 
       if window.clipboardData
         event.returnValue = false
@@ -1022,15 +1021,15 @@ class WorldMorph extends FrameMorph
       if event?
         if event.clipboardData
           # Look for access to data if types array is missing
-          text = event.clipboardData.getData("text/plain")
+          text = event.clipboardData.getData "text/plain"
           #url = event.clipboardData.getData("text/uri-list")
           #html = event.clipboardData.getData("text/html")
           #custom = event.clipboardData.getData("text/xcustom")
         # IE event is attached to the window object
         if window.clipboardData
           # The schema is fixed
-          text = window.clipboardData.getData("Text")
-          #url = window.clipboardData.getData("URL")
+          text = window.clipboardData.getData "Text"
+          #url = window.clipboardData.getData "URL"
       
       # Needs a few msec to execute paste
       console.log "about to insert text: " + text
@@ -1080,7 +1079,7 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      posInDocument = getDocumentPositionOf(@worldCanvas)
+      posInDocument = getDocumentPositionOf @worldCanvas
       # events from JS arrive in page coordinates,
       # we turn those into world coordinates
       # instead.
@@ -1317,12 +1316,12 @@ class WorldMorph extends FrameMorph
 
   # WorldMorph text field tabbing:
   nextTab: (editField) ->
-    next = @nextEntryField(editField)
+    next = @nextEntryField editField
     if next
       @switchTextFieldFocus editField, next
   
   previousTab: (editField) ->
-    prev = @previousEntryField(editField)
+    prev = @previousEntryField editField
     if prev
       @switchTextFieldFocus editField, prev
 
@@ -1341,8 +1340,8 @@ class WorldMorph extends FrameMorph
     @fullDestroyChildren()
     # some tests might change the background
     # color of the world so let's reset it.
-    @setColor(new Color(205, 205, 205))
-    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.resetWorldLink)
+    @setColor new Color 205, 205, 205
+    SystemTestsControlPanelUpdater.blinkLink SystemTestsControlPanelUpdater.resetWorldLink
     # make sure thw window is scrolled to top
     # so we can see the test results while tests
     # are running.
@@ -1383,7 +1382,7 @@ class WorldMorph extends FrameMorph
       menu = new MenuMorph(false, 
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuMorph(false, @, true, true, "Morphic")
+      menu = new MenuMorph false, @, true, true, "Morphic"
     if @isDevMode
       menu.addItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
@@ -1413,7 +1412,7 @@ class WorldMorph extends FrameMorph
     menu
 
   popUpSystemTestsMenu: ->
-    menu = new MenuMorph(false, @, true, true, "system tests")
+    menu = new MenuMorph false, @, true, true, "system tests"
 
     menu.addItem "run system tests", true, @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
     menu.addItem "run system tests force slow", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
@@ -1431,7 +1430,7 @@ class WorldMorph extends FrameMorph
     menu.addItem "save recorded test", true, @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
     menu.addItem "save failed screenshots", true, @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
 
-    menu.popUpAtHand(@firstContainerMenu())
+    menu.popUpAtHand @firstContainerMenu()
 
   create: (aMorph) ->
     aMorph.pickUp()
@@ -1452,22 +1451,22 @@ class WorldMorph extends FrameMorph
     @create new SliderMorph()
   createNewFrameMorph: ->
     newMorph = new FrameMorph()
-    newMorph.rawSetExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point 350, 250
     @create newMorph
   createNewScrollFrameMorph: ->
     newMorph = new ScrollFrameMorph()
     newMorph.adjustContentsBounds()
     newMorph.adjustScrollBars()
-    newMorph.rawSetExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point 350, 250
     @create newMorph
   createNewCanvas: ->
     newMorph = new CanvasMorph()
-    newMorph.rawSetExtent new Point(350, 250)
+    newMorph.rawSetExtent new Point 350, 250
     @create newMorph
   createNewHandle: ->
     @create new HandleMorph()
   createNewString: ->
-    newMorph = new StringMorph("Hello, World!")
+    newMorph = new StringMorph "Hello, World!"
     newMorph.isEditable = true
     @create newMorph
   createNewText: ->
@@ -1490,7 +1489,7 @@ class WorldMorph extends FrameMorph
     newMorph.maxTextWidth = 300
     @create newMorph
   createNewSpeechBubbleMorph: ->
-    newMorph = new SpeechBubbleMorph("Hello, World!")
+    newMorph = new SpeechBubbleMorph "Hello, World!"
     @create newMorph
   createNewGrayPaletteMorph: ->
     @create new GrayPaletteMorph()
@@ -1500,43 +1499,43 @@ class WorldMorph extends FrameMorph
     @create new ColorPickerMorph()
   createNewSensorDemo: ->
     newMorph = new MouseSensorMorph()
-    newMorph.setColor new Color(230, 200, 100)
+    newMorph.setColor new Color 230, 200, 100
     newMorph.cornerRadius = 35
     newMorph.alpha = 0.2
-    newMorph.rawSetExtent new Point(100, 100)
+    newMorph.rawSetExtent new Point 100, 100
     @create newMorph
   createNewAnimationDemo: ->
     foo = new BouncerMorph()
-    foo.fullRawMoveTo new Point(50, 20)
-    foo.rawSetExtent new Point(300, 200)
+    foo.fullRawMoveTo new Point 50, 20
+    foo.rawSetExtent new Point 300, 200
     foo.alpha = 0.9
     foo.speed = 3
     bar = new BouncerMorph()
-    bar.setColor new Color(50, 50, 50)
-    bar.fullRawMoveTo new Point(80, 80)
-    bar.rawSetExtent new Point(80, 250)
+    bar.setColor new Color 50, 50, 50
+    bar.fullRawMoveTo new Point 80, 80
+    bar.rawSetExtent new Point 80, 250
     bar.type = "horizontal"
     bar.direction = "right"
     bar.alpha = 0.9
     bar.speed = 5
     baz = new BouncerMorph()
-    baz.setColor new Color(20, 20, 20)
-    baz.fullRawMoveTo new Point(90, 140)
-    baz.rawSetExtent new Point(40, 30)
+    baz.setColor new Color 20, 20, 20
+    baz.fullRawMoveTo new Point 90, 140
+    baz.rawSetExtent new Point 40, 30
     baz.type = "horizontal"
     baz.direction = "right"
     baz.speed = 3
     garply = new BouncerMorph()
-    garply.setColor new Color(200, 20, 20)
-    garply.fullRawMoveTo new Point(90, 140)
-    garply.rawSetExtent new Point(20, 20)
+    garply.setColor new Color 200, 20, 20
+    garply.fullRawMoveTo new Point 90, 140
+    garply.rawSetExtent new Point 20, 20
     garply.type = "vertical"
     garply.direction = "up"
     garply.speed = 8
     fred = new BouncerMorph()
-    fred.setColor new Color(20, 200, 20)
-    fred.fullRawMoveTo new Point(120, 140)
-    fred.rawSetExtent new Point(20, 20)
+    fred.setColor new Color 20, 200, 20
+    fred.fullRawMoveTo new Point 120, 140
+    fred.rawSetExtent new Point 20, 20
     fred.type = "vertical"
     fred.direction = "down"
     fred.speed = 4
@@ -1557,7 +1556,7 @@ class WorldMorph extends FrameMorph
 
 
   popUpDemoMenu: (a,b,c,d) ->
-    menu = new MenuMorph(false, @, true, true, "make a morph")
+    menu = new MenuMorph false, @, true, true, "make a morph"
     menu.addItem "rectangle", true, @, "createNewRectangleMorph"
     menu.addItem "box", true, @, "createNewBoxMorph"
     menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -1589,14 +1588,14 @@ class WorldMorph extends FrameMorph
     menu.addItem "under the carpet", true, @, "underTheCarpet"
     menu.addItem "closing window", true, @, "closingWindow"
     
-    menu.popUpAtHand(a.firstContainerMenu())
+    menu.popUpAtHand a.firstContainerMenu()
 
   layoutTestsMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph(false, @, true, true, "Layout tests")
+    menu = new MenuMorph false, @, true, true, "Layout tests"
     menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
     menu.addItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
     menu.addItem "test screen 1", true, Morph, "setupTestScreen1"
-    menu.popUpAtHand(morphTriggeringThis.firstContainerMenu())
+    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
     
   
   toggleDevMode: ->
@@ -1635,7 +1634,7 @@ class WorldMorph extends FrameMorph
       @caret = @caret.destroy()
 
     # create the new Caret
-    @caret = new CaretMorph(aStringMorphOrTextMorph)
+    @caret = new CaretMorph aStringMorphOrTextMorph
     aStringMorphOrTextMorph.parent.add @caret
     # this is the only place where the @keyboardEventsReceiver is set
     @keyboardEventsReceiver = @caret
@@ -1648,12 +1647,12 @@ class WorldMorph extends FrameMorph
       # So, it is important to position the textbox around
       # where the caret is, so that the changed text is going to
       # be visible rather than out of the viewport.
-      pos = getDocumentPositionOf(@worldCanvas)
+      pos = getDocumentPositionOf @worldCanvas
       @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @inputDOMElementForVirtualKeyboard.focus()
     if WorldMorph.preferencesAndSettings.useSliderForInput
-      if !aStringMorphOrTextMorph.parentThatIsA(MenuMorph)
+      if !aStringMorphOrTextMorph.parentThatIsA MenuMorph
         @slide aStringMorphOrTextMorph
   
   # Editing can stop because of three reasons:
