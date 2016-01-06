@@ -1599,15 +1599,19 @@ class WorldMorph extends FrameMorph
   toggleDevMode: ->
     @isDevMode = not @isDevMode
   
-  minimiseAll: ->
-    @children.forEach (child) ->
-      child.minimise()
+  # This method is obsolete. It assumes a different meaning
+  # for "minimise" than what we have now.
+  #minimiseAll: ->
+  #  @children.forEach (child) ->
+  #    child.minimise()
   
-  showAllMinimised: ->
-    @forAllChildrenBottomToTop (child) ->
-      if !child.visibleBasedOnIsVisibleProperty() or
-      child.isCollapsed()
-        child.unminimise()
+  # This method is obsolete. It assumes a different meaning
+  # for "minimise" than what we have now.
+  #showAllMinimised: ->
+  #  @forAllChildrenBottomToTop (child) ->
+  #    if !child.visibleBasedOnIsVisibleProperty() or
+  #    child.isCollapsed()
+  #      child.unminimise()
   
   about: ->
     @inform "Zombie Kernel\n\n" +

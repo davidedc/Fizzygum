@@ -1,9 +1,11 @@
-# UnMinimiserMorph3 ///////////////////////////////////////////////////////////
+# FoldedMorph ///////////////////////////////////////////////////////////
 
 
-# Un-minimises a minimised Morph
+# Points to a Morph. There can be multiple FoldedMorph(s) for any
+# Morph. Although it is a pointer, we call it "folded" because it's
+# much more easy to grasp for anyone.
 
-class UnMinimiserMorph3 extends BoxMorph
+class FoldedMorph extends BoxMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -60,15 +62,15 @@ class UnMinimiserMorph3 extends BoxMorph
   mouseClickLeft: (pos) ->
     debugger
     if @target.destroyed
-      @inform "The morph to be\nun-minimised is dead!"
+      @inform "The morph to be\nun-folded is dead!"
       return
 
     if @target.isAncestorOf @
-      @inform "The morph to be un-minimised is\nalready open and containing\nwhat you just clicked on!"
+      @inform "The morph to be un-folded is\nalready open and containing\nwhat you just clicked on!"
       return
 
     if !@target.isOrphan()
-      @target.minimise()
+      @target.fold()
     myPosition = @positionAmongSiblings()
     @parent.add @target, myPosition
     @target.fullMoveTo @position()

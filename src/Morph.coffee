@@ -67,25 +67,14 @@ class Morph extends MorphicNode
   lastTime: null
   alpha: 1
 
-  # for a Morph, being visible and minimised
+  # for a Morph, being visible and collapsed
   # are two separate things.
   # isVisible means that the morph is meant to show
-  #  as empty or without any surface. For example
-  #  a scrollbar "collapses" itself when there is no
-  #  content to scroll and puts its isVisible = false
-  # isMinimised means that the morph, whatever its
+  #  as empty or without any surface. BUT the morph
+  #  will still take the usual space.
+  # Collapsed means that the morph, whatever its
   #  content or appearance or design, is not drawn
-  #  on the desktop. So a minimised or unminimised scrollbar
-  #  can be independently either visible or not.
-  # If we merge the two flags into one, then the
-  # following happens: "hiding" a morph causes the
-  # scrollbars in it to hide. Unhiding it causes the
-  # scrollbars to show, even if they should be invisible.
-  # Hence the need of two separate flags.
-  # Also, it's semantically two
-  # separate reasons of why a morph is not being
-  # painted on screen, so it makes sense to have
-  # two separate flags.
+  #  on the desktop AND it doesn't occupy any space.
   isVisible: true
   collapsed: false
 
@@ -1346,9 +1335,9 @@ class Morph extends MorphicNode
     @parent.removeChild @
     @fullChanged()
 
-  minimise: ->
+  fold: ->
     myPosition = @positionAmongSiblings()
-    morphToAdd = new UnMinimiserMorph3 @
+    morphToAdd = new FoldedMorph @
     @parent.add morphToAdd, myPosition
     morphToAdd.fullMoveTo @position()
     morphToAdd.setExtent new Point 150, 20
@@ -1357,7 +1346,6 @@ class Morph extends MorphicNode
 
     
   # Morph full image:
-  
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Zombie-Kernel/issues/160
   fullImage: (bounds, noShadow = false) ->
@@ -2230,7 +2218,7 @@ class Morph extends MorphicNode
     else
       menu.addItem "collapse", true, @, "collapse"
 
-    menu.addItem "minimise", true, @, "minimise"
+    menu.addItem "fold", true, @, "fold"
     menu.addItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
