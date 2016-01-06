@@ -1594,6 +1594,13 @@ class Morph extends MorphicNode
   #     children
   addRaw: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
 
+    # let's check if we are trying to add
+    # an ancestor of me below me.
+    # That would be impossible to do,
+    # so we return null to signal the error.
+    if aMorph.containedInParentsOf @
+      return null
+
     aMorph.parent?.invalidateLayout()
 
     aMorph.layoutSpec = layoutSpec
