@@ -2232,8 +2232,8 @@ class Morph extends MorphicNode
   underTheCarpetIconAndText: ->
     world.create new UnderTheCarpetOpenerMorph()
 
-  popUpSecondMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph false, @, true, true, "others"
+  popUpIconsMenu: (morphTriggeringThis) ->
+    menu = new MenuMorph false, @, true, true, "icons"
     menu.addItem "Destroy icon", true, @, "createDestroyIconMorph"
     menu.addItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
     menu.addItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
@@ -2243,8 +2243,13 @@ class Morph extends MorphicNode
     menu.addItem "Flora icon", true, @, "createFloraIconMorph"
     menu.addItem "Scooter icon", true, @, "createScooterIconMorph"
     menu.addItem "Heart icon", true, @, "createHeartIconMorph"
-    menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
+    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
+
+  popUpSecondMenu: (morphTriggeringThis) ->
+    menu = new MenuMorph false, @, true, true, "others"
+    menu.addItem "icons ➜", false, @, "popUpIconsMenu", "icons"
+    menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
