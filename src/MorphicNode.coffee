@@ -303,6 +303,8 @@ class MorphicNode
     if morph is @
       return true
     examinedMorph = morph
+    # could use recursion, but
+    # a loop will do too
     while examinedMorph.parent?
       examinedMorph = examinedMorph.parent
       if examinedMorph is @

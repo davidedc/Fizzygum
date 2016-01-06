@@ -57,8 +57,6 @@ class UnMinimiserMorph3 extends BoxMorph
     @fullRawMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
 
-  # Every time the user clicks on the text, a new edit()
-  # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
     debugger
     if @target.destroyed
