@@ -63,7 +63,7 @@ class UnMinimiserMorph3 extends BoxMorph
       @inform "The morph to be\nun-minimised is dead!"
       return
 
-    if @target.containedInParentsOf @
+    if @target.isAncestorOf @
       @inform "The morph to be un-minimised is\nalready open and containing\nwhat you just clicked on!"
       return
 

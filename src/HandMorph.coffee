@@ -270,7 +270,7 @@ class HandMorph extends Morph
         # caret is attached to
         mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
         if mostRecentlyCreatedMenu?
-          unless mostRecentlyCreatedMenu.containedInParentsOf actionedMorph
+          unless mostRecentlyCreatedMenu.isAncestorOf actionedMorph
             # only dismiss editing if the actionedMorph the user
             # clicked on is not part of a menu.
             @world.stopEditing()

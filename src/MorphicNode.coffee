@@ -287,7 +287,7 @@ class MorphicNode
   # but rather just loops up the chain
   # and lets us return as soon as
   # we find a match
-  containedInParentsOf: (morph) ->
+  isAncestorOf: (morph) ->
     if !morph?
       # this happens when in a test, you select
       # a menu entry that doesn't exist.

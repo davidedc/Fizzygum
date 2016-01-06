@@ -60,7 +60,7 @@ class FrameMorph extends Morph
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
-        !theMorph.containedInParentsOf(@) and
+        !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]

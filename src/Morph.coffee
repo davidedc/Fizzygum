@@ -409,7 +409,7 @@ class Morph extends MorphicNode
     # what we are destroying, then also
     # invoke stopEditing()
     if world.caret?
-      if @containedInParentsOf world.caret.target
+      if @isAncestorOf world.caret.target
         world.stopEditing()
 
     # remove callback when user clicks outside
@@ -591,7 +591,7 @@ class Morph extends MorphicNode
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
-        !theMorph.containedInParentsOf(@) and
+        !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
       result = [@]
@@ -1598,7 +1598,7 @@ class Morph extends MorphicNode
     # an ancestor of me below me.
     # That would be impossible to do,
     # so we return null to signal the error.
-    if aMorph.containedInParentsOf @
+    if aMorph.isAncestorOf @
       return null
 
     aMorph.parent?.invalidateLayout()
