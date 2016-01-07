@@ -1,11 +1,10 @@
-# FoldedMorph ///////////////////////////////////////////////////////////
+# PointerMorph ///////////////////////////////////////////////////////////
 
 
-# Points to a Morph. There can be multiple FoldedMorph(s) for any
-# Morph. Although it is a pointer, we call it "folded" because it's
-# much more easy to grasp for anyone.
+# Points to a Morph. There can be multiple PointerMorph(s) for any
+# Morph.
 
-class FoldedMorph extends BoxMorph
+class PointerMorph extends BoxMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -62,15 +61,15 @@ class FoldedMorph extends BoxMorph
   mouseClickLeft: (pos) ->
     debugger
     if @target.destroyed
-      @inform "The morph to be\nun-folded is dead!"
+      @inform "The pointed morph\nis dead!"
       return
 
     if @target.isAncestorOf @
-      @inform "The morph to be un-folded is\nalready open and containing\nwhat you just clicked on!"
+      @inform "The pointed morph is\nalready open and containing\nwhat you just clicked on!"
       return
 
     if !@target.isOrphan()
-      @target.fold()
+      @target.createPointerMorph()
     myPosition = @positionAmongSiblings()
     @parent.add @target, myPosition
     @target.fullMoveTo @position()

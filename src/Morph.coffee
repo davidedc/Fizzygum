@@ -1335,9 +1335,9 @@ class Morph extends MorphicNode
     @parent.removeChild @
     @fullChanged()
 
-  fold: ->
+  createPointerMorph: ->
     myPosition = @positionAmongSiblings()
-    morphToAdd = new FoldedMorph @
+    morphToAdd = new PointerMorph @
     @parent.add morphToAdd, myPosition
     morphToAdd.fullMoveTo @position()
     morphToAdd.setExtent new Point 150, 20
@@ -2218,7 +2218,7 @@ class Morph extends MorphicNode
     else
       menu.addItem "collapse", true, @, "collapse"
 
-    menu.addItem "fold", true, @, "fold"
+    menu.addItem "create pointer", true, @, "createPointerMorph"
     menu.addItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
