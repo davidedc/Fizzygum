@@ -463,16 +463,10 @@ class StringMorph2 extends Morph
     y += textVerticalPosition - fontHeight @fittingFontSize
 
     new Point x, y
-  
-  slotAt: (aPoint) ->
 
-    widthOfText = @calculateExtentBasedOnText()
-    if @verticalAlignment == AlignmentSpec.TOP
-      textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpec.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpec.BOTTOM
-      textVerticalPosition = @height()
+  slotAtReduced: (xPosition, text) ->
+
+    widthOfText = @calculateExtentBasedOnText text
 
     if @horizontalAlignment == AlignmentSpec.LEFT
       textHorizontalPosition = 0
@@ -481,18 +475,17 @@ class StringMorph2 extends Morph
     else if @horizontalAlignment == AlignmentSpec.RIGHT
       textHorizontalPosition = @width() - widthOfText
 
-    aPoint = new Point aPoint.x - textHorizontalPosition, aPoint.y - textVerticalPosition
+    xPosition = xPosition - textHorizontalPosition
+    if xPosition - @left() >= widthOfText
+      if text[text.length - 1] == '\u2063'
+        return text.length - 1
+      else
+        return text.length
 
     # answer the slot (index) closest to the given point
     # so the caret can be moved accordingly
-    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
     idx = 0
     charX = 0
-
-    # if pointer is below the line, the slot is at
-    # the last character.
-    if aPoint.y - @top() > Math.ceil fontHeight @fittingFontSize
-      return text.length
 
     # This code to pick the correct slot works but it's
     # way too convoluted, as I arrived to this
@@ -500,10 +493,10 @@ class StringMorph2 extends Morph
     # TODO Probably need a little patience to rewrite, I got
     # other parts to move on to now.
     while true
-      if charX > aPoint.x - @left()
-        console.log "aPoint.x - @left(): " + (aPoint.x - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
-        console.log "Math.abs(aPoint.x - @left() - charXMinusOne) " + Math.abs(aPoint.x - @left() - charXMinusOne) + "  Math.abs(aPoint.x - @left() - charX) " + Math.abs(aPoint.x - @left() - charX) 
-        if Math.abs(aPoint.x - @left() - charXMinusOne) < Math.abs(aPoint.x - @left() - charX)
+      if charX > xPosition - @left()
+        console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
+        console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
+        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
           return idx - 1
         break
 
@@ -516,9 +509,27 @@ class StringMorph2 extends Morph
 
       idx += 1
       if idx is text.length
-        if ((@calculateExtentBasedOnText(text)) - ((@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
+        if ((@calculateExtentBasedOnText(text)) - ((@calculateExtentBasedOnText(text[idx-1])) / 2)) < (xPosition - @left())  
           return idx
     idx
+  
+  slotAt: (aPoint) ->
+
+    if @verticalAlignment == AlignmentSpec.TOP
+      textVerticalPosition = fontHeight @fittingFontSize
+    else if @verticalAlignment == AlignmentSpec.MIDDLE
+      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
+    else if @verticalAlignment == AlignmentSpec.BOTTOM
+      textVerticalPosition = @height()
+
+    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
+
+    # if pointer is below the line, the slot is at
+    # the last character.
+    if (aPoint.y - textVerticalPosition) - @top() > Math.ceil fontHeight @fittingFontSize
+      return text.length
+
+    return @slotAtReduced aPoint.x, text
   
   upFrom: (slot) ->
     @startOfLine()

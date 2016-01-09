@@ -83,6 +83,10 @@ class TextMorph2 extends StringMorph2
     world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraph
     wordsOfThisParagraph
 
+  replaceLastSpaceWithInvisibleCarriageReturn: (string) ->
+    string = string.substr(0, string.length-1)
+    string = string + '\u2063'
+
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
     wrappingData = world.cacheForParagraphsWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
 
@@ -99,6 +103,7 @@ class TextMorph2 extends StringMorph2
         # we reached the end of the line in the
         # original text, so push the line and the
         # slotsInParagraph count in the arrays
+        currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
         wrappedLinesOfThisParagraph.push currentLine
         wrappedLineSlotsOfThisParagraph.push slotsInParagraph
         maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
@@ -116,6 +121,7 @@ class TextMorph2 extends StringMorph2
             # "slotsInParagraph" number to the respective arrays.
             # the new line is going to only contain the
             # word that has caused the overflow.
+            currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
             wrappedLinesOfThisParagraph.push currentLine
             wrappedLineSlotsOfThisParagraph.push slotsInParagraph
             maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
@@ -412,39 +418,14 @@ class TextMorph2 extends StringMorph2
   # refactor against the StringMorph2 version, I got
   # other parts to move on to now.
   slotAtRow: (row, xPosition) ->
-    charX = 0
-    col = 0
 
     if row > @wrappedLines.length
       return @textActuallyShown.length
 
-    while true
-      if col > @wrappedLines[row - 1].length - 1
-        # if pointer is beyond the end of the line, the slot is at
-        # the last character of the line.
-        return returnedSlot
+    
+    return @wrappedLineSlots[Math.max(row - 1, 0)] +
+      @slotAtReduced xPosition, @wrappedLines[row - 1]
 
-      if charX > xPosition - @left()
-        console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
-        console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
-        if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs xPosition - @left() - charX
-          return returnedSlot
-        break
-
-      if charX?
-        charXMinusOne = charX
-      else
-        charXMinusOne = 0
-
-
-      charX += @measureText null, @wrappedLines[row - 1][col]
-      col += 1
-      returnedSlot = @wrappedLineSlots[Math.max(row - 1, 0)] + col - 1
-
-    #[slotRow, slotColumn] = @slotRowAndColumn(returnedSlot)
-    #alert "SLOTAT|| returnedSlot: " + returnedSlot + " row and column: " + slotRow + " " + slotColumn + " line start: " + (@wrappedLines[slotRow]).substring(0,slotColumn)
-
-    returnedSlot + 1
   
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
