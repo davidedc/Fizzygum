@@ -228,20 +228,6 @@ class TextMorph2 extends StringMorph2
     return [textWrappingData, height]
 
 
-  ###
-  reLayout: ->
-    super()
-    @fittingFontSize = @fitToExtent()
-    @fontsize = @fittingFontSize
-    console.log "reLayout // fontSize: " + @fontSize + " fittingFontSize: " + @fittingFontSize
-
-    #super()
-    #@maxTextWidth = @width()
-    #@breakTextIntoLines()
-
-    @notifyChildrenThatParentHasReLayouted()
-  ###
-
   reflowText: ->
     tmp = @breakTextIntoLines @textActuallyShown, @fittingFontSize
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
