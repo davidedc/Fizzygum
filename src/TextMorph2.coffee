@@ -68,6 +68,150 @@ class TextMorph2 extends StringMorph2
     else
       return false
 
+  getParagraphs: (text) ->
+    paragraphs = world.cacheForTextParagraphSplits.get hashCode text
+    if paragraphs? then return paragraphs
+    paragraphs = text.split "\n"
+    world.cacheForTextParagraphSplits.set hashCode(text), paragraphs
+    paragraphs
+
+  getWordsOfParapraph: (eachParagraph) ->
+    wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get hashCode eachParagraph
+    if wordsOfThisParagraph? then return wordsOfThisParagraph
+    wordsOfThisParagraph = eachParagraph.split " "
+    wordsOfThisParagraph.push "\n"
+    world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraph
+    wordsOfThisParagraph
+
+  getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
+    wrappingData = world.cacheForParagraphsWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
+
+    if wrappingData? then return wrappingData
+    wrappedLinesOfThisParagraph = []
+    wrappedLineSlotsOfThisParagraph = []
+    maxWrappedLineWidthOfThisParagraph = 0
+
+    currentLine = ""
+    slotsInParagraph = 0
+
+    for word in wordsOfThisParagraph
+      if word is "\n"
+        # we reached the end of the line in the
+        # original text, so push the line and the
+        # slotsInParagraph count in the arrays
+        wrappedLinesOfThisParagraph.push currentLine
+        wrappedLineSlotsOfThisParagraph.push slotsInParagraph
+        maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
+        currentLine = ""
+      else
+        if maxTextWidth > 0 # there is a width limit, we might have to wrap
+          # there is a width limit, so we need
+          # to check whether we overflowed it. So create
+          # a prospective line and then check its width.
+          lineForOverflowTest = currentLine + word + " "
+          w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
+          if w > maxTextWidth
+            # ok we just overflowed the available space,
+            # so we need to push the old line and its
+            # "slotsInParagraph" number to the respective arrays.
+            # the new line is going to only contain the
+            # word that has caused the overflow.
+            wrappedLinesOfThisParagraph.push currentLine
+            wrappedLineSlotsOfThisParagraph.push slotsInParagraph
+            maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
+            currentLine = word + " "
+          else
+            # no overflow happened, so just proceed as normal
+            currentLine = lineForOverflowTest
+        else # there is no width limit, we never have to wrap
+          currentLine = currentLine + word + " "
+        slotsInParagraph += word.length + 1
+
+    # words of this paragraph have been scanned
+    wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph, slotsInParagraph]
+    world.cacheForParagraphsWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
+    wrappingData = wrappingDataCacheEntry
+
+  getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs) ->
+    textWrappingData = world.cacheForTextWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + text
+    if textWrappingData? then return textWrappingData
+    wrappedLinesOfWholeText = []
+    wrappedLineSlotsOfWholeText = [0]
+    maxWrappedLineWidthOfWholeText = 0
+    cumulativeSlotAcrossText = 0
+    previousCumulativeSlotAcrossText = 0
+
+    for eachParagraph in paragraphs
+
+      wordsOfThisParagraph = @getWordsOfParapraph eachParagraph
+
+      ## ////////////////////////////////////////////////////////////////
+
+      ## You want this method to be FAST because it would be done
+      ## a dozen times for each resize (while the painting is
+      ## only done once!)
+      ## you can have the words per paragraph, and cache all
+      ## operations below by paragraph (and font size and width),
+      ## the cache would return
+      ## two arrays "linesHit" and "lineslotsHit" AND the
+      ## "maxlinewidthHit" which you can
+      ## concatenate to the "running" ones
+      ## basically a) make two nested forach, outer by paragraph and
+      ## inner by words.
+      ## Then cache the hell out of each loop.
+
+      ## LATER FOR ANOTHER TIME IS TO MAKE THE PAINTING ALSO FAST.
+      ## You'd also love to cache the bitmap of each paragraph
+      ## rather than keeping one huge bitmap.
+      ## so this wouldn't be a BackBuffer anymore
+      ## SO you need to REMOVE the mixin from this class.
+      ## cause there would be a paint method and it would
+      ## compose the 
+      ## it would be much better to handle AND in theory
+      ## the single bitmaps per paragraph would be easy
+      ## to cache and could be created
+      ## only on demand if they ever get damaged.
+      ## GET THE stringMorph2 to cache the actual bitmap that they
+      ## generate so you can use that too from here, cause there
+      ## might be a lot of reuse rather than re-painting the
+      ## text all the times or even a paragraph.
+
+      # takes the text, word by word, and re-flows
+      # it according to the available width for the
+      # text (if there is such limit).
+      # The end result is an array of lines
+      # called @wrappedLines, which contains the string for
+      # each line (excluding the end of lines).
+      # Also another array is created, called
+      # @wrappedLineSlots, which memorises how many characters
+      # of the text have been consumed up to each line
+      #  example: original text: "Hello\nWorld"
+      # then @wrappedLines[0] = "Hello" @wrappedLines[1] = "World"
+      # and @wrappedLineSlots[0] = 6, @wrappedLineSlots[1] = 11
+      # Note that this algorithm doesn't work in case
+      # of single non-spaced words that are longer than
+      # the allowed width.
+      
+      wrappingData = @getWrappingData overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph
+
+      # we either cache-hit wrappingData or we re-built it
+      [wrappedLinesOfThisParagraph, wrappedLineSlotsOfThisParagraph, maxWrappedLineWidthOfThisParagraph, slotsInParagraph] = wrappingData
+
+      previousCumulativeSlotAcrossText = cumulativeSlotAcrossText
+      cumulativeSlotAcrossText += slotsInParagraph
+      wrappedLinesOfWholeText = wrappedLinesOfWholeText.concat wrappedLinesOfThisParagraph
+      advancedWrappedLineSlotsOfThisParagraph =  wrappedLineSlotsOfThisParagraph.map (i) -> i + previousCumulativeSlotAcrossText
+      #alert "unadvanced wrappedLineSlotsOfThisParagraph: " + wrappedLineSlotsOfThisParagraph + " advanced: " + advancedWrappedLineSlotsOfThisParagraph
+      wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat advancedWrappedLineSlotsOfThisParagraph
+      maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
+
+
+    # here all paragraphs have been visited
+    #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
+    textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
+    world.cacheForTextWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
+    textWrappingData = textWrappingDataCacheEntry
+
   breakTextIntoLines: (text = @text, overrideFontSize) ->
     ## remember to cache also here at the top level
     ## based on text, fontsize and width.
@@ -84,144 +228,10 @@ class TextMorph2 extends StringMorph2
     # below.
     # put all the text in an array, word by word
 
-    paragraphs = world.cacheForTextParagraphSplits.get hashCode text
-    if !paragraphs?
-      paragraphsCacheEntry = text.split "\n"
-      world.cacheForTextParagraphSplits.set hashCode(text), paragraphsCacheEntry
-      paragraphs = paragraphsCacheEntry
-
-    cumulativeSlotAcrossText = 0
-    previousCumulativeSlotAcrossText = 0
-
-    textWrappingData = world.cacheForTextWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
-    if !textWrappingData?
-      wrappedLinesOfWholeText = []
-      wrappedLineSlotsOfWholeText = [0]
-      maxWrappedLineWidthOfWholeText = 0
-
-      for eachParagraph in paragraphs
-
-        wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get hashCode eachParagraph
-        if !wordsOfThisParagraph?
-          wordsOfThisParagraphCacheEntry = eachParagraph.split " "
-          wordsOfThisParagraphCacheEntry.push "\n"
-          world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraphCacheEntry
-          wordsOfThisParagraph = wordsOfThisParagraphCacheEntry
+    paragraphs = @getParagraphs text
 
 
-        ## ////////////////////////////////////////////////////////////////
-
-        ## You want this method to be FAST because it would be done
-        ## a dozen times for each resize (while the painting is
-        ## only done once!)
-        ## you can have the words per paragraph, and cache all
-        ## operations below by paragraph (and font size and width),
-        ## the cache would return
-        ## two arrays "linesHit" and "lineslotsHit" AND the
-        ## "maxlinewidthHit" which you can
-        ## concatenate to the "running" ones
-        ## basically a) make two nested forach, outer by paragraph and
-        ## inner by words.
-        ## Then cache the hell out of each loop.
-
-        ## LATER FOR ANOTHER TIME IS TO MAKE THE PAINTING ALSO FAST.
-        ## You'd also love to cache the bitmap of each paragraph
-        ## rather than keeping one huge bitmap.
-        ## so this wouldn't be a BackBuffer anymore
-        ## SO you need to REMOVE the mixin from this class.
-        ## cause there would be a paint method and it would
-        ## compose the 
-        ## it would be much better to handle AND in theory
-        ## the single bitmaps per paragraph would be easy
-        ## to cache and could be created
-        ## only on demand if they ever get damaged.
-        ## GET THE stringMorph2 to cache the actual bitmap that they
-        ## generate so you can use that too from here, cause there
-        ## might be a lot of reuse rather than re-painting the
-        ## text all the times or even a paragraph.
-
-        # takes the text, word by word, and re-flows
-        # it according to the available width for the
-        # text (if there is such limit).
-        # The end result is an array of lines
-        # called @wrappedLines, which contains the string for
-        # each line (excluding the end of lines).
-        # Also another array is created, called
-        # @wrappedLineSlots, which memorises how many characters
-        # of the text have been consumed up to each line
-        #  example: original text: "Hello\nWorld"
-        # then @wrappedLines[0] = "Hello" @wrappedLines[1] = "World"
-        # and @wrappedLineSlots[0] = 6, @wrappedLineSlots[1] = 11
-        # Note that this algorithm doesn't work in case
-        # of single non-spaced words that are longer than
-        # the allowed width.
-        
-        wrappingData = world.cacheForParagraphsWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
-
-        if !wrappingData?
-          wrappedLinesOfThisParagraph = []
-          wrappedLineSlotsOfThisParagraph = []
-          maxWrappedLineWidthOfThisParagraph = 0
-
-          currentLine = ""
-          slotsInParagraph = 0
-
-          for word in wordsOfThisParagraph
-            if word is "\n"
-              # we reached the end of the line in the
-              # original text, so push the line and the
-              # slotsInParagraph count in the arrays
-              wrappedLinesOfThisParagraph.push currentLine
-              wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-              maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
-              currentLine = ""
-            else
-              if maxTextWidth > 0 # there is a width limit, we might have to wrap
-                # there is a width limit, so we need
-                # to check whether we overflowed it. So create
-                # a prospective line and then check its width.
-                lineForOverflowTest = currentLine + word + " "
-                w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
-                if w > maxTextWidth
-                  # ok we just overflowed the available space,
-                  # so we need to push the old line and its
-                  # "slotsInParagraph" number to the respective arrays.
-                  # the new line is going to only contain the
-                  # word that has caused the overflow.
-                  wrappedLinesOfThisParagraph.push currentLine
-                  wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-                  maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
-                  currentLine = word + " "
-                else
-                  # no overflow happened, so just proceed as normal
-                  currentLine = lineForOverflowTest
-              else # there is no width limit, we never have to wrap
-                currentLine = currentLine + word + " "
-              slotsInParagraph += word.length + 1
-
-          # words of this paragraph have been scanned
-          wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph, slotsInParagraph]
-          world.cacheForParagraphsWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
-          wrappingData = wrappingDataCacheEntry
-
-        # we either cache-hit wrappingData or we re-built it
-        [wrappedLinesOfThisParagraph, wrappedLineSlotsOfThisParagraph, maxWrappedLineWidthOfThisParagraph, slotsInParagraph] = wrappingData
-
-        previousCumulativeSlotAcrossText = cumulativeSlotAcrossText
-        cumulativeSlotAcrossText += slotsInParagraph
-        wrappedLinesOfWholeText = wrappedLinesOfWholeText.concat wrappedLinesOfThisParagraph
-        advancedWrappedLineSlotsOfThisParagraph =  wrappedLineSlotsOfThisParagraph.map (i) -> i + previousCumulativeSlotAcrossText
-        #alert "unadvanced wrappedLineSlotsOfThisParagraph: " + wrappedLineSlotsOfThisParagraph + " advanced: " + advancedWrappedLineSlotsOfThisParagraph
-        wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat advancedWrappedLineSlotsOfThisParagraph
-        maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
-
-        #cumulativeSlotAcrossText += wrappedLineSlotsOfThisParagraph.reduce (t, s) -> t + s
-
-      # here all paragraphs have been visited
-      #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
-      textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
-      world.cacheForTextWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
-      textWrappingData = textWrappingDataCacheEntry
+    textWrappingData = @getTextWrappingData overrideFontSize, maxTextWidth, text, paragraphs
 
     [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
     height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
