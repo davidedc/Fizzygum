@@ -419,7 +419,7 @@ class TextMorph2 extends StringMorph2
     charX = 0
     col = 0
 
-    if row > @wrappedLines.length - 1
+    if row > @wrappedLines.length
       return @textActuallyShown.length
 
     while true
