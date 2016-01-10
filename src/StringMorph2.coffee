@@ -354,9 +354,6 @@ class StringMorph2 extends Morph
 
     @backBufferContext = @backBuffer.getContext "2d"
 
-    # changing the canvas size resets many of
-    # the properties of the canvas, so we need to
-    # re-initialise the font and alignments here
     @backBufferContext.scale pixelRatio, pixelRatio
     @backBufferContext.font = @font()
     @backBufferContext.textAlign = "left"

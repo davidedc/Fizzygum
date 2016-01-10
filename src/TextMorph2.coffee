@@ -340,9 +340,6 @@ class TextMorph2 extends StringMorph2
     @backBuffer.width = @width() * pixelRatio
     @backBuffer.height = @height() * pixelRatio
 
-    # changing the canvas size resets many of
-    # the properties of the canvas, so we need to
-    # re-initialise the font and alignments here
     @backBufferContext.scale pixelRatio, pixelRatio
     @backBufferContext.font = @font()
     @backBufferContext.textAlign = "left"
