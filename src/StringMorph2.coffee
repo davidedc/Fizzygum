@@ -827,6 +827,7 @@ class StringMorph2 extends Morph
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForegroud()
+    world.caret?.bringToForegroud()
     if @isEditable
       # doesn't matter what we set editResult to initially,
       # just not undefined or null cause that's
