@@ -61,7 +61,7 @@ class TextMorph2 extends StringMorph2
   # notice the thick arrow here!
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     textSize = @breakTextIntoLines text, overrideFontSize
-    thisFitsInto = new Point @width(), textSize[1]
+    thisFitsInto = new Point textSize[2], textSize[1]
 
     if thisFitsInto.le @extent()
       return true
@@ -295,7 +295,7 @@ class TextMorph2 extends StringMorph2
 
     [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
     height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
-    return [textWrappingData, height]
+    return [textWrappingData, height, maxWrappedLineWidth]
 
 
   reflowText: ->
@@ -455,6 +455,15 @@ class TextMorph2 extends StringMorph2
   # This is in absolute world coordinates.
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
+
+    # this makes it so when you type and the string becomes too big
+    # then the edit stops to be directly in the screen and the
+    # popout for editing takes over.
+    if @text != @textActuallyShown and @cropWritingWhenTooBig
+      world.stopEditing()
+      @edit()
+      return null
+
     [slotRow, slotColumn] = @slotRowAndColumn slot
     yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
