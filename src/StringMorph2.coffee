@@ -16,6 +16,8 @@
 # REQUIRES BackBufferMixin
 # REQUIRES AlignmentSpec
 # REQUIRES LRUCache
+# REQUIRES FittingSpecTextInSmallerBounds
+# REQUIRES FittingSpecTextInLargerBounds
 
 class StringMorph2 extends Morph
   # this is so we can create objects from the object class name 
@@ -61,8 +63,8 @@ class StringMorph2 extends Morph
   horizontalAlignment: AlignmentSpec.LEFT
   verticalAlignment: AlignmentSpec.TOP
 
-  scaleAboveOriginallyAssignedFontSize: false
-  cropWritingWhenTooBig: true
+  fittingSpecWhenBoundsTooLarge: FittingSpecTextInLargerBounds.FLOAT
+  fittingSpecWhenBoundsTooSmall: FittingSpecTextInSmallerBounds.CROP
 
   caretHorizPositionForVertMovement: null
 
@@ -162,7 +164,7 @@ class StringMorph2 extends Morph
   searchLargestFittingFont: (fittingTestFunction, textToFit) ->
 
 
-    if !@scaleAboveOriginallyAssignedFontSize
+    if !@fittingSpecWhenBoundsTooLarge
       if fittingTestFunction textToFit, @originallySetFontSize
         return @originallySetFontSize
     # decimalFloatFigures allows you to go into sub-points
@@ -247,7 +249,7 @@ class StringMorph2 extends Morph
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 1"
     else
-      if !@cropWritingWhenTooBig
+      if !@fittingSpecWhenBoundsTooSmall
         @textActuallyShown = @text
         #console.log "@textActuallyShown = @text 2"
 
@@ -282,12 +284,12 @@ class StringMorph2 extends Morph
     if largestFittingFontSize > @originallySetFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 3"
-      if @scaleAboveOriginallyAssignedFontSize
+      if @fittingSpecWhenBoundsTooLarge
         return largestFittingFontSize
       else
         return @originallySetFontSize
     else
-      if @cropWritingWhenTooBig
+      if @fittingSpecWhenBoundsTooSmall
         @textActuallyShown = @searchLargestFittingText @doesTextFitInExtent, @text
         return @originallySetFontSize
       else
@@ -322,8 +324,8 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
       @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
       @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
-      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize and
-      @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
+      @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge == @fittingSpecWhenBoundsTooLarge and
+      @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall == @fittingSpecWhenBoundsTooSmall
         return
 
     @synchroniseTextAndActualText()
@@ -340,7 +342,7 @@ class StringMorph2 extends Morph
     # the morph could be "wasted" in memory.
     # This could be optimised but it's unclear if it's worth it.
     widthOfText = @calculateExtentBasedOnText()
-    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT or !@scaleAboveOriginallyAssignedFontSize
+    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT or !@fittingSpecWhenBoundsTooLarge
       width = @width()
       height = @height()
     else
@@ -413,8 +415,8 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment
     @backBufferValidityChecker.verticalAlignment = @verticalAlignment
-    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize
-    @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
+    @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge = @fittingSpecWhenBoundsTooLarge
+    @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall = @fittingSpecWhenBoundsTooSmall
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
     
@@ -425,7 +427,7 @@ class StringMorph2 extends Morph
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @cropWritingWhenTooBig
+    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall
       world.stopEditing()
       @edit()
       return null
@@ -606,29 +608,29 @@ class StringMorph2 extends Morph
 
     menu.addLine()
 
-    if @scaleAboveOriginallyAssignedFontSize
-      menu.addItem "←☓→ don't expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+    if @fittingSpecWhenBoundsTooLarge
+      menu.addItem "←☓→ don't expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
     else
-      menu.addItem "←→ expand to fill", true, @, "toggleScaleAboveOriginallyAssignedFontSize"
+      menu.addItem "←→ expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
 
-    if @cropWritingWhenTooBig
-      menu.addItem "→← shrink to fit", true, @, "toggleCropWritingWhenTooBig"
+    if @fittingSpecWhenBoundsTooSmall
+      menu.addItem "→← shrink to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
     else
-      menu.addItem "→⋯← crop to fit", true, @, "toggleCropWritingWhenTooBig"
+      menu.addItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
 
     menu
 
-  toggleCropWritingWhenTooBig: ->
-    @cropWritingWhenTooBig = not @cropWritingWhenTooBig
+  togglefittingSpecWhenBoundsTooSmall: ->
+    @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @synchroniseTextAndActualText()
     @reLayout()
     @backBufferIsPotentiallyDirty = true
     @changed()
     world.stopEditing()
 
-  toggleScaleAboveOriginallyAssignedFontSize: ->
+  togglefittingSpecWhenBoundsTooLarge: ->
     world.stopEditing()
-    @scaleAboveOriginallyAssignedFontSize = not @scaleAboveOriginallyAssignedFontSize
+    @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @synchroniseTextAndActualText()
     @reLayout()
     @backBufferIsPotentiallyDirty = true
@@ -687,7 +689,7 @@ class StringMorph2 extends Morph
 
     @text = theTextContent
     largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
-    if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
+    if !@fittingSpecWhenBoundsTooSmall or largestFittingFontSize >= @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 5"

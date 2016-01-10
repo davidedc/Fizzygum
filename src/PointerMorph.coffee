@@ -38,8 +38,8 @@ class PointerMorph extends BoxMorph
     lmContent2.noticesTransparentClick = true
     lmContent2.isEditable = false
 
-    lmContent2.scaleAboveOriginallyAssignedFontSize = true
-    lmContent2.cropWritingWhenTooBig = true
+    lmContent2.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
+    lmContent2.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
 
 
     lmContent3 = new CloseIconMorph @

@@ -54,8 +54,8 @@ class TextMorph2 extends StringMorph2
       @color = new Color 0, 0, 0
       @noticesTransparentClick = true
 
-      @scaleAboveOriginallyAssignedFontSize = true
-      @cropWritingWhenTooBig = true
+      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
+      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
   
 
   # notice the thick arrow here!
@@ -327,8 +327,8 @@ class TextMorph2 extends StringMorph2
       @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
       @backBufferValidityChecker.horizontalAlignment == horizontalAlignment and
       @backBufferValidityChecker.verticalAlignment == verticalAlignment and
-      @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize == @scaleAboveOriginallyAssignedFontSize and
-      @backBufferValidityChecker.cropWritingWhenTooBig == @cropWritingWhenTooBig
+      @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge == @fittingSpecWhenBoundsTooLarge and
+      @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall == @fittingSpecWhenBoundsTooSmall
         return
 
     contentHeight = @reflowText()
@@ -414,8 +414,8 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
     @backBufferValidityChecker.horizontalAlignment = horizontalAlignment
     @backBufferValidityChecker.verticalAlignment = verticalAlignment
-    @backBufferValidityChecker.scaleAboveOriginallyAssignedFontSize = @scaleAboveOriginallyAssignedFontSize
-    @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
+    @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge = @fittingSpecWhenBoundsTooLarge
+    @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall = @fittingSpecWhenBoundsTooSmall
 
 
   # TextMorph measuring ////
@@ -447,7 +447,7 @@ class TextMorph2 extends StringMorph2
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @cropWritingWhenTooBig
+    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall
       world.stopEditing()
       @edit()
       return null
