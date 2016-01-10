@@ -21,7 +21,7 @@ class StringMorph extends Morph
   isNumeric: null
   isPassword: false
   isShowingBlanks: false
-  # careful: this Color object is shared with all the instances of this class.
+  # careful: Objects are shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
   # specific object instance. Same behaviour as with arrays.
@@ -33,17 +33,9 @@ class StringMorph extends Morph
   currentlySelecting: false
   startMark: null
   endMark: null
-  # careful: this Color object is shared with all the instances of this class.
-  # if you modify it, then all the objects will get the change
-  # but if you replace it with a new Color, then that will only affect the
-  # specific object instance. Same behaviour as with arrays.
-  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+  # see note above about Colors and shared objects
   markedTextColor: new Color 255, 255, 255
-  # careful: this Color object is shared with all the instances of this class.
-  # if you modify it, then all the objects will get the change
-  # but if you replace it with a new Color, then that will only affect the
-  # specific object instance. Same behaviour as with arrays.
-  # see: https://github.com/jashkenas/coffee-script/issues/2501#issuecomment-7865333
+  # see note above about Colors and shared objects
   markedBackgoundColor: new Color 60, 60, 120
 
   constructor: (

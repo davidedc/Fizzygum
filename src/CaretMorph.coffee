@@ -264,6 +264,9 @@ class CaretMorph extends BlinkerMorph
       if shiftKey
         return @target.backTab @target
       return @target.tab @target
+    
+    # if the target "isNumeric", then reject all inputs
+    # other than numbers and "-" and "."
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or contains(["-", "."], symbol)
       if @target.selection() isnt ""
         @gotoSlot @target.selectionStartSlot()
