@@ -69,26 +69,23 @@ class StringMorph2 extends Morph
   caretHorizPositionForVertMovement: null
 
   constructor: (
-      text = "",
+      @text = (if (text is "") then "" else "StringMorph2"),
       @originallySetFontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
-      color,
-      fontName
+      @color = (new Color 0, 0, 0),
+      @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily),
       @backgroundColor = null,
       @backgroundTransparency = null
       ) ->
     # additional properties:
-    @text = text or ((if (text is "") then "" else "StringMorph2"))
     @textActuallyShown = @text
-    @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
 
     super()
 
     # override inherited properties:
-    @color = color or new Color 0, 0, 0
     @noticesTransparentClick = true
 
   # the actual font size used might be

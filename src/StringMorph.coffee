@@ -39,23 +39,19 @@ class StringMorph extends Morph
   markedBackgoundColor: new Color 60, 60, 120
 
   constructor: (
-      text = "",
+      @text = (if (text is "") then "" else "StringMorph"),
       @fontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
-      color,
-      fontName
+      @color = (new Color 0, 0, 0),
+      @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily)
       ) ->
-    # additional properties:
-    @text = text or ((if (text is "") then "" else "StringMorph"))
-    @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
 
     super()
 
     # override inherited properties:
-    @color = color or new Color 0, 0, 0
     @noticesTransparentClick = true
 
   setContent: (theTextContent,a) ->

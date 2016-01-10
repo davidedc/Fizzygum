@@ -21,37 +21,34 @@ class TextMorph2 extends StringMorph2
   receiver: null
 
   constructor: (
-    text = "",
+    @text = (if text is "" then text else "TextMorph2"),
     @originallySetFontSize = 12,
     @fontStyle = "sans-serif",
     @isBold = false,
     @isItalic = false,
     #@isNumeric = false,
-    color,
-    fontName,
+    @color = (new Color 0, 0, 0),
+    @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily),
     @backgroundColor = null,
     @backgroundTransparency = null
     ) ->
 
       super(
-        text,
+        @text,
         @originallySetFontSize,
         @fontStyle,
         @isBold,
         @isItalic,
         false, # isNumeric
-        color,
-        fontName
+        @color,
+        @fontName,
         @backgroundColor,
         @backgroundTransparency
         )
       # override inherited properties:
       @markedTextColor = new Color 255, 255, 255
       @markedBackgoundColor = new Color 60, 60, 120
-      @text = text or ((if text is "" then text else "TextMorph"))
       @textActuallyShown = @text
-      @fontName = fontName or WorldMorph.preferencesAndSettings.globalFontFamily
-      @color = new Color 0, 0, 0
       @noticesTransparentClick = true
 
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
