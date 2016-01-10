@@ -1179,6 +1179,8 @@ class Morph extends MorphicNode
 
 
   paintBackgroundRectangle: (aContext, al, at, w, h) ->
+      # not needed
+      #aContext.globalAlpha = @alpha
       aContext.fillStyle = @color.toString()
       aContext.fillRect  Math.round(al),
           Math.round(at),
@@ -1203,6 +1205,7 @@ class Morph extends MorphicNode
 
       aContext.save()
       aContext.globalAlpha = @alpha
+      aContext.fillStyle = @color.toString()
 
       if !@color?
         debugger
