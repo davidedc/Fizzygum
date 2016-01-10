@@ -306,7 +306,7 @@ class StringMorph2 extends Morph
   reLayout: ->
     super()
     @fittingFontSize = @fitToExtent()
-    console.log "reLayout // fittingFontSize: " + @fittingFontSize
+    #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
   repaintBackBufferIfNeeded: ->
 
@@ -692,7 +692,7 @@ class StringMorph2 extends Morph
     @text = theTextContent
     largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
     if !@cropWritingWhenTooBig or largestFittingFontSize >= @originallySetFontSize
-      console.log "texts synched"
+      console.log "texts synched at font size: " + @fittingFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 5"
     else

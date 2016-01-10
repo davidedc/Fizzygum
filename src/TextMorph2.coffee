@@ -98,7 +98,59 @@ class TextMorph2 extends StringMorph2
     currentLine = ""
     slotsInParagraph = 0
 
+    # currently unused because token-level wrapping
+    # is commented-out, see below
+    carryoverFromWrappingLine = ""
+
     for word in wordsOfThisParagraph
+
+      # TOKEN-LEVEL WRAPPING i.e.
+      # handling a single token that is too long.
+      # This works with the manual tests I've done so far
+      # BUT it brought up a logical error, because the
+      # following can happen: when the line waps,
+      # it pushes down the lines. In doing so, the text
+      # might resize. In doing so, the line doesn't need
+      # to wrap anymore, and hence the text can embiggen,
+      # and hence the line wraps...
+      # In other words there is no fixed point in the font
+      # size...
+      # So this can be done only if the textbox is
+      # constrained horizontally but not vertically...
+
+      ###
+      if word.substr(0, word.length-1).indexOf(" ") == -1
+        console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        console.log "> no space word: " + word
+        checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
+        console.log "> length of: " + word + " : " + checkingLongerSingleWorld
+        console.log "> maxTextWidth: " + maxTextWidth
+
+        while checkingLongerSingleWorld > maxTextWidth
+          console.log "> " + word + " is too long at overrideFontSize: " + overrideFontSize
+          maxLengthNotOverflowing = 0
+          for scanning in [0..word.length]
+            subword = word.substring 0, scanning
+            checkingLongerSingleWorld2 = Math.ceil @measureText overrideFontSize, subword
+            console.log "> length at size " + overrideFontSize + " of subword: " + subword + " : " + checkingLongerSingleWorld2
+            if checkingLongerSingleWorld2 > maxTextWidth
+              maxLengthNotOverflowing = scanning - 1
+              break
+          console.log "> maxLengthNotOverflowing: " + maxLengthNotOverflowing
+          if maxLengthNotOverflowing == 0
+            word = word.substring 1, word.length
+          else
+            currentLineCanStayInLine = word.substring 0, maxLengthNotOverflowing
+            carryoverFromWrappingLine = word.substring maxLengthNotOverflowing, word.length
+            console.log "> part that is not overflowing: " + currentLineCanStayInLine
+            console.log "> part that is overflowing: " + carryoverFromWrappingLine
+            slotsInParagraph += currentLineCanStayInLine.length
+            wrappedLinesOfThisParagraph.push currentLineCanStayInLine
+            wrappedLineSlotsOfThisParagraph.push slotsInParagraph
+            word = carryoverFromWrappingLine
+          checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
+      ###
+
       if word is "\n"
         # we reached the end of the line in the
         # original text, so push the line and the
@@ -117,10 +169,12 @@ class TextMorph2 extends StringMorph2
           w = Math.ceil @measureText overrideFontSize, lineForOverflowTest
           if w > maxTextWidth
             # ok we just overflowed the available space,
-            # so we need to push the old line and its
-            # "slotsInParagraph" number to the respective arrays.
+            # so we need to push the line *without the last word*
+            # and the corresponding "slotsInParagraph" number in the
+            # respective arrays.
             # the new line is going to only contain the
             # word that has caused the overflow.
+
             currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
             wrappedLinesOfThisParagraph.push currentLine
             wrappedLineSlotsOfThisParagraph.push slotsInParagraph
@@ -224,7 +278,7 @@ class TextMorph2 extends StringMorph2
 
     maxTextWidth = @width()
 
-    console.log "breakTextIntoLines // " + " maxTextWidth: " + maxTextWidth + " overrideFontSize: " + overrideFontSize
+    #console.log "breakTextIntoLines // " + " maxTextWidth: " + maxTextWidth + " overrideFontSize: " + overrideFontSize
 
     
     ## // this section only needs to be re-done when @text changes ////
