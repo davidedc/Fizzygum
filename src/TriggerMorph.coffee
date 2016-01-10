@@ -134,9 +134,9 @@ class TriggerMorph extends Morph
     if area.isNotEmpty()
       if w < 1 or h < 1
         return null
+      aContext.save()
       aContext.globalAlpha = @alpha
 
-      aContext.save()
       if !@color?
         debugger
 
