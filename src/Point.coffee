@@ -222,8 +222,10 @@ class Point
   translateBy: (deltaPoint) ->
     @add deltaPoint
   
-  rotateBy: (angle, centerPoint) ->
-    center = centerPoint or new @constructor 0, 0
+  rotateBy: (
+    angle,
+    center = (new @constructor 0, 0)
+    ) ->
     p = @subtract center
     r = p.r()
     theta = angle - p.theta()

@@ -464,8 +464,7 @@ class Morph extends MorphicNode
         child.runChildrensStepFunction()
 
   # not used within Zombie Kernel yet.
-  nextSteps: (arrayOfFunctions) ->
-    lst = arrayOfFunctions or []
+  nextSteps: (lst = []) ->
     nxt = lst.shift()
     if nxt
       @onNextStep = =>
@@ -1430,10 +1429,13 @@ class Morph extends MorphicNode
   # So, the shadow of a blue semi-transparent box
   # *will* contain some semi-transparent fill of
   # the box.
-  shadowImage: (off_, color, blurred) ->
-    offset = off_ or new Point 7, 7
+  shadowImage: (
+    offset = (new Point 7, 7),
+    clr = (new Color 0, 0, 0),
+    blurred
+    ) ->
+    
     blur = @shadowBlur
-    clr = color or new Color 0, 0, 0
     fb = @fullBoundsNoShadow().extent().add blur * 2
 
     # take "the image" which is the image of all the
@@ -1896,8 +1898,7 @@ class Morph extends MorphicNode
       )
     null
   
-  slideBackTo: (situation, inSteps) ->
-    steps = inSteps or 5
+  slideBackTo: (situation, steps = 5) ->
     pos = situation.origin.position().add situation.position
     xStep = -(@left() - pos.x) / steps
     yStep = -(@top() - pos.y) / steps

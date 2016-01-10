@@ -166,7 +166,7 @@ class StringMorph extends Morph
     # notify my parent of layout change
     # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
   
-  renderWithBlanks: (context, startX, y) ->
+  renderWithBlanks: (context, x = 0, y) ->
     # create the blank form
     drawBlank = ->
       context.drawImage blank, Math.round(x), 0
@@ -175,7 +175,6 @@ class StringMorph extends Morph
     blank = newCanvas new Point(space, @height()).scaleBy pixelRatio
     ctx = blank.getContext "2d"
     words = @text.split " "
-    x = startX or 0
     isFirst = true
     ctx.fillStyle = @blanksColor.toString()
     ctx.arc space / 2, blank.height / 2, space / 2, degreesToRadians(0), degreesToRadians(360)

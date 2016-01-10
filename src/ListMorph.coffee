@@ -15,7 +15,19 @@ class ListMorph extends ScrollFrameMorph
   target: null
   doubleClickAction: null
 
-  constructor: (@target, @action, @elements = [], labelGetter, @format = [], @doubleClickAction = null) ->
+  constructor: (
+    @target,
+    @action,
+    @elements = [],
+    @labelGetter = (element) ->
+        return element  if isString element
+        return element.toSource()  if element.toSource
+        element.toString()
+    ,
+
+    @format = [],
+    @doubleClickAction = null
+    ) ->
     #
     #    passing a format is optional. If the format parameter is specified
     #    it has to be of the following pattern:
@@ -40,10 +52,6 @@ class ListMorph extends ScrollFrameMorph
     super()
     @contents.disableDrops()
     @color = new Color 255, 255, 255
-    @labelGetter = labelGetter or (element) ->
-        return element  if isString element
-        return element.toSource()  if element.toSource
-        element.toString()
     @buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
     # instead of null because the scrollbars (inherited from scrollframe)

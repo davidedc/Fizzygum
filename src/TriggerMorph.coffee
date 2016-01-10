@@ -52,13 +52,13 @@ class TriggerMorph extends Morph
       @target = null,
       @action = null,
       @labelString = null,
-      fontSize,
-      fontStyle,
+      @fontSize = (WorldMorph.preferencesAndSettings.menuFontSize),
+      @fontStyle = "sans-serif",
       @centered = false,
       @dataSourceMorphForTarget = null,
       @morphEnv,
       @hint = null,
-      labelColor,
+      @labelColor = (new Color 0, 0, 0),
       @labelBold = false,
       @labelItalic = false,
       @doubleClickAction = null,
@@ -68,9 +68,6 @@ class TriggerMorph extends Morph
       ) ->
 
     # additional properties:
-    @fontSize = fontSize or WorldMorph.preferencesAndSettings.menuFontSize
-    @fontStyle = fontStyle or "sans-serif"
-    @labelColor = labelColor or new Color 0, 0, 0
 
     super()
 

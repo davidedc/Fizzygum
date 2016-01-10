@@ -29,12 +29,15 @@ class ScrollFrameMorph extends FrameMorph
   canScrollByDraggingBackground: false
   canScrollByDraggingForeground: false
 
-  constructor: (@contents, scrollBarSize, @sliderColor) ->
+  constructor: (
+    @contents,
+    @scrollBarSize = (WorldMorph.preferencesAndSettings.scrollBarSize),
+    @sliderColor
+    ) ->
     # super() paints the scrollframe, which we don't want,
     # so we set 0 opacity here.
     @alpha = 0
     super()
-    @scrollBarSize = scrollBarSize or WorldMorph.preferencesAndSettings.scrollBarSize
 
     @contents = new FrameMorph @ unless @contents?
     @addRaw @contents

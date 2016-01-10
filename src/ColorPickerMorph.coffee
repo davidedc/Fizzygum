@@ -19,8 +19,9 @@ class ColorPickerMorph extends Morph
   colorPalette: null
   grayPalette: null
 
-  constructor: (defaultColor) ->
-    @choice = defaultColor or new Color 255, 255, 255
+  constructor: (
+    @choice = (new Color 255, 255, 255)
+    ) ->    
     super()
     @color = new Color 255, 255, 255
     @rawSetExtent new Point 80, 80

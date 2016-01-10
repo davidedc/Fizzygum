@@ -21,12 +21,11 @@ class SpeechBubbleMorph extends BoxMorph
   constructor: (
     @contents="",
     @morphInvokingThis,
-    color,
+    @color = (new Color 230, 230, 230),
     cornerRadius,
     @padding = 0,
     @isThought = false) ->
       # console.log "bubble super"
-      @color = color or new Color 230, 230, 230
       super(cornerRadius or 6)
       # console.log @color
   

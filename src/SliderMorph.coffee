@@ -23,11 +23,17 @@ class SliderMorph extends CircleBoxMorph
   button: null
   argumentToAction: null
 
-  constructor: (@start = 1, @stop = 100, @value = 50, @size = 10, orientation, color) ->
+  constructor: (
+    @start = 1,
+    @stop = 100,
+    @value = 50,
+    @size = 10,
+    orientation,
+    @color = (new Color 0, 0, 0)
+    ) ->
     @button = new SliderButtonMorph()
     super orientation # if null, then a vertical one will be created
     @alpha = 0.1
-    @color = color or new Color 0, 0, 0
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button
 
