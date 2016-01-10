@@ -429,6 +429,9 @@ class StringMorph2 extends Morph
   # StringMorph2 measuring:
   slotCoordinates: (slot) ->
     
+    # this makes it so when you type and the string becomes too big
+    # then the edit stops to be directly in the screen and the
+    # popout for editing takes over.
     if @text != @textActuallyShown and @cropWritingWhenTooBig
       world.stopEditing()
       @edit()
