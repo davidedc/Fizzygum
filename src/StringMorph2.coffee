@@ -806,6 +806,8 @@ class StringMorph2 extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
 
+  # used when shift-clicking somewhere when there is
+  # no selection ongoing
   startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
     @startMark = previousCaretSlot
     @endMark = slotToExtendTo
@@ -813,6 +815,8 @@ class StringMorph2 extends Morph
     @backBufferIsPotentiallyDirty = true
     @changed()
 
+  # used when shift-clicking somewhere when there is
+  # already a selection ongoing
   extendSelectionUpToSlot: (slotToExtendTo) ->
     @endMark = slotToExtendTo
     @reLayout()
