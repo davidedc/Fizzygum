@@ -2447,7 +2447,10 @@ class Morph extends MorphicNode
   
   allEntryFields: ->
     @collectAllChildrenBottomToTopSuchThat (each) ->
-      each.isEditable && (each instanceof StringMorph || each instanceof StringMorph2 || each instanceof TextMorph)
+      each.isEditable and
+      (each instanceof StringMorph or
+        each instanceof StringMorph2 or
+        each instanceof TextMorph)
   
   
   nextEntryField: (current) ->

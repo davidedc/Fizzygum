@@ -69,7 +69,7 @@ class StringMorph2 extends Morph
   caretHorizPositionForVertMovement: null
 
   constructor: (
-      @text = (if (text is "") then "" else "StringMorph2"),
+      @text = (if text is "" then "" else "StringMorph2"),
       @originallySetFontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,

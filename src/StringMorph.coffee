@@ -39,7 +39,7 @@ class StringMorph extends Morph
   markedBackgoundColor: new Color 60, 60, 120
 
   constructor: (
-      @text = (if (text is "") then "" else "StringMorph"),
+      @text = (if text is "" then "" else "StringMorph"),
       @fontSize = 12,
       @fontStyle = "sans-serif",
       @isBold = false,

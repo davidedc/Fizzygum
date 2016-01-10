@@ -404,7 +404,7 @@ generate_inclusion_order = (dependencies) ->
 
 
   for key of dependencies
-    if key == 'length' || !dependencies.hasOwnProperty key
+    if key == 'length' or !dependencies.hasOwnProperty key
       continue
     #value = dependencies[key]
     #console.log value

@@ -454,7 +454,7 @@ class TextMorph2 extends StringMorph2
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     x = @left() + xOffset
     y = @top() + yOffset
-    #alert "slotCoordinates|| slot:" + slot + " x,y: " + x + ", " + y
+    #alert "slotCoordinates slot:" + slot + " x,y: " + x + ", " + y
     new Point x, y
 
 

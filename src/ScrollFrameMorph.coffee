@@ -318,12 +318,12 @@ class ScrollFrameMorph extends FrameMorph
           !@hBar.isCollapsed()
             deltaX = newPos.x - oldPos.x
             if deltaX isnt 0
-              scrollbarJustChanged = scrollbarJustChanged || @scrollX deltaX
+              scrollbarJustChanged ||= @scrollX deltaX
           if @vBar.visibleBasedOnIsVisibleProperty() and
           !@vBar.isCollapsed()
             deltaY = newPos.y - oldPos.y
             if deltaY isnt 0
-              scrollbarJustChanged = scrollbarJustChanged || @scrollY deltaY
+              scrollbarJustChanged ||= @scrollY deltaY
           oldPos = newPos
       else
         unless @hasVelocity
@@ -336,12 +336,12 @@ class ScrollFrameMorph extends FrameMorph
             !@hBar.isCollapsed()
               deltaX = deltaX * friction
               if deltaX isnt 0
-                scrollbarJustChanged = scrollbarJustChanged || @scrollX Math.round(deltaX)
+                scrollbarJustChanged ||= @scrollX Math.round deltaX
             if @vBar.visibleBasedOnIsVisibleProperty() and
             !@vBar.isCollapsed()
               deltaY = deltaY * friction
               if deltaY isnt 0
-                scrollbarJustChanged = scrollbarJustChanged || @scrollY Math.round(deltaY)
+                scrollbarJustChanged ||= @scrollY Math.round deltaY
       if scrollbarJustChanged
         @adjustContentsBounds()
         @adjustScrollBars()
@@ -368,20 +368,16 @@ class ScrollFrameMorph extends FrameMorph
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)
-      scrollbarJustChanged = scrollbarJustChanged ||
-        @scrollY inset - (pos.y - @top())
+      scrollbarJustChanged ||= @scrollY inset - (pos.y - @top())
     area = @topLeft().extent new Point inset, @height()
     if area.containsPoint(pos)
-      scrollbarJustChanged = scrollbarJustChanged ||
-        @scrollX inset - (pos.x - @left())
+      scrollbarJustChanged ||= @scrollX inset - (pos.x - @left())
     area = (new Point(@right() - inset, @top())).extent new Point inset, @height()
     if area.containsPoint(pos)
-      scrollbarJustChanged = scrollbarJustChanged ||
-        @scrollX -(inset - (@right() - pos.x))
+      scrollbarJustChanged ||= @scrollX -(inset - (@right() - pos.x))
     area = (new Point(@left(), @bottom() - inset)).extent new Point @width(), inset
     if area.containsPoint(pos)
-      scrollbarJustChanged = scrollbarJustChanged ||
-        @scrollY -(inset - (@bottom() - pos.y))
+      scrollbarJustChanged ||= @scrollY -(inset - (@bottom() - pos.y))
     if scrollbarJustChanged
       @adjustContentsBounds()
       @adjustScrollBars()  
