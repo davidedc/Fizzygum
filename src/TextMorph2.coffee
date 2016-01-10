@@ -418,15 +418,6 @@ class TextMorph2 extends StringMorph2
     @backBufferValidityChecker.cropWritingWhenTooBig = @cropWritingWhenTooBig
 
 
-  
-  ###
-  rawSetExtent: (aPoint) ->
-    @breakNumberOfRawMovesAndResizesCaches()
-    @maxTextWidth = Math.max(aPoint.x, 0)
-    @reLayout()
-    @changed()
-  ###
-
   # TextMorph measuring ////
 
   # answer the logical position point of the given index ("slot")

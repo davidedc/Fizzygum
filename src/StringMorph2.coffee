@@ -850,9 +850,6 @@ class StringMorph2 extends Morph
     else
       @escalateEvent "mouseClickLeft", pos
   
-  #mouseDoubleClick: ->
-  #  alert "mouseDoubleClick!"
-
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
