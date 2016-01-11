@@ -4,29 +4,6 @@
 
 # I am a multi-line, word-wrapping String
 
-# Note that in the original Jens' Morphic.js version he
-# has made this quasi-inheriting from StringMorph i.e. he is copying
-# over manually the following methods like so:
-#
-#  TextMorph::font = StringMorph::font
-#  TextMorph::edit = StringMorph::edit
-#  TextMorph::selection = StringMorph::selection
-#  TextMorph::selectionStartSlot = StringMorph::selectionStartSlot
-#  TextMorph::clearSelection = StringMorph::clearSelection
-#  TextMorph::deleteSelection = StringMorph::deleteSelection
-#  TextMorph::selectAll = StringMorph::selectAll
-#  TextMorph::mouseClickLeft = StringMorph::mouseClickLeft
-#  TextMorph::enableSelecting = StringMorph::enableSelecting 
-#  TextMorph::disableSelecting = StringMorph::disableSelecting
-#  TextMorph::toggleIsfloatDraggable = StringMorph::toggleIsfloatDraggable
-#  TextMorph::toggleWeight = StringMorph::toggleWeight
-#  TextMorph::toggleItalic = StringMorph::toggleItalic
-#  TextMorph::setSerif = StringMorph::setSerif
-#  TextMorph::setSansSerif = StringMorph::setSansSerif
-#  TextMorph::setText = StringMorph::setText
-#  TextMorph::setFontSize = StringMorph::setFontSize
-#  TextMorph::numericalSetters = StringMorph::numericalSetters
-
 
 class TextMorph extends StringMorph
   # this is so we can create objects from the object class name 
