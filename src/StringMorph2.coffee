@@ -127,11 +127,16 @@ class StringMorph2 extends Morph
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
     firstPart = super()
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+      AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
 
+  # used to identify morphs in macros/tests.
+  # identifying morphs this way resists more
+  # to tampering such as adding/removing morphs and
+  # changing their locations.
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of string)"
@@ -140,6 +145,9 @@ class StringMorph2 extends Morph
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
   password: (letter, length) ->
+    # there is an alternative to this, using an idiom
+    # http://stackoverflow.com/a/19892144
+    # but it's clearer this way
     ans = ""
     for i in [0...length]
       ans += letter
