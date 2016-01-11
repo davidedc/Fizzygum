@@ -154,7 +154,6 @@ class TextMorph extends StringMorph
 
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.font = @font()
 
     shadowWidth = Math.abs @shadowOffset.x
     shadowHeight = Math.abs @shadowOffset.y

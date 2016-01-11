@@ -332,7 +332,6 @@ class TextMorph2 extends StringMorph2
 
     @backBuffer = newCanvas()
     @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.font = @font()
 
     @backBuffer.width = @width() * pixelRatio
     @backBuffer.height = @height() * pixelRatio
