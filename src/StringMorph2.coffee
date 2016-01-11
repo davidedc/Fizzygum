@@ -128,7 +128,7 @@ class StringMorph2 extends Morph
     # e.g. 'a StringMorph2("Hello World")'
     firstPart = super()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
-      AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
+    AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
