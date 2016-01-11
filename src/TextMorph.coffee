@@ -58,7 +58,7 @@ class TextMorph extends StringMorph
     context.scale pixelRatio, pixelRatio
     currentLine = ""
     slot = 0
-    context.font = @font()
+    context.font = @buildCanvasFontProperty()
     @maxLineWidth = 0
     @lines = []
     @lineSlots = [0]
@@ -122,7 +122,7 @@ class TextMorph extends StringMorph
     super()
     ANimage = newCanvas()
     context = ANimage.getContext "2d"
-    context.font = @font()
+    context.font = @buildCanvasFontProperty()
     @breakTextIntoLines()
 
     shadowWidth = Math.abs @shadowOffset.x
@@ -142,7 +142,7 @@ class TextMorph extends StringMorph
 
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
       @backBufferValidityChecker.textAlign == @alignment and
       @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
       @backBufferValidityChecker.color == @color.toString() and
@@ -166,7 +166,7 @@ class TextMorph extends StringMorph
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
     @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @font()
+    @backBufferContext.font = @buildCanvasFontProperty()
     @backBufferContext.textAlign = "left"
     @backBufferContext.textBaseline = "bottom"
 
@@ -227,7 +227,7 @@ class TextMorph extends StringMorph
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
     @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()

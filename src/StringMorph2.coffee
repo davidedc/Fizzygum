@@ -153,7 +153,7 @@ class StringMorph2 extends Morph
       ans += letter
     ans
 
-  font: (overrideFontSize = @fittingFontSize) ->
+  buildCanvasFontProperty: (overrideFontSize = @fittingFontSize) ->
     # answer a font string, e.g. 'bold italic 12px sans-serif'
     font = ""
     font = font + "bold "  if @isBold
@@ -265,7 +265,7 @@ class StringMorph2 extends Morph
     if cacheHit?
       return cacheHit
     else
-      world.canvasContextForTextMeasurements.font = @font overrideFontSize
+      world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
       cacheEntry = Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
       world.cacheForTextMeasurements.set cacheKey, cacheEntry
     #if cacheHit?
@@ -320,7 +320,7 @@ class StringMorph2 extends Morph
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.isPassword == @isPassword and
       @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
-      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
       @backBufferValidityChecker.color == @color.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
       @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
@@ -358,7 +358,7 @@ class StringMorph2 extends Morph
     @backBufferContext = @backBuffer.getContext "2d"
 
     @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @font()
+    @backBufferContext.font = @buildCanvasFontProperty()
     @backBufferContext.textAlign = "left"
     @backBufferContext.textBaseline = "bottom"
 
@@ -411,7 +411,7 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.isPassword = @isPassword
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
-    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode @text
     @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown

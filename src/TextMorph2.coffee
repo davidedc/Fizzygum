@@ -314,7 +314,7 @@ class TextMorph2 extends StringMorph2
 
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
       @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
       @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
       @backBufferValidityChecker.color == @color.toString() and
@@ -337,7 +337,7 @@ class TextMorph2 extends StringMorph2
     @backBuffer.height = @height() * pixelRatio
 
     @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @font()
+    @backBufferContext.font = @buildCanvasFontProperty()
     @backBufferContext.textAlign = "left"
     @backBufferContext.textBaseline = "bottom"
 
@@ -400,7 +400,7 @@ class TextMorph2 extends StringMorph2
 
     @backBufferValidityChecker = new BackBufferValidityChecker()
     @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
     @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode @text

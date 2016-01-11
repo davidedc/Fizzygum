@@ -10,7 +10,7 @@ class BackBufferValidityChecker
   @augmentWith DeepCopierMixin
 
   extent: null
-  font: null
+  canvasFontProperty: null
   textAlign: null
   backgroundColor: null
   color: null

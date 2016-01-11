@@ -87,7 +87,7 @@ class StringMorph extends Morph
       ans += letter
     ans
 
-  font: ->
+  buildCanvasFontProperty: ->
     # answer a font string, e.g. 'bold italic 12px sans-serif'
     font = ""
     font = font + "bold "  if @isBold
@@ -97,7 +97,7 @@ class StringMorph extends Morph
 
   calculateExtentBasedOnText: (text = @text)->
     text = (if @isPassword then @password("*", text.length) else text)
-    world.canvasContextForTextMeasurements.font = @font()
+    world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty()
     return Math.ceil Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
 
   reLayout: ->
@@ -114,7 +114,7 @@ class StringMorph extends Morph
       if @backBufferValidityChecker.extent == @extent().toString() and
       @backBufferValidityChecker.isPassword == @isPassword and
       @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
-      @backBufferValidityChecker.font == @font() and
+      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
       @backBufferValidityChecker.textAlign == @alignment and
       @backBufferValidityChecker.color == @color.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
@@ -130,7 +130,7 @@ class StringMorph extends Morph
     @backBufferContext = @backBuffer.getContext "2d"
 
     @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @font()
+    @backBufferContext.font = @buildCanvasFontProperty()
     @backBufferContext.textAlign = "left"
     @backBufferContext.textBaseline = "bottom"
 
@@ -156,7 +156,7 @@ class StringMorph extends Morph
     @backBufferValidityChecker.extent = @extent().toString()
     @backBufferValidityChecker.isPassword = @isPassword
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
-    @backBufferValidityChecker.font = @font()
+    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
     @backBufferValidityChecker.textAlign = @alignment
     @backBufferValidityChecker.color = @color.toString()
     @backBufferValidityChecker.textHash = hashCode @text
