@@ -164,6 +164,27 @@ class WorldMorph extends FrameMorph
 
   underTheCarpetMorph: null
 
+  # Some operations are triggered by a callback
+  # actioned via a timeout
+  # e.g. see the cut and paste callbacks.
+  # In such cases, we count how many outstanding
+  # callbacks there are of this kind
+  # (by adding elements to this stack when the
+  # callback is scheduled, and popping them when
+  # the callback is executed), so that
+  # we can tell the automator player to PAUSE
+  # execution of actions until the scheduled
+  # callbacks are called. This is so turbo-mode macros
+  # can be still run at maximum speed.
+  # The alternative is to run at normal speed the
+  # macros containing such cases, which
+  # indeed would also take care of the problem
+  # (as the callbacks are likely satisfied at running
+  # time in the same span of time as when the macro
+  # was recorded), but the "slow-play"
+  # solution is more ad-hoc and is much much slower.
+  outstandingTimerTriggeredOperationsCounter: []
+
   isFloatDraggable: ->
     return false
 
@@ -993,7 +1014,14 @@ class WorldMorph extends FrameMorph
       if window.clipboardData
         event.returnValue = false
         setStatus = window.clipboardData.setData "Text", selectedText
-      window.setTimeout ( => @caret.deleteLeft()), 50, true
+
+      # see comment on outstandingTimerTriggeredOperationsCounter
+      # above where the property is declared and initialised.
+      @outstandingTimerTriggeredOperationsCounter.push true
+      window.setTimeout ( =>
+       @caret.deleteLeft()
+       @outstandingTimerTriggeredOperationsCounter.pop()
+      ), 50, true
 
     @systemTestsRecorderAndPlayer.addCutCommand selectedText
 
@@ -1032,7 +1060,14 @@ class WorldMorph extends FrameMorph
       # Needs a few msec to execute paste
       console.log "about to insert text: " + text
       @systemTestsRecorderAndPlayer.addPasteCommand text
-      window.setTimeout ( => (@caret.insert text)), 50, true
+
+      # see comment on outstandingTimerTriggeredOperationsCounter
+      # above where the property is declared and initialised.
+      @outstandingTimerTriggeredOperationsCounter.push true
+      window.setTimeout ( =>
+       @caret.insert text
+       @outstandingTimerTriggeredOperationsCounter.pop()
+      ), 50, true
 
 
   # note that we don't register the normal click,

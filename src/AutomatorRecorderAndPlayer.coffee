@@ -768,7 +768,11 @@ class AutomatorRecorderAndPlayer
    timeNow = (new Date()).getTime()
    timeUntilNextCommand = commandToBePlayed.millisecondsSincePreviousCommand or 0
    
-   if runCurrentCommandImmediately or (timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand)
+   if world.outstandingTimerTriggeredOperationsCounter.length == 0 and
+    (
+      runCurrentCommandImmediately or
+      (timeNow - @timeOfPreviouslyPlayedCommand >= timeUntilNextCommand)
+    )
 
      console.log ">>>>>> doing "  + commandToBePlayed.automatorCommandName
 
