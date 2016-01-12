@@ -163,12 +163,13 @@ class StringMorph2 extends Morph
   # does a binary search to see which font size
   # we need to apply to the text to fit to the
   # current extent.
-  # If this gets slow: all kinds of optimisation can be done.
-  # for example keeping an LRU cache inside fittingTestFunction
-  # keyed on the text and the size
+  # If this gets slow: some optimisations can be done,
+  # for example trying to make a couple of preliminary guesses
+  # assuming that the user is just resizing something slightly,
+  # which means that the font size is gonna change only slightly
+  # from the current one, so you can try to narrow the bracket
+  # a lot at the very start.
   searchLargestFittingFont: (fittingTestFunction, textToFit) ->
-
-
     if !@fittingSpecWhenBoundsTooLarge
       if fittingTestFunction textToFit, @originallySetFontSize
         return @originallySetFontSize
@@ -211,10 +212,10 @@ class StringMorph2 extends Morph
       return startingText + "…"
     return ""
 
-  searchLargestFittingText: (fittingTestFunction, textToFit) ->
-
-
-    start = 0    # minimum font size that we are gonna examine
+  # see comment above for "searchLargestFittingFont" for some
+  # ideas on how to optimise this further.
+  searchLongestFittingText: (fittingTestFunction, textToFit) ->
+    start = 0    # minimum string length that we are gonna examine
     stop  = @generateTextWithEllipsis(@text).length
     
     if fittingTestFunction(@text, @originallySetFontSize)
