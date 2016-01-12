@@ -71,18 +71,20 @@ class TextMorph2 extends StringMorph2
       return false
 
   getParagraphs: (text) ->
-    paragraphs = world.cacheForTextParagraphSplits.get hashCode text
+    cacheKey = hashCode text
+    paragraphs = world.cacheForTextParagraphSplits.get cacheKey
     if paragraphs? then return paragraphs
     paragraphs = text.split "\n"
-    world.cacheForTextParagraphSplits.set hashCode(text), paragraphs
+    world.cacheForTextParagraphSplits.set cacheKey, paragraphs
     paragraphs
 
   getWordsOfParapraph: (eachParagraph) ->
-    wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get hashCode eachParagraph
+    cacheKey = hashCode eachParagraph
+    wordsOfThisParagraph = world.cacheForParagraphsWordsSplits.get cacheKey
     if wordsOfThisParagraph? then return wordsOfThisParagraph
     wordsOfThisParagraph = eachParagraph.split " "
     wordsOfThisParagraph.push "\n"
-    world.cacheForParagraphsWordsSplits.set hashCode(eachParagraph), wordsOfThisParagraph
+    world.cacheForParagraphsWordsSplits.set cacheKey, wordsOfThisParagraph
     wordsOfThisParagraph
 
   replaceLastSpaceWithInvisibleCarriageReturn: (string) ->
@@ -90,7 +92,9 @@ class TextMorph2 extends StringMorph2
     string = string + '\u2063'
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
-    wrappingData = world.cacheForParagraphsWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode eachParagraph
+    wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
+
 
     if wrappingData? then return wrappingData
     wrappedLinesOfThisParagraph = []
@@ -191,7 +195,7 @@ class TextMorph2 extends StringMorph2
 
     # words of this paragraph have been scanned
     wrappingDataCacheEntry = [wrappedLinesOfThisParagraph,wrappedLineSlotsOfThisParagraph,maxWrappedLineWidthOfThisParagraph, slotsInParagraph]
-    world.cacheForParagraphsWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
+    world.cacheForParagraphsWrappingData.set cacheKey, wrappingDataCacheEntry
     wrappingData = wrappingDataCacheEntry
 
   # there are many factors beyond the font size that affect
@@ -200,7 +204,8 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs) ->
-    textWrappingData = world.cacheForTextWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + text
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode text
+    textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
     wrappedLineSlotsOfWholeText = [0]
@@ -276,7 +281,7 @@ class TextMorph2 extends StringMorph2
     # here all paragraphs have been visited
     #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
     textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
-    world.cacheForTextWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
+    world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
 
   # there are many factors beyond the font size that affect

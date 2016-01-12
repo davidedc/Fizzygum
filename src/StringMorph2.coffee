@@ -266,7 +266,7 @@ class StringMorph2 extends Morph
   # change when we do the binary search for trying to
   # see the largest fitting size.
   measureText: (overrideFontSize = @fittingFontSize, text) ->
-    cacheKey = hashCode overrideFontSize + "-" + text
+    cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + hashCode text
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit?
       return cacheHit
@@ -306,7 +306,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall
-        @textActuallyShown = @searchLargestFittingText @doesTextFitInExtent, @text
+        @textActuallyShown = @searchLongestFittingText @doesTextFitInExtent, @text
         return @originallySetFontSize
       else
         @textActuallyShown = @text
