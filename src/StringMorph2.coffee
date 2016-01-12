@@ -260,6 +260,11 @@ class StringMorph2 extends Morph
         #console.log "@textActuallyShown = @text 2"
 
 
+  # there are many factors beyond the font size that affect
+  # the measuring, such as font style, but we only pass
+  # the font size here because is the one we are going to
+  # change when we do the binary search for trying to
+  # see the largest fitting size.
   measureText: (overrideFontSize = @fittingFontSize, text) ->
     cacheKey = hashCode overrideFontSize + "-" + text
     cacheHit = world.cacheForTextMeasurements.get cacheKey
@@ -275,6 +280,11 @@ class StringMorph2 extends Morph
     return cacheEntry
 
   # notice the thick arrow here!
+  # there are many factors beyond the font size that affect
+  # the measuring, such as font style, but we only pass
+  # the font size here because is the one we are going to
+  # change when we do the binary search for trying to
+  # see the largest fitting size.
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 

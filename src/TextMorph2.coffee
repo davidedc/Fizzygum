@@ -56,6 +56,11 @@ class TextMorph2 extends StringMorph2
   
 
   # notice the thick arrow here!
+  # there are many factors beyond the font size that affect
+  # the measuring, such as font style, but we only pass
+  # the font size here because is the one we are going to
+  # change when we do the binary search for trying to
+  # see the largest fitting size.
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     textSize = @breakTextIntoLines text, overrideFontSize
     thisFitsInto = new Point textSize[2], textSize[1]
@@ -189,6 +194,11 @@ class TextMorph2 extends StringMorph2
     world.cacheForParagraphsWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), wrappingDataCacheEntry
     wrappingData = wrappingDataCacheEntry
 
+  # there are many factors beyond the font size that affect
+  # how the text wraps, such as font style, but we only pass
+  # the font size here because is the one we are going to
+  # change when we do the binary search for trying to
+  # see the largest fitting size.
   getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs) ->
     textWrappingData = world.cacheForTextWrappingData.get hashCode overrideFontSize + "-" + maxTextWidth + "-" + text
     if textWrappingData? then return textWrappingData
@@ -269,6 +279,11 @@ class TextMorph2 extends StringMorph2
     world.cacheForTextWrappingData.set hashCode(overrideFontSize + "-" + maxTextWidth + "-" + eachParagraph), textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
 
+  # there are many factors beyond the font size that affect
+  # how the text is broken, such as font style, but we only pass
+  # the font size here because is the one we are going to
+  # change when we do the binary search for trying to
+  # see the largest fitting size.
   breakTextIntoLines: (text = @text, overrideFontSize) ->
     ## remember to cache also here at the top level
     ## based on text, fontsize and width.
