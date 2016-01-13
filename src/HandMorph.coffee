@@ -632,7 +632,7 @@ class HandMorph extends Morph
     
     if files.length
       for file in files
-        if file.type.indexOf("svg") != -1 && !WorldMorph.preferencesAndSettings.rasterizeSVGs
+        if file.type.contains("svg") && !WorldMorph.preferencesAndSettings.rasterizeSVGs
           readSVG file
         else if file.type.indexOf("image") is 0
           readImage file

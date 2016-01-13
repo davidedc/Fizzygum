@@ -698,7 +698,7 @@ Mousetrap =
   stopCallback: (e, element) ->
     
     # if the element has the class "mousetrap" then no need to stop
-    return false  if (" " + element.className + " ").indexOf(" mousetrap ") > -1
+    return false  if (" " + element.className + " ").contains(" mousetrap ")
     
     # stop for input, select, and textarea
     element.tagName is "INPUT" or element.tagName is "SELECT" or element.tagName is "TEXTAREA" or (element.contentEditable and element.contentEditable is "true")

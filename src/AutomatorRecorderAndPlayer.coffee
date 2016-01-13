@@ -1090,7 +1090,7 @@ class AutomatorRecorderAndPlayer
       if eachCommand.screenShotImageName?
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in AutomatorRecorderAndPlayer.testsAssetsManifest
-          if eachAssetInManifest.indexOf(pureImageName) != -1
+          if eachAssetInManifest.contains pureImageName
             script = document.createElement('script')
             ###
             systemInfo = new SystemTestsSystemInfo()

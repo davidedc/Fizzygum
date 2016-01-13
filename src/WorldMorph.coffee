@@ -1435,7 +1435,7 @@ class WorldMorph extends FrameMorph
         menu.addItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if window.location.href.indexOf("worldWithSystemTestHarness") != -1
+    if window.location.href.contains "worldWithSystemTestHarness"
       menu.addItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
       menu.addItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"

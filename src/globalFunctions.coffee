@@ -98,9 +98,14 @@ Array::remove = (args...) ->
   output
 
 # from https://gist.github.com/vjt/827679
-String::camelize = ->
-  @replace /(?:^|[-])(\w)/g, (_, c) ->
-    if c then c.toUpperCase() else ''
+if typeof String::camelize == 'undefined'
+  String::camelize = ->
+    @replace /(?:^|[-])(\w)/g, (_, c) ->
+      if c then c.toUpperCase() else ''
+
+if typeof String::contains == 'undefined'
+  String::contains = (it) ->
+    @indexOf(it) != -1
 
 # used to clip any subsequent drawing on the context
 # to the dirty rectangle.
@@ -182,10 +187,10 @@ arrayShallowCopy = (anArray) ->
 arrayShallowCopyAndReverse = (anArray) ->
   anArray.concat().reverse()
 
-# This is used for testing purposes, we hash the
+# This is used a) for testing, we hash the
 # data URL of a canvas object so to get a fingerprint
 # of the image data, and compare it with "OK" pre-recorded
-# values.
+# values and b) to generate keys for some caches.
 # adapted from http://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
 
 hashCode = (stringToBeHashed) ->
@@ -484,7 +489,7 @@ continueBooting2 = ->
   # to fit the world in canvas as per dimensions
   # specified in the canvas element. Fill entire
   # page otherwise.
-  if window.location.href.indexOf('worldWithSystemTestHarness') > -1
+  if window.location.href.contains "worldWithSystemTestHarness"
     # the user is here to record a system test so
     # don't fill entire page cause there are some
     # controls on the right side of the canvas
@@ -506,13 +511,13 @@ continueBooting2 = ->
   )()
   # place the rAF *before* the render() to assure as close to 
   # 60fps with the setTimeout fallback.
-  if window.location.href.indexOf('runAllTests') > -1
+  if window.location.href.contains "runAllTests"
     world.runAllSystemTests()
   # in case we want to set up the page
   # for the System Tests, then add a panel
   # to the right where helper commands can be
   # clicked.
-  if window.location.href.indexOf('worldWithSystemTestHarness') > -1
+  if window.location.href.contains "worldWithSystemTestHarness"
     if SystemTestsControlPanelUpdater != null
       new SystemTestsControlPanelUpdater
   world.boot()

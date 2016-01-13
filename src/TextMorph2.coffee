@@ -125,7 +125,7 @@ class TextMorph2 extends StringMorph2
       # constrained horizontally but not vertically...
 
       ###
-      if word.substr(0, word.length-1).indexOf(" ") == -1
+      if !word.substr(0, word.length-1).contains(" ")
         console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
         console.log "> no space word: " + word
         checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
