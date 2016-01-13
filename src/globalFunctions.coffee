@@ -216,11 +216,6 @@ localize = (string) ->
 isNil = (thing) ->
   thing is `undefined` or thing is null
 
-contains = (list, element) ->
-  # answer true if element is a member of list
-  list.some (any) ->
-    any is element
-
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null

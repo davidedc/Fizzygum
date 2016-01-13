@@ -267,7 +267,7 @@ class CaretMorph extends BlinkerMorph
     
     # if the target "isNumeric", then only accept
     # numbers and "-" and "." as input
-    if not @target.isNumeric or not isNaN(parseFloat(symbol)) or contains(["-", "."], symbol)
+    if not @target.isNumeric or not isNaN(parseFloat(symbol)) or symbol in ["-", "."]
       if @target.selection() isnt ""
         @gotoSlot @target.selectionStartSlot()
         @target.deleteSelection()

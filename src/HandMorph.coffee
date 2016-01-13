@@ -643,7 +643,7 @@ class HandMorph extends Morph
         else
           readBinary file
     else if url
-      if contains(["gif", "png", "jpg", "jpeg", "bmp"], url.slice(url.lastIndexOf(".") + 1).toLowerCase())
+      if url.slice(url.lastIndexOf(".") + 1).toLowerCase() in ["gif", "png", "jpg", "jpeg", "bmp"]
         target = target.parent  until target.droppedImage
         img = new Image()
         img.onload = ->
@@ -798,12 +798,12 @@ class HandMorph extends Morph
   dispatchEventsFollowingMouseMove: (mouseOverNew) ->
 
     @mouseOverList.forEach (old) =>
-      unless contains(mouseOverNew, old)
+      unless old in mouseOverNew
         old.mouseLeave?()
         old.mouseLeavefloatDragging?()  if @mouseButton
 
     mouseOverNew.forEach (newMorph) =>
-      unless contains(@mouseOverList, newMorph)
+      unless newMorph in @mouseOverList
         newMorph.mouseEnter?()
         newMorph.mouseEnterfloatDragging?()  if @mouseButton
 
