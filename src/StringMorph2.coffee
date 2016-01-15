@@ -286,12 +286,9 @@ class StringMorph2 extends Morph
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     text = (if @isPassword then @password("*", text.length) else text)
 
-    thisFitsInto = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
+    extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
 
-    if thisFitsInto.le @extent()
-      return true
-    else
-      return false
+    return extentOccupiedByText.le @extent()
 
   fitToExtent: ->
     largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text

@@ -63,12 +63,9 @@ class TextMorph2 extends StringMorph2
   # see the largest fitting size.
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
     textSize = @breakTextIntoLines text, overrideFontSize
-    thisFitsInto = new Point textSize[2], textSize[1]
+    extentOccupiedByText = new Point textSize[2], textSize[1]
 
-    if thisFitsInto.le @extent()
-      return true
-    else
-      return false
+    return extentOccupiedByText.le @extent()
 
   getParagraphs: (text) ->
     cacheKey = hashCode text
