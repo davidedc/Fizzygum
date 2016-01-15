@@ -291,11 +291,17 @@ class StringMorph2 extends Morph
     return extentOccupiedByText.le @extent()
 
   fitToExtent: ->
-    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
-    if largestFittingFontSize > @originallySetFontSize
+    # this if is just to check if the text fits in the
+    # current extent. If it does, we either leave the size
+    # as is or we try to
+    # make the font size bigger if that's the policy.
+    # If it doesn't fit, then we either crop it or make the
+    # font smaller.
+    if @doesTextFitInExtent @text, @originallySetFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 3"
-      if @fittingSpecWhenBoundsTooLarge
+      if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
+        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
         return largestFittingFontSize
       else
         return @originallySetFontSize
