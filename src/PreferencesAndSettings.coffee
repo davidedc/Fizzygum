@@ -40,6 +40,14 @@ class PreferencesAndSettings
 
   printoutsReactiveValuesCode: true
 
+  # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
+  # in the font size. This is so the resizing of the
+  # text is less "jumpy".
+  # "1" seems to be perfect in terms of jumpiness,
+  # but obviously this routine gets quite a bit more
+  # expensive.
+  @decimalFloatFiguresOfFontSizeGranularity: 0
+
   constructor: ->
     @useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
     @setMouseInputMode()

@@ -173,28 +173,28 @@ class StringMorph2 extends Morph
     if !@fittingSpecWhenBoundsTooLarge
       if fittingTestFunction textToFit, @originallySetFontSize
         return @originallySetFontSize
-    # decimalFloatFigures allows you to go into sub-points
+    # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
     # in the font size. This is so the resizing of the
     # text is less "jumpy".
     # "1" seems to be perfect in terms of jumpiness,
     # but obviously this routine gets quite a bit more
     # expensive.
-    decimalFloatFigures = 0
+    PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity = 0
 
     start = 0    # minimum font size that we are gonna examine
-    stop  = Math.round 200 * Math.pow 10, decimalFloatFigures  # maximum font size that we are gonna examine
+    stop  = Math.round 200 * Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity  # maximum font size that we are gonna examine
     
     if !fittingTestFunction textToFit, start
        return -1
 
     if fittingTestFunction textToFit, stop
-       return stop / Math.pow 10, decimalFloatFigures
+       return stop / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      itFitsAtPivot = fittingTestFunction textToFit, pivot / Math.pow 10, decimalFloatFigures
+      itFitsAtPivot = fittingTestFunction textToFit, pivot / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
       if itFitsAtPivot
         # bring forward the start since there are still
@@ -205,7 +205,7 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    start / Math.pow 10, decimalFloatFigures
+    start / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
   generateTextWithEllipsis: (startingText) ->
     if startingText != ""
