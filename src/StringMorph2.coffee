@@ -170,9 +170,6 @@ class StringMorph2 extends Morph
   # from the current one, so you can try to narrow the bracket
   # a lot at the very start.
   searchLargestFittingFont: (fittingTestFunction, textToFit) ->
-    if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
-      if fittingTestFunction textToFit, @originallySetFontSize
-        return @originallySetFontSize
     # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
     # in the font size. This is so the resizing of the
     # text is less "jumpy".
