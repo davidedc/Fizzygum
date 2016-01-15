@@ -250,8 +250,7 @@ class StringMorph2 extends Morph
 
   synchroniseTextAndActualText: ->
 
-    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
-    if largestFittingFontSize > @originallySetFontSize
+    if @doesTextFitInExtent @text, @originallySetFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 1"
     else
@@ -709,9 +708,8 @@ class StringMorph2 extends Morph
 
 
     @text = theTextContent
-    largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
-    largestFittingFontSize >= @originallySetFontSize
+    @doesTextFitInExtent @text, @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 5"
