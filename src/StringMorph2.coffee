@@ -170,7 +170,7 @@ class StringMorph2 extends Morph
   # from the current one, so you can try to narrow the bracket
   # a lot at the very start.
   searchLargestFittingFont: (fittingTestFunction, textToFit) ->
-    if !@fittingSpecWhenBoundsTooLarge
+    if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
       if fittingTestFunction textToFit, @originallySetFontSize
         return @originallySetFontSize
     # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
@@ -255,7 +255,7 @@ class StringMorph2 extends Morph
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 1"
     else
-      if !@fittingSpecWhenBoundsTooSmall
+      if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
         @textActuallyShown = @text
         #console.log "@textActuallyShown = @text 2"
 
@@ -306,12 +306,13 @@ class StringMorph2 extends Morph
       else
         return @originallySetFontSize
     else
-      if @fittingSpecWhenBoundsTooSmall
+      if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
         @textActuallyShown = @searchLongestFittingText @doesTextFitInExtent, @text
         return @originallySetFontSize
       else
         @textActuallyShown = @text
         #console.log "@textActuallyShown = @text 4"
+        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
         return largestFittingFontSize
 
   calculateExtentBasedOnText: (text = @textActuallyShown, overrideFontSize) ->
@@ -359,7 +360,10 @@ class StringMorph2 extends Morph
     # the morph could be "wasted" in memory.
     # This could be optimised but it's unclear if it's worth it.
     widthOfText = @calculateExtentBasedOnText()
-    if @backgroundColor? or @verticalAlignment != AlignmentSpec.TOP or @horizontalAlignment != AlignmentSpec.LEFT or !@fittingSpecWhenBoundsTooLarge
+    if @backgroundColor? or
+    @verticalAlignment != AlignmentSpec.TOP or
+    @horizontalAlignment != AlignmentSpec.LEFT or
+    @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
       width = @width()
       height = @height()
     else
@@ -444,7 +448,7 @@ class StringMorph2 extends Morph
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall
+    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null
@@ -625,12 +629,12 @@ class StringMorph2 extends Morph
 
     menu.addLine()
 
-    if @fittingSpecWhenBoundsTooLarge
+    if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
       menu.addItem "←☓→ don't expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
     else
       menu.addItem "←→ expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
 
-    if @fittingSpecWhenBoundsTooSmall
+    if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       menu.addItem "→← shrink to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
     else
       menu.addItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
@@ -706,7 +710,8 @@ class StringMorph2 extends Morph
 
     @text = theTextContent
     largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
-    if !@fittingSpecWhenBoundsTooSmall or largestFittingFontSize >= @originallySetFontSize
+    if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
+    largestFittingFontSize >= @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
       @textActuallyShown = @text
       #console.log "@textActuallyShown = @text 5"

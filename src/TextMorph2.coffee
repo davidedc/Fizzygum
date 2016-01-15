@@ -460,7 +460,7 @@ class TextMorph2 extends StringMorph2
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall
+    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null
