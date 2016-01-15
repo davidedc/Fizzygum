@@ -268,12 +268,10 @@ class StringMorph2 extends Morph
   measureText: (overrideFontSize = @fittingFontSize, text) ->
     cacheKey =  @buildCanvasFontProperty(overrideFontSize) + "-" + hashCode text
     cacheHit = world.cacheForTextMeasurements.get cacheKey
-    if cacheHit?
-      return cacheHit
-    else
-      world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
-      cacheEntry = Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
-      world.cacheForTextMeasurements.set cacheKey, cacheEntry
+    if cacheHit? then return cacheHit
+    world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
+    cacheEntry = world.canvasContextForTextMeasurements.measureText(text).width
+    world.cacheForTextMeasurements.set cacheKey, cacheEntry
     #if cacheHit?
     #  if cacheHit != cacheEntry
     #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
