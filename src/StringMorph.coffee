@@ -95,14 +95,14 @@ class StringMorph extends Morph
     font + @fontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
 
 
-  calculateExtentBasedOnText: (text = @text)->
+  widthOfText: (text = @text)->
     text = (if @isPassword then @password("*", text.length) else text)
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty()
     return Math.ceil Math.max world.canvasContextForTextMeasurements.measureText(text).width, 1
 
   reLayout: ->
     super()
-    width = @calculateExtentBasedOnText()
+    width = @widthOfText @text
     @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
   
@@ -125,7 +125,7 @@ class StringMorph extends Morph
 
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
-    width = @calculateExtentBasedOnText()
+    width = @widthOfText @text
     @backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
@@ -196,7 +196,7 @@ class StringMorph extends Morph
     text = (if @isPassword then @password("*", @text.length) else @text)
     dest = Math.min Math.max(slot, 0), text.length
 
-    xOffset = Math.ceil @calculateExtentBasedOnText text.substring 0, dest
+    xOffset = Math.ceil @widthOfText text.substring 0, dest
     @pos = dest
     x = @left() + xOffset
     y = @top()
@@ -210,10 +210,10 @@ class StringMorph extends Morph
     charX = 0
 
     while aPoint.x - @left() > charX
-      charX += Math.ceil @calculateExtentBasedOnText text[idx]
+      charX += Math.ceil @widthOfText text[idx]
       idx += 1
       if idx is text.length
-        if (Math.ceil(@calculateExtentBasedOnText(text)) - (Math.ceil(@calculateExtentBasedOnText(text[idx-1])) / 2)) < (aPoint.x - @left())  
+        if (Math.ceil(@widthOfText(text)) - (Math.ceil(@widthOfText(text[idx-1])) / 2)) < (aPoint.x - @left())  
           return idx
     idx - 1
   

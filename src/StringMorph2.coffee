@@ -311,7 +311,7 @@ class StringMorph2 extends Morph
         largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
         return largestFittingFontSize
 
-  calculateExtentBasedOnText: (text = @textActuallyShown, overrideFontSize) ->
+  widthOfText: (text, overrideFontSize) ->
     text = (if @isPassword then @password("*", text.length) else text)
     return @measureText overrideFontSize, text
 
@@ -355,7 +355,7 @@ class StringMorph2 extends Morph
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
     # This could be optimised but it's unclear if it's worth it.
-    widthOfText = @calculateExtentBasedOnText()
+    widthOfText = @widthOfText @textActuallyShown
     if @backgroundColor? or
     @verticalAlignment != AlignmentSpec.TOP or
     @horizontalAlignment != AlignmentSpec.LEFT or
@@ -454,12 +454,12 @@ class StringMorph2 extends Morph
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
     dest = Math.min Math.max(slot, 0), text.length
 
-    xOffset = Math.ceil @calculateExtentBasedOnText text.substring 0, dest
+    xOffset = Math.ceil @widthOfText text.substring 0, dest
     @pos = dest
     x = @left() + xOffset
     y = @top()
 
-    widthOfText = @calculateExtentBasedOnText()
+    widthOfText = @widthOfText @textActuallyShown
     if @verticalAlignment == AlignmentSpec.TOP
       textVerticalPosition = fontHeight @fittingFontSize
     else if @verticalAlignment == AlignmentSpec.MIDDLE
@@ -481,7 +481,7 @@ class StringMorph2 extends Morph
 
   slotAtReduced: (xPosition, text) ->
 
-    widthOfText = @calculateExtentBasedOnText text
+    widthOfText = @widthOfText text
 
     if @horizontalAlignment == AlignmentSpec.LEFT
       textHorizontalPosition = 0
@@ -520,11 +520,11 @@ class StringMorph2 extends Morph
       else
         charXMinusOne = 0
 
-      charX += @calculateExtentBasedOnText text[idx]
+      charX += @widthOfText text[idx]
 
       idx += 1
       if idx is text.length
-        if ((@calculateExtentBasedOnText(text)) - ((@calculateExtentBasedOnText(text[idx-1])) / 2)) < (xPosition - @left())  
+        if ((@widthOfText(text)) - ((@widthOfText(text[idx-1])) / 2)) < (xPosition - @left())  
           return idx
     idx
   
