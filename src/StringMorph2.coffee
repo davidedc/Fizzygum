@@ -331,6 +331,8 @@ class StringMorph2 extends Morph
       @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
       @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
       @backBufferValidityChecker.color == @color.toString() and
+      @backBufferValidityChecker.backgroundColor == @backgroundColor.toString() and
+      @backBufferValidityChecker.backgroundTransparency == @backgroundTransparency.toString() and
       @backBufferValidityChecker.textHash == hashCode(@text) and
       @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
       @backBufferValidityChecker.startMark == @startMark and
@@ -425,6 +427,8 @@ class StringMorph2 extends Morph
     @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
     @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
     @backBufferValidityChecker.color = @color.toString()
+    @backBufferValidityChecker.backgroundColor = @backgroundColor.toString() and
+    @backBufferValidityChecker.backgroundTransparency = @backgroundTransparency.toString() and
     @backBufferValidityChecker.textHash = hashCode @text
     @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
     @backBufferValidityChecker.startMark = @startMark
