@@ -4,9 +4,9 @@ set pageRoot to "file:///Users/daviddellacasa/Zombie-Kernel/"
 
 set windows_number to 0
 
--- repeat -- repeat forever
+repeat -- repeat forever
 	set dialogResult to display dialog Â
-		"Pick a mode" buttons {"9 squashed", "9 tiled"} Â
+		"Pick a mode" buttons {"9 squashed", "9 tiled", "close"} Â
 		
 	if button returned of dialogResult is "9 squashed" then
 		set numberOfTilesX to 3
@@ -20,6 +20,8 @@ set windows_number to 0
 		set absoluteDisplacementX to 0
 		set windowSizeDivider to 1
 		set displacementDueToWindowWidthX to 1
+	else if button returned of dialogResult is "close" then
+		return
 	end if
 	
 	set eachWindow_width to screenWidth / numberOfTilesX / windowSizeDivider
@@ -51,6 +53,6 @@ set windows_number to 0
 			
 		end repeat
 	end repeat
--- end repeat -- repeat forever
+end repeat -- repeat forever
 
 
