@@ -8,7 +8,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point 80, 10
   
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString()

@@ -76,7 +76,7 @@ BackBufferMixin =
 
       # Morph pixel access:
       getPixelColor: (aPoint) ->
-        [@backBuffer, @backBufferContext] = @createRefreshOrGetImmutableBackBuffer()
+        [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
         data = @backBufferContext.getImageData point.x * pixelRatio, point.y * pixelRatio, 1, 1
         new Color data.data[0], data.data[1], data.data[2], data.data[3]
@@ -93,7 +93,7 @@ BackBufferMixin =
         if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
           return null
 
-        [@backBuffer, @backBufferContext] = @createRefreshOrGetImmutableBackBuffer()
+        [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
 
         if !@backBuffer?
           return null

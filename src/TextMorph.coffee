@@ -135,7 +135,7 @@ class TextMorph extends StringMorph
     @notifyChildrenThatParentHasReLayouted()
 
   # no changes of position or extent
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString()  + "-" +

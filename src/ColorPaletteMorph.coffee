@@ -18,7 +18,7 @@ class ColorPaletteMorph extends Morph
     super()
     @silentRawSetExtent sizePoint or new Point 80, 50
   
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
     cacheKey =
       @extent().toString()
 

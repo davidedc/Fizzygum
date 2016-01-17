@@ -321,7 +321,7 @@ class StringMorph2 extends Morph
     @fittingFontSize = @fitToExtent()
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString() + "-" +

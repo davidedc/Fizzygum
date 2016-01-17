@@ -106,7 +106,7 @@ class StringMorph extends Morph
     @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
   
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString()  + "-" +

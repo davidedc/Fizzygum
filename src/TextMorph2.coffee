@@ -317,7 +317,7 @@ class TextMorph2 extends StringMorph2
     return tmp[1]
 
   # no changes of position or extent
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment

@@ -32,7 +32,7 @@ class CanvasMorph extends FrameMorph
   
   imBeingAddedTo: (newParentMorph) ->
 
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString() + "-" +

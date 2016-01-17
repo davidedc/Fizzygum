@@ -33,7 +33,7 @@ class ShadowMorph extends Morph
     @offset.debugIfFloats()
     @notifyChildrenThatParentHasReLayouted()
 
-  createRefreshOrGetImmutableBackBuffer: ->
+  createRefreshOrGetBackBuffer: ->
 
     cacheKey =
       @extent().toString() + "-" +
