@@ -127,21 +127,10 @@ class PenMorph extends Morph
   # PenMorph drawing:
   drawLine: (start, dest) ->
 
-    if !@parent.penTrails?
+    if !@parent.backBuffer?
       return
 
-    context = @parent.penTrails().getContext "2d"
-    # by default penTrails() is to answer the normal
-    # morph image.
-    # The implication is that by default every Morph in the system
-    # (including the World) is able to act as turtle canvas and can
-    # display pen trails.
-    # BUT also this means that pen trails will be lost whenever
-    # the trail's morph (the pen's parent) performs a "drawNew()"
-    # operation. If you want to create your own pen trails canvas,
-    # you may wish to modify its **penTrails()** property, so that
-    # it keeps a separate offscreen canvas for pen trails
-    # (and doesn't lose these on redraw).
+    context = @parent.backBuffer.getContext "2d"
 
     from = start.subtract @parent.position()
     to = dest.subtract @parent.position()
