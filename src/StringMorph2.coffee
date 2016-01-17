@@ -14,7 +14,8 @@
 
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
-# REQUIRES AlignmentSpec
+# REQUIRES AlignmentSpecHorizontal
+# REQUIRES AlignmentSpecVertical
 # REQUIRES LRUCache
 # REQUIRES FittingSpecTextInSmallerBounds
 # REQUIRES FittingSpecTextInLargerBounds
@@ -60,8 +61,8 @@ class StringMorph2 extends Morph
   # see note above about Colors and shared objects
   markedBackgoundColor: new Color 60, 60, 120
 
-  horizontalAlignment: AlignmentSpec.LEFT
-  verticalAlignment: AlignmentSpec.TOP
+  horizontalAlignment: AlignmentSpecHorizontal.LEFT
+  verticalAlignment: AlignmentSpecVertical.TOP
 
   fittingSpecWhenBoundsTooLarge: FittingSpecTextInLargerBounds.FLOAT
   fittingSpecWhenBoundsTooSmall: FittingSpecTextInSmallerBounds.CROP
@@ -112,17 +113,17 @@ class StringMorph2 extends Morph
       @changed()
 
   alignLeft: ->
-    @setHorizontalAlignment AlignmentSpec.LEFT
+    @setHorizontalAlignment AlignmentSpecHorizontal.LEFT
   alignCenter: ->
-    @setHorizontalAlignment AlignmentSpec.CENTER
+    @setHorizontalAlignment AlignmentSpecHorizontal.CENTER
   alignRight: ->
-    @setHorizontalAlignment AlignmentSpec.RIGHT
+    @setHorizontalAlignment AlignmentSpecHorizontal.RIGHT
   alignTop: ->
-    @setVerticalAlignment AlignmentSpec.TOP
+    @setVerticalAlignment AlignmentSpecVertical.TOP
   alignMiddle: ->
-    @setVerticalAlignment AlignmentSpec.MIDDLE
+    @setVerticalAlignment AlignmentSpecVertical.MIDDLE
   alignBottom: ->
-    @setVerticalAlignment AlignmentSpec.BOTTOM
+    @setVerticalAlignment AlignmentSpecVertical.BOTTOM
   
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
@@ -359,8 +360,8 @@ class StringMorph2 extends Morph
     # This could be optimised but it's unclear if it's worth it.
     widthOfText = @widthOfText @textActuallyShown
     if @backgroundColor? or
-    @verticalAlignment != AlignmentSpec.TOP or
-    @horizontalAlignment != AlignmentSpec.LEFT or
+    @verticalAlignment != AlignmentSpecVertical.TOP or
+    @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
     @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
       width = @width()
       height = @height()
@@ -386,18 +387,18 @@ class StringMorph2 extends Morph
       @backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
       @backBufferContext.restore()
 
-    if @verticalAlignment == AlignmentSpec.TOP
+    if @verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpec.MIDDLE
+    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpec.BOTTOM
+    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
       textVerticalPosition = @height()
 
-    if @horizontalAlignment == AlignmentSpec.LEFT
+    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
       textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpec.CENTER
+    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
       textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpec.RIGHT
+    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
       textHorizontalPosition = @width() - widthOfText
 
 
@@ -464,18 +465,18 @@ class StringMorph2 extends Morph
     y = @top()
 
     widthOfText = @widthOfText @textActuallyShown
-    if @verticalAlignment == AlignmentSpec.TOP
+    if @verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpec.MIDDLE
+    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpec.BOTTOM
+    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
       textVerticalPosition = @height()
 
-    if @horizontalAlignment == AlignmentSpec.LEFT
+    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
       textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpec.CENTER
+    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
       textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpec.RIGHT
+    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
       textHorizontalPosition = @width() - widthOfText
 
     x += textHorizontalPosition
@@ -487,11 +488,11 @@ class StringMorph2 extends Morph
 
     widthOfText = @widthOfText text
 
-    if @horizontalAlignment == AlignmentSpec.LEFT
+    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
       textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpec.CENTER
+    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
       textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpec.RIGHT
+    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
       textHorizontalPosition = @width() - widthOfText
 
     xPosition = xPosition - textHorizontalPosition
@@ -534,11 +535,11 @@ class StringMorph2 extends Morph
   
   slotAt: (aPoint) ->
 
-    if @verticalAlignment == AlignmentSpec.TOP
+    if @verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpec.MIDDLE
+    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
       textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpec.BOTTOM
+    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
       textVerticalPosition = @height()
 
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
@@ -612,19 +613,19 @@ class StringMorph2 extends Morph
       menu.addItem "hide characters", true, @, "toggleIsPassword"
 
     menu.addLine()
-    if @horizontalAlignment != AlignmentSpec.LEFT
+    if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
       menu.addItem "← align left", true, @, "alignLeft"
-    if @horizontalAlignment != AlignmentSpec.CENTER
+    if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
       menu.addItem "∸ align center", true, @, "alignCenter"
-    if @horizontalAlignment != AlignmentSpec.RIGHT
+    if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
       menu.addItem "→ align right", true, @, "alignRight"
 
     menu.addLine()
-    if @verticalAlignment != AlignmentSpec.TOP
+    if @verticalAlignment != AlignmentSpecVertical.TOP
       menu.addItem "↑ align top", true, @, "alignTop"
-    if @verticalAlignment != AlignmentSpec.MIDDLE
+    if @verticalAlignment != AlignmentSpecVertical.MIDDLE
       menu.addItem "⍿ align middle", true, @, "alignMiddle"
-    if @verticalAlignment != AlignmentSpec.BOTTOM
+    if @verticalAlignment != AlignmentSpecVertical.BOTTOM
       menu.addItem "↓ align bottom", true, @, "alignBottom"
 
     menu.addLine()

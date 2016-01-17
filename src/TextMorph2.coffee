@@ -326,8 +326,8 @@ class TextMorph2 extends StringMorph2
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment
     if world.caret?.target ?= @
-      verticalAlignment = AlignmentSpec.TOP
-      horizontalAlignment = AlignmentSpec.LEFT
+      verticalAlignment = AlignmentSpecVertical.TOP
+      horizontalAlignment = AlignmentSpecHorizontal.LEFT
 
     if @backBufferValidityChecker?
       if @backBufferValidityChecker.extent == @extent().toString() and
@@ -370,19 +370,19 @@ class TextMorph2 extends StringMorph2
       @backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
       @backBufferContext.restore()
 
-    if verticalAlignment == AlignmentSpec.TOP
+    if verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = 0
-    else if verticalAlignment == AlignmentSpec.MIDDLE
+    else if verticalAlignment == AlignmentSpecVertical.MIDDLE
       textVerticalPosition = @height()/2 - contentHeight/2
-    else if verticalAlignment == AlignmentSpec.BOTTOM
+    else if verticalAlignment == AlignmentSpecVertical.BOTTOM
       textVerticalPosition = @height() - contentHeight
 
     ###
-    if horizontalAlignment == AlignmentSpec.LEFT
+    if horizontalAlignment == AlignmentSpecHorizontal.LEFT
       textHorizontalPosition = 0
-    else if horizontalAlignment == AlignmentSpec.CENTER
+    else if horizontalAlignment == AlignmentSpecHorizontal.CENTER
       textHorizontalPosition = @width()/2 - widthOfText/2
-    else if horizontalAlignment == AlignmentSpec.RIGHT
+    else if horizontalAlignment == AlignmentSpecHorizontal.RIGHT
       textHorizontalPosition = @width() - widthOfText
     ###
 
@@ -391,9 +391,9 @@ class TextMorph2 extends StringMorph2
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
-      if horizontalAlignment == AlignmentSpec.RIGHT
+      if horizontalAlignment == AlignmentSpecHorizontal.RIGHT
         x = @width() - width
-      else if horizontalAlignment == AlignmentSpec.CENTER
+      else if horizontalAlignment == AlignmentSpecHorizontal.CENTER
         x = (@width() - width) / 2
       else # 'left'
         x = 0
