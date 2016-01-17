@@ -18,18 +18,17 @@ class ColorPaletteMorph extends Morph
     super()
     @silentRawSetExtent sizePoint or new Point 80, 50
   
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
+    cacheKey =
+      @extent().toString()
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString()
-        return
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     extent = @extent()
-    @backBuffer = newCanvas extent.scaleBy pixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.scale pixelRatio, pixelRatio
+    backBuffer = newCanvas extent.scaleBy pixelRatio
+    backBufferContext = backBuffer.getContext "2d"
+    backBufferContext.scale pixelRatio, pixelRatio
     @choice = new Color()
     for x in [0..extent.x]
       h = 360 * x / extent.x
@@ -41,11 +40,12 @@ class ColorPaletteMorph extends Morph
         # You should really be using putImageData of the whole buffer
         # here anyways. But this is clearer.
         # http://stackoverflow.com/questions/4899799/whats-the-best-way-to-set-a-single-pixel-in-an-html5-canvas
-        @backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
-        @backBufferContext.fillRect x, y, 1, 1
+        backBufferContext.fillStyle = "hsl(" + h + ",100%," + l + "%)"
+        backBufferContext.fillRect x, y, 1, 1
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
 
   # you can't grab the colorPaletteMorph because
   # the drag operation currently picks a color.

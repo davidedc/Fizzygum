@@ -248,6 +248,7 @@ class WorldMorph extends FrameMorph
     @cacheForParagraphsWordsSplits = new LRUCache 300, 1000*60*60*24
     @cacheForParagraphsWrappingData = new LRUCache 300, 1000*60*60*24
     @cacheForTextWrappingData = new LRUCache 300, 1000*60*60*24
+    @cacheForImmutableBackBuffers = new LRUCache 10, 1000*60*60*24
 
     @changed()
 

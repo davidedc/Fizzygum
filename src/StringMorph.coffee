@@ -106,39 +106,39 @@ class StringMorph extends Morph
     @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
   
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.isPassword == @isPassword and
-      @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
-      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
-      @backBufferValidityChecker.textAlign == @alignment and
-      @backBufferValidityChecker.color == @color.toString() and
-      @backBufferValidityChecker.textHash == hashCode(@text) and
-      @backBufferValidityChecker.startMark == @startMark and
-      @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
-        return
+    cacheKey =
+      @extent().toString()  + "-" +
+      @isPassword  + "-" +
+      @isShowingBlanks  + "-" +
+      @buildCanvasFontProperty()  + "-" +
+      @alignment  + "-" +
+      @color.toString()  + "-" +
+      hashCode(@text)  + "-" +
+      @startMark  + "-" +
+      @endMark  + "-" +
+      @markedBackgoundColor.toString()
+
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     text = (if @isPassword then @password("*", @text.length) else @text)
     # initialize my surface property
     width = @widthOfText @text
-    @backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
+    backBuffer = newCanvas (new Point width, @height()).scaleBy pixelRatio
+    backBufferContext = backBuffer.getContext "2d"
 
-    @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @buildCanvasFontProperty()
-    @backBufferContext.textAlign = "left"
-    @backBufferContext.textBaseline = "bottom"
+    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.font = @buildCanvasFontProperty()
+    backBufferContext.textAlign = "left"
+    backBufferContext.textBaseline = "bottom"
 
-    @backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillStyle = @color.toString()
     if @isShowingBlanks
-      @renderWithBlanks @backBufferContext, 0, fontHeight @fontSize
+      @renderWithBlanks backBufferContext, 0, fontHeight @fontSize
     else
-      @backBufferContext.fillText text, 0, fontHeight @fontSize
+      backBufferContext.fillText text, 0, fontHeight @fontSize
 
     # draw the selection
     start = Math.min @startMark, @endMark
@@ -146,25 +146,15 @@ class StringMorph extends Morph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract @position()
       c = text.charAt(i)
-      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1,
+      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1,
         fontHeight @fontSize
-      @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, fontHeight @fontSize
+      backBufferContext.fillStyle = @markedTextColor.toString()
+      backBufferContext.fillText c, p.x, fontHeight @fontSize
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.isPassword = @isPassword
-    @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
-    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
-    @backBufferValidityChecker.textAlign = @alignment
-    @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode @text
-    @backBufferValidityChecker.startMark = @startMark
-    @backBufferValidityChecker.endMark = @endMark
-    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-    # notify my parent of layout change
-    # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
   
   renderWithBlanks: (context, x = 0, y) ->
     # create the blank form

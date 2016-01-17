@@ -1,6 +1,5 @@
 # TextMorph ///////////////////////////////////////////////////////////
 # these comments below needed to figure out dependencies between classes
-# REQUIRES BackBufferValidityChecker
 
 # I am a multi-line, word-wrapping String
 
@@ -136,54 +135,55 @@ class TextMorph extends StringMorph
     @notifyChildrenThatParentHasReLayouted()
 
   # no changes of position or extent
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
-      @backBufferValidityChecker.textAlign == @alignment and
-      @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
-      @backBufferValidityChecker.color == @color.toString() and
-      @backBufferValidityChecker.textHash == hashCode(@text) and
-      @backBufferValidityChecker.startMark == @startMark and
-      @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString()
-        return
+    cacheKey =
+      @extent().toString()  + "-" +
+      @buildCanvasFontProperty()  + "-" +
+      @alignment  + "-" +
+      @backgroundColor?.toString()  + "-" +
+      @color.toString()  + "-" +
+      hashCode(@text)  + "-" +
+      @startMark  + "-" +
+      @endMark  + "-" +
+      @markedBackgoundColor.toString()
 
-    @backBuffer = newCanvas()
-    @backBufferContext = @backBuffer.getContext "2d"
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
+
+
+    backBuffer = newCanvas()
+    backBufferContext = backBuffer.getContext "2d"
 
     shadowWidth = Math.abs @shadowOffset.x
     shadowHeight = Math.abs @shadowOffset.y
 
 
-    @backBuffer.width = @width() * pixelRatio
-    @backBuffer.height = @height() * pixelRatio
+    backBuffer.width = @width() * pixelRatio
+    backBuffer.height = @height() * pixelRatio
 
     # changing the canvas size resets many of
     # the properties of the canvas, so we need to
     # re-initialise the font and alignments here
-    @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @buildCanvasFontProperty()
-    @backBufferContext.textAlign = "left"
-    @backBufferContext.textBaseline = "bottom"
+    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.font = @buildCanvasFontProperty()
+    backBufferContext.textAlign = "left"
+    backBufferContext.textBaseline = "bottom"
 
     # fill the background, if desired
     if @backgroundColor
-      @backBufferContext.fillStyle = @backgroundColor.toString()
-      @backBufferContext.fillRect 0, 0, @width(), @height()
+      backBufferContext.fillStyle = @backgroundColor.toString()
+      backBufferContext.fillRect 0, 0, @width(), @height()
 
     # draw the shadow, if any
     if @shadowColor
       offx = Math.max @shadowOffset.x, 0
       offy = Math.max @shadowOffset.y, 0
       #console.log 'shadow x: ' + offx + " y: " + offy
-      @backBufferContext.fillStyle = @shadowColor.toString()
+      backBufferContext.fillStyle = @shadowColor.toString()
       i = 0
       for line in @lines
-        width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
+        width = Math.ceil(backBufferContext.measureText(line).width) + shadowWidth
         if @alignment is "right"
           x = @width() - width
         else if @alignment is "center"
@@ -192,16 +192,16 @@ class TextMorph extends StringMorph
           x = 0
         y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
         i++
-        @backBufferContext.fillText line, x + offx, y + offy
+        backBufferContext.fillText line, x + offx, y + offy
 
     # now draw the actual text
     offx = Math.abs Math.min @shadowOffset.x, 0
     offy = Math.abs Math.min @shadowOffset.y, 0
     #console.log 'maintext x: ' + offx + " y: " + offy
-    @backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @lines
-      width = Math.ceil(@backBufferContext.measureText(line).width) + shadowWidth
+      width = Math.ceil(backBufferContext.measureText(line).width) + shadowWidth
       if @alignment is "right"
         x = @width() - width
       else if @alignment is "center"
@@ -210,7 +210,7 @@ class TextMorph extends StringMorph
         x = 0
       y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
       i++
-      @backBufferContext.fillText line, x + offx, y + offy
+      backBufferContext.fillText line, x + offx, y + offy
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
@@ -220,23 +220,14 @@ class TextMorph extends StringMorph
     for i in [start...stop]
       p = @slotCoordinates(i).subtract @position()
       c = @text.charAt i
-      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight @fontSize)
-      @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fontSize
+      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillRect p.x, p.y, Math.ceil(backBufferContext.measureText(c).width) + 1, Math.ceil(fontHeight @fontSize)
+      backBufferContext.fillStyle = @markedTextColor.toString()
+      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fontSize
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
-    @backBufferValidityChecker.textAlign = @alignment
-    @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
-    @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.textHash = hashCode @text
-    @backBufferValidityChecker.startMark = @startMark
-    @backBufferValidityChecker.endMark = @endMark
-    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-
-
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
   
   rawSetExtent: (aPoint) ->
     #console.log "move 18"

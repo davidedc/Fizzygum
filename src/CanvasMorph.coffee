@@ -32,23 +32,23 @@ class CanvasMorph extends FrameMorph
   
   imBeingAddedTo: (newParentMorph) ->
 
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.color == @color.toString()
-        return
+    cacheKey =
+      @extent().toString() + "-" +
+      @toStringWithoutGeometry()
+
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     extent = @extent()
-    @backBuffer = newCanvas extent.scaleBy pixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.scale pixelRatio, pixelRatio
+    backBuffer = newCanvas extent.scaleBy pixelRatio
+    backBufferContext = backBuffer.getContext "2d"
+    backBufferContext.scale pixelRatio, pixelRatio
 
-    @backBufferContext.fillStyle = @color.toString()
-    @backBufferContext.fillRect 0, 0, extent.x, extent.y
+    backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillRect 0, 0, extent.x, extent.y
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.color = @color.toString()
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry

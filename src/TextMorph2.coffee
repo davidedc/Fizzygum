@@ -1,7 +1,6 @@
 # TextMorph2 ///////////////////////////////////////////////////////////
 
 # these comments below needed to figure out dependencies between classes
-# REQUIRES BackBufferValidityChecker
 # REQUIRES LRUCache
 
 # A multi-line, word-wrapping String
@@ -318,10 +317,7 @@ class TextMorph2 extends StringMorph2
     return tmp[1]
 
   # no changes of position or extent
-  repaintBackBufferIfNeeded: ->
-    console.log "repaintBackBufferIfNeeded // fontSize: " + @originallySetFontSize + " fittingFontSize: " + @fittingFontSize
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment
@@ -329,46 +325,48 @@ class TextMorph2 extends StringMorph2
       verticalAlignment = AlignmentSpecVertical.TOP
       horizontalAlignment = AlignmentSpecHorizontal.LEFT
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
-      @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
-      @backBufferValidityChecker.backgroundColor == @backgroundColor?.toString() and
-      @backBufferValidityChecker.color == @color.toString() and
-      @backBufferValidityChecker.backgroundColor == @backgroundColor.toString() and
-      @backBufferValidityChecker.backgroundTransparency == @backgroundTransparency.toString() and
-      @backBufferValidityChecker.textHash == hashCode(@text) and
-      @backBufferValidityChecker.startMark == @startMark and
-      @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
-      @backBufferValidityChecker.horizontalAlignment == horizontalAlignment and
-      @backBufferValidityChecker.verticalAlignment == verticalAlignment and
-      @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge == @fittingSpecWhenBoundsTooLarge and
-      @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall == @fittingSpecWhenBoundsTooSmall
-        return
+    cacheKey =
+      @extent().toString()  + "-" +
+      @buildCanvasFontProperty()  + "-" +
+      hashCode(@textActuallyShown)  + "-" +
+      @backgroundColor?.toString()  + "-" +
+      @color.toString()  + "-" +
+      @backgroundColor.toString()  + "-" +
+      @backgroundTransparency.toString()  + "-" +
+      hashCode(@text)  + "-" +
+      @startMark  + "-" +
+      @endMark  + "-" +
+      @markedBackgoundColor.toString()  + "-" +
+      horizontalAlignment  + "-" +
+      verticalAlignment  + "-" +
+      @fittingSpecWhenBoundsTooLarge  + "-" +
+      @fittingSpecWhenBoundsTooSmall
+
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     contentHeight = @reflowText()
 
-    @backBuffer = newCanvas()
-    @backBufferContext = @backBuffer.getContext "2d"
+    backBuffer = newCanvas()
+    backBufferContext = backBuffer.getContext "2d"
 
-    @backBuffer.width = @width() * pixelRatio
-    @backBuffer.height = @height() * pixelRatio
+    backBuffer.width = @width() * pixelRatio
+    backBuffer.height = @height() * pixelRatio
 
-    @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @buildCanvasFontProperty()
-    @backBufferContext.textAlign = "left"
-    @backBufferContext.textBaseline = "bottom"
+    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.font = @buildCanvasFontProperty()
+    backBufferContext.textAlign = "left"
+    backBufferContext.textBaseline = "bottom"
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
     if @backgroundColor?
-      @backBufferContext.save()
-      @backBufferContext.fillStyle = @backgroundColor.toString()
+      backBufferContext.save()
+      backBufferContext.fillStyle = @backgroundColor.toString()
       if @backgroundTransparency?
-        @backBufferContext.globalAlpha = @backgroundTransparency
-      @backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
-      @backBufferContext.restore()
+        backBufferContext.globalAlpha = @backgroundTransparency
+      backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
+      backBufferContext.restore()
 
     if verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = 0
@@ -387,7 +385,7 @@ class TextMorph2 extends StringMorph2
     ###
 
     # now draw the actual text
-    @backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
@@ -399,7 +397,7 @@ class TextMorph2 extends StringMorph2
         x = 0
       y = (i + 1) * Math.ceil fontHeight @fittingFontSize
       i++
-      @backBufferContext.fillText line, x, y + textVerticalPosition
+      backBufferContext.fillText line, x, y + textVerticalPosition
 
     # Draw the selection. This is done by re-drawing the
     # selected text, one character at the time, just with
@@ -409,30 +407,22 @@ class TextMorph2 extends StringMorph2
     for i in [start...stop]
       p = @slotCoordinates(i).subtract @position()
       c = @textActuallyShown.charAt(i)
-      @backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      @backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
-      @backBufferContext.fillStyle = @markedTextColor.toString()
-      @backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillStyle = @markedTextColor.toString()
+      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
 
+    # TODO this shouldn't be here, this is a
+    # side effect that has nothing to do with
+    # painting the backbuffer, you should have
+    # this somewhere where you change the
+    # font size.
     if world.caret?
       world.caret.updateCaretDimension()
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
-    @backBufferValidityChecker.backgroundColor = @backgroundColor?.toString()
-    @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.backgroundColor = @backgroundColor.toString() and
-    @backBufferValidityChecker.backgroundTransparency = @backgroundTransparency.toString() and
-    @backBufferValidityChecker.textHash = hashCode @text
-    @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
-    @backBufferValidityChecker.startMark = @startMark
-    @backBufferValidityChecker.endMark = @endMark
-    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-    @backBufferValidityChecker.horizontalAlignment = horizontalAlignment
-    @backBufferValidityChecker.verticalAlignment = verticalAlignment
-    @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge = @fittingSpecWhenBoundsTooLarge
-    @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall = @fittingSpecWhenBoundsTooSmall
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
 
 
   # TextMorph measuring ////

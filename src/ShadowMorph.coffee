@@ -33,24 +33,24 @@ class ShadowMorph extends Morph
     @offset.debugIfFloats()
     @notifyChildrenThatParentHasReLayouted()
 
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString()
-        return
+    cacheKey =
+      @extent().toString() + "-" +
+      @targetMorph.toStringWithoutGeometry()
+
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     @bounds.debugIfFloats()
     if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-      @backBuffer = @targetMorph.shadowImage @offset, @color, true
+      backBuffer = @targetMorph.shadowImage @offset, @color, true
     else
-      @backBuffer = @targetMorph.shadowImage @offset, @color, false
-    @backBufferContext =  @backBuffer.getContext "2d"
+      backBuffer = @targetMorph.shadowImage @offset, @color, false
+    backBufferContext =  backBuffer.getContext "2d"
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-
-    
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry

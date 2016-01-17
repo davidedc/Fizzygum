@@ -2,7 +2,6 @@
 
 # these comments below needed to figure out dependencies between classes
 # REQUIRES globalFunctions
-# REQUIRES BackBufferValidityChecker
 
 # A BackBuffer is a canvas that a morph can keep for
 # two reasons:
@@ -46,7 +45,6 @@ BackBufferMixin =
       # for the worldMorph, this only contains the background
       backBuffer: null
       backBufferContext: null
-      backBufferValidityChecker: null
       backBufferIsPotentiallyDirty: true
 
       # just a flag to indicate that the
@@ -79,7 +77,7 @@ BackBufferMixin =
 
       # Morph pixel access:
       getPixelColor: (aPoint) ->
-        @repaintBackBufferIfNeeded()
+        [@backBuffer, @backBufferContext] = @createRefreshOrGetImmutableBackBuffer()
         point = aPoint.toLocalCoordinatesOf @
         data = @backBufferContext.getImageData point.x * pixelRatio, point.y * pixelRatio, 1, 1
         new Color data.data[0], data.data[1], data.data[2], data.data[3]
@@ -96,7 +94,7 @@ BackBufferMixin =
         if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
           return null
 
-        @repaintBackBufferIfNeeded()
+        [@backBuffer, @backBufferContext] = @createRefreshOrGetImmutableBackBuffer()
 
         if !@backBuffer?
           return null

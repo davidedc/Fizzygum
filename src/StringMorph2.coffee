@@ -321,29 +321,29 @@ class StringMorph2 extends Morph
     @fittingFontSize = @fitToExtent()
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
-  repaintBackBufferIfNeeded: ->
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+    cacheKey =
+      @extent().toString() + "-" +
+      @isPassword  + "-" +
+      @isShowingBlanks  + "-" +
+      @buildCanvasFontProperty()  + "-" +
+      @color.toString()  + "-" +
+      @backgroundColor.toString()  + "-" +
+      @backgroundTransparency.toString()  + "-" +
+      hashCode(@text)  + "-" +
+      hashCode(@textActuallyShown)  + "-" +
+      @startMark  + "-" +
+      @endMark  + "-" +
+      @markedBackgoundColor.toString()  + "-" +
+      @horizontalAlignment  + "-" +
+      @verticalAlignment  + "-" +
+      @fittingSpecWhenBoundsTooLarge  + "-" +
+      @fittingSpecWhenBoundsTooSmall
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString() and
-      @backBufferValidityChecker.isPassword == @isPassword and
-      @backBufferValidityChecker.isShowingBlanks == @isShowingBlanks and
-      @backBufferValidityChecker.canvasFontProperty == @buildCanvasFontProperty() and
-      @backBufferValidityChecker.color == @color.toString() and
-      @backBufferValidityChecker.backgroundColor == @backgroundColor.toString() and
-      @backBufferValidityChecker.backgroundTransparency == @backgroundTransparency.toString() and
-      @backBufferValidityChecker.textHash == hashCode(@text) and
-      @backBufferValidityChecker.textActuallyShownHash == hashCode(@textActuallyShown) and
-      @backBufferValidityChecker.startMark == @startMark and
-      @backBufferValidityChecker.endMark == @endMark and
-      @backBufferValidityChecker.markedBackgoundColor == @markedBackgoundColor.toString() and
-      @backBufferValidityChecker.horizontalAlignment == @horizontalAlignment and
-      @backBufferValidityChecker.verticalAlignment == @verticalAlignment and
-      @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge == @fittingSpecWhenBoundsTooLarge and
-      @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall == @fittingSpecWhenBoundsTooSmall
-        return
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
+
 
     @synchroniseTextAndActualText()
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
@@ -368,24 +368,25 @@ class StringMorph2 extends Morph
     else
       width = widthOfText
       height = fontHeight @fittingFontSize
-    @backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
-    @backBufferContext = @backBuffer.getContext "2d"
+    backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
-    @backBufferContext.scale pixelRatio, pixelRatio
-    @backBufferContext.font = @buildCanvasFontProperty()
-    @backBufferContext.textAlign = "left"
-    @backBufferContext.textBaseline = "bottom"
+    backBufferContext = backBuffer.getContext "2d"
+
+    backBufferContext.scale pixelRatio, pixelRatio
+    backBufferContext.font = @buildCanvasFontProperty()
+    backBufferContext.textAlign = "left"
+    backBufferContext.textBaseline = "bottom"
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
     if @backgroundColor?
-      @backBufferContext.save()
-      @backBufferContext.fillStyle = @backgroundColor.toString()
+      backBufferContext.save()
+      backBufferContext.fillStyle = @backgroundColor.toString()
       if @backgroundTransparency?
-        @backBufferContext.globalAlpha = @backgroundTransparency
-      @backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
-      @backBufferContext.restore()
+        backBufferContext.globalAlpha = @backgroundTransparency
+      backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
+      backBufferContext.restore()
 
     if @verticalAlignment == AlignmentSpecVertical.TOP
       textVerticalPosition = fontHeight @fittingFontSize
@@ -402,8 +403,8 @@ class StringMorph2 extends Morph
       textHorizontalPosition = @width() - widthOfText
 
 
-    @backBufferContext.fillStyle = @color.toString()
-    @backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
+    backBufferContext.fillStyle = @color.toString()
+    backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
 
     # draw the selection
     start = Math.min @startMark, @endMark
@@ -412,35 +413,24 @@ class StringMorph2 extends Morph
       p = @slotCoordinates(i).subtract @position()
       if p?
         c = text.charAt(i)
-        @backBufferContext.fillStyle = @markedBackgoundColor.toString()
+        backBufferContext.fillStyle = @markedBackgoundColor.toString()
         
-        @backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@fittingFontSize), Math.ceil((@measureText @fittingFontSize, c)) + 1,
+        backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@fittingFontSize), Math.ceil((@measureText @fittingFontSize, c)) + 1,
           fontHeight(@fittingFontSize)
-        @backBufferContext.fillStyle = @markedTextColor.toString()
-        @backBufferContext.fillText c, p.x, textVerticalPosition
+        backBufferContext.fillStyle = @markedTextColor.toString()
+        backBufferContext.fillText c, p.x, textVerticalPosition
 
+    # TODO this shouldn't be here, this is a
+    # side effect that has nothing to do with
+    # painting the backbuffer, you should have
+    # this somewhere where you change the
+    # font size.
     if world.caret?
       world.caret.updateCaretDimension()
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
-    @backBufferValidityChecker.isPassword = @isPassword
-    @backBufferValidityChecker.isShowingBlanks = @isShowingBlanks
-    @backBufferValidityChecker.canvasFontProperty = @buildCanvasFontProperty()
-    @backBufferValidityChecker.color = @color.toString()
-    @backBufferValidityChecker.backgroundColor = @backgroundColor.toString() and
-    @backBufferValidityChecker.backgroundTransparency = @backgroundTransparency.toString() and
-    @backBufferValidityChecker.textHash = hashCode @text
-    @backBufferValidityChecker.textActuallyShownHash = hashCode @textActuallyShown
-    @backBufferValidityChecker.startMark = @startMark
-    @backBufferValidityChecker.endMark = @endMark
-    @backBufferValidityChecker.markedBackgoundColor = @markedBackgoundColor.toString()
-    @backBufferValidityChecker.horizontalAlignment = @horizontalAlignment
-    @backBufferValidityChecker.verticalAlignment = @verticalAlignment
-    @backBufferValidityChecker.fittingSpecWhenBoundsTooLarge = @fittingSpecWhenBoundsTooLarge
-    @backBufferValidityChecker.fittingSpecWhenBoundsTooSmall = @fittingSpecWhenBoundsTooSmall
-    # notify my parent of layout change
-    # @parent.layoutSubmorphs()  if @parent.layoutSubmorphs  if @parent
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
     
   
   # StringMorph2 measuring:

@@ -8,24 +8,25 @@ class GrayPaletteMorph extends ColorPaletteMorph
   constructor: (@target = null, sizePoint) ->
     super @target, sizePoint or new Point 80, 10
   
-  repaintBackBufferIfNeeded: ->
-    if !@backBufferIsPotentiallyDirty then return
-    @backBufferIsPotentiallyDirty = false
+  createRefreshOrGetImmutableBackBuffer: ->
 
-    if @backBufferValidityChecker?
-      if @backBufferValidityChecker.extent == @extent().toString()
-        return
+    cacheKey =
+      @extent().toString()
+
+    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
+    if cacheHit? then return cacheHit
 
     extent = @extent()
-    @backBuffer = newCanvas extent.scaleBy pixelRatio
-    @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.scale pixelRatio, pixelRatio
+    backBuffer = newCanvas extent.scaleBy pixelRatio
+    backBufferContext = backBuffer.getContext "2d"
+    backBufferContext.scale pixelRatio, pixelRatio
     @choice = new Color()
-    gradient = @backBufferContext.createLinearGradient 0, 0, extent.x, extent.y
+    gradient = backBufferContext.createLinearGradient 0, 0, extent.x, extent.y
     gradient.addColorStop 0, "black"
     gradient.addColorStop 1, "white"
-    @backBufferContext.fillStyle = gradient
-    @backBufferContext.fillRect 0, 0, extent.x, extent.y
+    backBufferContext.fillStyle = gradient
+    backBufferContext.fillRect 0, 0, extent.x, extent.y
 
-    @backBufferValidityChecker = new BackBufferValidityChecker()
-    @backBufferValidityChecker.extent = @extent().toString()
+    cacheEntry = [backBuffer, backBufferContext]
+    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
+    return cacheEntry
