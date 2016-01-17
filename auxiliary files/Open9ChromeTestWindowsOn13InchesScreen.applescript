@@ -7,7 +7,8 @@ set windows_number to 0
 repeat -- repeat forever
 	set dialogResult to display dialog Â
 		"Pick a mode" buttons {"9 squashed", "9 tiled", "close"} Â
-		
+		giving up after 536870910
+	
 	if button returned of dialogResult is "9 squashed" then
 		set numberOfTilesX to 3
 		set numberOfTilesY to 3
