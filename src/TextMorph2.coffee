@@ -412,14 +412,6 @@ class TextMorph2 extends StringMorph2
       backBufferContext.fillStyle = @markedTextColor.toString()
       backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
 
-    # TODO this shouldn't be here, this is a
-    # side effect that has nothing to do with
-    # painting the backbuffer, you should have
-    # this somewhere where you change the
-    # font size.
-    if world.caret?
-      world.caret.updateCaretDimension()
-
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry

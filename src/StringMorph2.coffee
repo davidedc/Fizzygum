@@ -316,9 +316,15 @@ class StringMorph2 extends Morph
     text = (if @isPassword then @password("*", text.length) else text)
     return @measureText overrideFontSize, text
 
+  setFittingFontSize: (theValue) ->
+    if @fittingFontSize != theValue
+      @fittingFontSize = theValue
+      if world.caret?
+        world.caret.updateCaretDimension()
+
   reLayout: ->
     super()
-    @fittingFontSize = @fitToExtent()
+    @setFittingFontSize @fitToExtent()
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
   createRefreshOrGetBackBuffer: ->
@@ -419,14 +425,6 @@ class StringMorph2 extends Morph
           fontHeight(@fittingFontSize)
         backBufferContext.fillStyle = @markedTextColor.toString()
         backBufferContext.fillText c, p.x, textVerticalPosition
-
-    # TODO this shouldn't be here, this is a
-    # side effect that has nothing to do with
-    # painting the backbuffer, you should have
-    # this somewhere where you change the
-    # font size.
-    if world.caret?
-      world.caret.updateCaretDimension()
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry

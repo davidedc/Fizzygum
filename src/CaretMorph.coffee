@@ -12,6 +12,7 @@ class CaretMorph extends BlinkerMorph
   originalContents: null
   slot: null
   viewPadding: 1
+  currentCaretFontSize: null
 
   constructor: (@target) ->
     # additional properties:
@@ -30,7 +31,9 @@ class CaretMorph extends BlinkerMorph
 
   updateCaretDimension: ->
     ls = fontHeight @target.actualFontSizeUsedInRendering()
-    @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
+    if ls != @currentCaretFontSize
+      @currentCaretFontSize = ls
+      @rawSetExtent new Point Math.max(Math.floor(ls / 20), 1), ls
   
   # CaretMorph event processing:
   processKeyPress: (charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
@@ -247,7 +250,7 @@ class CaretMorph extends BlinkerMorph
   undo: ->
     @target.setContent @originalContents
     @target.clearSelection()
-    
+
     # in theory these three lines are not
     # needed because clearSelection runs them
     # already, but I'm leaving them here
