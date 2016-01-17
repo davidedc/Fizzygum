@@ -1070,7 +1070,6 @@ class Morph extends MorphicNode
     if aColor
       unless @color.eq aColor
         @color = aColor
-        if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
         @changed()
         
     return aColor
@@ -1632,8 +1631,6 @@ class Morph extends MorphicNode
   # before painting themselves
   # e.g. the MenuMorph
   reLayout: ->
-    if @backBufferIsPotentiallyDirty?
-      @backBufferIsPotentiallyDirty = true
 
 
   calculateAndUpdateExtent: ->
@@ -2356,7 +2353,6 @@ class Morph extends MorphicNode
       alpha = @calculateAlphaScaled alpha
       unless @alpha == alpha
         @alpha = alpha
-        if @backBufferIsPotentiallyDirty? then @backBufferIsPotentiallyDirty = true
         @changed()
 
     return alpha

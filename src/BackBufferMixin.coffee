@@ -45,7 +45,6 @@ BackBufferMixin =
       # for the worldMorph, this only contains the background
       backBuffer: null
       backBufferContext: null
-      backBufferIsPotentiallyDirty: true
 
       # just a flag to indicate that the
       # backBufferContext value can be derived from others

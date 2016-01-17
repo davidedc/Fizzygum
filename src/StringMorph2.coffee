@@ -101,7 +101,7 @@ class StringMorph2 extends Morph
       world.stopEditing()
       @horizontalAlignment = newAlignment
       @reLayout()
-      @backBufferIsPotentiallyDirty = true
+      
       @changed()
 
   setVerticalAlignment: (newAlignment) ->
@@ -109,7 +109,7 @@ class StringMorph2 extends Morph
       world.stopEditing()
       @verticalAlignment = newAlignment
       @reLayout()
-      @backBufferIsPotentiallyDirty = true
+      
       @changed()
 
   alignLeft: ->
@@ -636,7 +636,7 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @synchroniseTextAndActualText()
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
     world.stopEditing()
 
@@ -645,7 +645,7 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @synchroniseTextAndActualText()
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
 
   toggleIsfloatDraggable: ->
@@ -659,37 +659,37 @@ class StringMorph2 extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   toggleIsPassword: ->
     @isPassword = not @isPassword
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   setSerif: ->
     @fontStyle = "serif"
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   setSansSerif: ->
     @fontStyle = "sans-serif"
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
 
   reflowText: ->
@@ -709,7 +709,7 @@ class StringMorph2 extends Morph
       console.log "texts non-synched"
     @reLayout()
     @reflowText()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
@@ -725,7 +725,7 @@ class StringMorph2 extends Morph
       newSize = parseFloat size
       @originallySetFontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   # TODO this is invoked when for example you take a slider
@@ -742,7 +742,7 @@ class StringMorph2 extends Morph
     @textActuallyShown = @text
     #console.log "@textActuallyShown = @text 6"
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   numericalSetters: ->
@@ -762,7 +762,7 @@ class StringMorph2 extends Morph
       # ones is complex. So during editing
       # we might change the alignment, hence
       # these two lines to repaint things.
-      @backBufferIsPotentiallyDirty = true
+      
       @changed()
 
       return true
@@ -794,7 +794,7 @@ class StringMorph2 extends Morph
     @startMark = null
     @endMark = null
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
   
   deleteSelection: ->
@@ -805,7 +805,7 @@ class StringMorph2 extends Morph
     @textActuallyShown = @text
     #console.log "@textActuallyShown = @text 6"
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
     @clearSelection()
     @reflowText()
@@ -813,7 +813,7 @@ class StringMorph2 extends Morph
   selectAll: ->
     @startMark = 0
     @endMark = @textActuallyShown.length
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
 
   # used when shift-clicking somewhere when there is
@@ -822,7 +822,7 @@ class StringMorph2 extends Morph
     @startMark = previousCaretSlot
     @endMark = slotToExtendTo
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
 
   # used when shift-clicking somewhere when there is
@@ -830,7 +830,7 @@ class StringMorph2 extends Morph
   extendSelectionUpToSlot: (slotToExtendTo) ->
     @endMark = slotToExtendTo
     @reLayout()
-    @backBufferIsPotentiallyDirty = true
+    
     @changed()
 
   # Every time the user clicks on the text, a new edit()
