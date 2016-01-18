@@ -63,40 +63,42 @@ class HandleMorph extends Morph
       # morph gets too small because they
       # become unusable anyways once they
       # overlap
-      if @type == "moveHandle"
-        if @target.width() < 2 * @width()
-          @hide()
-          return
-        else
-          @show()
-      else if @type == "resizeHorizontalHandle"
-        if @target.height() < 3 * @height()
-          @hide()
-          return
-        else
-          @show()
-      else if @type == "resizeVerticalHandle"
-        if @target.width() < 3 * @width()
-          @hide()
-          return
-        else
-          @show()
+      switch @type
+        when "moveHandle"
+          if @target.width() < 2 * @width()
+            @hide()
+            return
+          else
+            @show()
+        when "resizeHorizontalHandle"
+          if @target.height() < 3 * @height()
+            @hide()
+            return
+          else
+            @show()
+        when "resizeVerticalHandle"
+          if @target.width() < 3 * @width()
+            @hide()
+            return
+          else
+            @show()
 
       @silentUpdateResizerHandlePosition()
       @changed()
 
   silentUpdateResizerHandlePosition: ->
     if @target
-        if @type == "resizeBothDimensionsHandle"
-          @silentFullRawMoveTo @target.bottomRight().subtract @extent().add @inset
-        else if @type == "moveHandle"
-          @silentFullRawMoveTo @target.topLeft().add @inset
-        else if @type == "resizeHorizontalHandle"
-          offsetFromMiddlePoint = new Point @extent().x + @inset.x, Math.floor(@extent().y/2)
-          @silentFullRawMoveTo @target.rightCenter().subtract offsetFromMiddlePoint
-        else if @type == "resizeVerticalHandle"
-          offsetFromMiddlePoint = new Point Math.floor(@extent().x/2), @extent().y + @inset.y
-          @silentFullRawMoveTo @target.bottomCenter().subtract offsetFromMiddlePoint
+        switch @type
+          when "resizeBothDimensionsHandle"
+            @silentFullRawMoveTo @target.bottomRight().subtract @extent().add @inset
+          when "moveHandle"
+            @silentFullRawMoveTo @target.topLeft().add @inset
+          when "resizeHorizontalHandle"
+            offsetFromMiddlePoint = new Point @extent().x + @inset.x, Math.floor(@extent().y/2)
+            @silentFullRawMoveTo @target.rightCenter().subtract offsetFromMiddlePoint
+          when "resizeVerticalHandle"
+            offsetFromMiddlePoint = new Point Math.floor(@extent().x/2), @extent().y + @inset.y
+            @silentFullRawMoveTo @target.bottomCenter().subtract offsetFromMiddlePoint
   
   
 
@@ -227,21 +229,22 @@ class HandleMorph extends Morph
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
-    if @type is "resizeBothDimensionsHandle"
-      newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
-      @target.setExtent newExt
+    switch @type
+      when "resizeBothDimensionsHandle"
+        newExt = newPos.add(@extent().add(@inset)).subtract @target.position()
+        @target.setExtent newExt
       # the position of this handle will be changed when the
       # parentHasReLayouted method of this handle will be called
       # as the parent has re-layouted following the rawSetExtent call just
       # made.
-    else if @type is "moveHandle"
-      @target.fullMoveTo newPos.subtract @inset
-    else if @type is "resizeHorizontalHandle"
-      newWidth = newPos.x + @extent().x + @inset.x - @target.left()
-      @target.setWidth newWidth
-    else if @type is "resizeVerticalHandle"
-      newHeight = newPos.y + @extent().y + @inset.y - @target.top()
-      @target.setHeight newHeight
+      when "moveHandle"
+        @target.fullMoveTo newPos.subtract @inset
+      when "resizeHorizontalHandle"
+        newWidth = newPos.x + @extent().x + @inset.x - @target.left()
+        @target.setWidth newWidth
+      when "resizeVerticalHandle"
+        newHeight = newPos.y + @extent().y + @inset.y - @target.top()
+        @target.setHeight newHeight
   
   
   # HandleMorph floatDragging and dropping:

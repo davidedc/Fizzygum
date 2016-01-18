@@ -70,12 +70,13 @@ class ListMorph extends ScrollFrameMorph
       italic = false
       @format.forEach (pair) ->
         if pair[1].call null, element
-          if pair[0] == 'bold'
-            bold = true
-          else if pair[0] == 'italic'
-            italic = true
-          else # assume it's a color
-            color = pair[0]
+          switch pair[0]
+            when 'bold'
+              bold = true
+            when 'italic'
+              italic = true
+            else # assume it's a color
+              color = pair[0]
 
       #labelString,
       #action,

@@ -368,20 +368,22 @@ class TextMorph2 extends StringMorph2
       backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
       backBufferContext.restore()
 
-    if verticalAlignment == AlignmentSpecVertical.TOP
-      textVerticalPosition = 0
-    else if verticalAlignment == AlignmentSpecVertical.MIDDLE
-      textVerticalPosition = @height()/2 - contentHeight/2
-    else if verticalAlignment == AlignmentSpecVertical.BOTTOM
-      textVerticalPosition = @height() - contentHeight
+    textVerticalPosition = switch verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        @height()/2 - contentHeight/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - contentHeight
 
     ###
-    if horizontalAlignment == AlignmentSpecHorizontal.LEFT
-      textHorizontalPosition = 0
-    else if horizontalAlignment == AlignmentSpecHorizontal.CENTER
-      textHorizontalPosition = @width()/2 - widthOfText/2
-    else if horizontalAlignment == AlignmentSpecHorizontal.RIGHT
-      textHorizontalPosition = @width() - widthOfText
+    textHorizontalPosition = switch horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+        @width()/2 - widthOfText/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - widthOfText
     ###
 
     # now draw the actual text
@@ -389,12 +391,13 @@ class TextMorph2 extends StringMorph2
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
-      if horizontalAlignment == AlignmentSpecHorizontal.RIGHT
-        x = @width() - width
-      else if horizontalAlignment == AlignmentSpecHorizontal.CENTER
-        x = (@width() - width) / 2
-      else # 'left'
-        x = 0
+      x = switch horizontalAlignment
+        when AlignmentSpecHorizontal.RIGHT
+          @width() - width
+        when AlignmentSpecHorizontal.CENTER
+          (@width() - width) / 2
+        else # 'left'
+          0
       y = (i + 1) * Math.ceil fontHeight @fittingFontSize
       i++
       backBufferContext.fillText line, x, y + textVerticalPosition

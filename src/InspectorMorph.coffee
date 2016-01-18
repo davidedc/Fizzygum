@@ -71,13 +71,13 @@ class InspectorMorph extends BoxMorph
     for property of @target
       # dummy condition, to be refined
       attribs.push property  if property
-    if @showing is "attributes"
-      attribs = attribs.filter (prop) =>
-        not isFunction @target[prop]
-
-    else if @showing is "methods"
-      attribs = attribs.filter (prop) =>
-        isFunction @target[prop]
+    attribs = switch @showing
+      when "attributes"
+        attribs.filter (prop) =>
+          not isFunction @target[prop]
+      when "methods"
+        attribs.filter (prop) =>
+          isFunction @target[prop]
 
     # otherwise show all properties
     # label getter
@@ -89,22 +89,20 @@ class InspectorMorph extends BoxMorph
     staticProperties = staticProperties.filter (prop) =>
         prop not in ["name","length","prototype","caller","__super__","arguments"]
 
-    if @showing is "attributes"
-      staticFunctions = []
-      staticAttributes = staticProperties.filter (prop) =>
-        not isFunction @target.constructor[prop]
-
-    else if @showing is "methods"
-      staticFunctions = staticProperties.filter (prop) =>
-        isFunction @target.constructor[prop]
-
-      staticAttributes = []
-    else
-      staticFunctions = staticProperties.filter (prop) =>
-        isFunction @target.constructor[prop]
-
-      staticAttributes = staticProperties.filter (prop) =>
-        prop not in staticFunctions
+    switch @showing
+      when "attributes"
+        staticFunctions = []
+        staticAttributes = staticProperties.filter (prop) =>
+          not isFunction @target.constructor[prop]
+      when "methods"
+        staticFunctions = staticProperties.filter (prop) =>
+          isFunction @target.constructor[prop]
+        staticAttributes = []
+      else
+        staticFunctions = staticProperties.filter (prop) =>
+          isFunction @target.constructor[prop]
+        staticAttributes = staticProperties.filter (prop) =>
+          prop not in staticFunctions
 
     #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes
     attribs = (attribs.concat staticFunctions).concat staticAttributes

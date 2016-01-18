@@ -204,16 +204,14 @@ class LinearLayoutMorph extends LayoutMorph
       # Set bounds and adjust major direction for next step
       # self flag: #jmvVer2.
       # should extent be set in m's coordinate system? what if its scale is not 1?
-      if direction == "#horizontal"
-        newExtent = new Point Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent), h
-      else if direction == "#vertical"
-        newExtent = new Point h, Math.min mainDirectionSizeForThisMorph, mainDirectionBoundsExtent
+      switch direction
+        when "#horizontal"
+          newExtent = new Point Math.min(mainDirectionSizeForThisMorph,mainDirectionBoundsExtent), h
+          m.fullRawMoveTo new Point mainDirectionCursor, t
+        when "#vertical"
+          newExtent = new Point h, Math.min mainDirectionSizeForThisMorph, mainDirectionBoundsExtent
+          m.fullRawMoveTo new Point t, mainDirectionCursor
 
-      if direction == "#horizontal"
-        m.fullRawMoveTo new Point mainDirectionCursor, t
-      else if direction == "#vertical"
-        m.fullRawMoveTo new Point t, mainDirectionCursor
-      #debugger
       m.rawSetExtent newExtent
 
       if mainDirectionSizeForThisMorph > 0
@@ -254,10 +252,11 @@ class LinearLayoutMorph extends LayoutMorph
     sumOfProportional = 0
     @children.forEach (child) =>
       if child.linearLinearLayoutSpec?
-        if @direction == "#horizontal"
-          sumOfProportional += child.linearLinearLayoutSpec.getProportionalWidth()
-        else if @direction == "#vertical"
-          sumOfProportional += child.linearLinearLayoutSpec.getProportionalHeight()
+        sumOfProportional += switch @direction
+          when "#horizontal"
+            child.linearLinearLayoutSpec.getProportionalWidth()
+          when "#vertical"
+            child.linearLinearLayoutSpec.getProportionalHeight()
 
     return 1.0 / Math.max sumOfProportional, 1.0
 

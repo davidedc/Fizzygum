@@ -26,12 +26,13 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
     newY = Math.round((theMorph.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.top()
     world.hand.fullRawMoveTo new Point(newX, newY)
 
-    if commandBeingPlayed.button == "left"
-      button = 0
-    else if commandBeingPlayed.button == "middle"
-      button = 1
-    else if commandBeingPlayed.button == "right"
-      button = 2
+    button = switch commandBeingPlayed.button
+      when "left"
+        0
+      when "middle"
+        1
+      when "right"
+        2
 
     if commandBeingPlayed.upOrDown == "up"
       # the mouse up doesn't need the control key info
@@ -58,12 +59,13 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
   constructor: (@upOrDown, button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
     super(systemTestsRecorderAndPlayer)
 
-    if button == 0
-      @button = "left"
-    else if button == 1
-      @button = "middle"
-    else if button == 2
-      @button = "right"
+    @button = switch button
+      when 0
+        "left"
+      when 1
+        "middle"
+      when 2
+        "right"
 
     # it's important that this is the same name of
     # the class cause we need to use the static method

@@ -184,12 +184,13 @@ class TextMorph extends StringMorph
       i = 0
       for line in @lines
         width = Math.ceil(backBufferContext.measureText(line).width) + shadowWidth
-        if @alignment is "right"
-          x = @width() - width
-        else if @alignment is "center"
-          x = (@width() - width) / 2
-        else # 'left'
-          x = 0
+        x = switch @alignment
+          when "right"
+            @width() - width
+          when "center"
+            (@width() - width) / 2
+          else # 'left'
+            0
         y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
         i++
         backBufferContext.fillText line, x + offx, y + offy
@@ -202,12 +203,13 @@ class TextMorph extends StringMorph
     i = 0
     for line in @lines
       width = Math.ceil(backBufferContext.measureText(line).width) + shadowWidth
-      if @alignment is "right"
-        x = @width() - width
-      else if @alignment is "center"
-        x = (@width() - width) / 2
-      else # 'left'
-        x = 0
+      x = switch @alignment
+        when "right"
+          @width() - width
+        when "center"
+          (@width() - width) / 2
+        else # 'left'
+          0
       y = (i + 1) * (Math.ceil(fontHeight @fontSize) + shadowHeight) - shadowHeight
       i++
       backBufferContext.fillText line, x + offx, y + offy

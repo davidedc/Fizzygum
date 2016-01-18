@@ -69,20 +69,21 @@ class BouncerMorph extends Morph
       @fullRawMoveBy new Point -@speed, 0
 
   moveAccordingToBounce: (silently) ->
-    if @type is "vertical"
-      if @direction is "down"
-        @moveDown silently
-      else
-        @moveUp silently
-      @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
-      @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
-    else if @type is "horizontal"
-      if @direction is "right"
-        @moveRight silently
-      else
-        @moveLeft silently
-      @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
-      @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
+    switch @type
+      when "vertical"
+        if @direction is "down"
+          @moveDown silently
+        else
+          @moveUp silently
+        @direction = "down"  if @fullBounds().top() < @parent.top() and @direction is "up"
+        @direction = "up"  if @fullBounds().bottom() > @parent.bottom() and @direction is "down"
+      when "horizontal"
+        if @direction is "right"
+          @moveRight silently
+        else
+          @moveLeft silently
+        @direction = "right"  if @fullBounds().left() < @parent.left() and @direction is "left"
+        @direction = "left"  if @fullBounds().right() > @parent.right() and @direction is "right"
   
   
   # BouncerMorph stepping:

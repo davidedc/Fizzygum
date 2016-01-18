@@ -445,76 +445,77 @@ class AutomatorRecorderAndPlayer
         SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
       @stopTestPlaying()
 
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      if orderMatters
-        systemTestCommand =
-          new AutomatorCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
-      else
-        systemTestCommand =
-          new AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
+    switch AutomatorRecorderAndPlayer.state
+      when AutomatorRecorderAndPlayer.RECORDING
+        if orderMatters
+          systemTestCommand =
+            new AutomatorCommandCheckStringsOfItemsInMenuOrderImportant stringOfItemsInCurrentMenuInOriginalOrder, @
+        else
+          systemTestCommand =
+            new AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant stringOfItemsInCurrentMenuInOriginalOrder, @
 
-      @automatorCommandsSequence.push systemTestCommand
-      @timeOfPreviouslyRecordedCommand = new Date().getTime()
-    else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-      giveSuccess = =>
-        if orderMatters
-          message = "PASS Strings in menu are same and in same order"
-        else
-          message = "PASS Strings in menu are same (not considering order)"
-        if SystemTestsControlPanelUpdater?
-          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
-      giveError = =>
-        if orderMatters
-          @allTestsPassedSoFar = false
-          document.getElementById("background").style.background = "red"
-          errorMessage =
-            "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " +
-              stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
-          testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
-          if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-          document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
-        else
-          @allTestsPassedSoFar = false
-          document.getElementById("background").style.background = "red"
-          errorMessage =
-            "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " +
-              stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
-          testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
-          if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
-          document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
-        if SystemTestsControlPanelUpdater?
-          SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
-        @stopTestPlaying()
+        @automatorCommandsSequence.push systemTestCommand
+        @timeOfPreviouslyRecordedCommand = new Date().getTime()
+      when AutomatorRecorderAndPlayer.PLAYING
+        giveSuccess = =>
+          if orderMatters
+            message = "PASS Strings in menu are same and in same order"
+          else
+            message = "PASS Strings in menu are same (not considering order)"
+          if SystemTestsControlPanelUpdater?
+            SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
+        giveError = =>
+          if orderMatters
+            @allTestsPassedSoFar = false
+            document.getElementById("background").style.background = "red"
+            errorMessage =
+              "FAIL Strings in menu doesn't match or order is incorrect. Was expecting: " +
+                stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+            testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+            if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+            document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
+          else
+            @allTestsPassedSoFar = false
+            document.getElementById("background").style.background = "red"
+            errorMessage =
+              "FAIL Strings in menu doesn't match (even not considering order). Was expecting: " +
+                stringOfItemsInMenuInOriginalOrder + " found: " + stringOfItemsInCurrentMenuInOriginalOrder
+            testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
+            if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
+            document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
+          if SystemTestsControlPanelUpdater?
+            SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
+          @stopTestPlaying()
       
-      menuListIsSame = true
+        menuListIsSame = true
 
-      # the reason why we make a copy here is the following:
-      # if you kept the original array then this could happen:
-      # you record a test and then you play it back and then you save it
-      # the array is always the same and could get mutated during the play
-      # (because it could be sorted). So when you save the test, you
-      # save the ordered array instead of the original.
-      copyOfstringOfItemsInMenuInOriginalOrder = arrayShallowCopy(stringOfItemsInMenuInOriginalOrder)
+        # the reason why we make a copy here is the following:
+        # if you kept the original array then this could happen:
+        # you record a test and then you play it back and then you save it
+        # the array is always the same and could get mutated during the play
+        # (because it could be sorted). So when you save the test, you
+        # save the ordered array instead of the original.
+        copyOfstringOfItemsInMenuInOriginalOrder = arrayShallowCopy(stringOfItemsInMenuInOriginalOrder)
 
-      # if the order doesn't matter then we need to
-      # sort the strings first so we compare regardless
-      # of the original order
-      if !orderMatters
-        stringOfItemsInCurrentMenuInOriginalOrder.sort()
-        copyOfstringOfItemsInMenuInOriginalOrder.sort()
+        # if the order doesn't matter then we need to
+        # sort the strings first so we compare regardless
+        # of the original order
+        if !orderMatters
+          stringOfItemsInCurrentMenuInOriginalOrder.sort()
+          copyOfstringOfItemsInMenuInOriginalOrder.sort()
 
-      if stringOfItemsInCurrentMenuInOriginalOrder.length == copyOfstringOfItemsInMenuInOriginalOrder.length
-        for itemNumber in [0...copyOfstringOfItemsInMenuInOriginalOrder.length]
-          if copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] != stringOfItemsInCurrentMenuInOriginalOrder[itemNumber]
-            menuListIsSame = false
-            console.log copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] + " != " + stringOfItemsInCurrentMenuInOriginalOrder[itemNumber] + " at " + itemNumber
-      else
-        menuListIsSame = false
+        if stringOfItemsInCurrentMenuInOriginalOrder.length == copyOfstringOfItemsInMenuInOriginalOrder.length
+          for itemNumber in [0...copyOfstringOfItemsInMenuInOriginalOrder.length]
+            if copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] != stringOfItemsInCurrentMenuInOriginalOrder[itemNumber]
+              menuListIsSame = false
+              console.log copyOfstringOfItemsInMenuInOriginalOrder[itemNumber] + " != " + stringOfItemsInCurrentMenuInOriginalOrder[itemNumber] + " at " + itemNumber
+        else
+          menuListIsSame = false
 
-      if menuListIsSame
-        giveSuccess()
-      else
-        giveError()
+        if menuListIsSame
+          giveSuccess()
+        else
+          giveError()
 
   checkNumberOfItemsInMenu: (numberOfItems) ->
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkNumnberOfItems)

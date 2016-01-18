@@ -435,12 +435,13 @@ class HandMorph extends Morph
       if morph?
         if morph == @mouseDownMorph
 
-          if expectedClick == "mouseClickLeft"
-            pointerAndMorphInfo = world.getPointerAndMorphInfo()
-            world.systemTestsRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
-          else if expectedClick == "mouseClickRight"
-            pointerAndMorphInfo = world.getPointerAndMorphInfo()
-            world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+          switch expectedClick
+            when "mouseClickLeft"
+              pointerAndMorphInfo = world.getPointerAndMorphInfo()
+              world.systemTestsRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+            when "mouseClickRight"
+              pointerAndMorphInfo = world.getPointerAndMorphInfo()
+              world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           # also send doubleclick if the

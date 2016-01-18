@@ -286,37 +286,39 @@ class CaretMorph extends BlinkerMorph
     # 64 is for keydown
     # 97 is for keypress
     # in Chrome on OSX there is no keypress
-    if (scanCodeOrCharCode is 97) or (scanCodeOrCharCode is 65)
-      @target.selectAll()
-    # ctrl-z arrives both via keypress and
-    # keydown but 90 here matches the keydown only
-    else if scanCodeOrCharCode is 90
-      @undo()
-    # unclear which keyboard needs ctrl
-    # to be pressed to give a keypressed
-    # event for {}[]@
-    # but this is what this catches
-    else if scanCodeOrCharCode is 123
-      @insert "{"
-    else if scanCodeOrCharCode is 125
-      @insert "}"
-    else if scanCodeOrCharCode is 91
-      @insert "["
-    else if scanCodeOrCharCode is 93
-      @insert "]"
-    else if scanCodeOrCharCode is 64
-      @insert "@"
+    switch scanCodeOrCharCode
+      when 97, 65
+        @target.selectAll()
+      # ctrl-z arrives both via keypress and
+      # keydown but 90 here matches the keydown only
+      when 90
+        @undo()
+      # unclear which keyboard needs ctrl
+      # to be pressed to give a keypressed
+      # event for {}[]@
+      # but this is what this catches
+      when 123
+        @insert "{"
+      when 125
+        @insert "}"
+      when 91
+        @insert "["
+      when 93
+        @insert "]"
+      when 64
+        @insert "@"
   
   # these two arrive only from
   # keypressed, at least in Chrome/OSX
   # 65 and 90 are both scan codes.
   cmd: (scanCode) ->
     # CMD-A
-    if scanCode is 65
-      @target.selectAll()
-    # CMD-Z
-    else if scanCode is 90
-      @undo()
+    switch scanCode
+      when 65
+        @target.selectAll()
+      # CMD-Z
+      when 90
+        @undo()
   
   deleteRight: ->
     if @target.selection() isnt ""

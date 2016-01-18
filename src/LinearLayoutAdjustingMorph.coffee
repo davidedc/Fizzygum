@@ -37,10 +37,12 @@ class LinearLayoutAdjustingMorph extends RectangleMorph
 
   #SliderButtonMorph events:
   mouseEnter: ->
-    if @parent.direction == "#horizontal"
-      document.getElementById("world").style.cursor = "col-resize"
-    else if @parent.direction == "#vertical"
-      document.getElementById("world").style.cursor = "row-resize"
+    document.getElementById("world").style.cursor =
+      switch @parent.direction
+        when "#horizontal"
+          "col-resize"
+        when @parent.direction == "#vertical"
+          "row-resize"
   
   mouseLeave: ->
     document.getElementById("world").style.cursor = "auto"

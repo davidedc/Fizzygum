@@ -2296,23 +2296,24 @@ class Morph extends MorphicNode
     # going to replay but *waiting* for that screenshot
     # first.
     takePic = =>
-      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        # While recording a test, just trigger for
-        # the takeScreenshot command to be recorded. 
-        window.world.systemTestsRecorderAndPlayer.takeScreenshot @
-      else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-        # While playing a test, this command puts the
-        # screenshot of this morph in a special
-        # variable of the system test runner.
-        # The test runner will wait for this variable
-        # to contain the morph screenshot before
-        # doing the comparison as per command recorded
-        # in the case above.
-        window.world.systemTestsRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
-      else
-        # no system tests recording/playing ongoing,
-        # just open new tab with image of morph.
-        window.open @fullImageData()
+      switch AutomatorRecorderAndPlayer.state
+        when AutomatorRecorderAndPlayer.RECORDING
+          # While recording a test, just trigger for
+          # the takeScreenshot command to be recorded. 
+          window.world.systemTestsRecorderAndPlayer.takeScreenshot @
+        when AutomatorRecorderAndPlayer.PLAYING
+          # While playing a test, this command puts the
+          # screenshot of this morph in a special
+          # variable of the system test runner.
+          # The test runner will wait for this variable
+          # to contain the morph screenshot before
+          # doing the comparison as per command recorded
+          # in the case above.
+          window.world.systemTestsRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
+        else
+          # no system tests recording/playing ongoing,
+          # just open new tab with image of morph.
+          window.open @fullImageData()
     menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
 
     menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"

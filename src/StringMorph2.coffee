@@ -394,19 +394,21 @@ class StringMorph2 extends Morph
       backBufferContext.fillRect  0,0, width * pixelRatio, height * pixelRatio
       backBufferContext.restore()
 
-    if @verticalAlignment == AlignmentSpecVertical.TOP
-      textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
-      textVerticalPosition = @height()
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        fontHeight @fittingFontSize
+      when AlignmentSpecVertical.MIDDLE
+        @height()/2 + fontHeight(@fittingFontSize)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height()
 
-    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
-      textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
-      textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
-      textHorizontalPosition = @width() - widthOfText
+    textHorizontalPosition = switch @horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+        @width()/2 - widthOfText/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - widthOfText
 
 
     backBufferContext.fillStyle = @color.toString()
@@ -453,19 +455,21 @@ class StringMorph2 extends Morph
     y = @top()
 
     widthOfText = @widthOfText @textActuallyShown
-    if @verticalAlignment == AlignmentSpecVertical.TOP
-      textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
-      textVerticalPosition = @height()
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        fontHeight @fittingFontSize
+      when AlignmentSpecVertical.MIDDLE
+        @height()/2 + fontHeight(@fittingFontSize)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height()
 
-    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
-      textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
-      textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
-      textHorizontalPosition = @width() - widthOfText
+    textHorizontalPosition = switch @horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+        @width()/2 - widthOfText/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - widthOfText
 
     x += textHorizontalPosition
     y += textVerticalPosition - fontHeight @fittingFontSize
@@ -476,12 +480,13 @@ class StringMorph2 extends Morph
 
     widthOfText = @widthOfText text
 
-    if @horizontalAlignment == AlignmentSpecHorizontal.LEFT
-      textHorizontalPosition = 0
-    else if @horizontalAlignment == AlignmentSpecHorizontal.CENTER
-      textHorizontalPosition = @width()/2 - widthOfText/2
-    else if @horizontalAlignment == AlignmentSpecHorizontal.RIGHT
-      textHorizontalPosition = @width() - widthOfText
+    textHorizontalPosition = switch @horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+         @width()/2 - widthOfText/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - widthOfText
 
     xPosition = xPosition - textHorizontalPosition
     if xPosition - @left() >= widthOfText
@@ -523,12 +528,13 @@ class StringMorph2 extends Morph
   
   slotAt: (aPoint) ->
 
-    if @verticalAlignment == AlignmentSpecVertical.TOP
-      textVerticalPosition = fontHeight @fittingFontSize
-    else if @verticalAlignment == AlignmentSpecVertical.MIDDLE
-      textVerticalPosition = @height()/2 + fontHeight(@fittingFontSize)/2
-    else if @verticalAlignment == AlignmentSpecVertical.BOTTOM
-      textVerticalPosition = @height()
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        fontHeight @fittingFontSize
+      when AlignmentSpecVertical.MIDDLE
+        @height()/2 + fontHeight(@fittingFontSize)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height()
 
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
 
