@@ -328,29 +328,35 @@ class StringMorph2 extends Morph
     @setFittingFontSize @fitToExtent()
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
+  # this shenanigan of passing the alignments is only
+  # needed because we can't edit a TextMorph2 "in place"
+  # when it has an alignment other than top-left.
+  # When that changes, we can simplify this passing of
+  # parameters and simply use
+  # @horizontalAlignment and @verticalAlignment
+  createBufferCacheKey: (horizontalAlignment, verticalAlignment) ->
+    @extent().toString() + "-" +
+    @isPassword  + "-" +
+    @isShowingBlanks  + "-" +
+    @buildCanvasFontProperty()  + "-" +
+    @color.toString()  + "-" +
+    @backgroundColor.toString()  + "-" +
+    @backgroundTransparency.toString()  + "-" +
+    hashCode(@text)  + "-" +
+    hashCode(@textActuallyShown)  + "-" +
+    @startMark  + "-" +
+    @endMark  + "-" +
+    @markedBackgoundColor.toString()  + "-" +
+    horizontalAlignment  + "-" +
+    verticalAlignment  + "-" +
+    @fittingSpecWhenBoundsTooLarge  + "-" +
+    @fittingSpecWhenBoundsTooSmall
+
   createRefreshOrGetBackBuffer: ->
 
-    cacheKey =
-      @extent().toString() + "-" +
-      @isPassword  + "-" +
-      @isShowingBlanks  + "-" +
-      @buildCanvasFontProperty()  + "-" +
-      @color.toString()  + "-" +
-      @backgroundColor.toString()  + "-" +
-      @backgroundTransparency.toString()  + "-" +
-      hashCode(@text)  + "-" +
-      hashCode(@textActuallyShown)  + "-" +
-      @startMark  + "-" +
-      @endMark  + "-" +
-      @markedBackgoundColor.toString()  + "-" +
-      @horizontalAlignment  + "-" +
-      @verticalAlignment  + "-" +
-      @fittingSpecWhenBoundsTooLarge  + "-" +
-      @fittingSpecWhenBoundsTooSmall
-
+    cacheKey = @createBufferCacheKey @horizontalAlignment, @verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit
-
 
     @synchroniseTextAndActualText()
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)

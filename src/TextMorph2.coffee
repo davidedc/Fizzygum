@@ -325,23 +325,7 @@ class TextMorph2 extends StringMorph2
       verticalAlignment = AlignmentSpecVertical.TOP
       horizontalAlignment = AlignmentSpecHorizontal.LEFT
 
-    cacheKey =
-      @extent().toString()  + "-" +
-      @buildCanvasFontProperty()  + "-" +
-      hashCode(@textActuallyShown)  + "-" +
-      @backgroundColor?.toString()  + "-" +
-      @color.toString()  + "-" +
-      @backgroundColor.toString()  + "-" +
-      @backgroundTransparency.toString()  + "-" +
-      hashCode(@text)  + "-" +
-      @startMark  + "-" +
-      @endMark  + "-" +
-      @markedBackgoundColor.toString()  + "-" +
-      horizontalAlignment  + "-" +
-      verticalAlignment  + "-" +
-      @fittingSpecWhenBoundsTooLarge  + "-" +
-      @fittingSpecWhenBoundsTooSmall
-
+    cacheKey = @createBufferCacheKey horizontalAlignment, verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit
 
