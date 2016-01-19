@@ -5,7 +5,8 @@
 # It's useful when you mean an "enter" from the user to mean
 # "accept the changes", and to represent things that are
 # necessarily on one line and one line only such as
-# numbers, booleans, method names, file names, colors etc.
+# numbers, booleans, method names, file names,
+# colors, passwords etc.
 # If there is a chance that the text might span more
 # than one line (e.g. most button actions) then do
 # use a TextMorph instead.
