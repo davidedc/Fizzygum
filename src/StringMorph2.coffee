@@ -426,10 +426,10 @@ class StringMorph2 extends Morph
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
 
+  # Draw the selection. This is done by re-drawing the
+  # selected text, one character at the time, just with
+  # a background rectangle.
   drawSelection: (backBufferContext) ->
-    # Draw the selection. This is done by re-drawing the
-    # selected text, one character at the time, just with
-    # a background rectangle.
     startSlot = @selectionStartSlot()
     endSlot = @selectionEndSlot()
     for i in [startSlot...endSlot]

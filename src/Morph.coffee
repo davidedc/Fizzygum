@@ -1146,13 +1146,13 @@ class Morph extends MorphicNode
     return [area,sl,st,al,at,w,h]
 
   turnOnHighlight: ->
-    if @highlighted == false
+    if !@highlighted
       @highlighted = true
       world.morphsToBeHighlighted.push @
       @changed()
 
   turnOffHighlight: ->
-    if @highlighted == true
+    if @highlighted
       @highlighted = false
       world.morphsToBeHighlighted.remove @
       @changed()
