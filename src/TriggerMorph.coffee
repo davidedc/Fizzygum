@@ -127,25 +127,22 @@ class TriggerMorph extends Morph
     if area.isNotEmpty()
       if w < 1 or h < 1
         return null
-      aContext.save()
-      aContext.globalAlpha = @alpha
 
-      if !@color?
-        debugger
+      color = switch @state
+        when @STATE_NORMAL
+          @color
+        when @STATE_HIGHLIGHTED
+          @highlightColor
+        when @STATE_PRESSED
+          @pressColor
 
-      if @state == @STATE_NORMAL
-        aContext.fillStyle = @color.toString()
-      if @state == @STATE_HIGHLIGHTED
-        aContext.fillStyle = @highlightColor.toString()
-      if @state == @STATE_PRESSED
-        aContext.fillStyle = @pressColor.toString()
+      @paintRectangle \
+        aContext,
+        al, at, w, h,
+        color,
+        @alpha,
+        true # push and pop the context
 
-      aContext.fillRect  Math.round(al),
-          Math.round(at),
-          Math.round(w),
-          Math.round(h)
-
-      aContext.restore()
       @paintHighlight aContext, al, at, w, h
 
   createLabel: ->

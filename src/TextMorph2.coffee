@@ -344,13 +344,12 @@ class TextMorph2 extends StringMorph2
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
-    if @backgroundColor?
-      backBufferContext.save()
-      backBufferContext.fillStyle = @backgroundColor.toString()
-      if @backgroundTransparency?
-        backBufferContext.globalAlpha = @backgroundTransparency
-      backBufferContext.fillRect  0,0, @width() * pixelRatio, @height() * pixelRatio
-      backBufferContext.restore()
+    @paintRectangle \
+      backBufferContext,
+      0, 0, @width(), @height(),
+      @backgroundColor,
+      @backgroundTransparency,
+      true # push and pop the context
 
     textVerticalPosition = switch verticalAlignment
       when AlignmentSpecVertical.TOP

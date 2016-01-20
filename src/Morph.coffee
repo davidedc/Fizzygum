@@ -1161,29 +1161,34 @@ class Morph extends MorphicNode
     if !@highlighted
       return
 
-    aContext.save()
+    @paintRectangle \
+      aContext,
+      al, at, w, h,
+      "orange",
+      0.5,
+      true # push and pop the context
 
-    # Don't need this scale because
-    # al,at,w,h already account for that.
-    #aContext.scale pixelRatio, pixelRatio
+  paintRectangle: (
+    aContext,
+    al, at, w, h,
+    color = @color,
+    backgroundTransparency = null,
+    pushAndPopContext = false
+  ) ->
+      if color? and pushAndPopContext
+        aContext.save()
 
-    aContext.globalAlpha = 0.5
-    aContext.fillStyle = "orange"
-    aContext.fillRect  Math.round(al),
-        Math.round(at),
-        Math.round(w),
-        Math.round(h)
-    aContext.restore()
+      aContext.fillStyle = color.toString()
+      if backgroundTransparency?
+        aContext.globalAlpha = backgroundTransparency
 
-
-  paintBackgroundRectangle: (aContext, al, at, w, h) ->
-      # not needed
-      #aContext.globalAlpha = @alpha
-      aContext.fillStyle = @color.toString()
       aContext.fillRect  Math.round(al),
           Math.round(at),
           Math.round(w),
           Math.round(h)
+
+      if color? and pushAndPopContext
+        aContext.restore()
 
   # This method only paints this very morph
   # i.e. it doesn't descend the children
@@ -1207,7 +1212,7 @@ class Morph extends MorphicNode
 
       if !@color?
         debugger
-      @paintBackgroundRectangle aContext, al, at, w, h
+      @paintRectangle aContext, al, at, w, h
 
       aContext.restore()
       @paintHighlight aContext, al, at, w, h

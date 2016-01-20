@@ -41,7 +41,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
 
       aContext.scale pixelRatio, pixelRatio
 
-      @paintBackgroundRectangle aContext, al, at, w, h
+      @paintRectangle aContext, al, at, w, h
 
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
