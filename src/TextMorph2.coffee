@@ -286,10 +286,11 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   breakTextIntoLines: (text = @text, overrideFontSize) ->
-    ## remember to cache also here at the top level
-    ## based on text, fontsize and width.
-
     maxTextWidth = @width()
+
+    cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth
+    textBreak = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
+    if textBreak? then return textBreak
 
     #console.log "breakTextIntoLines // " + " maxTextWidth: " + maxTextWidth + " overrideFontSize: " + overrideFontSize
 
@@ -303,13 +304,14 @@ class TextMorph2 extends StringMorph2
 
     paragraphs = @getParagraphs text
 
-
     textWrappingData = @getTextWrappingData overrideFontSize, maxTextWidth, text, paragraphs
 
     [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
     height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
-    return [textWrappingData, height, maxWrappedLineWidth]
+    textBreak = [textWrappingData, height, maxWrappedLineWidth]
+    world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textBreak
 
+    return textBreak
 
   reflowText: ->
     tmp = @breakTextIntoLines @textActuallyShown, @fittingFontSize

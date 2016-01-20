@@ -100,6 +100,7 @@ class WorldMorph extends FrameMorph
   cacheForParagraphsWordsSplits: null
   cacheForParagraphsWrappingData: null
   cacheForTextWrappingData: null
+  cacheForTextBreakingIntoLinesTopLevel: null
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -249,6 +250,7 @@ class WorldMorph extends FrameMorph
     @cacheForParagraphsWrappingData = new LRUCache 300, 1000*60*60*24
     @cacheForTextWrappingData = new LRUCache 300, 1000*60*60*24
     @cacheForImmutableBackBuffers = new LRUCache 10, 1000*60*60*24
+    @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
 
     @changed()
 
