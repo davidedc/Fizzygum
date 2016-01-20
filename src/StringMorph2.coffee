@@ -370,7 +370,6 @@ class StringMorph2 extends Morph
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
-    # This could be optimised but it's unclear if it's worth it.
     widthOfText = @widthOfText @textActuallyShown
     if @backgroundColor? or
     @verticalAlignment != AlignmentSpecVertical.TOP or
