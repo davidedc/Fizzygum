@@ -4,7 +4,7 @@ set pageRoot to "file:///Users/daviddellacasa/Zombie-Kernel/"
 
 set windows_number to 0
 
-repeat -- repeat forever
+-- repeat -- repeat forever
 	set dialogResult to display dialog Â
 		"Pick a mode" buttons {"9 squashed", "9 tiled", "close"} Â
 		giving up after 536870910
@@ -54,6 +54,6 @@ repeat -- repeat forever
 			
 		end repeat
 	end repeat
-end repeat -- repeat forever
+-- end repeat -- repeat forever
 
 
