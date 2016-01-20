@@ -420,24 +420,25 @@ class StringMorph2 extends Morph
 
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
-
-    # draw the selection
-    start = Math.min @startMark, @endMark
-    stop = Math.max @startMark, @endMark
-    for i in [start...stop]
-      p = @slotCoordinates(i).subtract @position()
-      if p?
-        c = text.charAt(i)
-        backBufferContext.fillStyle = @markedBackgoundColor.toString()
-        
-        backBufferContext.fillRect p.x, textVerticalPosition - fontHeight(@fittingFontSize), Math.ceil((@measureText @fittingFontSize, c)) + 1,
-          fontHeight(@fittingFontSize)
-        backBufferContext.fillStyle = @markedTextColor.toString()
-        backBufferContext.fillText c, p.x, textVerticalPosition
+    @drawSelection backBufferContext
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
+
+  drawSelection: (backBufferContext) ->
+    # Draw the selection. This is done by re-drawing the
+    # selected text, one character at the time, just with
+    # a background rectangle.
+    startSlot = @selectionStartSlot()
+    endSlot = @selectionEndSlot()
+    for i in [startSlot...endSlot]
+      p = @slotCoordinates(i).subtract @position()
+      c = @textActuallyShown.charAt(i)
+      backBufferContext.fillStyle = @markedBackgoundColor.toString()
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillStyle = @markedTextColor.toString()
+      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
     
   
   # StringMorph2 measuring:

@@ -386,18 +386,7 @@ class TextMorph2 extends StringMorph2
       i++
       backBufferContext.fillText line, x, y + textVerticalPosition
 
-    # Draw the selection. This is done by re-drawing the
-    # selected text, one character at the time, just with
-    # a background rectangle.
-    start = Math.min @startMark, @endMark
-    stop = Math.max @startMark, @endMark
-    for i in [start...stop]
-      p = @slotCoordinates(i).subtract @position()
-      c = @textActuallyShown.charAt(i)
-      backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
-      backBufferContext.fillStyle = @markedTextColor.toString()
-      backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
+    @drawSelection backBufferContext
 
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
