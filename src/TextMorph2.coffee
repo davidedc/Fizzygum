@@ -337,6 +337,10 @@ class TextMorph2 extends StringMorph2
 
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment
+
+    # it's easier for the time being to use the
+    # top-left alignment when editing the text,
+    # so let's force that here.
     if world.caret?.target ?= @
       verticalAlignment = AlignmentSpecVertical.TOP
       horizontalAlignment = AlignmentSpecHorizontal.LEFT
