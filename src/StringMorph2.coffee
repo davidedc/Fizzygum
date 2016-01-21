@@ -29,7 +29,7 @@ class StringMorph2 extends Morph
   @augmentWith BackBufferMixin
 
   text: ""
-  textActuallyShown: ""
+  textPossiblyCroppedToFit: ""
 
   fittingFontSize: null
   originallySetFontSize: null
@@ -83,7 +83,7 @@ class StringMorph2 extends Morph
       @backgroundTransparency = null
       ) ->
     # additional properties:
-    @textActuallyShown = @text
+    @textPossiblyCroppedToFit = @text
 
     super()
 
@@ -250,12 +250,12 @@ class StringMorph2 extends Morph
   synchroniseTextAndActualText: ->
 
     if @doesTextFitInExtent @text, @originallySetFontSize
-      @textActuallyShown = @text
-      #console.log "@textActuallyShown = @text 1"
+      @textPossiblyCroppedToFit = @text
+      #console.log "@textPossiblyCroppedToFit = @text 1"
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
-        @textActuallyShown = @text
-        #console.log "@textActuallyShown = @text 2"
+        @textPossiblyCroppedToFit = @text
+        #console.log "@textPossiblyCroppedToFit = @text 2"
 
 
   # there are many factors beyond the font size that affect
@@ -296,8 +296,8 @@ class StringMorph2 extends Morph
     # If it doesn't fit, then we either crop it or make the
     # font smaller.
     if @doesTextFitInExtent @text, @originallySetFontSize
-      @textActuallyShown = @text
-      #console.log "@textActuallyShown = @text 3"
+      @textPossiblyCroppedToFit = @text
+      #console.log "@textPossiblyCroppedToFit = @text 3"
       if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
         largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
         return largestFittingFontSize
@@ -305,11 +305,11 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-        @textActuallyShown = @searchLongestFittingText @doesTextFitInExtent, @text
+        @textPossiblyCroppedToFit = @searchLongestFittingText @doesTextFitInExtent, @text
         return @originallySetFontSize
       else
-        @textActuallyShown = @text
-        #console.log "@textActuallyShown = @text 4"
+        @textPossiblyCroppedToFit = @text
+        #console.log "@textPossiblyCroppedToFit = @text 4"
         largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
         return largestFittingFontSize
 
@@ -343,7 +343,7 @@ class StringMorph2 extends Morph
     @backgroundColor.toString()  + "-" +
     @backgroundTransparency.toString()  + "-" +
     hashCode(@text)  + "-" +
-    hashCode(@textActuallyShown)  + "-" +
+    hashCode(@textPossiblyCroppedToFit)  + "-" +
     @startMark  + "-" +
     @endMark  + "-" +
     @markedBackgoundColor.toString()  + "-" +
@@ -361,7 +361,7 @@ class StringMorph2 extends Morph
     if cacheHit? then return cacheHit
 
     @synchroniseTextAndActualText()
-    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
+    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
     # big as the text - which is likely to be smaller than the whole morph
@@ -372,7 +372,7 @@ class StringMorph2 extends Morph
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
-    widthOfText = @widthOfText @textActuallyShown
+    widthOfText = @widthOfText @textPossiblyCroppedToFit
     if @backgroundColor? or
     @verticalAlignment != AlignmentSpecVertical.TOP or
     @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
@@ -434,7 +434,7 @@ class StringMorph2 extends Morph
     endSlot = @selectionEndSlot()
     for i in [startSlot...endSlot]
       p = @slotCoordinates(i).subtract @position()
-      c = @textActuallyShown.charAt(i)
+      c = @textPossiblyCroppedToFit.charAt(i)
       backBufferContext.fillStyle = @markedBackgoundColor.toString()
       backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
@@ -447,14 +447,14 @@ class StringMorph2 extends Morph
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
+    if @text != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
-    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
+    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
 
     # let's be defensive and check that the
     # slot is in the right interval
@@ -467,7 +467,7 @@ class StringMorph2 extends Morph
     x = @left() + xOffset
     y = @top()
 
-    widthOfText = @widthOfText @textActuallyShown
+    widthOfText = @widthOfText @textPossiblyCroppedToFit
     textVerticalPosition = switch @verticalAlignment
       when AlignmentSpecVertical.TOP
         fontHeight @fittingFontSize
@@ -549,7 +549,7 @@ class StringMorph2 extends Morph
       when AlignmentSpecVertical.BOTTOM
         @height()
 
-    text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
+    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
 
     # if pointer is below the line, the slot is at
     # the last character.
@@ -570,7 +570,7 @@ class StringMorph2 extends Morph
   
   endOfLine: ->
     # answer the slot (index) indicating the EOL for the given slot
-    @textActuallyShown.length
+    @textPossiblyCroppedToFit.length
 
   fontSizePopup: (menuItem)->
     @prompt menuItem.parent.title + "\nfont\nsize:",
@@ -720,8 +720,8 @@ class StringMorph2 extends Morph
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
     @doesTextFitInExtent @text, @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
-      @textActuallyShown = @text
-      #console.log "@textActuallyShown = @text 5"
+      @textPossiblyCroppedToFit = @text
+      #console.log "@textPossiblyCroppedToFit = @text 5"
     else
       console.log "texts non-synched"
     @reLayout()
@@ -756,8 +756,8 @@ class StringMorph2 extends Morph
     alert "this is strange"
     # for context menu demo purposes
     @text = Math.round(size).toString()
-    @textActuallyShown = @text
-    #console.log "@textActuallyShown = @text 6"
+    @textPossiblyCroppedToFit = @text
+    #console.log "@textPossiblyCroppedToFit = @text 6"
     @reLayout()
     
     @changed()
@@ -769,7 +769,7 @@ class StringMorph2 extends Morph
   
   # StringMorph2 editing:
   edit: ->
-    if @textActuallyShown == @text
+    if @textPossiblyCroppedToFit == @text
       world.edit @
 
       # when you edit a TextMorph, potentially
@@ -790,7 +790,7 @@ class StringMorph2 extends Morph
   selection: ->
     start = Math.min @startMark, @endMark
     stop = Math.max @startMark, @endMark
-    @textActuallyShown.slice start, stop
+    @textPossiblyCroppedToFit.slice start, stop
   
   selectionStartSlot: ->
     if !@startMark? or !@endMark?
@@ -819,8 +819,8 @@ class StringMorph2 extends Morph
     start = Math.min @startMark, @endMark
     stop = Math.max @startMark, @endMark
     @text = text.slice(0, start) + text.slice(stop)
-    @textActuallyShown = @text
-    #console.log "@textActuallyShown = @text 6"
+    @textPossiblyCroppedToFit = @text
+    #console.log "@textPossiblyCroppedToFit = @text 6"
     @reLayout()
     
     @changed()
@@ -829,7 +829,7 @@ class StringMorph2 extends Morph
 
   selectAll: ->
     @startMark = 0
-    @endMark = @textActuallyShown.length
+    @endMark = @textPossiblyCroppedToFit.length
     
     @changed()
 

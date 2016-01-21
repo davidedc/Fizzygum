@@ -47,7 +47,7 @@ class TextMorph2 extends StringMorph2
       # override inherited properties:
       @markedTextColor = new Color 255, 255, 255
       @markedBackgoundColor = new Color 60, 60, 120
-      @textActuallyShown = @text
+      @textPossiblyCroppedToFit = @text
       @noticesTransparentClick = true
 
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
@@ -327,7 +327,7 @@ class TextMorph2 extends StringMorph2
     return textBreak
 
   reflowText: ->
-    tmp = @breakTextIntoLines @textActuallyShown, @fittingFontSize
+    tmp = @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
     return tmp[1]
 
@@ -441,7 +441,7 @@ class TextMorph2 extends StringMorph2
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textActuallyShown and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
+    if @text != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null
@@ -465,7 +465,7 @@ class TextMorph2 extends StringMorph2
   slotAtRow: (row, xPosition) ->
 
     if row > @wrappedLines.length
-      return @textActuallyShown.length
+      return @textPossiblyCroppedToFit.length
 
     
     return @wrappedLineSlots[Math.max(row - 1, 0)] +
@@ -499,7 +499,7 @@ class TextMorph2 extends StringMorph2
     # answer the slot below the given one
     [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow > @wrappedLines.length - 2
-      return @textActuallyShown.length
+      return @textPossiblyCroppedToFit.length
     return @slotAtRow(slotRow+2, @caretHorizPositionForVertMovement)
     below = @wrappedLines[slotRow + 1]
     if below.length < slotColumn - 1
