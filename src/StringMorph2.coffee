@@ -458,7 +458,6 @@ class StringMorph2 extends Morph
     dest = Math.min Math.max(slot, 0), text.length
 
     xOffset = Math.ceil @widthOfText text.substring 0, dest
-    @pos = dest
     x = @left() + xOffset
     y = @top()
 
