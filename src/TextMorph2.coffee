@@ -61,10 +61,8 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   doesTextFitInExtent: (text = @text, overrideFontSize) =>
-    textSize = @breakTextIntoLines text, overrideFontSize
-    extentOccupiedByText = new Point textSize[2], textSize[1]
-
-    return extentOccupiedByText.le @extent()
+    doesItFit = @breakTextIntoLines text, overrideFontSize, @extent()
+    return doesItFit
 
   getParagraphs: (text) ->
     cacheKey = hashCode text
@@ -199,8 +197,8 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs) ->
-    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode text
+  getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs, justCheckIfItFitsInThisExtent) ->
+    cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode(text) + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
     if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
@@ -273,9 +271,20 @@ class TextMorph2 extends StringMorph2
       wrappedLineSlotsOfWholeText = wrappedLineSlotsOfWholeText.concat advancedWrappedLineSlotsOfThisParagraph
       maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
+      if justCheckIfItFitsInThisExtent?
+        heightOfText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(fontHeight overrideFontSize)
+        #console.log "heightOfText: " + heightOfText + " justCheckIfItFitsInThisExtent: " + justCheckIfItFitsInThisExtent
+        if heightOfText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
+          world.cacheForTextWrappingData.set cacheKey, false
+          return false
+
 
     # here all paragraphs have been visited
     #alert "wrappedLineSlotsOfWholeText: " + wrappedLineSlotsOfWholeText
+
+    if justCheckIfItFitsInThisExtent?
+      world.cacheForTextWrappingData.set cacheKey, true
+      return true
     textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
     world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
@@ -285,10 +294,10 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  breakTextIntoLines: (text = @text, overrideFontSize) ->
+  breakTextIntoLines: (text = @text, overrideFontSize, justCheckIfItFitsInThisExtent) ->
     morphWidth = @width()
 
-    cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth
+    cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textBreak = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
     if textBreak? then return textBreak
 
@@ -304,13 +313,17 @@ class TextMorph2 extends StringMorph2
 
     paragraphs = @getParagraphs text
 
-    textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs
+    textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
 
-    [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
-    height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
-    textBreak = [textWrappingData, height, maxWrappedLineWidth]
+
+    if justCheckIfItFitsInThisExtent?
+      textBreak = textWrappingData
+    else
+      [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
+      height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
+      textBreak = [textWrappingData, height, maxWrappedLineWidth]
+
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textBreak
-
     return textBreak
 
   reflowText: ->
