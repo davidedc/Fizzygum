@@ -33,6 +33,8 @@ class ShadowMorph extends Morph
     @offset.debugIfFloats()
     @notifyChildrenThatParentHasReLayouted()
 
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     cacheKey =

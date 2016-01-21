@@ -352,6 +352,8 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooLarge  + "-" +
     @fittingSpecWhenBoundsTooSmall
 
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     cacheKey = @createBufferCacheKey @horizontalAlignment, @verticalAlignment

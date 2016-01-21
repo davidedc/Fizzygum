@@ -18,6 +18,8 @@ class ColorPaletteMorph extends Morph
     super()
     @silentRawSetExtent sizePoint or new Point 80, 50
   
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
     cacheKey =
       @extent().toString()

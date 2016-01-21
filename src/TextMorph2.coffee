@@ -331,7 +331,8 @@ class TextMorph2 extends StringMorph2
     [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
     return tmp[1]
 
-  # no changes of position or extent
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     verticalAlignment = @verticalAlignment

@@ -17,6 +17,8 @@ class CanvasMorph extends FrameMorph
   
   imBeingAddedTo: (newParentMorph) ->
 
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     cacheKey =

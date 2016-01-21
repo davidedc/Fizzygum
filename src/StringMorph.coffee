@@ -106,6 +106,8 @@ class StringMorph extends Morph
     @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
   
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     cacheKey =

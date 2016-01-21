@@ -134,7 +134,8 @@ class TextMorph extends StringMorph
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @notifyChildrenThatParentHasReLayouted()
 
-  # no changes of position or extent
+  # no changes of position or extent should be
+  # performed in here
   createRefreshOrGetBackBuffer: ->
 
     cacheKey =
