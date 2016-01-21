@@ -455,9 +455,15 @@ class StringMorph2 extends Morph
     # answer the position point of the given index ("slot")
     # where the caret should be placed
     text = (if @isPassword then @password("*", @textActuallyShown.length) else @textActuallyShown)
-    dest = Math.min Math.max(slot, 0), text.length
 
-    xOffset = Math.ceil @widthOfText text.substring 0, dest
+    # let's be defensive and check that the
+    # slot is in the right interval
+    checkedSlot = Math.min Math.max(slot, 0), text.length
+    if slot != checkedSlot
+      alert "something wrong - slot is out of range"
+    slot = checkedSlot
+
+    xOffset = Math.ceil @widthOfText text.substring 0, slot
     x = @left() + xOffset
     y = @top()
 
