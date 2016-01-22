@@ -339,7 +339,7 @@ class CaretMorph extends BlinkerMorph
       @target.changed()
       @target.setContent text.substring(0, @slot - 1) + text.substr(@slot)
       @goLeft()
-    @target.reflowText()
+    @target.reflowText?()
 
     @updateSelection false
     @gotoSlot @slot

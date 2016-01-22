@@ -47,7 +47,7 @@ class TextMorph2 extends StringMorph2
       # override inherited properties:
       @markedTextColor = new Color 255, 255, 255
       @markedBackgoundColor = new Color 60, 60, 120
-      @textPossiblyCroppedToFit = @text
+      @textPossiblyCroppedToFit = @transformTextOneToOne @text
       @noticesTransparentClick = true
 
       @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
@@ -60,7 +60,7 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  doesTextFitInExtent: (text = @text, overrideFontSize) =>
+  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) =>
     doesItFit = @breakTextIntoLines text, overrideFontSize, @extent()
     return doesItFit
 
@@ -294,7 +294,7 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  breakTextIntoLines: (text = @text, overrideFontSize, justCheckIfItFitsInThisExtent) ->
+  breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
     morphWidth = @width()
 
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
@@ -441,7 +441,7 @@ class TextMorph2 extends StringMorph2
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
+    if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null

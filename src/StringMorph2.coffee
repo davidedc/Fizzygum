@@ -28,7 +28,11 @@ class StringMorph2 extends Morph
 
   @augmentWith BackBufferMixin
 
+  # clear unadulterated text
   text: ""
+  # the text as it actually shows.
+  # It might have undergone transformations
+  # and cropping.
   textPossiblyCroppedToFit: ""
 
   fittingFontSize: null
@@ -83,7 +87,7 @@ class StringMorph2 extends Morph
       @backgroundTransparency = null
       ) ->
     # additional properties:
-    @textPossiblyCroppedToFit = @text
+    @textPossiblyCroppedToFit = @transformTextOneToOne @text
 
     super()
 
@@ -214,17 +218,18 @@ class StringMorph2 extends Morph
   # see comment above for "searchLargestFittingFont" for some
   # ideas on how to optimise this further.
   searchLongestFittingText: (fittingTestFunction, textToFit) ->
+    textToFit = @transformTextOneToOne @text
     start = 0    # minimum string length that we are gonna examine
-    stop  = @generateTextWithEllipsis(@text).length
+    stop  = @generateTextWithEllipsis(textToFit).length
     
-    if fittingTestFunction(@text, @originallySetFontSize)
-       return @text
+    if fittingTestFunction(textToFit, @originallySetFontSize)
+       return textToFit
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      textAtPivot = @generateTextWithEllipsis @text.substring 0, pivot
+      textAtPivot = @generateTextWithEllipsis textToFit.substring 0, pivot
       itFitsAtPivot = fittingTestFunction textAtPivot, @originallySetFontSize
       #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
@@ -237,7 +242,7 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    fittingText = @generateTextWithEllipsis @text.substring 0, start
+    fittingText = @generateTextWithEllipsis textToFit.substring 0, start
     #console.log "what fits: " + fittingText
     if start == 0
       if fittingTestFunction "…", @originallySetFontSize
@@ -248,14 +253,14 @@ class StringMorph2 extends Morph
       return fittingText
 
   synchroniseTextAndActualText: ->
-
-    if @doesTextFitInExtent @text, @originallySetFontSize
-      @textPossiblyCroppedToFit = @text
-      #console.log "@textPossiblyCroppedToFit = @text 1"
+    textToFit = @transformTextOneToOne @text
+    if @doesTextFitInExtent textToFit, @originallySetFontSize
+      @textPossiblyCroppedToFit = textToFit
+      #console.log "@textPossiblyCroppedToFit = textToFit 1"
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN
-        @textPossiblyCroppedToFit = @text
-        #console.log "@textPossiblyCroppedToFit = @text 2"
+        @textPossiblyCroppedToFit = textToFit
+        #console.log "@textPossiblyCroppedToFit = textToFit 2"
 
 
   # there are many factors beyond the font size that affect
@@ -275,15 +280,22 @@ class StringMorph2 extends Morph
     #    alert "problem with cache on: " + overrideFontSize + "-" + text + " hit is: " + cacheHit + " should be: " + cacheEntry
     return cacheEntry
 
+  visualisedText: ->
+    return @textPossiblyCroppedToFit
+
+  # this should be a 1-1 transformation.
+  # for example substitute any letter with "*" for passwords
+  # or turn everything to uppercase
+  transformTextOneToOne: (theText) ->
+    return (if @isPassword then @password("*", theText.length) else theText)
+
   # notice the thick arrow here!
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  doesTextFitInExtent: (text = @text, overrideFontSize) =>
-    text = (if @isPassword then @password("*", text.length) else text)
-
+  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) =>
     extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
 
     return extentOccupiedByText.le @extent()
@@ -295,26 +307,26 @@ class StringMorph2 extends Morph
     # make the font size bigger if that's the policy.
     # If it doesn't fit, then we either crop it or make the
     # font smaller.
-    if @doesTextFitInExtent @text, @originallySetFontSize
-      @textPossiblyCroppedToFit = @text
-      #console.log "@textPossiblyCroppedToFit = @text 3"
+    textToFit = @transformTextOneToOne @text
+    if @doesTextFitInExtent textToFit, @originallySetFontSize
+      @textPossiblyCroppedToFit = textToFit
+      #console.log "@textPossiblyCroppedToFit = textToFit 3"
       if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
+        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, textToFit
         return largestFittingFontSize
       else
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-        @textPossiblyCroppedToFit = @searchLongestFittingText @doesTextFitInExtent, @text
+        @textPossiblyCroppedToFit = @searchLongestFittingText @doesTextFitInExtent, textToFit
         return @originallySetFontSize
       else
-        @textPossiblyCroppedToFit = @text
-        #console.log "@textPossiblyCroppedToFit = @text 4"
-        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, @text
+        @textPossiblyCroppedToFit = textToFit
+        #console.log "@textPossiblyCroppedToFit = textToFit 4"
+        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, textToFit
         return largestFittingFontSize
 
   widthOfText: (text, overrideFontSize) ->
-    text = (if @isPassword then @password("*", text.length) else text)
     return @measureText overrideFontSize, text
 
   setFittingFontSize: (theValue) ->
@@ -361,7 +373,7 @@ class StringMorph2 extends Morph
     if cacheHit? then return cacheHit
 
     @synchroniseTextAndActualText()
-    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
+    text = @textPossiblyCroppedToFit
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
     # big as the text - which is likely to be smaller than the whole morph
@@ -372,7 +384,7 @@ class StringMorph2 extends Morph
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
-    widthOfText = @widthOfText @textPossiblyCroppedToFit
+    widthOfText = @widthOfText text
     if @backgroundColor? or
     @verticalAlignment != AlignmentSpecVertical.TOP or
     @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
@@ -447,14 +459,14 @@ class StringMorph2 extends Morph
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the
     # popout for editing takes over.
-    if @text != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
+    if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
       return null
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
-    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
+    text = @textPossiblyCroppedToFit
 
     # let's be defensive and check that the
     # slot is in the right interval
@@ -467,7 +479,7 @@ class StringMorph2 extends Morph
     x = @left() + xOffset
     y = @top()
 
-    widthOfText = @widthOfText @textPossiblyCroppedToFit
+    widthOfText = @widthOfText text
     textVerticalPosition = switch @verticalAlignment
       when AlignmentSpecVertical.TOP
         fontHeight @fittingFontSize
@@ -549,14 +561,13 @@ class StringMorph2 extends Morph
       when AlignmentSpecVertical.BOTTOM
         @height()
 
-    text = (if @isPassword then @password("*", @textPossiblyCroppedToFit.length) else @textPossiblyCroppedToFit)
 
     # if pointer is below the line, the slot is at
     # the last character.
     if (aPoint.y - textVerticalPosition) - @top() > Math.ceil fontHeight @fittingFontSize
-      return text.length
+      return @textPossiblyCroppedToFit.length
 
-    return @slotAtReduced aPoint.x, text
+    return @slotAtReduced aPoint.x, @textPossiblyCroppedToFit
   
   upFrom: (slot) ->
     @startOfLine()
@@ -718,9 +729,9 @@ class StringMorph2 extends Morph
 
     @text = theTextContent
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
-    @doesTextFitInExtent @text, @originallySetFontSize
+    @doesTextFitInExtent (@transformTextOneToOne @text), @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
-      @textPossiblyCroppedToFit = @text
+      @textPossiblyCroppedToFit = @transformTextOneToOne @text
       #console.log "@textPossiblyCroppedToFit = @text 5"
     else
       console.log "texts non-synched"
@@ -756,7 +767,8 @@ class StringMorph2 extends Morph
     alert "this is strange"
     # for context menu demo purposes
     @text = Math.round(size).toString()
-    @textPossiblyCroppedToFit = @text
+    @textPossiblyCroppedToFit = @transformTextOneToOne @text
+    # the reLayout() here might actually crop the text
     #console.log "@textPossiblyCroppedToFit = @text 6"
     @reLayout()
     
@@ -769,7 +781,7 @@ class StringMorph2 extends Morph
   
   # StringMorph2 editing:
   edit: ->
-    if @textPossiblyCroppedToFit == @text
+    if @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world.edit @
 
       # when you edit a TextMorph, potentially
@@ -790,7 +802,7 @@ class StringMorph2 extends Morph
   selection: ->
     start = Math.min @startMark, @endMark
     stop = Math.max @startMark, @endMark
-    @textPossiblyCroppedToFit.slice start, stop
+    @text.slice start, stop
   
   selectionStartSlot: ->
     if !@startMark? or !@endMark?
@@ -819,8 +831,10 @@ class StringMorph2 extends Morph
     start = Math.min @startMark, @endMark
     stop = Math.max @startMark, @endMark
     @text = text.slice(0, start) + text.slice(stop)
-    @textPossiblyCroppedToFit = @text
-    #console.log "@textPossiblyCroppedToFit = @text 6"
+    @textPossiblyCroppedToFit = @transformTextOneToOne @text
+    # the reLayout() below might actually
+    # crop the text
+    #console.log "@textPossiblyCroppedToFit =  6"
     @reLayout()
     
     @changed()
