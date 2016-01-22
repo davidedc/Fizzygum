@@ -703,6 +703,7 @@ class StringMorph2 extends Morph
     @changed()
   
   toggleIsPassword: ->
+    world.stopEditing()
     @isPassword = not @isPassword
     @reLayout()
     
