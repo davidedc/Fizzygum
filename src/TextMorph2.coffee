@@ -13,6 +13,8 @@ class TextMorph2 extends StringMorph2
   wrappedLines: []
   wrappedLineSlots: []
   maxWrappedLineWidth: 0
+  emptyCharacter: '\u2063'
+  #emptyCharacter: '^'
 
   backgroundColor: null
 
@@ -83,7 +85,7 @@ class TextMorph2 extends StringMorph2
 
   replaceLastSpaceWithInvisibleCarriageReturn: (string) ->
     string = string.substr(0, string.length-1)
-    string = string + '\u2063'
+    string = string + @emptyCharacter
 
   getWrappingData: (overrideFontSize, maxTextWidth, eachParagraph, wordsOfThisParagraph) ->
     cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode eachParagraph
@@ -176,9 +178,12 @@ class TextMorph2 extends StringMorph2
             # word that has caused the overflow.
 
             currentLine = @replaceLastSpaceWithInvisibleCarriageReturn currentLine
-            wrappedLinesOfThisParagraph.push currentLine
-            wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-            maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
+            # if we don't do this test there is a strange behaviour
+            # when one types a very long word
+            if currentLine != @emptyCharacter
+              wrappedLinesOfThisParagraph.push currentLine
+              wrappedLineSlotsOfThisParagraph.push slotsInParagraph
+              maxWrappedLineWidthOfThisParagraph = Math.max maxWrappedLineWidthOfThisParagraph, Math.ceil @measureText overrideFontSize, currentLine
             currentLine = word + " "
           else
             # no overflow happened, so just proceed as normal
