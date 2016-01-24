@@ -341,13 +341,13 @@ class StringMorph extends Morph
     stop = Math.max @startMark, @endMark
     @text.slice start, stop
   
-  selectionStartSlot: ->
+  firstSelectedSlot: ->
     Math.min @startMark, @endMark
     if !@startMark? or !@endMark?
       return null
     return Math.min @startMark, @endMark
 
-  selectionEndSlot: ->
+  lastSelectedSlot: ->
     if !@startMark? or !@endMark?
       return null
     return Math.max @startMark, @endMark

@@ -149,8 +149,8 @@ class CaretMorph extends BlinkerMorph
         @parent.parent.scrollCaretIntoView @
   
   goLeft: (shift) ->
-    if !shift and @target.selectionStartSlot()?
-      @gotoSlot @target.selectionStartSlot()
+    if !shift and @target.firstSelectedSlot()?
+      @gotoSlot @target.firstSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
@@ -160,8 +160,8 @@ class CaretMorph extends BlinkerMorph
     @target.caretHorizPositionForVertMovement = @left()
   
   goRight: (shift, howMany) ->
-    if !shift and @target.selectionEndSlot()?
-      @gotoSlot @target.selectionEndSlot()
+    if !shift and @target.lastSelectedSlot()?
+      @gotoSlot @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
@@ -171,8 +171,8 @@ class CaretMorph extends BlinkerMorph
     @target.caretHorizPositionForVertMovement = @left()
   
   goUp: (shift) ->
-    if !shift and @target.selectionEndSlot()?
-      @gotoSlot @target.selectionStartSlot()
+    if !shift and @target.lastSelectedSlot()?
+      @gotoSlot @target.firstSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
@@ -181,8 +181,8 @@ class CaretMorph extends BlinkerMorph
       @clearSelectionIfStartAndEndMeet shift
   
   goDown: (shift) ->
-    if !shift and @target.selectionEndSlot()?
-      @gotoSlot @target.selectionEndSlot()
+    if !shift and @target.lastSelectedSlot()?
+      @gotoSlot @target.lastSelectedSlot()
       @updateSelection shift
     else
       @updateSelection shift
@@ -272,7 +272,7 @@ class CaretMorph extends BlinkerMorph
     # numbers and "-" and "." as input
     if not @target.isNumeric or not isNaN(parseFloat(symbol)) or symbol in ["-", "."]
       if @target.selection() isnt ""
-        @gotoSlot @target.selectionStartSlot()
+        @gotoSlot @target.firstSelectedSlot()
         @target.deleteSelection()
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
@@ -322,7 +322,7 @@ class CaretMorph extends BlinkerMorph
   
   deleteRight: ->
     if @target.selection() isnt ""
-      @gotoSlot @target.selectionStartSlot()
+      @gotoSlot @target.firstSelectedSlot()
       @target.deleteSelection()
     else
       text = @target.text
@@ -332,7 +332,7 @@ class CaretMorph extends BlinkerMorph
   
   deleteLeft: ->
     if @target.selection()
-      @gotoSlot @target.selectionStartSlot()
+      @gotoSlot @target.firstSelectedSlot()
       @target.deleteSelection()
     else
       text = @target.text

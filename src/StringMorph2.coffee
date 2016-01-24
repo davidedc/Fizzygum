@@ -58,8 +58,15 @@ class StringMorph2 extends Morph
   # text to scroll, so that the caret is in-view when
   # used, say, on a text in a scrollMorph.
   isScrollable: true
+
+  # startMark and endMark contain the slot of the
+  # slot first selected IN TIME, not "in space".
+  # i.e. startMark might be higher than endMark if
+  # text had been selected starting from the
+  # right and "going left"
   startMark: null
   endMark: null
+
   # see note above about Colors and shared objects
   markedTextColor: new Color 255, 255, 255
   # see note above about Colors and shared objects
@@ -470,8 +477,8 @@ class StringMorph2 extends Morph
   # selected text, one character at the time, just with
   # a background rectangle.
   drawSelection: (backBufferContext) ->
-    startSlot = @selectionStartSlot()
-    endSlot = @selectionEndSlot()
+    startSlot = @firstSelectedSlot()
+    endSlot = @lastSelectedSlot()
     for i in [startSlot...endSlot]
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
@@ -846,12 +853,12 @@ class StringMorph2 extends Morph
     stop = Math.max @startMark, @endMark
     @text.slice start, stop
   
-  selectionStartSlot: ->
+  firstSelectedSlot: ->
     if !@startMark? or !@endMark?
       return null
     return Math.min @startMark, @endMark
 
-  selectionEndSlot: ->
+  lastSelectedSlot: ->
     if !@startMark? or !@endMark?
       return null
     return Math.max @startMark, @endMark
