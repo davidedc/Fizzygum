@@ -5,7 +5,7 @@
 # It's useful when you mean an "enter" from the user to mean
 # "accept the changes", and to represent things that are
 # necessarily on one line and one line only such as
-# numbers, booleans, method names, file names,
+# numbers, booleans, method and property names, file names,
 # colors, passwords etc.
 # If there is a chance that the text might span more
 # than one line (e.g. most button actions) then do
@@ -751,6 +751,9 @@ class StringMorph2 extends Morph
     @reLayout()
     @changed()
 
+  # this would be triggered by the "lock/unlock"
+  # menu entry but unclear the specific use and
+  # how to implement this right now.
   toggleIsfloatDraggable: ->
   #  # for context menu demo purposes
   #  @isfloatDraggable = not @isfloatDraggable
@@ -782,10 +785,12 @@ class StringMorph2 extends Morph
   
   reflowText: ->
 
-  setContent: (theTextContent,a) ->
-    if a?
-      theTextContent = a.text.text
-
+  setContent: (theTextContent,stringFieldMorph) ->
+    if stringFieldMorph?
+      # in this case, the stringFieldMorph has a
+      # StringMorph in "text". The StringMorph has the
+      # "text" inside it.
+      theTextContent = stringFieldMorph.text.text
 
     @text = theTextContent
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or

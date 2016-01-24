@@ -1,4 +1,6 @@
 # StringFieldMorph ////////////////////////////////////////////////////
+# a stringMorph that can "scroll" as the cursor moves
+# but note that there are no scrollbars
 
 class StringFieldMorph extends FrameMorph
   # this is so we can create objects from the object class name 
