@@ -150,7 +150,7 @@ class StringMorph2 extends Morph
     textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
-  password: (letter, length) ->
+  obfuscateAsPassword: (letter, length) ->
     # there is an alternative to this, using an idiom
     # http://stackoverflow.com/a/19892144
     # but it's clearer this way
@@ -287,7 +287,7 @@ class StringMorph2 extends Morph
   # for example substitute any letter with "*" for passwords
   # or turn everything to uppercase
   transformTextOneToOne: (theText) ->
-    return (if @isPassword then @password("*", theText.length) else theText)
+    return (if @isPassword then @obfuscateAsPassword("*", theText.length) else theText)
 
   # notice the thick arrow here!
   # there are many factors beyond the font size that affect
