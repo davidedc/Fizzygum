@@ -1970,48 +1970,12 @@ class Morph extends MorphicNode
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
-    isNumeric = true  if ceilingNum
-    tempPromptEntryField = new StringFieldMorph(
-      defaultContents or "",
-      width or 100,
-      WorldMorph.preferencesAndSettings.prompterFontSize,
-      WorldMorph.preferencesAndSettings.prompterFontName,
-      false,
-      false,
-      isNumeric)
-    menu = new MenuMorph false, target, true, true, msg or "", tempPromptEntryField
-    menu.tempPromptEntryField = tempPromptEntryField
-    menu.items.push tempPromptEntryField
-    if ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
-      slider = new SliderMorph(
-        floorNum or 0,
-        ceilingNum,
-        parseFloat(defaultContents),
-        Math.floor((ceilingNum - floorNum) / 4),
-        "horizontal")
-      slider.alpha = 1
-      slider.color = new Color 225, 225, 225
-      slider.button.color = new Color 60,60,60
-      slider.button.highlightColor = slider.button.color.copy()
-      slider.button.highlightColor.b += 100
-      slider.button.pressColor = slider.button.color.copy()
-      slider.button.pressColor.b += 150
-      slider.silentRawSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
-      slider.target = @
-      slider.argumentToAction = menu
-      if isRounded
-        slider.action = "reactToSliderAction1"
-      else
-        slider.action = "reactToSliderAction2"
-      menu.items.push slider
-    menu.addLine 2
-    menu.addItem "Ok", true, target, callback
 
-    menu.addItem "Cancel", true, @, ->
-      null
+    prompt = new PromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    ceilingNum, isRounded)
 
-    menu.popUpAtHand @firstContainerMenu()
-    tempPromptEntryField.text.edit()
+    prompt.popUpAtHand @firstContainerMenu()
+    prompt.tempPromptEntryField.text.edit()
 
   reactToSliderAction1: (num, theMenu) ->
     theMenu.tempPromptEntryField.changed()
