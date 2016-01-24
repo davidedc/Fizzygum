@@ -23,7 +23,7 @@ class TextMorph2 extends StringMorph2
   constructor: (
     @text = (if text is "" then text else "TextMorph2"),
     @originallySetFontSize = 12,
-    @fontName = "Arial",
+    @fontName = @justArialFontStack,
     @isBold = false,
     @isItalic = false,
     #@isNumeric = false,

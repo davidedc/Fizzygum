@@ -74,10 +74,33 @@ class StringMorph2 extends Morph
   caretHorizPositionForVertMovement: null
 
   emptyCharacter: '\u2063'
+
+  # Since we let the browser paint the text, we can't guarantee that
+  # a specific font will be available to the user.
+  # So we do what web designers do: we allow for a few families of
+  # very simialar fonts (at least in style in not in shape),
+  # each specifying a list of fallbacks that
+  # are chosen to be similar and, collectively, widely available.
+  # On top of that we also add a justArialFontStack, since Arial
+  # is actually available on all devices, it's useful for testing
+  # to have a font that is supposed to be identical across all
+  # devices.
+  # These stacks have been taken from
+  # http://www.sitepoint.com/eight-definitive-font-stacks/
+  justArialFontStack: 'Arial, sans-serif'
+  timesFontStack: 'Cambria, "Hoefler Text", Utopia, "Liberation Serif", "Nimbus Roman No9 L Regular", Times, "Times New Roman", serif'
+  georgiaFontStack: 'Constantia, "Lucida Bright", Lucidabright, "Lucida Serif", Lucida, "DejaVu Serif", "Bitstream Vera Serif", "Liberation Serif", Georgia, serif'
+  garamoFontStack: '"Palatino Linotype", Palatino, Palladio, "URW Palladio L", "Book Antiqua", Baskerville, "Bookman Old Style", "Bitstream Charter", "Nimbus Roman No9 L", Garamond, "Apple Garamond", "ITC Garamond Narrow", "New Century Schoolbook", "Century Schoolbook", "Century Schoolbook L", Georgia, serif'
+  helveFontStack: 'Frutiger, "Frutiger Linotype", Univers, Calibri, "Gill Sans", "Gill Sans MT", "Myriad Pro", Myriad, "DejaVu Sans Condensed", "Liberation Sans", "Nimbus Sans L", Tahoma, Geneva, "Helvetica Neue", Helvetica, Arial, sans-serif'
+  verdaFontStack: 'Corbel, "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", "DejaVu Sans", "Bitstream Vera Sans", "Liberation Sans", Verdana, "Verdana Ref", sans-serif'
+  trebuFontStack: '"Segoe UI", Candara, "Bitstream Vera Sans", "DejaVu Sans", "Bitstream Vera Sans", "Trebuchet MS", Verdana, "Verdana Ref", sans-serif'
+  heavyFontStack: 'Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans-serif'
+  monoFontStack: 'Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace'
+
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
       @originallySetFontSize = 12,
-      @fontName = "Arial",
+      @fontName = @justArialFontStack,
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
@@ -613,6 +636,47 @@ class StringMorph2 extends Morph
       @reLayout()
       @changed()
 
+  fontsMenu: (a,targetMorph)->
+    menu = new MenuMorph false, targetMorph, true, true, null
+
+    justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
+    garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
+    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = "    "
+
+    tick = "✓ "
+
+    switch @fontName
+      when @justArialFontStack
+        justArialFontStackTick = tick
+      when @timesFontStack
+        timesFontStackTick = tick
+      when @georgiaFontStack
+        georgiaFontStackTick = tick
+      when @garamoFontStack
+        garamoFontStackTick = tick
+      when @helveFontStack
+        helveFontStackTick = tick
+      when @verdaFontStack
+        verdaFontStackTick = tick
+      when @trebuFontStack
+        trebuFontStackTick = tick
+      when @heavyFontStack
+        heavyFontStackTick = tick
+      when @monoFontStack
+        monoFontStackTick = tick
+
+    menu.addItem justArialFontStackTick + "Arial", true, @, "setFontName", null, null, null, null, null, @justArialFontStack
+    menu.addItem timesFontStackTick + "Times", true, @, "setFontName", null, null, null, null, null, @timesFontStack
+    menu.addItem georgiaFontStackTick + "Georgia", true, @, "setFontName", null, null, null, null, null, @georgiaFontStack
+    menu.addItem garamoFontStackTick + "Garamo", true, @, "setFontName", null, null, null, null, null, @garamoFontStack
+    menu.addItem helveFontStackTick + "Helve", true, @, "setFontName", null, null, null, null, null, @helveFontStack
+    menu.addItem verdaFontStackTick + "Verda", true, @, "setFontName", null, null, null, null, null, @verdaFontStack
+    menu.addItem trebuFontStackTick + "Treby", true, @, "setFontName", null, null, null, null, null, @trebuFontStack
+    menu.addItem heavyFontStackTick + "Heavy", true, @, "setFontName", null, null, null, null, null, @heavyFontStack
+    menu.addItem monoFontStackTick + "Mono", true, @, "setFontName", null, null, null, null, null, @monoFontStack
+
+    menu.popUpAtHand a.firstContainerMenu()
+
   # StringMorph2 menus:
   developersMenu: ->
     menu = super()
@@ -620,13 +684,7 @@ class StringMorph2 extends Morph
     menu.addItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
 
-    if @fontName != "Arial"
-      menu.addItem "Arial", true, @, "setFontName", null, null, null, null, null, "Arial"
-    if @fontName != "Times New Roman"
-      menu.addItem "Times", true, @, "setFontName", null, null, null, null, null, "Times New Roman"
-    if @fontName != "Courier New"
-      menu.addItem "Courier", true, @, "setFontName", null, null, null, null, null, "Courier New"
-
+    menu.addItem "font ➜", false, @, "fontsMenu", "pick a font"
 
     if @isBold
       menu.addItem "normal weight", true, @, "toggleWeight"
