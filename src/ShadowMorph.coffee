@@ -41,7 +41,7 @@ class ShadowMorph extends Morph
   # for each canvas, simple.
   createRefreshOrGetBackBuffer: ->
 
-    extent = @targetMorph.extent()
+    extent = @extent()
 
     if @backBuffer?
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height

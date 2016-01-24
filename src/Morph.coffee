@@ -1495,8 +1495,7 @@ class Morph extends MorphicNode
     shadow
 
   silentAddFullShadow: (offset, alpha, color) ->
-    if @getShadowMorph()?
-      @removeShadowMorph()
+    @removeShadowMorph()
     shadow = new ShadowMorph @, offset, alpha, color
     @addChildFirst shadow
     shadow
