@@ -554,6 +554,18 @@ class TextMorph2 extends StringMorph2
       menu.prependItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
 
+  # StringMorph2 editing:
+  edit: ->
+    # when you edit a TextMorph, potentially
+    # you need to change the alignment of the
+    # text, because managing the caret with
+    # alignments other than the top-left
+    # ones is complex. So during editing
+    # we might change the alignment, hence
+    # ths method here with @changed()
+    @changed()
+    return super
+
 
   selectAllAndEdit: ->
     @edit()

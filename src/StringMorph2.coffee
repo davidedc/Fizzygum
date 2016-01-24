@@ -836,17 +836,6 @@ class StringMorph2 extends Morph
   edit: ->
     if @textPossiblyCroppedToFit == @transformTextOneToOne @text
       world.edit @
-
-      # when you edit a TextMorph, potentially
-      # you need to change the alignment of the
-      # text, because managing the caret with
-      # alignments other than the top-left
-      # ones is complex. So during editing
-      # we might change the alignment, hence
-      # these two lines to repaint things.
-      
-      @changed()
-
       return true
     else
       @editPopup()
