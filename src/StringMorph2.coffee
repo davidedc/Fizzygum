@@ -632,7 +632,7 @@ class StringMorph2 extends Morph
 
     @prompt title,
       @,
-      "setContent",
+      "setText",
       @text,
       null, 6, null, true
 
@@ -785,14 +785,19 @@ class StringMorph2 extends Morph
   
   reflowText: ->
 
-  setContent: (theTextContent,stringFieldMorph) ->
+  # This is also invoked for example when you take a slider
+  # and set it to target this.
+  setText: (theTextContent,stringFieldMorph) ->
     if stringFieldMorph?
       # in this case, the stringFieldMorph has a
       # StringMorph in "text". The StringMorph has the
       # "text" inside it.
       theTextContent = stringFieldMorph.text.text
 
-    @text = theTextContent
+    # other morphs might send something like a
+    # number or a color so let's make sure we
+    # convert to a string.
+    @text = theTextContent + ""
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
     @doesTextFitInExtent (@transformTextOneToOne @text), @originallySetFontSize
       console.log "texts synched at font size: " + @fittingFontSize
@@ -821,23 +826,6 @@ class StringMorph2 extends Morph
     
     @changed()
   
-  # TODO this is invoked when for example you take a slider
-  # and set it to target a TextMorph.
-  # this is rather strange but I see why in case
-  # of a Number you might want to show this in a more
-  # compact form. This would have to be handled
-  # in a different way though, "setText"'s obvious
-  # meaning is very different from this...
-  setText: (size) ->
-    alert "this is strange"
-    # for context menu demo purposes
-    @text = Math.round(size).toString()
-    @textPossiblyCroppedToFit = @transformTextOneToOne @text
-    # the reLayout() here might actually crop the text
-    #console.log "@textPossiblyCroppedToFit = @text 6"
-    @reLayout()
-    
-    @changed()
   
   numericalSetters: ->
     # for context menu demo purposes

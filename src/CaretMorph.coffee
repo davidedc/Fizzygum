@@ -248,7 +248,7 @@ class CaretMorph extends BlinkerMorph
   # all the changes and sort-of-resetting the
   # state of the target.
   undo: ->
-    @target.setContent @originalContents
+    @target.setText @originalContents
     @target.clearSelection()
 
     # in theory these three lines are not
@@ -276,7 +276,7 @@ class CaretMorph extends BlinkerMorph
         @target.deleteSelection()
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
-      @target.setContent text
+      @target.setText text
       @goRight false, symbol.length
       @updateCaretDimension()
   
@@ -328,7 +328,7 @@ class CaretMorph extends BlinkerMorph
       text = @target.text
       @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setContent text    
+      @target.setText text    
   
   deleteLeft: ->
     if @target.selection()
@@ -337,7 +337,7 @@ class CaretMorph extends BlinkerMorph
     else
       text = @target.text
       @target.changed()
-      @target.setContent text.substring(0, @slot - 1) + text.substr(@slot)
+      @target.setText text.substring(0, @slot - 1) + text.substr(@slot)
       @goLeft()
     @target.reflowText?()
 

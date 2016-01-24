@@ -54,9 +54,10 @@ class StringMorph extends Morph
     # override inherited properties:
     @noticesTransparentClick = true
 
-  setContent: (theTextContent,a) ->
+  setText: (theTextContent,a) ->
     if a?
       theTextContent = a.text.text
+    theTextContent = theTextContent + ""
     if @text != theTextContent
       @text = theTextContent
       @reLayout()
@@ -322,20 +323,6 @@ class StringMorph extends Morph
     else
       newSize = parseFloat size
       @fontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
-    @reLayout()
-    
-    @changed()
-  
-  # TODO this is invoked when for example you take a slider
-  # and set it to target a TextMorph.
-  # this is rather strange but I see why in case
-  # of a Number you might want to show this in a more
-  # compact form. This would have to be handled
-  # in a different way though, "setText"'s obvious
-  # meaning is very different from this...
-  setText: (size) ->
-    # for context menu demo purposes
-    @text = Math.round(size).toString()
     @reLayout()
     
     @changed()
