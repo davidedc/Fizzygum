@@ -30,7 +30,6 @@ class PointerMorph extends BoxMorph
       null, #@isItalic,
       false, # isNumeric
       null, #color,
-      null, #fontName
       new Color 255, 255, 255, #@backgroundColor,
       null, #@backgroundTransparency
     )

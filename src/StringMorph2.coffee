@@ -39,7 +39,6 @@ class StringMorph2 extends Morph
   originallySetFontSize: null
 
   fontName: null
-  fontStyle: null
   isBold: null
   isItalic: null
   isEditable: false
@@ -77,12 +76,11 @@ class StringMorph2 extends Morph
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
       @originallySetFontSize = 12,
-      @fontStyle = "sans-serif",
+      @fontName = "Arial",
       @isBold = false,
       @isItalic = false,
       @isNumeric = false,
       @color = (new Color 0, 0, 0),
-      @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily),
       @backgroundColor = null,
       @backgroundTransparency = null
       ) ->
@@ -160,11 +158,11 @@ class StringMorph2 extends Morph
     ans
 
   buildCanvasFontProperty: (overrideFontSize = @fittingFontSize) ->
-    # answer a font string, e.g. 'bold italic 12px sans-serif'
+    # answer a font string, e.g. 'bold italic 12px Arial'
     font = ""
     font = font + "bold "  if @isBold
     font = font + "italic "  if @isItalic
-    font + overrideFontSize + "px " + ((if @fontName then @fontName + ", " else "")) + @fontStyle
+    font + overrideFontSize + "px " + @fontName
 
   # does a binary search to see which font size
   # we need to apply to the text to fit to the
@@ -602,6 +600,11 @@ class StringMorph2 extends Morph
       @text,
       null, 6, null, true
 
+  setFontName: (ignored1, ignored2, theNewFontName) ->
+    if @fontName != theNewFontName
+      @fontName = theNewFontName
+      @reLayout()
+      @changed()
 
   # StringMorph2 menus:
   developersMenu: ->
@@ -610,10 +613,13 @@ class StringMorph2 extends Morph
     menu.addItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
 
-    if @fontStyle is "serif"
-      menu.addItem "sans-serif", true, @, "setSansSerif"  if @fontStyle isnt "sans-serif"
-    else
-      menu.addItem "serif", true, @, "setSerif" 
+    if @fontName != "Arial"
+      menu.addItem "Arial", true, @, "setFontName", null, null, null, null, null, "Arial"
+    if @fontName != "Times New Roman"
+      menu.addItem "Times", true, @, "setFontName", null, null, null, null, null, "Times New Roman"
+    if @fontName != "Courier New"
+      menu.addItem "Courier", true, @, "setFontName", null, null, null, null, null, "Courier New"
+
 
     if @isBold
       menu.addItem "normal weight", true, @, "toggleWeight"
@@ -664,7 +670,6 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @synchroniseTextAndActualText()
     @reLayout()
-    
     @changed()
     world.stopEditing()
 
@@ -673,7 +678,6 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @synchroniseTextAndActualText()
     @reLayout()
-    
     @changed()
 
   toggleIsfloatDraggable: ->
@@ -687,40 +691,24 @@ class StringMorph2 extends Morph
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @reLayout()
-    
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
     @reLayout()
-    
     @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @reLayout()
-    
     @changed()
   
   toggleIsPassword: ->
     world.stopEditing()
     @isPassword = not @isPassword
     @reLayout()
-    
     @changed()
   
-  setSerif: ->
-    @fontStyle = "serif"
-    @reLayout()
-    
-    @changed()
-  
-  setSansSerif: ->
-    @fontStyle = "sans-serif"
-    @reLayout()
-    
-    @changed()
-
   reflowText: ->
 
   setContent: (theTextContent,a) ->

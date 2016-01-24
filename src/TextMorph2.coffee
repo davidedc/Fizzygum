@@ -24,12 +24,11 @@ class TextMorph2 extends StringMorph2
   constructor: (
     @text = (if text is "" then text else "TextMorph2"),
     @originallySetFontSize = 12,
-    @fontStyle = "sans-serif",
+    @fontName = "Arial",
     @isBold = false,
     @isItalic = false,
     #@isNumeric = false,
     @color = (new Color 0, 0, 0),
-    @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily),
     @backgroundColor = null,
     @backgroundTransparency = null
     ) ->
@@ -37,12 +36,11 @@ class TextMorph2 extends StringMorph2
       super(
         @text,
         @originallySetFontSize,
-        @fontStyle,
+        @fontName,
         @isBold,
         @isItalic,
         false, # isNumeric
         @color,
-        @fontName,
         @backgroundColor,
         @backgroundTransparency
         )
