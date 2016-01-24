@@ -46,7 +46,7 @@ class StringMorph extends Morph
       @isItalic = false,
       @isNumeric = false,
       @color = (new Color 0, 0, 0),
-      @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily)
+      @fontName = ""
       ) ->
 
     super()

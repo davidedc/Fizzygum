@@ -28,7 +28,7 @@ class TextMorph extends StringMorph
     @isItalic = false,
     @alignment = "left",
     @maxTextWidth = 0,
-    @fontName = (WorldMorph.preferencesAndSettings.globalFontFamily),
+    @fontName = "",
     @shadowOffset = (new Point 0, 0),
     @shadowColor = null
     ) ->

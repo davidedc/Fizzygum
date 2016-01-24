@@ -22,7 +22,6 @@ class PreferencesAndSettings
   # by the input mode.
   inputMode: null
   minimumFontHeight: null
-  globalFontFamily: null
   menuFontName: null
   menuFontSize: null
   bubbleHelpFontSize: null
@@ -65,7 +64,6 @@ class PreferencesAndSettings
   setMouseInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_MOUSE
     @minimumFontHeight = getMinimumFontHeight() # browser settings
-    @globalFontFamily = ""
     @menuFontName = "sans-serif"
     @menuFontSize = 12
     @bubbleHelpFontSize = 10
@@ -84,7 +82,6 @@ class PreferencesAndSettings
   setTouchInputMode: ->
     @inputMode = PreferencesAndSettings.INPUT_MODE_TOUCH
     @minimumFontHeight = getMinimumFontHeight()
-    @globalFontFamily = ""
     @menuFontName = "sans-serif"
     @menuFontSize = 24
     @bubbleHelpFontSize = 18
