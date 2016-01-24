@@ -529,7 +529,7 @@ class StringMorph2 extends Morph
 
     new Point x, y
 
-  slotAtReduced: (xPosition, text) ->
+  slotAtSingleLineString: (xPosition, text) ->
 
     widthOfText = @widthOfText text
 
@@ -578,9 +578,8 @@ class StringMorph2 extends Morph
         if ((@widthOfText(text)) - ((@widthOfText(text[idx-1])) / 2)) < (xPosition - @left())  
           return idx
     idx
-  
-  slotAt: (aPoint) ->
 
+  pointIsUnderLastLine: (aPoint) ->
     textVerticalPosition = switch @verticalAlignment
       when AlignmentSpecVertical.TOP
         fontHeight @fittingFontSize
@@ -595,7 +594,14 @@ class StringMorph2 extends Morph
     if (aPoint.y - textVerticalPosition) - @top() > Math.ceil fontHeight @fittingFontSize
       return @textPossiblyCroppedToFit.length
 
-    return @slotAtReduced aPoint.x, @textPossiblyCroppedToFit
+    return false
+
+  
+  slotAt: (aPoint) ->
+    if isPointUnderLastLine = @pointIsUnderLastLine aPoint
+      return isPointUnderLastLine
+
+    return @slotAtSingleLineString aPoint.x, @textPossiblyCroppedToFit
   
   upFrom: (slot) ->
     @startOfLine()
