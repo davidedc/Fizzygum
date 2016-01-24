@@ -73,6 +73,7 @@ class StringMorph2 extends Morph
 
   caretHorizPositionForVertMovement: null
 
+  emptyCharacter: '\u2063'
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
       @originallySetFontSize = 12,
@@ -260,6 +261,8 @@ class StringMorph2 extends Morph
         @textPossiblyCroppedToFit = textToFit
         #console.log "@textPossiblyCroppedToFit = textToFit 2"
 
+  eliminateInvisibleCharacter: (string) ->
+    string.replace @emptyCharacter, ''
 
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
@@ -271,7 +274,11 @@ class StringMorph2 extends Morph
     cacheHit = world.cacheForTextMeasurements.get cacheKey
     if cacheHit? then return cacheHit
     world.canvasContextForTextMeasurements.font = @buildCanvasFontProperty overrideFontSize
-    cacheEntry = world.canvasContextForTextMeasurements.measureText(text).width
+    # you'd think that we don't need to eliminate the invisible character
+    # to measure the text, as it's supposed to be of zero length.
+    # Unfortunately some fonts do draw it, so we indeed have to eliminate
+    # it.
+    cacheEntry = world.canvasContextForTextMeasurements.measureText(@eliminateInvisibleCharacter text).width
     world.cacheForTextMeasurements.set cacheKey, cacheEntry
     #if cacheHit?
     #  if cacheHit != cacheEntry

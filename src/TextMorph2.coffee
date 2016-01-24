@@ -13,7 +13,6 @@ class TextMorph2 extends StringMorph2
   wrappedLines: []
   wrappedLineSlots: []
   maxWrappedLineWidth: 0
-  emptyCharacter: '\u2063'
   #emptyCharacter: '^'
 
   backgroundColor: null
@@ -406,7 +405,12 @@ class TextMorph2 extends StringMorph2
           0
       y = (i + 1) * Math.ceil fontHeight @fittingFontSize
       i++
-      backBufferContext.fillText line, x, y + textVerticalPosition
+
+      # you'd think that we don't need to eliminate the invisible character
+      # to draw the text, as it's supposed to be, well, invisible.
+      # Unfortunately some fonts do draw it, so we indeed have to eliminate
+      # it.
+      backBufferContext.fillText (@eliminateInvisibleCharacter line), x, y + textVerticalPosition
 
     @drawSelection backBufferContext
 
