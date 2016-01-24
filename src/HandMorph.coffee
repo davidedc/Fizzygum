@@ -208,13 +208,7 @@ class HandMorph extends Morph
       if doRemoveShadow
         morphToDrop.removeShadowMorph()
       else
-        # TODO adding of the shadow
-        # is not really legit because it
-        # ignores the original color and opacity
-        # of the shadow...
-        shadow = morphToDrop.getShadowMorph()
-        if !shadow?
-          morphToDrop.addFullShadow()
+        morphToDrop.addFullShadow()
 
       @children = []
       @rawSetExtent new Point()
