@@ -17,25 +17,27 @@ class CanvasMorph extends FrameMorph
   
   imBeingAddedTo: (newParentMorph) ->
 
-  # no changes of position or extent should be
-  # performed in here
+  # No changes of position or extent should be
+  # performed in here.
+  # There is really little hope to cache this buffer
+  # cross-morph, unless you key the buffer with the
+  # order of all the primitives and their
+  # parameters. So just keep a dedicated one
+  # for each canvas, simple.
   createRefreshOrGetBackBuffer: ->
 
-    cacheKey =
-      @extent().toString() + "-" +
-      @toStringWithoutGeometry()
-
-    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
-
     extent = @extent()
-    backBuffer = newCanvas extent.scaleBy pixelRatio
-    backBufferContext = backBuffer.getContext "2d"
-    backBufferContext.scale pixelRatio, pixelRatio
 
-    backBufferContext.fillStyle = @color.toString()
-    backBufferContext.fillRect 0, 0, extent.x, extent.y
+    if @backBuffer?
+      backBufferExtent = new Point @backBuffer.width, @backBuffer.height
+      if backBufferExtent.eq extent.scaleBy pixelRatio
+        return [@backBuffer, @backBufferContext]
 
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
+    @backBuffer = newCanvas extent.scaleBy pixelRatio
+    @backBufferContext = @backBuffer.getContext "2d"
+    @backBufferContext.scale pixelRatio, pixelRatio
+
+    @backBufferContext.fillStyle = @color.toString()
+    @backBufferContext.fillRect 0, 0, extent.x, extent.y
+
+    return [@backBuffer, @backBufferContext]

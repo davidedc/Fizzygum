@@ -33,26 +33,28 @@ class ShadowMorph extends Morph
     @offset.debugIfFloats()
     @notifyChildrenThatParentHasReLayouted()
 
-  # no changes of position or extent should be
-  # performed in here
+  # No changes of position or extent should be
+  # performed in here,
+  # There is really little hope to cache this buffer
+  # cross-morph.
+  # So just keep a dedicated one
+  # for each canvas, simple.
   createRefreshOrGetBackBuffer: ->
 
-    cacheKey =
-      @extent().toString() + "-" +
-      @targetMorph.toStringWithoutGeometry()
+    extent = @extent()
 
-    cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
+    if @backBuffer?
+      backBufferExtent = new Point @backBuffer.width, @backBuffer.height
+      if backBufferExtent.eq extent.scaleBy pixelRatio
+        return [@backBuffer, @backBufferContext]
 
     @bounds.debugIfFloats()
     if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-      backBuffer = @targetMorph.shadowImage @offset, @color, true
+      @backBuffer = @targetMorph.shadowImage @offset, @color, true
     else
-      backBuffer = @targetMorph.shadowImage @offset, @color, false
-    backBufferContext =  backBuffer.getContext "2d"
+      @backBuffer = @targetMorph.shadowImage @offset, @color, false
+    @backBufferContext =  @backBuffer.getContext "2d"
     @bounds.debugIfFloats()
     @offset.debugIfFloats()
 
-    cacheEntry = [backBuffer, backBufferContext]
-    world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
-    return cacheEntry
+    return [@backBuffer, @backBufferContext]
