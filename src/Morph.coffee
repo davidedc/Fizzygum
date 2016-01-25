@@ -2492,7 +2492,7 @@ class Morph extends MorphicNode
   # Morph eval. Used by the Inspector and the TextMorph.
   evaluateString: (code) ->
     try
-      result = eval code
+      result = eval CoffeeScript.compile code, {"bare":true}
       @reLayout()
       
       @changed()
