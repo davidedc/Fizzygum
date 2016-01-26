@@ -107,6 +107,10 @@ if typeof String::contains == 'undefined'
   String::contains = (it) ->
     @indexOf(it) != -1
 
+if typeof String::isLetter == 'undefined'
+  String::isLetter = ->
+    @length == 1 && @match /[a-z]/i
+
 # used to clip any subsequent drawing on the context
 # to the dirty rectangle.
 CanvasRenderingContext2D::clipToRectangle = (al,at,w,h) ->

@@ -925,11 +925,15 @@ class StringMorph2 extends Morph
       previousCaretSlot = world.caret?.slot
 
       extendRight = 0
-      while @text[previousCaretSlot + extendRight] != " " and (previousCaretSlot + extendRight < @text.length)
+      while previousCaretSlot + extendRight < @text.length
+        if !@text[previousCaretSlot + extendRight].isLetter()
+          break
         extendRight++
 
       extendLeft = 0
-      while @text[previousCaretSlot + extendLeft - 1] != " " and (previousCaretSlot + extendLeft - 1 >= 0)
+      while previousCaretSlot + extendLeft - 1 >= 0
+        if !@text[previousCaretSlot + extendLeft - 1].isLetter()
+          break
         extendLeft--
 
       @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
