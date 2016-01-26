@@ -1872,6 +1872,9 @@ class Morph extends MorphicNode
       #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
+  justDropped: ->
+      @removeShadowMorph()
+    
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops
 

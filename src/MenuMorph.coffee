@@ -300,7 +300,14 @@ class MenuMorph extends BoxMorph
   itemSelected: ->
     unless @isListContents
       @destroy()
-  
+
+  justDropped: ->
+    if @isPinned()
+      @removeShadowMorph()
+    else
+      @addFullShadow()
+
+
   popup: (morphToAttachTo, pos) ->
     # console.log "menu popup"
     @silentFullRawMoveTo pos
@@ -320,12 +327,12 @@ class MenuMorph extends BoxMorph
     # to base the shadow on
     # P.S. this is the thing that causes the MenuMorph buffer
     # to be painted after the creation.
-    @addFullShadow new Point(2, 2), 0.8
+    @addFullShadow()
     @fullChanged()
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addFullShadow: (offset, alpha, color) ->
+  addFullShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
     super offset, alpha, color
   
   popUpAtHand: (morphToAttachTo)->

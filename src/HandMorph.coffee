@@ -162,6 +162,9 @@ class HandMorph extends Morph
       # so they all seem to float at a particular height)
       # but here when we grab morphs we
       # specify a particular look for the shadow.
+      # This is a particularly "floaty" shadow
+      # which illustrates how things being dragged
+      # are above anything else.
       aMorph.addFullShadow new Point(7, 7), 0.2
       
       #debugger
@@ -194,25 +197,6 @@ class HandMorph extends Morph
       @fullChanged()
       target.add morphToDrop
       morphToDrop.fullChanged()
-
-      doRemoveShadow = true
-      if morphToDrop instanceof MenuMorph
-        console.log "dropping menu morph which with pinned status: " + morphToDrop.isPinned()
-        if morphToDrop.isPinned()
-          doRemoveShadow = true
-        else
-          doRemoveShadow = false
-      else
-        doRemoveShadow = true
-
-      if doRemoveShadow
-        morphToDrop.removeShadowMorph()
-      else
-        # TODO adding of the shadow
-        # is not really legit because it
-        # ignores the original color and opacity
-        # of the shadow...
-        morphToDrop.addFullShadow new Point(2, 2), 0.8
 
       @children = []
       @rawSetExtent new Point()
