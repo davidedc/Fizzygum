@@ -446,7 +446,7 @@ class HandMorph extends Morph
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                   disableDoubleClickDueToFastTests = true
               if !disableDoubleClickDueToFastTests
-                @processDoubleClick()
+                @processDoubleClick morph
             else
               @rememberDoubleClickMorphsForAWhile morph
           else
@@ -516,12 +516,10 @@ class HandMorph extends Morph
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
-  processDoubleClick: ->
-
-    pointerAndMorphInfo = world.getPointerAndMorphInfo()
+  processDoubleClick: (morph = @topMorphUnderPointer()) ->
+    pointerAndMorphInfo = world.getPointerAndMorphInfo morph
     world.automatorRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
 
-    morph = @topMorphUnderPointer()
     @destroyTemporaries()
     if @floatDraggingSomething()
       @drop()

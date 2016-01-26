@@ -871,11 +871,10 @@ class WorldMorph extends FrameMorph
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
       @inputDOMElementForVirtualKeyboardKeypressEventListener, false
 
-  getPointerAndMorphInfo:  ->
+  getPointerAndMorphInfo:  (topMorphUnderPointer = @hand.topMorphUnderPointer()) ->
     # we might eliminate this command afterwards if
     # we find out user is clicking on a menu item
     # or right-clicking on a morph
-    topMorphUnderPointer = @hand.topMorphUnderPointer()
     absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.boundingBox().asArray_xywh()
     morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
     morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
