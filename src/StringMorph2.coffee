@@ -940,17 +940,7 @@ class StringMorph2 extends Morph
 
   mouseTripleClick: ->
     if @isEditable
-      previousCaretSlot = world.caret?.slot
-
-      extendRight = 0
-      while @text[previousCaretSlot + extendRight] != "\n" and (previousCaretSlot + extendRight < @text.length)
-        extendRight++
-
-      extendLeft = 0
-      while @text[previousCaretSlot + extendLeft - 1] != "\n" and (previousCaretSlot + extendLeft - 1 >= 0)
-        extendLeft--
-
-      @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
+      @selectAll()
 
 
   # Every time the user clicks on the text, a new edit()

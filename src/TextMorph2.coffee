@@ -566,7 +566,6 @@ class TextMorph2 extends StringMorph2
     @changed()
     return super
 
-
   selectAllAndEdit: ->
     @edit()
     @selectAll()
@@ -606,3 +605,16 @@ class TextMorph2 extends StringMorph2
     # the Morph class.
     result = @receiver.evaluateString @selection()
     if result? then @spawnInspector result
+
+  # selects the whole line (if it's wrapped, just
+  # what sits on the very line, not what wraps
+  # above or under). Just like normal editors.
+  mouseTripleClick: ->
+    if @isEditable
+      [row, column] = @slotRowAndColumn world.caret?.slot
+      slotBeginOfLine = @slotAtRow row + 1, 0
+      slotsInRow = @wrappedLineSlots[row + 1]
+      @selectBetween slotBeginOfLine, slotsInRow
+
+
+
