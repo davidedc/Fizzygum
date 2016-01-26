@@ -53,6 +53,15 @@ class HandMorph extends Morph
         !m.isCollapsed() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
         (m not instanceof ShadowMorph) and
+        # we exclude the Caret here because
+        #  a) it messes up things on double-click as it appears under
+        #     the mouse after the first clicks
+        #  b) the caret disappears as soon as a menu appears, so it
+        #     would be confusing to select a caret.
+        # I drafted an alternative implementation where we manage
+        # those situations without being radical in this filtering-out
+        # but it was quite a bit more complicated.
+        (m not instanceof CaretMorph) and
         # exclude morphs we use for highlighting
         # other morphs
         !m.morphThisMorphIsHighlighting? and
