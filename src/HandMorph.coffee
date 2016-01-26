@@ -23,6 +23,7 @@ class HandMorph extends Morph
   temporaries: null
   touchHoldTimeout: null
   doubleClickMorph: null
+  tripleClickMorph: null
   nonFloatDraggedMorph: null
   nonFloatDragPositionWithinMorphAtStart: null
   # this is useful during nonFloatDrags to pass the morph
@@ -298,6 +299,7 @@ class HandMorph extends Morph
       @mouseButton = null
     else
       morph = @topMorphUnderPointer()
+
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
       @stopEditingIfActionIsElsewhere morph
 
@@ -376,6 +378,7 @@ class HandMorph extends Morph
         fade 'leftMouseButtonIndicator', 1, 0, 500, new Date().getTime()
 
     morph = @topMorphUnderPointer()
+
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
@@ -445,21 +448,54 @@ class HandMorph extends Morph
               world.automatorRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
+          #console.log ">>> sent event " + expectedClick + " to: " + morph
+
           # also send doubleclick if the
           # two clicks happen on the same morph
+          doubleClickInvoked = false
+
           if @doubleClickMorph?
             if @doubleClickMorph == morph
               @doubleClickMorph = null
-              disableDoubleClickDueToFastTests = false
+              disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
-                  disableDoubleClickDueToFastTests = true
-              if !disableDoubleClickDueToFastTests
+                  disableConsecutiveClicksFromSingleClicksDueToFastTests = true
+              if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                 @processDoubleClick morph
+                doubleClickInvoked = true
+                # triple-click detection starts here, it's just
+                # like chaining a second double-click detection
+                # once this double-click has just been detected
+                # right here.
+                @rememberTripleClickMorphsForAWhile morph
             else
               @rememberDoubleClickMorphsForAWhile morph
           else
             @rememberDoubleClickMorphsForAWhile morph
+
+          # also send tripleclick if the
+          # three clicks happen on the same morph
+          # Don't do anything if a double-click has
+          # just been invoked because you'd immediately
+          # fire a tripleClick
+          # This pargraph of code is basically the same
+          # as the previous one.
+          if !doubleClickInvoked
+            if @tripleClickMorph?
+              debugger
+              if @tripleClickMorph == morph
+                @tripleClickMorph = null
+                disableConsecutiveClicksFromSingleClicksDueToFastTests = false
+                if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+                  if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
+                    disableConsecutiveClicksFromSingleClicksDueToFastTests = true
+                if !disableConsecutiveClicksFromSingleClicksDueToFastTests
+                  @processTripleClick morph
+              else
+                @rememberTripleClickMorphsForAWhile morph
+            else
+              @rememberTripleClickMorphsForAWhile morph
 
       @cleanupMenuMorphs expectedClick, morph
     @mouseButton = null
@@ -472,6 +508,16 @@ class HandMorph extends Morph
       @doubleClickMorph = null
       return false
     ), 300
+
+  # basically the same as rememberDoubleClickMorphsForAWhile
+  rememberTripleClickMorphsForAWhile: (morph) ->
+    @tripleClickMorph = morph
+    setTimeout (=>
+      if @tripleClickMorph?
+        console.log "not a triple click, just a double click"
+      @tripleClickMorph = null
+      return false
+    ), 500
 
   cleanupMenuMorphs: (expectedClick, morph)->
 
@@ -535,6 +581,18 @@ class HandMorph extends Morph
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
       morph.mouseDoubleClick @position() if morph
+    @mouseButton = null
+
+  processTripleClick: (morph = @topMorphUnderPointer()) ->
+    pointerAndMorphInfo = world.getPointerAndMorphInfo morph
+    world.automatorRecorderAndPlayer.addMouseTripleClickCommand null, pointerAndMorphInfo...
+
+    @destroyTemporaries()
+    if @floatDraggingSomething()
+      @drop()
+    else
+      morph = morph.parent  while morph and not morph.mouseTripleClick
+      morph.mouseTripleClick @position() if morph
     @mouseButton = null
   
   processMouseScroll: (event) ->

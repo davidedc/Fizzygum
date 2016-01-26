@@ -319,6 +319,15 @@ class AutomatorRecorderAndPlayer
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  # note that we give for granted that triple click
+  # is always on the left button
+  addMouseTripleClickCommand: (ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph) ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    systemTestCommand = new AutomatorCommandMouseTripleClick ctrlKey, morphUniqueIDString, morphPathRelativeToWorld, morphIdentifierViaTextLabel, absoluteBoundsOfMorphRelativeToWorld, pointerPositionFractionalInMorph, pointerPositionPixelsInMorph, pointerPositionPixelsInWorld, isPartOfListMorph, @
+    @lastMouseDownCommand = systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
+    @timeOfPreviouslyRecordedCommand = new Date().getTime()
+
 
   addOpenContextMenuCommand: (context) ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
