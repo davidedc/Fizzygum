@@ -20,7 +20,7 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
   morphPathRelativeToWorld: null
   isPartOfListMorph: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
     newX = Math.round((theMorph.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0])) + theMorph.left()
     newY = Math.round((theMorph.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.top()
@@ -36,7 +36,7 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
 
     if commandBeingPlayed.upOrDown == "up"
       # the mouse up doesn't need the control key info
-      systemTestsRecorderAndPlayer.handMorph.processMouseUp \
+      automatorRecorderAndPlayer.handMorph.processMouseUp \
         button,
         commandBeingPlayed.buttons,
         commandBeingPlayed.ctrlKey,
@@ -44,7 +44,7 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
         commandBeingPlayed.altKey,
         commandBeingPlayed.metaKey
     else
-      systemTestsRecorderAndPlayer.handMorph.processMouseDown \
+      automatorRecorderAndPlayer.handMorph.processMouseDown \
       button,
       commandBeingPlayed.buttons,
       commandBeingPlayed.ctrlKey,
@@ -56,8 +56,8 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@upOrDown, button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@upOrDown, button, @buttons, @ctrlKey, @shiftKey, @altKey, @metaKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
 
     @button = switch button
       when 0

@@ -9,11 +9,11 @@ class AutomatorCommandLeftOrRightClickOnMenuItem extends AutomatorCommand
   # which one it is
   textLabelOccurrenceNumber: 0
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    #systemTestsRecorderAndPlayer.handMorph.leftOrRightClickOnMenuItemWithText(commandBeingPlayed.whichMouseButtonPressed, commandBeingPlayed.textLabelOfClickedItem, commandBeingPlayed.textLabelOccurrenceNumber)
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
+    #automatorRecorderAndPlayer.handMorph.leftOrRightClickOnMenuItemWithText(commandBeingPlayed.whichMouseButtonPressed, commandBeingPlayed.textLabelOfClickedItem, commandBeingPlayed.textLabelOccurrenceNumber)
 
-  constructor: (@whichMouseButtonPressed, @textLabelOfClickedItem, @textLabelOccurrenceNumber, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@whichMouseButtonPressed, @textLabelOfClickedItem, @textLabelOccurrenceNumber, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

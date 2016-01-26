@@ -135,10 +135,10 @@ class HandMorph extends Morph
     oldParent = aMorph.parent
     if !@floatDraggingSomething()
 
-      @world.systemTestsRecorderAndPlayer.addGrabCommand()
+      @world.automatorRecorderAndPlayer.addGrabCommand()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "grab"
-        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
 
@@ -182,10 +182,10 @@ class HandMorph extends Morph
   drop: ->
     if @floatDraggingSomething()
 
-      @world.systemTestsRecorderAndPlayer.addDropCommand()
+      @world.automatorRecorderAndPlayer.addDropCommand()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "drop"
-        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
 
@@ -417,7 +417,7 @@ class HandMorph extends Morph
             # this method below is also going to remove
             # the mouse down/up commands that have
             # recently/just been added.
-            @world.systemTestsRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+            @world.automatorRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
@@ -433,7 +433,7 @@ class HandMorph extends Morph
           if !alreadyRecordedLeftOrRightClickOnMenuItem
             # this being a right click, pop
             # up a menu as needed.
-            @world.systemTestsRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
+            @world.automatorRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
 
       # trigger the action
       until morph[expectedClick]
@@ -446,10 +446,10 @@ class HandMorph extends Morph
           switch expectedClick
             when "mouseClickLeft"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.systemTestsRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+              world.automatorRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
             when "mouseClickRight"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.systemTestsRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+              world.automatorRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           # also send doubleclick if the
@@ -459,7 +459,7 @@ class HandMorph extends Morph
               @doubleClickMorph = null
               disableDoubleClickDueToFastTests = false
               if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-                if !window.world.systemTestsRecorderAndPlayer.runningInSlowMode()
+                if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                   disableDoubleClickDueToFastTests = true
               if !disableDoubleClickDueToFastTests
                 @processDoubleClick()
@@ -535,7 +535,7 @@ class HandMorph extends Morph
   processDoubleClick: ->
 
     pointerAndMorphInfo = world.getPointerAndMorphInfo()
-    world.systemTestsRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
+    world.automatorRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
 
     morph = @topMorphUnderPointer()
     @destroyTemporaries()

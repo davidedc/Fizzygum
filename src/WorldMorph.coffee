@@ -85,7 +85,7 @@ class WorldMorph extends FrameMorph
   @currentTime: null
   showRedraws: false
   doubleCheckCachedMethodsResults: false
-  systemTestsRecorderAndPlayer: null
+  automatorRecorderAndPlayer: null
 
   # this is the actual reference to the canvas
   # on the html page, where the world is
@@ -234,7 +234,7 @@ class WorldMorph extends FrameMorph
     @silentRawSetBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
 
     @initEventListeners()
-    @systemTestsRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
+    @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
@@ -285,8 +285,8 @@ class WorldMorph extends FrameMorph
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber = 0
       if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-        if @systemTestsRecorderAndPlayer.atLeastOneTestHasBeenRun
-          if @systemTestsRecorderAndPlayer.allTestsPassedSoFar
+        if @automatorRecorderAndPlayer.atLeastOneTestHasBeenRun
+          if @automatorRecorderAndPlayer.allTestsPassedSoFar
             document.getElementById("background").style.background = "green"
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
@@ -296,27 +296,27 @@ class WorldMorph extends FrameMorph
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
     if currentAction.name == "runTests"
-      @systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
+      @automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
 
       if currentAction.numberOfGroups?
-        @systemTestsRecorderAndPlayer.numberOfGroups = currentAction.numberOfGroups
+        @automatorRecorderAndPlayer.numberOfGroups = currentAction.numberOfGroups
       else
-        @systemTestsRecorderAndPlayer.numberOfGroups = 1
+        @automatorRecorderAndPlayer.numberOfGroups = 1
       if currentAction.groupToBeRun?
-        @systemTestsRecorderAndPlayer.groupToBeRun = currentAction.groupToBeRun
+        @automatorRecorderAndPlayer.groupToBeRun = currentAction.groupToBeRun
       else
-        @systemTestsRecorderAndPlayer.groupToBeRun = 0
+        @automatorRecorderAndPlayer.groupToBeRun = 0
 
       if currentAction.forceSlowTestPlaying?
-        @systemTestsRecorderAndPlayer.forceSlowTestPlaying = true
+        @automatorRecorderAndPlayer.forceSlowTestPlaying = true
       if currentAction.forceTurbo?
-        @systemTestsRecorderAndPlayer.forceTurbo = true
+        @automatorRecorderAndPlayer.forceTurbo = true
       if currentAction.forceSkippingInBetweenMouseMoves?
-        @systemTestsRecorderAndPlayer.forceSkippingInBetweenMouseMoves = true
+        @automatorRecorderAndPlayer.forceSkippingInBetweenMouseMoves = true
       if currentAction.forceRunningInBetweenMouseMoves?
-        @systemTestsRecorderAndPlayer.forceRunningInBetweenMouseMoves = true
+        @automatorRecorderAndPlayer.forceRunningInBetweenMouseMoves = true
 
-      @systemTestsRecorderAndPlayer.runAllSystemTests()
+      @automatorRecorderAndPlayer.runAllSystemTests()
     WorldMorph.ongoingUrlActionNumber++
 
   getMorphViaTextLabel: ([textDescription, occurrenceNumber, numberOfOccurrences]) ->
@@ -890,7 +890,7 @@ class WorldMorph extends FrameMorph
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     pointerAndMorphInfo = @getPointerAndMorphInfo()
-    @systemTestsRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
+    @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
 
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -923,11 +923,11 @@ class WorldMorph extends FrameMorph
     if @hand.floatDraggingSomething()
       if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "floatDrag"
-        arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
-    @systemTestsRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+    @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
   # event.type must be keypress
   getChar: (event) ->
@@ -939,7 +939,7 @@ class WorldMorph extends FrameMorph
       null # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
@@ -955,7 +955,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     if @keyboardEventsReceiver
       # so far the caret is the only keyboard
@@ -967,7 +967,7 @@ class WorldMorph extends FrameMorph
       event.preventDefault()
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    @systemTestsRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    @automatorRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -1026,7 +1026,7 @@ class WorldMorph extends FrameMorph
        @outstandingTimerTriggeredOperationsCounter.pop()
       ), 50, true
 
-    @systemTestsRecorderAndPlayer.addCutCommand selectedText
+    @automatorRecorderAndPlayer.addCutCommand selectedText
 
   processCopy: (event, clipboardTextIfTestRunning) ->
     console.log "processing copy"
@@ -1043,7 +1043,7 @@ class WorldMorph extends FrameMorph
         event.returnValue = false
         setStatus = window.clipboardData.setData "Text", selectedText
 
-    @systemTestsRecorderAndPlayer.addCopyCommand selectedText
+    @automatorRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (event, text) ->
     if @caret
@@ -1062,7 +1062,7 @@ class WorldMorph extends FrameMorph
       
       # Needs a few msec to execute paste
       console.log "about to insert text: " + text
-      @systemTestsRecorderAndPlayer.addPasteCommand text
+      @automatorRecorderAndPlayer.addPasteCommand text
 
       # see comment on outstandingTimerTriggeredOperationsCounter
       # above where the property is declared and initialised.
@@ -1239,47 +1239,47 @@ class WorldMorph extends FrameMorph
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.resetWorld()
+      @automatorRecorderAndPlayer.resetWorld()
       false
     Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
     @keyComboTurnOnAnimationsPacingControl = (event) =>
-      @systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()
+      @automatorRecorderAndPlayer.turnOnAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
 
     @keyComboTurnOffAnimationsPacingControl = (event) =>
-      @systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl()
+      @automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+u"], @keyComboTurnOffAnimationsPacingControl
 
     @keyComboTakeScreenshotEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.takeScreenshot()
+      @automatorRecorderAndPlayer.takeScreenshot()
       false
     Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
 
     @keyComboStopTestRecordingEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.stopTestRecording()
+      @automatorRecorderAndPlayer.stopTestRecording()
       false
     Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
 
     @keyComboAddTestCommentEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.addTestComment()
+      @automatorRecorderAndPlayer.addTestComment()
       false
     Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
 
     @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
-      @systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu()
+      @automatorRecorderAndPlayer.checkNumberOfItemsInMenu()
       false
     Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
 
     @keyComboCheckStringsOfItemsInMenuOrderImportant = (event) =>
-      @systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant()
+      @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant()
       false
     Mousetrap.bind ["alt+a"], @keyComboCheckStringsOfItemsInMenuOrderImportant
 
     @keyComboCheckStringsOfItemsInMenuOrderUnimportant = (event) =>
-      @systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant()
+      @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant()
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
 
@@ -1405,11 +1405,11 @@ class WorldMorph extends FrameMorph
         # which is set based on lastBuiltInstanceNumericID
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
-    window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl()
-    window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
-    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
-    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
-    window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
+    window.world.automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
+    window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
+    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
+    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
+    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
 
     super()
 
@@ -1450,21 +1450,21 @@ class WorldMorph extends FrameMorph
   popUpSystemTestsMenu: ->
     menu = new MenuMorph false, @, true, true, "system tests"
 
-    menu.addItem "run system tests", true, @systemTestsRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
-    menu.addItem "run system tests force slow", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
-    menu.addItem "run system tests force fast skip in-between mouse moves", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
-    menu.addItem "run system tests force fast run in-between mouse moves", true, @systemTestsRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
+    menu.addItem "run system tests", true, @automatorRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addItem "run system tests force slow", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addItem "run system tests force fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
+    menu.addItem "run system tests force fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
 
-    menu.addItem "start test recording", true, @systemTestsRecorderAndPlayer, "startTestRecording", "start recording a test"
-    menu.addItem "stop test recording", true, @systemTestsRecorderAndPlayer, "stopTestRecording", "stop recording the test"
+    menu.addItem "start test recording", true, @automatorRecorderAndPlayer, "startTestRecording", "start recording a test"
+    menu.addItem "stop test recording", true, @automatorRecorderAndPlayer, "stopTestRecording", "stop recording the test"
 
-    menu.addItem "(re)play recorded test slow", true, @systemTestsRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
-    menu.addItem "(re)play recorded test fast skip in-between mouse moves", true, @systemTestsRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
-    menu.addItem "(re)play recorded test  fast run in-between mouse moves", true, @systemTestsRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
+    menu.addItem "(re)play recorded test slow", true, @automatorRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
+    menu.addItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
+    menu.addItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
-    menu.addItem "show test source", true, @systemTestsRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
-    menu.addItem "save recorded test", true, @systemTestsRecorderAndPlayer, "saveTest", "save the recorded test"
-    menu.addItem "save failed screenshots", true, @systemTestsRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
+    menu.addItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
+    menu.addItem "save recorded test", true, @automatorRecorderAndPlayer, "saveTest", "save the recorded test"
+    menu.addItem "save failed screenshots", true, @automatorRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand @firstContainerMenu()
 

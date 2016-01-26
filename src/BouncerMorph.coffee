@@ -103,13 +103,13 @@ class BouncerMorph extends Morph
       if AutomatorRecorderAndPlayer.animationsPacingControl
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           @resetPosition()
-          for i in [0... window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence.length]
+          for i in [0... window.world.automatorRecorderAndPlayer.automatorCommandsSequence.length]
             @moveAccordingToBounce true
           @parent.changed()
           return
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
           @resetPosition()
-          for i in [0... window.world.systemTestsRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence]
+          for i in [0... window.world.automatorRecorderAndPlayer.indexOfTestCommandBeingPlayedFromSequence]
             @moveAccordingToBounce true
           @parent.changed()
           return

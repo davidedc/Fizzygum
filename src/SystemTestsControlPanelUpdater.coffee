@@ -156,55 +156,55 @@ class SystemTestsControlPanelUpdater
     # menu items changing.
     SystemTestsControlPanelUpdater.resetWorldLink =
             @addLink "alt+d: reset world",
-                (-> window.world.systemTestsRecorderAndPlayer.resetWorld())
+                (-> window.world.automatorRecorderAndPlayer.resetWorld())
     SystemTestsControlPanelUpdater.tieAnimations =
         @addOnOffSwitchLink "tie animations to test step",
             "alt+e",
             "alt+u",
-            (-> window.world.systemTestsRecorderAndPlayer.turnOnAnimationsPacingControl()),
-            (-> window.world.systemTestsRecorderAndPlayer.turnOffAnimationsPacingControl())
+            (-> window.world.automatorRecorderAndPlayer.turnOnAnimationsPacingControl()),
+            (-> window.world.automatorRecorderAndPlayer.turnOffAnimationsPacingControl())
     SystemTestsControlPanelUpdater.alignMorphIDs =
         @addOnOffSwitchLink "periodically align Morph IDs",
             "-",
             "-",
-            (-> window.world.systemTestsRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()),
-            (-> window.world.systemTestsRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
+            (-> window.world.automatorRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()),
+            (-> window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
     SystemTestsControlPanelUpdater.hideGeometry =
         @addOnOffSwitchLink "hide Morph geometry in labels",
             "-",
             "-",
-            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
+            (-> window.world.automatorRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
 
     SystemTestsControlPanelUpdater.hideMorphContentExtracts =
         @addOnOffSwitchLink "hide Morph content extract in labels",
             "-",
             "-",
-            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
+            (-> window.world.automatorRecorderAndPlayer.turnOnHidingOfMorphsContentExtractInLabels()), (-> window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels())
 
     SystemTestsControlPanelUpdater.hideMorphIDs =
         @addOnOffSwitchLink "hide Morph number ID in labels",
             "-",
             "-",
-            (-> window.world.systemTestsRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.systemTestsRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
+            (-> window.world.automatorRecorderAndPlayer.turnOnHidingOfMorphsNumberIDInLabels()), (-> window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels())
 
     SystemTestsControlPanelUpdater.takeScreenshot =
         @addLink "alt+c: take screenshot",
-            (-> window.world.systemTestsRecorderAndPlayer.takeScreenshot())
+            (-> window.world.automatorRecorderAndPlayer.takeScreenshot())
     SystemTestsControlPanelUpdater.checkNumnberOfItems =
         @addLink "alt+k: check number of items in menu",
-            (-> window.world.systemTestsRecorderAndPlayer.checkNumberOfItemsInMenu())
+            (-> window.world.automatorRecorderAndPlayer.checkNumberOfItemsInMenu())
     SystemTestsControlPanelUpdater.checkMenuEntriesInOrder =
         @addLink "alt+a: check menu entries (in order)",
-            (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
+            (-> window.world.automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant())
     SystemTestsControlPanelUpdater.checkMenuEntriesNotInOrder =
         @addLink "alt+z: check menu entries (any order)",
-            (-> window.world.systemTestsRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
+            (-> window.world.automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant())
     SystemTestsControlPanelUpdater.addTestComment =
         @addLink "alt+m: add test comment",
-            (-> window.world.systemTestsRecorderAndPlayer.addTestComment())
+            (-> window.world.automatorRecorderAndPlayer.addTestComment())
     SystemTestsControlPanelUpdater.stopTestRec =
         @addLink "alt+t: stop test recording",
-            (-> window.world.systemTestsRecorderAndPlayer.stopTestRecording())
+            (-> window.world.automatorRecorderAndPlayer.stopTestRecording())
 
 
     # add the div with the fake mouse pointer
@@ -314,5 +314,5 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild(numberOfFailedTests)
     numberOfFailedTests.onclick = ->
         debugger
-        world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
+        world.automatorRecorderAndPlayer.saveFailedScreenshots()
     #fade('numberOfFailedTests', 1, 0, 10, new Date().getTime());

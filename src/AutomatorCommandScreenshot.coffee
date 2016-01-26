@@ -14,12 +14,12 @@ class AutomatorCommandScreenshot extends AutomatorCommand
   # to provide the image data (the take pic command
   # will do it)
   screenshotTakenOfAParticularMorph: false
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.compareScreenshots(commandBeingPlayed.screenShotImageName, commandBeingPlayed.screenshotTakenOfAParticularMorph)
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
+    automatorRecorderAndPlayer.compareScreenshots(commandBeingPlayed.screenShotImageName, commandBeingPlayed.screenshotTakenOfAParticularMorph)
 
 
-  constructor: (@screenShotImageName, systemTestsRecorderAndPlayer, @screenshotTakenOfAParticularMorph = false ) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@screenShotImageName, automatorRecorderAndPlayer, @screenshotTakenOfAParticularMorph = false ) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

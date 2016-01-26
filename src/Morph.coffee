@@ -311,7 +311,7 @@ class Morph extends MorphicNode
     @assignUniqueID()
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-      arr = window.world.systemTestsRecorderAndPlayer.tagsCollectedWhileRecordingTest
+      arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
       if @constructor.name not in arr
         arr.push @constructor.name
 
@@ -2270,7 +2270,7 @@ class Morph extends MorphicNode
         when AutomatorRecorderAndPlayer.RECORDING
           # While recording a test, just trigger for
           # the takeScreenshot command to be recorded. 
-          window.world.systemTestsRecorderAndPlayer.takeScreenshot @
+          window.world.automatorRecorderAndPlayer.takeScreenshot @
         when AutomatorRecorderAndPlayer.PLAYING
           # While playing a test, this command puts the
           # screenshot of this morph in a special
@@ -2279,7 +2279,7 @@ class Morph extends MorphicNode
           # to contain the morph screenshot before
           # doing the comparison as per command recorded
           # in the case above.
-          window.world.systemTestsRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
+          window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
         else
           # no system tests recording/playing ongoing,
           # just open new tab with image of morph.

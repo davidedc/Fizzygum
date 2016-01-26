@@ -5,13 +5,13 @@
 
 # How to load/play a test:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# world.systemTestsRecorderAndPlayer.loadAndRunSingleTestFromName("SystemTest_inspectorResizingOKEvenWhenTakenApart")
+# world.automatorRecorderAndPlayer.loadAndRunSingleTestFromName("SystemTest_inspectorResizingOKEvenWhenTakenApart")
 
 # How to inspect the screenshot differences:
 # after having played a test with some failing screenshots
 # comparisons:
 # from the Chrome console (Option-Command-J) OR Safari console (Option-Command-C):
-# window.world.systemTestsRecorderAndPlayer.saveFailedScreenshots()
+# window.world.automatorRecorderAndPlayer.saveFailedScreenshots()
 # it will save a zip file containing three files for each failure:
 # 1) the png of the obtained screenshot (different from the expected)
 # 2) the .js file containing the data for the obtained screenshot
@@ -19,18 +19,18 @@
 # 3) a .png file highlighting the differences in red.
 
 # How to record a test:
-# window.world.systemTestsRecorderAndPlayer.startTestRecording('nameOfTheTest')
+# window.world.automatorRecorderAndPlayer.startTestRecording('nameOfTheTest')
 # ...do the test...
-# window.world.systemTestsRecorderAndPlayer.stopTestRecording()
+# window.world.automatorRecorderAndPlayer.stopTestRecording()
 # if you want to verify the test on the spot:
-# window.world.systemTestsRecorderAndPlayer.startTestPlayingWithSlideIntro()
+# window.world.automatorRecorderAndPlayer.startTestPlayingWithSlideIntro()
 
 # For recording screenshot data at any time -
 # can be used for screenshot comparisons during the test:
-# window.world.systemTestsRecorderAndPlayer.takeScreenshot()
+# window.world.automatorRecorderAndPlayer.takeScreenshot()
 
 # How to save the test:
-# window.world.systemTestsRecorderAndPlayer.saveTest()
+# window.world.automatorRecorderAndPlayer.saveTest()
 # The created zip will contain both the test and the
 # related reference images.
 
@@ -1051,7 +1051,7 @@ class AutomatorRecorderAndPlayer
     blob = @testMetadataFileContentCreator()
     zip.file("SystemTest_#{@testName}.js", blob);
 
-    blob = @automatorCommandsFileContentCreator window.world.systemTestsRecorderAndPlayer.automatorCommandsSequence
+    blob = @automatorCommandsFileContentCreator window.world.automatorRecorderAndPlayer.automatorCommandsSequence
     testNameExtended = @testName + "_automationCommands"
     zip.file("SystemTest_#{testNameExtended}.js", blob);
     
@@ -1189,12 +1189,12 @@ class AutomatorRecorderAndPlayer
   # tag "all" to select them all.
   #
   # Examples to try from cosole:
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow"]);
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble"]);
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow", "bubble"]);
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["all"]);
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
-  # world.systemTestsRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble", "SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["shadow", "bubble"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["all"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
+  # world.automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(["bubble", "SystemTest_buildAllMorphs", "SystemTest_compositeMorphsHaveCorrectShadow"]);
 
   selectTestsFromTagsOrTestNames: (wantedTagsOrNamesArray) ->
     console.log "selectTestsFromTagsOrTestNames"

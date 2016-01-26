@@ -3,12 +3,12 @@
 
 class AutomatorCommandTurnOffHidingOfMorphsGeometryInfoInLabels extends AutomatorCommand
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
+    automatorRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
 
 
-  constructor: (systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

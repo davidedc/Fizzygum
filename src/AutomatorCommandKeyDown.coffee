@@ -8,13 +8,13 @@ class AutomatorCommandKeyDown extends AutomatorCommand
   altKey: null
   metaKey: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     console.log "replaying key"
-    systemTestsRecorderAndPlayer.worldMorph.processKeydown null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
+    automatorRecorderAndPlayer.worldMorph.processKeydown null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
 
 
-  constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

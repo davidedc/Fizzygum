@@ -19,15 +19,15 @@ class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   # In fast mode we can't do that because the rapid
   # clicks would always turn into double-clicks, so we check
   # for that.
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     debugger
-    if !window.world.systemTestsRecorderAndPlayer.runningInSlowMode()
+    if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
       console.log ">>>>>>>>>>>>> executing AutomatorCommandMouseDoubleClick"
       theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
       newX = Math.round((theMorph.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0])) + theMorph.left()
       newY = Math.round((theMorph.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.top()
       world.hand.fullRawMoveTo new Point(newX, newY)
-      systemTestsRecorderAndPlayer.handMorph.processDoubleClick()
+      automatorRecorderAndPlayer.handMorph.processDoubleClick()
     else
       # in this case the system is going to detect (and process)
       # the double click by detecting 2 normal clicks in quick
@@ -37,8 +37,8 @@ class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (@ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command

@@ -8,6 +8,6 @@ class AutomatorCommand
   automatorCommandName: ''
   millisecondsSincePreviousCommand: 0
 
-  constructor: (systemTestsRecorderAndPlayer) ->
+  constructor: (automatorRecorderAndPlayer) ->
     @millisecondsSincePreviousCommand = (new Date().getTime()) -
-    	systemTestsRecorderAndPlayer.timeOfPreviouslyRecordedCommand
+    	automatorRecorderAndPlayer.timeOfPreviouslyRecordedCommand

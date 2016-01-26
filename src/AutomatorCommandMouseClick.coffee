@@ -13,13 +13,13 @@ class AutomatorCommandMouseClick extends AutomatorCommand
   morphPathRelativeToWorld: null
   isPartOfListMorph: null
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
 
   transformIntoDoNothingCommand: ->
     @automatorCommandName = "AutomatorCommandDoNothing"
 
-  constructor: (button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (button, @ctrlKey, @morphUniqueIDString, @morphPathRelativeToWorld, @morphIdentifierViaTextLabel, @absoluteBoundsOfMorphRelativeToWorld, @pointerPositionFractionalInMorph, @pointerPositionPixelsInMorph, @pointerPositionPixelsInWorld, @isPartOfListMorph, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     
     if button == 0
       @button = "left"

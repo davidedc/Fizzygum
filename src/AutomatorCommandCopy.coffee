@@ -5,11 +5,11 @@ class AutomatorCommandCopy extends AutomatorCommand
 
   clipboardText: ""
 
-  @replayFunction: (systemTestsRecorderAndPlayer, commandBeingPlayed) ->
-    systemTestsRecorderAndPlayer.worldMorph.processCopy null, commandBeingPlayed.clipboardText
+  @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
+    automatorRecorderAndPlayer.worldMorph.processCopy null, commandBeingPlayed.clipboardText
 
-  constructor: (@clipboardText, systemTestsRecorderAndPlayer) ->
-    super(systemTestsRecorderAndPlayer)
+  constructor: (@clipboardText, automatorRecorderAndPlayer) ->
+    super(automatorRecorderAndPlayer)
     # it's important that this is the same name of
     # the class cause we need to use the static method
     # replayFunction to replay the command
