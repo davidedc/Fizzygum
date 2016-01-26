@@ -501,7 +501,7 @@ class StringMorph2 extends Morph
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
-    text = @textPossiblyCroppedToFit
+    text = @text
 
     # let's be defensive and check that the
     # slot is in the right interval
@@ -875,6 +875,13 @@ class StringMorph2 extends Morph
     
     @changed()
   
+  selectBetween: (start, end) ->
+    @startMark = Math.min start, end
+    @endMark = Math.max start, end
+    @reLayout()
+    
+    @changed()
+  
   deleteSelection: ->
     text = @text
     start = Math.min @startMark, @endMark
@@ -912,6 +919,22 @@ class StringMorph2 extends Morph
     @reLayout()
     
     @changed()
+
+  mouseDoubleClick: ->
+    if @isEditable
+      previousCaretSlot = world.caret?.slot
+
+      extendRight = 0
+      while @text[previousCaretSlot + extendRight] != " " and (previousCaretSlot + extendRight < @text.length)
+        extendRight++
+
+      extendLeft = 0
+      while @text[previousCaretSlot + extendLeft - 1] != " " and (previousCaretSlot + extendLeft - 1 >= 0)
+        extendLeft--
+
+      @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
+
+
 
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.

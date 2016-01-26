@@ -709,6 +709,13 @@ class AutomatorRecorderAndPlayer
    if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
    document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
 
+  runningInSlowMode: ->
+    if @forceSlowTestPlaying then return true
+    if @forceRunningInBetweenMouseMoves then return false
+    if @forceSkippingInBetweenMouseMoves then return false
+    if @forceTurbo then return false
+    if window["#{@currentlyPlayingTestName}"]?.skipInbetweenMouseMoves then return false
+
   replayTestCommands: ->
    commandToBePlayed = @automatorCommandsSequence[@indexOfTestCommandBeingPlayedFromSequence]
    # console.log "examining command: " + commandToBePlayed.automatorCommandName + " at: " + commandToBePlayed.millisecondsSincePreviousCommand +

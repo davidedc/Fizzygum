@@ -320,8 +320,18 @@ class HandMorph extends Morph
 
       @mouseDownMorph = morph
       @mouseDownMorph = @mouseDownMorph.parent  until @mouseDownMorph[expectedClick]
-      morph = morph.parent  until morph[actualClick]
-      morph[actualClick] @position()
+
+      
+      while !morph[actualClick]?
+        if morph.parent?
+          morph = morph.parent
+        else
+          break
+
+      if morph[actualClick]?
+        morph[actualClick] @position()
+      #morph = morph.parent  until morph[actualClick]
+      #morph[actualClick] @position()
   
   # touch events, see:
   # https://developer.apple.com/library/safari/documentation/appleapplications/reference/safariwebcontent/HandlingEvents/HandlingEvents.html
@@ -447,7 +457,12 @@ class HandMorph extends Morph
           if @doubleClickMorph?
             if @doubleClickMorph == morph
               @doubleClickMorph = null
-              @processDoubleClick()
+              disableDoubleClickDueToFastTests = false
+              if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+                if !window.world.systemTestsRecorderAndPlayer.runningInSlowMode()
+                  disableDoubleClickDueToFastTests = true
+              if !disableDoubleClickDueToFastTests
+                @processDoubleClick()
             else
               @rememberDoubleClickMorphsForAWhile morph
           else
