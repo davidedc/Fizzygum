@@ -13,6 +13,7 @@ class TextMorph2 extends StringMorph2
   wrappedLines: []
   wrappedLineSlots: []
   maxWrappedLineWidth: 0
+  softWrap: true
   #emptyCharacter: '^'
 
   backgroundColor: null
@@ -297,7 +298,17 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
-    morphWidth = @width()
+    
+    # Easy, lazy way to get soft-wrapping.
+    # TODO you can actually simplify lots of code in the
+    # case of soft-wrapping as really there is a lot
+    # less to measure and the wrapping becomes trivial.
+    # Also testing if it fits in an extent can be made
+    # really easy.
+    if @softWrap
+      morphWidth = @width()
+    else
+      morphWidth = Number.MAX_VALUE
 
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textBreak = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
@@ -513,10 +524,22 @@ class TextMorph2 extends StringMorph2
   endOfLine: (slot) ->
     # answer the slot (index) indicating the EOL for the given slot
     @startOfLine(slot) + @wrappedLines[@slotRowAndColumn(slot).y].length - 1
-  
+
+  toggleSoftWrap: ->
+    @softWrap = not @softWrap
+    @synchroniseTextAndActualText()
+    @reLayout()
+    @changed()
+    world.stopEditing()
+
   # TextMorph menus:
   developersMenu: ->
     menu = super()
+    menu.addLine()
+    if @softWrap
+      menu.addItem "soft wrap", true, @, "toggleSoftWrap"
+    else
+      menu.addItem "✓ " + "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
     menu.addItem "run contents", true, @, "doContents"
     menu
