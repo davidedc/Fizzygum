@@ -42,7 +42,11 @@
 		</script>
 	</head>
 
-	<body style="margin: 0px;">
+	<!-- the style below is for disabling any browser selection on
+	the DOM of the page, we don't want any of that, see
+	http://stackoverflow.com/questions/16805684/javascript-disable-text-select -->
+	<body style="margin: 0px; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
+
 		<!-- note that the width and height of the
 		canvas below are ignored in case the WorldMorph
 		is created without a second parameter of with
