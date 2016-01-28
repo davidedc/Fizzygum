@@ -311,8 +311,10 @@ class TextMorph2 extends StringMorph2
     else
       morphWidth = Number.MAX_VALUE
 
+    # TODO: we are not using the classic pattern of returning
+    # immediately the cache key because we have to calculate
+    # and store a couple of values from the hit.
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
-
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
 
     if !textWrappingData?
