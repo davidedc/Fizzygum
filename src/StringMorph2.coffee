@@ -361,7 +361,7 @@ class StringMorph2 extends Morph
         largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, textToFit
         return largestFittingFontSize
 
-  widthOfText: (text, overrideFontSize) ->
+  calculateTextWidth: (text, overrideFontSize) ->
     return @measureText overrideFontSize, text
 
   setFittingFontSize: (theValue) ->
@@ -419,7 +419,7 @@ class StringMorph2 extends Morph
     # so potentially we could be wasting some space as the string might
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
-    widthOfText = @widthOfText text
+    widthOfText = @calculateTextWidth text
     if @backgroundColor? or
     @verticalAlignment != AlignmentSpecVertical.TOP or
     @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
@@ -510,11 +510,11 @@ class StringMorph2 extends Morph
       alert "something wrong - slot is out of range"
     slot = checkedSlot
 
-    xOffset = Math.ceil @widthOfText text.substring 0, slot
+    xOffset = Math.ceil @calculateTextWidth text.substring 0, slot
     x = @left() + xOffset
     y = @top()
 
-    widthOfText = @widthOfText text
+    widthOfText = @calculateTextWidth text
     textVerticalPosition = switch @verticalAlignment
       when AlignmentSpecVertical.TOP
         fontHeight @fittingFontSize
@@ -538,7 +538,7 @@ class StringMorph2 extends Morph
 
   slotAtSingleLineString: (xPosition, text) ->
 
-    widthOfText = @widthOfText text
+    widthOfText = @calculateTextWidth text
 
     textHorizontalPosition = switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
@@ -578,13 +578,27 @@ class StringMorph2 extends Morph
       else
         charXMinusOne = 0
 
-      charX += @widthOfText text[idx]
+      charX += @calculateTextWidth text[idx]
 
       idx += 1
       if idx is text.length
-        if ((@widthOfText(text)) - ((@widthOfText(text[idx-1])) / 2)) < (xPosition - @left())  
+        if ((@calculateTextWidth(text)) - ((@calculateTextWidth(text[idx-1])) / 2)) < (xPosition - @left())  
           return idx
     idx
+
+  pointIsAboveFirstLine: (aPoint) ->
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        (@height() - fontHeight(@fittingFontSize))/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - fontHeight(@fittingFontSize)
+
+    if aPoint.y - @top() < textVerticalPosition
+      return 0
+
+    return false
 
   pointIsUnderLastLine: (aPoint) ->
     textVerticalPosition = switch @verticalAlignment
@@ -602,10 +616,12 @@ class StringMorph2 extends Morph
       return @textPossiblyCroppedToFit.length
 
     return false
-
   
   slotAt: (aPoint) ->
-    if isPointUnderLastLine = @pointIsUnderLastLine aPoint
+    if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
+      return isPointBeforeFirstLine
+
+    if (isPointUnderLastLine = @pointIsUnderLastLine aPoint) != false
       return isPointUnderLastLine
 
     return @slotAtSingleLineString aPoint.x, @textPossiblyCroppedToFit

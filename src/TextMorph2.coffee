@@ -12,7 +12,6 @@ class TextMorph2 extends StringMorph2
 
   wrappedLines: []
   wrappedLineSlots: []
-  maxWrappedLineWidth: 0
   softWrap: true
   #emptyCharacter: '^'
 
@@ -20,6 +19,8 @@ class TextMorph2 extends StringMorph2
 
   #additional properties for ad-hoc evaluation:
   receiver: null
+  heightOfText: null
+  widthOfText: null
 
   constructor: (
     @text = (if text is "" then text else "TextMorph2"),
@@ -332,16 +333,16 @@ class TextMorph2 extends StringMorph2
     if justCheckIfItFitsInThisExtent?
       textBreak = textWrappingData
     else
-      [wrappedLines,wrappedLineSlots,maxWrappedLineWidth] = textWrappingData
-      height = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
-      textBreak = [textWrappingData, height, maxWrappedLineWidth]
+      [wrappedLines,wrappedLineSlots,@widthOfText] = textWrappingData
+      @heightOfText = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
+      textBreak = [textWrappingData, @heightOfText, @widthOfText]
 
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textBreak
     return textBreak
 
   reflowText: ->
     tmp = @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
-    [@wrappedLines,@wrappedLineSlots,@maxWrappedLineWidth] = tmp[0]
+    [@wrappedLines,@wrappedLineSlots,@widthOfText] = tmp[0]
     return tmp[1]
 
   # no changes of position or extent should be
@@ -354,9 +355,9 @@ class TextMorph2 extends StringMorph2
     # it's easier for the time being to use the
     # top-left alignment when editing the text,
     # so let's force that here.
-    if world.caret?.target ?= @
-      verticalAlignment = AlignmentSpecVertical.TOP
-      horizontalAlignment = AlignmentSpecHorizontal.LEFT
+    #if world.caret?.target ?= @
+    #  verticalAlignment = AlignmentSpecVertical.TOP
+    #  horizontalAlignment = AlignmentSpecHorizontal.LEFT
 
     cacheKey = @createBufferCacheKey horizontalAlignment, verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
@@ -392,15 +393,6 @@ class TextMorph2 extends StringMorph2
       when AlignmentSpecVertical.BOTTOM
         @height() - contentHeight
 
-    ###
-    textHorizontalPosition = switch horizontalAlignment
-      when AlignmentSpecHorizontal.LEFT
-        0
-      when AlignmentSpecHorizontal.CENTER
-        @width()/2 - widthOfText/2
-      when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
-    ###
 
     # now draw the actual text
     backBufferContext.fillStyle = @color.toString()
@@ -465,10 +457,30 @@ class TextMorph2 extends StringMorph2
       return null
 
     [slotRow, slotColumn] = @slotRowAndColumn slot
-    yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
+
+    lineWidth = @measureText null, @wrappedLines[slotRow]
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
-    x = @left() + xOffset
-    y = @top() + yOffset
+    yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
+
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        (@height() - @heightOfText)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - @heightOfText
+
+    textHorizontalPosition = switch @horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+        @width()/2 - lineWidth/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - lineWidth
+
+
+    x = @left() + xOffset + textHorizontalPosition
+    y = @top() + yOffset + textVerticalPosition
     #alert "slotCoordinates slot:" + slot + " x,y: " + x + ", " + y
     new Point x, y
 
@@ -477,18 +489,44 @@ class TextMorph2 extends StringMorph2
 
     if row > @wrappedLines.length
       return @textPossiblyCroppedToFit.length
-
     
     return @wrappedLineSlots[Math.max(row - 1, 0)] +
       @slotAtSingleLineString xPosition, @wrappedLines[row - 1]
 
+
+  pointIsAboveFirstLine: (aPoint) ->
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        (@height() - @heightOfText)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - @heightOfText
+
+    if aPoint.y - @top() < textVerticalPosition
+      return 0
+
+    return false
   
   # Returns the slot (index) closest to the given point
   # so the caret can be moved accordingly
   # This function assumes that the text is left-justified.
   slotAt: (aPoint) ->
+
+    if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
+      return isPointBeforeFirstLine
+
+    textVerticalPosition = switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        (@height() - @heightOfText)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - @heightOfText
+
     row = 0
-    while aPoint.y - @top() > row * Math.ceil fontHeight @fittingFontSize
+
+    while aPoint.y - @top() > textVerticalPosition + row * Math.ceil fontHeight @fittingFontSize
       row += 1
     row = Math.max row, 1
 
