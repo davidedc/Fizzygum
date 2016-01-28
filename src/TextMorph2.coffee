@@ -312,22 +312,23 @@ class TextMorph2 extends StringMorph2
       morphWidth = Number.MAX_VALUE
 
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
-    textBreak = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
-    if textBreak? then return textBreak
 
-    #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
+    textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
 
-    
-    ## // this section only needs to be re-done when @text changes ////
-    # put all the text in an array, word by word
-    # >>> avoid to do this double-split, jus split by spacing and then
-    # you'll find and remove the newline in the running code
-    # below.
-    # put all the text in an array, word by word
+    if !textWrappingData?
+      #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
 
-    paragraphs = @getParagraphs text
+      
+      ## // this section only needs to be re-done when @text changes ////
+      # put all the text in an array, word by word
+      # >>> avoid to do this double-split, jus split by spacing and then
+      # you'll find and remove the newline in the running code
+      # below.
+      # put all the text in an array, word by word
 
-    textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
+      paragraphs = @getParagraphs text
+
+      textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
 
 
     if justCheckIfItFitsInThisExtent?
@@ -337,7 +338,7 @@ class TextMorph2 extends StringMorph2
       @heightOfText = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
       textBreak = [textWrappingData, @heightOfText, @widthOfText]
 
-    world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textBreak
+    world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
     return textBreak
 
   reflowText: ->
