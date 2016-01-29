@@ -289,7 +289,8 @@ class TextMorph2 extends StringMorph2
     if justCheckIfItFitsInThisExtent?
       world.cacheForTextWrappingData.set cacheKey, true
       return true
-    textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText]
+    heightOfText = wrappedLinesOfWholeText.length * Math.ceil(fontHeight overrideFontSize)
+    textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText, heightOfText]
     world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
 
@@ -311,47 +312,37 @@ class TextMorph2 extends StringMorph2
     else
       morphWidth = Number.MAX_VALUE
 
-    # TODO: we are not using the classic pattern of returning
-    # immediately the cache key because we have to calculate
-    # and store a couple of values from the hit.
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
+    if textWrappingData? then return textWrappingData
 
-    if !textWrappingData?
-      #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
+    #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
 
-      
-      ## // this section only needs to be re-done when @text changes ////
-      # put all the text in an array, word by word
-      # >>> avoid to do this double-split, jus split by spacing and then
-      # you'll find and remove the newline in the running code
-      # below.
-      # put all the text in an array, word by word
+    
+    ## // this section only needs to be re-done when @text changes ////
+    # put all the text in an array, word by word
+    # >>> avoid to do this double-split, jus split by spacing and then
+    # you'll find and remove the newline in the running code
+    # below.
+    # put all the text in an array, word by word
 
-      paragraphs = @getParagraphs text
+    paragraphs = @getParagraphs text
 
-      textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
+    textWrappingData = @getTextWrappingData overrideFontSize, morphWidth, text, paragraphs, justCheckIfItFitsInThisExtent
 
-
-    if justCheckIfItFitsInThisExtent?
-      textBreak = textWrappingData
-    else
-      [wrappedLines,wrappedLineSlots,@widthOfText] = textWrappingData
-      @heightOfText = wrappedLines.length * Math.ceil(fontHeight overrideFontSize)
-      textBreak = [textWrappingData, @heightOfText, @widthOfText]
 
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
-    return textBreak
+    return textWrappingData
 
   reflowText: ->
-    tmp = @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
-    [@wrappedLines,@wrappedLineSlots,@widthOfText] = tmp[0]
+    [@wrappedLines,@wrappedLineSlots,@widthOfText,@heightOfText] =
+      @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
     #if world.caret?
     #  world.caret.updateCaretDimension()
     #  world.caret.gotoSlot world.caret.slot
 
-    return tmp[1]
+    return @heightOfText
 
   # no changes of position or extent should be
   # performed in here
