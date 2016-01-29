@@ -797,18 +797,30 @@ class StringMorph2 extends Morph
   toggleWeight: ->
     @isBold = not @isBold
     @reLayout()
+    @reflowText()
     @changed()
+    if world.caret?
+      world.caret.updateCaretDimension()
+      world.caret.gotoSlot world.caret.slot
   
   toggleItalic: ->
     @isItalic = not @isItalic
     @reLayout()
+    @reflowText()
     @changed()
+    if world.caret?
+      world.caret.updateCaretDimension()
+      world.caret.gotoSlot world.caret.slot
   
   toggleIsPassword: ->
     world.stopEditing()
     @isPassword = not @isPassword
     @reLayout()
+    @reflowText()
     @changed()
+    if world.caret?
+      world.caret.updateCaretDimension()
+      world.caret.gotoSlot world.caret.slot
   
   reflowText: ->
 
