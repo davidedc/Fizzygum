@@ -684,6 +684,7 @@ class TextMorph2 extends StringMorph2
       slotBeginOfLine = @slotAtRow row + 1, 0
       slotsInRow = @wrappedLineSlots[row + 1]
       @selectBetween slotBeginOfLine, slotsInRow
+      world.caret?.gotoSlot slotsInRow
 
 
 

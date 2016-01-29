@@ -970,10 +970,12 @@ class StringMorph2 extends Morph
         extendLeft--
 
       @selectBetween (previousCaretSlot + extendLeft), (previousCaretSlot + extendRight)
+      world.caret?.gotoSlot (previousCaretSlot + extendRight)
 
   mouseTripleClick: ->
     if @isEditable
       @selectAll()
+      world.caret?.gotoSlot @text.length
 
 
   # Every time the user clicks on the text, a new edit()
