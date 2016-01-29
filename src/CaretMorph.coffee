@@ -157,7 +157,7 @@ class CaretMorph extends BlinkerMorph
       @gotoSlot @slot - 1
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.caretHorizPositionForVertMovement = @left()
+    @target.caretHorizPositionForVertMovement = @slot
   
   goRight: (shift, howMany) ->
     if !shift and @target.lastSelectedSlot()?
@@ -168,7 +168,7 @@ class CaretMorph extends BlinkerMorph
       @gotoSlot @slot + (howMany || 1)
       @updateSelection shift
       @clearSelectionIfStartAndEndMeet shift
-    @target.caretHorizPositionForVertMovement = @left()
+    @target.caretHorizPositionForVertMovement = @slot
   
   goUp: (shift) ->
     if !shift and @target.lastSelectedSlot()?

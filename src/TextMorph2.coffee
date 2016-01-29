@@ -346,6 +346,11 @@ class TextMorph2 extends StringMorph2
   reflowText: ->
     tmp = @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
     [@wrappedLines,@wrappedLineSlots,@widthOfText] = tmp[0]
+
+    #if world.caret?
+    #  world.caret.updateCaretDimension()
+    #  world.caret.gotoSlot world.caret.slot
+
     return tmp[1]
 
   # no changes of position or extent should be
@@ -541,7 +546,7 @@ class TextMorph2 extends StringMorph2
     [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow < 1
       return 0
-    return @slotAtRow slotRow, @caretHorizPositionForVertMovement
+    return @slotAtRow slotRow, (@slotCoordinates @caretHorizPositionForVertMovement).x
     above = @wrappedLines[slotRow - 1]
     if above.length < slotColumn - 1
       return @wrappedLineSlots[slotRow - 1] + above.length
@@ -552,7 +557,7 @@ class TextMorph2 extends StringMorph2
     [slotRow, slotColumn] = @slotRowAndColumn slot
     if slotRow > @wrappedLines.length - 2
       return @textPossiblyCroppedToFit.length
-    return @slotAtRow(slotRow+2, @caretHorizPositionForVertMovement)
+    return @slotAtRow(slotRow+2, (@slotCoordinates @caretHorizPositionForVertMovement).x)
     below = @wrappedLines[slotRow + 1]
     if below.length < slotColumn - 1
       return @wrappedLineSlots[slotRow + 1] + below.length

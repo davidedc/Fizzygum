@@ -373,6 +373,10 @@ class StringMorph2 extends Morph
   reLayout: ->
     super()
     @setFittingFontSize @fitToExtent()
+    #if world.caret?
+    #  world.caret.updateCaretDimension()
+    #  world.caret.gotoSlot world.caret.slot
+
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
   # this shenanigan of passing the alignments is only
@@ -830,6 +834,7 @@ class StringMorph2 extends Morph
       console.log "texts non-synched"
     @reLayout()
     @reflowText()
+    #@reLayout()
     
     @changed()
   
@@ -986,7 +991,7 @@ class StringMorph2 extends Morph
       if editResult?
         world.caret.gotoSlot slotUserClickedOn
         world.caret.show()
-        @caretHorizPositionForVertMovement = world.caret.left()
+        @caretHorizPositionForVertMovement = world.caret.slot
 
     else
       @escalateEvent "mouseClickLeft", pos
