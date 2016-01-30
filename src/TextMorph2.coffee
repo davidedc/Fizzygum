@@ -339,10 +339,6 @@ class TextMorph2 extends StringMorph2
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
-    #if world.caret?
-    #  world.caret.updateDimension()
-    #  world.caret.gotoSlot world.caret.slot
-
     return @heightOfPossiblyCroppedText
 
   # no changes of position or extent should be
@@ -351,13 +347,6 @@ class TextMorph2 extends StringMorph2
 
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment
-
-    # it's easier for the time being to use the
-    # top-left alignment when editing the text,
-    # so let's force that here.
-    #if world.caret?.target ?= @
-    #  verticalAlignment = AlignmentSpecVertical.TOP
-    #  horizontalAlignment = AlignmentSpecHorizontal.LEFT
 
     cacheKey = @createBufferCacheKey horizontalAlignment, verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
@@ -567,7 +556,6 @@ class TextMorph2 extends StringMorph2
     @softWrap = not @softWrap
     @synchroniseTextAndActualText()
     @reflowText()
-    @changed()
     world.stopEditing()
 
   # TextMorph menus:
@@ -585,17 +573,14 @@ class TextMorph2 extends StringMorph2
   setAlignmentToLeft: ->
     @alignment = "left"
     @reflowText()
-    @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
     @reflowText()
-    @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
     @reflowText()
-    @changed()  
   
   # TextMorph evaluation:
   evaluationMenu: ->
