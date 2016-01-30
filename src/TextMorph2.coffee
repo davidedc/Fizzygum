@@ -338,7 +338,7 @@ class TextMorph2 extends StringMorph2
     super
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
-      
+
     # a changed() is already done in the
     # super but adding it here as well for clarity
 
@@ -575,7 +575,6 @@ class TextMorph2 extends StringMorph2
   toggleSoftWrap: ->
     @softWrap = not @softWrap
     @changed()
-    @synchroniseTextAndActualText()
     world.stopEditing()
 
   # TextMorph menus:

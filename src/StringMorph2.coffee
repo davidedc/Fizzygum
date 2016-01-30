@@ -403,9 +403,24 @@ class StringMorph2 extends Morph
 
     cacheKey = @createBufferCacheKey @horizontalAlignment, @verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
+    if cacheHit?
+      # we might have hit a previously cached
+      # backBuffer but here we are interested in
+      # knowing whether the buffer we are gonna paint
+      # is the same as the one being shown now. If
+      # not, then we mark the caret as broken.
+      if backBuffer != cacheHit[0]
+        if world.caret?
+          world.caret.changed()      
+      return cacheHit
 
-    @synchroniseTextAndActualText()
+    @reflowText()
+
+    # if we are calculating a new buffer then
+    # for sure we have to mark the caret as broken
+    if world.caret?
+      world.caret.changed()      
+
     text = @textPossiblyCroppedToFit
     # Initialize my surface property.
     # If don't have to paint the background then the surface is just as
@@ -759,14 +774,12 @@ class StringMorph2 extends Morph
 
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
-    @synchroniseTextAndActualText()
     @changed()
     world.stopEditing()
 
   togglefittingSpecWhenBoundsTooLarge: ->
     world.stopEditing()
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
-    @synchroniseTextAndActualText()
     @changed()
 
   # this would be triggered by the "lock/unlock"
@@ -803,6 +816,7 @@ class StringMorph2 extends Morph
       world.caret.changed()
   
   reflowText: ->
+    @synchroniseTextAndActualText()
     @setFittingFontSize @fitToExtent()
 
   justBeforeBeingPainted: ->
