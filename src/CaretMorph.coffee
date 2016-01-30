@@ -26,10 +26,13 @@ class CaretMorph extends BlinkerMorph
 
     if (@target instanceof TextMorph) and (@target.alignment != 'left')
       @target.setAlignmentToLeft()
-    @gotoSlot @slot
-    @updateCaretDimension()
+    @updatePositionAndDimension()
 
-  updateCaretDimension: ->
+  updatePositionAndDimension: ->
+    @updateDimension()
+    @gotoSlot @slot
+
+  updateDimension: ->
     ls = fontHeight @target.actualFontSizeUsedInRendering()
     if ls != @currentCaretFontSize
       @currentCaretFontSize = ls
@@ -40,7 +43,7 @@ class CaretMorph extends BlinkerMorph
     # @inspectKeyEvent event
     if @keyDownEventUsed
       @keyDownEventUsed = false
-      @updateCaretDimension()
+      @updateDimension()
       return null
     if ctrlKey
       @ctrl charCode
@@ -54,7 +57,7 @@ class CaretMorph extends BlinkerMorph
       @insert symbol, shiftKey
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
-    @updateCaretDimension()
+    @updateDimension()
   
   processKeyDown: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
@@ -63,13 +66,13 @@ class CaretMorph extends BlinkerMorph
       @ctrl scanCode
       # notify target's parent of key event
       @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
-      @updateCaretDimension()
+      @updateDimension()
       return
     else if metaKey
       @cmd scanCode
       # notify target's parent of key event
       @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
-      @updateCaretDimension()
+      @updateDimension()
       return
     switch scanCode
       when 37
@@ -112,7 +115,7 @@ class CaretMorph extends BlinkerMorph
     # @inspectKeyEvent event
     # notify target's parent of key event
     @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
-    @updateCaretDimension()
+    @updateDimension()
   
   
   # CaretMorph navigation - simple version
@@ -278,7 +281,7 @@ class CaretMorph extends BlinkerMorph
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
       @target.setText text
       @goRight false, symbol.length
-      @updateCaretDimension()
+      @updateDimension()
   
   ctrl: (scanCodeOrCharCode) ->
     # ctrl-a apparently can come from either

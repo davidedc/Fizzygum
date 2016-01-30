@@ -339,7 +339,7 @@ class TextMorph2 extends StringMorph2
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
     #if world.caret?
-    #  world.caret.updateCaretDimension()
+    #  world.caret.updateDimension()
     #  world.caret.gotoSlot world.caret.slot
 
     return @heightOfPossiblyCroppedText

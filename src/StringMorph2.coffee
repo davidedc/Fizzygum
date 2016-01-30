@@ -367,14 +367,14 @@ class StringMorph2 extends Morph
   setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
       @fittingFontSize = theValue
-      if world.caret?
-        world.caret.updateCaretDimension()
+      #if world.caret?
+      #  world.caret.updateDimension()
 
   reLayout: ->
     super()
     @setFittingFontSize @fitToExtent()
     #if world.caret?
-    #  world.caret.updateCaretDimension()
+    #  world.caret.updateDimension()
     #  world.caret.gotoSlot world.caret.slot
 
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
@@ -800,8 +800,7 @@ class StringMorph2 extends Morph
     @reflowText()
     @changed()
     if world.caret?
-      world.caret.updateCaretDimension()
-      world.caret.gotoSlot world.caret.slot
+      world.caret.updatePositionAndDimension()
   
   toggleItalic: ->
     @isItalic = not @isItalic
@@ -809,8 +808,7 @@ class StringMorph2 extends Morph
     @reflowText()
     @changed()
     if world.caret?
-      world.caret.updateCaretDimension()
-      world.caret.gotoSlot world.caret.slot
+      world.caret.updatePositionAndDimension()
   
   toggleIsPassword: ->
     world.stopEditing()
@@ -819,8 +817,7 @@ class StringMorph2 extends Morph
     @reflowText()
     @changed()
     if world.caret?
-      world.caret.updateCaretDimension()
-      world.caret.gotoSlot world.caret.slot
+      world.caret.updatePositionAndDimension()
   
   reflowText: ->
 
