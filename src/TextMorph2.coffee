@@ -335,6 +335,7 @@ class TextMorph2 extends StringMorph2
     return textWrappingData
 
   reflowText: ->
+    @setFittingFontSize @fitToExtent()
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
