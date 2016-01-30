@@ -374,9 +374,6 @@ class StringMorph2 extends Morph
   reLayout: ->
     super()
     @reflowText()
-    #if world.caret?
-    #  world.caret.updateDimension()
-    #  world.caret.gotoSlot world.caret.slot
 
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 

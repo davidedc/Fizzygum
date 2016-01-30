@@ -483,7 +483,7 @@ class HandMorph extends Morph
           # as the previous one.
           if !doubleClickInvoked
             if @tripleClickMorph?
-              debugger
+              #debugger
               if @tripleClickMorph == morph
                 @tripleClickMorph = null
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false

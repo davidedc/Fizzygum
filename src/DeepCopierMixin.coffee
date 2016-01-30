@@ -36,8 +36,8 @@ DeepCopierMixin =
           # also includes the "parent" property
           if @hasOwnProperty property
 
-            if property == "backBufferContext"
-              debugger
+            #if property == "backBufferContext"
+            #  debugger
             if !@[property]?
               cloneOfMe[property] = null
             else if typeof @[property] == 'object'

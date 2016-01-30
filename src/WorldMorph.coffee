@@ -511,8 +511,8 @@ class WorldMorph extends FrameMorph
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
           sourceBroken = brokenMorph.clippedBoundsWhenLastPainted
 
-        if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
-          debugger
+        #if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
+        #  debugger
 
       # for the "destination" broken rectangle we can actually
       # check whether the Morph is still visible because we
@@ -527,8 +527,8 @@ class WorldMorph extends FrameMorph
 
         if boundsToBeChanged.isNotEmpty()
           destinationBroken = boundsToBeChanged.spread()
-          if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
-            debugger
+          #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
+          #  debugger
 
 
       if sourceBroken? and destinationBroken?
