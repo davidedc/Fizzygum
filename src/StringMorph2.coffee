@@ -367,12 +367,6 @@ class StringMorph2 extends Morph
       @fittingFontSize = theValue
       @changed()
 
-  reLayout: ->
-    super()
-    @changed()
-
-    #console.log "reLayout // fittingFontSize: " + @fittingFontSize
-
   # this shenanigan of passing the alignments is only
   # needed because we can't edit a TextMorph2 "in place"
   # when it has an alignment other than top-left.
@@ -824,25 +818,22 @@ class StringMorph2 extends Morph
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
-  setText: (theTextContent,stringFieldMorph) ->
+  setText: (theTextContent, stringFieldMorph) ->
     if stringFieldMorph?
       # in this case, the stringFieldMorph has a
       # StringMorph in "text". The StringMorph has the
       # "text" inside it.
       theTextContent = stringFieldMorph.text.text
 
-    # other morphs might send something like a
-    # number or a color so let's make sure we
-    # convert to a string.
-    @text = theTextContent + ""
-    if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.SCALEDOWN or
-    @doesTextFitInExtent (@transformTextOneToOne @text), @originallySetFontSize
-      console.log "texts synched at font size: " + @fittingFontSize
-      @textPossiblyCroppedToFit = @transformTextOneToOne @text
-      #console.log "@textPossiblyCroppedToFit = @text 5"
-    else
-      console.log "texts non-synched"
-    @changed()
+    theNewText = theTextContent + ""
+    if @text != theNewText
+      # other morphs might send something like a
+      # number or a color so let's make sure we
+      # convert to a string.
+      @clearSelection()
+      @text = theNewText
+      @synchroniseTextAndActualText()
+      @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
