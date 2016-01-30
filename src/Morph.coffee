@@ -1206,6 +1206,8 @@ class Morph extends MorphicNode
       if w < 1 or h < 1
         return null
 
+      @justBeforeBeingPainted?()
+
       aContext.save()
       aContext.globalAlpha = @alpha
       aContext.fillStyle = @color.toString()

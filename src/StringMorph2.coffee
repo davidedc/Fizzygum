@@ -122,26 +122,27 @@ class StringMorph2 extends Morph
 
     # override inherited properties:
     @noticesTransparentClick = true
-    @reflowText()
+    @changed()
 
   # the actual font size used might be
   # different than the one specified originally
   # because this morph has to be able to fit
   # any extent by shrinking.
   actualFontSizeUsedInRendering: ->
+    @reflowText()
     @fittingFontSize
 
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
       world.stopEditing()
       @horizontalAlignment = newAlignment
-      @reflowText()
+      @changed()
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
       world.stopEditing()
       @verticalAlignment = newAlignment
-      @reflowText()
+      @changed()
 
   alignLeft: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.LEFT
@@ -364,10 +365,11 @@ class StringMorph2 extends Morph
   setFittingFontSize: (theValue) ->
     if @fittingFontSize != theValue
       @fittingFontSize = theValue
+      @changed()
 
   reLayout: ->
     super()
-    @reflowText()
+    @changed()
 
     #console.log "reLayout // fittingFontSize: " + @fittingFontSize
 
@@ -658,7 +660,7 @@ class StringMorph2 extends Morph
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
-      @reflowText()
+      @changed()
 
   fontsMenu: (a,targetMorph)->
     menu = new MenuMorph false, targetMorph, true, true, null
@@ -758,14 +760,14 @@ class StringMorph2 extends Morph
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @synchroniseTextAndActualText()
-    @reflowText()
+    @changed()
     world.stopEditing()
 
   togglefittingSpecWhenBoundsTooLarge: ->
     world.stopEditing()
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @synchroniseTextAndActualText()
-    @reflowText()
+    @changed()
 
   # this would be triggered by the "lock/unlock"
   # menu entry but unclear the specific use and
@@ -780,29 +782,31 @@ class StringMorph2 extends Morph
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
-    @reflowTextAndUpdateCaret()
+    @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
-    @reflowTextAndUpdateCaret()
+    @changed()
   
   toggleItalic: ->
     @isItalic = not @isItalic
-    @reflowTextAndUpdateCaret()
+    @changed()
   
   toggleIsPassword: ->
     world.stopEditing()
     @isPassword = not @isPassword
-    @reflowTextAndUpdateCaret()
+    @changed()
 
-  reflowTextAndUpdateCaret: ->
-    @reflowText()
+  changed: ->
+    super
     if world.caret?
-      world.caret.updatePositionAndDimension()
+      world.caret.changed()
   
   reflowText: ->
     @setFittingFontSize @fitToExtent()
-    @changed()
+
+  justBeforeBeingPainted: ->
+    @reflowText()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
@@ -824,7 +828,7 @@ class StringMorph2 extends Morph
       #console.log "@textPossiblyCroppedToFit = @text 5"
     else
       console.log "texts non-synched"
-    @reflowText()
+    @changed()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
@@ -834,11 +838,14 @@ class StringMorph2 extends Morph
 
     # for context menu demo purposes
     if typeof size is "number"
-      @originallySetFontSize = Math.round Math.min Math.max(size, 4), 500
+      newSize = Math.round Math.min Math.max(size, 4), 500
     else
       newSize = parseFloat size
-      @originallySetFontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
-    @reflowText()
+      newSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
+
+    if newSize != @originallySetFontSize
+      @originallySetFontSize = newSize
+      @changed()
   
   
   numericalSetters: ->
@@ -878,12 +885,12 @@ class StringMorph2 extends Morph
   clearSelection: ->
     @startMark = null
     @endMark = null
-    @reflowText()
+    @changed()
   
   selectBetween: (start, end) ->
     @startMark = Math.min start, end
     @endMark = Math.max start, end
-    @reflowText()
+    @changed()
   
   deleteSelection: ->
     text = @text
@@ -894,9 +901,8 @@ class StringMorph2 extends Morph
     # the reLayout() below might actually
     # crop the text
     #console.log "@textPossiblyCroppedToFit =  6"
-    @reflowText()
     @clearSelection()
-    @reflowText()
+    @changed()
 
   selectAll: ->
     @startMark = 0

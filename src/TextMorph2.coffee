@@ -338,6 +338,9 @@ class TextMorph2 extends StringMorph2
     super
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
+      
+    # a changed() is already done in the
+    # super but adding it here as well for clarity
 
     return @heightOfPossiblyCroppedText
 
@@ -348,11 +351,26 @@ class TextMorph2 extends StringMorph2
     verticalAlignment = @verticalAlignment
     horizontalAlignment = @horizontalAlignment
 
+    
     cacheKey = @createBufferCacheKey horizontalAlignment, verticalAlignment
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
-    if cacheHit? then return cacheHit
+    if cacheHit?
+      # we might have hit a previously cached
+      # backBuffer but here we are interested in
+      # knowing whether the buffer we are gonna paint
+      # is the same as the one being shown now. If
+      # not, then we mark the caret as broken.
+      if backBuffer != cacheHit[0]
+        if world.caret?
+          world.caret.changed()      
+      return cacheHit
 
     contentHeight = @reflowText()
+
+    # if we are calculating a new buffer then
+    # for sure we have to mark the caret as broken
+    if world.caret?
+      world.caret.changed()      
 
     backBuffer = newCanvas()
     backBufferContext = backBuffer.getContext "2d"
@@ -416,6 +434,7 @@ class TextMorph2 extends StringMorph2
   # answer the logical position point of the given index ("slot")
   # i.e. the row and the column where a particular character is.
   slotRowAndColumn: (slot) ->
+    @reflowText()
     idx = 0
     # Note that this solution scans all the characters
     # in all the rows up to the slot. This could be
@@ -445,6 +464,7 @@ class TextMorph2 extends StringMorph2
       @edit()
       return null
 
+    @reflowText()
     [slotRow, slotColumn] = @slotRowAndColumn slot
 
     lineWidth = @measureText null, @wrappedLines[slotRow]
@@ -554,8 +574,8 @@ class TextMorph2 extends StringMorph2
 
   toggleSoftWrap: ->
     @softWrap = not @softWrap
+    @changed()
     @synchroniseTextAndActualText()
-    @reflowText()
     world.stopEditing()
 
   # TextMorph menus:
@@ -572,15 +592,15 @@ class TextMorph2 extends StringMorph2
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @reflowText()
+    @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @reflowText()
+    @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @reflowText()
+    @changed()
   
   # TextMorph evaluation:
   evaluationMenu: ->

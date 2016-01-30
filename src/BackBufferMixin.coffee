@@ -89,6 +89,7 @@ BackBufferMixin =
       # Note that this morph might paint something on the screen even if
       # it's not a "leaf".
       paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+        @justBeforeBeingPainted?()
 
         if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
           return null

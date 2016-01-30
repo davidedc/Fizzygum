@@ -26,11 +26,14 @@ class CaretMorph extends BlinkerMorph
 
     if (@target instanceof TextMorph) and (@target.alignment != 'left')
       @target.setAlignmentToLeft()
-    @updatePositionAndDimension()
+    @adjustAccordingToTargetText()
 
-  updatePositionAndDimension: ->
+  adjustAccordingToTargetText: ->
     @updateDimension()
     @gotoSlot @slot
+
+  justBeforeBeingPainted: ->
+    @adjustAccordingToTargetText()
 
   updateDimension: ->
     ls = fontHeight @target.actualFontSizeUsedInRendering()
