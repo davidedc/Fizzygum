@@ -121,11 +121,6 @@ class CaretMorph extends BlinkerMorph
     @updateDimension()
   
   
-  # CaretMorph navigation - simple version
-  #gotoSlot: (newSlot) ->
-  #  @fullRawMoveTo @target.slotCoordinates(newSlot)
-  #  @slot = Math.max newSlot, 0
-
   gotoSlot: (slot) ->
     # check that slot is within the allowed boundaries of
     # of zero and text length.
