@@ -19,8 +19,8 @@ class TextMorph2 extends StringMorph2
 
   #additional properties for ad-hoc evaluation:
   receiver: null
-  heightOfText: null
-  widthOfText: null
+  heightOfPossiblyCroppedText: null
+  widthOfPossiblyCroppedText: null
 
   constructor: (
     @text = (if text is "" then text else "TextMorph2"),
@@ -276,9 +276,9 @@ class TextMorph2 extends StringMorph2
       maxWrappedLineWidthOfWholeText = Math.max maxWrappedLineWidthOfWholeText, maxWrappedLineWidthOfThisParagraph
 
       if justCheckIfItFitsInThisExtent?
-        heightOfText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(fontHeight overrideFontSize)
-        #console.log "heightOfText: " + heightOfText + " justCheckIfItFitsInThisExtent: " + justCheckIfItFitsInThisExtent
-        if heightOfText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
+        heightOfPossiblyCroppedText = (wrappedLineSlotsOfWholeText.length - 1) * Math.ceil(fontHeight overrideFontSize)
+        #console.log "heightOfPossiblyCroppedText: " + heightOfPossiblyCroppedText + " justCheckIfItFitsInThisExtent: " + justCheckIfItFitsInThisExtent
+        if heightOfPossiblyCroppedText > justCheckIfItFitsInThisExtent.y or maxWrappedLineWidthOfWholeText > justCheckIfItFitsInThisExtent.x
           world.cacheForTextWrappingData.set cacheKey, false
           return false
 
@@ -289,8 +289,8 @@ class TextMorph2 extends StringMorph2
     if justCheckIfItFitsInThisExtent?
       world.cacheForTextWrappingData.set cacheKey, true
       return true
-    heightOfText = wrappedLinesOfWholeText.length * Math.ceil(fontHeight overrideFontSize)
-    textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText, heightOfText]
+    heightOfPossiblyCroppedText = wrappedLinesOfWholeText.length * Math.ceil(fontHeight overrideFontSize)
+    textWrappingDataCacheEntry = [wrappedLinesOfWholeText, wrappedLineSlotsOfWholeText, maxWrappedLineWidthOfWholeText, heightOfPossiblyCroppedText]
     world.cacheForTextWrappingData.set cacheKey, textWrappingDataCacheEntry
     textWrappingData = textWrappingDataCacheEntry
 
@@ -335,14 +335,14 @@ class TextMorph2 extends StringMorph2
     return textWrappingData
 
   reflowText: ->
-    [@wrappedLines,@wrappedLineSlots,@widthOfText,@heightOfText] =
+    [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
     #if world.caret?
     #  world.caret.updateCaretDimension()
     #  world.caret.gotoSlot world.caret.slot
 
-    return @heightOfText
+    return @heightOfPossiblyCroppedText
 
   # no changes of position or extent should be
   # performed in here
@@ -465,9 +465,9 @@ class TextMorph2 extends StringMorph2
       when AlignmentSpecVertical.TOP
         0
       when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfText)/2
+        (@height() - @heightOfPossiblyCroppedText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfText
+        @height() - @heightOfPossiblyCroppedText
 
     textHorizontalPosition = switch @horizontalAlignment
       when AlignmentSpecHorizontal.LEFT
@@ -498,9 +498,9 @@ class TextMorph2 extends StringMorph2
       when AlignmentSpecVertical.TOP
         0
       when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfText)/2
+        (@height() - @heightOfPossiblyCroppedText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfText
+        @height() - @heightOfPossiblyCroppedText
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -519,9 +519,9 @@ class TextMorph2 extends StringMorph2
       when AlignmentSpecVertical.TOP
         0
       when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfText)/2
+        (@height() - @heightOfPossiblyCroppedText)/2
       when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfText
+        @height() - @heightOfPossiblyCroppedText
 
     row = 0
 
