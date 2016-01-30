@@ -106,6 +106,9 @@ class StringMorph extends Morph
     width = @widthOfText @text
     @silentRawSetExtent new Point width, fontHeight @fontSize
     @notifyChildrenThatParentHasReLayouted()
+
+  reflowText: ->
+    @reLayout()
   
   # no changes of position or extent should be
   # performed in here

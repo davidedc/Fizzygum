@@ -122,6 +122,7 @@ class StringMorph2 extends Morph
 
     # override inherited properties:
     @noticesTransparentClick = true
+    @reflowText()
 
   # the actual font size used might be
   # different than the one specified originally
@@ -134,7 +135,7 @@ class StringMorph2 extends Morph
     if @horizontalAlignment != newAlignment
       world.stopEditing()
       @horizontalAlignment = newAlignment
-      @reLayout()
+      @reflowText()
       
       @changed()
 
@@ -142,7 +143,7 @@ class StringMorph2 extends Morph
     if @verticalAlignment != newAlignment
       world.stopEditing()
       @verticalAlignment = newAlignment
-      @reLayout()
+      @reflowText()
       
       @changed()
 
@@ -372,7 +373,7 @@ class StringMorph2 extends Morph
 
   reLayout: ->
     super()
-    @setFittingFontSize @fitToExtent()
+    @reflowText()
     #if world.caret?
     #  world.caret.updateDimension()
     #  world.caret.gotoSlot world.caret.slot
@@ -666,7 +667,7 @@ class StringMorph2 extends Morph
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
-      @reLayout()
+      @reflowText()
       @changed()
 
   fontsMenu: (a,targetMorph)->
@@ -767,7 +768,7 @@ class StringMorph2 extends Morph
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall
     @synchroniseTextAndActualText()
-    @reLayout()
+    @reflowText()
     @changed()
     world.stopEditing()
 
@@ -775,7 +776,7 @@ class StringMorph2 extends Morph
     world.stopEditing()
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @synchroniseTextAndActualText()
-    @reLayout()
+    @reflowText()
     @changed()
 
   # this would be triggered by the "lock/unlock"
@@ -791,12 +792,11 @@ class StringMorph2 extends Morph
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
-    @reLayout()
+    @reflowText()
     @changed()
   
   toggleWeight: ->
     @isBold = not @isBold
-    @reLayout()
     @reflowText()
     @changed()
     if world.caret?
@@ -804,7 +804,6 @@ class StringMorph2 extends Morph
   
   toggleItalic: ->
     @isItalic = not @isItalic
-    @reLayout()
     @reflowText()
     @changed()
     if world.caret?
@@ -813,13 +812,13 @@ class StringMorph2 extends Morph
   toggleIsPassword: ->
     world.stopEditing()
     @isPassword = not @isPassword
-    @reLayout()
     @reflowText()
     @changed()
     if world.caret?
       world.caret.updatePositionAndDimension()
   
   reflowText: ->
+    @setFittingFontSize @fitToExtent()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
@@ -841,9 +840,7 @@ class StringMorph2 extends Morph
       #console.log "@textPossiblyCroppedToFit = @text 5"
     else
       console.log "texts non-synched"
-    @reLayout()
     @reflowText()
-    #@reLayout()
     
     @changed()
   
@@ -859,7 +856,7 @@ class StringMorph2 extends Morph
     else
       newSize = parseFloat size
       @originallySetFontSize = Math.round Math.min Math.max(newSize, 4), 500  unless isNaN newSize
-    @reLayout()
+    @reflowText()
     
     @changed()
   
@@ -901,14 +898,14 @@ class StringMorph2 extends Morph
   clearSelection: ->
     @startMark = null
     @endMark = null
-    @reLayout()
+    @reflowText()
     
     @changed()
   
   selectBetween: (start, end) ->
     @startMark = Math.min start, end
     @endMark = Math.max start, end
-    @reLayout()
+    @reflowText()
     
     @changed()
   
@@ -921,7 +918,7 @@ class StringMorph2 extends Morph
     # the reLayout() below might actually
     # crop the text
     #console.log "@textPossiblyCroppedToFit =  6"
-    @reLayout()
+    @reflowText()
     
     @changed()
     @clearSelection()
@@ -938,7 +935,7 @@ class StringMorph2 extends Morph
   startSelectionUpToSlot: (previousCaretSlot, slotToExtendTo) ->
     @startMark = previousCaretSlot
     @endMark = slotToExtendTo
-    @reLayout()
+    @reflowText()
     
     @changed()
 
@@ -946,7 +943,7 @@ class StringMorph2 extends Morph
   # already a selection ongoing
   extendSelectionUpToSlot: (slotToExtendTo) ->
     @endMark = slotToExtendTo
-    @reLayout()
+    @reflowText()
     
     @changed()
 

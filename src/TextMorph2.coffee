@@ -335,7 +335,7 @@ class TextMorph2 extends StringMorph2
     return textWrappingData
 
   reflowText: ->
-    @setFittingFontSize @fitToExtent()
+    super
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
       @breakTextIntoLines @textPossiblyCroppedToFit, @fittingFontSize
 
@@ -566,7 +566,7 @@ class TextMorph2 extends StringMorph2
   toggleSoftWrap: ->
     @softWrap = not @softWrap
     @synchroniseTextAndActualText()
-    @reLayout()
+    @reflowText()
     @changed()
     world.stopEditing()
 
@@ -584,17 +584,17 @@ class TextMorph2 extends StringMorph2
   
   setAlignmentToLeft: ->
     @alignment = "left"
-    @reLayout()
+    @reflowText()
     @changed()
   
   setAlignmentToRight: ->
     @alignment = "right"
-    @reLayout()
+    @reflowText()
     @changed()
   
   setAlignmentToCenter: ->
     @alignment = "center"
-    @reLayout()
+    @reflowText()
     @changed()  
   
   # TextMorph evaluation:

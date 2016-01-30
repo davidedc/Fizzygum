@@ -226,7 +226,7 @@ class CaretMorph extends BlinkerMorph
         @target.endMark = @slot
       else if @target.endMark isnt @slot
         @target.endMark = @slot
-        @target.reLayout()
+        @target.reflowText()
 
         @target.changed()
     else
@@ -259,7 +259,7 @@ class CaretMorph extends BlinkerMorph
     # already, but I'm leaving them here
     # until I understand better this changed
     # vs. updateBackBuffer semantics.
-    @target.reLayout()    
+    @target.reflowText()    
     @target.changed()
 
     @gotoSlot 0
@@ -356,7 +356,7 @@ class CaretMorph extends BlinkerMorph
     WorldMorph.numberOfAddsAndRemoves++
     if @target.alignment isnt @originalAlignment
       @target.alignment = @originalAlignment
-      @target.reLayout()
+      @target.reflowText()
       
       @target.changed()
     super  
