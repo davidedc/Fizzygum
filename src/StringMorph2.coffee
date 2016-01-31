@@ -889,6 +889,10 @@ class StringMorph2 extends Morph
     @startMark = null
     @endMark = null
     @changed()
+
+  setEndMark: (slot) ->
+    @endMark = slot
+    @changed()
   
   selectBetween: (start, end) ->
     @startMark = Math.min start, end

@@ -214,16 +214,13 @@ class CaretMorph extends BlinkerMorph
       if @target.startMark == @target.endMark
         #console.log "clearSelectionIfStartAndEndMeet clearing selection"
         @target.clearSelection()
-        @target.changed()
 
   updateSelection: (shift) ->
     if shift
       if (@target.endMark is null) and (@target.startMark is null)
-        @target.startMark = @slot
-        @target.endMark = @slot
+        @target.selectBetween @slot, @slot
       else if @target.endMark isnt @slot
-        @target.endMark = @slot
-        @target.changed()
+        @target.setEndMark @slot
     else
       @target.clearSelection()
   
@@ -315,7 +312,6 @@ class CaretMorph extends BlinkerMorph
       @target.deleteSelection()
     else
       text = @target.text
-      @target.changed()
       text = text.slice(0, @slot) + text.slice(@slot + 1)
       @target.setText text    
   
@@ -332,8 +328,6 @@ class CaretMorph extends BlinkerMorph
     @gotoSlot @slot
     @updateSelection false
     @clearSelectionIfStartAndEndMeet false
-
-    @changed()
   
   # CaretMorph utilities:
   inspectKeyEvent: (event) ->

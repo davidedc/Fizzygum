@@ -361,7 +361,16 @@ class StringMorph extends Morph
     @endMark = null
     
     @changed()
+
+  setEndMark: (slot) ->
+    @endMark = slot
+    @changed()
   
+  selectBetween: (start, end) ->
+    @startMark = Math.min start, end
+    @endMark = Math.max start, end
+    @changed()  
+
   deleteSelection: ->
     text = @text
     start = Math.min @startMark, @endMark
