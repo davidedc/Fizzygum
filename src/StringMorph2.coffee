@@ -377,6 +377,7 @@ class StringMorph2 extends Morph
     @extent().toString() + "-" +
     @isPassword  + "-" +
     @isShowingBlanks  + "-" +
+    @originallySetFontSize + "-" +
     @buildCanvasFontProperty()  + "-" +
     @color.toString()  + "-" +
     @backgroundColor.toString()  + "-" +
@@ -812,9 +813,6 @@ class StringMorph2 extends Morph
   reflowText: ->
     @synchroniseTextAndActualText()
     @setFittingFontSize @fitToExtent()
-
-  justBeforeBeingPainted: ->
-    @reflowText()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
