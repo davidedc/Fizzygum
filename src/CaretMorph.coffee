@@ -17,7 +17,6 @@ class CaretMorph extends BlinkerMorph
   constructor: (@target) ->
     # additional properties:
     @originalContents = @target.text
-    @originalAlignment = @target.alignment
     @slot = @target.text.length
     super()
 
@@ -224,8 +223,6 @@ class CaretMorph extends BlinkerMorph
         @target.endMark = @slot
       else if @target.endMark isnt @slot
         @target.endMark = @slot
-        @target.reflowText()
-
         @target.changed()
     else
       @target.clearSelection()
@@ -251,15 +248,6 @@ class CaretMorph extends BlinkerMorph
   undo: ->
     @target.setText @originalContents
     @target.clearSelection()
-
-    # in theory these three lines are not
-    # needed because clearSelection runs them
-    # already, but I'm leaving them here
-    # until I understand better this changed
-    # vs. updateBackBuffer semantics.
-    @target.reflowText()    
-    @target.changed()
-
     @gotoSlot 0
   
   insert: (symbol, shiftKey) ->
@@ -337,10 +325,8 @@ class CaretMorph extends BlinkerMorph
       @target.deleteSelection()
     else
       text = @target.text
-      @target.changed()
       @target.setText text.substring(0, @slot - 1) + text.substr(@slot)
       @goLeft()
-    @target.reflowText?()
 
     @updateSelection false
     @gotoSlot @slot
@@ -348,16 +334,6 @@ class CaretMorph extends BlinkerMorph
     @clearSelectionIfStartAndEndMeet false
 
     @changed()
-
-  # CaretMorph destroying:
-  destroy: ->
-    WorldMorph.numberOfAddsAndRemoves++
-    if @target.alignment isnt @originalAlignment
-      @target.alignment = @originalAlignment
-      @target.reflowText()
-      
-      @target.changed()
-    super  
   
   # CaretMorph utilities:
   inspectKeyEvent: (event) ->
