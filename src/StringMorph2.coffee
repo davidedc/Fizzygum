@@ -814,6 +814,11 @@ class StringMorph2 extends Morph
     if world.caret?
       world.caret.changed()
   
+  # adjust the data models behind the text. E.g.
+  # is it going to be shown as cropped? What size
+  # is it going to be? How is the text broken down
+  # into rows?
+  # this method doesn't draw anything.
   reflowText: ->
     @synchroniseTextAndActualText()
     @setFittingFontSize @fitToExtent()

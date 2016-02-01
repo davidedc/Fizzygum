@@ -334,6 +334,11 @@ class TextMorph2 extends StringMorph2
     world.cacheForTextBreakingIntoLinesTopLevel.set cacheKey, textWrappingData
     return textWrappingData
 
+  # adjust the data models behind the text. E.g.
+  # is it going to be shown as cropped? What size
+  # is it going to be? How is the text broken down
+  # into rows?
+  # this method doesn't draw anything.
   reflowText: ->
     super
     [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
