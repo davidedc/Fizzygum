@@ -612,7 +612,7 @@ class TextMorph2 extends StringMorph2
     if @text.length > 0
       menu.prependLine()
       menu.prependItem "select all", true, @, "selectAllAndEdit"
-      menu.prependItem "do all", true, @, "selectAllAndDoit"
+      menu.prependItem "do all", true, @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
@@ -639,14 +639,8 @@ class TextMorph2 extends StringMorph2
     @edit()
     @selectAll()
 
-  # TODO this can be done more
-  # abstractly, bypassing the
-  # actual selection and doSelection...
-  selectAllAndDoit: ->
-    @edit()
-    @selectAll()
-    @doSelection()
-    @clearSelection()
+  doAll: ->
+    @receiver.evaluateString @text
    
   # this is set by the inspector. It tells the TextMorph
   # that any following doSelection/showSelection/inspectSelection action needs to be

@@ -343,7 +343,7 @@ class TextMorph extends StringMorph
     if @text.length > 0
       menu.prependLine()
       menu.prependItem "select all", true, @, "selectAllAndEdit"
-      menu.prependItem "do all", true, @, "selectAllAndDoit"
+      menu.prependItem "do all", true, @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
@@ -361,7 +361,7 @@ class TextMorph extends StringMorph
   # TODO this can be done more
   # abstractly, bypassing the
   # actual selection and doSelection...
-  selectAllAndDoit: ->
+  doAll: ->
     @edit()
     @selectAll()
     @doSelection()
