@@ -909,16 +909,9 @@ class StringMorph2 extends Morph
     @changed()
   
   deleteSelection: ->
-    text = @text
     start = Math.min @startMark, @endMark
     stop = Math.max @startMark, @endMark
-    @text = text.slice(0, start) + text.slice(stop)
-    @textPossiblyCroppedToFit = @transformTextOneToOne @text
-    # the reLayout() below might actually
-    # crop the text
-    #console.log "@textPossiblyCroppedToFit =  6"
-    @clearSelection()
-    @changed()
+    @setText @text.slice(0, start) + @text.slice(stop)
 
   selectAll: ->
     @startMark = 0
