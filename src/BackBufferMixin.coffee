@@ -50,6 +50,10 @@ BackBufferMixin =
       # backBufferContext value can be derived from others
       backBufferContext_isDerivedValue: true
 
+      # as seen by the " * pixelRatio " parts in the code,
+      # this function returns actual pixels, not logical pixels.
+      # Hence, these values are only good outside of the
+      # scope of the scaling due to the pixelRatio
       calculateKeyValues: (aContext, clippingRectangle) ->
         area = clippingRectangle.intersect(@boundingBox()).round()
         # test whether anything that we are going to be drawing
@@ -57,6 +61,9 @@ BackBufferMixin =
         if area.isNotEmpty()
           delta = @position().neg()
           src = area.translateBy(delta).round()
+          
+          # the " * pixelRatio " multiplications
+          # tranform logical pixels into actual pixels.
           sl = src.left() * pixelRatio
           st = src.top() * pixelRatio
           al = area.left() * pixelRatio
@@ -119,4 +126,10 @@ BackBufferMixin =
             Math.round(h)
 
           aContext.restore()
+
+          # paintHighlight is usually made to work with
+          # al, at, w, h which are actual pixels
+          # rather than logical pixels, so it's generally used
+          # outside the effect of the scaling because
+          # of the pixelRatio
           @paintHighlight aContext, al, at, w, h

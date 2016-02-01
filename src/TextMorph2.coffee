@@ -385,6 +385,10 @@ class TextMorph2 extends StringMorph2
 
     # paint the background so we have a better sense of
     # where the text is fitting into.
+    # paintRectangle here is passed logical pixels
+    # rather than actual pixels, contrary to how it's used
+    # most other places. This is because it's inside
+    # the scope of the "scale pixelRatio, pixelRatio".
     @paintRectangle \
       backBufferContext,
       0, 0, @width(), @height(),

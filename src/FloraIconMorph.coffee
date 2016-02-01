@@ -37,8 +37,6 @@ class FloraIconMorph extends Morph
 
       aContext.scale pixelRatio, pixelRatio
 
-      #@paintRectangle aContext, al, at, w, h
-
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 
@@ -61,6 +59,12 @@ class FloraIconMorph extends Morph
       @drawingIconInSquare aContext
 
       aContext.restore()
+
+      # paintHighlight is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
   oval = (context, x, y, w, h) ->

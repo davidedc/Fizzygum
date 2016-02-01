@@ -136,6 +136,12 @@ class HandleMorph extends Morph
         @handleMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
 
       aContext.restore()
+
+      # paintHighlight is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
   doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->

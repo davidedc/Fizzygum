@@ -134,9 +134,12 @@ class StackElementsSizeAdjustingMorph extends Morph
 
       aContext.globalAlpha = @alpha
 
-      aContext.scale pixelRatio, pixelRatio
-
+      # paintRectangle here is made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, this is why
+      # it's called before the scaling.
       @paintRectangle aContext, al, at, w, h
+      aContext.scale pixelRatio, pixelRatio
 
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
@@ -153,5 +156,11 @@ class StackElementsSizeAdjustingMorph extends Morph
       aContext.closePath()
 
       aContext.restore()
+
+      # paintHighlight is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 

@@ -39,9 +39,12 @@ class LayoutElementAdderOrDropletMorph extends Morph
 
       aContext.globalAlpha = @alpha
 
-      aContext.scale pixelRatio, pixelRatio
-
+      # paintRectangle here is made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, this is why
+      # it's called before the scaling.
       @paintRectangle aContext, al, at, w, h
+      aContext.scale pixelRatio, pixelRatio
 
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
@@ -49,6 +52,12 @@ class LayoutElementAdderOrDropletMorph extends Morph
       @spacerMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
 
       aContext.restore()
+
+      # paintHighlight here is made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, this is why
+      # it's called outside the effect of the scaling
+      # (after the restore).
       @paintHighlight aContext, al, at, w, h
 
   drawHandle: (context) ->

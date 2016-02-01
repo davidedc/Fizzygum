@@ -1157,10 +1157,21 @@ class Morph extends MorphicNode
       world.morphsToBeHighlighted.remove @
       @changed()
 
+  # paintHighlight can work in two patterns:
+  #  * passing actual pixels, when used
+  #    outside the effect of the scope of
+  #    "scale pixelRatio, pixelRatio", or
+  #  * passing logiacl pixels, when used
+  #    inside the effect of the scope of
+  #    "scale pixelRatio, pixelRatio", or
+  # Mostly, the first pattern is used.
   paintHighlight: (aContext, al, at, w, h) ->
     if !@highlighted
       return
 
+    # paintRectangle here is usually made to work with
+    # al, at, w, h which are actual pixels
+    # rather than logical pixels.
     @paintRectangle \
       aContext,
       al, at, w, h,
@@ -1168,6 +1179,14 @@ class Morph extends MorphicNode
       0.5,
       true # push and pop the context
 
+  # paintRectangle can work in two patterns:
+  #  * passing actual pixels, when used
+  #    outside the effect of the scope of
+  #    "scale pixelRatio, pixelRatio", or
+  #  * passing logiacl pixels, when used
+  #    inside the effect of the scope of
+  #    "scale pixelRatio, pixelRatio", or
+  # Mostly, the first pattern is used.
   paintRectangle: (
     aContext,
     al, at, w, h,
@@ -1214,9 +1233,21 @@ class Morph extends MorphicNode
 
       if !@color?
         debugger
+
+      # paintRectangle is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio
       @paintRectangle aContext, al, at, w, h
 
       aContext.restore()
+
+      # paintHighlight is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio
       @paintHighlight aContext, al, at, w, h
 
 

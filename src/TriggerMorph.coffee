@@ -136,6 +136,11 @@ class TriggerMorph extends Morph
         when @STATE_PRESSED
           @pressColor
 
+      # paintRectangle is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio
       @paintRectangle \
         aContext,
         al, at, w, h,
@@ -143,6 +148,11 @@ class TriggerMorph extends Morph
         @alpha,
         true # push and pop the context
 
+      # paintHighlight is usually made to work with
+      # al, at, w, h which are actual pixels
+      # rather than logical pixels, so it's generally used
+      # outside the effect of the scaling because
+      # of the pixelRatio
       @paintHighlight aContext, al, at, w, h
 
   createLabel: ->
