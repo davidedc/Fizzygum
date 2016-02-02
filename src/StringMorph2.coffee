@@ -392,6 +392,25 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooLarge  + "-" +
     @fittingSpecWhenBoundsTooSmall
 
+  textVerticalPosition: (heightOfText) -> 
+    switch @verticalAlignment
+      when AlignmentSpecVertical.TOP
+        0
+      when AlignmentSpecVertical.MIDDLE
+        (@height() - heightOfText)/2
+      when AlignmentSpecVertical.BOTTOM
+        @height() - heightOfText
+
+  textHorizontalPosition: (widthOfText) ->
+    switch @horizontalAlignment
+      when AlignmentSpecHorizontal.LEFT
+        0
+      when AlignmentSpecHorizontal.CENTER
+        @width()/2 - widthOfText/2
+      when AlignmentSpecHorizontal.RIGHT
+        @width() - widthOfText
+
+
   # no changes of position or extent should be
   # performed in here
   createRefreshOrGetBackBuffer: ->
@@ -460,22 +479,8 @@ class StringMorph2 extends Morph
       @backgroundTransparency,
       true # push and pop the context
 
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        fontHeight @fittingFontSize
-      when AlignmentSpecVertical.MIDDLE
-        @height()/2 + fontHeight(@fittingFontSize)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height()
-
-    textHorizontalPosition = switch @horizontalAlignment
-      when AlignmentSpecHorizontal.LEFT
-        0
-      when AlignmentSpecHorizontal.CENTER
-        @width()/2 - widthOfText/2
-      when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
-
+    textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
+    textHorizontalPosition = @textHorizontalPosition widthOfText
 
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
@@ -527,38 +532,19 @@ class StringMorph2 extends Morph
     y = @top()
 
     widthOfText = @calculateTextWidth text
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        fontHeight @fittingFontSize
-      when AlignmentSpecVertical.MIDDLE
-        @height()/2 + fontHeight(@fittingFontSize)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height()
 
-    textHorizontalPosition = switch @horizontalAlignment
-      when AlignmentSpecHorizontal.LEFT
-        0
-      when AlignmentSpecHorizontal.CENTER
-        @width()/2 - widthOfText/2
-      when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
+    textVerticalPosition = @textVerticalPosition fontHeight @fittingFontSize
+    textHorizontalPosition = @textHorizontalPosition widthOfText
 
     x += textHorizontalPosition
-    y += textVerticalPosition - fontHeight @fittingFontSize
+    y += textVerticalPosition
 
     new Point x, y
 
   slotAtSingleLineString: (xPosition, text) ->
 
     widthOfText = @calculateTextWidth text
-
-    textHorizontalPosition = switch @horizontalAlignment
-      when AlignmentSpecHorizontal.LEFT
-        0
-      when AlignmentSpecHorizontal.CENTER
-         @width()/2 - widthOfText/2
-      when AlignmentSpecHorizontal.RIGHT
-        @width() - widthOfText
+    textHorizontalPosition = @textHorizontalPosition widthOfText
 
     xPosition = xPosition - textHorizontalPosition
     if xPosition - @left() >= widthOfText
@@ -599,13 +585,7 @@ class StringMorph2 extends Morph
     idx
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        0
-      when AlignmentSpecVertical.MIDDLE
-        (@height() - fontHeight(@fittingFontSize))/2
-      when AlignmentSpecVertical.BOTTOM
-        @height() - fontHeight(@fittingFontSize)
+    textVerticalPosition = @textVerticalPosition fontHeight @fittingFontSize
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -613,14 +593,7 @@ class StringMorph2 extends Morph
     return false
 
   pointIsUnderLastLine: (aPoint) ->
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        fontHeight @fittingFontSize
-      when AlignmentSpecVertical.MIDDLE
-        @height()/2 + fontHeight(@fittingFontSize)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height()
-
+    textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
 
     # if pointer is below the line, the slot is at
     # the last character.

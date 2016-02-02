@@ -401,14 +401,7 @@ class TextMorph2 extends StringMorph2
       @backgroundTransparency,
       true # push and pop the context
 
-    textVerticalPosition = switch verticalAlignment
-      when AlignmentSpecVertical.TOP
-        0
-      when AlignmentSpecVertical.MIDDLE
-        @height()/2 - contentHeight/2
-      when AlignmentSpecVertical.BOTTOM
-        @height() - contentHeight
-
+    textVerticalPosition = @textVerticalPosition contentHeight
 
     # now draw the actual text
     backBufferContext.fillStyle = @color.toString()
@@ -480,22 +473,8 @@ class TextMorph2 extends StringMorph2
     xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
     yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
 
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        0
-      when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfPossiblyCroppedText)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfPossiblyCroppedText
-
-    textHorizontalPosition = switch @horizontalAlignment
-      when AlignmentSpecHorizontal.LEFT
-        0
-      when AlignmentSpecHorizontal.CENTER
-        @width()/2 - lineWidth/2
-      when AlignmentSpecHorizontal.RIGHT
-        @width() - lineWidth
-
+    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
+    textHorizontalPosition = @textHorizontalPosition lineWidth
 
     x = @left() + xOffset + textHorizontalPosition
     y = @top() + yOffset + textVerticalPosition
@@ -513,13 +492,7 @@ class TextMorph2 extends StringMorph2
 
 
   pointIsAboveFirstLine: (aPoint) ->
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        0
-      when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfPossiblyCroppedText)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfPossiblyCroppedText
+    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
 
     if aPoint.y - @top() < textVerticalPosition
       return 0
@@ -534,13 +507,7 @@ class TextMorph2 extends StringMorph2
     if (isPointBeforeFirstLine = @pointIsAboveFirstLine aPoint) != false
       return isPointBeforeFirstLine
 
-    textVerticalPosition = switch @verticalAlignment
-      when AlignmentSpecVertical.TOP
-        0
-      when AlignmentSpecVertical.MIDDLE
-        (@height() - @heightOfPossiblyCroppedText)/2
-      when AlignmentSpecVertical.BOTTOM
-        @height() - @heightOfPossiblyCroppedText
+    textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText
 
     row = 0
 
