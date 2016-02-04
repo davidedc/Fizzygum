@@ -67,6 +67,21 @@ class Morph extends MorphicNode
   lastTime: null
   alpha: 1
 
+  # the padding area of a morph is INSIDE a morph and
+  # responds to mouse events.
+  # The padding area should be empty, not drawn, except
+  # for debugging or "interim painting" purposes such
+  # as highlights.
+  # The padding's purpose is to give the option to morphs
+  # to accommodate for spacing between their contents and
+  # their bounds, so to enable consecutive morphs to
+  # have some spacing in between them.
+  # Note that paddings of consecutive morphs do add up.
+  paddingTop: 0
+  paddingBottom: 0
+  paddingLeft: 0
+  paddingRight: 0
+
   # for a Morph, being visible and collapsed
   # are two separate things.
   # isVisible means that the morph is meant to show
@@ -506,6 +521,31 @@ class Morph extends MorphicNode
   boundingBox: ->
     @bounds
   
+  # Morph accessing - geometry getting:
+  leftTight: ->
+    @bounds.left() + @paddingLeft
+  
+  rightTight: ->
+    @bounds.right() - @paddingRight
+  
+  topTight: ->
+    @bounds.top() + @paddingTop
+  
+  bottomTight: ->
+    @bounds.bottom() - @paddingBottom
+  
+  bottomCenterTight: ->
+    @bounds.bottomCenter().subtract new Point 0, @paddingBottom
+  
+  bottomLeftTight: ->
+    @bounds.bottomLeft().add new Point @paddingLeft, -@paddingBottom
+  
+  bottomRightTight: ->
+    @bounds.bottomRight().subtract new Point @paddingRight, @paddingBottom
+  
+  boundingBoxTight: ->
+    new Rectangle @leftTight(), @topTight(), @rightTight(), @bottomTight()
+  
   # note that using this one, the children
   # morphs attached as floating don't move
   rawSetBounds: (newBounds) ->
@@ -558,6 +598,37 @@ class Morph extends MorphicNode
   
   height: ->
     @bounds.height()
+
+  cornersTight: ->
+    [@topLeftTight(), @bottomLeftTight(), @bottomRightTight(), @topRightTight()]
+  
+  leftCenterTight: ->
+    @bounds.leftCenter().add new Point @paddingLeft, 0
+  
+  rightCenterTight: ->
+    @bounds.rightCenter().subtract new Point @paddingRight, 0
+  
+  topCenterTight: ->
+    @bounds.topCenter().add new Point 0, @paddingTop
+  
+  # same as position()
+  topLeftTight: ->
+    @bounds.origin.add new Point @paddingLeft, @paddingTop
+  
+  topRightTight: ->
+    @bounds.topRight.add new Point -@paddingRight, @paddingTop
+  
+  positionTight: ->
+    @bounds.origin.add new Point @paddingLeft, @paddingTop
+  
+  extentTight: ->
+    @bounds.extent().subtract new Point - (@paddingLeft + @paddingRight), - (@paddingTop + @paddingBottom)
+  
+  widthTight: ->
+    @bounds.width() - (@paddingLeft + @paddingRight)
+  
+  heightTight: ->
+    @bounds.height() - (@paddingTop + @paddingBottom)
 
 
   # used for example:
@@ -1240,7 +1311,9 @@ class Morph extends MorphicNode
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
       # of the pixelRatio
-      @paintRectangle aContext, al, at, w, h
+      toBePainted = new Rectangle al, at, al + w, at + h
+      toBePainted = toBePainted.intersect @boundingBoxTight().scaleBy pixelRatio
+      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
 
       aContext.restore()
 
@@ -2351,6 +2424,74 @@ class Morph extends MorphicNode
         unscaled = newAlpha / 100
         return Math.min Math.max(unscaled, 0.1), 1
 
+  setPadding: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+    if morphGivingPadding?.getValue?
+      padding = morphGivingPadding.getValue()
+    else
+      padding = paddingOrMorphGivingPadding
+
+    if padding
+      if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
+        @paddingTop = padding
+        @paddingBottom = padding
+        @paddingLeft = padding
+        @paddingRight = padding
+        @changed()
+
+    return padding
+
+  setPaddingTop: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+    if morphGivingPadding?.getValue?
+      padding = morphGivingPadding.getValue()
+    else
+      padding = paddingOrMorphGivingPadding
+
+    if padding
+      unless @paddingTop == padding
+        @paddingTop = padding
+        @changed()
+
+    return padding
+
+  setPaddingBottom: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+    if morphGivingPadding?.getValue?
+      padding = morphGivingPadding.getValue()
+    else
+      padding = paddingOrMorphGivingPadding
+
+    if padding
+      unless @paddingBottom == padding
+        @paddingBottom = padding
+        @changed()
+
+    return padding
+
+  setPaddingLeft: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+    if morphGivingPadding?.getValue?
+      padding = morphGivingPadding.getValue()
+    else
+      padding = paddingOrMorphGivingPadding
+
+    if padding
+      unless @paddingLeft == padding
+        @paddingLeft = padding
+        @changed()
+
+    return padding
+
+  setPaddingRight: (paddingOrMorphGivingPadding, morphGivingPadding) ->
+    if morphGivingPadding?.getValue?
+      padding = morphGivingPadding.getValue()
+    else
+      padding = paddingOrMorphGivingPadding
+
+    if padding
+      unless @paddingRight == padding
+        @paddingRight = padding
+        @changed()
+
+    return padding
+
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
     if morphGivingAlpha?.getValue?
       alpha = morphGivingAlpha.getValue()
@@ -2445,7 +2586,7 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled"]
+    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
   
   
   # Morph entry field tabbing //////////////////////////////////////////////
