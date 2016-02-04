@@ -1100,8 +1100,7 @@ class Morph extends MorphicNode
   # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
-  
-  # tiles the texture
+  # tiles the texture - never used in Zombie Kernel at the moment.
   drawCachedTexture: ->
     bg = @cachedTexture
     cols = Math.floor @backBuffer.width / bg.width
@@ -1137,12 +1136,14 @@ class Morph extends MorphicNode
     if area.isNotEmpty()
       delta = @position().neg()
       src = area.translateBy(delta).round()
+
       sl = src.left() * pixelRatio
       st = src.top() * pixelRatio
       al = area.left() * pixelRatio
       at = area.top() * pixelRatio
       w = Math.min(src.width() * pixelRatio, @width() * pixelRatio - sl)
       h = Math.min(src.height() * pixelRatio, @height() * pixelRatio - st)
+
     return [area,sl,st,al,at,w,h]
 
   turnOnHighlight: ->
