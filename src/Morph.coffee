@@ -82,6 +82,13 @@ class Morph extends MorphicNode
   paddingLeft: 0
   paddingRight: 0
 
+  # backgroundColor and backgroundTransparency fill the
+  # entire rectangular bounds of the morph.
+  # I.e. they area they fill is not affected by the
+  # padding or the actual design of the morph.
+  backgroundColor: null
+  backgroundTransparency: null
+
   # for a Morph, being visible and collapsed
   # are two separate things.
   # isVisible means that the morph is meant to show
@@ -1145,6 +1152,17 @@ class Morph extends MorphicNode
         
     return aColor
   
+  setBackgroundColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+    if morphGivingColor?.getColor?
+      aColor = morphGivingColor.getColor()
+    else
+      aColor = aColorOrAMorphGivingAColor
+    if aColor
+      unless @color.eq aColor
+        @backgroundColor = aColor
+        @changed()
+        
+    return aColor
   
   # Morph displaying ---------------------------------------------------------
 
@@ -1262,23 +1280,27 @@ class Morph extends MorphicNode
   paintRectangle: (
     aContext,
     al, at, w, h,
-    color = @color,
-    backgroundTransparency = null,
+    color,
+    transparency = null,
     pushAndPopContext = false
   ) ->
-      if color? and pushAndPopContext
+
+      if !color?
+        return
+
+      if pushAndPopContext
         aContext.save()
 
       aContext.fillStyle = color.toString()
-      if backgroundTransparency?
-        aContext.globalAlpha = backgroundTransparency
+      if transparency?
+        aContext.globalAlpha = transparency
 
       aContext.fillRect  Math.round(al),
           Math.round(at),
           Math.round(w),
           Math.round(h)
 
-      if color? and pushAndPopContext
+      if pushAndPopContext
         aContext.restore()
 
   # This method only paints this very morph
@@ -1306,14 +1328,21 @@ class Morph extends MorphicNode
       if !@color?
         debugger
 
+
       # paintRectangle is usually made to work with
       # al, at, w, h which are actual pixels
       # rather than logical pixels, so it's generally used
       # outside the effect of the scaling because
       # of the pixelRatio
+
+      # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
+      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @backgroundColor, @backgroundTransparency
+
+      # now paint the actual morph, which is a rectangle
+      # (potentially inset because of the padding)
       toBePainted = toBePainted.intersect @boundingBoxTight().scaleBy pixelRatio
-      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
+      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @color
 
       aContext.restore()
 
@@ -2582,7 +2611,7 @@ class Morph extends MorphicNode
   
   colorSetters: ->
     # for context menu demo purposes
-    ["color"]
+    ["color", "backgroundColor"]
   
   numericalSetters: ->
     # for context menu demo purposes

@@ -138,7 +138,7 @@ class StackElementsSizeAdjustingMorph extends Morph
       # al, at, w, h which are actual pixels
       # rather than logical pixels, this is why
       # it's called before the scaling.
-      @paintRectangle aContext, al, at, w, h
+      @paintRectangle aContext, al, at, w, h, @color
       aContext.scale pixelRatio, pixelRatio
 
       morphPosition = @position()
