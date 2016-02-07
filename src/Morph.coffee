@@ -93,7 +93,7 @@ class Morph extends MorphicNode
   # I.e. they area they fill is not affected by the
   # padding or the actual design of the morph.
   backgroundColor: null
-  backgroundTransparency: null
+  backgroundTransparency: 1
 
   # for a Morph, being visible and collapsed
   # are two separate things.
@@ -1211,13 +1211,19 @@ class Morph extends MorphicNode
   # opaque and rectangular. This method is called when
   # the mouse is within the bounds of the morph.
   # There are two possible implementations of this
-  isTransparentAt: ->
-    return false
   # method:
   #   * raster-based, looking up the
   #     backing store contents
   #   * mathematically from the shape of the
   #     morph
+  isTransparentAt: (aPoint) ->
+    if @boundingBoxTight().containsPoint aPoint
+      return false
+    if @backgroundTransparency? and @backgroundColor?
+      if @backgroundTransparency > 0
+        if @boundsContainPoint aPoint
+          return false
+    return true
   
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
@@ -2466,13 +2472,15 @@ class Morph extends MorphicNode
     else
       padding = paddingOrMorphGivingPadding
 
-    if padding
-      if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
-        @paddingTop = padding
-        @paddingBottom = padding
-        @paddingLeft = padding
-        @paddingRight = padding
-        @changed()
+    console.log " >>>>>>>>>>>>> padding: " + padding
+    #if padding == 1
+    #  debugger
+    if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
+      @paddingTop = padding
+      @paddingBottom = padding
+      @paddingLeft = padding
+      @paddingRight = padding
+      @changed()
 
     return padding
 
