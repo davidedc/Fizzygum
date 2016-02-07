@@ -65,6 +65,8 @@ class Morph extends MorphicNode
   texture: null # optional url of a fill-image
   cachedTexture: null # internal cache of actual bg image
   lastTime: null
+
+  # 1: fully opaque, 0: fully transparent
   alpha: 1
 
   # the padding area of a morph is INSIDE a morph and
@@ -77,6 +79,10 @@ class Morph extends MorphicNode
   # their bounds, so to enable consecutive morphs to
   # have some spacing in between them.
   # Note that paddings of consecutive morphs do add up.
+  # The padding area reacts to mouse events ONLY IF
+  # it's filled with color. Otherwise, it doesn't.
+  # This is consistent with the concept that Morphs only
+  # react within their "filled" region.
   paddingTop: 0
   paddingBottom: 0
   paddingLeft: 0
@@ -1205,12 +1211,13 @@ class Morph extends MorphicNode
   # opaque and rectangular. This method is called when
   # the mouse is within the bounds of the morph.
   # There are two possible implementations of this
-  # method - one is raster-based and looks up the
-  # backing store contents. The other one calculated
-  # mathematically whether there is anything under
-  # the mouse.
   isTransparentAt: ->
     return false
+  # method:
+  #   * raster-based, looking up the
+  #     backing store contents
+  #   * mathematically from the shape of the
+  #     morph
   
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
