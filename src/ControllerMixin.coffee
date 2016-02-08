@@ -23,7 +23,7 @@ ControllerMixin =
           menu = new MenuMorph false, @, true, true, "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
-            menu.addItem each.toString().slice(0, 50) + " ➜", false, @, "setTargetSetter", null, null, null, null, null,each
+            menu.addItem each.toString().slice(0, 50) + " ➜", false, @, "setTargetSetter", null, null, null, null, null, each, null, true
         else
           menu = new MenuMorph false, @, true, true, "no targets available"
         menu.popUpAtHand @firstContainerMenu()

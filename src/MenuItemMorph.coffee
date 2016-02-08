@@ -94,7 +94,15 @@ class MenuItemMorph extends TriggerMorph
     #  debugger
 
     if @representsAMorph
-      @target.turnOnHighlight()
+      morphToBeHighlighted = null
+      if @argumentToAction1?
+        # this first case handles when you pick a morph
+        # as a target
+        morphToBeHighlighted = @argumentToAction1
+      else
+        # this second case handles when you attach to a morph
+        morphToBeHighlighted = @target
+      morphToBeHighlighted.turnOnHighlight()
     unless @isListItem()
       @state = @STATE_HIGHLIGHTED
       @changed()
@@ -103,7 +111,15 @@ class MenuItemMorph extends TriggerMorph
   
   mouseLeave: ->
     if @representsAMorph
-      @target.turnOffHighlight()
+      morphToBeHighlighted = null
+      if @argumentToAction1?
+        # this first case handles when you pick a morph
+        # as a target
+        morphToBeHighlighted = @argumentToAction1
+      else
+        # this second case handles when you attach to a morph
+        morphToBeHighlighted = @target
+      morphToBeHighlighted.turnOffHighlight()
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()
