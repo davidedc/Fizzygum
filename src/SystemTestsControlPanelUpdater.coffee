@@ -219,7 +219,7 @@ class SystemTestsControlPanelUpdater
     # higher-ppi displays
     elem.setAttribute "width", "40px"
     elem.setAttribute "height", "40px"
-    document.getElementById("mousePointerIndicator").appendChild(elem);
+    document.getElementById("mousePointerIndicator").appendChild elem
 
     # add the div highlighting the state of the
     # left mouse button
@@ -229,8 +229,8 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild leftMouseButtonIndicator
     elem = document.createElement "img"
     elem.setAttribute "src", "icons/leftButtonPressed.png"
-    document.getElementById("leftMouseButtonIndicator").appendChild(elem);
-    fade('leftMouseButtonIndicator', 1, 0, 10, new Date().getTime());
+    document.getElementById("leftMouseButtonIndicator").appendChild elem
+    fade 'leftMouseButtonIndicator', 1, 0, 10, new Date().getTime()
 
     # add the div highlighting the state of the
     # right mouse button
@@ -240,8 +240,8 @@ class SystemTestsControlPanelUpdater
     document.body.appendChild rightMouseButtonIndicator
     elem = document.createElement "img"
     elem.setAttribute "src", "icons/rightButtonPressed.png"
-    document.getElementById("rightMouseButtonIndicator").appendChild(elem);
-    fade('rightMouseButtonIndicator', 1, 0, 10, new Date().getTime());
+    document.getElementById("rightMouseButtonIndicator").appendChild elem
+    fade 'rightMouseButtonIndicator', 1, 0, 10, new Date().getTime()
 
 
     # ------------------------------------------------------
@@ -257,7 +257,7 @@ class SystemTestsControlPanelUpdater
         'position: absolute; left: 5px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
     singleTestProgressBarWrap.appendChild(singleTestProgressBar)
     document.body.appendChild(singleTestProgressBarWrap)
-    fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade 'singleTestProgressBarWrap', 1, 0, 10, new Date().getTime()
 
     # add the div highlighting the percentage progress of the test
     singleTestProgressIndicator = document.createElement "div"
@@ -265,7 +265,7 @@ class SystemTestsControlPanelUpdater
     singleTestProgressIndicator.style.cssText =
         'position: absolute; left: 10px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
     document.body.appendChild singleTestProgressIndicator
-    fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade 'singleTestProgressIndicator', 1, 0, 10, new Date().getTime()
 
 
     # ------------------------------------------------------
@@ -279,14 +279,14 @@ class SystemTestsControlPanelUpdater
     allTestsProgressBarWrap.style.cssText = 'position: absolute; left: 110px; top: 5px; font-size: xx-large; font-family: sans-serif; width: 100px; height: 14px; overflow: hidden; background: rgb(0, 0, 0);'
     allTestsProgressBarWrap.appendChild(allTestsProgressBar)
     document.body.appendChild(allTestsProgressBarWrap)
-    fade('allTestsProgressBarWrap', 1, 0, 10, new Date().getTime());
+    fade 'allTestsProgressBarWrap', 1, 0, 10, new Date().getTime()
 
     # add the div highlighting the percentage progress of the test
     allTestsProgressIndicator = document.createElement "div"
     allTestsProgressIndicator.id = "allTestsProgressIndicator"
     allTestsProgressIndicator.style.cssText = 'position: absolute; left: 115px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: white;'
     document.body.appendChild(allTestsProgressIndicator)
-    fade('allTestsProgressIndicator', 1, 0, 10, new Date().getTime());
+    fade 'allTestsProgressIndicator', 1, 0, 10, new Date().getTime()
 
 
     # ------------------------------------------------------
@@ -295,7 +295,7 @@ class SystemTestsControlPanelUpdater
     testTitleAndDescription.id = "testTitleAndDescription"
     testTitleAndDescription.style.cssText = 'position: absolute; left: 0px; top: 25px; font-size: 1.5em; font-family: sans-serif; background-color: rgba(128, 128, 128, 1); width: 860px; height: 340px; padding: 50px; color: white;'
     document.body.appendChild(testTitleAndDescription)
-    fade('testTitleAndDescription', 1, 0, 10, new Date().getTime());
+    fade 'testTitleAndDescription', 1, 0, 10, new Date().getTime()
     #testTitleAndDescription.innerHTML = "Test asdasdasdasdasdakjhdasdasdasd"
 
     # ------------------------------------------------------
@@ -304,7 +304,7 @@ class SystemTestsControlPanelUpdater
     numberOfTestsDoneIndicator.id = "numberOfTestsDoneIndicator"
     numberOfTestsDoneIndicator.style.cssText = 'position: absolute; left: 217px; top: 5px; font-size: 0.8em; font-family: sans-serif; color: black;'
     document.body.appendChild numberOfTestsDoneIndicator
-    fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
+    fade 'numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime()
 
     # ------------------------------------------------------
     # add the div highlighting the number of failed tests

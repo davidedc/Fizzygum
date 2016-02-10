@@ -141,7 +141,7 @@ class AutomatorRecorderAndPlayer
     if not @testTags?
       @testTags = prompt("Please enter test tags separated by commas", "noTags")
       @testTags = @testTags.replace(/[ ]+/g, "")
-      @testTags = @testTags.split(",");
+      @testTags = @testTags.split(",")
 
     # if you choose the same name
     # of a previously loaded tests,
@@ -177,11 +177,11 @@ class AutomatorRecorderAndPlayer
     # complete
     world.worldCanvas.tabIndex = "1"
 
-    fade('singleTestProgressIndicator', 1, 0, 10, new Date().getTime());
-    fade('singleTestProgressBarWrap', 1, 0, 10, new Date().getTime());
-    fade('allTestsProgressIndicator', 1, 0, 10, new Date().getTime());
-    fade('allTestsProgressBarWrap', 1, 0, 10, new Date().getTime());
-    fade('numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime());
+    fade 'singleTestProgressIndicator', 1, 0, 10, new Date().getTime()
+    fade 'singleTestProgressBarWrap', 1, 0, 10, new Date().getTime()
+    fade 'allTestsProgressIndicator', 1, 0, 10, new Date().getTime()
+    fade 'allTestsProgressBarWrap', 1, 0, 10, new Date().getTime()
+    fade 'numberOfTestsDoneIndicator', 1, 0, 10, new Date().getTime()
 
 
     SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole "test complete"
@@ -866,15 +866,15 @@ class AutomatorRecorderAndPlayer
     @setUpIntroSlide()
 
   setUpIntroSlide: ->
-    fade('singleTestProgressIndicator', 0, 1, 10, new Date().getTime());
-    fade('singleTestProgressBarWrap', 0, 1, 10, new Date().getTime());
-    fade('allTestsProgressIndicator', 0, 1, 10, new Date().getTime());
-    fade('allTestsProgressBarWrap', 0, 1, 10, new Date().getTime());
-    fade('numberOfTestsDoneIndicator', 0, 1, 10, new Date().getTime());
+    fade 'singleTestProgressIndicator', 0, 1, 10, new Date().getTime()
+    fade 'singleTestProgressBarWrap', 0, 1, 10, new Date().getTime()
+    fade 'allTestsProgressIndicator', 0, 1, 10, new Date().getTime()
+    fade 'allTestsProgressBarWrap', 0, 1, 10, new Date().getTime()
+    fade 'numberOfTestsDoneIndicator', 0, 1, 10, new Date().getTime()
 
-    fade('testTitleAndDescription', 0, 1, 10, new Date().getTime());
+    fade 'testTitleAndDescription', 0, 1, 10, new Date().getTime()
 
-    presentableTestName = @currentlyPlayingTestName.replace(/SystemTest_/g, "")
+    presentableTestName = @currentlyPlayingTestName.replace /SystemTest_/g, ""
     presentableTestName = decamelize presentableTestName, " "
     presentableTestName = presentableTestName.charAt(0).toUpperCase() + presentableTestName.slice(1)
     presentableTestName = '"' + presentableTestName + '"'
@@ -883,7 +883,7 @@ class AutomatorRecorderAndPlayer
     testTitleAndDescription.innerHTML = testTitleAndDescription.innerHTML + "<br><br><small>" + window["#{@currentlyPlayingTestName}"].description + "</small>"
     setTimeout \
       =>
-        fade('testTitleAndDescription', 1, 0, 2000, new Date().getTime());        
+        fade 'testTitleAndDescription', 1, 0, 2000, new Date().getTime()        
       , 4000
 
 
@@ -934,9 +934,9 @@ class AutomatorRecorderAndPlayer
   // can be copied in the /src/tests folder
   // to make them available in the testing
   // environment.
-  var SystemTest_#{testNameExtended};
+  var SystemTest_#{testNameExtended}
 
-  SystemTest_#{testNameExtended} = #{JSON.stringify(testToBeSerialized, null, 4)};
+  SystemTest_#{testNameExtended} = #{JSON.stringify(testToBeSerialized, null, 4)}
     """
 
   saveFailedScreenshots: ->
@@ -1023,12 +1023,12 @@ class AutomatorRecorderAndPlayer
             "-diffNumber-"+
             diffNumber+
             ".png"
-          , subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true});
+          , subtractionCanvas.toDataURL().replace(/^data:image\/png;base64,/, ""), {base64: true})
 
     renamerScript += "# take away all the 'obtained' prefixes in all the files" + "\n"
     renamerScript += "find ../Zombie-Kernel-tests/tests/ -name 'obtained-*' -type f -exec bash -c 'mv \"$1\" \"${1/\\/obtained-//}\"' -- {} \\;" + "\n"
 
-    zip.file("replace_all_images.sh", renamerScript);
+    zip.file "replace_all_images.sh", renamerScript
 
     # OK the images are all put in the zip
     # asynchronously. So, in theory what we should do is to
@@ -1058,11 +1058,11 @@ class AutomatorRecorderAndPlayer
     zip = new JSZip()
 
     blob = @testMetadataFileContentCreator()
-    zip.file("SystemTest_#{@testName}.js", blob);
+    zip.file "SystemTest_#{@testName}.js", blob
 
     blob = @automatorCommandsFileContentCreator window.world.automatorRecorderAndPlayer.automatorCommandsSequence
     testNameExtended = @testName + "_automationCommands"
-    zip.file("SystemTest_#{testNameExtended}.js", blob);
+    zip.file "SystemTest_#{testNameExtended}.js", blob
     
     # save all the images, each as a .png and .js file
     # the png is for quick browsing, while the js contains
