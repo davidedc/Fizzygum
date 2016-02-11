@@ -18,7 +18,7 @@ class ReactiveValuesTests
     firstReactValRect.fullRawMoveTo new Point 10, 10
     world.add firstReactValRect
 
-    # create second rectangle, slightly displaced to verlap
+    # create second rectangle, slightly displaced to overlap
     secondReactValRect = new ReactiveValuesTestsRectangleMorph()
     if ProfilerData.reactiveValues_createdGroundVals != 2
       console.log "ERROR createdGroundVals should be 2 it's " +
