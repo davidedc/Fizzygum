@@ -29,6 +29,7 @@ class SystemTestsControlPanelUpdater
   @checkMenuEntriesInOrder: null
   @checkMenuEntriesNotInOrder: null
   @addTestComment: null
+  @runCommand: null
   @stopTestRec: null
 
   @highlightOnLink: (theElementName) ->
@@ -202,6 +203,9 @@ class SystemTestsControlPanelUpdater
     SystemTestsControlPanelUpdater.addTestComment =
         @addLink "alt+m: add test comment",
             (-> window.world.automatorRecorderAndPlayer.addTestComment())
+    SystemTestsControlPanelUpdater.runCommand =
+        @addLink "run command",
+            (-> window.world.automatorRecorderAndPlayer.runCommand())
     SystemTestsControlPanelUpdater.stopTestRec =
         @addLink "alt+t: stop test recording",
             (-> window.world.automatorRecorderAndPlayer.stopTestRecording())

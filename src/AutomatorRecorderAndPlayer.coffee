@@ -424,6 +424,17 @@ class AutomatorRecorderAndPlayer
     systemTestCommand = new AutomatorCommandShowComment comment, @
     @automatorCommandsSequence.push systemTestCommand
 
+  runCommand: ->
+    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
+    # we don't record the time here, we run the command right on the back
+    # of the action that precedes it
+    #@timeOfPreviouslyRecordedCommand = new Date().getTime()
+    command = prompt("enter command", "your command here")
+    systemTestCommand = new AutomatorCommandRunCommand command, @
+    debugger
+    window[systemTestCommand.automatorCommandName].replayFunction @, systemTestCommand
+    @automatorCommandsSequence.push systemTestCommand
+
   checkStringsOfItemsInMenuOrderImportant: (stringOfItemsInMenuInOriginalOrder) ->
     SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.checkMenuEntriesInOrder)
     @checkStringsOfItemsInMenu(stringOfItemsInMenuInOriginalOrder, true)
