@@ -133,7 +133,7 @@ class SystemTestsControlPanelUpdater
     @SystemTestsControlPanelDiv = document.createElement "div"
     @SystemTestsControlPanelDiv.id = "SystemTestsControlPanel"
     @SystemTestsControlPanelDiv.style.cssText =
-        'border: 1px solid green; overflow: hidden; font-size: x-small; top: 464px; left: 200px; position: absolute;'
+        'border: 1px solid green; overflow: hidden; font-size: xx-small; top: 464px; left: 200px; position: absolute;'
     document.body.appendChild @SystemTestsControlPanelDiv
 
     @addOutputPanel "SystemTestsControlPanelOutputConsoleDiv",
