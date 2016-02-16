@@ -424,14 +424,14 @@ class AutomatorRecorderAndPlayer
     systemTestCommand = new AutomatorCommandShowComment comment, @
     @automatorCommandsSequence.push systemTestCommand
 
-  runCommand: ->
+  evaluateString: ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
     # we record the time here instead of after the user has
     # dismissed the prompt, since we run the command right on the back
     # of the action that precedes it, otherwise there would be a wait.
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
     command = prompt("enter command", "your command here")
-    systemTestCommand = new AutomatorCommandRunCommand command, @
+    systemTestCommand = new AutomatorCommandEvaluateString command, @
     debugger
     window[systemTestCommand.automatorCommandName].replayFunction @, systemTestCommand
     @automatorCommandsSequence.push systemTestCommand
