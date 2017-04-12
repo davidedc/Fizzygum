@@ -369,7 +369,7 @@ class Morph extends MorphicNode
   #
   #	the trackChanges property of the Morph prototype is a Boolean switch
   #	that determines whether the World's damage list ('broken' rectangles)
-  #	tracks changes. By default the switch is always on. If set to false
+  #	tracks changes. By default the switch is always on. If set to false,
   #	changes are not stored. This can be very useful for housekeeping of
   #	the damage list in situations where a large number of (sub-) morphs
   #	are changed more or less at once. Instead of keeping track of every
@@ -2764,14 +2764,15 @@ class Morph extends MorphicNode
   #  3) The default attaching of Morphs to a Morph puts them
   #     under the effect of the most basic layout: the FREEFLOATING
   #     layout.
-  #  3) You can only do a high-level-resize or move to a FREEFLOATING
+  #  3) A user can only do a high-level resize or move to a FREEFLOATING
   #     Morph. All other Morphs are under the effect of more complex
-  #     layout strategies so they can't be moved willy nilly.
-  #     Control of size and placement can be done but in other
+  #     layout strategies so they can't be moved willy nilly
+  #     directly by the user via some high-level "resize" or "move"
+  #     Control of size and placement can be done, but indirectly via other
   #     means below.
   #  4) You CAN control the size and location of Morphs under the
-  #     effect of complex layouts by programmatically changing their
-  #     layout spec properties.
+  #     effect of complex layouts, but only indirectly: by programmatically
+  #     changing their layout spec properties.
   #  5) You CAN also manually control the size and location of Morphs
   #     under the effect of complex layouts by using special Adjusting
   #     Morphs, which are provided by the container, and give handles

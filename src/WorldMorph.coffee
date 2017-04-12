@@ -606,7 +606,7 @@ class WorldMorph extends FrameMorph
   # there will be several subtrees
   # that will need relayout.
   # So take the head of any subtree and re-layout it
-  # The relayout might or might not all the subnodes
+  # The relayout might or might not visit all the subnodes
   # of the subtree, because you might have a subtree
   # that lives inside a floating morph, in which
   # case it's not re-layout.
@@ -739,7 +739,10 @@ class WorldMorph extends FrameMorph
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+
+    # most notably replays test actions at the right time
     @runOtherTasksStepFunction()
+    
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @recalculateLayouts()

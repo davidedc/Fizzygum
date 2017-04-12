@@ -357,6 +357,9 @@ class InspectorMorph extends BoxMorph
       @label.rawSetWidth labelWidth
       if @label.height() > @height() - 50
         @silentRawSetHeight @label.height() + 50
+        # TODO run the tests when commenting this out
+        # because this one point to the Morph implementation
+        # which is empty.
         @reLayout()
         
         @changed()
