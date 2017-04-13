@@ -236,7 +236,8 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
 def main():
     """
     Creates an ordered list of the coffee files, iterates through it, reads the
-    source code of each file and combines them all into one final output file.
+    source code of each file and put each it its own .coffee containing the source
+    Also put together a manifest of all the sources.
     """
     dependencies = OrderedDict()
 
@@ -244,6 +245,9 @@ def main():
     filenames = sorted(glob("src/*.coffee"))
 
     # Read each file and search it for each sort of dependency.
+    # note that this is not strictly needed because it's not
+    # kept anywhere, the loader
+    # in zombie kernel independently re-calculates the order.
     for filename in filenames:
         dependencies[filename] = list()
         with open(filename, "r") as f:
@@ -277,7 +281,7 @@ def main():
     """window.%s = '''\n%s\n'''"""
     sourcesManifests = "sourcesManifests = [];\n"
 
-    # now iterate through the files and create the giant final *.coffee file.
+    # now iterate through the files and create the *.coffee files.
     text = []
     for filename in inclusion_order:
         print(">>>> %s " % (filename))
@@ -285,8 +289,9 @@ def main():
         with codecs.open(filename, "r", "utf-8") as f:
             content = f.read()
 
-        # if the file is a class, then we add its source code in the giant
-        # *.coffee file as a static variable (string block).
+        # if the file is a class, then we add its source code in a
+        # *.coffee file as a window.SOURCENAME_coffeSource variable
+        # (string block).
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
         is_class_file = IS_CLASS.search(content)
@@ -301,8 +306,8 @@ def main():
         # are going to be translated to javascript (still containing coffeescript
         # sources as text).
         # Also keep track of all the sources in a manifest.
-        # The manifest will be loaded, and then the sources will be
-        # dynamically loaded following the manifest entries.
+        # The manifest will be immediately loaded, and then the sources will be
+        # dynamically and asynchronously loaded following the manifest entries.
         # This is to avoid the page necessarily loading all the morph
         # classes on load.
         if is_class_file:

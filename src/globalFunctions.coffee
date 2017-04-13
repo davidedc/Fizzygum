@@ -336,10 +336,13 @@ getDocumentPositionOf = (aDOMelement) ->
 
 howManySourcesLoaded = 0
 howManyTestManifestsLoaded = 0
+howManySourcesCompiledAndEvalled = 0
 
 aSourceHasBeenLoaded = ->
   howManySourcesLoaded++
   if howManySourcesLoaded == sourcesManifests.length
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv.innerHTML = ""
     continueBooting()
 
 
@@ -350,7 +353,9 @@ loadAllSources = ->
     script = document.createElement "script"
     script.src = "js/sourceCode/" + eachClass + ".js"
 
-    script.onload = =>
+    script.onload = ->
+      loadingLogDiv = document.getElementById 'loadingLog'
+      loadingLogDiv.innerHTML += "loading " + this.src + "</br>"
       aSourceHasBeenLoaded()
 
     document.head.appendChild script
@@ -360,8 +365,7 @@ aTestScriptHasBeenLoaded = ->
   if howManyTestManifestsLoaded == 2
     continueBooting2()
 
-
-loadAllTestManifests = ->
+loadTestManifests = ->
     script = document.createElement "script"
     script.src = "js/tests/testsManifest.js"
     script.onload = =>
@@ -460,16 +464,36 @@ continueBooting = ->
       i++
   inclusion_order = generate_inclusion_order dependencies
   console.log "--------------------------------"
+  compileAndEvalAllSrcFiles 0, inclusion_order
 
-  for eachClass in inclusion_order
-    console.log "checking whether " + eachClass + " is already in the system "
-    if !window[eachClass]?
-      if eachClass + "_coffeSource" in sourcesManifests
-        console.log "loading " + eachClass + " from souce code"
-        # give life to the loaded and translated coffeescript klass now!
-        eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
 
-  loadAllTestManifests()
+compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
+
+  if srcNumber == inclusion_order.length
+
+    # remove the log div
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv.parentElement.removeChild loadingLogDiv
+
+    loadTestManifests()
+    return
+
+  eachClass = inclusion_order[srcNumber]
+  console.log "checking whether " + eachClass + " is already in the system "
+  if !window[eachClass]?
+    if eachClass + "_coffeSource" in sourcesManifests
+      console.log "loading " + eachClass + " from souce code"
+      loadingLogDiv = document.getElementById 'loadingLog'
+      loadingLogDiv.innerHTML = "compiling and evalling " + eachClass
+
+      # give life to the loaded and translated coffeescript klass now!
+      eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
+
+  setTimeout ( ->
+    compileAndEvalAllSrcFiles srcNumber+1 , inclusion_order
+  ), 1
+
+
 
 
 world = {} # we make "world" global
