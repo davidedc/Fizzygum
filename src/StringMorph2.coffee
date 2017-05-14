@@ -112,11 +112,15 @@ class StringMorph2 extends Morph
       @isItalic = false,
       @isNumeric = false,
       @color = (new Color 0, 0, 0),
-      @backgroundColor = null,
-      @backgroundTransparency = null
+      backgroundColor,
+      backgroundTransparency
       ) ->
     # additional properties:
     @textPossiblyCroppedToFit = @transformTextOneToOne @text
+
+    # properties that override existing ones only when passed
+    @backgroundColor = backgroundColor if backgroundColor?
+    @backgroundTransparency = backgroundTransparency if backgroundTransparency?      
 
     super()
 
@@ -202,7 +206,7 @@ class StringMorph2 extends Morph
   # which means that the font size is gonna change only slightly
   # from the current one, so you can try to narrow the bracket
   # a lot at the very start.
-  searchLargestFittingFont: (fittingTestFunction, textToFit) ->
+  searchLargestFittingFont: (textToFit) ->
     # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
     # in the font size. This is so the resizing of the
     # text is less "jumpy".
@@ -214,17 +218,17 @@ class StringMorph2 extends Morph
     start = 0    # minimum font size that we are gonna examine
     stop  = Math.round 200 * Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity  # maximum font size that we are gonna examine
     
-    if !fittingTestFunction textToFit, start
+    if !@doesTextFitInExtent textToFit, start
        return -1
 
-    if fittingTestFunction textToFit, stop
+    if @doesTextFitInExtent textToFit, stop
        return stop / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
     while start != (pivot = Math.floor (start + stop) / 2)
 
-      itFitsAtPivot = fittingTestFunction textToFit, pivot / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
+      itFitsAtPivot = @doesTextFitInExtent textToFit, pivot / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
       if itFitsAtPivot
         # bring forward the start since there are still
@@ -244,12 +248,12 @@ class StringMorph2 extends Morph
 
   # see comment above for "searchLargestFittingFont" for some
   # ideas on how to optimise this further.
-  searchLongestFittingText: (fittingTestFunction, textToFit) ->
+  searchLongestFittingText: (textToFit) ->
     textToFit = @transformTextOneToOne @text
     start = 0    # minimum string length that we are gonna examine
     stop  = @generateTextWithEllipsis(textToFit).length
     
-    if fittingTestFunction(textToFit, @originallySetFontSize)
+    if @doesTextFitInExtent(textToFit, @originallySetFontSize)
        return textToFit
 
     # since we round the pivot to the floor, we
@@ -257,7 +261,7 @@ class StringMorph2 extends Morph
     while start != (pivot = Math.floor (start + stop) / 2)
 
       textAtPivot = @generateTextWithEllipsis textToFit.substring 0, pivot
-      itFitsAtPivot = fittingTestFunction textAtPivot, @originallySetFontSize
+      itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
       #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
       if itFitsAtPivot
@@ -272,7 +276,7 @@ class StringMorph2 extends Morph
     fittingText = @generateTextWithEllipsis textToFit.substring 0, start
     #console.log "what fits: " + fittingText
     if start == 0
-      if fittingTestFunction "…", @originallySetFontSize
+      if @doesTextFitInExtent "…", @originallySetFontSize
         return "…"
       else
         return ""
@@ -328,7 +332,9 @@ class StringMorph2 extends Morph
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) =>
+  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
+    if !@measureText?
+      debugger
     extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
 
     return extentOccupiedByText.le @extent()
@@ -345,18 +351,18 @@ class StringMorph2 extends Morph
       @textPossiblyCroppedToFit = textToFit
       #console.log "@textPossiblyCroppedToFit = textToFit 3"
       if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, textToFit
+        largestFittingFontSize = @searchLargestFittingFont textToFit
         return largestFittingFontSize
       else
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-        @textPossiblyCroppedToFit = @searchLongestFittingText @doesTextFitInExtent, textToFit
+        @textPossiblyCroppedToFit = @searchLongestFittingText textToFit
         return @originallySetFontSize
       else
         @textPossiblyCroppedToFit = textToFit
         #console.log "@textPossiblyCroppedToFit = textToFit 4"
-        largestFittingFontSize = @searchLargestFittingFont @doesTextFitInExtent, textToFit
+        largestFittingFontSize = @searchLargestFittingFont textToFit
         return largestFittingFontSize
 
   calculateTextWidth: (text, overrideFontSize) ->
@@ -380,7 +386,7 @@ class StringMorph2 extends Morph
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty()  + "-" +
     @color.toString()  + "-" +
-    @backgroundColor.toString()  + "-" +
+    (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
     @backgroundTransparency.toString()  + "-" +
     hashCode(@text)  + "-" +
     hashCode(@textPossiblyCroppedToFit)  + "-" +

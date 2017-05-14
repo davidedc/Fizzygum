@@ -61,7 +61,7 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) =>
+  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     doesItFit = @breakTextIntoLines text, overrideFontSize, @extent()
     return doesItFit
 
