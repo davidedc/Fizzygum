@@ -1096,18 +1096,6 @@ class Morph extends MorphicNode
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
 
-    if @aspectRatio?
-      if @aspectRatio >= 1
-        if aPoint.y >= aPoint.x
-          aPoint = new Point aPoint.y * @aspectRatio, aPoint.y
-        else
-          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
-      else if @aspectRatio < 1
-        if aPoint.y >= aPoint.x
-          aPoint = new Point aPoint.y * (1/@aspectRatio), aPoint.y
-        else
-          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
-
     newWidth = Math.max aPoint.x, 0
     newHeight = Math.max aPoint.y, 0
 
