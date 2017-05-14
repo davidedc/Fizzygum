@@ -2362,6 +2362,7 @@ class Morph extends MorphicNode
     menu.addItem "reconfigurable paint", true, menusHelper, "createReconfigurablePaint"
     menu.addItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addItem "switch button", true, menusHelper, "createSwitchButtonMorph"
+    
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 

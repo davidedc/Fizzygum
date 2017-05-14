@@ -25,3 +25,4 @@ class MenusHelper
     button1 = new SimpleButtonMorph true, @, null, new IconMorph(new Point(200,200),null)
     button2 = new SimpleButtonMorph true, @, null, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
+
