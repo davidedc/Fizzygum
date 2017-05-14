@@ -72,6 +72,7 @@ REQUIRES = re.compile(r"\sREQUIRES\s*(\w+)")
 EXTENDS = re.compile(r"\sextends\s*(\w+)")
 DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"\s*class\s+(\w+)")
+IS_MIXIN = re.compile(r"(\w+Mixin)[ \t]*=")
 TRIPLE_QUOTES = re.compile(r"'''")
 
 # These two functions search for "requires" comments in the
@@ -297,22 +298,23 @@ def main():
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
         is_class_file = IS_CLASS.search(content)
+        is_mixin_file = IS_MIXIN.search(content)
 
-        if not is_class_file:
+        if not (is_class_file or is_mixin_file):
             print("#### appending %s " % (filename))
             text.append(content)
 
-        # all the class files' coffeescript source is put
+        # all the class and mixins files' coffeescript source is put
         # in .coffee files containing such sources as text.
         # later on in the build process these .coffee "source containers"
         # are going to be translated to javascript (still containing coffeescript
         # sources as text).
         # Also keep track of all the sources in a manifest.
-        # The manifest will be immediately loaded, and then the sources will be
+        # The manifest will be loaded at start, and then the sources will be
         # dynamically and asynchronously loaded following the manifest entries.
-        # This is to avoid the page necessarily loading all the morph
-        # classes on load.
-        if is_class_file:
+        # This is so Fizzygum can dynamically (and possibly lazily) load all
+        # the morph's classes as coffeescript source code.
+        if is_class_file or is_mixin_file:
             # If there is a string block in the source, then we must escape it.
             escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
             # also all the slashes need to be escaped
