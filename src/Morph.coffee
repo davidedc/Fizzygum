@@ -2435,7 +2435,7 @@ class Morph extends MorphicNode
     else
       menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
     menu.addItem "hide", true, @, "hide"
-    menu.addItem "delete", true, @, "destroy"
+    menu.addItem "delete", true, @, "fullDestroy"
     menu
 
   developersMenu: ->
