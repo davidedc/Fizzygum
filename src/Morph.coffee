@@ -42,7 +42,8 @@ class Morph extends MorphicNode
   # script that hangs
   # TODO
   aspectRatio: null
-  
+
+
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
   morphMethod: ->
