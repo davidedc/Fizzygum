@@ -42,3 +42,33 @@ class CanvasMorph extends FrameMorph
 
 
     return [@backBuffer, @backBufferContext]
+
+  clear: (color = @color.toString()) ->
+    if !@backBuffer? then @createRefreshOrGetBackBuffer()
+    backBufferExtent = new Point @backBuffer.width, @backBuffer.height
+    
+    # just in case we get a dirty transformation matrix:
+    # set it to the identity.
+    @backBufferContext.setTransform(1, 0, 0, 1, 0, 0)
+    
+    @backBufferContext.fillStyle = color
+    @backBufferContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
+    @changed()
+
+  drawLine: (start, dest, lineWidth, color) ->
+    if !@backBuffer? then @createRefreshOrGetBackBuffer()
+
+    context = @backBufferContext
+
+    from = start
+    to = dest
+    context.lineWidth = lineWidth
+    context.strokeStyle = color.toString()
+    context.lineCap = "round"
+    context.lineJoin = "round"
+    context.beginPath()
+    context.moveTo from.x, from.y
+    context.lineTo to.x, to.y
+    context.stroke()
+    @changed()
+  
