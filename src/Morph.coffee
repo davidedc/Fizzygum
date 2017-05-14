@@ -1618,13 +1618,18 @@ class Morph extends MorphicNode
     sha
   
   isBeingFloatDragged: ->
-    # first check if the hand is nonfloatdragging
-    # anything at all
-    if !@nonFloatDraggedMorph?
+
+    if !world.hand?
+      return false
+
+    # first check if the hand is floatdragging
+    # anything, in that case if it's floatdragging
+    # it can't be non-floatdragging
+    if world.hand.nonFloatDraggedMorph?
       return false
 
     # then check if my root is the hand
-    if root() instanceof HandMorph
+    if @root() instanceof HandMorph
       return true
 
     # if we are here it means we are not being
