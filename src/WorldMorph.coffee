@@ -789,37 +789,7 @@ class WorldMorph extends FrameMorph
     @children.forEach (child) =>
       child.reactToWorldResize? @boundingBox()
   
-  
-  
-  # WorldMorph global pixel access:
-  getGlobalPixelColor: (point) ->
     
-    #
-    # answer the color at the given point.
-    #
-    # Note: for some strange reason this method works fine if the page is
-    # opened via HTTP, but *not*, if it is opened from a local uri
-    # (e.g. from a directory), in which case it's always null.
-    #
-    # This behavior is consistent throughout several browsers. I have no
-    # clue what's behind this, apparently the imageData attribute of
-    # canvas context only gets filled with meaningful data if transferred
-    # via HTTP ???
-    #
-    # This is somewhat of a showstopper for color detection in a planned
-    # offline version of Snap.
-    #
-    # The issue has also been discussed at: (join lines before pasting)
-    # http://stackoverflow.com/questions/4069400/
-    # canvas-getimagedata-doesnt-work-when-running-locally-on-windows-
-    # security-excep
-    #
-    # The suggestion solution appears to work, since the settings are
-    # applied globally.
-    #
-    dta = @worldCanvasContext.getImageData(point.x, point.y, 1, 1).data
-    new Color dta[0], dta[1], dta[2]
-  
   
   # WorldMorph events:
   initVirtualKeyboard: ->
