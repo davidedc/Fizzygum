@@ -311,6 +311,7 @@ class ScrollFrameMorph extends FrameMorph
     deltaX = 0
     deltaY = 0
     friction = 0.8
+    world.addSteppingMorph @
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
@@ -331,9 +332,11 @@ class ScrollFrameMorph extends FrameMorph
       else
         unless @hasVelocity
           @step = noOperation
+          world.removeSteppingMorph @
         else
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
+            world.removeSteppingMorph @
           else
             if @hBar.visibleBasedOnIsVisibleProperty() and
             !@hBar.isCollapsed()
@@ -354,6 +357,7 @@ class ScrollFrameMorph extends FrameMorph
     if @isOrphan() then return null
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
+    world.addSteppingMorph @
     @step = =>
       pos = hand.position()
       inner = @boundingBox().insetBy inset
@@ -363,6 +367,7 @@ class ScrollFrameMorph extends FrameMorph
           @autoScroll pos
       else
         @step = noOperation
+        world.removeSteppingMorph @
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->

@@ -143,7 +143,7 @@ class InspectorMorph extends BoxMorph
     # we set that here. Note that the ListMorph itself does require animation because of the
     # scrollbars, but the MenuMorph (which contains the actual list contents)
     # in this context doesn't.
-    @list.listContents.step = null
+    world.removeSteppingMorph @list.listContents
     @add @list
 
     # we add a Morph alignment here because adjusting IDs whenever

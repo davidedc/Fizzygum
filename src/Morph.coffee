@@ -426,6 +426,8 @@ class Morph extends MorphicNode
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
 
+    world.removeSteppingMorph @
+
     # if there is anything being edited inside
     # what we are destroying, then also
     # invoke stopEditing()
@@ -464,36 +466,6 @@ class Morph extends MorphicNode
     return null
 
 
-  # Morph stepping:
-  runChildrensStepFunction: ->
-    # step is the function that this Morph wants to run at each step.
-    # If the Morph wants to do nothing and let no-one of the children do nothing,
-    # then step is set to null.
-    # If the morph wants to do nothing but the children might want to do something,
-    # then step is set to the function that does nothing (i.e. a function noOperation that
-    # only returns null)
-    return null  unless @step
-
-    # for objects where @fps is defined, check which ones are due to be stepped
-    # and which ones want to wait. 
-    elapsed = WorldMorph.currentTime - @lastTime
-    if @fps > 0
-      timeRemainingToWaitedFrame = (1000 / @fps) - elapsed
-    else
-      timeRemainingToWaitedFrame = 0
-    
-    # Question: why 1 here below?
-    if timeRemainingToWaitedFrame < 1
-      @lastTime = WorldMorph.currentTime
-      if @onNextStep
-        nxt = @onNextStep
-        @onNextStep = null
-        nxt.call @
-      @step()
-      @children.forEach (child) ->
-        if !child.runChildrensStepFunction?
-          debugger
-        child.runChildrensStepFunction()
 
   # not used within Zombie Kernel yet.
   nextSteps: (lst = []) ->
@@ -1887,6 +1859,11 @@ class Morph extends MorphicNode
      window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(copiedMorph) == -1
       window.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
 
+  # in case we copy a morph, if the original was in some
+  # stepping structures, then we have to add the copy too.
+  alignCopiedMorphToSteppingStructures: (copiedMorph) ->
+    if world.steppingMorphs.indexOf(@) != -1
+      world.addSteppingMorph copiedMorph
 
   # note that the entire copying mechanism
   # should also take care of inserting the copied
@@ -2127,6 +2104,7 @@ class Morph extends MorphicNode
     oldStep = @step
     oldFps = @fps
     @fps = 0
+    world.addSteppingMorph @
     @step = =>
       @silentFullRawMoveBy new Point xStep, yStep
       @fullChanged()
@@ -2136,6 +2114,8 @@ class Morph extends MorphicNode
         situation.origin.reactToDropOf @  if situation.origin.reactToDropOf
         @step = oldStep
         @fps = oldFps
+        if @step == noOperation or !@step?
+          world.removeSteppingMorph @
   
   
   # Morph utilities ////////////////////////////////////////////////////////

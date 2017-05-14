@@ -163,6 +163,8 @@ class WorldMorph extends FrameMorph
   currentPinoutingMorphs: []
   morphsBeingPinouted: []
 
+  steppingMorphs: []
+
   underTheCarpetMorph: null
 
   # Some operations are triggered by a callback
@@ -769,6 +771,47 @@ class WorldMorph extends FrameMorph
     @addHighlightingMorphs()
     @updateBroken()
     WorldMorph.frameCount++
+
+  addSteppingMorph: (theMorph) ->
+    if @steppingMorphs.indexOf(theMorph) == -1
+      @steppingMorphs.push theMorph
+
+  removeSteppingMorph: (theMorph) ->
+    if @steppingMorphs.indexOf(theMorph) != -1
+      @steppingMorphs.remove theMorph
+
+  # Morph stepping:
+  runChildrensStepFunction: ->
+    for eachSteppingMorph in @steppingMorphs
+      if eachSteppingMorph.isBeingFloatDragged()
+        continue
+      # for objects where @fps is defined, check which ones are due to be stepped
+      # and which ones want to wait.
+      elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
+      if eachSteppingMorph.fps > 0
+        millisecondsRemainingToWaitedFrame = (1000 / eachSteppingMorph.fps) - elapsedMilliseconds
+      else
+        # if fps 0 or negative, then just run as fast as possible,
+        # so 0 milliseconds remaining to the next invokation
+        millisecondsRemainingToWaitedFrame = 0
+      
+      # We could fire at the exact due time or when the time is past by
+      # firing when remaining ms is <= 0
+      # Or like in this case we can fire slightly earlier so to compensate
+      # for when we come to fire late for one reason or the other.
+      # There is no excat science in choosing to fire
+      # a ms earlier here, it's quite random.
+      # This whole mechanism will need to be remade anyways.
+      if millisecondsRemainingToWaitedFrame <= 1
+        eachSteppingMorph.lastTime = WorldMorph.currentTime
+        if eachSteppingMorph.onNextStep
+          nxt = eachSteppingMorph.onNextStep
+          eachSteppingMorph.onNextStep = null
+          nxt.call eachSteppingMorph
+        if !eachSteppingMorph.step?
+          debugger
+        eachSteppingMorph.step()
+
   
   runOtherTasksStepFunction : ->
     for task in @otherTasksToBeRunOnStep

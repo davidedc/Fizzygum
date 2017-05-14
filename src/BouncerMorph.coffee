@@ -16,6 +16,7 @@ class BouncerMorph extends Morph
   constructor: (@type = "vertical", @speed = 1) ->
     super()
     @fps = 50
+    world.addSteppingMorph @
     # additional properties:
     if @type is "vertical"
       @direction = "down"
