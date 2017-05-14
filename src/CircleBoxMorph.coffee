@@ -7,19 +7,16 @@ class CircleBoxMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  orientation: null
-  autoOrient: true
 
-  constructor: (@orientation = "vertical") ->
+  constructor: ->
     super()
     @silentRawSetExtent new Point 20, 100
 
   
   autoOrientation: ->
     if @height() > @width()
-      @orientation = "vertical"
+      orientation = "vertical"
     else
-      @orientation = "horizontal"
 
 
   calculateKeyPoints: ->
@@ -128,12 +125,4 @@ class CircleBoxMorph extends Morph
       menu.addItem "make vertical", true, @, "toggleOrientation", "toggle the\norientation"
     menu
   
-  toggleOrientation: ->
-    center = @center()
-    if @orientation is "vertical"
-      @orientation = "horizontal"
-    else
-      @orientation = "vertical"
-    @silentRawSetExtent new Point @height(), @width()
-    @fullRawMoveCenterTo center
-    @changed()
+      orientation = "horizontal"
