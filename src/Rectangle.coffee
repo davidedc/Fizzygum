@@ -343,6 +343,11 @@ class Rectangle
     c = @corner.add factor
     new @constructor o.x, o.y, c.x, c.y
   
+  translateTo: (aPoint) ->
+    @debugIfFloats()
+    c = @corner
+    new @constructor aPoint.x, aPoint.y, c.x, c.y
+  
   
   # Rectangle converting:
   asArray: ->
