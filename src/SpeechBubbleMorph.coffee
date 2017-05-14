@@ -6,15 +6,13 @@
 #	If I am invoked using popUp() I behave like a tool tip.
 #
 
-class SpeechBubbleMorph extends BoxMorph
+class SpeechBubbleMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  isPointingRight: true # orientation of text
   contents: null
   padding: null # additional vertical pixels
-  isThought: null # draw "think" bubble
   isClickable: false
   morphInvokingThis: null
 
@@ -24,9 +22,11 @@ class SpeechBubbleMorph extends BoxMorph
     @color = (new Color 230, 230, 230),
     cornerRadius,
     @padding = 0,
-    @isThought = false) ->
+    isThought = false) ->
       # console.log "bubble super"
-      super(cornerRadius or 6)
+      super()
+      @cornerRadius = cornerRadius or 6
+      @appearance = new BubblyAppearance @, isThought, true
       # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
@@ -111,63 +111,4 @@ class SpeechBubbleMorph extends BoxMorph
     @contentsMorph.fullRawMoveTo @position().add(
       new Point(@padding or @cornerRadius, @padding + 1))
 
-
-  outlinePath: (context, radius) ->
-    # console.log "bubble outlinePath"
-    circle = (x, y, r) ->
-      context.moveTo x + r, y
-      context.arc x, y, r, degreesToRadians(0), degreesToRadians(360)
-    offset = radius
-    w = @width()
-    h = @height()
-
-    # top left:
-    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90), false
-
-    # top right:
-    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0), false
-
-    # bottom right:
-    context.arc w - offset, h - offset - radius, radius, degreesToRadians(0), degreesToRadians(90), false
-    unless @isThought # draw speech bubble hook
-      if @isPointingRight
-        context.lineTo offset + radius, h - offset
-        context.lineTo radius / 2, h
-      else # pointing left
-        context.lineTo w - (radius / 2), h
-        context.lineTo w - (offset + radius), h - offset
-
-    # bottom left:
-    context.arc offset, h - offset - radius, radius, degreesToRadians(90), degreesToRadians(180), false
-
-    if @isThought
-      # close large bubble:
-      context.lineTo 0, offset
-
-      # draw thought bubbles:
-      if @isPointingRight
-
-        # tip bubble:
-        rad = radius / 4
-        circle rad, h - rad, rad
-
-        # middle bubble:
-        rad = radius / 3.2
-        circle rad * 2, h - rad, rad
-
-        # top bubble:
-        rad = radius / 2.8
-        circle rad * 3, h - rad, rad
-      else # pointing left
-        # tip bubble:
-        rad = radius / 4
-        circle w - (rad), h - rad, rad
-
-        # middle bubble:
-        rad = radius / 3.2
-        circle w - (rad * 2), h - rad, rad
-
-        # top bubble:
-        rad = radius / 2.8
-        circle w - (rad * 3), h - rad, rad
 

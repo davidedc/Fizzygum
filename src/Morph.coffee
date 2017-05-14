@@ -43,6 +43,7 @@ class Morph extends MorphicNode
   # TODO
   aspectRatio: null
 
+  appearance: null
 
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -361,6 +362,25 @@ class Morph extends MorphicNode
     @morphValsDirectlyDependingOnParentVals = {}
 
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
+
+  isTransparentAt: (aPoint) ->
+    @appearance?.isTransparentAt aPoint
+
+  paintHighlight: (aContext, al, at, w, h) ->
+    @appearance?.paintHighlight aContext, al, at, w, h
+
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+    @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
+
+  addShapeSpecificMenus: (menu) ->
+    if @appearance?.addShapeSpecificMenus?
+      return @appearance.addShapeSpecificMenus menu
+    return menu
+
+  addShapeSpecificNumericalSetters: (list) ->
+    if @appearance?.addShapeSpecificNumericalSetters?
+      return @appearance.addShapeSpecificNumericalSetters list
+    return list
 
   
   #
@@ -1183,24 +1203,6 @@ class Morph extends MorphicNode
     @changed()
   
   
-  # a morph by default is considered as completely
-  # opaque and rectangular. This method is called when
-  # the mouse is within the bounds of the morph.
-  # There are two possible implementations of this
-  # method:
-  #   * raster-based, looking up the
-  #     backing store contents
-  #   * mathematically from the shape of the
-  #     morph
-  isTransparentAt: (aPoint) ->
-    if @boundingBoxTight().containsPoint aPoint
-      return false
-    if @backgroundTransparency? and @backgroundColor?
-      if @backgroundTransparency > 0
-        if @boundsContainPoint aPoint
-          return false
-    return true
-  
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
@@ -1236,27 +1238,6 @@ class Morph extends MorphicNode
       world.morphsToBeHighlighted.remove @
       @changed()
 
-  # paintHighlight can work in two patterns:
-  #  * passing actual pixels, when used
-  #    outside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
-  #  * passing logiacl pixels, when used
-  #    inside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
-  # Mostly, the first pattern is used.
-  paintHighlight: (aContext, al, at, w, h) ->
-    if !@highlighted
-      return
-
-    # paintRectangle here is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels.
-    @paintRectangle \
-      aContext,
-      al, at, w, h,
-      "orange",
-      0.5,
-      true # push and pop the context
 
   # paintRectangle can work in two patterns:
   #  * passing actual pixels, when used
@@ -1291,56 +1272,6 @@ class Morph extends MorphicNode
 
       if pushAndPopContext
         aContext.restore()
-
-  # This method only paints this very morph
-  # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
-  # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-
-    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
-      return null
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return null
-
-      @justBeforeBeingPainted?()
-
-      aContext.save()
-      aContext.globalAlpha = @alpha
-      aContext.fillStyle = @color.toString()
-
-      if !@color?
-        debugger
-
-
-      # paintRectangle is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the pixelRatio
-
-      # paint the background
-      toBePainted = new Rectangle al, at, al + w, at + h
-      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @backgroundColor, @backgroundTransparency
-
-      # now paint the actual morph, which is a rectangle
-      # (potentially inset because of the padding)
-      toBePainted = toBePainted.intersect @boundingBoxTight().scaleBy pixelRatio
-      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @color
-
-      aContext.restore()
-
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the pixelRatio
-      @paintHighlight aContext, al, at, w, h
 
 
   preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
@@ -2497,8 +2428,11 @@ class Morph extends MorphicNode
     menu
 
   developersMenu: ->
-    return @developersMenuOfMorph()
-  
+    menu = @developersMenuOfMorph()
+    if @addShapeSpecificMenus?
+      menu = @addShapeSpecificMenus menu
+    menu
+
   userMenu: ->
     null  
   
@@ -2677,8 +2611,11 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
-  
+    list = ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
+    if @addShapeSpecificNumericalSetters?
+      list = @addShapeSpecificNumericalSetters list
+    list
+
   
   # Morph entry field tabbing //////////////////////////////////////////////
   
@@ -3256,7 +3193,7 @@ class Morph extends MorphicNode
     ## draw some reference patterns to see the sizes
 
     for i in [0..5]
-      lmHolder = new Morph()
+      lmHolder = new RectangleMorph()
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
       lmHolder.fullRawMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
@@ -3264,10 +3201,10 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3286,10 +3223,10 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3308,11 +3245,11 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
-    lmContent3 = new Morph()
+    lmContent2 = new RectangleMorph()
+    lmContent3 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3334,12 +3271,12 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3362,15 +3299,15 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph()
 
@@ -3399,15 +3336,15 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -3436,15 +3373,15 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -3473,15 +3410,15 @@ class Morph extends MorphicNode
 
     # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 

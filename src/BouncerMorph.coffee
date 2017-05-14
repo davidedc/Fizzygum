@@ -17,6 +17,9 @@ class BouncerMorph extends Morph
     super()
     @fps = 50
     world.addSteppingMorph @
+
+    @appearance = new RectangularAppearance @
+
     # additional properties:
     if @type is "vertical"
       @direction = "down"

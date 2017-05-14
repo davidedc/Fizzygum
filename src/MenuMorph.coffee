@@ -199,7 +199,7 @@ class MenuMorph extends BoxMorph
       # to draw the line.
       else if tuple[0] is 0
         isLine = true
-        item = new Morph()
+        item = new RectangleMorph()
         item.setMinimumExtent new Point 5,1
         item.color = new Color 60,60,60
         item.rawSetHeight tuple[1]

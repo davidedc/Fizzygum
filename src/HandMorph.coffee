@@ -35,6 +35,7 @@ class HandMorph extends Morph
     @mouseOverList = []
     @temporaries = []
     super()
+    @minimumExtent = new Point 0,0
     @silentRawSetBounds Rectangle.EMPTY
 
   clippedThroughBounds: ->

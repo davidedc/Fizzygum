@@ -10,6 +10,7 @@ class BlinkerMorph extends Morph
   constructor: (@fps = 2) ->
     world.addSteppingMorph @
     super()
+    @appearance = new RectangularAppearance @
     @color = new Color 0, 0, 0
   
   # BlinkerMorph stepping:

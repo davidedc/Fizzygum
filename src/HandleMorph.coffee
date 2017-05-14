@@ -56,6 +56,7 @@ class HandleMorph extends Morph
     else
       @updateResizerHandlePosition()
       @moveInFrontOfSiblings()
+      super
 
   updateResizerHandlePosition: ->
     if @target
