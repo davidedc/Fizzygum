@@ -127,7 +127,6 @@ class BoxMorph extends Morph
   choiceOfMorphToBePicked: (ignored, morphPickingUp) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
-    debugger
     morphPickingUp.addInset @
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
