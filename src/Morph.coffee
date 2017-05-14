@@ -1862,6 +1862,26 @@ class Morph extends MorphicNode
     aFullCopy = @fullCopy()
     aFullCopy.pickUp()
 
+  # in case we copy a morph, if the original was in some
+  # data structures related to broken morphs, then
+  # we have to add the copy too.
+  alignCopiedMorphToBrokenInfoDataStructures: (copiedMorph) ->
+    if window.morphsThatMaybeChangedGeometryOrPosition.indexOf(@) != -1 and
+     window.morphsThatMaybeChangedGeometryOrPosition.indexOf(copiedMorph) == -1
+      window.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
+
+    if window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(@) != -1 and
+     window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(copiedMorph) == -1
+      window.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
+
+
+  # note that the entire copying mechanism
+  # should also take care of inserting the copied
+  # morph in whatever other data structures where the
+  # original morph was.
+  # For example, if the Morph appeared in a data
+  # structure related to the broken rectangles mechanism,
+  # we should place the copied morph there.
   fullCopy: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
