@@ -39,7 +39,6 @@ class SliderMorph2 extends CircleBoxMorph
     @stop = 100,
     @value = 50,
     @size = 10,
-    orientation,
     @color = (new Color 0, 0, 0)
     ) ->
     @button = new SliderButtonMorph()

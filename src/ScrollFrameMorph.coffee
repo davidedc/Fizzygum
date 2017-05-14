@@ -51,13 +51,13 @@ class ScrollFrameMorph extends FrameMorph
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph null, null, null, null, "horizontal", @sliderColor
+    @hBar = new SliderMorph null, null, null, null, @sliderColor
     @hBar.rawSetHeight @scrollBarSize
 
     @hBar.target = @
     @addRaw @hBar
 
-    @vBar = new SliderMorph null, null, null, null, "vertical", @sliderColor
+    @vBar = new SliderMorph null, null, null, null, @sliderColor
     @vBar.rawSetWidth @scrollBarSize
     @vBar.target = @
     @addRaw @vBar
