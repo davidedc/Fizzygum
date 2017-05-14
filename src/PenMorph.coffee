@@ -16,9 +16,7 @@ class PenMorph extends Morph
   
   heading: 0
   penSize: null
-  isWarped: false # internal optimization
   isDown: true
-  wantsRedraw: false # internal optimization
   penPoint: 'tip' # or 'center'
   
   constructor: ->
@@ -45,16 +43,6 @@ class PenMorph extends Morph
   # NOTE: here we are painting the turtle/pen,
   # NOT what the turtle/pen is drawing!
     
-  # PenMorph updating - optimized for warping, i.e atomic recursion
-  changed: ->
-    if @isWarped is false
-      w = @root()
-      # unless we are the main desktop, then if the morph has no parent
-      # don't add the broken rect since the morph is not visible
-      if w instanceof WorldMorph and (@ instanceof WorldMorph or @parent?)
-        w.broken.push @clippedThroughBounds().spread()
-      @parent.childChanged @  if @parent
-  
   # This method only paints this very morph's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
@@ -84,9 +72,6 @@ class PenMorph extends Morph
       aContext.translate morphPosition.x, morphPosition.y
 
       direction = @heading
-      if @isWarped
-        @wantsRedraw = true
-        return
       len = @width() / 2
       start = @center().subtract(@position())
 
@@ -115,7 +100,6 @@ class PenMorph extends Morph
       aContext.lineWidth = 1
       aContext.stroke()
       aContext.fill()
-      @wantsRedraw = false
 
       aContext.restore()
 
@@ -132,39 +116,16 @@ class PenMorph extends Morph
   setHeading: (degrees) ->
     @heading = parseFloat(degrees) % 360
     @changed()
-  
-  
-  # PenMorph drawing:
-  drawLine: (start, dest) ->
-
-    if !@parent.backBuffer?
-      return
-
-    context = @parent.backBuffer.getContext "2d"
-
-    from = start.subtract @parent.position()
-    to = dest.subtract @parent.position()
-    if @isDown
-      context.lineWidth = @penSize
-      context.strokeStyle = @color.toString()
-      context.lineCap = "round"
-      context.lineJoin = "round"
-      context.beginPath()
-      context.moveTo from.x, from.y
-      context.lineTo to.x, to.y
-      context.stroke()
-      @parent.changed()
-      # unless we are the main desktop, then if the morph has no parent
-      # don't add the broken rect since the morph is not visible
-      if @isWarped is false and (@ instanceof WorldMorph or @parent?)
-        world.broken.push start.rectangle(dest).expandBy(Math.max(@penSize / 2, 1)).intersect(@parent.clippedThroughBounds()).spread()
-  
+    
   
   # PenMorph turtle ops:
   turn: (degrees) ->
     @setHeading @heading + parseFloat degrees
   
   forward: (steps) ->
+    if !@parent.backBuffer?
+      return
+
     start = @center()
     dist = parseFloat steps
     if dist >= 0
@@ -172,7 +133,8 @@ class PenMorph extends Morph
     else
       dest = @position().distanceAngle(Math.abs(dist), (@heading - 180))
     @fullRawMoveTo dest.round()
-    @drawLine start, @center()
+    if @isDown
+      @parent.drawLine start.subtract(@parent.position()), @center().subtract(@parent.position()), @penSize, @color
   
   down: ->
     @isDown = true
@@ -180,38 +142,14 @@ class PenMorph extends Morph
   up: ->
     @isDown = false
   
+  # TODO I don't think this is going to
+  # work. Needs to clear the canvas, not
+  # to change it.
   clear: ->
+    if !@parent.backBuffer?
+      return
+    @parent.clear()
     
-    @parent.changed()
-  
-  
-  # PenMorph optimization for atomic recursion:
-  startWarp: ->
-    @wantsRedraw = false
-    @isWarped = true
-  
-  endWarp: ->
-    @isWarped = false
-    if @wantsRedraw
-      
-      @wantsRedraw = false
-    @parent.changed()
-  
-  warp: (fun) ->
-    @startWarp()
-    fun.call @
-    @endWarp()
-  
-  warpOp: (selector, argsArray) ->
-    @startWarp()
-    @[selector].apply @, argsArray
-    @endWarp()
-  
-  
-  # PenMorph demo ops:
-  # try these with WARP eg.: this.warp(function () {tree(12, 120, 20)})
-  warpSierpinski: (length, min) ->
-    @warpOp "sierpinski", [length, min]
   
   # PenMorph demo ops:  
   sierpinski: (length, min) ->
@@ -220,9 +158,6 @@ class PenMorph extends Morph
         @sierpinski length * 0.5, min
         @turn 120
         @forward length
-  
-  warpTree: (level, length, angle) ->
-    @warpOp "tree", [level, length, angle]
   
   tree: (level, length, angle) ->
     if level > 0
