@@ -2136,8 +2136,18 @@ class Morph extends MorphicNode
   inspect: (anotherObject) ->
     @spawnInspector @
 
+  inspect2: (anotherObject) ->
+    @spawnInspector2 @
+
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph inspectee
+    inspector.fullRawMoveTo world.hand.position()
+    inspector.fullRawMoveWithin world
+    world.add inspector
+    inspector.changed()
+
+  spawnInspector2: (inspectee) ->
+    inspector = new InspectorMorph2 inspectee
     inspector.fullRawMoveTo world.hand.position()
     inspector.fullRawMoveWithin world
     world.add inspector
@@ -2346,6 +2356,7 @@ class Morph extends MorphicNode
     menu = new MenuMorph false, @, true, true, "others"
     menu.addItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
+    menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
