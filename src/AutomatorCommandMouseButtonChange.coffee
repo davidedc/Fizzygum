@@ -22,6 +22,9 @@ class AutomatorCommandMouseButtonChange extends AutomatorCommand
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
+    if !theMorph?
+      console.log "tried to get morph with label: " + commandBeingPlayed.morphIdentifierViaTextLabel + " but failed "
+      debugger
     newX = Math.round((theMorph.width() * commandBeingPlayed.pointerPositionFractionalInMorph[0])) + theMorph.left()
     newY = Math.round((theMorph.height() * commandBeingPlayed.pointerPositionFractionalInMorph[1])) + theMorph.top()
     world.hand.fullRawMoveTo new Point(newX, newY)
