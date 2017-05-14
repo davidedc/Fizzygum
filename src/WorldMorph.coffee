@@ -653,6 +653,13 @@ class WorldMorph extends FrameMorph
       # on the chain (but not all)
       tryThisMorph.doLayout()
 
+  clearGeometryOrPositionPossiblyChangedFlags: ->
+    for m in window.morphsThatMaybeChangedGeometryOrPosition
+      m.geometryOrPositionPossiblyChanged = false
+
+  clearFullGeometryOrPositionPossiblyChangedFlags: ->
+    for m in window.morphsThatMaybeChangedFullGeometryOrPosition
+      m.fullGeometryOrPositionPossiblyChanged = false
 
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
@@ -665,6 +672,10 @@ class WorldMorph extends FrameMorph
     @fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenMorph()
     @cleanupSrcAndDestRectsOfMorphs()
+
+    @clearGeometryOrPositionPossiblyChangedFlags()
+    @clearFullGeometryOrPositionPossiblyChangedFlags()
+
     window.morphsThatMaybeChangedGeometryOrPosition = []
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
