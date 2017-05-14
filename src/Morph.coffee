@@ -2356,6 +2356,7 @@ class Morph extends MorphicNode
     menu = new MenuMorph false, @, true, true, "others"
     menu.addItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
+    menu.addItem "analog clock", true, @, "analogClock"
     menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
