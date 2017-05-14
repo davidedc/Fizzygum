@@ -15,6 +15,9 @@ class MenusHelper
   createFridgeMagnets: ->
     world.create new FridgeMagnetsMorph()
 
+  createReconfigurablePaint: ->
+    world.create new ReconfigurablePaintMorph()
+
   createSimpleButton: ->
     world.create new SimpleButtonMorph true, @, null, new IconMorph(new Point(200,200),null)
 
