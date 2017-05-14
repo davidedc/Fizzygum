@@ -560,21 +560,29 @@ class Morph extends MorphicNode
     if @bounds.eq newBounds
       return
 
-    oldExtent = @bounds.extent()
-    newExtent = newBounds.extent()
-    @bounds = newBounds
-    @changed()
-    @breakNumberOfRawMovesAndResizesCaches()
+    unless @bounds.origin.eq newBounds.origin
+      @bounds = @bounds.translateTo newBounds.origin
+      @breakNumberOfRawMovesAndResizesCaches()
+      @changed()
 
-    if !oldExtent.eq newExtent
-      @reLayout()
+    @rawSetExtent newBounds.extent()
 
+  setBounds: (aRectangle, morphStartingTheChange = null) ->
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @rawSetBounds arguments...
 
   silentRawSetBounds: (newBounds) ->
-    if @bounds?.eq newBounds
+    if @bounds.eq newBounds
       return
-    @bounds = newBounds
-    @breakNumberOfRawMovesAndResizesCaches()
+
+    unless @bounds.origin.eq newBounds.origin
+      @bounds = @bounds.translateTo newBounds.origin
+      @breakNumberOfRawMovesAndResizesCaches()
+
+    @silentRawSetExtent newBounds.extent()
   
   corners: ->
     @bounds.corners()
@@ -1054,13 +1062,14 @@ class Morph extends MorphicNode
   # Morph accessing - dimensional changes requiring a complete redraw
   rawSetExtent: (aPoint, morphStartingTheChange = null) ->
     #console.log "move 8"
-    @breakNumberOfRawMovesAndResizesCaches()
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq @extent()
+      @breakNumberOfRawMovesAndResizesCaches()
+
       @silentRawSetExtent aPoint
       @changed()
       @reLayout()
@@ -1082,7 +1091,6 @@ class Morph extends MorphicNode
   silentRawSetExtent: (aPoint) ->
     aPoint = aPoint.round()
     #console.log "move 9"
-    @breakNumberOfRawMovesAndResizesCaches()
 
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
@@ -1102,7 +1110,12 @@ class Morph extends MorphicNode
 
     newWidth = Math.max aPoint.x, 0
     newHeight = Math.max aPoint.y, 0
-    @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
+
+    newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
+
+    unless @bounds.eq newBounds
+      @bounds = newBounds
+      @breakNumberOfRawMovesAndResizesCaches()
   
   rawSetWidth: (width) ->
     #console.log "move 10"
