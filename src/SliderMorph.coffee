@@ -2,6 +2,11 @@
 # Sliders (and hence slider button morphs)
 # are also used in the ScrollMorphs .
 
+# In previous versions the user could force an orientation, so
+# that one could have a vertical slider even if the slider is
+# more wide than tall. Simplified that code because it doesn't
+# look like a common need.
+
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 # REQUIRES ControllerMixin
@@ -58,16 +63,6 @@ class SliderMorph extends CircleBoxMorph
     @button.reLayout()
     
 
-  toggleOrientation: ->
-    super()
-    # the background CircleBoxMorph has just been updated
-    # in the call of super, now
-    # it's the time of the button
-    @button.reLayout()
-    
-  
-  autoOrientation: ->
-      noOperation
   
   rangeSize: ->
     @stop - @start
@@ -81,13 +76,13 @@ class SliderMorph extends CircleBoxMorph
     # so skip in that case
     if !(@button? and @button instanceof SliderButtonMorph)
       return 1
-    if @orientation is "vertical"
+    if @autoOrientation() is "vertical"
       return (@height() - @button.height()) / @rangeSize()
     else
       return (@width() - @button.width()) / @rangeSize()
     
   updateValue: ->
-    if @orientation is "vertical"
+    if @autoOrientation() is "vertical"
       relPos = @button.top() - @top()
     else
       relPos = @button.left() - @left()
