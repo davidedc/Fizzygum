@@ -1671,6 +1671,8 @@ class Morph extends MorphicNode
         world.hand.fullChanged()
         return
 
+      # you could check directly if it's in the array
+      # but we use a flag because it's faster.
       if !@geometryOrPositionPossiblyChanged
         window.morphsThatMaybeChangedGeometryOrPosition.push @
         @geometryOrPositionPossiblyChanged = true
