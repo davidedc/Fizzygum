@@ -60,7 +60,7 @@ class Morph extends MorphicNode
   # access this property.
   bounds: null
   minimumExtent: null
-  color: null
+  color: new Color 80, 80, 80
   texture: null # optional url of a fill-image
   cachedTexture: null # internal cache of actual bg image
   lastTime: null
@@ -344,13 +344,11 @@ class Morph extends MorphicNode
       if @constructor.name not in arr
         arr.push @constructor.name
 
-    @silentRawSetBounds Rectangle.EMPTY
+    @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5
-    @silentFullRawMoveTo new Point 0,0
-    # [TODO] why is there this strange non-zero default extent?
-    @silentRawSetExtent new Point 50, 40
 
-    @color = @color or new Color 80, 80, 80
+    @silentRawSetBounds new Rectangle 0,0,50,40
+
     @lastTime = Date.now()
     # Note that we don't call 
     # that's because the actual extending morph will probably
