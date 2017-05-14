@@ -12,3 +12,6 @@ class MenusHelper
 
   @augmentWith DeepCopierMixin
 
+  createFridgeMagnets: ->
+    world.create new FridgeMagnetsMorph()
+

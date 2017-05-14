@@ -577,6 +577,8 @@ continueBooting2 = ->
   if window.location.href.contains "worldWithSystemTestHarness"
     if SystemTestsControlPanelUpdater != null
       new SystemTestsControlPanelUpdater
+
+  window.menusHelper = new MenusHelper()
   world.boot()
 
 

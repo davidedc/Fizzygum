@@ -2358,6 +2358,7 @@ class Morph extends MorphicNode
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addItem "analog clock", true, @, "analogClock"
     menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
+    menu.addItem "fridge magnets", true, menusHelper, "createFridgeMagnets"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
