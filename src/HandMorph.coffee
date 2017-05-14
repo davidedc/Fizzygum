@@ -17,6 +17,7 @@ class HandMorph extends Morph
   # example when resizing a button via the
   # handle)
   mouseDownMorph: null
+  mouseDownPosition: null
   morphToGrab: null
   grabOrigin: null
   mouseOverList: null
@@ -140,7 +141,7 @@ class HandMorph extends Morph
       target = target.parent
     target
   
-  grab: (aMorph) ->
+  grab: (aMorph, displacementDueToGrabDragThreshold) ->
     return null  if aMorph instanceof WorldMorph
     oldParent = aMorph.parent
     if !@floatDraggingSomething()
@@ -154,6 +155,8 @@ class HandMorph extends Morph
 
 
       @world.stopEditing()
+      if displacementDueToGrabDragThreshold?
+        aMorph.fullMoveTo aMorph.position().add displacementDueToGrabDragThreshold
       @grabOrigin = aMorph.situation()
       aMorph.prepareToBeGrabbed? @
       @add aMorph
@@ -291,6 +294,9 @@ class HandMorph extends Morph
         fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
         fade 'leftMouseButtonIndicator', 0, 1, 10, new Date().getTime()
+
+
+    @mouseDownPosition = @position()
 
     # check whether we are in the middle
     # of a floatDrag/drop operation
@@ -788,22 +794,53 @@ class HandMorph extends Morph
       # if a morph is marked for grabbing, just grab it
       if @morphToGrab
         if @morphToGrab.isFloatDraggable()
+
+          # pointers inevitably have some "noise", so to avoid that
+          # a simple clicking (which could be done for example for
+          # selection purposes or to pick a position for a cursor)
+          # turns into a drag, so we add
+          # a grab/drag distance threshold.
+          # Note that even if the mouse moves a bit, we are still
+          # picking up the correct morph that was under the mouse when
+          # the mouse down happened.
+          # Also we correct for the initial displacement
+          # due to the threshold, so really when user starts dragging
+          # it should pick up the EXACT point where the click happened,
+          # not a "later" point once the threshold is passed.
+
+          # UNFORTUNATELY OLD tests didn't take the correction into account,
+          # so we have to bypass this mechanism for those.
+          displacementDueToGrabDragThreshold = null
+          skipGrabDragThreshold = false
+          
+          if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+            currentlyPlayingTestName = world.automatorRecorderAndPlayer.currentlyPlayingTestName
+            if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
+              skipGrabDragThreshold = true
+
+          if !skipGrabDragThreshold
+            if @morphToGrab.parent != world
+              if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
+                return
+            displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
+
+
           morph = @morphToGrab
-          @grab morph
-        # templates create a copy of
-        # themselves when floatDragged
-        else if @morphToGrab.isTemplate
-          morph = @morphToGrab.fullCopy()
-          morph.isTemplate = false
-          # this flag is not used anymore but not sure
-          # if anything should replace this.
-          # keeping it as a comment as a breadcrumb
-          # morph.isfloatDraggable = true
-          @grab morph
-          @grabOrigin = @morphToGrab.situation()
+          @grab morph, displacementDueToGrabDragThreshold
         else
-          @nonFloatDraggedMorph = @morphToGrab
-          @nonFloatDragPositionWithinMorphAtStart = pos.subtract @nonFloatDraggedMorph.position()
+          # non-float drags are for things such as sliders
+          # and resize handles.
+          # you could have the concept of de-noising, but
+          # actually it seems nicer to have a "springy"
+          # reaction to a slider with some noise.
+          # Users don't seem to click on a slider for any other
+          # reason than to move it (as opposed to selecting them
+          # or picking a position for a cursor), so it's OK.
+          @nonFloatDraggedMorph = @morphToGrab          
+          @nonFloatDragPositionWithinMorphAtStart =
+            # if we ever will need to compensate for the grab/drag
+            # treshold here, just add .subtract displacementDueToGrabDragThreshold
+            (pos.subtract @nonFloatDraggedMorph.position())
 
 
         # if the mouse has left its fullBounds, center it

@@ -867,6 +867,9 @@ class AutomatorRecorderAndPlayer
     if window["#{@currentlyPlayingTestName}"]?
       @testDuration = window["#{@currentlyPlayingTestName}"].testDuration
 
+    if window["#{@currentlyPlayingTestName}"].grabDragThreshold?
+      WorldMorph.preferencesAndSettings.grabDragThreshold = window["#{@currentlyPlayingTestName}"].grabDragThreshold
+
     @millisOfTestSoFar = 0
     @ongoingTestPlayingTask = (=> @replayTestCommands())
     @worldMorph.otherTasksToBeRunOnStep.push @ongoingTestPlayingTask
@@ -915,6 +918,7 @@ class AutomatorRecorderAndPlayer
     testToBeSerialized.testDuration = @testDuration
     testToBeSerialized.supportsTurboPlayback = true
     testToBeSerialized.skipInbetweenMouseMoves = true
+    testToBeSerialized.grabDragThreshold = WorldMorph.preferencesAndSettings.grabDragThreshold
 
     """
   // This Automator file is automatically

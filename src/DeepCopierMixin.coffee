@@ -58,6 +58,7 @@ DeepCopierMixin =
               if @[property].rebuildDerivedValue?
                 cloneOfMe[property] = null
               else
+                if !@[property].deepCopy? then debugger
                 cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
             else
               if property != "instanceNumericID"
@@ -68,6 +69,26 @@ DeepCopierMixin =
 
         # see comment in the method
         cloneOfMe.rebuildDerivedValues @
+
+        # if we deep-copied a morph, check whether the original
+        # was in data structures related to the broken rects
+        # mechanism, and if so, add the copy there too.
+        # (since we deep-copy all kinds of data structures,
+        # not just morphs, check if we have the relevant alignment
+        # method to invoke).
+        if @alignCopiedMorphToBrokenInfoDataStructures?
+          @alignCopiedMorphToBrokenInfoDataStructures cloneOfMe
+
+        # if we deep-copied a morph, check whether the original
+        # was in data structures related to stepping
+        # mechanism, and if so, add the copy there too.
+        # (since we deep-copy all kinds of data structures,
+        # not just morphs, check if we have the relevant alignment
+        # method to invoke).
+        if @alignCopiedMorphToSteppingStructures?
+          @alignCopiedMorphToSteppingStructures cloneOfMe
+
+
 
         return cloneOfMe
 
@@ -101,6 +122,9 @@ DeepCopierMixin =
           # note that this case ALSO handles arrays
           # since they test positive as typeof "object"
           theClone = Object.create(@constructor::)
+          # add to the instances tracking
+          if @constructor.klass?
+            @constructor.klass.instances.push theClone
           if addClassNameFieldIfObjectNotArray
             theClone.className = @constructor.name
           #console.log "theClone class:" + theClone.constructor.name
