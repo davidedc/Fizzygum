@@ -2359,6 +2359,8 @@ class Morph extends MorphicNode
     menu.addItem "analog clock", true, @, "analogClock"
     menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addItem "fridge magnets", true, menusHelper, "createFridgeMagnets"
+    menu.addItem "simple button", true, menusHelper, "createSimpleButton"
+    menu.addItem "switch button", true, menusHelper, "createSwitchButtonMorph"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
