@@ -37,9 +37,6 @@ class PenMorph extends Morph
     #
 
 
-  @staticVariable: 1
-  @staticFunction: -> 3.14
-
   imBeingAddedTo: (newParentMorph) ->
     if !(newParentMorph instanceof HandMorph or newParentMorph instanceof CanvasMorph)
       @inform "a pen will only\nwork on a canvas..."
