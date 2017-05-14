@@ -43,7 +43,11 @@ class MorphicNode
   
   # MorphicNode string representation: e.g. 'a MorphicNode[3]'
   toString: ->
-    "a MorphicNode" + "[" + @children.length + "]"
+    if @children?
+      childrenLength = @children.length
+    else
+      childrenLength = "-"
+    "a MorphicNode" + "[" + childrenLength + "]"
 
   # currently unused in ZK
   childrenTopToBottom: ->
