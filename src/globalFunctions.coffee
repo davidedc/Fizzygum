@@ -340,7 +340,10 @@ howManySourcesCompiledAndEvalled = 0
 
 aSourceHasBeenLoaded = ->
   howManySourcesLoaded++
-  if howManySourcesLoaded == sourcesManifests.length
+  # the -1 here is due to the fact that we load
+  # "klass" separately in advance, so there is no
+  # need to wait for it here.
+  if howManySourcesLoaded == sourcesManifests.length - 1
     loadingLogDiv = document.getElementById 'loadingLog'
     loadingLogDiv.innerHTML = ""
     continueBooting()
@@ -350,12 +353,14 @@ aSourceHasBeenLoaded = ->
 loadAllSources = ->
   for eachClass in sourcesManifests
 
+    if eachClass == "Klass_coffeSource" then continue
     script = document.createElement "script"
     script.src = "js/sourceCode/" + eachClass + ".js"
 
     script.onload = ->
       loadingLogDiv = document.getElementById 'loadingLog'
       loadingLogDiv.innerHTML += "loading " + this.src + "</br>"
+      console.log "loading " + this.src
       aSourceHasBeenLoaded()
 
     document.head.appendChild script
@@ -366,21 +371,35 @@ aTestScriptHasBeenLoaded = ->
     continueBooting2()
 
 loadTestManifests = ->
-    script = document.createElement "script"
-    script.src = "js/tests/testsManifest.js"
-    script.onload = =>
-      aTestScriptHasBeenLoaded()
-    document.head.appendChild script
+  script = document.createElement "script"
+  script.src = "js/tests/testsManifest.js"
+  script.onload = =>
+    aTestScriptHasBeenLoaded()
+  document.head.appendChild script
 
-    script2 = document.createElement "script"
-    script2.src = "js/tests/testsAssetsManifest.js"
-    script2.onload = =>
-      aTestScriptHasBeenLoaded()
-    document.head.appendChild script2
+  script2 = document.createElement "script"
+  script2.src = "js/tests/testsAssetsManifest.js"
+  script2.onload = =>
+    aTestScriptHasBeenLoaded()
+  document.head.appendChild script2
+
+loadKlass = ->
+
+  script = document.createElement "script"
+  script.src = "js/sourceCode/Klass_coffeSource.js"
+
+  script.onload = ->
+    # give life to the loaded and translated coffeescript klass now!
+    console.log "compiling and evalling Klass from souce code"
+    eval.call window, CoffeeScript.compile window["Klass_coffeSource"],{"bare":true}
+    loadAllSources()
+
+
+  document.head.appendChild script
 
 
 boot = ->
-  loadAllSources()
+  loadKlass()
 
 
 # The whole idea here is that
@@ -435,6 +454,7 @@ continueBooting = ->
   for eachClass in sourcesManifests
 
     eachClass = eachClass.replace "_coffeSource",""
+    if eachClass == "Klass" then continue
     #if namedClasses.hasOwnProperty eachClass
     console.log eachClass + " - "
     dependencies[eachClass] = []
@@ -480,9 +500,18 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
   eachClass = inclusion_order[srcNumber]
   console.log "checking whether " + eachClass + " is already in the system "
+
+  if eachClass == "MorphicNode" or
+   eachClass == "Morph" or
+   eachClass == "AnalogClockMorph" or
+   eachClass == "StringMorph2" or
+   eachClass == "TextMorph2"
+    morphKlass = new Klass(window[eachClass + "_coffeSource"])
+
+
   if !window[eachClass]?
     if eachClass + "_coffeSource" in sourcesManifests
-      console.log "loading " + eachClass + " from souce code"
+      console.log "compiling and evalling " + eachClass + " from souce code"
       loadingLogDiv = document.getElementById 'loadingLog'
       loadingLogDiv.innerHTML = "compiling and evalling " + eachClass
 
@@ -549,6 +578,21 @@ continueBooting2 = ->
     if SystemTestsControlPanelUpdater != null
       new SystemTestsControlPanelUpdater
   world.boot()
+
+
+# these two are to build klasses
+extend = (child, parent) ->
+  ctor = ->
+    @constructor = child
+    return
+
+  for own key of parent
+    child[key] = parent[key]
+  ctor.prototype = parent.prototype
+  child.prototype = new ctor()
+  child.__super__ = parent.prototype
+  return child
+
 
 
 

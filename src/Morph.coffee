@@ -412,6 +412,15 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+
+    # remove instance from the instances tracker
+    # in the class. To see this: just create an
+    # AnalogClockMorph, see that
+    # AnalogClockMorph.klass.instances[0] has one
+    # element. Then delete the clock, and see that the
+    # tracker is now an empty array.
+    @constructor.klass.instances.remove @
+
     @destroyed = true
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
@@ -1795,6 +1804,10 @@ class Morph extends MorphicNode
     aMorph.rawSetExtent @insetSpaceExtent(), @
 
 
+  sourceChanged: ->
+    @reLayout?() 
+    @changed?()
+
 
   # this is done before the updating of the
   # backing store in some morphs that
@@ -1979,6 +1992,22 @@ class Morph extends MorphicNode
 
     return clonedMorphs[0]
 
+  # Injecting code /////////////////////////////////////////
+
+  # if a function, the txt must contain the parameters and
+  # the arrow and the body
+  injectCode: (propertyName, txt) ->
+    try
+      # this.target[propertyName] = evaluate txt
+      @evaluateString "@" + propertyName + " = " + txt
+      # if we are saving a function, we'd like to
+      # keep the source code so we can edit Coffeescript
+      # again.
+      if isFunction @[propertyName]
+        @[propertyName + "_source"] = txt
+      @sourceChanged()
+    catch err
+      @inform err
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
