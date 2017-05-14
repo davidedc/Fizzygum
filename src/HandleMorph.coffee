@@ -224,7 +224,7 @@ class HandleMorph extends Morph
 
   # implement dummy methods in here
   # so the handle catches the clicks and
-  # prevents the parent to do anything.
+  # prevents the parent from doing anything.
   mouseClickLeft: ->
   mouseUpLeft: ->
   mouseDownLeft: ->

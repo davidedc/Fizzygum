@@ -38,11 +38,9 @@ class Morph extends MorphicNode
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
 
-  # some visual cues work best if they are always in
-  # the same aspect ratio. E.g. icons are much less
-  # recognisable when they come with different aspect
-  # ratios. So there is a way to keep the same aspect
-  # ratio when resizing
+  # unused - can't afford the time right now to change a
+  # script that hangs
+  # TODO
   aspectRatio: null
   
   # Just some tests here ////////////////////
@@ -201,8 +199,10 @@ class Morph extends MorphicNode
 
   getTextDescription: ->
     if @textDescription?
+      #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of morph)"
       return @textDescription + "" + @constructor.name + " (adhoc description of morph)"
     else
+      #console.log "got name: " + @constructor.name + " (class name)"
       return @constructor.name + " (class name)"
 
   identifyViaTextLabel: ->
@@ -380,13 +380,7 @@ class Morph extends MorphicNode
   #
   #		layoutSubmorphs()
   #		
-  #	method of InspectorMorph, or the
-  #	
-  #		startLayout()
-  #		endLayout()
-  #
-  #	methods of SyntaxElementMorph in the Snap application.
-  #
+  #	method of InspectorMorph
   
   
   # Morph string representation: e.g. 'a Morph#2 [20@45 | 130@250]'
@@ -1711,6 +1705,19 @@ class Morph extends MorphicNode
   
   # Morph accessing - structure //////////////////////////////////////////////
 
+  # EXPLANATION of "silent" vs. "raw" vs. "normal" hyerarchy/bounds change methods
+  # ------------------------------------------------------------------------------
+  # “normal”: these are the highest-level methods and take into account layouts.
+  #           Should use these ones as much as possible. Call the "raw"
+  #           versions below
+  # “raw”: lower level. This is what the re-layout routines use. Usually call the
+  #        silent version below.
+  # “silent”: doesn’t mark the morph as changed
+  #
+  # It's important that lower-level functions don't ever call the higher-level
+  # functions, as that's architecturally incorrect and can cause infinite loops in
+  # the invocations.
+
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
 
@@ -2751,9 +2758,9 @@ class Morph extends MorphicNode
     oImg
 
 
-  ######################################################################################
+  # ------------------------------------------------------------------------------------
   # Layouts
-  ######################################################################################
+  # ------------------------------------------------------------------------------------
   # So layouts in ZK work the following way:
   #  1) Any Morph can contain a number of other morphs
   #     according to a number of layouts *simultaneously*
@@ -3215,7 +3222,7 @@ class Morph extends MorphicNode
 
       world.add lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
     lmContent1 = new Morph()
@@ -3237,7 +3244,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder 
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
     lmContent1 = new Morph()
@@ -3259,7 +3266,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
     lmContent1 = new Morph()
@@ -3285,7 +3292,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
     lmContent1 = new Morph()
@@ -3313,7 +3320,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
 
@@ -3350,7 +3357,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
 
@@ -3387,7 +3394,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
 
@@ -3424,7 +3431,7 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
     lmHolder = new Morph()
 

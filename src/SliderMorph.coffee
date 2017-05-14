@@ -32,7 +32,7 @@ class SliderMorph extends CircleBoxMorph
     @color = (new Color 0, 0, 0)
     ) ->
     @button = new SliderButtonMorph()
-    super orientation # if null, then a vertical one will be created
+    super # if null, then a vertical one will be created
     @alpha = 0.1
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button

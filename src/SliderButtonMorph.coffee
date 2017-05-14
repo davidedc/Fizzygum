@@ -27,8 +27,8 @@ class SliderButtonMorph extends CircleBoxMorph
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
-  constructor: (orientation) ->
-    super orientation
+  constructor: ->
+    super
     @color = @normalColor.copy()
     @noticesTransparentClick = true
     @alpha = 0.4

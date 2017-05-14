@@ -634,6 +634,11 @@ class WorldMorph extends FrameMorph
       # now that you have a Morph with a broken layout
       # go up the chain of broken layouts as much as
       # possible
+      # QUESTION: would it be safer instead to start from the
+      # very top invalid morph, i.e. on the way to the top,
+      # stop at the last morph with an invalid layout
+      # instead of stopping at the first morph with a
+      # valid layout...
       while tryThisMorph.parent?
         if tryThisMorph.parent.layoutIsValid
           break
@@ -1606,9 +1611,6 @@ class WorldMorph extends FrameMorph
     menu.addItem "handle", true, @, "createNewHandle"
     menu.addLine()
     menu.addItem "string", true, @, "createNewString"
-    # this is "The Lorelei" poem (From German).
-    # see translation here:
-    # http://poemsintranslation.blogspot.co.uk/2009/11/heinrich-heine-lorelei-from-german.html
     menu.addItem "text", true, @, "createNewText"
     menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
     menu.addLine()

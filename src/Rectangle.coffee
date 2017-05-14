@@ -43,8 +43,8 @@ class Rectangle
 
   @augmentWith DeepCopierMixin
 
-  origin: null
-  corner: null
+  origin: null # a Point
+  corner: null # a Point
   @EMPTY: new Rectangle()
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->

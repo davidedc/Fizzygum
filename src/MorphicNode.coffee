@@ -544,3 +544,4 @@ class MorphicNode
     @children.forEach (child) ->
       collected = collected.concat(child.collectAllChildrenBottomToTopSuchThat(predicate))
     return collected
+

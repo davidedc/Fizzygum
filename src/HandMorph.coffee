@@ -126,13 +126,13 @@ class HandMorph extends Morph
   
   # HandMorph floatDragging and dropping:
   #
-  #	floatDrag 'n' drop events, method(arg) -> receiver:
+  # floatDrag 'n' drop events, method(arg) -> receiver:
   #
-  #		prepareToBeGrabbed(handMorph) -> grabTarget
-  #		reactToGrabOf(grabbedMorph) -> oldParent
-  #		wantsDropOf(morphToDrop) ->  newParent
-  #		justDropped(handMorph) -> droppedMorph
-  #		reactToDropOf(droppedMorph, handMorph) -> newParent
+  #   prepareToBeGrabbed(handMorph) -> grabTarget
+  #   reactToGrabOf(grabbedMorph) -> oldParent
+  #   wantsDropOf(morphToDrop) ->  newParent
+  #   justDropped(handMorph) -> droppedMorph
+  #   reactToDropOf(droppedMorph, handMorph) -> newParent
   #
   dropTargetFor: (aMorph) ->
     target = @topMorphUnderPointer()
@@ -220,17 +220,17 @@ class HandMorph extends Morph
   #
   #    mouse events:
   #
-  #		mouseDownLeft
-  #		mouseDownRight
-  #		mouseClickLeft
-  #		mouseClickRight
+  #   mouseDownLeft
+  #   mouseDownRight
+  #   mouseClickLeft
+  #   mouseClickRight
   #   mouseDoubleClick
-  #		mouseEnter
-  #		mouseLeave
-  #		mouseEnterfloatDragging
-  #		mouseLeavefloatDragging
-  #		mouseMove
-  #		mouseScroll
+  #   mouseEnter
+  #   mouseLeave
+  #   mouseEnterfloatDragging
+  #   mouseLeavefloatDragging
+  #   mouseMove
+  #   mouseScroll
   #
   # Note that some handlers don't want the event but the
   # interesting parameters of the event. This is because
@@ -603,7 +603,7 @@ class HandMorph extends Morph
   
   
   #
-  #	drop event:
+  # drop event:
   #
   #        droppedImage
   #        droppedSVG
@@ -728,10 +728,10 @@ class HandMorph extends Morph
   # HandMorph tools
   destroyTemporaries: ->
     #
-    #	temporaries are just an array of morphs which will be deleted upon
-    #	the next mouse click, or whenever another temporary Morph decides
-    #	that it needs to remove them. The primary purpose of temporaries is
-    #	to display tools tips of speech bubble help.
+    # temporaries are just an array of morphs which will be deleted upon
+    # the next mouse click, or whenever another temporary Morph decides
+    # that it needs to remove them. The primary purpose of temporaries is
+    # to display tools tips of speech bubble help.
     #
     @temporaries.forEach (morph) =>
       unless morph.isClickable and morph.boundsContainPoint @position()
@@ -777,6 +777,7 @@ class HandMorph extends Morph
     mouseOverNew = topMorph.allParentsTopToBottom()
 
     @determineGrabs pos, topMorph, mouseOverNew
+
     @dispatchEventsFollowingMouseMove mouseOverNew
 
   determineGrabs: (pos, topMorph, mouseOverNew) ->
@@ -838,19 +839,19 @@ class HandMorph extends Morph
         @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
     
     #
-    #	original, more cautious code for grabbing Morphs,
-    #	retained in case of needing to fall back:
+    # original, more cautious code for grabbing Morphs,
+    # retained in case of needing to fall back:
     #
-    #		if (morph === this.morphToGrab) {
-    #			if (morph.isfloatDraggable) {
-    #				this.grab(morph);
-    #			} else if (morph.isTemplate) {
-    #				morph = morph.fullCopy();
-    #				morph.isTemplate = false;
-    #				morph.isfloatDraggable = true;
-    #				this.grab(morph);
-    #			}
-    #		}
+    #   if (morph === this.morphToGrab) {
+    #     if (morph.isfloatDraggable) {
+    #       this.grab(morph);
+    #     } else if (morph.isTemplate) {
+    #       morph = morph.fullCopy();
+    #       morph.isTemplate = false;
+    #       morph.isfloatDraggable = true;
+    #       this.grab(morph);
+    #     }
+    #   }
     #
 
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->

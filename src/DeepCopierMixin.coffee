@@ -11,6 +11,15 @@ DeepCopierMixin =
   # instance properties to follow:
   onceAddedClassProperties: ->
     @addInstanceProperties
+
+      # Note 1: we deep-copy all kinds of data structures, not just morphs
+      # Note 2: the entire copying mechanism
+      # should also take care of inserting the copied
+      # morph in whatever other data structures where the
+      # original morph was.
+      # For example, if the Morph appeared in a data
+      # structure related to the broken rectangles mechanism,
+      # we should place the copied morph there.
       deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
         haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf @
         if haveIBeenCopiedAlready >= 0

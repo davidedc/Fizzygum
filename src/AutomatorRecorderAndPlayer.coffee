@@ -846,6 +846,7 @@ class AutomatorRecorderAndPlayer
 
   startTestPlaying: ->
 
+
     # seems that if focus is on canvas
     # then updates to DOM get coalesced so
     # much that the highlights/flashed

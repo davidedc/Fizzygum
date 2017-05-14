@@ -22,8 +22,8 @@ class CanvasMorph extends FrameMorph
   # There is really little hope to cache this buffer
   # cross-morph, unless you key the buffer with the
   # order of all the primitives and their
-  # parameters. So just keep a dedicated one
-  # for each canvas, simple.
+  # parameters. So if user wants a cache it will have to specify
+  # a dedicated one in here. See textMorph for an example.
   createRefreshOrGetBackBuffer: ->
 
     extent = @extent()
@@ -39,5 +39,6 @@ class CanvasMorph extends FrameMorph
 
     @backBufferContext.fillStyle = @color.toString()
     @backBufferContext.fillRect 0, 0, extent.x, extent.y
+
 
     return [@backBuffer, @backBufferContext]

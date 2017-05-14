@@ -20,7 +20,7 @@
 # for the very morph, not for the whole of the
 # hierarchy.)
 #
-# Ideal use of a cache is tex,t because painting text
+# Ideal use of a cache is text because painting text
 # can be a lengthy operation.
 # Worst possible use of a cache is the large
 # desktop background rectangle, where a lot of memory
