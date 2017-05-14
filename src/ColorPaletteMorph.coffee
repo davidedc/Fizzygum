@@ -61,9 +61,12 @@ class ColorPaletteMorph extends Morph
   rootForGrab: ->
     return null
   
-  mouseMove: (pos) ->
-    @choice = @getPixelColor pos
-    @updateTarget()
+  mouseMove: (pos, mouseButton) ->
+    # effectively takes care of drag as well
+
+    if mouseButton == "left"
+      @choice = @getPixelColor pos
+      @updateTarget()
   
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos

@@ -904,6 +904,13 @@ class HandMorph extends Morph
         old.mouseLeavefloatDragging?()  if @mouseButton
 
     mouseOverNew.forEach (newMorph) =>
+      
+      # send mouseMove only if mouse actually moved,
+      # otherwise it will fire also when the user
+      # simply clicks
+      if !@mouseDownPosition? or !@mouseDownPosition.eq @position()
+        newMorph.mouseMove?(@position(), @mouseButton)
+      
       unless newMorph in @mouseOverList
         newMorph.mouseEnter?()
         newMorph.mouseEnterfloatDragging?()  if @mouseButton
