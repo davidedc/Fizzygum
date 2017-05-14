@@ -1019,6 +1019,7 @@ class Morph extends MorphicNode
   # to place itself in the bottom-right
   # corner.
   parentHasReLayouted: ->
+    @notifyChildrenThatParentHasReLayouted()
 
   layoutInset: (morphStartingTheChange = null) ->
     if @insetMorph?
