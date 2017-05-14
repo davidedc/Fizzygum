@@ -2357,6 +2357,9 @@ class Morph extends MorphicNode
   underTheCarpetIconAndText: ->
     world.create new UnderTheCarpetOpenerMorph()
 
+  analogClock: ->
+    world.create new AnalogClockMorph()
+
   popUpIconsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "icons"
     menu.addItem "Destroy icon", true, @, "createDestroyIconMorph"
