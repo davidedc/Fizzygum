@@ -10,11 +10,13 @@ This script performs only some of the steps of the build:
 2) For each class file (not all of the coffee files are class files), it adds
    a special string that contains the source of the file itself.  This is so we
    can allow some editing of the classes in coffeescript, and do something like
-   generating the documentation on the fly.
-
-3) Combines the "extended" coffee files.  Note that 2) is a bit naive
+   generating the documentation on the fly. Note that this step is a bit naive
    because we just do some simple string checks. So, there could be strings in
    the source code that mangle this process. It's not likely though.
+
+3) Combines the files that DON'T contain classes. The classes will be loaded
+   dynamically by the environment, these other non-class files are loaded
+   at start instead.
 
 4) Generates an index html file that also includes all the tests, which
    are javascripts in a special directory
