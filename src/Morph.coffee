@@ -2385,63 +2385,82 @@ class Morph extends MorphicNode
       true,
       true,
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
-    if userMenu
-      menu.addItem "user features...", true, @, ->
-        userMenu.popUpAtHand @firstContainerMenu()
+
+    if window.location.href.contains "worldWithSystemTestHarness"
+      if userMenu
+        menu.addItem "user features...", true, @, ->
+          userMenu.popUpAtHand @firstContainerMenu()
+
+        menu.addLine()
+      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addLine()
+      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
+      menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
+
+      # A) normally, just take a picture of this morph
+      # and open it in a new tab.
+      # B) If a test is being recorded, then the behaviour
+      # is slightly different: a system test command is
+      # triggered to take a screenshot of this particular
+      # morph.
+      # C) If a test is being played, then the screenshot of
+      # the particular morph is put in a special place
+      # in the test player. The command recorded at B) is
+      # going to replay but *waiting* for that screenshot
+      # first.
+      takePic = =>
+        switch AutomatorRecorderAndPlayer.state
+          when AutomatorRecorderAndPlayer.RECORDING
+            # While recording a test, just trigger for
+            # the takeScreenshot command to be recorded. 
+            window.world.automatorRecorderAndPlayer.takeScreenshot @
+          when AutomatorRecorderAndPlayer.PLAYING
+            # While playing a test, this command puts the
+            # screenshot of this morph in a special
+            # variable of the system test runner.
+            # The test runner will wait for this variable
+            # to contain the morph screenshot before
+            # doing the comparison as per command recorded
+            # in the case above.
+            window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
+          else
+            # no system tests recording/playing ongoing,
+            # just open new tab with image of morph.
+            window.open @fullImageData()
+      menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
+
+      menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
       menu.addLine()
-    menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-
-    menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
-    menu.addLine()
-    menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
-    menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-    menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-    menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
-    menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
-
-    # A) normally, just take a picture of this morph
-    # and open it in a new tab.
-    # B) If a test is being recorded, then the behaviour
-    # is slightly different: a system test command is
-    # triggered to take a screenshot of this particular
-    # morph.
-    # C) If a test is being played, then the screenshot of
-    # the particular morph is put in a special place
-    # in the test player. The command recorded at B) is
-    # going to replay but *waiting* for that screenshot
-    # first.
-    takePic = =>
-      switch AutomatorRecorderAndPlayer.state
-        when AutomatorRecorderAndPlayer.RECORDING
-          # While recording a test, just trigger for
-          # the takeScreenshot command to be recorded. 
-          window.world.automatorRecorderAndPlayer.takeScreenshot @
-        when AutomatorRecorderAndPlayer.PLAYING
-          # While playing a test, this command puts the
-          # screenshot of this morph in a special
-          # variable of the system test runner.
-          # The test runner will wait for this variable
-          # to contain the morph screenshot before
-          # doing the comparison as per command recorded
-          # in the case above.
-          window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
-        else
-          # no system tests recording/playing ongoing,
-          # just open new tab with image of morph.
-          window.open @fullImageData()
-    menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
-
-    menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
-
-    menu.addLine()
-    if @isFloatDraggable()
-      menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      if @isFloatDraggable()
+        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      else
+        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addItem "hide", true, @, "hide"
+      menu.addItem "delete", true, @, "fullDestroy"
     else
-      menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
-    menu.addItem "hide", true, @, "hide"
-    menu.addItem "delete", true, @, "fullDestroy"
+      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addLine()
+      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addItem "inspect", true, @, "inspect2", "open a window\non all properties"
+      menu.addLine()
+      if @isFloatDraggable()
+        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      else
+        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addItem "hide", true, @, "hide"
+      menu.addItem "delete", true, @, "fullDestroy"
+
+
     menu
 
   developersMenu: ->

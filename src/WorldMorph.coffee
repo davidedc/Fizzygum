@@ -264,6 +264,20 @@ class WorldMorph extends FrameMorph
     @changed()
 
   boot: ->
+
+    if !window.location.href.contains "worldWithSystemTestHarness"
+      @contextMenu= ->
+        if @isDevMode
+          menu = new MenuMorph false, @, true, true, "Fizzygum"
+        else
+          menu = new MenuMorph false, @, true, true, "Morphic"
+        if @isDevMode
+          menu.addItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
+          menu.addItem "delete all", true, @, "fullDestroy"
+        menu
+      @setColor new Color 244,243,244
+
+
     # boot-up state machine
     console.log "booting"
     @underTheCarpetMorph = new UnderTheCarpetMorph()
@@ -1744,35 +1758,57 @@ class WorldMorph extends FrameMorph
 
 
   popUpDemoMenu: (a,b,c,d) ->
-    menu = new MenuMorph false, @, true, true, "make a morph"
-    menu.addItem "rectangle", true, @, "createNewRectangleMorph"
-    menu.addItem "box", true, @, "createNewBoxMorph"
-    menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
-    menu.addLine()
-    menu.addItem "slider", true, @, "createNewSliderMorph"
-    menu.addItem "frame", true, @, "createNewFrameMorph"
-    menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
-    menu.addItem "canvas", true, @, "createNewCanvas"
-    menu.addItem "handle", true, @, "createNewHandle"
-    menu.addLine()
-    menu.addItem "string", true, @, "createNewString"
-    menu.addItem "text", true, @, "createNewText"
-    menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
-    menu.addLine()
-    menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-    menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
-    menu.addItem "color picker", true, @, "createNewColorPickerMorph"
-    menu.addLine()
-    menu.addItem "sensor demo", true, @, "createNewSensorDemo"
-    menu.addItem "animation demo", true, @, "createNewAnimationDemo"
-    menu.addItem "pen", true, @, "createNewPenMorph"
-      
-    menu.addLine()
-    menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
-    menu.addLine()
-    menu.addItem "under the carpet", true, @, "underTheCarpet"
-    menu.addItem "closing window", true, @, "closingWindow"
-    
+    if window.location.href.contains "worldWithSystemTestHarness"
+      menu = new MenuMorph false, @, true, true, "make a morph"
+      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addItem "box", true, @, "createNewBoxMorph"
+      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addLine()
+      menu.addItem "slider", true, @, "createNewSliderMorph"
+      menu.addItem "frame", true, @, "createNewFrameMorph"
+      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addItem "canvas", true, @, "createNewCanvas"
+      menu.addItem "handle", true, @, "createNewHandle"
+      menu.addLine()
+      menu.addItem "string", true, @, "createNewString"
+      menu.addItem "text", true, @, "createNewText"
+      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addLine()
+      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addLine()
+      menu.addItem "sensor demo", true, @, "createNewSensorDemo"
+      menu.addItem "animation demo", true, @, "createNewAnimationDemo"
+      menu.addItem "pen", true, @, "createNewPenMorph"
+        
+      menu.addLine()
+      menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
+      menu.addLine()
+      menu.addItem "under the carpet", true, @, "underTheCarpet"
+      menu.addItem "closing window", true, @, "closingWindow"
+    else
+      menu = new MenuMorph false, @, true, true, "parts bin"
+      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addItem "box", true, @, "createNewBoxMorph"
+      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addItem "slider", true, @, "createNewSliderMorph"
+      menu.addItem "frame", true, @, "createNewFrameMorph"
+      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addItem "canvas", true, @, "createNewCanvas"
+      menu.addLine()
+      menu.addItem "string", true, @, "createNewStringMorph2WithoutBackground"
+      menu.addItem "text", true, @, "createNewTextMorph2WithBackground"
+      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addLine()
+      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addLine()
+      menu.addItem "analog clock", true, @, "analogClock"
+      menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+      menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+
     menu.popUpAtHand a.firstContainerMenu()
 
   layoutTestsMenu: (morphTriggeringThis) ->
