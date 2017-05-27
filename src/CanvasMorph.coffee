@@ -34,13 +34,31 @@ class CanvasMorph extends FrameMorph
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height
       if backBufferExtent.eq extent.scaleBy pixelRatio
         return [@backBuffer, @backBufferContext]
+      else
+
+        original_backBuffer = @backBuffer
+
+        # make a new canvas of the new size
+        @backBuffer = newCanvas extent.scaleBy pixelRatio
+        @backBufferContext = @backBuffer.getContext "2d"
+
+        # paint the background over it all so there are
+        # no holes in the new area (if the canvas is being
+        # enlarged).
+        if @color?
+          @backBufferContext.fillStyle = @color.toString()
+          @backBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
+
+        # copy back the original canvas in the new one.
+        @backBufferContext.drawImage original_backBuffer, 0, 0
+        return [@backBuffer, @backBufferContext]
 
     @backBuffer = newCanvas extent.scaleBy pixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
-    @backBufferContext.scale pixelRatio, pixelRatio
 
-    @backBufferContext.fillStyle = @color.toString()
-    @backBufferContext.fillRect 0, 0, extent.x, extent.y
+    if @color?
+      @backBufferContext.fillStyle = @color.toString()
+      @backBufferContext.fillRect 0, 0, extent.x * pixelRatio, extent.y * pixelRatio
 
 
     return [@backBuffer, @backBufferContext]
