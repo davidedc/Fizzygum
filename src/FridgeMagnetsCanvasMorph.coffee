@@ -159,6 +159,6 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
     @changed()
 
-    if appendedFunction? then appendedFunction()
+    if appendedFunction? then appendedFunction.apply @
     return
 
