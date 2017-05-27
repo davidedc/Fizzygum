@@ -53,18 +53,6 @@ class SwitchButtonMorph extends Morph
 
   
 
-  # This method only paints this very morph's "image",
-  # it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which
-  # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-
-    if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-      return null
-
-
   mouseClickLeft: ->
     debugger
 
