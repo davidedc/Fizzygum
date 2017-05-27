@@ -29,6 +29,8 @@ class CanvasMorph extends FrameMorph
     extent = @extent()
 
     if @backBuffer?
+      # @backBuffer.width and @backBuffer.height are already in
+      # physical coordinates so no need to adjust for pixelratio
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height
       if backBufferExtent.eq extent.scaleBy pixelRatio
         return [@backBuffer, @backBufferContext]
@@ -43,13 +45,19 @@ class CanvasMorph extends FrameMorph
 
     return [@backBuffer, @backBufferContext]
 
+
   clear: (color = @color.toString()) ->
     if !@backBuffer? then @createRefreshOrGetBackBuffer()
+    # @backBuffer.width and @backBuffer.height are already in
+    # physical coordinates so no need to adjust for pixelratio
     backBufferExtent = new Point @backBuffer.width, @backBuffer.height
     
     # just in case we get a dirty transformation matrix:
     # set it to the identity.
     @backBufferContext.setTransform(1, 0, 0, 1, 0, 0)
+    # no need to scale here because we get the physical pixels
+    # in backBufferExtent 
+    #@backBufferContext.scale pixelRatio, pixelRatio
     
     @backBufferContext.fillStyle = color
     @backBufferContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
