@@ -101,6 +101,13 @@ Array::remove = (args...) ->
   output = output[0] if args.length is 1
   output
 
+# deduplicates array entries
+# doesn NOT modify array in place
+Array::unique = ->
+  output = {}
+  output[@[key]] = @[key] for key in [0...@length]
+  value for key, value of output
+
 # from https://gist.github.com/vjt/827679
 if typeof String::camelize == 'undefined'
   String::camelize = ->
