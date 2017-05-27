@@ -167,6 +167,8 @@ class WorldMorph extends FrameMorph
 
   underTheCarpetMorph: null
 
+  events: []
+
   # Some operations are triggered by a callback
   # actioned via a timeout
   # e.g. see the cut and paste callbacks.
@@ -757,9 +759,91 @@ class WorldMorph extends FrameMorph
         @morphsBeingHighlighted.push eachMorphNeedingHighlight
 
 
+  playQueuedEvents: ->
+    for i in [0...@events.length] by 2
+      eventType = @events[i]
+      event = @events[i+1]
+
+      switch eventType
+
+        when "inputDOMElementForVirtualKeyboardKeydownEventListener"
+          @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
+
+          if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+            @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+
+        when "inputDOMElementForVirtualKeyboardKeyupEventListener"
+          # dispatch to keyboard receiver
+          if @keyboardEventsReceiver
+            # so far the caret is the only keyboard
+            # event handler and it has no keyup
+            # handler
+            if @keyboardEventsReceiver.processKeyUp
+              @keyboardEventsReceiver.processKeyUp event  
+
+        when "inputDOMElementForVirtualKeyboardKeypressEventListener"
+          @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+
+        when "mousedownEventListener"
+          @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchstartEventListener"
+          @hand.processTouchStart event
+
+        when "mouseupEventListener"
+          @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchendEventListener"
+          @hand.processTouchEnd event
+
+        when "mousemoveEventListener"
+          posInDocument = getDocumentPositionOf @worldCanvas
+          # events from JS arrive in page coordinates,
+          # we turn those into world coordinates
+          # instead.
+          worldX = event.pageX - posInDocument.x
+          worldY = event.pageY - posInDocument.y
+          @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchmoveEventListener"
+          @hand.processTouchMove event
+
+        when "keydownEventListener"
+          @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "keyupEventListener"
+          @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "keypressEventListener"
+          @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "mousewheelEventListener"
+          @hand.processMouseScroll event
+
+        when "DOMMouseScrollEventListener"
+          @hand.processMouseScroll event
+
+        when "cutEventListener"
+          @processCut event
+
+        when "copyEventListener"
+          @processCopy event
+
+        when "pasteEventListener"
+          @processPaste event
+
+        when "dropEventListener"
+          @hand.processDrop event
+
+
+    @events = []
+
+
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+
+    @playQueuedEvents()
 
     # most notably replays test actions at the right time
     @runOtherTasksStepFunction()
@@ -867,9 +951,8 @@ class WorldMorph extends FrameMorph
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownEventListener = (event) =>
-
-      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
-
+      @events.push "inputDOMElementForVirtualKeyboardKeydownEventListener"
+      @events.push event
       # Default in several browsers
       # is for the backspace button to trigger
       # the "back button", so we prevent that
@@ -880,27 +963,22 @@ class WorldMorph extends FrameMorph
       # suppress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeyupEventListener = (event) =>
-      # dispatch to keyboard receiver
-      if @keyboardEventsReceiver
-        # so far the caret is the only keyboard
-        # event handler and it has no keyup
-        # handler
-        if @keyboardEventsReceiver.processKeyUp
-          @keyboardEventsReceiver.processKeyUp event  
+      @events.push "inputDOMElementForVirtualKeyboardKeyupEventListener"
+      @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
       @inputDOMElementForVirtualKeyboardKeyupEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeypressEventListener = (event) =>
-      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+      @events.push "inputDOMElementForVirtualKeyboardKeypressEventListener"
+      @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
@@ -944,7 +1022,6 @@ class WorldMorph extends FrameMorph
     # event.preventDefault()
 
     @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
-
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1133,33 +1210,39 @@ class WorldMorph extends FrameMorph
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
-      @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mousedownEventListener"
+      @events.push event
+
     canvas.addEventListener "mousedown", @mousedownEventListener, false
 
     @touchstartEventListener = (event) =>
-      @hand.processTouchStart event
+      @events.push "touchstartEventListener"
+      @events.push event
+
     canvas.addEventListener "touchstart", @touchstartEventListener , false
     
     @mouseupEventListener = (event) =>
-      @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mouseupEventListener"
+      @events.push event
+
     canvas.addEventListener "mouseup", @mouseupEventListener, false
     
     @touchendEventListener = (event) =>
-      @hand.processTouchEnd event
+      @events.push "touchendEventListener"
+      @events.push event
+
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      posInDocument = getDocumentPositionOf @worldCanvas
-      # events from JS arrive in page coordinates,
-      # we turn those into world coordinates
-      # instead.
-      worldX = event.pageX - posInDocument.x
-      worldY = event.pageY - posInDocument.y
-      @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mousemoveEventListener"
+      @events.push event
+
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>
-      @hand.processTouchMove event
+      @events.push "touchmoveEventListener"
+      @events.push event
+
     canvas.addEventListener "touchmove", @touchmoveEventListener, false
     
     @gesturestartEventListener = (event) =>
@@ -1178,6 +1261,8 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "contextmenu", @contextmenuEventListener, false
     
     @keydownEventListener = (event) =>
+      @events.push "keydownEventListener"
+      @events.push event
 
       # this paragraph is to prevent the browser going
       # "back button" when the user presses delete backspace.
@@ -1200,11 +1285,12 @@ class WorldMorph extends FrameMorph
       if doPrevent
         event.preventDefault()
 
-      @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keydown", @keydownEventListener, false
 
     @keyupEventListener = (event) =>
-      @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+      @events.push "keyupEventListener"
+      @events.push event
+
     canvas.addEventListener "keyup", @keyupEventListener, false
 
     # This method also handles keypresses from a special
@@ -1225,20 +1311,26 @@ class WorldMorph extends FrameMorph
     doublePressOfZeroKeypadKey: null
     
     @keypressEventListener = (event) =>
-      @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+      @events.push "keypressEventListener"
+      @events.push event
+
     canvas.addEventListener "keypress", @keypressEventListener, false
 
     # Safari, Chrome
     
     @mousewheelEventListener = (event) =>
-      @hand.processMouseScroll event
+      @events.push "mousewheelEventListener"
+      @events.push event
       event.preventDefault()
+
     canvas.addEventListener "mousewheel", @mousewheelEventListener, false
     # Firefox
     
     @DOMMouseScrollEventListener = (event) =>
-      @hand.processMouseScroll event
+      @events.push "DOMMouseScrollEventListener"
+      @events.push event
       event.preventDefault()
+
     canvas.addEventListener "DOMMouseScroll", @DOMMouseScrollEventListener, false
 
     # in theory there should be no scroll event on the page
@@ -1259,15 +1351,21 @@ class WorldMorph extends FrameMorph
     # key combinations manually instead of from the copy/paste events.
 
     @cutEventListener = (event) =>
-      @processCut event
+      @events.push "cutEventListener"
+      @events.push event
+
     document.body.addEventListener "cut", @cutEventListener, false
     
     @copyEventListener = (event) =>
-      @processCopy event
+      @events.push "copyEventListener"
+      @events.push event
+
     document.body.addEventListener "copy", @copyEventListener, false
 
     @pasteEventListener = (event) =>
-      @processPaste event
+      @events.push "pasteEventListener"
+      @events.push event
+
     document.body.addEventListener "paste", @pasteEventListener, false
 
     #console.log "binding via mousetrap"
@@ -1322,11 +1420,16 @@ class WorldMorph extends FrameMorph
     window.addEventListener "dragover", @dragoverEventListener, false
     
     @dropEventListener = (event) =>
-      @hand.processDrop event
+      @events.push "dropEventListener"
+      @events.push event
       event.preventDefault()
     window.addEventListener "drop", @dropEventListener, false
     
     @resizeEventListener = =>
+      @events.push "resizeEventListener"
+      @events.push null
+      return
+
       @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
