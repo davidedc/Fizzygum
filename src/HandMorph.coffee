@@ -454,6 +454,7 @@ class HandMorph extends Morph
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
               world.automatorRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
 
+          # fire the click
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           #console.log ">>> sent event " + expectedClick + " to: " + morph
 
