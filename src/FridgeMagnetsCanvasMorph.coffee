@@ -152,8 +152,11 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     context.stroke();
     ###
 
-    @backBufferContext.fillStyle="green";
-    @backBufferContext.fillRect(-50,-50,100,100)
+    @backBufferContext.strokeStyle = "black"
+    @backBufferContext.beginPath()
+    @backBufferContext.rect -50,-50,100,100
+    @backBufferContext.stroke()
+
     @changed()
 
     if appendedFunction? then appendedFunction()
