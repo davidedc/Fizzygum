@@ -1785,14 +1785,6 @@ class WorldMorph extends FrameMorph
   #    child.isCollapsed()
   #      child.unminimise()
   
-  about: ->
-    @inform "Zombie Kernel\n\n" +
-      "a lively Web GUI\ninspired by Squeak\n" +
-      morphicVersion +
-      "\n\nby Davide Della Casa" +
-      "\n\nbased on morphic.js by" +
-      "\nJens Mönig (jens@moenig.org)"
-  
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable
     # then there is nothing to do
