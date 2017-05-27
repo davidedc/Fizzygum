@@ -28,6 +28,7 @@ if [ -d ../Zombie-Kernel-builds-private ]; then
       mv ../Zombie-Kernel-builds-private ../Zombie-Kernel-builds
       mv ../Zombie-Kernel-tests-private ../Zombie-Kernel-tests
       mv ../Zombie-Kernel-core-private ../Zombie-Kernel-core
+      cd ~/Zombie-Kernel/Zombie-Kernel-core
       exit
     fi
   fi
@@ -39,6 +40,7 @@ if [ -d ../Zombie-Kernel-builds ]; then
       mv ../Zombie-Kernel-builds ../Zombie-Kernel-builds-private
       mv ../Zombie-Kernel-tests ../Zombie-Kernel-tests-private
       mv ../Zombie-Kernel-core ../Zombie-Kernel-core-private
+      cd ~/Zombie-Kernel/Zombie-Kernel-core-private
       exit
     fi
   fi
