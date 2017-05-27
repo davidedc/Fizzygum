@@ -40,6 +40,7 @@ class TextMorph2 extends StringMorph2
       @fontName,
       @isBold,
       @isItalic,
+      false, # isHeaderLine
       false, # isNumeric
       @color,
       @backgroundColor,

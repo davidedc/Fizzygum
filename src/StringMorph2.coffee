@@ -41,6 +41,7 @@ class StringMorph2 extends Morph
   fontName: null
   isBold: null
   isItalic: null
+  isHeaderLine: null
   isEditable: false
   # if "isNumeric", it rejects all inputs
   # other than numbers and "-" and "."
@@ -110,6 +111,7 @@ class StringMorph2 extends Morph
       @fontName = @justArialFontStack,
       @isBold = false,
       @isItalic = false,
+      @isHeaderLine = false,
       @isNumeric = false,
       @color = (new Color 0, 0, 0),
       backgroundColor,
@@ -490,6 +492,20 @@ class StringMorph2 extends Morph
 
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
+
+    # header line
+    if @isHeaderLine
+      backBufferContext.strokeStyle = @color.toString()
+      backBufferContext.beginPath()
+      backBufferContext.moveTo 0, textVerticalPosition - height / 2
+      backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - height / 2
+      backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVerticalPosition - height / 2
+      backBufferContext.lineTo @width(), textVerticalPosition - height / 2
+      backBufferContext.stroke()
+
+
+
+
     @drawSelection backBufferContext
 
     cacheEntry = [backBuffer, backBufferContext]
@@ -715,6 +731,12 @@ class StringMorph2 extends Morph
     else
       menu.addItem "italic", true, @, "toggleItalic"
 
+    if @isHeaderLine
+      menu.addItem "no header line", true, @, "toggleHeaderLine"
+    else
+      menu.addItem "header line", true, @, "toggleHeaderLine"
+
+
     if @isPassword
       menu.addItem "show characters", true, @, "toggleIsPassword"
     else
@@ -781,6 +803,10 @@ class StringMorph2 extends Morph
   
   toggleItalic: ->
     @isItalic = not @isItalic
+    @changed()
+
+  toggleHeaderLine: ->
+    @isHeaderLine = not @isHeaderLine
     @changed()
   
   toggleIsPassword: ->
