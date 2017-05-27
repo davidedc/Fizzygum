@@ -882,7 +882,15 @@ class WorldMorph extends FrameMorph
 
   # Morph stepping:
   runChildrensStepFunction: ->
-    for eachSteppingMorph in @steppingMorphs
+
+    # make a shallow copy of the array before iterating over
+    # it in the case some morph destroyes itself and takes itself
+    # out of the array thus changing it in place and mangling the
+    # stepping.
+    # TODO all these array modifications should be immutable...
+    steppingMorphs = arrayShallowCopy @steppingMorphs
+
+    for eachSteppingMorph in steppingMorphs
       if eachSteppingMorph.isBeingFloatDragged()
         continue
       # for objects where @fps is defined, check which ones are due to be stepped
