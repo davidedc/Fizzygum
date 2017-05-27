@@ -27,10 +27,10 @@
 			window.onload = function () {
 				worldCanvas = document.getElementById('world');
 
-			    worldCanvas.width = Math.round(960 * pixelRatio);
-			    worldCanvas.height = Math.round(440 * pixelRatio);
-			    worldCanvas.style.width = "960px";
-			    worldCanvas.style.height = "440px";
+			    worldCanvas.width = 1;
+			    worldCanvas.height = 1;
+			    worldCanvas.style.width = "1px";
+			    worldCanvas.style.height = "1px";
 			    // "boot" here first loads the manifests for the
 			    // source code of the Morphs, and two manifests
 			    // for the tests.
@@ -53,7 +53,7 @@
 		second parameter = true, in which case the
 		world will fill the entire page-->
 
-		<div id="background" style="position: absolute; left: 0px; top: 0px; width: 960px; height: 720px; background-color: rgb(245, 245, 245);">
+		<div id="background" style="position: absolute; left: 0px; top: 0px; width: 1; height: 1;">
 		</div>
 
 		<canvas id="world" tabindex="1" style="position: absolute; left: 0px; top: 0px;">

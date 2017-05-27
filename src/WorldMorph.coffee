@@ -230,8 +230,10 @@ class WorldMorph extends FrameMorph
     @temporaryHandlesAndLayoutAdjusters = []
     @inputDOMElementForVirtualKeyboard = null
 
-    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and !window.location.href.contains "worldWithSystemTestHarness"
       @stretchWorldToFillEntirePage()
+    else
+      @sizeCanvasToTestScreenResolution()
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
@@ -902,6 +904,17 @@ class WorldMorph extends FrameMorph
       #console.log "running a task: " + task
       task()
 
+  sizeCanvasToTestScreenResolution: ->
+    @worldCanvas.width = Math.round(960 * pixelRatio)
+    @worldCanvas.height = Math.round(440 * pixelRatio)
+    @worldCanvas.style.width = "960px"
+    @worldCanvas.style.height = "440px"
+
+    bkground = document.getElementById("background")
+    bkground.style.width = "960px"
+    bkground.style.height = "720px"
+    bkground.style.backgroundColor = "gb(245, 245, 245)"
+
   stretchWorldToFillEntirePage: ->
     pos = getDocumentPositionOf @worldCanvas
     clientHeight = window.innerHeight
@@ -919,10 +932,12 @@ class WorldMorph extends FrameMorph
     # scrolled left b/c of viewport scaling
     clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft
     if @worldCanvas.width isnt clientWidth
-      @worldCanvas.width = clientWidth
+      @worldCanvas.width = (clientWidth * pixelRatio)
+      @worldCanvas.style.width = clientWidth + "px"
       @rawSetWidth clientWidth
     if @worldCanvas.height isnt clientHeight
-      @worldCanvas.height = clientHeight
+      @worldCanvas.height = (clientHeight * pixelRatio)
+      @worldCanvas.style.height = clientHeight + "px"
       @rawSetHeight clientHeight
     @children.forEach (child) =>
       child.reactToWorldResize? @boundingBox()
