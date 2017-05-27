@@ -20,7 +20,7 @@ class UpperRightTriangleAnnotation extends UpperRightTriangle
 
   constructor: (parent = null) ->
     super
-    @pencilIconMorph = new PencilIconMorph new Point(200,200),null
+    @pencilIconMorph = new PencilIconMorph new Color 0,0,0
 
     @pencilIconMorph.parentHasReLayouted = ->
       @updateResizerPosition()
@@ -33,7 +33,6 @@ class UpperRightTriangleAnnotation extends UpperRightTriangle
 
     @pencilIconMorph.silentUpdateResizerPosition = ->
       if @parent
-        debugger
         xDim = @parent.width()
         yDim = @parent.height()
         minDim = Math.min(xDim, yDim) / 2
@@ -69,10 +68,9 @@ class UpperRightTriangleAnnotation extends UpperRightTriangle
 
   silentUpdateResizerPosition: ->
     if @parent
-      debugger
       xDim = @parent.width()
       yDim = @parent.height()
-      minDim = Math.min(xDim, yDim) * 3/8
+      minDim = Math.min(xDim, yDim) * 4/8
 
       @silentRawSetExtent new Point minDim, minDim
       @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
