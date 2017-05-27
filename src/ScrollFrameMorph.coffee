@@ -197,13 +197,14 @@ class ScrollFrameMorph extends FrameMorph
     @add aMorph
   
   rawSetExtent: (aPoint) ->
-    #console.log "move 15"
-    @breakNumberOfRawMovesAndResizesCaches()
-    @contents.fullRawMoveTo @position()  if @isTextLineWrapping
-    super aPoint
-    @contents.rawSetExtent aPoint
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    unless aPoint.eq @extent()
+      #console.log "move 15"
+      @breakNumberOfRawMovesAndResizesCaches()
+      @contents.fullRawMoveTo @position()  if @isTextLineWrapping
+      super aPoint
+      @contents.rawSetExtent aPoint
+      @adjustContentsBounds()
+      @adjustScrollBars()
 
 
   reactToDropOf: ->

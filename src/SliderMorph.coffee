@@ -52,14 +52,15 @@ class SliderMorph extends CircleBoxMorph
       
     @changed()
 
-  rawSetExtent: (a) -> 
-    #console.log "move 17"
-    @breakNumberOfRawMovesAndResizesCaches()  
-    super a
-    # my backing store had just been updated
-    # in the call of super, now
-    # it's the time of the button
-    @button.reLayout()
+  rawSetExtent: (aPoint) -> 
+    unless aPoint.eq @extent()
+      #console.log "move 17"
+      @breakNumberOfRawMovesAndResizesCaches()  
+      super aPoint
+      # my backing store had just been updated
+      # in the call of super, now
+      # it's the time of the button
+      @button.reLayout()
     
 
   
