@@ -8,6 +8,10 @@ class AnalogClockMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
+  hoursHandAngle: 0
+  minutesHandAngle: 0
+  secondsHandAngle: 0
+
   constructor: ->
 
     @fps = 1
@@ -69,31 +73,29 @@ class AnalogClockMorph extends Morph
   step: ->
     @changed()
 
+  calculateHandsAngles: ->
+    now = new Date()
+    #sec = now.getSeconds()
+    sec = now.getSeconds() + now.getMilliseconds()/1000
+    min = now.getMinutes()
+    hr = now.getHours()
+    hr = if hr >= 12 then hr - 12 else hr
+    @hoursHandAngle = hr * Math.PI / 6 + Math.PI / 360 * min + Math.PI / 21600 * sec
+    @minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
+    @secondsHandAngle = sec * Math.PI / 30
+
   renderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
     context.lineCap = "round"
 
-    # give it a good shadow so that
-    # it's visible also when on light
-    # background. Do that by painting it
-    # twice, slightly translated, in
-    # darker color.
     context.save()
     context.globalAlpha = @alpha
-    context.strokeStyle = shadowColor.toString()
 
     height = @height()
     width = @width()
 
     squareDim = Math.min width/2, height/2
 
-    # p0 is the origin, the origin being in the bottom-left corner
-    p0 = @bottomLeft().subtract(@position())
-
-    # now the origin if on the left edge, in the top 2/3 of the morph
-    p0 = p0.subtract new Point 0, Math.ceil 2 * height/3
-    
-    now = new Date()
     context.translate width/2, height/2
     context.scale 0.9, 0.9
 
@@ -128,48 +130,16 @@ class AnalogClockMorph extends Morph
       context.rotate Math.PI / 30
       i++
     context.restore()
-    sec = now.getSeconds()
-    min = now.getMinutes()
-    hr = now.getHours()
-    hr = if hr >= 12 then hr - 12 else hr
+
     context.fillStyle = 'black'
 
+    @calculateHandsAngles()
+
     # hour hand
-    context.save()
-    context.rotate hr * Math.PI / 6 + Math.PI / 360 * min + Math.PI / 21600 * sec
-    context.lineWidth = 8
-    context.beginPath()
-    context.moveTo -squareDim/7, 0
-    context.lineTo squareDim/2, 0
-    context.stroke()
-    context.restore()
+    @drawHoursHand context, squareDim
+    @drawMinutesHand context, squareDim
+    @drawSecondsHand context, squareDim
 
-    # minute hand
-    context.save()
-    context.rotate Math.PI / 30 * min + Math.PI / 1800 * sec
-    context.lineWidth = 5
-    context.beginPath()
-    context.moveTo -squareDim/5, 0
-    context.lineTo squareDim/1.3, 0
-    context.stroke()
-    context.restore()
-
-    # seconds hand
-    context.save()
-    context.rotate sec * Math.PI / 30
-    context.strokeStyle = '#D40000'
-    context.fillStyle = '#D40000'
-    context.lineWidth = 6
-    context.beginPath()
-    context.moveTo -squareDim/5, 0
-    context.lineTo squareDim/1.3, 0
-    context.stroke()
-
-    context.beginPath()
-    context.arc(0, 0, 7, 0, Math.PI * 2, true)
-    context.fill()
-
-    context.restore()
 
     context.beginPath()
     context.lineWidth = 10
@@ -183,4 +153,41 @@ class AnalogClockMorph extends Morph
     context.strokeStyle = color.toString()
 
 
+  drawHoursHand: (context, squareDim) ->
+    context.save()
+    context.rotate @hoursHandAngle
+    context.lineWidth = 8
+    context.beginPath()
+    context.moveTo -squareDim/7, 0
+    context.lineTo squareDim/2, 0
+    context.stroke()
+    context.restore()
+
+
+  drawMinutesHand: (context, squareDim) ->
+    context.save()
+    context.rotate @minutesHandAngle
+    context.lineWidth = 5
+    context.beginPath()
+    context.moveTo -squareDim/5, 0
+    context.lineTo squareDim/1.3, 0
+    context.stroke()
+    context.restore()
+
+  drawSecondsHand: (context, squareDim) ->
+    context.save()
+    context.rotate @secondsHandAngle
+    context.strokeStyle = '#D40000'
+    context.fillStyle = '#D40000'
+    context.lineWidth = 6
+    context.beginPath()
+    context.moveTo -squareDim/5, 0
+    context.lineTo squareDim/1.3, 0
+    context.stroke()
+
+    # the dot in the middle of the face
+    context.beginPath()
+    context.arc(0, 0, 7, 0, Math.PI * 2, true)
+    context.fill()
+    context.restore()
 
