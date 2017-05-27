@@ -230,6 +230,9 @@ class HandleMorph extends Morph
   mouseUpLeft: ->
   mouseDownLeft: ->
   
+  # same here, the handle doesn't want to propagate
+  # anything, otherwise the handle on a button
+  # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
     return null  unless @target
     @target.bringToForegroud()

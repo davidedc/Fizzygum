@@ -23,6 +23,10 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
   positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
+  # with and height here are not the morph's,
+  # which would be in logical units and hence would need pixelRatio
+  # correction,
+  # but in actual physical units i.e. the actual bugffer size
   cloneOfMe = newCanvas new Point @width, @height
 
   ctx = cloneOfMe.getContext "2d"
@@ -259,6 +263,14 @@ fontHeight = (fontSize) ->
   minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
   Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
+# newCanvas takes physical size, i.e. actual buffer pixels
+# on retina displays that's twice the amount of logical pixels,
+# which are used for all other measures of morphs.
+# So if the dimensions come from a canvas size, then those are
+# already physical pixels.
+# If the dimensions come form other measurements of the morphs
+# then those are in logical coordinates and need to be
+# corrected with pixelRatio before being passed here.
 newCanvas = (extentPoint) ->
   extentPoint?.debugIfFloats()
   # answer a new empty instance of Canvas, don't display anywhere

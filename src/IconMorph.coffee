@@ -1,9 +1,9 @@
 # IconMorph //////////////////////////////////////////////////////
 
 # to try it:
-#   world.create(new IconMorph(new Point(200,200),null))
+#   world.create(new IconMorph(null))
 # or
-#   world.create(new IconMorph(new Point(200,200),"color = 'rgba(226, 0, 75, 1)'\ncontext.beginPath()\ncontext.moveTo 23, 103\ncontext.lineTo 93, 178\ncontext.strokeStyle = color\ncontext.stroke()"))
+#   world.create(new IconMorph("color = 'rgba(226, 0, 75, 1)'\ncontext.beginPath()\ncontext.moveTo 23, 103\ncontext.lineTo 93, 178\ncontext.strokeStyle = color\ncontext.stroke()"))
 
 class IconMorph extends Morph
   # this is so we can create objects from the object class name 

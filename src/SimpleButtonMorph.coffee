@@ -1,8 +1,8 @@
 # SimpleButtonMorph ////////////////////////////////////////////////////////
 
 # sends a message to a target object when pressed.
-# Although it usually contains text, it can contain any
-# morph
+# takes a rectangular shape, and can host
+# a morph to be used as "face"
 
 class SimpleButtonMorph extends Morph
   # this is so we can create objects from the object class name 

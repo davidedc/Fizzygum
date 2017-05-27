@@ -59,6 +59,7 @@ class MenuItemMorph extends TriggerMorph
     np = @position().add new Point 4, 0
     @label.silentFullRawMoveTo np
   
+
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement
     icon = new Morph()
