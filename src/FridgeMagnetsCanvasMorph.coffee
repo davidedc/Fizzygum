@@ -106,6 +106,90 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
         appendedFunctionsStartIndex++
       context.restore()
 
+  rotate: (a, b, c = 0, d = null) ->
+    arg_a = a
+    arg_b = b
+    arg_c = c
+    arg_d = d
+
+    appendedFunctionsStartIndex = undefined
+
+    if typeof arg_a isnt "number"
+      if isFunction arg_a then appendedFunctionsStartIndex = 0
+      arg_a = @pulse() * Math.PI
+      arg_b = arg_a
+      arg_c = 0
+    else if typeof arg_b isnt "number"
+      if isFunction arg_b then appendedFunctionsStartIndex = 1
+      arg_b = arg_a
+      arg_c = arg_a
+    else if typeof arg_c isnt "number"
+      if isFunction arg_c then appendedFunctionsStartIndex = 2
+      arg_c = 0
+    else if isFunction arg_d
+      appendedFunctionsStartIndex = 3
+
+    context = @backBufferContext
+    if appendedFunctionsStartIndex?
+      context.save()
+
+    context.rotate arg_a
+
+    if appendedFunctionsStartIndex?
+      while isFunction arguments[appendedFunctionsStartIndex]
+        result = arguments[appendedFunctionsStartIndex].apply @
+        # we find out that the function is actually
+        # a fake so we have to undo the push and leave
+        if result == null
+          context.restore()
+          return
+        appendedFunctionsStartIndex++
+      context.restore()
+
+  move: (a, b, c = 0, d = null) ->
+    arg_a = a
+    arg_b = b
+    arg_c = c
+    arg_d = d
+
+    appendedFunctionsStartIndex = undefined
+
+    if typeof arg_a isnt "number"
+      if isFunction arg_a then appendedFunctionsStartIndex = 0
+
+      d = new Date()
+      n = d.getTime()
+
+      arg_a = Math.sin(n/150) * 15
+      arg_b = Math.cos(n/150) * 15
+      arg_c = arg_a
+    else if typeof arg_b isnt "number"
+      if isFunction arg_b then appendedFunctionsStartIndex = 1
+      arg_b = arg_a
+      arg_c = arg_a
+    else if typeof arg_c isnt "number"
+      if isFunction arg_c then appendedFunctionsStartIndex = 2
+      arg_c = 0
+    else if isFunction arg_d
+      appendedFunctionsStartIndex = 3
+
+    context = @backBufferContext
+    if appendedFunctionsStartIndex?
+      context.save()
+
+    context.translate arg_a, arg_b
+
+    if appendedFunctionsStartIndex?
+      while isFunction arguments[appendedFunctionsStartIndex]
+        result = arguments[appendedFunctionsStartIndex].apply @
+        # we find out that the function is actually
+        # a fake so we have to undo the push and leave
+        if result == null
+          context.restore()
+          return
+        appendedFunctionsStartIndex++
+      context.restore()
+
   box: (a, b, c, d = null) ->
     # primitive-specific initialisations:
     primitiveProperties =
