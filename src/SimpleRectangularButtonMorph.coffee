@@ -1,10 +1,10 @@
-# SimpleButtonMorph ////////////////////////////////////////////////////////
+# SimpleRectangularButtonMorph ////////////////////////////////////////////////////////
 
 # sends a message to a target object when pressed.
 # takes a rectangular shape, and can host
 # a morph to be used as "face"
 
-class SimpleButtonMorph extends EmptyButtonMorph
+class SimpleRectangularButtonMorph extends EmptyButtonMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -30,5 +30,5 @@ class SimpleButtonMorph extends EmptyButtonMorph
 
     super
 
-    @appearance = new BoxyAppearance @
+    @appearance = new RectangularAppearance @
 
