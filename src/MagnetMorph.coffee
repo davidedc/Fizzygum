@@ -7,6 +7,7 @@ class MagnetMorph extends TriggerMorph
   namedClasses[@name] = @prototype
 
   putIntoWords: false
+  isTemplate: true
 
   rightCenter: ->
     new Point(@right(),@height()/2)

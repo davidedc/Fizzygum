@@ -788,6 +788,38 @@ class HandMorph extends Morph
 
     @dispatchEventsFollowingMouseMove mouseOverNew
 
+  checkDraggingTreshold: ->
+    # UNFORTUNATELY OLD tests didn't take the correction into account,
+    # pointers inevitably have some "noise", so to avoid that
+    # a simple clicking (which could be done for example for
+    # selection purposes or to pick a position for a cursor)
+    # turns into a drag, so we add
+    # a grab/drag distance threshold.
+    # Note that even if the mouse moves a bit, we are still
+    # picking up the correct morph that was under the mouse when
+    # the mouse down happened.
+    # Also we correct for the initial displacement
+    # due to the threshold, so really when user starts dragging
+    # it should pick up the EXACT point where the click happened,
+    # not a "later" point once the threshold is passed.
+
+    # so we have to bypass this mechanism for those.
+    displacementDueToGrabDragThreshold = null
+    skipGrabDragThreshold = false
+    
+    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+      currentlyPlayingTestName = world.automatorRecorderAndPlayer.currentlyPlayingTestName
+      if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
+        skipGrabDragThreshold = true
+
+    if !skipGrabDragThreshold
+      if @morphToGrab.parent != world or (!@morphToGrab.isEditable? or @morphToGrab.isEditable )
+        if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
+          return [true,null]
+      displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
+
+    return [false, displacementDueToGrabDragThreshold]
+
   determineGrabs: (pos, topMorph, mouseOverNew) ->
     if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
       morph = topMorph.rootForGrab()
@@ -795,40 +827,26 @@ class HandMorph extends Morph
 
       # if a morph is marked for grabbing, just grab it
       if @morphToGrab
-        if @morphToGrab.isFloatDraggable()
+        if @morphToGrab.isTemplate
+          [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
+          if skipDragging then return
 
-          # pointers inevitably have some "noise", so to avoid that
-          # a simple clicking (which could be done for example for
-          # selection purposes or to pick a position for a cursor)
-          # turns into a drag, so we add
-          # a grab/drag distance threshold.
-          # Note that even if the mouse moves a bit, we are still
-          # picking up the correct morph that was under the mouse when
-          # the mouse down happened.
-          # Also we correct for the initial displacement
-          # due to the threshold, so really when user starts dragging
-          # it should pick up the EXACT point where the click happened,
-          # not a "later" point once the threshold is passed.
+          morph = @morphToGrab.fullCopy()
+          morph.isTemplate = false
+          # this flag is not used anymore but not sure
+          # if anything should replace this.
+          # keeping it as a comment as a breadcrumb
+          # morph.isfloatDraggable = true
+          @grab morph, displacementDueToGrabDragThreshold
+          @grabOrigin = @morphToGrab.situation()
 
-          # UNFORTUNATELY OLD tests didn't take the correction into account,
-          # so we have to bypass this mechanism for those.
-          displacementDueToGrabDragThreshold = null
-          skipGrabDragThreshold = false
-          
-          if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
-            currentlyPlayingTestName = world.automatorRecorderAndPlayer.currentlyPlayingTestName
-            if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
-              skipGrabDragThreshold = true
-
-          if !skipGrabDragThreshold
-            if @morphToGrab.parent != world
-              if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
-                return
-            displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
-
+        else if @morphToGrab.isFloatDraggable()
+          [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
+          if skipDragging then return
 
           morph = @morphToGrab
           @grab morph, displacementDueToGrabDragThreshold
+
         else
           # non-float drags are for things such as sliders
           # and resize handles.
