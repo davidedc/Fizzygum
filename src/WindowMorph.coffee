@@ -6,18 +6,18 @@ class WindowMorph extends BoxMorph
   namedClasses[@name] = @prototype
 
   label: null
-  closeButton: null
+  topLeftButton: null
   labelContent: null
   resizer: null
   padding: null
 
-  constructor: (@labelContent) ->
+  constructor: (@labelContent, @topLeftButton) ->
     super()
     # override inherited properties:
     @silentRawSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
-      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
+      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3.5).round()
     @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
-    @color = new Color 138, 138, 138
+    @color = new Color 172, 172, 172
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
@@ -28,14 +28,18 @@ class WindowMorph extends BoxMorph
     @label.color = new Color 255, 255, 255
     @add @label
 
-    # close button
-    @closeButton = new CloseIconMorph @
-    @add @closeButton
+    # upper-left button, often a close button
+    # but it can be anything
+    if !@topLeftButton?
+      @topLeftButton = new CloseIconButtonMorph @
+    @add @topLeftButton
 
-    @layoutLabelAndCloseButton()
+    @resizer = new HandleMorph @
+
+    @layoutLabelAndTopLeftButton()
 
   
-  layoutLabelAndCloseButton: ->
+  layoutLabelAndTopLeftButton: ->
 
     closeIconSize = 16
 
@@ -59,16 +63,16 @@ class WindowMorph extends BoxMorph
     labelBottom = labelTop + @label.height() + 2
 
     # close button
-    if @closeButton.parent == @
-      @closeButton.fullRawMoveTo new Point @left() + @padding, @top() + @padding
-      @closeButton.rawSetHeight closeIconSize
-      @closeButton.rawSetWidth closeIconSize
+    if @topLeftButton.parent == @
+      @topLeftButton.fullRawMoveTo new Point @left() + @padding, @top() + @padding
+      @topLeftButton.rawSetHeight closeIconSize
+      @topLeftButton.rawSetWidth closeIconSize
 
 
     @changed()
 
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    @layoutLabelAndCloseButton()
+    @layoutLabelAndTopLeftButton()
 
 
