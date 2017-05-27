@@ -40,6 +40,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     @clear()
     context = @backBufferContext
     context.setTransform 1, 0, 0, 1, 0, 0
+    context.scale pixelRatio, pixelRatio
     context.translate @width()/2, @height()/2
 
     @graphicsCode()
