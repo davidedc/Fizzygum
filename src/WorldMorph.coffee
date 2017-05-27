@@ -44,6 +44,7 @@ class WorldMorph extends FrameMorph
   copyEventListener: null
   pasteEventListener: null
   clipboardTextIfTestRunning: null
+  errorConsole: null
 
   # the string for the last serialised morph
   # is kept in here, to make serialization
@@ -261,6 +262,7 @@ class WorldMorph extends FrameMorph
     @cacheForImmutableBackBuffers = new LRUCache 1000, 1000*60*60*24
     @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
 
+
     @changed()
 
   boot: ->
@@ -292,6 +294,12 @@ class WorldMorph extends FrameMorph
     if startupActions?
       @nextStartupAction()
 
+    if !window.location.href.contains "worldWithSystemTestHarness"
+      @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
+      @add @errorConsole
+      @errorConsole.fullRawMoveTo new Point 190,10
+      @errorConsole.rawSetExtent new Point 550,415
+      @errorConsole.hide()
   # some test urls:
 
   # this one contains two actions, two tests each, but only
@@ -918,7 +926,11 @@ class WorldMorph extends FrameMorph
           nxt.call eachSteppingMorph
         if !eachSteppingMorph.step?
           debugger
-        eachSteppingMorph.step()
+        try
+          eachSteppingMorph.step()
+        catch err
+          @errorConsole.popUpWithError err
+
 
   
   runOtherTasksStepFunction : ->
