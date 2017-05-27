@@ -8,6 +8,26 @@ class ClassInspectorMorph extends InspectorMorph2
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.klass.notifyInstancesOfSourceChange propertiesArray
 
+  buildAndConnectChildren: ->
+    super
+    @lastLabelInHierarchy.setText "this class"
+    @label.setText "class " + @target.constructor.name   
+
+  layoutOwnPropsOnlyToggle: (height) ->
+
+    @showMethodsToggle.fullRawMoveTo new Point @left()+@padding , height
+    @showMethodsToggle.rawSetExtent new Point (@width() - 4*@padding)/4,15
+
+    @showFieldsToggle.fullRawMoveTo new Point @showMethodsToggle.right() + @padding, height
+    @showFieldsToggle.rawSetExtent new Point (@width() - 4*@padding)/4,15
+
+    @showInheritedToggle.fullRawMoveTo new Point @showFieldsToggle.right() + @padding, height
+    @showInheritedToggle.rawSetExtent new Point 2*(@width() - 4*@padding)/4,15
+
+
+
+  buildAndConnectObjOwnPropsButton: ->
+
   # TODO: when inspecting objects, we added the functionality to
   # inject code in the objects themselves.
   # We'd have to do the same here, add a way to inject code in
