@@ -2125,6 +2125,21 @@ class Morph extends MorphicNode
     prompt.popUpAtHand @firstContainerMenu()
     prompt.tempPromptEntryField.text.edit()
 
+  textPrompt: (msg, target, callback, defaultContents, width, floorNum,
+    ceilingNum, isRounded) ->
+
+    prompt = new TextPromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    ceilingNum, isRounded)
+
+    prompt.setExtent new Point 600,400
+
+    world.add prompt
+    prompt.fullMoveTo world.hand.position().subtract new Point 50, 100
+    prompt.fullRawMoveWithin world
+
+    #prompt.popUpAtHand @firstContainerMenu()
+    #prompt.tempPromptEntryField.edit()
+
   reactToSliderAction1: (num, theMenu) ->
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
