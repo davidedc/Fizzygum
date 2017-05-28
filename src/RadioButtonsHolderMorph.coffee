@@ -7,6 +7,8 @@ class RadioButtonsHolderMorph extends Morph
   namedClasses[@name] = @prototype
 
   wantsButtonsToBehaveLikeRadioButtons: true
+  allowsRadioButtonsToBeAllDisabled: true
+  color: new Color 0,0,0,0.2
 
   constructor: ->
   	super()
