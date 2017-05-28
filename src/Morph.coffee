@@ -1902,7 +1902,7 @@ class Morph extends MorphicNode
 
   # if a function, the txt must contain the parameters and
   # the arrow and the body
-  injectCode: (propertyName, txt) ->
+  injectProperty: (propertyName, txt) ->
     try
       # this.target[propertyName] = evaluate txt
       @evaluateString "@" + propertyName + " = " + txt
@@ -1914,6 +1914,23 @@ class Morph extends MorphicNode
       @sourceChanged()
     catch err
       @inform err
+
+  injectProperties: (codeBlurb) ->
+
+    codeBlurb = codeBlurb.replace(/^[ \t]*$/gm,"\n")
+    codeBlurb = codeBlurb + "\n# end injected code"
+
+    # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
+    regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
+
+    while (m = regex.exec(codeBlurb)) != null
+      # This is necessary to avoid infinite loops with zero-width matches
+      if m.index == regex.lastIndex
+        regex.lastIndex++
+      # The result can be accessed through the `m`-variable.
+      #m.forEach (match, groupIndex) ->
+      #  console.log ''
+      @injectProperty m[1],m[2]
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
