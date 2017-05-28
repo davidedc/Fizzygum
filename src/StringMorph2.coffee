@@ -392,10 +392,11 @@ class StringMorph2 extends Morph
     @isPassword  + "-" +
     @isShowingBlanks  + "-" +
     @originallySetFontSize + "-" +
-    @buildCanvasFontProperty()  + "-" +
+    @buildCanvasFontProperty() + "-" +
+    @isHeaderLine + "-" +
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
-    @backgroundTransparency.toString()  + "-" +
+    (if @backgroundTransparency? then @backgroundTransparency.toString() else "transp") + "-" +
     hashCode(@text)  + "-" +
     hashCode(@textPossiblyCroppedToFit)  + "-" +
     @startMark  + "-" +
