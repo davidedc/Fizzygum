@@ -7,5 +7,9 @@ class OverlayCanvasMorph extends CanvasMorph
 
   underlyingCanvasMorph: null
 
+  constructor: ->
+  	super
+  	@color = null
+
   isFloatDraggable: ->
     false
