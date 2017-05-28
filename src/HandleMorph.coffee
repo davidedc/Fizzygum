@@ -228,7 +228,6 @@ class HandleMorph extends Morph
   # prevents the parent from doing anything.
   mouseClickLeft: ->
   mouseUpLeft: ->
-  mouseDownLeft: ->
   
   # same here, the handle doesn't want to propagate
   # anything, otherwise the handle on a button

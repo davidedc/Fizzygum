@@ -217,6 +217,7 @@ class TriggerMorph extends Morph
   mouseDownLeft: ->
     @state = @STATE_PRESSED
     @changed()
+    super
   
   mouseClickLeft: ->
     @bringToForegroud()

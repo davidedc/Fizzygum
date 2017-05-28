@@ -50,6 +50,7 @@ class MouseSensorMorph extends BoxMorph
   
   mouseDownLeft: ->
     @touch()
+    super
   
   mouseClickLeft: ->
     @unTouch()

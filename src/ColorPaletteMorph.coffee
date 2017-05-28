@@ -71,6 +71,7 @@ class ColorPaletteMorph extends Morph
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos
     @updateTarget()
+    super
   
   updateTarget: ->
     if @target instanceof Morph and @choice?

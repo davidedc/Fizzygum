@@ -352,6 +352,7 @@ class ScrollFrameMorph extends FrameMorph
       if scrollbarJustChanged
         @adjustContentsBounds()
         @adjustScrollBars()
+    super
   
   startAutoScrolling: ->
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
