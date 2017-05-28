@@ -68,6 +68,8 @@ BackBufferMixin =
           st = src.top() * pixelRatio
           al = area.left() * pixelRatio
           at = area.top() * pixelRatio
+          # @backBuffer.width and @backBuffer.height are already in
+          # physical coordinates so no need to adjust for pixelratio
           w = Math.min(src.width() * pixelRatio, @backBuffer.width - sl)
           h = Math.min(src.height() * pixelRatio, @backBuffer.height - st)
         return [area,sl,st,al,at,w,h]
