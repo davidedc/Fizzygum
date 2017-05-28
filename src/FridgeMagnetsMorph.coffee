@@ -1,6 +1,6 @@
 # FridgeMagnetsMorph //////////////////////////////////////////////////////
 
-class FridgeMagnetsMorph extends BoxMorph
+class FridgeMagnetsMorph extends WindowMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -10,33 +10,21 @@ class FridgeMagnetsMorph extends BoxMorph
   codeOutput: null
   magnetsBox: null
   visualOutput: null
-  resizer: null
 
-  constructor: (@target) ->
-    super()
-    # override inherited properties:
-    @silentRawSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
-      WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3).round()
-    @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
-    @color = new Color 60, 60, 60
-    @buildAndConnectChildren()
+  dragTheTilesHereHeader: null
+  tilesBinHeader: null
+  liveCodeLangOutputHeader: null
+  outputAnimationHeader: null
+
+
+  constructor: ->
+    super "Fizzytiles"
   
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    # remove all submorhs i.e. panes and buttons
-    # THE ONES THAT ARE STILL
-    # submorphs of the inspector. If they
-    # have been peeled away, they still live
-    #@fullDestroyChildren()
-
-    # label
-    @label = new TextMorph "Fridge magnets"
-    @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
-    @label.isBold = true
-    @label.color = new Color 255, 255, 255
-    @add @label
+    super
     
     # source code output pane
     @codeOutput = new ScrollFrameMorph()
@@ -65,9 +53,6 @@ class FridgeMagnetsMorph extends BoxMorph
     @visualOutput.disableDrops()
     @add @visualOutput
 
-    # resizer
-    @resizer = new HandleMorph @
-
 
     # sample magnets -------------------------------
     @scale = new MagnetMorph true, @
@@ -84,7 +69,36 @@ class FridgeMagnetsMorph extends BoxMorph
     @box.setLabel "box"
     @box.alignCenter()
     @magnetsBox.add @box
+
+    @move = new MagnetMorph true, @
+    @move.setLabel "move"
+    @move.alignCenter()
+    @magnetsBox.add @move
+
     # ----------------------------------------------
+
+    # headers --------------------------------------
+    @dragTheTilesHereHeader = new StringMorph2 "drag tiles here"
+    @dragTheTilesHereHeader.toggleHeaderLine()
+    @dragTheTilesHereHeader.alignCenter()
+    @add @dragTheTilesHereHeader
+
+    @tilesBinHeader = new StringMorph2 "tiles bin"
+    @tilesBinHeader.toggleHeaderLine()
+    @tilesBinHeader.alignCenter()
+    @add @tilesBinHeader
+
+    @liveCodeLangOutputHeader = new StringMorph2 "LiveCodeLang output"
+    @liveCodeLangOutputHeader.toggleHeaderLine()
+    @liveCodeLangOutputHeader.alignCenter()
+    @add @liveCodeLangOutputHeader
+
+    @outputAnimationHeader = new StringMorph2 "output animation"
+    @outputAnimationHeader.toggleHeaderLine()
+    @outputAnimationHeader.alignCenter()
+    @add @outputAnimationHeader
+    # -----------------------------------------------
+
 
     # update layout
     @layoutSubmorphs()
@@ -110,31 +124,10 @@ class FridgeMagnetsMorph extends BoxMorph
     labelTop = @top() + @padding
     labelRight = @right() - @padding
     labelWidth = labelRight - labelLeft
-    if @label.parent == @
-      @label.fullRawMoveTo new Point labelLeft, labelTop
-      @label.rawSetWidth labelWidth
-      if @label.height() > @height() - 50
-        @silentRawSetHeight @label.height() + 50
-        # TODO run the tests when commenting this out
-        # because this one point to the Morph implementation
-        # which is empty.
-        @reLayout()
-        
-        @changed()
-        @resizer.silentUpdateResizerHandlePosition()
     labelBottom = labelTop + @label.height() + 2
 
     classDiagrHeight = Math.floor(@height() / 2)
-    eachPaneWidth = Math.floor(@width() / 3) - @padding
-
-
-    ###
-    fridge: null
-    codeOutput: null
-    magnetsBox: null
-    visualOutput: null
-    resizer: null
-    ###
+    eachPaneWidth = Math.floor( (@width() - 4*@padding) / 3) 
 
 
     # fridge
@@ -144,23 +137,35 @@ class FridgeMagnetsMorph extends BoxMorph
     fridgeBottom = labelBottom + fridgeHeight + classDiagrHeight
     fridgeLeft = @fridge.left()
 
+    magnetsBoxLeft = labelLeft + eachPaneWidth + @padding
+    magnetsBoxWidth = eachPaneWidth
+    magnetsBoxHeight = b - labelBottom - (15 + 2*@padding)
+
     if @fridge.parent == @
-      @fridge.fullRawMoveTo new Point labelLeft, labelBottom
+      @fridge.fullRawMoveTo new Point magnetsBoxLeft, labelBottom + 15 + 2*@padding
       @fridge.rawSetExtent new Point eachPaneWidth, fridgeHeight
+
+    if @liveCodeLangOutputHeader.parent == @
+      @liveCodeLangOutputHeader.fullRawMoveTo new Point magnetsBoxLeft, @fridge.bottom() + @padding
+      @liveCodeLangOutputHeader.rawSetExtent new Point eachPaneWidth, 15
 
     # codeOutput
     if @codeOutput.parent == @
-      @codeOutput.fullRawMoveTo new Point labelLeft, labelBottom + classDiagrHeight
+      @codeOutput.fullRawMoveTo new Point magnetsBoxLeft, labelBottom + classDiagrHeight
       @codeOutput.rawSetExtent new Point fridgeWidth, fridgeHeight
 
+    if @dragTheTilesHereHeader.parent == @
+      @dragTheTilesHereHeader.fullRawMoveTo new Point magnetsBoxLeft, @label.bottom() + @padding
+      @dragTheTilesHereHeader.rawSetExtent new Point eachPaneWidth, 15
+
+    if @tilesBinHeader.parent == @
+      @tilesBinHeader.fullRawMoveTo new Point @left() + @padding, @label.bottom() + @padding
+      @tilesBinHeader.rawSetExtent new Point eachPaneWidth, 15
 
     # magnets box
-    magnetsBoxLeft = labelLeft + eachPaneWidth + @padding
-    magnetsBoxWidth = eachPaneWidth
-    magnetsBoxHeight = b - labelBottom
     detailRight = fridgeLeft + eachPaneWidth
     if @magnetsBox.parent == @
-      @magnetsBox.fullRawMoveTo new Point magnetsBoxLeft, labelBottom
+      @magnetsBox.fullRawMoveTo new Point labelLeft, labelBottom + 15 + 2*@padding
       @magnetsBox.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     # visual output
@@ -168,18 +173,27 @@ class FridgeMagnetsMorph extends BoxMorph
     visualOutputWidth = eachPaneWidth
     visualOutputRight = visualOutputLeft + visualOutputWidth
     if @visualOutput.parent == @
-      @visualOutput.fullRawMoveTo new Point visualOutputLeft, labelBottom
+      @visualOutput.fullRawMoveTo new Point visualOutputLeft, labelBottom + 15 + 2*@padding
       @visualOutput.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
+
+    if @outputAnimationHeader.parent == @
+      @outputAnimationHeader.fullRawMoveTo new Point visualOutputLeft, @label.bottom() + @padding
+      @outputAnimationHeader.rawSetExtent new Point eachPaneWidth, 15
+
 
     # sample magnets -------------------------------
     if @scale.parent == @magnetsBox
-      @scale.fullRawMoveTo new Point magnetsBoxLeft + 10, labelBottom + 10
+      @scale.fullRawMoveTo new Point @magnetsBox.left() + @padding, @magnetsBox.top() + @padding
 
     if @rotate.parent == @magnetsBox
-      @rotate.fullRawMoveTo new Point magnetsBoxLeft + 10, labelBottom + 50
+      @rotate.fullRawMoveTo new Point @magnetsBox.left() + @padding, @scale.bottom() + @padding
 
     if @box.parent == @magnetsBox
-      @box.fullRawMoveTo new Point magnetsBoxLeft + 10, labelBottom + 80
+      @box.fullRawMoveTo new Point @magnetsBox.left() + @padding, @rotate.bottom() + @padding
+
+    if @move.parent == @magnetsBox
+      @move.fullRawMoveTo new Point @magnetsBox.left() + @padding, @box.bottom() + @padding
+
     # ----------------------------------------------
 
 
