@@ -2184,6 +2184,7 @@ class Morph extends MorphicNode
   spawnInspector2: (inspectee) ->
     inspector = new InspectorMorph2 inspectee
     inspector.fullRawMoveTo world.hand.position()
+    inspector.setExtent new Point 560, 410
     inspector.fullRawMoveWithin world
     world.add inspector
     inspector.changed()
@@ -2267,7 +2268,7 @@ class Morph extends MorphicNode
       true
 
   createNewStringMorph2WithBackground: ->
-    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null, new Color(255, 255, 54), 0.5
+    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2315,8 +2316,8 @@ class Morph extends MorphicNode
   createCollapsedStateIconMorph: ->
     world.create new CollapsedStateIconMorph()
 
-  createCloseIconMorph: ->
-    world.create new CloseIconMorph()
+  createCloseIconButtonMorph: ->
+    world.create new CloseIconButtonMorph()
 
   createScratchAreaIconMorph: ->
     world.create new ScratchAreaIconMorph()
@@ -2379,7 +2380,7 @@ class Morph extends MorphicNode
     menu.addItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
     menu.addItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
     menu.addItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
-    menu.addItem "Close icon", true, @, "createCloseIconMorph"
+    menu.addItem "Close icon", true, @, "createCloseIconButtonMorph"
     menu.addItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
     menu.addItem "Flora icon", true, @, "createFloraIconMorph"
     menu.addItem "Scooter icon", true, @, "createScooterIconMorph"
@@ -2393,8 +2394,8 @@ class Morph extends MorphicNode
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addItem "analog clock", true, @, "analogClock"
     menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
-    menu.addItem "fridge magnets", true, menusHelper, "createFridgeMagnets"
-    menu.addItem "reconfigurable paint", true, menusHelper, "createReconfigurablePaint"
+    menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+    menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     

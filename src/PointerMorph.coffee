@@ -41,7 +41,7 @@ class PointerMorph extends BoxMorph
     lmContent2.fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
 
 
-    lmContent3 = new CloseIconMorph @
+    lmContent3 = new CloseIconButtonMorph @
 
     @add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

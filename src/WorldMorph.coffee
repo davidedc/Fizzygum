@@ -300,6 +300,48 @@ class WorldMorph extends FrameMorph
       @errorConsole.fullRawMoveTo new Point 190,10
       @errorConsole.rawSetExtent new Point 550,415
       @errorConsole.hide()
+
+      welcomeTitle = new StringMorph2 "Welcome to Fizzygum!",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      welcomeTitle.isEditable = true
+      @add welcomeTitle
+      welcomeTitle.togglefittingSpecWhenBoundsTooLarge()
+      welcomeTitle.fullRawMoveTo new Point 40, 15
+      welcomeTitle.rawSetExtent new Point 271, 35
+
+      version = new StringMorph2 "version 2017-05-26",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      version.isEditable = true
+      @add version
+      version.togglefittingSpecWhenBoundsTooLarge()
+      version.fullRawMoveTo new Point 41, 47
+      version.rawSetExtent new Point 134, 15
+
+      welcomeMessage = """
+      ...a small dynamic web desktop environment for experimenting with live programming, prototyping and mashups.
+
+      Right-click on the desktop to try more widgets!
+      """
+
+      welcomeBody = new TextMorph2 welcomeMessage,null,null,null,null,null,null,null
+      welcomeBody.isEditable = true
+      @add welcomeBody
+      welcomeBody.fullRawMoveTo new Point 37, 80
+      welcomeBody.rawSetExtent new Point 340, 175
+
+      reconfPaint = new ReconfigurablePaintMorph()
+      @add reconfPaint
+      reconfPaint.fullRawMoveTo new Point 35, 275
+      reconfPaint.setExtent new Point 460, 400
+
+      fmm = new FridgeMagnetsMorph()
+      @add fmm
+      fmm.fullRawMoveTo new Point 505, 275
+      fmm.setExtent new Point 570, 400
+
+      acm = new AnalogClockMorph()
+      @add acm
+      acm.fullRawMoveTo new Point 860, 40
+      acm.setExtent new Point 200, 200
+
   # some test urls:
 
   # this one contains two actions, two tests each, but only

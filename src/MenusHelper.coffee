@@ -13,16 +13,20 @@ class MenusHelper
   @augmentWith DeepCopierMixin
 
   createFridgeMagnets: ->
-    world.create new FridgeMagnetsMorph()
+    fmm = new FridgeMagnetsMorph()
+    world.create fmm
+    fmm.setExtent new Point 570, 400
 
   createReconfigurablePaint: ->
-    world.create new ReconfigurablePaintMorph()
+    reconfPaint = new ReconfigurablePaintMorph()
+    world.create reconfPaint
+    reconfPaint.setExtent new Point 460, 400
 
   createSimpleButton: ->
-    world.create new SimpleButtonMorph true, @, null, new IconMorph(new Point(200,200),null)
+    world.create new SimpleRectangularButtonMorph true, @, null, new IconMorph(null)
 
   createSwitchButtonMorph: ->
-    button1 = new SimpleButtonMorph true, @, null, new IconMorph(new Point(200,200),null)
-    button2 = new SimpleButtonMorph true, @, null, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button1 = new SimpleRectangularButtonMorph true, @, null, new IconMorph(null)
+    button2 = new SimpleRectangularButtonMorph true, @, null, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 
