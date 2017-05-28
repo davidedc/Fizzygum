@@ -450,9 +450,11 @@ class HandMorph extends Morph
             when "mouseClickLeft"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
               world.automatorRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+              morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
               world.automatorRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+              morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
