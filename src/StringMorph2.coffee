@@ -152,16 +152,22 @@ class StringMorph2 extends Morph
 
   alignLeft: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.LEFT
+    @
   alignCenter: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.CENTER
+    @
   alignRight: ->
     @setHorizontalAlignment AlignmentSpecHorizontal.RIGHT
+    @
   alignTop: ->
     @setVerticalAlignment AlignmentSpecVertical.TOP
+    @
   alignMiddle: ->
     @setVerticalAlignment AlignmentSpecVertical.MIDDLE
+    @
   alignBottom: ->
     @setVerticalAlignment AlignmentSpecVertical.BOTTOM
+    @
   
   toString: ->
     # e.g. 'a StringMorph2("Hello World")'
