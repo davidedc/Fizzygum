@@ -15,8 +15,8 @@ ControllerMixin =
   # none
 
   # instance properties to follow:
-  onceAddedClassProperties: ->
-    @addInstanceProperties
+  onceAddedClassProperties: (fromClass) ->
+    @addInstanceProperties fromClass,
       setTarget: ->
         choices = world.plausibleTargetAndDestinationMorphs @
         if choices.length > 0

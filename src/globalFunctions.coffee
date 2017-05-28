@@ -179,18 +179,22 @@ getParameterByName = (name) ->
 ## -------------------------------------------------------
 # adds klass properties
 # these are added to the constructor
-Object::augmentWith = (obj) ->
+Object::augmentWith = (obj, fromClass) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
-  obj.onceAddedClassProperties?.apply @
+  obj.onceAddedClassProperties?.apply @, [fromClass]
   this
 
 # adds instance properties
 # these are added to the prototype
-Object::addInstanceProperties= (obj) ->
+Object::addInstanceProperties = (fromClass, obj) ->
   for key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype
     @::[key] = value
+    if fromClass?
+      if isFunction value
+        @::[key + "_class_injected_in"] = fromClass
+        console.log "addingClassToMixin " + key + "_class_injected_in"
   obj.included?.apply @
   this
 ##--------------- end of mixins methods -------------------

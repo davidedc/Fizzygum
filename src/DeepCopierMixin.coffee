@@ -9,8 +9,8 @@ DeepCopierMixin =
   # none
 
   # instance properties to follow:
-  onceAddedClassProperties: ->
-    @addInstanceProperties
+  onceAddedClassProperties: (fromClass) ->
+    @addInstanceProperties fromClass,
 
       # Note 1: we deep-copy all kinds of data structures, not just morphs
       # Note 2: the entire copying mechanism

@@ -36,8 +36,8 @@ BackBufferMixin =
   # none
 
   # instance properties to follow:
-  onceAddedClassProperties: ->
-    @addInstanceProperties
+  onceAddedClassProperties: (fromClass) ->
+    @addInstanceProperties fromClass,
 
       # note that image contains only the CURRENT morph, not the composition of this
       # morph with all of the submorphs. I.e. for an inspector, this will only
