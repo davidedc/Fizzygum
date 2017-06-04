@@ -36,6 +36,7 @@ class PreferencesAndSettings
   isTouchDevice: null
   rasterizeSVGs: null
   isFlat: null
+  grabDragThreshold: 7
 
   printoutsReactiveValuesCode: true
 

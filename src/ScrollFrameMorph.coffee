@@ -51,13 +51,13 @@ class ScrollFrameMorph extends FrameMorph
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph null, null, null, null, "horizontal", @sliderColor
+    @hBar = new SliderMorph null, null, null, null, @sliderColor
     @hBar.rawSetHeight @scrollBarSize
 
     @hBar.target = @
     @addRaw @hBar
 
-    @vBar = new SliderMorph null, null, null, null, "vertical", @sliderColor
+    @vBar = new SliderMorph null, null, null, null, @sliderColor
     @vBar.rawSetWidth @scrollBarSize
     @vBar.target = @
     @addRaw @vBar
@@ -197,13 +197,14 @@ class ScrollFrameMorph extends FrameMorph
     @add aMorph
   
   rawSetExtent: (aPoint) ->
-    #console.log "move 15"
-    @breakNumberOfRawMovesAndResizesCaches()
-    @contents.fullRawMoveTo @position()  if @isTextLineWrapping
-    super aPoint
-    @contents.rawSetExtent aPoint
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    unless aPoint.eq @extent()
+      #console.log "move 15"
+      @breakNumberOfRawMovesAndResizesCaches()
+      @contents.fullRawMoveTo @position()  if @isTextLineWrapping
+      super aPoint
+      @contents.rawSetExtent aPoint
+      @adjustContentsBounds()
+      @adjustScrollBars()
 
 
   reactToDropOf: ->
@@ -311,6 +312,7 @@ class ScrollFrameMorph extends FrameMorph
     deltaX = 0
     deltaY = 0
     friction = 0.8
+    world.addSteppingMorph @
     @step = =>
       scrollbarJustChanged = false
       if world.hand.mouseButton and
@@ -331,9 +333,11 @@ class ScrollFrameMorph extends FrameMorph
       else
         unless @hasVelocity
           @step = noOperation
+          world.removeSteppingMorph @
         else
           if (Math.abs(deltaX) < 0.5) and (Math.abs(deltaY) < 0.5)
             @step = noOperation
+            world.removeSteppingMorph @
           else
             if @hBar.visibleBasedOnIsVisibleProperty() and
             !@hBar.isCollapsed()
@@ -348,12 +352,14 @@ class ScrollFrameMorph extends FrameMorph
       if scrollbarJustChanged
         @adjustContentsBounds()
         @adjustScrollBars()
+    super
   
   startAutoScrolling: ->
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     if @isOrphan() then return null
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
+    world.addSteppingMorph @
     @step = =>
       pos = hand.position()
       inner = @boundingBox().insetBy inset
@@ -363,6 +369,7 @@ class ScrollFrameMorph extends FrameMorph
           @autoScroll pos
       else
         @step = noOperation
+        world.removeSteppingMorph @
         @autoScrollTrigger = null
   
   autoScroll: (pos) ->

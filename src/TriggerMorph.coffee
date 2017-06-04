@@ -47,6 +47,9 @@ class TriggerMorph extends Morph
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
+  # overrides to superclass
+  color: new Color 255, 255, 255
+
   constructor: (
       @closesUnpinnedMenus = true,
       @target = null,
@@ -72,7 +75,7 @@ class TriggerMorph extends Morph
     super()
 
     #@color = new Color 255, 152, 152
-    @color = new Color 255, 255, 255
+    #@color = new Color 255, 255, 255
     if @labelString?
       @layoutSubmorphs()
   
@@ -183,6 +186,7 @@ class TriggerMorph extends Morph
       else # assume it's a String
         #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
         @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
+    return
 
   triggerDoubleClick: ->
     # same as trigger() but use doubleClickAction instead of action property
@@ -213,6 +217,7 @@ class TriggerMorph extends Morph
   mouseDownLeft: ->
     @state = @STATE_PRESSED
     @changed()
+    super
   
   mouseClickLeft: ->
     @bringToForegroud()

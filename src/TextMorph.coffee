@@ -233,11 +233,12 @@ class TextMorph extends StringMorph
     return cacheEntry
   
   rawSetExtent: (aPoint) ->
-    #console.log "move 18"
-    @breakNumberOfRawMovesAndResizesCaches()
-    @maxTextWidth = Math.max aPoint.x, 0
-    @reLayout()
-    @changed()
+    unless aPoint.eq @extent()
+      #console.log "move 18"
+      @breakNumberOfRawMovesAndResizesCaches()
+      @maxTextWidth = Math.max aPoint.x, 0
+      @reLayout()
+      @changed()
   
   # TextMorph measuring ////
 

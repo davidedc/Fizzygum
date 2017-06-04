@@ -27,14 +27,11 @@ class SliderButtonMorph extends CircleBoxMorph
   STATE_HIGHLIGHTED: 1
   STATE_PRESSED: 2
 
-  constructor: (orientation) ->
-    super orientation
+  constructor: ->
+    super
     @color = @normalColor.copy()
     @noticesTransparentClick = true
     @alpha = 0.4
-
-  autoOrientation: ->
-      noOperation
 
   # HandleMorph floatDragging and dropping:
   rootForGrab: ->
@@ -43,8 +40,8 @@ class SliderButtonMorph extends CircleBoxMorph
   reLayout: ->
     super()
     if @parent?
-      @orientation = @parent.orientation
-      if @orientation is "vertical"
+      orientation = @parent.autoOrientation()
+      if orientation is "vertical"
         bw = @parent.width() - 2
         bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
         @silentRawSetExtent new Point bw, bh
@@ -72,7 +69,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @visibleBasedOnIsVisibleProperty() and
     !@isCollapsed()
       oldButtonPosition = @position()
-      if @parent.orientation is "vertical"
+      if @parent.autoOrientation() is "vertical"
         newX = @left()
         newY = Math.max(
           Math.min(@offset.y,
@@ -103,6 +100,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @state = @STATE_PRESSED
     @color = @pressColor.copy()
     @changed()
+    super
   
   mouseClickLeft: ->
     @bringToForegroud()

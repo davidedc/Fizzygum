@@ -56,6 +56,7 @@ class HandleMorph extends Morph
     else
       @updateResizerHandlePosition()
       @moveInFrontOfSiblings()
+      super
 
   updateResizerHandlePosition: ->
     if @target
@@ -224,11 +225,13 @@ class HandleMorph extends Morph
 
   # implement dummy methods in here
   # so the handle catches the clicks and
-  # prevents the parent to do anything.
+  # prevents the parent from doing anything.
   mouseClickLeft: ->
   mouseUpLeft: ->
-  mouseDownLeft: ->
   
+  # same here, the handle doesn't want to propagate
+  # anything, otherwise the handle on a button
+  # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
     return null  unless @target
     @target.bringToForegroud()

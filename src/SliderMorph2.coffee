@@ -5,6 +5,11 @@
 # bugs where values are given within a smaller interval of
 # the range.
 
+# In previous versions the user could force an orientation, so
+# that one could have a vertical slider even if the slider is
+# more wide than tall. Simplified that code because it doesn't
+# look like a common need.
+
 # Sliders (and hence slider button morphs)
 # are also used in the ScrollMorphs .
 
@@ -34,11 +39,10 @@ class SliderMorph2 extends CircleBoxMorph
     @stop = 100,
     @value = 50,
     @size = 10,
-    orientation,
     @color = (new Color 0, 0, 0)
     ) ->
     @button = new SliderButtonMorph()
-    super orientation # if null, then a vertical one will be created
+    super  # if null, then a vertical one will be created
     @alpha = 0.1
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button
@@ -54,27 +58,16 @@ class SliderMorph2 extends CircleBoxMorph
       
     @changed()
 
-  rawSetExtent: (a) -> 
-    #console.log "move 17"
-    @breakNumberOfRawMovesAndResizesCaches()  
-    super a
-    # my backing store had just been updated
-    # in the call of super, now
-    # it's the time of the button
-    @button.reLayout()
+  rawSetExtent: (aPoint) -> 
+    unless aPoint.eq @extent()
+      #console.log "move 17"
+      @breakNumberOfRawMovesAndResizesCaches()  
+      super aPoint
+      # my backing store had just been updated
+      # in the call of super, now
+      # it's the time of the button
+      @button.reLayout()
     
-
-  toggleOrientation: ->
-    super()
-    # the background CircleBoxMorph has just been updated
-    # in the call of super, now
-    # it's the time of the button
-    @button.reLayout()
-    
-  
-  autoOrientation: ->
-      noOperation
-  
   rangeSize: ->
     @stop - @start + 1
   
@@ -87,13 +80,13 @@ class SliderMorph2 extends CircleBoxMorph
     # so skip in that case
     if !(@button? and @button instanceof SliderButtonMorph)
       return 1
-    if @orientation is "vertical"
+    if @autoOrientation() is "vertical"
       return (@height() - @button.height()) / @rangeSize()
     else
       return (@width() - @button.width()) / @rangeSize()
     
   updateValue: ->
-    if @orientation is "vertical"
+    if @autoOrientation() is "vertical"
       relPos = @button.top() - @top()
     else
       relPos = @button.left() - @left()

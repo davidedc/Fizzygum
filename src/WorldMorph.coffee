@@ -44,6 +44,7 @@ class WorldMorph extends FrameMorph
   copyEventListener: null
   pasteEventListener: null
   clipboardTextIfTestRunning: null
+  errorConsole: null
 
   # the string for the last serialised morph
   # is kept in here, to make serialization
@@ -163,7 +164,11 @@ class WorldMorph extends FrameMorph
   currentPinoutingMorphs: []
   morphsBeingPinouted: []
 
+  steppingMorphs: []
+
   underTheCarpetMorph: null
+
+  events: []
 
   # Some operations are triggered by a callback
   # actioned via a timeout
@@ -226,8 +231,10 @@ class WorldMorph extends FrameMorph
     @temporaryHandlesAndLayoutAdjusters = []
     @inputDOMElementForVirtualKeyboard = null
 
-    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+    if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and !window.location.href.contains "worldWithSystemTestHarness"
       @stretchWorldToFillEntirePage()
+    else
+      @sizeCanvasToTestScreenResolution()
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
@@ -244,17 +251,35 @@ class WorldMorph extends FrameMorph
     @canvasContextForTextMeasurements.textAlign = "left"
     @canvasContextForTextMeasurements.textBaseline = "bottom"
 
-    @cacheForTextMeasurements = new LRUCache 300, 1000*60*60*24
+    # when using an inspector it's not uncommon to render
+    # 400 labels just for the properties, so trying to size
+    # the cache accordingly...
+    @cacheForTextMeasurements = new LRUCache 1000, 1000*60*60*24
     @cacheForTextParagraphSplits = new LRUCache 300, 1000*60*60*24
     @cacheForParagraphsWordsSplits = new LRUCache 300, 1000*60*60*24
     @cacheForParagraphsWrappingData = new LRUCache 300, 1000*60*60*24
     @cacheForTextWrappingData = new LRUCache 300, 1000*60*60*24
-    @cacheForImmutableBackBuffers = new LRUCache 10, 1000*60*60*24
+    @cacheForImmutableBackBuffers = new LRUCache 1000, 1000*60*60*24
     @cacheForTextBreakingIntoLinesTopLevel = new LRUCache 10, 1000*60*60*24
+
 
     @changed()
 
   boot: ->
+
+    if !window.location.href.contains "worldWithSystemTestHarness"
+      @contextMenu= ->
+        if @isDevMode
+          menu = new MenuMorph false, @, true, true, "Fizzygum"
+        else
+          menu = new MenuMorph false, @, true, true, "Morphic"
+        if @isDevMode
+          menu.addItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
+          menu.addItem "delete all", true, @, "fullDestroy"
+        menu
+      @setColor new Color 244,243,244
+
+
     # boot-up state machine
     console.log "booting"
     @underTheCarpetMorph = new UnderTheCarpetMorph()
@@ -268,6 +293,54 @@ class WorldMorph extends FrameMorph
     console.log "startupActions: " + startupActions
     if startupActions?
       @nextStartupAction()
+
+    if !window.location.href.contains "worldWithSystemTestHarness"
+      @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
+      @add @errorConsole
+      @errorConsole.fullRawMoveTo new Point 190,10
+      @errorConsole.rawSetExtent new Point 550,415
+      @errorConsole.hide()
+
+      welcomeTitle = new StringMorph2 "Welcome to Fizzygum!",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      welcomeTitle.isEditable = true
+      @add welcomeTitle
+      welcomeTitle.togglefittingSpecWhenBoundsTooLarge()
+      welcomeTitle.fullRawMoveTo new Point 40, 15
+      welcomeTitle.rawSetExtent new Point 271, 35
+
+      version = new StringMorph2 "version 2017-05-26",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      version.isEditable = true
+      @add version
+      version.togglefittingSpecWhenBoundsTooLarge()
+      version.fullRawMoveTo new Point 41, 47
+      version.rawSetExtent new Point 134, 15
+
+      welcomeMessage = """
+      ...a small dynamic web desktop environment for experimenting with live programming, prototyping and mashups.
+
+      Right-click on the desktop to try more widgets!
+      """
+
+      welcomeBody = new TextMorph2 welcomeMessage,null,null,null,null,null,null,null
+      welcomeBody.isEditable = true
+      @add welcomeBody
+      welcomeBody.fullRawMoveTo new Point 37, 80
+      welcomeBody.rawSetExtent new Point 340, 175
+
+      reconfPaint = new ReconfigurablePaintMorph()
+      @add reconfPaint
+      reconfPaint.fullRawMoveTo new Point 35, 275
+      reconfPaint.setExtent new Point 460, 400
+
+      fmm = new FridgeMagnetsMorph()
+      @add fmm
+      fmm.fullRawMoveTo new Point 505, 275
+      fmm.setExtent new Point 570, 400
+
+      acm = new AnalogClockMorph()
+      @add acm
+      acm.fullRawMoveTo new Point 860, 40
+      acm.setExtent new Point 200, 200
 
   # some test urls:
 
@@ -606,7 +679,7 @@ class WorldMorph extends FrameMorph
   # there will be several subtrees
   # that will need relayout.
   # So take the head of any subtree and re-layout it
-  # The relayout might or might not all the subnodes
+  # The relayout might or might not visit all the subnodes
   # of the subtree, because you might have a subtree
   # that lives inside a floating morph, in which
   # case it's not re-layout.
@@ -634,6 +707,11 @@ class WorldMorph extends FrameMorph
       # now that you have a Morph with a broken layout
       # go up the chain of broken layouts as much as
       # possible
+      # QUESTION: would it be safer instead to start from the
+      # very top invalid morph, i.e. on the way to the top,
+      # stop at the last morph with an invalid layout
+      # instead of stopping at the first morph with a
+      # valid layout...
       while tryThisMorph.parent?
         if tryThisMorph.parent.layoutIsValid
           break
@@ -645,6 +723,13 @@ class WorldMorph extends FrameMorph
       # on the chain (but not all)
       tryThisMorph.doLayout()
 
+  clearGeometryOrPositionPossiblyChangedFlags: ->
+    for m in window.morphsThatMaybeChangedGeometryOrPosition
+      m.geometryOrPositionPossiblyChanged = false
+
+  clearFullGeometryOrPositionPossiblyChangedFlags: ->
+    for m in window.morphsThatMaybeChangedFullGeometryOrPosition
+      m.fullGeometryOrPositionPossiblyChanged = false
 
   updateBroken: ->
     #console.log "number of broken rectangles: " + @broken.length
@@ -657,6 +742,10 @@ class WorldMorph extends FrameMorph
     @fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenMorph()
     @cleanupSrcAndDestRectsOfMorphs()
+
+    @clearGeometryOrPositionPossiblyChangedFlags()
+    @clearFullGeometryOrPositionPossiblyChangedFlags()
+
     window.morphsThatMaybeChangedGeometryOrPosition = []
     window.morphsThatMaybeChangedFullGeometryOrPosition = []
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
@@ -726,7 +815,7 @@ class WorldMorph extends FrameMorph
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
       if eachMorphNeedingHighlight not in @morphsBeingHighlighted
-        hM = new Morph()
+        hM = new RectangleMorph()
         world.add hM
         hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
@@ -736,10 +825,95 @@ class WorldMorph extends FrameMorph
         @morphsBeingHighlighted.push eachMorphNeedingHighlight
 
 
+  playQueuedEvents: ->
+    for i in [0...@events.length] by 2
+      eventType = @events[i]
+      event = @events[i+1]
+
+      switch eventType
+
+        when "inputDOMElementForVirtualKeyboardKeydownEventListener"
+          @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
+
+          if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+            @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+
+        when "inputDOMElementForVirtualKeyboardKeyupEventListener"
+          # dispatch to keyboard receiver
+          if @keyboardEventsReceiver
+            # so far the caret is the only keyboard
+            # event handler and it has no keyup
+            # handler
+            if @keyboardEventsReceiver.processKeyUp
+              @keyboardEventsReceiver.processKeyUp event  
+
+        when "inputDOMElementForVirtualKeyboardKeypressEventListener"
+          @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+
+        when "mousedownEventListener"
+          @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchstartEventListener"
+          @hand.processTouchStart event
+
+        when "mouseupEventListener"
+          @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchendEventListener"
+          @hand.processTouchEnd event
+
+        when "mousemoveEventListener"
+          posInDocument = getDocumentPositionOf @worldCanvas
+          # events from JS arrive in page coordinates,
+          # we turn those into world coordinates
+          # instead.
+          worldX = event.pageX - posInDocument.x
+          worldY = event.pageY - posInDocument.y
+          @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+
+        when "touchmoveEventListener"
+          @hand.processTouchMove event
+
+        when "keydownEventListener"
+          @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "keyupEventListener"
+          @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "keypressEventListener"
+          @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+
+        when "mousewheelEventListener"
+          @hand.processMouseScroll event
+
+        when "DOMMouseScrollEventListener"
+          @hand.processMouseScroll event
+
+        when "cutEventListener"
+          @processCut event
+
+        when "copyEventListener"
+          @processCopy event
+
+        when "pasteEventListener"
+          @processPaste event
+
+        when "dropEventListener"
+          @hand.processDrop event
+
+
+    @events = []
+
+
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+
+    @playQueuedEvents()
+
+    # most notably replays test actions at the right time
     @runOtherTasksStepFunction()
+    
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
     @recalculateLayouts()
@@ -747,11 +921,75 @@ class WorldMorph extends FrameMorph
     @addHighlightingMorphs()
     @updateBroken()
     WorldMorph.frameCount++
+
+  addSteppingMorph: (theMorph) ->
+    if @steppingMorphs.indexOf(theMorph) == -1
+      @steppingMorphs.push theMorph
+
+  removeSteppingMorph: (theMorph) ->
+    if @steppingMorphs.indexOf(theMorph) != -1
+      @steppingMorphs.remove theMorph
+
+  # Morph stepping:
+  runChildrensStepFunction: ->
+
+    # make a shallow copy of the array before iterating over
+    # it in the case some morph destroyes itself and takes itself
+    # out of the array thus changing it in place and mangling the
+    # stepping.
+    # TODO all these array modifications should be immutable...
+    steppingMorphs = arrayShallowCopy @steppingMorphs
+
+    for eachSteppingMorph in steppingMorphs
+      if eachSteppingMorph.isBeingFloatDragged()
+        continue
+      # for objects where @fps is defined, check which ones are due to be stepped
+      # and which ones want to wait.
+      elapsedMilliseconds = WorldMorph.currentTime - eachSteppingMorph.lastTime
+      if eachSteppingMorph.fps > 0
+        millisecondsRemainingToWaitedFrame = (1000 / eachSteppingMorph.fps) - elapsedMilliseconds
+      else
+        # if fps 0 or negative, then just run as fast as possible,
+        # so 0 milliseconds remaining to the next invokation
+        millisecondsRemainingToWaitedFrame = 0
+      
+      # We could fire at the exact due time or when the time is past by
+      # firing when remaining ms is <= 0
+      # Or like in this case we can fire slightly earlier so to compensate
+      # for when we come to fire late for one reason or the other.
+      # There is no excat science in choosing to fire
+      # a ms earlier here, it's quite random.
+      # This whole mechanism will need to be remade anyways.
+      if millisecondsRemainingToWaitedFrame <= 1
+        eachSteppingMorph.lastTime = WorldMorph.currentTime
+        if eachSteppingMorph.onNextStep
+          nxt = eachSteppingMorph.onNextStep
+          eachSteppingMorph.onNextStep = null
+          nxt.call eachSteppingMorph
+        if !eachSteppingMorph.step?
+          debugger
+        try
+          eachSteppingMorph.step()
+        catch err
+          @errorConsole.popUpWithError err
+
+
   
   runOtherTasksStepFunction : ->
     for task in @otherTasksToBeRunOnStep
       #console.log "running a task: " + task
       task()
+
+  sizeCanvasToTestScreenResolution: ->
+    @worldCanvas.width = Math.round(960 * pixelRatio)
+    @worldCanvas.height = Math.round(440 * pixelRatio)
+    @worldCanvas.style.width = "960px"
+    @worldCanvas.style.height = "440px"
+
+    bkground = document.getElementById("background")
+    bkground.style.width = "960px"
+    bkground.style.height = "720px"
+    bkground.style.backgroundColor = "gb(245, 245, 245)"
 
   stretchWorldToFillEntirePage: ->
     pos = getDocumentPositionOf @worldCanvas
@@ -770,45 +1008,17 @@ class WorldMorph extends FrameMorph
     # scrolled left b/c of viewport scaling
     clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft
     if @worldCanvas.width isnt clientWidth
-      @worldCanvas.width = clientWidth
+      @worldCanvas.width = (clientWidth * pixelRatio)
+      @worldCanvas.style.width = clientWidth + "px"
       @rawSetWidth clientWidth
     if @worldCanvas.height isnt clientHeight
-      @worldCanvas.height = clientHeight
+      @worldCanvas.height = (clientHeight * pixelRatio)
+      @worldCanvas.style.height = clientHeight + "px"
       @rawSetHeight clientHeight
     @children.forEach (child) =>
       child.reactToWorldResize? @boundingBox()
   
-  
-  
-  # WorldMorph global pixel access:
-  getGlobalPixelColor: (point) ->
     
-    #
-    # answer the color at the given point.
-    #
-    # Note: for some strange reason this method works fine if the page is
-    # opened via HTTP, but *not*, if it is opened from a local uri
-    # (e.g. from a directory), in which case it's always null.
-    #
-    # This behavior is consistent throughout several browsers. I have no
-    # clue what's behind this, apparently the imageData attribute of
-    # canvas context only gets filled with meaningful data if transferred
-    # via HTTP ???
-    #
-    # This is somewhat of a showstopper for color detection in a planned
-    # offline version of Snap.
-    #
-    # The issue has also been discussed at: (join lines before pasting)
-    # http://stackoverflow.com/questions/4069400/
-    # canvas-getimagedata-doesnt-work-when-running-locally-on-windows-
-    # security-excep
-    #
-    # The suggestion solution appears to work, since the settings are
-    # applied globally.
-    #
-    dta = @worldCanvasContext.getImageData(point.x, point.y, 1, 1).data
-    new Color dta[0], dta[1], dta[2]
-  
   
   # WorldMorph events:
   initVirtualKeyboard: ->
@@ -832,9 +1042,8 @@ class WorldMorph extends FrameMorph
     document.body.appendChild @inputDOMElementForVirtualKeyboard
 
     @inputDOMElementForVirtualKeyboardKeydownEventListener = (event) =>
-
-      @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
-
+      @events.push "inputDOMElementForVirtualKeyboardKeydownEventListener"
+      @events.push event
       # Default in several browsers
       # is for the backspace button to trigger
       # the "back button", so we prevent that
@@ -845,27 +1054,22 @@ class WorldMorph extends FrameMorph
       # suppress tab override and make sure tab gets
       # received by all browsers
       if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
-        @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
         event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keydown",
       @inputDOMElementForVirtualKeyboardKeydownEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeyupEventListener = (event) =>
-      # dispatch to keyboard receiver
-      if @keyboardEventsReceiver
-        # so far the caret is the only keyboard
-        # event handler and it has no keyup
-        # handler
-        if @keyboardEventsReceiver.processKeyUp
-          @keyboardEventsReceiver.processKeyUp event  
+      @events.push "inputDOMElementForVirtualKeyboardKeyupEventListener"
+      @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keyup",
       @inputDOMElementForVirtualKeyboardKeyupEventListener, false
 
     @inputDOMElementForVirtualKeyboardKeypressEventListener = (event) =>
-      @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+      @events.push "inputDOMElementForVirtualKeyboardKeypressEventListener"
+      @events.push event
       event.preventDefault()
 
     @inputDOMElementForVirtualKeyboard.addEventListener "keypress",
@@ -909,7 +1113,6 @@ class WorldMorph extends FrameMorph
     # event.preventDefault()
 
     @addMouseChangeCommand "up", button, buttons, ctrlKey, shiftKey, altKey, metaKey
-
     @hand.processMouseUp button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
   processMouseMove: (pageX, pageY, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1098,33 +1301,39 @@ class WorldMorph extends FrameMorph
     #canvas.addEventListener "dblclick", @dblclickEventListener, false
 
     @mousedownEventListener = (event) =>
-      @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mousedownEventListener"
+      @events.push event
+
     canvas.addEventListener "mousedown", @mousedownEventListener, false
 
     @touchstartEventListener = (event) =>
-      @hand.processTouchStart event
+      @events.push "touchstartEventListener"
+      @events.push event
+
     canvas.addEventListener "touchstart", @touchstartEventListener , false
     
     @mouseupEventListener = (event) =>
-      @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mouseupEventListener"
+      @events.push event
+
     canvas.addEventListener "mouseup", @mouseupEventListener, false
     
     @touchendEventListener = (event) =>
-      @hand.processTouchEnd event
+      @events.push "touchendEventListener"
+      @events.push event
+
     canvas.addEventListener "touchend", @touchendEventListener, false
     
     @mousemoveEventListener = (event) =>
-      posInDocument = getDocumentPositionOf @worldCanvas
-      # events from JS arrive in page coordinates,
-      # we turn those into world coordinates
-      # instead.
-      worldX = event.pageX - posInDocument.x
-      worldY = event.pageY - posInDocument.y
-      @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+      @events.push "mousemoveEventListener"
+      @events.push event
+
     canvas.addEventListener "mousemove", @mousemoveEventListener, false
     
     @touchmoveEventListener = (event) =>
-      @hand.processTouchMove event
+      @events.push "touchmoveEventListener"
+      @events.push event
+
     canvas.addEventListener "touchmove", @touchmoveEventListener, false
     
     @gesturestartEventListener = (event) =>
@@ -1143,6 +1352,8 @@ class WorldMorph extends FrameMorph
     canvas.addEventListener "contextmenu", @contextmenuEventListener, false
     
     @keydownEventListener = (event) =>
+      @events.push "keydownEventListener"
+      @events.push event
 
       # this paragraph is to prevent the browser going
       # "back button" when the user presses delete backspace.
@@ -1165,11 +1376,12 @@ class WorldMorph extends FrameMorph
       if doPrevent
         event.preventDefault()
 
-      @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
     canvas.addEventListener "keydown", @keydownEventListener, false
 
     @keyupEventListener = (event) =>
-      @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+      @events.push "keyupEventListener"
+      @events.push event
+
     canvas.addEventListener "keyup", @keyupEventListener, false
 
     # This method also handles keypresses from a special
@@ -1190,20 +1402,26 @@ class WorldMorph extends FrameMorph
     doublePressOfZeroKeypadKey: null
     
     @keypressEventListener = (event) =>
-      @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+      @events.push "keypressEventListener"
+      @events.push event
+
     canvas.addEventListener "keypress", @keypressEventListener, false
 
     # Safari, Chrome
     
     @mousewheelEventListener = (event) =>
-      @hand.processMouseScroll event
+      @events.push "mousewheelEventListener"
+      @events.push event
       event.preventDefault()
+
     canvas.addEventListener "mousewheel", @mousewheelEventListener, false
     # Firefox
     
     @DOMMouseScrollEventListener = (event) =>
-      @hand.processMouseScroll event
+      @events.push "DOMMouseScrollEventListener"
+      @events.push event
       event.preventDefault()
+
     canvas.addEventListener "DOMMouseScroll", @DOMMouseScrollEventListener, false
 
     # in theory there should be no scroll event on the page
@@ -1224,15 +1442,21 @@ class WorldMorph extends FrameMorph
     # key combinations manually instead of from the copy/paste events.
 
     @cutEventListener = (event) =>
-      @processCut event
+      @events.push "cutEventListener"
+      @events.push event
+
     document.body.addEventListener "cut", @cutEventListener, false
     
     @copyEventListener = (event) =>
-      @processCopy event
+      @events.push "copyEventListener"
+      @events.push event
+
     document.body.addEventListener "copy", @copyEventListener, false
 
     @pasteEventListener = (event) =>
-      @processPaste event
+      @events.push "pasteEventListener"
+      @events.push event
+
     document.body.addEventListener "paste", @pasteEventListener, false
 
     #console.log "binding via mousetrap"
@@ -1287,11 +1511,16 @@ class WorldMorph extends FrameMorph
     window.addEventListener "dragover", @dragoverEventListener, false
     
     @dropEventListener = (event) =>
-      @hand.processDrop event
+      @events.push "dropEventListener"
+      @events.push event
       event.preventDefault()
     window.addEventListener "drop", @dropEventListener, false
     
     @resizeEventListener = =>
+      @events.push "resizeEventListener"
+      @events.push null
+      return
+
       @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
@@ -1591,38 +1820,57 @@ class WorldMorph extends FrameMorph
 
 
   popUpDemoMenu: (a,b,c,d) ->
-    menu = new MenuMorph false, @, true, true, "make a morph"
-    menu.addItem "rectangle", true, @, "createNewRectangleMorph"
-    menu.addItem "box", true, @, "createNewBoxMorph"
-    menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
-    menu.addLine()
-    menu.addItem "slider", true, @, "createNewSliderMorph"
-    menu.addItem "frame", true, @, "createNewFrameMorph"
-    menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
-    menu.addItem "canvas", true, @, "createNewCanvas"
-    menu.addItem "handle", true, @, "createNewHandle"
-    menu.addLine()
-    menu.addItem "string", true, @, "createNewString"
-    # this is "The Lorelei" poem (From German).
-    # see translation here:
-    # http://poemsintranslation.blogspot.co.uk/2009/11/heinrich-heine-lorelei-from-german.html
-    menu.addItem "text", true, @, "createNewText"
-    menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
-    menu.addLine()
-    menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-    menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
-    menu.addItem "color picker", true, @, "createNewColorPickerMorph"
-    menu.addLine()
-    menu.addItem "sensor demo", true, @, "createNewSensorDemo"
-    menu.addItem "animation demo", true, @, "createNewAnimationDemo"
-    menu.addItem "pen", true, @, "createNewPenMorph"
-      
-    menu.addLine()
-    menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
-    menu.addLine()
-    menu.addItem "under the carpet", true, @, "underTheCarpet"
-    menu.addItem "closing window", true, @, "closingWindow"
-    
+    if window.location.href.contains "worldWithSystemTestHarness"
+      menu = new MenuMorph false, @, true, true, "make a morph"
+      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addItem "box", true, @, "createNewBoxMorph"
+      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addLine()
+      menu.addItem "slider", true, @, "createNewSliderMorph"
+      menu.addItem "frame", true, @, "createNewFrameMorph"
+      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addItem "canvas", true, @, "createNewCanvas"
+      menu.addItem "handle", true, @, "createNewHandle"
+      menu.addLine()
+      menu.addItem "string", true, @, "createNewString"
+      menu.addItem "text", true, @, "createNewText"
+      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addLine()
+      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addLine()
+      menu.addItem "sensor demo", true, @, "createNewSensorDemo"
+      menu.addItem "animation demo", true, @, "createNewAnimationDemo"
+      menu.addItem "pen", true, @, "createNewPenMorph"
+        
+      menu.addLine()
+      menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
+      menu.addLine()
+      menu.addItem "under the carpet", true, @, "underTheCarpet"
+      menu.addItem "closing window", true, @, "closingWindow"
+    else
+      menu = new MenuMorph false, @, true, true, "parts bin"
+      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addItem "box", true, @, "createNewBoxMorph"
+      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addItem "slider", true, @, "createNewSliderMorph"
+      menu.addItem "frame", true, @, "createNewFrameMorph"
+      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addItem "canvas", true, @, "createNewCanvas"
+      menu.addLine()
+      menu.addItem "string", true, @, "createNewStringMorph2WithoutBackground"
+      menu.addItem "text", true, @, "createNewTextMorph2WithBackground"
+      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addLine()
+      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addLine()
+      menu.addItem "analog clock", true, @, "analogClock"
+      menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+      menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+
     menu.popUpAtHand a.firstContainerMenu()
 
   layoutTestsMenu: (morphTriggeringThis) ->
@@ -1649,14 +1897,6 @@ class WorldMorph extends FrameMorph
   #    if !child.visibleBasedOnIsVisibleProperty() or
   #    child.isCollapsed()
   #      child.unminimise()
-  
-  about: ->
-    @inform "Zombie Kernel\n\n" +
-      "a lively Web GUI\ninspired by Squeak\n" +
-      morphicVersion +
-      "\n\nby Davide Della Casa" +
-      "\n\nbased on morphic.js by" +
-      "\nJens Mönig (jens@moenig.org)"
   
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable

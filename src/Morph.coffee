@@ -38,13 +38,13 @@ class Morph extends MorphicNode
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
 
-  # some visual cues work best if they are always in
-  # the same aspect ratio. E.g. icons are much less
-  # recognisable when they come with different aspect
-  # ratios. So there is a way to keep the same aspect
-  # ratio when resizing
+  # unused - can't afford the time right now to change a
+  # script that hangs
+  # TODO
   aspectRatio: null
-  
+
+  appearance: null
+
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
   morphMethod: ->
@@ -61,7 +61,7 @@ class Morph extends MorphicNode
   # access this property.
   bounds: null
   minimumExtent: null
-  color: null
+  color: new Color 80, 80, 80
   texture: null # optional url of a fill-image
   cachedTexture: null # internal cache of actual bg image
   lastTime: null
@@ -201,8 +201,10 @@ class Morph extends MorphicNode
 
   getTextDescription: ->
     if @textDescription?
+      #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of morph)"
       return @textDescription + "" + @constructor.name + " (adhoc description of morph)"
     else
+      #console.log "got name: " + @constructor.name + " (class name)"
       return @constructor.name + " (class name)"
 
   identifyViaTextLabel: ->
@@ -343,13 +345,11 @@ class Morph extends MorphicNode
       if @constructor.name not in arr
         arr.push @constructor.name
 
-    @silentRawSetBounds Rectangle.EMPTY
+    @bounds = Rectangle.EMPTY
     @minimumExtent = new Point 5,5
-    @silentFullRawMoveTo new Point 0,0
-    # [TODO] why is there this strange non-zero default extent?
-    @silentRawSetExtent new Point 50, 40
 
-    @color = @color or new Color 80, 80, 80
+    @silentRawSetBounds new Rectangle 0,0,50,40
+
     @lastTime = Date.now()
     # Note that we don't call 
     # that's because the actual extending morph will probably
@@ -363,13 +363,32 @@ class Morph extends MorphicNode
 
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
+  isTransparentAt: (aPoint) ->
+    @appearance?.isTransparentAt aPoint
+
+  paintHighlight: (aContext, al, at, w, h) ->
+    @appearance?.paintHighlight aContext, al, at, w, h
+
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+    @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
+
+  addShapeSpecificMenus: (menu) ->
+    if @appearance?.addShapeSpecificMenus?
+      return @appearance.addShapeSpecificMenus menu
+    return menu
+
+  addShapeSpecificNumericalSetters: (list) ->
+    if @appearance?.addShapeSpecificNumericalSetters?
+      return @appearance.addShapeSpecificNumericalSetters list
+    return list
+
   
   #
   #    damage list housekeeping
   #
   #	the trackChanges property of the Morph prototype is a Boolean switch
   #	that determines whether the World's damage list ('broken' rectangles)
-  #	tracks changes. By default the switch is always on. If set to false
+  #	tracks changes. By default the switch is always on. If set to false,
   #	changes are not stored. This can be very useful for housekeeping of
   #	the damage list in situations where a large number of (sub-) morphs
   #	are changed more or less at once. Instead of keeping track of every
@@ -380,13 +399,7 @@ class Morph extends MorphicNode
   #
   #		layoutSubmorphs()
   #		
-  #	method of InspectorMorph, or the
-  #	
-  #		startLayout()
-  #		endLayout()
-  #
-  #	methods of SyntaxElementMorph in the Snap application.
-  #
+  #	method of InspectorMorph
   
   
   # Morph string representation: e.g. 'a Morph#2 [20@45 | 130@250]'
@@ -417,10 +430,21 @@ class Morph extends MorphicNode
   
   # Morph deleting:
   destroy: ->
+
+    # remove instance from the instances tracker
+    # in the class. To see this: just create an
+    # AnalogClockMorph, see that
+    # AnalogClockMorph.klass.instances[0] has one
+    # element. Then delete the clock, and see that the
+    # tracker is now an empty array.
+    @constructor.klass.instances.remove @
+
     @destroyed = true
     @parent?.invalidateLayout()
     @breakNumberOfRawMovesAndResizesCaches()
     WorldMorph.numberOfAddsAndRemoves++
+
+    world.removeSteppingMorph @
 
     # if there is anything being edited inside
     # what we are destroying, then also
@@ -460,36 +484,6 @@ class Morph extends MorphicNode
     return null
 
 
-  # Morph stepping:
-  runChildrensStepFunction: ->
-    # step is the function that this Morph wants to run at each step.
-    # If the Morph wants to do nothing and let no-one of the children do nothing,
-    # then step is set to null.
-    # If the morph wants to do nothing but the children might want to do something,
-    # then step is set to the function that does nothing (i.e. a function noOperation that
-    # only returns null)
-    return null  unless @step
-
-    # for objects where @fps is defined, check which ones are due to be stepped
-    # and which ones want to wait. 
-    elapsed = WorldMorph.currentTime - @lastTime
-    if @fps > 0
-      timeRemainingToWaitedFrame = (1000 / @fps) - elapsed
-    else
-      timeRemainingToWaitedFrame = 0
-    
-    # Question: why 1 here below?
-    if timeRemainingToWaitedFrame < 1
-      @lastTime = WorldMorph.currentTime
-      if @onNextStep
-        nxt = @onNextStep
-        @onNextStep = null
-        nxt.call @
-      @step()
-      @children.forEach (child) ->
-        if !child.runChildrensStepFunction?
-          debugger
-        child.runChildrensStepFunction()
 
   # not used within Zombie Kernel yet.
   nextSteps: (lst = []) ->
@@ -565,21 +559,29 @@ class Morph extends MorphicNode
     if @bounds.eq newBounds
       return
 
-    oldExtent = @bounds.extent()
-    newExtent = newBounds.extent()
-    @bounds = newBounds
-    @changed()
-    @breakNumberOfRawMovesAndResizesCaches()
+    unless @bounds.origin.eq newBounds.origin
+      @bounds = @bounds.translateTo newBounds.origin
+      @breakNumberOfRawMovesAndResizesCaches()
+      @changed()
 
-    if !oldExtent.eq newExtent
-      @reLayout()
+    @rawSetExtent newBounds.extent()
 
+  setBounds: (aRectangle, morphStartingTheChange = null) ->
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
+      return
+    else
+      @invalidateLayout()
+      @rawSetBounds arguments...
 
   silentRawSetBounds: (newBounds) ->
-    if @bounds?.eq newBounds
+    if @bounds.eq newBounds
       return
-    @bounds = newBounds
-    @breakNumberOfRawMovesAndResizesCaches()
+
+    unless @bounds.origin.eq newBounds.origin
+      @bounds = @bounds.translateTo newBounds.origin
+      @breakNumberOfRawMovesAndResizesCaches()
+
+    @silentRawSetExtent newBounds.extent()
   
   corners: ->
     @bounds.corners()
@@ -1016,6 +1018,7 @@ class Morph extends MorphicNode
   # to place itself in the bottom-right
   # corner.
   parentHasReLayouted: ->
+    @notifyChildrenThatParentHasReLayouted()
 
   layoutInset: (morphStartingTheChange = null) ->
     if @insetMorph?
@@ -1059,13 +1062,14 @@ class Morph extends MorphicNode
   # Morph accessing - dimensional changes requiring a complete redraw
   rawSetExtent: (aPoint, morphStartingTheChange = null) ->
     #console.log "move 8"
-    @breakNumberOfRawMovesAndResizesCaches()
     if @ == morphStartingTheChange
       return
     if morphStartingTheChange == null
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq @extent()
+      @breakNumberOfRawMovesAndResizesCaches()
+
       @silentRawSetExtent aPoint
       @changed()
       @reLayout()
@@ -1087,27 +1091,19 @@ class Morph extends MorphicNode
   silentRawSetExtent: (aPoint) ->
     aPoint = aPoint.round()
     #console.log "move 9"
-    @breakNumberOfRawMovesAndResizesCaches()
 
     minExtent = @getMinimumExtent()
     if ! aPoint.ge minExtent
       aPoint = aPoint.max minExtent
 
-    if @aspectRatio?
-      if @aspectRatio >= 1
-        if aPoint.y >= aPoint.x
-          aPoint = new Point aPoint.y * @aspectRatio, aPoint.y
-        else
-          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
-      else if @aspectRatio < 1
-        if aPoint.y >= aPoint.x
-          aPoint = new Point aPoint.y * (1/@aspectRatio), aPoint.y
-        else
-          aPoint = new Point aPoint.x, aPoint.x * (1/@aspectRatio)
-
     newWidth = Math.max aPoint.x, 0
     newHeight = Math.max aPoint.y, 0
-    @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
+
+    newBounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + newWidth, @bounds.origin.y + newHeight
+
+    unless @bounds.eq newBounds
+      @bounds = newBounds
+      @breakNumberOfRawMovesAndResizesCaches()
   
   rawSetWidth: (width) ->
     #console.log "move 10"
@@ -1207,24 +1203,6 @@ class Morph extends MorphicNode
     @changed()
   
   
-  # a morph by default is considered as completely
-  # opaque and rectangular. This method is called when
-  # the mouse is within the bounds of the morph.
-  # There are two possible implementations of this
-  # method:
-  #   * raster-based, looking up the
-  #     backing store contents
-  #   * mathematically from the shape of the
-  #     morph
-  isTransparentAt: (aPoint) ->
-    if @boundingBoxTight().containsPoint aPoint
-      return false
-    if @backgroundTransparency? and @backgroundColor?
-      if @backgroundTransparency > 0
-        if @boundsContainPoint aPoint
-          return false
-    return true
-  
   boundsContainPoint: (aPoint) ->
     @bounds.containsPoint aPoint
 
@@ -1260,27 +1238,6 @@ class Morph extends MorphicNode
       world.morphsToBeHighlighted.remove @
       @changed()
 
-  # paintHighlight can work in two patterns:
-  #  * passing actual pixels, when used
-  #    outside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
-  #  * passing logiacl pixels, when used
-  #    inside the effect of the scope of
-  #    "scale pixelRatio, pixelRatio", or
-  # Mostly, the first pattern is used.
-  paintHighlight: (aContext, al, at, w, h) ->
-    if !@highlighted
-      return
-
-    # paintRectangle here is usually made to work with
-    # al, at, w, h which are actual pixels
-    # rather than logical pixels.
-    @paintRectangle \
-      aContext,
-      al, at, w, h,
-      "orange",
-      0.5,
-      true # push and pop the context
 
   # paintRectangle can work in two patterns:
   #  * passing actual pixels, when used
@@ -1315,56 +1272,6 @@ class Morph extends MorphicNode
 
       if pushAndPopContext
         aContext.restore()
-
-  # This method only paints this very morph
-  # i.e. it doesn't descend the children
-  # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
-  # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
-  # Note that this morph might paint something on the screen even if
-  # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-
-    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
-      return null
-
-    [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
-    if area.isNotEmpty()
-      if w < 1 or h < 1
-        return null
-
-      @justBeforeBeingPainted?()
-
-      aContext.save()
-      aContext.globalAlpha = @alpha
-      aContext.fillStyle = @color.toString()
-
-      if !@color?
-        debugger
-
-
-      # paintRectangle is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the pixelRatio
-
-      # paint the background
-      toBePainted = new Rectangle al, at, al + w, at + h
-      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @backgroundColor, @backgroundTransparency
-
-      # now paint the actual morph, which is a rectangle
-      # (potentially inset because of the padding)
-      toBePainted = toBePainted.intersect @boundingBoxTight().scaleBy pixelRatio
-      @paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @color
-
-      aContext.restore()
-
-      # paintHighlight is usually made to work with
-      # al, at, w, h which are actual pixels
-      # rather than logical pixels, so it's generally used
-      # outside the effect of the scaling because
-      # of the pixelRatio
-      @paintHighlight aContext, al, at, w, h
 
 
   preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
@@ -1621,13 +1528,18 @@ class Morph extends MorphicNode
     sha
   
   isBeingFloatDragged: ->
-    # first check if the hand is nonfloatdragging
-    # anything at all
-    if !@nonFloatDraggedMorph?
+
+    if !world.hand?
+      return false
+
+    # first check if the hand is floatdragging
+    # anything, in that case if it's floatdragging
+    # it can't be non-floatdragging
+    if world.hand.nonFloatDraggedMorph?
       return false
 
     # then check if my root is the hand
-    if root() instanceof HandMorph
+    if @root() instanceof HandMorph
       return true
 
     # if we are here it means we are not being
@@ -1674,6 +1586,8 @@ class Morph extends MorphicNode
         world.hand.fullChanged()
         return
 
+      # you could check directly if it's in the array
+      # but we use a flag because it's faster.
       if !@geometryOrPositionPossiblyChanged
         window.morphsThatMaybeChangedGeometryOrPosition.push @
         @geometryOrPositionPossiblyChanged = true
@@ -1710,6 +1624,19 @@ class Morph extends MorphicNode
   
   
   # Morph accessing - structure //////////////////////////////////////////////
+
+  # EXPLANATION of "silent" vs. "raw" vs. "normal" hyerarchy/bounds change methods
+  # ------------------------------------------------------------------------------
+  # “normal”: these are the highest-level methods and take into account layouts.
+  #           Should use these ones as much as possible. Call the "raw"
+  #           versions below
+  # “raw”: lower level. This is what the re-layout routines use. Usually call the
+  #        silent version below.
+  # “silent”: doesn’t mark the morph as changed
+  #
+  # It's important that lower-level functions don't ever call the higher-level
+  # functions, as that's architecturally incorrect and can cause infinite loops in
+  # the invocations.
 
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
@@ -1778,6 +1705,10 @@ class Morph extends MorphicNode
     aMorph.rawSetExtent @insetSpaceExtent(), @
 
 
+  sourceChanged: ->
+    @reLayout?() 
+    @changed?()
+
 
   # this is done before the updating of the
   # backing store in some morphs that
@@ -1845,6 +1776,31 @@ class Morph extends MorphicNode
     aFullCopy = @fullCopy()
     aFullCopy.pickUp()
 
+  # in case we copy a morph, if the original was in some
+  # data structures related to broken morphs, then
+  # we have to add the copy too.
+  alignCopiedMorphToBrokenInfoDataStructures: (copiedMorph) ->
+    if window.morphsThatMaybeChangedGeometryOrPosition.indexOf(@) != -1 and
+     window.morphsThatMaybeChangedGeometryOrPosition.indexOf(copiedMorph) == -1
+      window.morphsThatMaybeChangedGeometryOrPosition.push copiedMorph
+
+    if window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(@) != -1 and
+     window.morphsThatMaybeChangedFullGeometryOrPosition.indexOf(copiedMorph) == -1
+      window.morphsThatMaybeChangedFullGeometryOrPosition.push copiedMorph
+
+  # in case we copy a morph, if the original was in some
+  # stepping structures, then we have to add the copy too.
+  alignCopiedMorphToSteppingStructures: (copiedMorph) ->
+    if world.steppingMorphs.indexOf(@) != -1
+      world.addSteppingMorph copiedMorph
+
+  # note that the entire copying mechanism
+  # should also take care of inserting the copied
+  # morph in whatever other data structures where the
+  # original morph was.
+  # For example, if the Morph appeared in a data
+  # structure related to the broken rectangles mechanism,
+  # we should place the copied morph there.
   fullCopy: ()->
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
@@ -1942,6 +1898,39 @@ class Morph extends MorphicNode
 
     return clonedMorphs[0]
 
+  # Injecting code /////////////////////////////////////////
+
+  # if a function, the txt must contain the parameters and
+  # the arrow and the body
+  injectProperty: (propertyName, txt) ->
+    try
+      # this.target[propertyName] = evaluate txt
+      @evaluateString "@" + propertyName + " = " + txt
+      # if we are saving a function, we'd like to
+      # keep the source code so we can edit Coffeescript
+      # again.
+      if isFunction @[propertyName]
+        @[propertyName + "_source"] = txt
+      @sourceChanged()
+    catch err
+      @inform err
+
+  injectProperties: (codeBlurb) ->
+
+    codeBlurb = codeBlurb.replace(/^[ \t]*$/gm,"\n")
+    codeBlurb = codeBlurb + "\n# end injected code"
+
+    # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
+    regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
+
+    while (m = regex.exec(codeBlurb)) != null
+      # This is necessary to avoid infinite loops with zero-width matches
+      if m.index == regex.lastIndex
+        regex.lastIndex++
+      # The result can be accessed through the `m`-variable.
+      #m.forEach (match, groupIndex) ->
+      #  console.log ''
+      @injectProperty m[1],m[2]
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
@@ -2008,8 +1997,11 @@ class Morph extends MorphicNode
     if @parent?
       @parent.propagateKillMenus()
 
-  mouseClickLeft: (pos) ->
+  mouseDownLeft: (pos) ->
     @bringToForegroud()
+    @escalateEvent "mouseDownLeft", pos
+
+  mouseClickLeft: (pos) ->
     @escalateEvent "mouseClickLeft", pos
 
   onClickOutsideMeOrAnyOfMyChildren: (functionName, arg1, arg2, arg3)->
@@ -2061,6 +2053,7 @@ class Morph extends MorphicNode
     oldStep = @step
     oldFps = @fps
     @fps = 0
+    world.addSteppingMorph @
     @step = =>
       @silentFullRawMoveBy new Point xStep, yStep
       @fullChanged()
@@ -2070,6 +2063,8 @@ class Morph extends MorphicNode
         situation.origin.reactToDropOf @  if situation.origin.reactToDropOf
         @step = oldStep
         @fps = oldFps
+        if @step == noOperation or !@step?
+          world.removeSteppingMorph @
   
   
   # Morph utilities ////////////////////////////////////////////////////////
@@ -2130,6 +2125,21 @@ class Morph extends MorphicNode
     prompt.popUpAtHand @firstContainerMenu()
     prompt.tempPromptEntryField.text.edit()
 
+  textPrompt: (msg, target, callback, defaultContents, width, floorNum,
+    ceilingNum, isRounded) ->
+
+    prompt = new TextPromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    ceilingNum, isRounded)
+
+    prompt.setExtent new Point 600,400
+
+    world.add prompt
+    prompt.fullMoveTo world.hand.position().subtract new Point 50, 100
+    prompt.fullRawMoveWithin world
+
+    #prompt.popUpAtHand @firstContainerMenu()
+    #prompt.tempPromptEntryField.edit()
+
   reactToSliderAction1: (num, theMenu) ->
     theMenu.tempPromptEntryField.changed()
     theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
@@ -2161,9 +2171,20 @@ class Morph extends MorphicNode
   inspect: (anotherObject) ->
     @spawnInspector @
 
+  inspect2: (anotherObject) ->
+    @spawnInspector2 @
+
   spawnInspector: (inspectee) ->
     inspector = new InspectorMorph inspectee
     inspector.fullRawMoveTo world.hand.position()
+    inspector.fullRawMoveWithin world
+    world.add inspector
+    inspector.changed()
+
+  spawnInspector2: (inspectee) ->
+    inspector = new InspectorMorph2 inspectee
+    inspector.fullRawMoveTo world.hand.position()
+    inspector.setExtent new Point 560, 410
     inspector.fullRawMoveWithin world
     world.add inspector
     inspector.changed()
@@ -2247,7 +2268,7 @@ class Morph extends MorphicNode
       true
 
   createNewStringMorph2WithBackground: ->
-    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null, new Color(255, 255, 54), 0.5
+    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2295,8 +2316,8 @@ class Morph extends MorphicNode
   createCollapsedStateIconMorph: ->
     world.create new CollapsedStateIconMorph()
 
-  createCloseIconMorph: ->
-    world.create new CloseIconMorph()
+  createCloseIconButtonMorph: ->
+    world.create new CloseIconButtonMorph()
 
   createScratchAreaIconMorph: ->
     world.create new ScratchAreaIconMorph()
@@ -2350,13 +2371,16 @@ class Morph extends MorphicNode
   underTheCarpetIconAndText: ->
     world.create new UnderTheCarpetOpenerMorph()
 
+  analogClock: ->
+    world.create new AnalogClockMorph()
+
   popUpIconsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "icons"
     menu.addItem "Destroy icon", true, @, "createDestroyIconMorph"
     menu.addItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
     menu.addItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
     menu.addItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
-    menu.addItem "Close icon", true, @, "createCloseIconMorph"
+    menu.addItem "Close icon", true, @, "createCloseIconButtonMorph"
     menu.addItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
     menu.addItem "Flora icon", true, @, "createFloraIconMorph"
     menu.addItem "Scooter icon", true, @, "createScooterIconMorph"
@@ -2368,6 +2392,13 @@ class Morph extends MorphicNode
     menu = new MenuMorph false, @, true, true, "others"
     menu.addItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
+    menu.addItem "analog clock", true, @, "analogClock"
+    menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
+    menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+    menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+    menu.addItem "simple button", true, menusHelper, "createSimpleButton"
+    menu.addItem "switch button", true, menusHelper, "createSwitchButtonMorph"
+    
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
@@ -2390,68 +2421,90 @@ class Morph extends MorphicNode
       true,
       true,
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
-    if userMenu
-      menu.addItem "user features...", true, @, ->
-        userMenu.popUpAtHand @firstContainerMenu()
+
+    if window.location.href.contains "worldWithSystemTestHarness"
+      if userMenu
+        menu.addItem "user features...", true, @, ->
+          userMenu.popUpAtHand @firstContainerMenu()
+
+        menu.addLine()
+      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addLine()
+      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
+      menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
+
+      # A) normally, just take a picture of this morph
+      # and open it in a new tab.
+      # B) If a test is being recorded, then the behaviour
+      # is slightly different: a system test command is
+      # triggered to take a screenshot of this particular
+      # morph.
+      # C) If a test is being played, then the screenshot of
+      # the particular morph is put in a special place
+      # in the test player. The command recorded at B) is
+      # going to replay but *waiting* for that screenshot
+      # first.
+      takePic = =>
+        switch AutomatorRecorderAndPlayer.state
+          when AutomatorRecorderAndPlayer.RECORDING
+            # While recording a test, just trigger for
+            # the takeScreenshot command to be recorded. 
+            window.world.automatorRecorderAndPlayer.takeScreenshot @
+          when AutomatorRecorderAndPlayer.PLAYING
+            # While playing a test, this command puts the
+            # screenshot of this morph in a special
+            # variable of the system test runner.
+            # The test runner will wait for this variable
+            # to contain the morph screenshot before
+            # doing the comparison as per command recorded
+            # in the case above.
+            window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
+          else
+            # no system tests recording/playing ongoing,
+            # just open new tab with image of morph.
+            window.open @fullImageData()
+      menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
+
+      menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
       menu.addLine()
-    menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-
-    menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-    menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
-    menu.addLine()
-    menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
-    menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-    menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-    menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
-    menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
-
-    # A) normally, just take a picture of this morph
-    # and open it in a new tab.
-    # B) If a test is being recorded, then the behaviour
-    # is slightly different: a system test command is
-    # triggered to take a screenshot of this particular
-    # morph.
-    # C) If a test is being played, then the screenshot of
-    # the particular morph is put in a special place
-    # in the test player. The command recorded at B) is
-    # going to replay but *waiting* for that screenshot
-    # first.
-    takePic = =>
-      switch AutomatorRecorderAndPlayer.state
-        when AutomatorRecorderAndPlayer.RECORDING
-          # While recording a test, just trigger for
-          # the takeScreenshot command to be recorded. 
-          window.world.automatorRecorderAndPlayer.takeScreenshot @
-        when AutomatorRecorderAndPlayer.PLAYING
-          # While playing a test, this command puts the
-          # screenshot of this morph in a special
-          # variable of the system test runner.
-          # The test runner will wait for this variable
-          # to contain the morph screenshot before
-          # doing the comparison as per command recorded
-          # in the case above.
-          window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
-        else
-          # no system tests recording/playing ongoing,
-          # just open new tab with image of morph.
-          window.open @fullImageData()
-    menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
-
-    menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
-
-    menu.addLine()
-    if @isFloatDraggable()
-      menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      if @isFloatDraggable()
+        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      else
+        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addItem "hide", true, @, "hide"
+      menu.addItem "delete", true, @, "fullDestroy"
     else
-      menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
-    menu.addItem "hide", true, @, "hide"
-    menu.addItem "delete", true, @, "destroy"
+      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addLine()
+      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addItem "inspect", true, @, "inspect2", "open a window\non all properties"
+      menu.addLine()
+      if @isFloatDraggable()
+        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+      else
+        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addItem "hide", true, @, "hide"
+      menu.addItem "delete", true, @, "fullDestroy"
+
+
     menu
 
   developersMenu: ->
-    return @developersMenuOfMorph()
-  
+    menu = @developersMenuOfMorph()
+    if @addShapeSpecificMenus?
+      menu = @addShapeSpecificMenus menu
+    menu
+
   userMenu: ->
     null  
   
@@ -2630,8 +2683,11 @@ class Morph extends MorphicNode
   
   numericalSetters: ->
     # for context menu demo purposes
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
-  
+    list = ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
+    if @addShapeSpecificNumericalSetters?
+      list = @addShapeSpecificNumericalSetters list
+    list
+
   
   # Morph entry field tabbing //////////////////////////////////////////////
   
@@ -2751,9 +2807,9 @@ class Morph extends MorphicNode
     oImg
 
 
-  ######################################################################################
+  # ------------------------------------------------------------------------------------
   # Layouts
-  ######################################################################################
+  # ------------------------------------------------------------------------------------
   # So layouts in ZK work the following way:
   #  1) Any Morph can contain a number of other morphs
   #     according to a number of layouts *simultaneously*
@@ -2764,14 +2820,15 @@ class Morph extends MorphicNode
   #  3) The default attaching of Morphs to a Morph puts them
   #     under the effect of the most basic layout: the FREEFLOATING
   #     layout.
-  #  3) You can only do a high-level-resize or move to a FREEFLOATING
+  #  3) A user can only do a high-level resize or move to a FREEFLOATING
   #     Morph. All other Morphs are under the effect of more complex
-  #     layout strategies so they can't be moved willy nilly.
-  #     Control of size and placement can be done but in other
+  #     layout strategies so they can't be moved willy nilly
+  #     directly by the user via some high-level "resize" or "move"
+  #     Control of size and placement can be done, but indirectly via other
   #     means below.
   #  4) You CAN control the size and location of Morphs under the
-  #     effect of complex layouts by programmatically changing their
-  #     layout spec properties.
+  #     effect of complex layouts, but only indirectly: by programmatically
+  #     changing their layout spec properties.
   #  5) You CAN also manually control the size and location of Morphs
   #     under the effect of complex layouts by using special Adjusting
   #     Morphs, which are provided by the container, and give handles
@@ -3208,18 +3265,18 @@ class Morph extends MorphicNode
     ## draw some reference patterns to see the sizes
 
     for i in [0..5]
-      lmHolder = new Morph()
+      lmHolder = new RectangleMorph()
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
       lmHolder.fullRawMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
       world.add lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3236,12 +3293,12 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder 
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3258,13 +3315,13 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
-    lmContent3 = new Morph()
+    lmContent2 = new RectangleMorph()
+    lmContent3 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3284,14 +3341,14 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
-    lmContent1 = new Morph()
+    lmHolder = new RectangleMorph()
+    lmContent1 = new RectangleMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
 
     lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -3312,17 +3369,17 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph()
 
@@ -3349,17 +3406,17 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -3386,17 +3443,17 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
@@ -3423,17 +3480,17 @@ class Morph extends MorphicNode
     world.add lmHolder
     new HandleMorph lmHolder
 
-    ################################################
+    # ----------------------------------------------
 
-    lmHolder = new Morph()
+    lmHolder = new RectangleMorph()
 
     lmSpacer1 = new LayoutSpacerMorph()
     lmAdj = new StackElementsSizeAdjustingMorph()
-    lmContent1 = new Morph()
+    lmContent1 = new RectangleMorph()
     lmAdj2 = new StackElementsSizeAdjustingMorph()
-    lmContent2 = new Morph()
+    lmContent2 = new RectangleMorph()
     lmAdj3 = new StackElementsSizeAdjustingMorph()
-    lmContent3 = new Morph()
+    lmContent3 = new RectangleMorph()
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 

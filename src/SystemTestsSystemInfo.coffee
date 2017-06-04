@@ -14,5 +14,5 @@ class SystemTestsSystemInfo extends SystemInfo
   constructor: ->
     super()
     @AutomatorVersionMajor = 0
-    @AutomatorVersionMinor = 1
+    @AutomatorVersionMinor = 2
     @AutomatorVersionRelease = 0

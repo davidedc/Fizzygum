@@ -96,4 +96,5 @@ find ../Zombie-Kernel-builds/latest/js/tests -iname '*[!0123456789][!0123456789]
 
 rm -rdf ../Zombie-Kernel-builds/latest/delete_me
 
-say -v Bells "e"
+say build done
+echo done!!!!!!!!!!!!

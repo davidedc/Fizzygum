@@ -20,7 +20,7 @@
 # for the very morph, not for the whole of the
 # hierarchy.)
 #
-# Ideal use of a cache is tex,t because painting text
+# Ideal use of a cache is text because painting text
 # can be a lengthy operation.
 # Worst possible use of a cache is the large
 # desktop background rectangle, where a lot of memory
@@ -36,8 +36,8 @@ BackBufferMixin =
   # none
 
   # instance properties to follow:
-  onceAddedClassProperties: ->
-    @addInstanceProperties
+  onceAddedClassProperties: (fromClass) ->
+    @addInstanceProperties fromClass,
 
       # note that image contains only the CURRENT morph, not the composition of this
       # morph with all of the submorphs. I.e. for an inspector, this will only
@@ -68,6 +68,8 @@ BackBufferMixin =
           st = src.top() * pixelRatio
           al = area.left() * pixelRatio
           at = area.top() * pixelRatio
+          # @backBuffer.width and @backBuffer.height are already in
+          # physical coordinates so no need to adjust for pixelratio
           w = Math.min(src.width() * pixelRatio, @backBuffer.width - sl)
           h = Math.min(src.height() * pixelRatio, @backBuffer.height - st)
         return [area,sl,st,al,at,w,h]

@@ -23,6 +23,10 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
 
   positionInObjClonesArray = objOriginalsClonedAlready.length
   objOriginalsClonedAlready.push @
+  # with and height here are not the morph's,
+  # which would be in logical units and hence would need pixelRatio
+  # correction,
+  # but in actual physical units i.e. the actual bugffer size
   cloneOfMe = newCanvas new Point @width, @height
 
   ctx = cloneOfMe.getContext "2d"
@@ -44,7 +48,7 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   return cloneOfMe
 
 CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName) ->
-  objectIBelongTo[myPropertyName] = @canvas.getContext "2d"
+  objectIBelongTo[myPropertyName] = objectIBelongTo.backBuffer.getContext "2d"
 
 # Extending Array's prototype if 'filter' doesn't exist
 # already
@@ -96,6 +100,13 @@ Array::remove = (args...) ->
     output.push @splice index, 1 if index isnt -1
   output = output[0] if args.length is 1
   output
+
+# deduplicates array entries
+# doesn NOT modify array in place
+Array::unique = ->
+  output = {}
+  output[@[key]] = @[key] for key in [0...@length]
+  value for key, value of output
 
 # from https://gist.github.com/vjt/827679
 if typeof String::camelize == 'undefined'
@@ -168,18 +179,22 @@ getParameterByName = (name) ->
 ## -------------------------------------------------------
 # adds klass properties
 # these are added to the constructor
-Object::augmentWith = (obj) ->
+Object::augmentWith = (obj, fromClass) ->
   for key, value of obj when key not in MixedClassKeywords
     @[key] = value
-  obj.onceAddedClassProperties?.apply @
+  obj.onceAddedClassProperties?.apply @, [fromClass]
   this
 
 # adds instance properties
 # these are added to the prototype
-Object::addInstanceProperties= (obj) ->
+Object::addInstanceProperties = (fromClass, obj) ->
   for key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype
     @::[key] = value
+    if fromClass?
+      if isFunction value
+        @::[key + "_class_injected_in"] = fromClass
+        console.log "addingClassToMixin " + key + "_class_injected_in"
   obj.included?.apply @
   this
 ##--------------- end of mixins methods -------------------
@@ -259,6 +274,14 @@ fontHeight = (fontSize) ->
   minHeight = Math.max fontSize, WorldMorph.preferencesAndSettings.minimumFontHeight
   Math.ceil minHeight * 1.2 # assuming 1/5 font size for ascenders
 
+# newCanvas takes physical size, i.e. actual buffer pixels
+# on retina displays that's twice the amount of logical pixels,
+# which are used for all other measures of morphs.
+# So if the dimensions come from a canvas size, then those are
+# already physical pixels.
+# If the dimensions come form other measurements of the morphs
+# then those are in logical coordinates and need to be
+# corrected with pixelRatio before being passed here.
 newCanvas = (extentPoint) ->
   extentPoint?.debugIfFloats()
   # answer a new empty instance of Canvas, don't display anywhere
@@ -336,10 +359,16 @@ getDocumentPositionOf = (aDOMelement) ->
 
 howManySourcesLoaded = 0
 howManyTestManifestsLoaded = 0
+howManySourcesCompiledAndEvalled = 0
 
 aSourceHasBeenLoaded = ->
   howManySourcesLoaded++
-  if howManySourcesLoaded == sourcesManifests.length
+  # the -1 here is due to the fact that we load
+  # "klass" separately in advance, so there is no
+  # need to wait for it here.
+  if howManySourcesLoaded == sourcesManifests.length - 1
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv.innerHTML = ""
     continueBooting()
 
 
@@ -347,10 +376,14 @@ aSourceHasBeenLoaded = ->
 loadAllSources = ->
   for eachClass in sourcesManifests
 
+    if eachClass == "Klass_coffeSource" then continue
     script = document.createElement "script"
     script.src = "js/sourceCode/" + eachClass + ".js"
 
-    script.onload = =>
+    script.onload = ->
+      loadingLogDiv = document.getElementById 'loadingLog'
+      loadingLogDiv.innerHTML += "loading " + this.src + "</br>"
+      console.log "loading " + this.src
       aSourceHasBeenLoaded()
 
     document.head.appendChild script
@@ -360,23 +393,36 @@ aTestScriptHasBeenLoaded = ->
   if howManyTestManifestsLoaded == 2
     continueBooting2()
 
+loadTestManifests = ->
+  script = document.createElement "script"
+  script.src = "js/tests/testsManifest.js"
+  script.onload = =>
+    aTestScriptHasBeenLoaded()
+  document.head.appendChild script
 
-loadAllTestManifests = ->
-    script = document.createElement "script"
-    script.src = "js/tests/testsManifest.js"
-    script.onload = =>
-      aTestScriptHasBeenLoaded()
-    document.head.appendChild script
+  script2 = document.createElement "script"
+  script2.src = "js/tests/testsAssetsManifest.js"
+  script2.onload = =>
+    aTestScriptHasBeenLoaded()
+  document.head.appendChild script2
 
-    script2 = document.createElement "script"
-    script2.src = "js/tests/testsAssetsManifest.js"
-    script2.onload = =>
-      aTestScriptHasBeenLoaded()
-    document.head.appendChild script2
+loadKlass = ->
+
+  script = document.createElement "script"
+  script.src = "js/sourceCode/Klass_coffeSource.js"
+
+  script.onload = ->
+    # give life to the loaded and translated coffeescript klass now!
+    console.log "compiling and evalling Klass from souce code"
+    eval.call window, CoffeeScript.compile window["Klass_coffeSource"],{"bare":true}
+    loadAllSources()
+
+
+  document.head.appendChild script
 
 
 boot = ->
-  loadAllSources()
+  loadKlass()
 
 
 # The whole idea here is that
@@ -431,6 +477,7 @@ continueBooting = ->
   for eachClass in sourcesManifests
 
     eachClass = eachClass.replace "_coffeSource",""
+    if eachClass == "Klass" then continue
     #if namedClasses.hasOwnProperty eachClass
     console.log eachClass + " - "
     dependencies[eachClass] = []
@@ -460,16 +507,45 @@ continueBooting = ->
       i++
   inclusion_order = generate_inclusion_order dependencies
   console.log "--------------------------------"
+  compileAndEvalAllSrcFiles 0, inclusion_order
 
-  for eachClass in inclusion_order
-    console.log "checking whether " + eachClass + " is already in the system "
-    if !window[eachClass]?
-      if eachClass + "_coffeSource" in sourcesManifests
-        console.log "loading " + eachClass + " from souce code"
-        # give life to the loaded and translated coffeescript klass now!
-        eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
 
-  loadAllTestManifests()
+compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
+
+  if srcNumber == inclusion_order.length
+
+    # remove the log div
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv.parentElement.removeChild loadingLogDiv
+
+    loadTestManifests()
+    return
+
+  eachClass = inclusion_order[srcNumber]
+  console.log "checking whether " + eachClass + " is already in the system "
+
+  if eachClass == "MorphicNode" or
+   eachClass == "Morph" or
+   eachClass == "AnalogClockMorph" or
+   eachClass == "StringMorph2" or
+   eachClass == "TextMorph2"
+    morphKlass = new Klass(window[eachClass + "_coffeSource"])
+
+
+  if !window[eachClass]?
+    if eachClass + "_coffeSource" in sourcesManifests
+      console.log "compiling and evalling " + eachClass + " from souce code"
+      loadingLogDiv = document.getElementById 'loadingLog'
+      loadingLogDiv.innerHTML = "compiling and evalling " + eachClass
+
+      # give life to the loaded and translated coffeescript klass now!
+      eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
+
+  setTimeout ( ->
+    compileAndEvalAllSrcFiles srcNumber+1 , inclusion_order
+  ), 1
+
+
 
 
 world = {} # we make "world" global
@@ -524,7 +600,24 @@ continueBooting2 = ->
   if window.location.href.contains "worldWithSystemTestHarness"
     if SystemTestsControlPanelUpdater != null
       new SystemTestsControlPanelUpdater
+
+  window.menusHelper = new MenusHelper()
   world.boot()
+
+
+# these two are to build klasses
+extend = (child, parent) ->
+  ctor = ->
+    @constructor = child
+    return
+
+  for own key of parent
+    child[key] = parent[key]
+  ctor.prototype = parent.prototype
+  child.prototype = new ctor()
+  child.__super__ = parent.prototype
+  return child
+
 
 
 

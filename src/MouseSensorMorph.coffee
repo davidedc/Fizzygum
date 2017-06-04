@@ -35,7 +35,9 @@ class MouseSensorMorph extends BoxMorph
         else
           @alpha = 0
           @step = null
+          world.removeSteppingMorph @
         @changed()
+      world.addSteppingMorph @
   
   unTouch: ->
     @isTouched = false
@@ -48,6 +50,7 @@ class MouseSensorMorph extends BoxMorph
   
   mouseDownLeft: ->
     @touch()
+    super
   
   mouseClickLeft: ->
     @unTouch()

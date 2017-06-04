@@ -1,0 +1,1 @@
+for f in ./src/*.coffee; do open -a TextWrangler $f; done

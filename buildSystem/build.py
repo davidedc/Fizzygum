@@ -10,11 +10,13 @@ This script performs only some of the steps of the build:
 2) For each class file (not all of the coffee files are class files), it adds
    a special string that contains the source of the file itself.  This is so we
    can allow some editing of the classes in coffeescript, and do something like
-   generating the documentation on the fly.
-
-3) Combines the "extended" coffee files.  Note that 2) is a bit naive
+   generating the documentation on the fly. Note that this step is a bit naive
    because we just do some simple string checks. So, there could be strings in
    the source code that mangle this process. It's not likely though.
+
+3) Combines the files that DON'T contain classes. The classes will be loaded
+   dynamically by the environment, these other non-class files are loaded
+   at start instead.
 
 4) Generates an index html file that also includes all the tests, which
    are javascripts in a special directory
@@ -70,6 +72,7 @@ REQUIRES = re.compile(r"\sREQUIRES\s*(\w+)")
 EXTENDS = re.compile(r"\sextends\s*(\w+)")
 DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
 IS_CLASS = re.compile(r"\s*class\s+(\w+)")
+IS_MIXIN = re.compile(r"(\w+Mixin)[ \t]*=")
 TRIPLE_QUOTES = re.compile(r"'''")
 
 # These two functions search for "requires" comments in the
@@ -236,7 +239,8 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
 def main():
     """
     Creates an ordered list of the coffee files, iterates through it, reads the
-    source code of each file and combines them all into one final output file.
+    source code of each file and put each it its own .coffee containing the source
+    Also put together a manifest of all the sources.
     """
     dependencies = OrderedDict()
 
@@ -244,6 +248,9 @@ def main():
     filenames = sorted(glob("src/*.coffee"))
 
     # Read each file and search it for each sort of dependency.
+    # note that this is not strictly needed because it's not
+    # kept anywhere, the loader
+    # in zombie kernel independently re-calculates the order.
     for filename in filenames:
         dependencies[filename] = list()
         with open(filename, "r") as f:
@@ -277,7 +284,7 @@ def main():
     """window.%s = '''\n%s\n'''"""
     sourcesManifests = "sourcesManifests = [];\n"
 
-    # now iterate through the files and create the giant final *.coffee file.
+    # now iterate through the files and create the *.coffee files.
     text = []
     for filename in inclusion_order:
         print(">>>> %s " % (filename))
@@ -285,27 +292,29 @@ def main():
         with codecs.open(filename, "r", "utf-8") as f:
             content = f.read()
 
-        # if the file is a class, then we add its source code in the giant
-        # *.coffee file as a static variable (string block).
+        # if the file is a class, then we add its source code in a
+        # *.coffee file as a window.SOURCENAME_coffeSource variable
+        # (string block).
         # We check if the file is a class by searching its contents for a
         # class ... declaration.
         is_class_file = IS_CLASS.search(content)
+        is_mixin_file = IS_MIXIN.search(content)
 
-        if not is_class_file:
+        if not (is_class_file or is_mixin_file):
             print("#### appending %s " % (filename))
             text.append(content)
 
-        # all the class files' coffeescript source is put
+        # all the class and mixins files' coffeescript source is put
         # in .coffee files containing such sources as text.
         # later on in the build process these .coffee "source containers"
         # are going to be translated to javascript (still containing coffeescript
         # sources as text).
         # Also keep track of all the sources in a manifest.
-        # The manifest will be loaded, and then the sources will be
-        # dynamically loaded following the manifest entries.
-        # This is to avoid the page necessarily loading all the morph
-        # classes on load.
-        if is_class_file:
+        # The manifest will be loaded at start, and then the sources will be
+        # dynamically and asynchronously loaded following the manifest entries.
+        # This is so Fizzygum can dynamically (and possibly lazily) load all
+        # the morph's classes as coffeescript source code.
+        if is_class_file or is_mixin_file:
             # If there is a string block in the source, then we must escape it.
             escaped_content = re.sub(TRIPLE_QUOTES, "\\'\\'\\'", content)
             # also all the slashes need to be escaped

@@ -111,7 +111,3 @@ class MorphsListMorph extends BoxMorph
     trackChanges.pop()
     @changed()
   
-  rawSetExtent: (aPoint) ->
-    #console.log "move 14"
-    @breakNumberOfRawMovesAndResizesCaches()
-    super aPoint

@@ -41,8 +41,7 @@ class PromptMorph extends MenuMorph
         @floorNum or 0,
         @ceilingNum,
         parseFloat(@defaultContents),
-        Math.floor((@ceilingNum - @floorNum) / 4),
-        "horizontal")
+        Math.floor((@ceilingNum - @floorNum) / 4))
       slider.alpha = 1
       slider.color = new Color 225, 225, 225
       slider.button.color = new Color 60,60,60

@@ -43,8 +43,8 @@ class Rectangle
 
   @augmentWith DeepCopierMixin
 
-  origin: null
-  corner: null
+  origin: null # a Point
+  corner: null # a Point
   @EMPTY: new Rectangle()
   
   constructor: (left = 0, top = 0, right = 0, bottom = 0) ->
@@ -342,6 +342,11 @@ class Rectangle
     o = @origin.add factor
     c = @corner.add factor
     new @constructor o.x, o.y, c.x, c.y
+  
+  translateTo: (aPoint) ->
+    @debugIfFloats()
+    c = @corner
+    new @constructor aPoint.x, aPoint.y, c.x, c.y
   
   
   # Rectangle converting:

@@ -23,6 +23,7 @@ class ColorPickerMorph extends Morph
     @choice = (new Color 255, 255, 255)
     ) ->    
     super()
+    @appearance = new RectangularAppearance @
     @color = new Color 255, 255, 255
     @rawSetExtent new Point 80, 80
 

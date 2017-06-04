@@ -44,6 +44,8 @@ class ShadowMorph extends Morph
     extent = @extent()
 
     if @backBuffer?
+      # @backBuffer.width and @backBuffer.height are already in
+      # physical coordinates so no need to adjust for pixelratio
       backBufferExtent = new Point @backBuffer.width, @backBuffer.height
       if backBufferExtent.eq extent.scaleBy pixelRatio
         return [@backBuffer, @backBufferContext]

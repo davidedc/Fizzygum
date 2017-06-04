@@ -59,6 +59,7 @@ class MenuItemMorph extends TriggerMorph
     np = @position().add new Point 4, 0
     @label.silentFullRawMoveTo np
   
+
   createIcon: (source) ->
     # source can be either a Morph or an HTMLCanvasElement
     icon = new Morph()
@@ -130,7 +131,8 @@ class MenuItemMorph extends TriggerMorph
       @parent.unselectAllItems()
       @escalateEvent "mouseDownLeft", pos
     @state = @STATE_PRESSED
-    @changed()  
+    @changed()
+    super
   
   isListItem: ->
     return @parent.isListContents  if @parent

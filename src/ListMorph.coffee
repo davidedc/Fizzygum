@@ -116,12 +116,13 @@ class ListMorph extends ScrollFrameMorph
         @target[@action].call @target, item.labelString
   
   rawSetExtent: (aPoint) ->
-    #console.log "move 3"
-    @breakNumberOfRawMovesAndResizesCaches()
-    lb = @listContents.boundingBox()
-    nb = @bounds.origin.corner @bounds.origin.add aPoint
-    if nb.right() > lb.right() and nb.width() <= lb.width()
-      @listContents.fullRawMoveRightSideTo nb.right()
-    if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
-      @listContents.fullRawMoveBottomSideTo nb.bottom()
-    super aPoint
+    unless aPoint.eq @extent()
+      #console.log "move 3"
+      @breakNumberOfRawMovesAndResizesCaches()
+      lb = @listContents.boundingBox()
+      nb = @bounds.origin.corner @bounds.origin.add aPoint
+      if nb.right() > lb.right() and nb.width() <= lb.width()
+        @listContents.fullRawMoveRightSideTo nb.right()
+      if nb.bottom() > lb.bottom() and nb.height() <= lb.height()
+        @listContents.fullRawMoveBottomSideTo nb.bottom()
+      super aPoint

@@ -23,36 +23,37 @@ class TextMorph2 extends StringMorph2
   widthOfPossiblyCroppedText: null
 
   constructor: (
-    @text = (if text is "" then text else "TextMorph2"),
-    @originallySetFontSize = 12,
-    @fontName = @justArialFontStack,
-    @isBold = false,
-    @isItalic = false,
-    #@isNumeric = false,
-    @color = (new Color 0, 0, 0),
-    @backgroundColor = null,
-    @backgroundTransparency = null
-    ) ->
+   @text = (if text is "" then text else "TextMorph2"),
+   @originallySetFontSize = 12,
+   @fontName = @justArialFontStack,
+   @isBold = false,
+   @isItalic = false,
+   #@isNumeric = false,
+   @color = (new Color 0, 0, 0),
+   @backgroundColor = null,
+   @backgroundTransparency = null
+   ) ->
 
-      super(
-        @text,
-        @originallySetFontSize,
-        @fontName,
-        @isBold,
-        @isItalic,
-        false, # isNumeric
-        @color,
-        @backgroundColor,
-        @backgroundTransparency
-        )
-      # override inherited properties:
-      @markedTextColor = new Color 255, 255, 255
-      @markedBackgoundColor = new Color 60, 60, 120
-      @textPossiblyCroppedToFit = @transformTextOneToOne @text
-      @noticesTransparentClick = true
+    super(
+      @text,
+      @originallySetFontSize,
+      @fontName,
+      @isBold,
+      @isItalic,
+      false, # isHeaderLine
+      false, # isNumeric
+      @color,
+      @backgroundColor,
+      @backgroundTransparency
+      )
+    # override inherited properties:
+    @markedTextColor = new Color 255, 255, 255
+    @markedBackgoundColor = new Color 60, 60, 120
+    @textPossiblyCroppedToFit = @transformTextOneToOne @text
+    @noticesTransparentClick = true
 
-      @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
-      @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
+    @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
+    @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
   
 
   # notice the thick arrow here!
@@ -61,7 +62,7 @@ class TextMorph2 extends StringMorph2
   # the font size here because is the one we are going to
   # change when we do the binary search for trying to
   # see the largest fitting size.
-  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) =>
+  doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     doesItFit = @breakTextIntoLines text, overrideFontSize, @extent()
     return doesItFit
 

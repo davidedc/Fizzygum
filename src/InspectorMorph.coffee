@@ -71,6 +71,7 @@ class InspectorMorph extends BoxMorph
     for property of @target
       # dummy condition, to be refined
       attribs.push property  if property
+
     attribs = switch @showing
       when "attributes"
         attribs.filter (prop) =>
@@ -78,6 +79,8 @@ class InspectorMorph extends BoxMorph
       when "methods"
         attribs.filter (prop) =>
           isFunction @target[prop]
+      when "all"
+        attribs
 
     # otherwise show all properties
     # label getter
@@ -106,7 +109,13 @@ class InspectorMorph extends BoxMorph
 
     #alert "stat fun " + staticFunctions + " stat attr " + staticAttributes
     attribs = (attribs.concat staticFunctions).concat staticAttributes
-    #alert " all attribs " + attribs
+
+    # I expected this sort of filtering based on property names to work
+    # but it doesn't, leaving it here as a curiosity and in case I try this
+    # again...
+    #attribs = attribs.filter((prop) => prop.indexOf("_class_injected_in") == -1)
+    #attribs = attribs.filter((prop) => prop.indexOf("function ") == -1)
+    #attribs = attribs.unique()
     
     # caches the own methods of the object
     if @markOwnershipOfProperties
@@ -143,7 +152,7 @@ class InspectorMorph extends BoxMorph
     # we set that here. Note that the ListMorph itself does require animation because of the
     # scrollbars, but the MenuMorph (which contains the actual list contents)
     # in this context doesn't.
-    @list.listContents.step = null
+    world.removeSteppingMorph @list.listContents
     @add @list
 
     # we add a Morph alignment here because adjusting IDs whenever
@@ -357,6 +366,9 @@ class InspectorMorph extends BoxMorph
       @label.rawSetWidth labelWidth
       if @label.height() > @height() - 50
         @silentRawSetHeight @label.height() + 50
+        # TODO run the tests when commenting this out
+        # because this one point to the Morph implementation
+        # which is empty.
         @reLayout()
         
         @changed()
