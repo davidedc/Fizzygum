@@ -312,9 +312,13 @@ class ReconfigurablePaintMorph extends WindowMorph
 
             contextMain.restore()
 
-        mouseDownLeft = (pos) ->
-            if world.hand.floatDraggingSomething() then return
-            @queue = [0..24].map -> null
+        # you'd be tempted to initialise the queue
+        # on mouseDown but it would be a bad idea
+        # because the mouse could come "already-pressed"
+        # from outside the canvas
+        initialiseQueueIfNeeded = ->
+            if !@queue?
+                @queue = [0..24].map -> null
             console.log "resetting the queue"
 
         mouseUpLeft = ->
@@ -353,6 +357,7 @@ class ReconfigurablePaintMorph extends WindowMorph
             context.lineWidth="2"
 
             if mouseButton == 'left'
+                @initialiseQueueIfNeeded()
                 @queue.push pos
                 context.fillStyle = "red"
 
