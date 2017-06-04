@@ -37,12 +37,11 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     @paintNewFrame()
 
   paintNewFrame: ->
+    # we get the context already with the correct pixel scaling
+    # (ALWAYS leave the context with the correct pixel scaling.)
     @clear()
     context = @backBufferContext
-    context.setTransform 1, 0, 0, 1, 0, 0
-    context.scale pixelRatio, pixelRatio
     context.translate @width()/2, @height()/2
-
     @graphicsCode()
 
   pulse: (frequency) ->
