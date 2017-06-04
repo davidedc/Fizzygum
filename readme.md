@@ -1,24 +1,19 @@
-Zombie Kernel
-============
+Fizzygum
+========
 
-Zombie Kernel is a minimal live desktop system similar in concept to Squeak and Lively Kernel.
+Fizzygum is a minimal live desktop system similar in concept to Squeak and Lively Kernel.
 
 ![alt tag](https://raw.githubusercontent.com/davidedc/Zombie-Kernel-builds/gh-pages/other-support-files/docs/other/imgs/ZombieKernelScreenshot5thSept2013.png)
 
-It's "live" in the sense that it allows direct interaction/inspection with/of all its elements. Everything in Zombie Kernel is an object that can be inspected and changed "live".
+It's "live" in the sense that it allows direct interaction/inspection with/of all its elements. Everything in Fizzygum is an object that can be inspected and changed "live".
 
 Play with it
 -------------------
-Try it [here](http://davidedc.github.io/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html)
+Try it [here](http://fizzygum.net)
 
 Download it / build it
 -------------------
 Install npm. Then install coffeescript. Run the "build_it_please.sh" script. No server needed, just drag "index.html" from the "build" directory into any browser and right click to open a system menu. The "demo" section has some elements that you can play with.
-
-Docs
--------------------
-[Here](http://davidedc.github.io/Zombie-Kernel-builds/other-support-files/docs/index.html), it contains an overview of the system, and links to detailed docco files (and more).
-
 
 Build it / Hack it
 ---------------------------------------------
@@ -26,14 +21,13 @@ TBD
 
 Standing on the shoulders of giants
 -----------------------------------
-Zombie Kernel was inspired by [Lively Kernel](http://www.lively-kernel.org/).
-Zombie Kernel was built starting from [Morphic.js](https://github.com/jmoenig/morphic.js) by [Jens Mönig](https://twitter.com/moenig).
-Parts of Zombie Kernel are adapted from the compact and awesome [Cuis Smalltalk](http://www.jvuletich.org/Cuis/Index.html) by [Juan Vuletich](http://www.jvuletich.org/).
+Fizzygum was inspired by [Lively Kernel](http://www.lively-kernel.org/).
+Fizzygum was built starting from [Morphic.js](https://github.com/jmoenig/morphic.js) by [Jens Mönig](https://twitter.com/moenig).
 
 The MIT License
 -----------------------------------
 
-Copyright (c) 2015 All Zombie Kernel contributors
+Copyright (c) 2015 All Fizzygum contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

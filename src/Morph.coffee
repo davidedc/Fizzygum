@@ -116,7 +116,7 @@ class Morph extends MorphicNode
   fps: 0
   customContextMenu: null
   shadowBlur: 10
-  onNextStep: null # optional function to be run once. Not currently used in Zombie Kernel
+  onNextStep: null # optional function to be run once. Not currently used in Fizzygum
 
   # contains all the reactive vals
   allValsInMorphByName: null
@@ -485,7 +485,7 @@ class Morph extends MorphicNode
 
 
 
-  # not used within Zombie Kernel yet.
+  # not used within Fizzygum yet.
   nextSteps: (lst = []) ->
     nxt = lst.shift()
     if nxt
@@ -1191,7 +1191,7 @@ class Morph extends MorphicNode
   # * fullPaintIntoAreaOrBlitFromBackBuffer: recursively draws all the local canvas of this morph and all
   #   its children into a specific area of a passed canvas.
 
-  # tiles the texture - never used in Zombie Kernel at the moment.
+  # tiles the texture - never used in Fizzygum at the moment.
   drawCachedTexture: ->
     bg = @cachedTexture
     cols = Math.floor @backBuffer.width / bg.width
@@ -1325,7 +1325,7 @@ class Morph extends MorphicNode
     # Note that if we could dynamically and cheaply keep an updated
     # fullBounds property, then we could be smarter
     # in discarding whole sections of the scene graph.
-    # (see https://github.com/davidedc/Zombie-Kernel/issues/150 )
+    # (see https://github.com/davidedc/Fizzygum/issues/150 )
     
 
     if aContext == world.worldCanvasContext
@@ -1409,7 +1409,7 @@ class Morph extends MorphicNode
     
   # Morph full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
-  # and https://github.com/davidedc/Zombie-Kernel/issues/160
+  # and https://github.com/davidedc/Fizzygum/issues/160
   fullImage: (bounds, noShadow = false) ->
     if !bounds?
       bounds = @fullBounds()

@@ -346,10 +346,10 @@ class WorldMorph extends FrameMorph
 
   # this one contains two actions, two tests each, but only
   # the second test is run for the second group.
-  # file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22bubble%22%5D%0D%0A++++%7D%2C%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22shadow%22%2C+%22SystemTest_basicResize%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+2%2C%0D%0A++++++%22groupToBeRun%22%3A+1%0D%0A++++%7D++%5D%0D%0A%7D
+  # file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22bubble%22%5D%0D%0A++++%7D%2C%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22shadow%22%2C+%22SystemTest_basicResize%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+2%2C%0D%0A++++++%22groupToBeRun%22%3A+1%0D%0A++++%7D++%5D%0D%0A%7D
   #
   # just one simple quick test about shadows
-  #file:///Users/daviddellacasa/Zombie-Kernel/Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
+  #file:///Users/daviddellacasa/Fizzygum/Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0A%20%20%22paramsVersion%22%3A%200.1%2C%0A%20%20%22actions%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22name%22%3A%20%22runTests%22%2C%0A%20%20%20%20%20%20%22testsToRun%22%3A%20%5B%22shadow%22%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D
 
   nextStartupAction: ->
     startupActions = JSON.parse getParameterByName "startupActions"
@@ -1181,7 +1181,7 @@ class WorldMorph extends FrameMorph
     # We manage that case - if that key is
     # pressed twice we understand that it's
     # that particular key. Managing this
-    # special case within Zombie Kernel
+    # special case within Fizzygum
     # is not best, but there aren't any
     # good alternatives.
     if event?
@@ -1672,7 +1672,7 @@ class WorldMorph extends FrameMorph
       menu.addItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
       menu.addItem "switch to dev mode", true, @, "toggleDevMode"
-    menu.addItem "about Zombie Kernel...", true, @, "about"
+    menu.addItem "about Fizzygum...", true, @, "about"
     menu
 
   popUpSystemTestsMenu: ->

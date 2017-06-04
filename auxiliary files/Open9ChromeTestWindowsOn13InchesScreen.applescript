@@ -1,6 +1,6 @@
 set screenWidth to 1280
 set screenHeight to 800
-set pageRoot to "file:///Users/daviddellacasa/Zombie-Kernel/"
+set pageRoot to "file:///Users/daviddellacasa/Fizzygum/"
 
 set windows_number to 0
 
@@ -38,7 +38,7 @@ repeat with tile_x from 1 to numberOfTilesX
 		
 		tell application "Google Chrome"
 			tell (make new window)
-				set URL of active tab to (pageRoot & "Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22all%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+9%2C%0D%0A++++++%22groupToBeRun%22%3A+" & windows_number & "%0D%0A++++%7D++%5D%0D%0A%7D")
+				set URL of active tab to (pageRoot & "Fizzygum-builds/latest/worldWithSystemTestHarness.html?startupActions=%7B%0D%0A++%22paramsVersion%22%3A+0.1%2C%0D%0A++%22actions%22%3A+%5B%0D%0A++++%7B%0D%0A++++++%22name%22%3A+%22runTests%22%2C%0D%0A++++++%22testsToRun%22%3A+%5B%22all%22%5D%2C%0D%0A++++++%22numberOfGroups%22%3A+9%2C%0D%0A++++++%22groupToBeRun%22%3A+" & windows_number & "%0D%0A++++%7D++%5D%0D%0A%7D")
 				
 				set posX to (tile_x - 1) * (displacementDueToWindowWidthX + absoluteDisplacementX)
 				set posY to (tile_y - 1) * eachWindow_height

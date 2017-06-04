@@ -213,7 +213,7 @@ class FrameMorph extends Morph
     # keep for example a list of the top n biggest opaque morphs
     # (say, frames and rectangles)
     # and check that case while you traverse the list.
-    # (see https://github.com/davidedc/Zombie-Kernel/issues/149 )
+    # (see https://github.com/davidedc/Fizzygum/issues/149 )
     
     # the part to be redrawn could be outside the frame entirely,
     # in which case we can stop going down the morphs inside the frame

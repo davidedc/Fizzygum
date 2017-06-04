@@ -58,12 +58,12 @@ import ntpath
 import fnmatch
 
 # GLOBALS
-FINAL_OUTPUT_FILE = '../Zombie-Kernel-builds/latest/delete_me/zombie-kernel.coffee'
+FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum.coffee'
 
 
-DIRECTORY_WITH_TEST_FILES = "../Zombie-Kernel-tests/tests/"
+DIRECTORY_WITH_TEST_FILES = "../Fizzygum-tests/tests/"
 FILE_TO_BE_ADDED_TEST_INCLUDES = "src/index.html"
-OUTPUT_FILE_WITH_TEST_INCLUDES = "../Zombie-Kernel-builds/latest/worldWithSystemTestHarness.html"
+OUTPUT_FILE_WITH_TEST_INCLUDES = "../Fizzygum-builds/latest/worldWithSystemTestHarness.html"
 
 # RegEx Patterns
 # We precompile them in order to improve performance and increase
@@ -139,7 +139,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # which only includes the test steps and not the
     # assets, so it's one js file for each test
     filenames2 = []
-    for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
+    for root, dirnames, fileNMS in os.walk("../Fizzygum-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[!0123456789][!0123456789][!0123456789][!0123456789][!0123456789][!0123456789].js'):
           # the way to differentiate between files: the asset files contain a hash
           # in the filename that we can use to filter them in/out.
@@ -167,7 +167,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
         manifest = manifest + "AutomatorRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');\n"
 
     # 'build/indexWithTests.html'
-    with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
+    with codecs.open("../Fizzygum-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
         f.write(manifest)
     # -------------------------------------------------------------------------
 
@@ -176,7 +176,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     # assets, so it's one js file for each test
     filenames2 = []
     #print("Tests assets ----------------------------")
-    for root, dirnames, fileNMS in os.walk("../Zombie-Kernel-tests/tests/"):
+    for root, dirnames, fileNMS in os.walk("../Fizzygum-tests/tests/"):
       for filename in fnmatch.filter(fileNMS, 'SystemTest_*[0123456789][0123456789][0123456789][0123456789][0123456789][0123456789].js'):
           # the way to differentiate between files: the asset files contain a hash
           # in the filename that we can use to filter them in/out.
@@ -184,7 +184,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           # as explained here:
           # http://fabiosantoscode.blogspot.co.uk/2012/12/wildcards-in-python-fnmatch-module.html
           filename = filename[:-3] # remove the last three chars i.e. the ".js" extension
-          filenames2.append(os.path.join(root,filename).replace("../Zombie-Kernel-tests/tests/",""))
+          filenames2.append(os.path.join(root,filename).replace("../Fizzygum-tests/tests/",""))
           #print("%s" % (os.path.join(root,filename)))
     filenames2 = sorted(filenames2)
 
@@ -194,7 +194,7 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
         manifest = manifest + "AutomatorRecorderAndPlayer.testsAssetsManifest.push('"+filename+"');\n"
 
     # 'build/indexWithTests.html'
-    with codecs.open("../Zombie-Kernel-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:
+    with codecs.open("../Fizzygum-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:
         f.write(manifest)
     # -------------------------------------------------------------------------
 
@@ -250,7 +250,7 @@ def main():
     # Read each file and search it for each sort of dependency.
     # note that this is not strictly needed because it's not
     # kept anywhere, the loader
-    # in zombie kernel independently re-calculates the order.
+    # in Fizzygum independently re-calculates the order.
     for filename in filenames:
         dependencies[filename] = list()
         with open(filename, "r") as f:
@@ -321,11 +321,11 @@ def main():
             escaped_content = escaped_content.replace("\\","\\\\")
 
             sourceFileName = ntpath.basename(filename).replace(".coffee","_coffeSource")
-            with codecs.open("../Zombie-Kernel-builds/latest/js/sourceCode/"+sourceFileName+".coffee", "w", "utf-8") as f:
+            with codecs.open("../Fizzygum-builds/latest/js/sourceCode/"+sourceFileName+".coffee", "w", "utf-8") as f:
                 f.write(STRING_BLOCK % (unicode(sourceFileName), unicode(escaped_content)))
                 sourcesManifests += "sourcesManifests.push('" + sourceFileName + "');\n";
 
-    with codecs.open("../Zombie-Kernel-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
+    with codecs.open("../Fizzygum-builds/latest/js/sourceCode/sourceCodeManifest.js", "w", "utf-8") as f:
         f.write(sourcesManifests)
 
 
