@@ -1113,6 +1113,8 @@ class AutomatorRecorderAndPlayer
     script = document.createElement('script')
     script.src = "js/tests/"+@testsList()[testNumber] + "_automationCommands.js"
 
+    # todo: you should be able to remove the script once it's loaded/executed...
+    # any implication of that? debugger still working OK finding the source code?
     script.onload = =>
       @loadImagesOfTest testNumber, andThenDoThis
 
@@ -1125,6 +1127,8 @@ class AutomatorRecorderAndPlayer
         pureImageName = eachCommand.screenShotImageName
         for eachAssetInManifest in AutomatorRecorderAndPlayer.testsAssetsManifest
           if eachAssetInManifest.contains pureImageName
+            # todo: you should be able to remove the script once it's loaded/executed...
+            # any implication of that? debugger still working OK finding the source code?
             script = document.createElement('script')
             ###
             systemInfo = new SystemTestsSystemInfo()
@@ -1174,6 +1178,8 @@ class AutomatorRecorderAndPlayer
     script = document.createElement('script')
     script.src = "js/tests/" + AutomatorRecorderAndPlayer.testsManifest[testNumber] + ".js"
 
+    # todo: you should be able to remove the script once it's loaded/executed...
+    # any implication of that? debugger still working OK finding the source code?
     script.onload = =>
       @loadTestMetadata(testNumber+1, andThen)
 
