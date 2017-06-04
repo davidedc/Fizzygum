@@ -25,33 +25,29 @@ class FridgeMagnetsMorph extends WindowMorph
       world.alignIDsOfNextMorphsInSystemTests()
 
     super
+
+    # visual output
+    @visualOutput = new FridgeMagnetsCanvasMorph()
+    @visualOutput.disableDrops()
+    @add @visualOutput
     
     # source code output pane
-    @codeOutput = new ScrollFrameMorph()
-    @codeOutput.disableDrops()
-    @codeOutput.contents.disableDrops()
-    @codeOutput.isTextLineWrapping = true
-    @codeOutput.color = new Color 255, 255, 255
-    sourceCode = new TextMorph ""
-    sourceCode.isEditable = true
-    sourceCode.enableSelecting()
-    sourceCode.setReceiver @target
-    @codeOutput.setContents sourceCode, 2
+    @codeOutput = new FizzytilesCodeMorph "",null,null,null,null,null,(new Color 255, 250, 245), 1
+    @codeOutput.fridgeMagnetsCanvas = @visualOutput
+    @codeOutput.isEditable = true
+    @codeOutput.enableSelecting()
+    @codeOutput.togglefittingSpecWhenBoundsTooLarge()
     @add @codeOutput
 
     # fridge
     @fridge = new FridgeMorph()
+    @fridge.fridgeMagnetsCanvas = @visualOutput
     @fridge.sourceCodeHolder = @codeOutput
     @add @fridge
 
     # magnets box
     @magnetsBox = new FrameMorph()
     @add @magnetsBox
-
-    # visual output
-    @visualOutput = new FridgeMagnetsCanvasMorph()
-    @visualOutput.disableDrops()
-    @add @visualOutput
 
 
     # sample magnets -------------------------------

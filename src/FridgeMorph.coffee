@@ -7,15 +7,17 @@ class FridgeMorph extends FrameMorph
 
   tabs: []
   sourceCodeHolder: null
-  codeCompiler: new CodeCompiler()
+  fridgeMagnetsCanvas: null
 
-  topMostMagnet: ->
-    filtered = @children.filter (m) ->
+  topMostMagnet: (setOfMorphs = @children) ->
+    filtered = setOfMorphs.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
+
     calculated = filtered.map (m) ->
       m.top()
     calcIndex = calculated.indexOf(Math.min(calculated...))
     if calcIndex == -1 then return null
+
     return filtered[calcIndex]
 
   magnetToLeftOf: (aMagnet) ->
@@ -41,8 +43,23 @@ class FridgeMorph extends FrameMorph
     if calcIndex == -1 then return null
     return correctSide[calcIndex]
 
-  # symmetric of magnetToLeftOf
-  magnetToRightOf: (aMagnet) ->
+  # the magnet following another magnet is
+  # not necessarily the closest magnet to the right
+  # consider this case:
+  #   |   |
+  #   | A |
+  #   |   | |   |
+  #         | B |
+  #    |   ||   |
+  #    | C |
+  #    |   |
+  # 
+  # A's closest magnet to the right is B, but it's not the
+  # correct one, because B's closest magnet to the left is NOT A
+  # (it's C).
+  # So in order to find the correct magnet we need to verify
+  # that they are reciprocally the closest ones.
+  magnetFollowing: (aMagnet) ->
     correctHeight = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords and
       (
@@ -53,21 +70,66 @@ class FridgeMorph extends FrameMorph
     correctSide = correctHeight.filter (m) ->
       m.left() > aMagnet.left()
 
+    # distance from the magnet to all the magnets that are
+    # about the same height and to the right
     calculated = correctSide.map (m) ->
       m.leftCenter().distanceTo(aMagnet.rightCenter())
-    calcIndex = calculated.indexOf(Math.min(calculated...))
-    if calcIndex == -1 then return null
-    return correctSide[calcIndex]
 
+    comparator = (arr) ->
+      (a, b) ->
+        if arr[a] < arr[b] then 1 else if arr[a] > arr[b] then -1 else 0
+
+    # Sort by distance
+    correctSide = correctSide.sort(comparator(calculated))
+
+    # now we check each magnet K that could follow H. If we find that
+    # K's distance with his left is smaller than K's distance with H
+    # then K doesn't follow H and we need to check the
+    # next one.
+    # vice versa, if K's distance with his left is bigger, then indeed
+    # K follows H so we stop the search and we are done.
+    for eachMagnet in correctSide
+
+      left = @magnetToLeftOf eachMagnet
+      if !left? or left.rightCenter().distanceTo(eachMagnet.leftCenter()) > aMagnet.rightCenter().distanceTo(eachMagnet.leftCenter())
+        return eachMagnet
+    return null
+
+
+  # the idea is that we first find the top most one
+  # and then we filter through the ones on the left
+  # of it and we keep doing that recursively until
+  # all the ones on the left are all COMPLETELY below
+  # the top morph.
   topLeftMostMagnet: ->
-    topMostMagnet = @topMostMagnet()
-    somethingToTheLeft = topMostMagnet
+    bag = @children.filter (m) ->
+      m.putIntoWords? and !m.putIntoWords
 
-    while somethingToTheLeft
-      topLeftMostMagnet = somethingToTheLeft
-      somethingToTheLeft = @magnetToLeftOf topLeftMostMagnet
+    topMostMagnet = null
 
-    return topLeftMostMagnet
+    while bag.length > 0
+      topMostMagnet = @topMostMagnet bag
+      if !topMostMagnet? then return null
+
+      # filter through the ones on the left
+      bag = bag.filter (m) ->
+        m.left() < topMostMagnet.left()
+
+      # check if all the ones on the left are
+      # strictly below the topmost. If they are
+      # then we are done
+      notStrictlyBelow = bag.filter (m) ->
+        m.top() < topMostMagnet.bottom()
+
+      # if eliminating the ones on the left
+      # and eliminating the ones strictly below
+      # you remain with nothing, then the
+      # search is over
+      if notStrictlyBelow.length == 0
+        break
+
+    return topMostMagnet
+
 
   clearUpTranslitteratedFlags: ->
     for eachChild in @children
@@ -106,7 +168,7 @@ class FridgeMorph extends FrameMorph
         currentTranslitteratedMagnet = somethingToTheRight
         translitteration += currentTranslitteratedMagnet.labelString + " "
         currentTranslitteratedMagnet.putIntoWords = true
-        somethingToTheRight = @magnetToRightOf currentTranslitteratedMagnet
+        somethingToTheRight = @magnetFollowing currentTranslitteratedMagnet
 
       somethingBelow = @topLeftMostMagnet()
 
@@ -114,14 +176,10 @@ class FridgeMorph extends FrameMorph
 
   compileTiles: ->
    if @sourceCodeHolder?
-      cnts = new TextMorph @putIntoWords()
-      cnts.isEditable = true
-      cnts.enableSelecting()
-      @sourceCodeHolder.setContents cnts, 2
-      compiled = @codeCompiler.compileCode cnts.text
-      console.log compiled
-      console.log compiled.program
-      @parent.visualOutput.graphicsCode = @codeCompiler.lastCorrectOutput.program
+      code = @putIntoWords()
+      debugger
+      @sourceCodeHolder.showCompiledCode code
+      @fridgeMagnetsCanvas?.newGraphicsCode code
 
 
   reactToGrabOf: ->

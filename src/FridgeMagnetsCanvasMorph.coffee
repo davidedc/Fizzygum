@@ -11,13 +11,24 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   namedClasses[@name] = @prototype
 
   primitiveTypes: {}
+  codeCompiler: new CodeCompiler()
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
+    debugger
     @paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
+  oldGraphicsCode: ->
+
   graphicsCode: ->
+
+  newGraphicsCode: (newCode) ->
+    debugger
+    @oldGraphicsCode = @graphicsCode
+    compilation = @codeCompiler.compileCode newCode
+    if compilation.program?
+      @graphicsCode = compilation.program
 
   constructor: ->
     super
@@ -43,7 +54,10 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     @clear()
     context = @backBufferContext
     context.translate @width()/2, @height()/2
-    @graphicsCode()
+    try
+      @graphicsCode()
+    catch
+      @graphicsCode = @oldGraphicsCode
 
   pulse: (frequency) ->
 
