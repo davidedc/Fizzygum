@@ -1,5 +1,6 @@
 # FridgeMagnetsCanvasMorph //////////////////////////////////////////////////////////
 # REQUIRES BackBufferMixin
+# REQUIRES numbertimes
 # 
 # 
 # "container"/"contained" scenario going on.

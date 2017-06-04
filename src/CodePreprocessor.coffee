@@ -1314,6 +1314,21 @@ class CodePreprocessor
 
     return [code, error]
 
+  addScopeToTimes: (code, error) ->
+    # if there is an error, just propagate it
+    return [undefined, error] if error?
+
+
+    rx = RegExp("\.times ",'gm')
+    code = code.replace(rx, ".times @, ")
+    if detailedDebug then console.log "addScopeToTimes-1\n" + code + " error: " + error
+
+    rx = RegExp("\.timesWithVariable ",'gm')
+    code = code.replace(rx, ".timesWithVariable @, ")
+    if detailedDebug then console.log "addScopeToTimes-2\n" + code + " error: " + error
+
+
+    return [code, error]
 
   evaluateAllExpressions: (code, error, userDefinedFunctions) ->
     # if there is an error, just propagate it
@@ -1786,8 +1801,10 @@ class CodePreprocessor
     if detailedDebug then console.log "preprocess-25\n" + code + " error: " + error
     [code, error] = @putBackBracketVarOriginalName(code, error)
     if detailedDebug then console.log "preprocess-26\n" + code + " error: " + error
-    [code, error] = @beautifyCode(code, error)
+    [code, error] = @addScopeToTimes(code, error)
     if detailedDebug then console.log "preprocess-27\n" + code + " error: " + error
+    [code, error] = @beautifyCode(code, error)
+    if detailedDebug then console.log "preprocess-28\n" + code + " error: " + error
     
     # unfortunately some beautification depends on the () being there
     # so we need to put this function here after the beautification step
