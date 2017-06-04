@@ -6,7 +6,7 @@ class AutomatorCommandPaste extends AutomatorCommand
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     console.log "test player inserting text: " + commandBeingPlayed.clipboardText
-    automatorRecorderAndPlayer.worldMorph.processPaste null, commandBeingPlayed.clipboardText
+    automatorRecorderAndPlayer.worldMorph.processPaste commandBeingPlayed.clipboardText
 
 
   constructor: (@clipboardText, automatorRecorderAndPlayer) ->

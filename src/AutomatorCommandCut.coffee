@@ -6,7 +6,7 @@ class AutomatorCommandCut extends AutomatorCommand
   clipboardText: ""
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
-    automatorRecorderAndPlayer.worldMorph.processCut null, commandBeingPlayed.clipboardText
+    automatorRecorderAndPlayer.worldMorph.processCut commandBeingPlayed.clipboardText
 
   constructor: (@clipboardText, automatorRecorderAndPlayer) ->
     super(automatorRecorderAndPlayer)

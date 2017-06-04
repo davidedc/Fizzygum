@@ -828,6 +828,11 @@ class WorldMorph extends FrameMorph
   playQueuedEvents: ->
     for i in [0...@events.length] by 2
       eventType = @events[i]
+      # note that these events are actually strings
+      # in the case of clipboard events. Since
+      # for security reasons clipboard access is not
+      # allowed outside of the event listener, we
+      # have to work with text here.
       event = @events[i+1]
 
       switch eventType
@@ -890,12 +895,24 @@ class WorldMorph extends FrameMorph
           @hand.processMouseScroll event
 
         when "cutEventListener"
+          # note that "event" here is actually a string,
+          # for security reasons clipboard access is not
+          # allowed outside of the event listener, we
+          # have to work with text here.
           @processCut event
 
         when "copyEventListener"
+          # note that "event" here is actually a string,
+          # for security reasons clipboard access is not
+          # allowed outside of the event listener, we
+          # have to work with text here.
           @processCopy event
 
         when "pasteEventListener"
+          # note that "event" here is actually a string,
+          # for security reasons clipboard access is not
+          # allowed outside of the event listener, we
+          # have to work with text here.
           @processPaste event
 
         when "dropEventListener"
@@ -1208,18 +1225,21 @@ class WorldMorph extends FrameMorph
     if event?
       event.preventDefault()
 
-  processCut: (event, clipboardTextIfTestRunning) ->
+  # -----------------------------------------------------
+  # clipboard events processing
+  # -----------------------------------------------------
+  # clipboard events take a text instead of the event,
+  # the reason is that you can't access the clipboard
+  # outside of the EventListener, I presume for
+  # security reasons. So, since these process* methods
+  # are executed outside of the listeners, we really can't use
+  # the event and the clipboard object in the event, so
+  # we have to work with text. The clipboard IS handled, but
+  # it's handled in the listeners
+
+  processCut: (selectedText) ->
     console.log "processing cut"
     if @caret
-      selectedText = @caret.target.selection()
-      if event?.clipboardData
-        event.preventDefault()
-        setStatus = event.clipboardData.setData "text/plain", selectedText
-
-      if window.clipboardData
-        event.returnValue = false
-        setStatus = window.clipboardData.setData "Text", selectedText
-
       # see comment on outstandingTimerTriggeredOperationsCounter
       # above where the property is declared and initialised.
       @outstandingTimerTriggeredOperationsCounter.push true
@@ -1230,47 +1250,24 @@ class WorldMorph extends FrameMorph
 
     @automatorRecorderAndPlayer.addCutCommand selectedText
 
-  processCopy: (event, clipboardTextIfTestRunning) ->
+  processCopy: (selectedText) ->
     console.log "processing copy"
-    if @caret
-      if clipboardTextIfTestRunning?
-        selectedText = clipboardTextIfTestRunning
-      else
-        selectedText = @caret.target.selection()
-      if event?.clipboardData
-        event.preventDefault()
-        setStatus = event.clipboardData.setData "text/plain", selectedText
-
-      if window.clipboardData
-        event.returnValue = false
-        setStatus = window.clipboardData.setData "Text", selectedText
-
+    debugger
     @automatorRecorderAndPlayer.addCopyCommand selectedText
 
-  processPaste: (event, text) ->
-    if @caret
-      if event?
-        if event.clipboardData
-          # Look for access to data if types array is missing
-          text = event.clipboardData.getData "text/plain"
-          #url = event.clipboardData.getData("text/uri-list")
-          #html = event.clipboardData.getData("text/html")
-          #custom = event.clipboardData.getData("text/xcustom")
-        # IE event is attached to the window object
-        if window.clipboardData
-          # The schema is fixed
-          text = window.clipboardData.getData "Text"
-          #url = window.clipboardData.getData "URL"
+  processPaste: (clipboardText) ->
+    debugger
       
+    if @caret
       # Needs a few msec to execute paste
-      console.log "about to insert text: " + text
-      @automatorRecorderAndPlayer.addPasteCommand text
+      console.log "about to insert text: " + clipboardText
+      @automatorRecorderAndPlayer.addPasteCommand clipboardText
 
       # see comment on outstandingTimerTriggeredOperationsCounter
       # above where the property is declared and initialised.
       @outstandingTimerTriggeredOperationsCounter.push true
       window.setTimeout ( =>
-       @caret.insert text
+       @caret.insert clipboardText
        @outstandingTimerTriggeredOperationsCounter.pop()
       ), 50, true
 
@@ -1441,21 +1438,73 @@ class WorldMorph extends FrameMorph
     # be some copy/paste working. Also one would need to intercept the copy/paste
     # key combinations manually instead of from the copy/paste events.
 
+    # -----------------------------------------------------
+    # clipboard events listeners
+    # -----------------------------------------------------
+    # we deal with the clipboard here in the event listeners
+    # because for security reasons the runtime is not allowed
+    # access to the clipboards outside of here. So we do all
+    # we have to do with the clipboard here, and in every
+    # other place we work with text.
+
     @cutEventListener = (event) =>
+      selectedText = ""
+      if @caret
+        selectedText = @caret.target.selection()
+        if event?.clipboardData
+          event.preventDefault()
+          setStatus = event.clipboardData.setData "text/plain", selectedText
+
+        if window.clipboardData
+          event.returnValue = false
+          setStatus = window.clipboardData.setData "Text", selectedText
+
       @events.push "cutEventListener"
-      @events.push event
+      @events.push selectedText
 
     document.body.addEventListener "cut", @cutEventListener, false
     
     @copyEventListener = (event) =>
+      debugger
+
+      selectedText = ""
+      if @caret
+        if clipboardTextIfTestRunning?
+          selectedText = clipboardTextIfTestRunning
+        else
+          selectedText = @caret.target.selection()
+        if event?.clipboardData
+          event.preventDefault()
+          setStatus = event.clipboardData.setData "text/plain", selectedText
+
+        if window.clipboardData
+          event.returnValue = false
+          setStatus = window.clipboardData.setData "Text", selectedText
+
       @events.push "copyEventListener"
-      @events.push event
+      @events.push selectedText
 
     document.body.addEventListener "copy", @copyEventListener, false
 
     @pasteEventListener = (event) =>
+      debugger
+
+      if @caret
+        if event?
+          if event.clipboardData
+            # Look for access to data if types array is missing
+            text = event.clipboardData.getData "text/plain"
+            #url = event.clipboardData.getData("text/uri-list")
+            #html = event.clipboardData.getData("text/html")
+            #custom = event.clipboardData.getData("text/xcustom")
+          # IE event is attached to the window object
+          if window.clipboardData
+            # The schema is fixed
+            text = window.clipboardData.getData "Text"
+            #url = window.clipboardData.getData "URL"
+
       @events.push "pasteEventListener"
-      @events.push event
+      @events.push text
 
     document.body.addEventListener "paste", @pasteEventListener, false
 
