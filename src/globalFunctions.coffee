@@ -617,7 +617,3 @@ extend = (child, parent) ->
   child.prototype = new ctor()
   child.__super__ = parent.prototype
   return child
-
-
-
-
