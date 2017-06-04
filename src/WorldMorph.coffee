@@ -301,14 +301,14 @@ class WorldMorph extends FrameMorph
       @errorConsole.rawSetExtent new Point 550,415
       @errorConsole.hide()
 
-      welcomeTitle = new StringMorph2 "Welcome to Fizzygum!",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      welcomeTitle = new StringMorph2 "Welcome to Fizzygum!"
       welcomeTitle.isEditable = true
       @add welcomeTitle
       welcomeTitle.togglefittingSpecWhenBoundsTooLarge()
       welcomeTitle.fullRawMoveTo new Point 40, 15
       welcomeTitle.rawSetExtent new Point 271, 35
 
-      version = new StringMorph2 "version 2017-05-26",null,null,null,null,null,new Color(255, 255, 54), 0.5
+      version = new StringMorph2 "version 2017-05-26"
       version.isEditable = true
       @add version
       version.togglefittingSpecWhenBoundsTooLarge()
