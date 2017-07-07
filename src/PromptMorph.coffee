@@ -58,9 +58,9 @@ class PromptMorph extends MenuMorph
         slider.action = "reactToSliderAction2"
       @items.push slider
     @addLine 2
-    @addItem "Ok", true, @target, @callback
+    @addMenuItem "Ok", true, @target, @callback
 
-    @addItem "Cancel", true, @, ->
+    @addMenuItem "Cancel", true, @, ->
       null
 
     @reLayout()

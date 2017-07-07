@@ -559,11 +559,11 @@ class TextMorph2 extends StringMorph2
     menu = super()
     menu.addLine()
     if @softWrap
-      menu.addItem "soft wrap", true, @, "toggleSoftWrap"
+      menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
     else
-      menu.addItem "✓ " + "soft wrap", true, @, "toggleSoftWrap"
+      menu.addMenuItem "✓ " + "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
-    menu.addItem "run contents", true, @, "doContents"
+    menu.addMenuItem "run contents", true, @, "doContents"
     menu
   
   setAlignmentToLeft: ->
@@ -584,16 +584,16 @@ class TextMorph2 extends StringMorph2
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependItem "select all", true, @, "selectAllAndEdit"
-      menu.prependItem "do all", true, @, "doAll"
+      menu.prependMenuItem "select all", true, @, "selectAllAndEdit"
+      menu.prependMenuItem "do all", true, @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependItem "inspect selection", true, @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
-      menu.prependItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
-      menu.prependItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
+      menu.prependMenuItem "inspect selection", true, @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependMenuItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
+      menu.prependMenuItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
 
   # StringMorph2 editing:

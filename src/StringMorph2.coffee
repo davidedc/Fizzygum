@@ -707,15 +707,15 @@ class StringMorph2 extends Morph
       when @monoFontStack
         monoFontStackTick = tick
 
-    menu.addItem justArialFontStackTick + "Arial", true, @, "setFontName", null, null, null, null, null, @justArialFontStack
-    menu.addItem timesFontStackTick + "Times", true, @, "setFontName", null, null, null, null, null, @timesFontStack
-    menu.addItem georgiaFontStackTick + "Georgia", true, @, "setFontName", null, null, null, null, null, @georgiaFontStack
-    menu.addItem garamoFontStackTick + "Garamo", true, @, "setFontName", null, null, null, null, null, @garamoFontStack
-    menu.addItem helveFontStackTick + "Helve", true, @, "setFontName", null, null, null, null, null, @helveFontStack
-    menu.addItem verdaFontStackTick + "Verda", true, @, "setFontName", null, null, null, null, null, @verdaFontStack
-    menu.addItem trebuFontStackTick + "Treby", true, @, "setFontName", null, null, null, null, null, @trebuFontStack
-    menu.addItem heavyFontStackTick + "Heavy", true, @, "setFontName", null, null, null, null, null, @heavyFontStack
-    menu.addItem monoFontStackTick + "Mono", true, @, "setFontName", null, null, null, null, null, @monoFontStack
+    menu.addMenuItem justArialFontStackTick + "Arial", true, @, "setFontName", null, null, null, null, null, @justArialFontStack
+    menu.addMenuItem timesFontStackTick + "Times", true, @, "setFontName", null, null, null, null, null, @timesFontStack
+    menu.addMenuItem georgiaFontStackTick + "Georgia", true, @, "setFontName", null, null, null, null, null, @georgiaFontStack
+    menu.addMenuItem garamoFontStackTick + "Garamo", true, @, "setFontName", null, null, null, null, null, @garamoFontStack
+    menu.addMenuItem helveFontStackTick + "Helve", true, @, "setFontName", null, null, null, null, null, @helveFontStack
+    menu.addMenuItem verdaFontStackTick + "Verda", true, @, "setFontName", null, null, null, null, null, @verdaFontStack
+    menu.addMenuItem trebuFontStackTick + "Treby", true, @, "setFontName", null, null, null, null, null, @trebuFontStack
+    menu.addMenuItem heavyFontStackTick + "Heavy", true, @, "setFontName", null, null, null, null, null, @heavyFontStack
+    menu.addMenuItem monoFontStackTick + "Mono", true, @, "setFontName", null, null, null, null, null, @monoFontStack
 
     menu.popUpAtHand a.firstContainerMenu()
 
@@ -723,59 +723,59 @@ class StringMorph2 extends Morph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit...", true, @, "editPopup", "set this String's\ncontent"
-    menu.addItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
+    menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
+    menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
 
-    menu.addItem "font ➜", false, @, "fontsMenu", "pick a font"
+    menu.addMenuItem "font ➜", false, @, "fontsMenu", "pick a font"
 
     if @isBold
-      menu.addItem "normal weight", true, @, "toggleWeight"
+      menu.addMenuItem "normal weight", true, @, "toggleWeight"
     else
-      menu.addItem "bold", true, @, "toggleWeight"
+      menu.addMenuItem "bold", true, @, "toggleWeight"
 
     if @isItalic
-      menu.addItem "non-italic", true, @, "toggleItalic"
+      menu.addMenuItem "non-italic", true, @, "toggleItalic"
     else
-      menu.addItem "italic", true, @, "toggleItalic"
+      menu.addMenuItem "italic", true, @, "toggleItalic"
 
     if @isHeaderLine
-      menu.addItem "no header line", true, @, "toggleHeaderLine"
+      menu.addMenuItem "no header line", true, @, "toggleHeaderLine"
     else
-      menu.addItem "header line", true, @, "toggleHeaderLine"
+      menu.addMenuItem "header line", true, @, "toggleHeaderLine"
 
 
     if @isPassword
-      menu.addItem "show characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "show characters", true, @, "toggleIsPassword"
     else
-      menu.addItem "hide characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
 
     menu.addLine()
     if @horizontalAlignment != AlignmentSpecHorizontal.LEFT
-      menu.addItem "← align left", true, @, "alignLeft"
+      menu.addMenuItem "← align left", true, @, "alignLeft"
     if @horizontalAlignment != AlignmentSpecHorizontal.CENTER
-      menu.addItem "∸ align center", true, @, "alignCenter"
+      menu.addMenuItem "∸ align center", true, @, "alignCenter"
     if @horizontalAlignment != AlignmentSpecHorizontal.RIGHT
-      menu.addItem "→ align right", true, @, "alignRight"
+      menu.addMenuItem "→ align right", true, @, "alignRight"
 
     menu.addLine()
     if @verticalAlignment != AlignmentSpecVertical.TOP
-      menu.addItem "↑ align top", true, @, "alignTop"
+      menu.addMenuItem "↑ align top", true, @, "alignTop"
     if @verticalAlignment != AlignmentSpecVertical.MIDDLE
-      menu.addItem "⍿ align middle", true, @, "alignMiddle"
+      menu.addMenuItem "⍿ align middle", true, @, "alignMiddle"
     if @verticalAlignment != AlignmentSpecVertical.BOTTOM
-      menu.addItem "↓ align bottom", true, @, "alignBottom"
+      menu.addMenuItem "↓ align bottom", true, @, "alignBottom"
 
     menu.addLine()
 
     if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addItem "←☓→ don't expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←☓→ don't expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
     else
-      menu.addItem "←→ expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "←→ expand to fill", true, @, "togglefittingSpecWhenBoundsTooLarge"
 
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addItem "→← shrink to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→← shrink to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
     else
-      menu.addItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
 
     menu
 

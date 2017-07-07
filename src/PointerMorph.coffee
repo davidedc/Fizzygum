@@ -85,6 +85,6 @@ class PointerMorph extends BoxMorph
   developersMenu: ->
     menu = @developersMenuOfMorph()
     menu.addLine 1
-    menu.addItem "close this button", true, @, "closeThis"
-    menu.addItem "close target morph", true, @, "closeThisAndTarget"
+    menu.addMenuItem "close this button", true, @, "closeThis"
+    menu.addMenuItem "close target morph", true, @, "closeThisAndTarget"
     menu

@@ -118,8 +118,8 @@ class BoxyAppearance extends Appearance
   # Boxy menus:
   addShapeSpecificMenus: (menu) ->
     menu.addLine()
-    menu.addItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
-    menu.addItem "pick inset...", true, @morph, "pickInset", "put a morph as inset"
+    menu.addMenuItem "corner radius...", true, @, "cornerRadiusPopout", "set the corner's\nradius"
+    menu.addMenuItem "pick inset...", true, @morph, "pickInset", "put a morph as inset"
     menu
   
   addShapeSpecificNumericalSetters: (list) ->

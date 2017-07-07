@@ -243,30 +243,30 @@ class StringMorph extends Morph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "edit", true, @, "edit"
-    menu.addItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
-    menu.addItem "serif", true, @, "setSerif"  if @fontStyle isnt "serif"
-    menu.addItem "sans-serif", true, @, "setSansSerif"  if @fontStyle isnt "sans-serif"
+    menu.addMenuItem "edit", true, @, "edit"
+    menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
+    menu.addMenuItem "serif", true, @, "setSerif"  if @fontStyle isnt "serif"
+    menu.addMenuItem "sans-serif", true, @, "setSansSerif"  if @fontStyle isnt "sans-serif"
 
     if @isBold
-      menu.addItem "normal weight", true, @, "toggleWeight"
+      menu.addMenuItem "normal weight", true, @, "toggleWeight"
     else
-      menu.addItem "bold", true, @, "toggleWeight"
+      menu.addMenuItem "bold", true, @, "toggleWeight"
 
     if @isItalic
-      menu.addItem "normal style", true, @, "toggleItalic"
+      menu.addMenuItem "normal style", true, @, "toggleItalic"
     else
-      menu.addItem "italic", true, @, "toggleItalic"
+      menu.addMenuItem "italic", true, @, "toggleItalic"
 
     if @isShowingBlanks
-      menu.addItem "hide blanks", true, @, "toggleShowBlanks"
+      menu.addMenuItem "hide blanks", true, @, "toggleShowBlanks"
     else
-      menu.addItem "show blanks", true, @, "toggleShowBlanks"
+      menu.addMenuItem "show blanks", true, @, "toggleShowBlanks"
 
     if @isPassword
-      menu.addItem "show characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "show characters", true, @, "toggleIsPassword"
     else
-      menu.addItem "hide characters", true, @, "toggleIsPassword"
+      menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
 
     menu
   

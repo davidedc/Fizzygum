@@ -2113,7 +2113,7 @@ class Morph extends MorphicNode
     else
       text = "NULL"
     m = new MenuMorph false, @, true, true, text
-    m.addItem "Ok"
+    m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
@@ -2161,9 +2161,9 @@ class Morph extends MorphicNode
     menu = new MenuMorph false, @, true, true, msg or "", colorPicker
     menu.items.push colorPicker
     menu.addLine 2
-    menu.addItem "Ok", true, @, callback
+    menu.addMenuItem "Ok", true, @, callback
 
-    menu.addItem "Cancel", true, @, ->
+    menu.addMenuItem "Cancel", true, @, ->
       null
 
     menu.popUpAtHand @firstContainerMenu()
@@ -2246,7 +2246,7 @@ class Morph extends MorphicNode
     parents.forEach (each) ->
       if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice 0, 50
-        menu.addItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
+        menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
 
     menu
 
@@ -2279,6 +2279,33 @@ class Morph extends MorphicNode
 
   createNewTextMorph2WithBackground: ->
     newMorph = new TextMorph2(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",null,null,null,null,null,new Color(255, 255, 54), 0.5)
+    newMorph.isEditable = true
+    #newMorph.maxTextWidth = 300
+    world.create newMorph
+
+  createNewTextMorph3WithBackground: ->
+    newMorph = new TextMorph3(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2339,31 +2366,32 @@ class Morph extends MorphicNode
 
   testMenu: (a,targetMorph)->
     menu = new MenuMorph false, targetMorph, true, true, null
-    menu.addItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
-    menu.addItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
-    menu.addItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
-    menu.addItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
-    menu.addItem "make spacers transparent", true, @, "makeSpacersTransparent"
-    menu.addItem "make spacers opaque", true, @, "makeSpacersOpaque"
-    menu.addItem "show adders", true, @, "showAdders"
-    menu.addItem "remove adders", true, @, "removeAdders"
-    menu.addItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
-    menu.addItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
-    menu.addItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
+    menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
+    menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
+    menu.addMenuItem "attach with horizontal layout", true, @, "attachWithHorizLayout"
+    menu.addMenuItem "make spacers transparent", true, @, "makeSpacersTransparent"
+    menu.addMenuItem "make spacers opaque", true, @, "makeSpacersOpaque"
+    menu.addMenuItem "show adders", true, @, "showAdders"
+    menu.addMenuItem "remove adders", true, @, "removeAdders"
+    menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
+    menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
+    menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
     if targetMorph in world.morphsToBePinouted
-      menu.addItem "remove output pins", true, @, "removeOutputPins"
+      menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
     else
-      menu.addItem "show output pins", true, @, "showOutputPins"
+      menu.addMenuItem "show output pins", true, @, "showOutputPins"
     
     # unclear whether the "un-collapse" entry would ever be
     # visible.
     if targetMorph.collapsed
-      menu.addItem "un-collapse", true, @, "unCollapse"
+      menu.addMenuItem "un-collapse", true, @, "unCollapse"
     else
-      menu.addItem "collapse", true, @, "collapse"
+      menu.addMenuItem "collapse", true, @, "collapse"
 
-    menu.addItem "create pointer", true, @, "createPointerMorph"
-    menu.addItem "others ➜", false, @, "popUpSecondMenu", "others"
+    menu.addMenuItem "create pointer", true, @, "createPointerMorph"
+    menu.addMenuItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
     menu.popUpAtHand a.firstContainerMenu()
@@ -2376,28 +2404,28 @@ class Morph extends MorphicNode
 
   popUpIconsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "icons"
-    menu.addItem "Destroy icon", true, @, "createDestroyIconMorph"
-    menu.addItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
-    menu.addItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
-    menu.addItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
-    menu.addItem "Close icon", true, @, "createCloseIconButtonMorph"
-    menu.addItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
-    menu.addItem "Flora icon", true, @, "createFloraIconMorph"
-    menu.addItem "Scooter icon", true, @, "createScooterIconMorph"
-    menu.addItem "Heart icon", true, @, "createHeartIconMorph"
+    menu.addMenuItem "Destroy icon", true, @, "createDestroyIconMorph"
+    menu.addMenuItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
+    menu.addMenuItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
+    menu.addMenuItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
+    menu.addMenuItem "Close icon", true, @, "createCloseIconButtonMorph"
+    menu.addMenuItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
+    menu.addMenuItem "Flora icon", true, @, "createFloraIconMorph"
+    menu.addMenuItem "Scooter icon", true, @, "createScooterIconMorph"
+    menu.addMenuItem "Heart icon", true, @, "createHeartIconMorph"
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
 
   popUpSecondMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "others"
-    menu.addItem "icons ➜", false, @, "popUpIconsMenu", "icons"
-    menu.addItem "under the carpet", true, @, "underTheCarpetIconAndText"
-    menu.addItem "analog clock", true, @, "analogClock"
-    menu.addItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
-    menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
-    menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
-    menu.addItem "simple button", true, menusHelper, "createSimpleButton"
-    menu.addItem "switch button", true, menusHelper, "createSwitchButtonMorph"
+    menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
+    menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
+    menu.addMenuItem "analog clock", true, @, "analogClock"
+    menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+    menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+    menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
+    menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     
 
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
@@ -2424,19 +2452,19 @@ class Morph extends MorphicNode
 
     if window.location.href.contains "worldWithSystemTestHarness"
       if userMenu
-        menu.addItem "user features...", true, @, ->
+        menu.addMenuItem "user features...", true, @, ->
           userMenu.popUpAtHand @firstContainerMenu()
 
         menu.addLine()
-      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
-      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
-      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-      menu.addItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
-      menu.addItem "inspect", true, @, "inspect", "open a window\non all properties"
+      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addMenuItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
+      menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
 
       # A) normally, just take a picture of this morph
       # and open it in a new tab.
@@ -2468,33 +2496,33 @@ class Morph extends MorphicNode
             # no system tests recording/playing ongoing,
             # just open new tab with image of morph.
             window.open @fullImageData()
-      menu.addItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
+      menu.addMenuItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
 
-      menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
       menu.addLine()
       if @isFloatDraggable()
-        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
       else
-        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
-      menu.addItem "hide", true, @, "hide"
-      menu.addItem "delete", true, @, "fullDestroy"
+        menu.addMenuItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addMenuItem "hide", true, @, "hide"
+      menu.addMenuItem "delete", true, @, "fullDestroy"
     else
-      menu.addItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
-      menu.addItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
-      menu.addItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
+      menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
+      menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
+      menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
       menu.addLine()
-      menu.addItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
-      menu.addItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
-      menu.addItem "attach...", true, @, "attach", "stick this morph\nto another one"
-      menu.addItem "inspect", true, @, "inspect2", "open a window\non all properties"
+      menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
+      menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
+      menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
+      menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
       menu.addLine()
       if @isFloatDraggable()
-        menu.addItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
       else
-        menu.addItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
-      menu.addItem "hide", true, @, "hide"
-      menu.addItem "delete", true, @, "fullDestroy"
+        menu.addMenuItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+      menu.addMenuItem "hide", true, @, "hide"
+      menu.addMenuItem "delete", true, @, "fullDestroy"
 
 
     menu
@@ -2632,7 +2660,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
+        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -2658,7 +2686,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
+        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

@@ -86,7 +86,7 @@ class ColorPaletteMorph extends Morph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
+    menu.addMenuItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
     menu
   
   # setTarget: -> taken form the ControllerMixin
@@ -99,7 +99,7 @@ class ColorPaletteMorph extends Morph
     choices = theTarget.colorSetters()
     menu = new MenuMorph false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
+      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
 
     if choices.length == 0
       menu = new MenuMorph false, @, true, true, "no target properties available"

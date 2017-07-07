@@ -65,7 +65,7 @@ class BoxMorph extends Morph
     if choicesExcludingParent.length > 0
       menu = new MenuMorph false, @, true, true, "choose Morph to put as inset:"
       choicesExcludingParent.forEach (each) =>
-        menu.addItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
+        menu.addMenuItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

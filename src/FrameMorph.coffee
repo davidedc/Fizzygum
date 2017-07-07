@@ -283,7 +283,7 @@ class FrameMorph extends Morph
     menu = super()
     if @children.length
       menu.addLine()
-      menu.addItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
     menu
   
   keepAllSubmorphsWithin: ->

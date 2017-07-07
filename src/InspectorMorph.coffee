@@ -240,24 +240,24 @@ class InspectorMorph extends BoxMorph
 
   openShowMenu: ->
     menu = new MenuMorph false
-    menu.addItem "attributes", true, @, "showAttributes"
-    menu.addItem "methods", true, @, "showMethods"
-    menu.addItem "all", true, @, "showAttributesAndMethods"
+    menu.addMenuItem "attributes", true, @, "showAttributes"
+    menu.addMenuItem "methods", true, @, "showMethods"
+    menu.addMenuItem "all", true, @, "showAttributesAndMethods"
     menu.addLine()
-    menu.addItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, "highlightOwnershipOfProperties", "highlight\nownership of properties"
+    menu.addMenuItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, "highlightOwnershipOfProperties", "highlight\nownership of properties"
     menu.popUpAtHand @firstContainerMenu()
 
   openInspectorMenu: ->
     if isObject @currentProperty
       menu = new MenuMorph false
-      menu.addItem "in new inspector...", true, @, =>
+      menu.addMenuItem "in new inspector...", true, @, =>
         inspector = new @constructor @currentProperty
         inspector.fullRawMoveTo world.hand.position()
         inspector.fullRawMoveWithin world
         world.add inspector
         inspector.changed()
 
-      menu.addItem "here...", true, @, =>
+      menu.addMenuItem "here...", true, @, =>
         @setTarget @currentProperty
 
       menu.popUpAtHand @firstContainerMenu()
@@ -266,11 +266,11 @@ class InspectorMorph extends BoxMorph
 
   openEditMenu: ->
     menu = new MenuMorph false
-    menu.addItem "save", true, @, "save", "accept changes"
+    menu.addMenuItem "save", true, @, "save", "accept changes"
     menu.addLine()
-    menu.addItem "add property...", true, @, "addPropertyPopout"
-    menu.addItem "rename...", true, @, "renamePropertyPopout"
-    menu.addItem "remove", true, @, "removeProperty"
+    menu.addMenuItem "add property...", true, @, "addPropertyPopout"
+    menu.addMenuItem "rename...", true, @, "renamePropertyPopout"
+    menu.addMenuItem "remove", true, @, "removeProperty"
     menu.popUpAtHand @firstContainerMenu()
 
 

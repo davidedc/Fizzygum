@@ -113,8 +113,8 @@ class SliderMorph2 extends CircleBoxMorph
   # SliderMorph2 menu:
   developersMenu: ->
     menu = super()
-    menu.addItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
-    menu.addItem "floor...", true, @, (->
+    menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
+    menu.addMenuItem "floor...", true, @, (->
       @prompt menu.title + "\nfloor:",
         @setStart,
         @start.toString(),
@@ -123,7 +123,7 @@ class SliderMorph2 extends CircleBoxMorph
         @stop - @size,
         true
     ), "set the minimum value\nwhich can be selected"
-    menu.addItem "ceiling...", true, @, (->
+    menu.addMenuItem "ceiling...", true, @, (->
       @prompt menu.title + "\nceiling:",
         @setStop,
         @stop.toString(),
@@ -132,7 +132,7 @@ class SliderMorph2 extends CircleBoxMorph
         @size * 100,
         true
     ), "set the maximum value\nwhich can be selected"
-    menu.addItem "button size...", true, @, (->
+    menu.addMenuItem "button size...", true, @, (->
       @prompt menu.title + "\nbutton size:",
         @setSize,
         @size.toString(),
@@ -142,7 +142,7 @@ class SliderMorph2 extends CircleBoxMorph
         true
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
-    menu.addItem "set target", true, @, "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+    menu.addMenuItem "set target", true, @, "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
     menu
   
   showValue: ->
@@ -251,7 +251,7 @@ class SliderMorph2 extends CircleBoxMorph
     choices = theTarget.numericalSetters()
     menu = new MenuMorph false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
+      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
     if choices.length == 0
       menu = new MenuMorph false, @, true, true, "no target properties available"
     menu.popUpAtHand @firstContainerMenu()

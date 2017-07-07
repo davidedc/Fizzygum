@@ -55,83 +55,23 @@ class MenuMorph extends BoxMorph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "pin", false, @, "pin"
+    menu.addMenuItem "pin", false, @, "pin"
     menu
   
-  addItem: (
-      labelString,
-      closesUnpinnedMenus = true,
-      target,
-      action,
-      hint,
-      color,
-      bold = false,
-      italic = false,
-      doubleClickAction, # optional, when used as list contents
-      argumentToAction1,
-      argumentToAction2,
-      representsAMorph = false
-      ) ->
-    # labelString is normally a single-line string. But it can also be one
-    # of the following:
-    #     * a multi-line string (containing line breaks)
-    #     * an icon (either a Morph or a Canvas)
-    #     * a tuple of format: [icon, string]
-    @items.push [
-      localize(labelString or "close"),
-      closesUnpinnedMenus,
-      target,
-      action,
-      hint,
-      color,
-      bold,
-      italic,
-      doubleClickAction,
-      argumentToAction1,
-      argumentToAction2,
-      representsAMorph
-    ]
+  createLine: (height = 1) ->
+    item = new RectangleMorph()
+    item.setMinimumExtent new Point 5,1
+    item.color = new Color 230,230,230
+    item.rawSetHeight height + 2
+    item
 
-  prependItem: (
-      labelString,
-      closesUnpinnedMenus,
-      target,
-      action,
-      hint,
-      color,
-      bold = false,
-      italic = false,
-      doubleClickAction, # optional, when used as list contents
-      argumentToAction1,
-      argumentToAction2,
-      representsAMorph
-      ) ->
-    # labelString is normally a single-line string. But it can also be one
-    # of the following:
-    #     * a multi-line string (containing line breaks)
-    #     * an icon (either a Morph or a Canvas)
-    #     * a tuple of format: [icon, string]
-    @items.unshift [
-      localize(labelString or "close"),
-      closesUnpinnedMenus,
-      target,
-      action,
-      hint,
-      color,
-      bold,
-      italic,
-      doubleClickAction,
-      argumentToAction1,
-      argumentToAction2,
-      representsAMorph
-    ]
-  
+  addLine: (height) ->
+    item = @createLine height
+    @items.push item
 
-  addLine: (width) ->
-    @items.push [0, width or 1]
-
-  prependLine: (width) ->
-    @items.unshift [0, width or 1]
+  prependLine: (height) ->
+    item = @createLine height
+    @items.unshift item
   
   createLabel: ->
     # console.log "menu create label"
@@ -152,6 +92,44 @@ class MenuMorph extends BoxMorph
     @label.rawSetExtent text.extent().add 2
     @label.text = text
 
+  createMenuItem: (label, closesUnpinnedMenus = true, target, action, hint, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
+    # console.log "menu creating MenuItemMorph "
+    item = new MenuItemMorph(
+      closesUnpinnedMenus, # closes unpinned menus
+      target, # target
+      action, # action
+      (label or "close"), # label
+      @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
+      WorldMorph.preferencesAndSettings.menuFontName,
+      false,
+      @target, # environment
+      @environment, # environment2
+      hint, # bubble help hint
+      color, # color
+      bold, # bold
+      italic, # italic
+      doubleClickAction,  # doubleclick action
+      arg1,  # argument to action 1
+      arg2,  # argument to action 2
+      representsAMorph  # does it represent a Morph?
+      )
+    if !@environment?
+      item.dataSourceMorphForTarget = item
+      item.morphEnv = @target
+
+    item
+
+
+  addMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+    # console.log "menu creating MenuItemMorph "
+    item = @createMenuItem label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    @items.push item
+
+  prependMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
+    # console.log "menu creating MenuItemMorph "
+    item = @createMenuItem label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
+    @items.unshift item
+
   reLayout: ->
     # console.log "menu update rendering"
     super()
@@ -162,7 +140,17 @@ class MenuMorph extends BoxMorph
     trackChanges.push false
 
     isLine = false
-    @fullDestroyChildren()
+
+    # we are going to re-build the
+    # children list from the @items.
+    # If the list of @items has changed, we
+    # make sure we destroy the children that
+    # are going away.
+    #for eachChild in @children
+    #  if @items.indexOf(eachChild) == -1
+    #    eachChild.fullDestroy()
+
+    @children = []
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
@@ -188,50 +176,7 @@ class MenuMorph extends BoxMorph
     # sliders, menuItems (which are buttons)
     # and divider lines.
     # console.log "menu @items.length " + @items.length
-    @items.forEach (tuple) =>
-      isLine = false
-      # string, color picker and slider
-      if tuple instanceof StringFieldMorph or
-        tuple instanceof ColorPickerMorph or
-        tuple instanceof SliderMorph
-          item = tuple
-      # line. A thin Morph is used
-      # to draw the line.
-      else if tuple[0] is 0
-        isLine = true
-        item = new RectangleMorph()
-        item.setMinimumExtent new Point 5,1
-        item.color = new Color 60,60,60
-        item.rawSetHeight tuple[1]
-      # menuItem
-      else
-        # console.log "menu creating MenuItemMorph "
-        item = new MenuItemMorph(
-          tuple[1], # closes unpinned menus
-          tuple[2], # target
-          tuple[3], # action
-          tuple[0], # label
-          @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
-          WorldMorph.preferencesAndSettings.menuFontName,
-          false,
-          @target, # environment
-          @environment, # environment2
-          tuple[4], # bubble help hint
-          tuple[5], # color
-          tuple[6], # bold
-          tuple[7], # italic
-          tuple[8],  # doubleclick action
-          tuple[9],  # argument to action 1
-          tuple[10],  # argument to action 2
-          tuple[11]  # does it represent a Morph?
-          )
-        if !@environment?
-          item.dataSourceMorphForTarget = item
-          item.morphEnv = @target
-        #if tuple[1] == null
-        #  debugger
-        #  item.environment = item
-      y += 1  if isLine
+    @items.forEach (item) =>
       item.fullRawMoveTo new Point x, y
       # we do a silentAdd here because we are going
       # to update all the morphs again later in
@@ -240,7 +185,6 @@ class MenuMorph extends BoxMorph
       @silentAdd item
       #console.log "item added: " + item.bounds
       y = y + item.height()
-      y += 1  if isLine
   
     @adjustWidthsOfMenuEntries()
     fb = @fullBounds()
@@ -257,6 +201,7 @@ class MenuMorph extends BoxMorph
     #    w = @parent.scrollFrame.width()    
     @children.forEach (item) ->
       if item instanceof MenuItemMorph
+        if !item.children[0]? then debugger
         w = Math.max(w, item.children[0].width() + 8)
       else if (item instanceof StringFieldMorph) or
         (item instanceof ColorPickerMorph) or

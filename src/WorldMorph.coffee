@@ -274,8 +274,8 @@ class WorldMorph extends FrameMorph
         else
           menu = new MenuMorph false, @, true, true, "Morphic"
         if @isDevMode
-          menu.addItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
-          menu.addItem "delete all", true, @, "fullDestroy"
+          menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
+          menu.addMenuItem "delete all", true, @, "fullDestroy"
         menu
       @setColor new Color 244,243,244
 
@@ -1697,51 +1697,51 @@ class WorldMorph extends FrameMorph
     else
       menu = new MenuMorph false, @, true, true, "Morphic"
     if @isDevMode
-      menu.addItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
+      menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
-      menu.addItem "show all", true, @, "showAllMinimised"
-      menu.addItem "hide all", true, @, "minimiseAll"
-      menu.addItem "delete all", true, @, "fullDestroy"
-      menu.addItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
-      menu.addItem "inspect", true, @, "inspect", "open a window on\nall properties"
-      menu.addItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
+      menu.addMenuItem "show all", true, @, "showAllMinimised"
+      menu.addMenuItem "hide all", true, @, "minimiseAll"
+      menu.addMenuItem "delete all", true, @, "fullDestroy"
+      menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
+      menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
+      menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
       menu.addLine()
-      menu.addItem "restore display", true, @, "changed", "redraw the\nscreen once"
-      menu.addItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
-      menu.addItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
+      menu.addMenuItem "restore display", true, @, "changed", "redraw the\nscreen once"
+      menu.addMenuItem "fit whole page", true, @, "stretchWorldToFillEntirePage", "let the World automatically\nadjust to browser resizings"
+      menu.addMenuItem "color...", true, @, "popUpColorSetter", "choose the World's\nbackground color"
       if WorldMorph.preferencesAndSettings.inputMode is PreferencesAndSettings.INPUT_MODE_MOUSE
-        menu.addItem "touch screen settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
+        menu.addMenuItem "touch screen settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "bigger menu fonts\nand sliders"
       else
-        menu.addItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
+        menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
     if window.location.href.contains "worldWithSystemTestHarness"
-      menu.addItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
+      menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
-      menu.addItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
+      menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
-      menu.addItem "switch to dev mode", true, @, "toggleDevMode"
-    menu.addItem "about Fizzygum...", true, @, "about"
+      menu.addMenuItem "switch to dev mode", true, @, "toggleDevMode"
+    menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
 
   popUpSystemTestsMenu: ->
     menu = new MenuMorph false, @, true, true, "system tests"
 
-    menu.addItem "run system tests", true, @automatorRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
-    menu.addItem "run system tests force slow", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
-    menu.addItem "run system tests force fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
-    menu.addItem "run system tests force fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests", true, @automatorRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
+    menu.addMenuItem "run system tests force slow", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastSkipInbetweenMouseMoves", "runs all the system tests"
+    menu.addMenuItem "run system tests force fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceFastRunInbetweenMouseMoves", "runs all the system tests"
 
-    menu.addItem "start test recording", true, @automatorRecorderAndPlayer, "startTestRecording", "start recording a test"
-    menu.addItem "stop test recording", true, @automatorRecorderAndPlayer, "stopTestRecording", "stop recording the test"
+    menu.addMenuItem "start test recording", true, @automatorRecorderAndPlayer, "startTestRecording", "start recording a test"
+    menu.addMenuItem "stop test recording", true, @automatorRecorderAndPlayer, "stopTestRecording", "stop recording the test"
 
-    menu.addItem "(re)play recorded test slow", true, @automatorRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
-    menu.addItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
-    menu.addItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test slow", true, @automatorRecorderAndPlayer, "startTestPlayingSlow", "start playing the test"
+    menu.addMenuItem "(re)play recorded test fast skip in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastSkipInbetweenMouseMoves", "start playing the test"
+    menu.addMenuItem "(re)play recorded test  fast run in-between mouse moves", true, @automatorRecorderAndPlayer, "startTestPlayingFastRunInbetweenMouseMoves", "start playing the test"
 
-    menu.addItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
-    menu.addItem "save recorded test", true, @automatorRecorderAndPlayer, "saveTest", "save the recorded test"
-    menu.addItem "save failed screenshots", true, @automatorRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
+    menu.addMenuItem "show test source", true, @automatorRecorderAndPlayer, "showTestSource", "opens a window with the source of the latest test"
+    menu.addMenuItem "save recorded test", true, @automatorRecorderAndPlayer, "saveTest", "save the recorded test"
+    menu.addMenuItem "save failed screenshots", true, @automatorRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
 
     menu.popUpAtHand @firstContainerMenu()
 
@@ -1871,62 +1871,62 @@ class WorldMorph extends FrameMorph
   popUpDemoMenu: (a,b,c,d) ->
     if window.location.href.contains "worldWithSystemTestHarness"
       menu = new MenuMorph false, @, true, true, "make a morph"
-      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
-      menu.addItem "box", true, @, "createNewBoxMorph"
-      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addMenuItem "box", true, @, "createNewBoxMorph"
+      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
       menu.addLine()
-      menu.addItem "slider", true, @, "createNewSliderMorph"
-      menu.addItem "frame", true, @, "createNewFrameMorph"
-      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
-      menu.addItem "canvas", true, @, "createNewCanvas"
-      menu.addItem "handle", true, @, "createNewHandle"
+      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
+      menu.addMenuItem "frame", true, @, "createNewFrameMorph"
+      menu.addMenuItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addMenuItem "canvas", true, @, "createNewCanvas"
+      menu.addMenuItem "handle", true, @, "createNewHandle"
       menu.addLine()
-      menu.addItem "string", true, @, "createNewString"
-      menu.addItem "text", true, @, "createNewText"
-      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addMenuItem "string", true, @, "createNewString"
+      menu.addMenuItem "text", true, @, "createNewText"
+      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
       menu.addLine()
-      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
-      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
       menu.addLine()
-      menu.addItem "sensor demo", true, @, "createNewSensorDemo"
-      menu.addItem "animation demo", true, @, "createNewAnimationDemo"
-      menu.addItem "pen", true, @, "createNewPenMorph"
+      menu.addMenuItem "sensor demo", true, @, "createNewSensorDemo"
+      menu.addMenuItem "animation demo", true, @, "createNewAnimationDemo"
+      menu.addMenuItem "pen", true, @, "createNewPenMorph"
         
       menu.addLine()
-      menu.addItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
+      menu.addMenuItem "layout tests ➜", false, @, "layoutTestsMenu", "sample morphs"
       menu.addLine()
-      menu.addItem "under the carpet", true, @, "underTheCarpet"
-      menu.addItem "closing window", true, @, "closingWindow"
+      menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
+      menu.addMenuItem "closing window", true, @, "closingWindow"
     else
       menu = new MenuMorph false, @, true, true, "parts bin"
-      menu.addItem "rectangle", true, @, "createNewRectangleMorph"
-      menu.addItem "box", true, @, "createNewBoxMorph"
-      menu.addItem "circle box", true, @, "createNewCircleBoxMorph"
-      menu.addItem "slider", true, @, "createNewSliderMorph"
-      menu.addItem "frame", true, @, "createNewFrameMorph"
-      menu.addItem "scroll frame", true, @, "createNewScrollFrameMorph"
-      menu.addItem "canvas", true, @, "createNewCanvas"
+      menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
+      menu.addMenuItem "box", true, @, "createNewBoxMorph"
+      menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
+      menu.addMenuItem "slider", true, @, "createNewSliderMorph"
+      menu.addMenuItem "frame", true, @, "createNewFrameMorph"
+      menu.addMenuItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addMenuItem "canvas", true, @, "createNewCanvas"
       menu.addLine()
-      menu.addItem "string", true, @, "createNewStringMorph2WithoutBackground"
-      menu.addItem "text", true, @, "createNewTextMorph2WithBackground"
-      menu.addItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addMenuItem "string", true, @, "createNewStringMorph2WithoutBackground"
+      menu.addMenuItem "text", true, @, "createNewTextMorph2WithBackground"
+      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
       menu.addLine()
-      menu.addItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
-      menu.addItem "color palette", true, @, "createNewColorPaletteMorph"
-      menu.addItem "color picker", true, @, "createNewColorPickerMorph"
+      menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
+      menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
+      menu.addMenuItem "color picker", true, @, "createNewColorPickerMorph"
       menu.addLine()
-      menu.addItem "analog clock", true, @, "analogClock"
-      menu.addItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
-      menu.addItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+      menu.addMenuItem "analog clock", true, @, "analogClock"
+      menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
+      menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
 
     menu.popUpAtHand a.firstContainerMenu()
 
   layoutTestsMenu: (morphTriggeringThis) ->
     menu = new MenuMorph false, @, true, true, "Layout tests"
-    menu.addItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
-    menu.addItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
-    menu.addItem "test screen 1", true, Morph, "setupTestScreen1"
+    menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
+    menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
+    menu.addMenuItem "test screen 1", true, Morph, "setupTestScreen1"
     menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
     
   

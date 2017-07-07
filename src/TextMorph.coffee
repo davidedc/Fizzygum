@@ -316,10 +316,10 @@ class TextMorph extends StringMorph
   developersMenu: ->
     menu = super()
     menu.addLine()
-    menu.addItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
-    menu.addItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"
-    menu.addItem "align center", true, @, "setAlignmentToCenter"  if @alignment isnt "center"
-    menu.addItem "run contents", true, @, "doContents"
+    menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
+    menu.addMenuItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"
+    menu.addMenuItem "align center", true, @, "setAlignmentToCenter"  if @alignment isnt "center"
+    menu.addMenuItem "run contents", true, @, "doContents"
     menu
   
   setAlignmentToLeft: ->
@@ -343,16 +343,16 @@ class TextMorph extends StringMorph
 
     if @text.length > 0
       menu.prependLine()
-      menu.prependItem "select all", true, @, "selectAllAndEdit"
-      menu.prependItem "do all", true, @, "doAll"
+      menu.prependMenuItem "select all", true, @, "selectAllAndEdit"
+      menu.prependMenuItem "do all", true, @, "doAll"
 
     # only show the do it / show it / inspect it entries
     # if there is actually something selected.
     if @selection().replace(/^\s\s*/, '').replace(/\s\s*$/, '') != ''
       menu.prependLine()
-      menu.prependItem "inspect selection", true, @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
-      menu.prependItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
-      menu.prependItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
+      menu.prependMenuItem "inspect selection", true, @, "inspectSelection", "evaluate the\nselected expression\nand inspect the result"
+      menu.prependMenuItem "show selection", true, @, "showSelection", "evaluate the\nselected expression\nand show the result"
+      menu.prependMenuItem "do selection", true, @, "doSelection", "evaluate the\nselected expression"
     menu
 
   selectAllAndEdit: ->
