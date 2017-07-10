@@ -9,7 +9,6 @@ class MenuMorph extends BoxMorph
   title: null
   environment: null
   fontSize: null
-  items: null
   label: null
   isListContents: false
   killThisMenuIfClickOnDescendantsTriggers: true
@@ -18,7 +17,6 @@ class MenuMorph extends BoxMorph
 
   constructor: (@isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
-    @items = []
     # console.log "menu super"
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -36,6 +34,12 @@ class MenuMorph extends BoxMorph
     # want to traverse them all. Setting step to null (as opposed to nop)
     # achieves that.
 
+    unless @isListContents
+      if @title
+        @createLabel()
+        @silentAdd @label
+
+
   propagateKillMenus: ->
     if @killThisMenuIfClickOnDescendantsTriggers
       if @parent?
@@ -45,10 +49,12 @@ class MenuMorph extends BoxMorph
   isPinned: ->
     return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOutsideDescendants)
 
-  pin: ->
+  pin: (pinMenuItem)->
     @killThisMenuIfClickOnDescendantsTriggers = false
     @killThisMenuIfClickOutsideDescendants = false
     @onClickOutsideMeOrAnyOfMyChildren null
+    pinMenuItem.parent.propagateKillMenus()
+    world.destroyMorphsMarkedForDestruction()
     world.add @
 
   # StringMorph menus:
@@ -67,11 +73,11 @@ class MenuMorph extends BoxMorph
 
   addLine: (height) ->
     item = @createLine height
-    @items.push item
+    @silentAdd item
 
   prependLine: (height) ->
     item = @createLine height
-    @items.unshift item
+    @silentAdd item,null,0
   
   createLabel: ->
     # console.log "menu create label"
@@ -123,12 +129,30 @@ class MenuMorph extends BoxMorph
   addMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
     item = @createMenuItem label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
-    @items.push item
+    @silentAdd item
 
   prependMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
     item = @createMenuItem label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
-    @items.unshift item
+    @silentAdd item, null, 0
+
+  # this is used by the test system to check that the menu
+  # has the correct number of items. Note that we count the
+  # children, but we don't count the top label and we don't
+  # count the shadow.
+  testNumberOfItems: ->
+    @testItems().length
+
+  # this is used by the test system to check that the menu
+  # has the correct items. Note that we consider the
+  # children, but we don't consider the top label and we don't
+  # consider the shadow.
+  testItems: ->
+    items = []
+    for item in @children
+      if (item != @label) and (item not instanceof ShadowMorph)
+        items.push item
+    items
 
   reLayout: ->
     # console.log "menu update rendering"
@@ -139,7 +163,6 @@ class MenuMorph extends BoxMorph
     # a fullChanged() at the end.
     trackChanges.push false
 
-    isLine = false
 
     # we are going to re-build the
     # children list from the @items.
@@ -150,7 +173,7 @@ class MenuMorph extends BoxMorph
     #  if @items.indexOf(eachChild) == -1
     #    eachChild.fullDestroy()
 
-    @children = []
+    #@children = []
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
@@ -163,26 +186,22 @@ class MenuMorph extends BoxMorph
 
     unless @isListContents
       if @title
-        @createLabel()
         @label.fullRawMoveTo @position().add 2
-        @add @label
         y = @label.bottom()
       else
         y = @top()
     y += 1
+
+    @removeShadowMorph()
 
     # note that menus can contain:
     # strings, colorpickers,
     # sliders, menuItems (which are buttons)
     # and divider lines.
     # console.log "menu @items.length " + @items.length
-    @items.forEach (item) =>
+    for item in @children
+      if item == @label then continue
       item.fullRawMoveTo new Point x, y
-      # we do a silentAdd here because we are going
-      # to update all the morphs again later in
-      # adjustWidthsOfMenuEntries
-      # (cause we need to know the maximum width first)
-      @silentAdd item
       #console.log "item added: " + item.bounds
       y = y + item.height()
   

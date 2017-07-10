@@ -452,8 +452,8 @@ class AutomatorRecorderAndPlayer
     stringOfItemsInCurrentMenuInOriginalOrder = []
 
     if menuAtPointer?
-      for eachMenuItem in menuAtPointer.items
-        stringOfItemsInCurrentMenuInOriginalOrder.push eachMenuItem[0]
+      for eachMenuItem in menuAtPointer.testItems()
+        stringOfItemsInCurrentMenuInOriginalOrder.push eachMenuItem.getTextDescription().replace(/ \(text in button\)/, "")
     else
       errorMessage = "FAIL was expecting a menu under the pointer"
       console.log errorMessage
@@ -544,7 +544,7 @@ class AutomatorRecorderAndPlayer
       menuAtPointer = @handMorph.menuAtPointer()
       console.log menuAtPointer
       if menuAtPointer?
-        numberOfItems = menuAtPointer.items.length
+        numberOfItems = menuAtPointer.testNumberOfItems()
         console.log "found " + numberOfItems + " number of items "
       else
         console.log "was expecting a menu under the pointer"
@@ -555,13 +555,13 @@ class AutomatorRecorderAndPlayer
     else if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       menuAtPointer = @handMorph.menuAtPointer()
       giveSuccess = =>
-        message = "PASS Number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.items.length
+        message = "PASS Number of items in menu matches. Note that count includes line separators. Found: " + menuAtPointer.testNumberOfItems()
         if SystemTestsControlPanelUpdater?
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole message
       giveError = =>
         @allTestsPassedSoFar = false
         document.getElementById("background").style.background = "red"
-        errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.items.length
+        errorMessage = "FAIL Number of items in menu doesn't match. Note that count includes line separators. Was expecting: " + numberOfItems + " found: " + menuAtPointer.testNumberOfItems()
         testBeingPlayed = @testsList()[@indexOfSystemTestBeingPlayed]
         if @failedTests.indexOf(testBeingPlayed) < 0 then @failedTests.push(testBeingPlayed)
         document.getElementById('numberOfFailedTests').innerHTML = "- " + @failedTests.length + " failed"
@@ -569,7 +569,7 @@ class AutomatorRecorderAndPlayer
           SystemTestsControlPanelUpdater.addMessageToSystemTestsConsole errorMessage
         @stopTestPlaying()
       if menuAtPointer?
-        if numberOfItems != menuAtPointer.items.length
+        if numberOfItems != menuAtPointer.testNumberOfItems()
           giveError()
         else
           giveSuccess()

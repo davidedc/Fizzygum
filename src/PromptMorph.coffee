@@ -35,7 +35,7 @@ class PromptMorph extends MenuMorph
     super false, @target, true, true, @msg or "", @tempPromptEntryField
 
 
-    @items.push @tempPromptEntryField
+    @silentAdd @tempPromptEntryField
     if @ceilingNum or WorldMorph.preferencesAndSettings.useSliderForInput
       slider = new SliderMorph(
         @floorNum or 0,
@@ -56,7 +56,7 @@ class PromptMorph extends MenuMorph
         slider.action = "reactToSliderAction1"
       else
         slider.action = "reactToSliderAction2"
-      @items.push slider
+      @silentAdd slider
     @addLine 2
     @addMenuItem "Ok", true, @target, @callback
 

@@ -2159,7 +2159,7 @@ class Morph extends MorphicNode
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph defaultContents
     menu = new MenuMorph false, @, true, true, msg or "", colorPicker
-    menu.items.push colorPicker
+    menu.silentAdd colorPicker
     menu.addLine 2
     menu.addMenuItem "Ok", true, @, callback
 
