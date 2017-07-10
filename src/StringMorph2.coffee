@@ -359,6 +359,8 @@ class StringMorph2 extends Morph
   doesTextFitInExtent: (text = (@transformTextOneToOne @text), overrideFontSize) ->
     if !@measureText?
       debugger
+    if text == ""
+      return true
     extentOccupiedByText = new Point Math.ceil(@measureText overrideFontSize, text), fontHeight(overrideFontSize)
 
     return extentOccupiedByText.le @extent()
