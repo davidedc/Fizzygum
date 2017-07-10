@@ -254,15 +254,27 @@ class StringMorph2 extends Morph
       return startingText + "…"
     return ""
 
-  # see comment above for "searchLargestFittingFont" for some
+  # what we are tyring to do here is to fit the text into
+  # a boundary that potentially is too small. We are not going
+  # to fit it by changing the font size, rather we are fitting
+  # it by cropping it.
+  # TODO Note that we are only going to apply ONE crop, while ideally
+  # we'd want to crop it potentially in multiple places, since
+  # several lines might be extending beyond the width of the
+  # boundary. Right now, we stop at the first offending crop.
+  #
+  # See comment above for "searchLargestFittingFont" for some
   # ideas on how to optimise this further.
-  searchLongestFittingText: (textToFit) ->
+  searchLongestFittingTextPossiblyCropped: (textToFit) ->
     textToFit = @transformTextOneToOne @text
-    start = 0    # minimum string length that we are gonna examine
-    stop  = @generateTextWithEllipsis(textToFit).length
-    
+
+    # check if it fits as is, maybe we don't
+    # need to do any cropping.
     if @doesTextFitInExtent(textToFit, @originallySetFontSize)
        return textToFit
+
+    start = 0    # minimum string length that we are gonna examine
+    stop  = @generateTextWithEllipsis(textToFit).length    
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
@@ -283,6 +295,7 @@ class StringMorph2 extends Morph
 
     fittingText = @generateTextWithEllipsis textToFit.substring 0, start
     #console.log "what fits: " + fittingText
+
     if start == 0
       if @doesTextFitInExtent "…", @originallySetFontSize
         return "…"
@@ -365,7 +378,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-        @textPossiblyCroppedToFit = @searchLongestFittingText textToFit
+        @textPossiblyCroppedToFit = @searchLongestFittingTextPossiblyCropped textToFit
         return @originallySetFontSize
       else
         @textPossiblyCroppedToFit = textToFit
