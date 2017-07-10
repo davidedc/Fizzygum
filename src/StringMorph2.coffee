@@ -261,14 +261,16 @@ class StringMorph2 extends Morph
   # a boundary that potentially is too small. We are not going
   # to fit it by changing the font size, rather we are fitting
   # it by cropping it.
-  # TODO Note that we are only going to apply ONE crop, while ideally
-  # we'd want to crop it potentially in multiple places, since
-  # several lines might be extending beyond the width of the
-  # boundary. Right now, we stop at the first offending crop.
+  # Note that the text could be set to wrap, so we also have
+  # to take that into account when measuring if it fits.
+  #
+  # Note that the resulting text might contain more than one
+  # crop, because several lines might be extending beyond the
+  # width of the boundary.
   #
   # See comment above for "searchLargestFittingFont" for some
   # ideas on how to optimise this further.
-  searchLongestFittingTextPossiblyCropped: (textToFit) ->
+  searchLongestFittingTextByMultiCroppingIt: (textToFit) ->
     textToFit = @transformTextOneToOne @text
 
     # check if it fits as is, maybe we don't
@@ -276,36 +278,122 @@ class StringMorph2 extends Morph
     if @doesTextFitInExtent(textToFit, @originallySetFontSize)
        return textToFit
 
-    start = 0    # minimum string length that we are gonna examine
-    stop  = @generateTextWithEllipsis(textToFit).length    
 
-    # since we round the pivot to the floor, we
-    # always end up start and pivot coinciding
-    while start != (pivot = Math.floor (start + stop) / 2)
+    # split textToFit into lines i.e. into paragraphs
+    splitText = textToFit.split /\n/
+    
+    fittingText = ""
 
-      textAtPivot = @generateTextWithEllipsis textToFit.substring 0, pivot
-      itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
-      #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
+    for i in [0...splitText.length]
 
-      if itFitsAtPivot
-        # bring forward the start since there are still
-        # zeroes at the pivot
-        start = pivot
-      else
-        # bring backwards the stop since there is already
-        # a one at the pivot
-        stop = pivot
+      eachParagraph  = splitText[i]
+      fittingText += eachParagraph
+      
+      # also add the newline, except if it's
+      # the last element of the array, in which
+      # case there is no newline after it.
+      if i != splitText.length - 1
+        fittingText += "\n"
 
-    fittingText = @generateTextWithEllipsis textToFit.substring 0, start
-    #console.log "what fits: " + fittingText
+      console.log "searchLongestFittingTextByMultiCroppingIt trying to fit one more paragraph:"
+      console.log "   " + eachParagraph
+      console.log " overal blurb we are fitting: " + fittingText
 
-    if start == 0
+      # add each new line of textToFit to the existing blurb to be tested
+      # (if we are done with adding lines of textToFit, then we have our
+      # successful blurb)
+
+      if !@doesTextFitInExtent(fittingText, @originallySetFontSize)
+
+        start = 0    # minimum string length that we are gonna examine
+        stop  = fittingText.length
+
+        # since we round the pivot to the floor, we
+        # always end up start and pivot coinciding
+        while start != (pivot = Math.floor (start + stop) / 2)
+
+          console.log "start/stop/pivot: " + start + " / " + stop + " / " + pivot
+
+          textAtPivot = fittingText.substring 0, pivot
+          itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
+          #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
+
+          if itFitsAtPivot
+            console.log "fits at pivot of " + pivot + " : start = pivot now"
+            # bring forward the start since there are still
+            # zeroes at the pivot
+            start = pivot
+          else
+            console.log "doesn't fit at pivot of " + pivot + " : start = pivot now"
+            # bring backwards the stop since there is already
+            # a one at the pivot
+            stop = pivot
+
+        #replace the blurb we just tested with the piece of it that actually
+        # fits, and that might have a crop in it.
+        if start != fittingText.length
+
+          # todo you should count the newlines
+          paragraphBeforeWithNewLineHasBeenCropped = false
+          if fittingText.substr(fittingText.length - 1) == "\n"
+            paragraphBeforeWithNewLineHasBeenCropped = true
+
+          reducing = 0
+          while (start - reducing > 0) and !@doesTextFitInExtent(
+              @generateTextWithEllipsis(
+                fittingText.substring(0, start - reducing)
+                ),
+              @originallySetFontSize
+              )
+            reducing++
+
+          if (start - reducing == 0)
+            if @doesTextFitInExtent "…", @originallySetFontSize
+              fittingText = "…"
+            else
+              fittingText = ""
+          else
+            fittingText = @generateTextWithEllipsis(fittingText.substring 0, start - reducing)
+
+          if paragraphBeforeWithNewLineHasBeenCropped
+            if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
+              console.log "break 1"
+              break
+            else
+              fittingText += "\n"
+
+          if !@doesTextFitInExtent fittingText, @originallySetFontSize
+            alert "something wrong, this really should have fit: >" + fittingText + "<"
+            debugger
+            @doesTextFitInExtent fittingText, @originallySetFontSize
+
+      #console.log "what fits: " + fittingText
+
+      # if there is no more space
+      # for even a single line with the smallest character, then it means
+      # that just there is no more vertical space, this is really the
+      # end, then exit the loop, we have the biggest
+      # possible blurb that we can fit.
+      #if i != splitText.length - 1
+      #  if !@doesTextFitInExtent fittingText + "\n", @originallySetFontSize
+      #    console.log "break 2"
+      #    break
+
+    # we either found the fitting blurb or we are in the
+    # degenerate case where almost nothing fits
+
+    # check degenerate case where (almost) nothing fits
+    if fittingText.length == 0
       if @doesTextFitInExtent "…", @originallySetFontSize
-        return "…"
+        fittingText = "…"
       else
-        return ""
-    else
-      return fittingText
+        fittingText = ""
+
+    console.log "_________fittingText: " + fittingText
+
+
+    return fittingText
+
 
   synchroniseTextAndActualText: ->
     textToFit = @transformTextOneToOne @text
@@ -383,7 +471,7 @@ class StringMorph2 extends Morph
         return @originallySetFontSize
     else
       if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-        @textPossiblyCroppedToFit = @searchLongestFittingTextPossiblyCropped textToFit
+        @textPossiblyCroppedToFit = @searchLongestFittingTextByMultiCroppingIt textToFit
         return @originallySetFontSize
       else
         @textPossiblyCroppedToFit = textToFit
