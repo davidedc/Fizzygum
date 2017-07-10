@@ -533,7 +533,7 @@ class HandMorph extends Morph
 
     world.hierarchyOfClickedMorphs = []
 
-    # not that all the actions due to the clicked
+    # note that all the actions due to the clicked
     # morphs have been performed, now we can destroy
     # morphs queued up for destruction
     # which might include menus...
