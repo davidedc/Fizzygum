@@ -223,8 +223,11 @@ class StringMorph2 extends Morph
     # expensive.
     PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity = 0
 
-    start = 0    # minimum font size that we are gonna examine
-    stop  = Math.round 200 * Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity  # maximum font size that we are gonna examine
+    # minimum font size that we are gonna examine
+    start = 0
+    # maximum font size that we are gonna examine
+    stop  = Math.round 200 * Math.pow 10,
+            PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
     
     if !@doesTextFitInExtent textToFit, start
        return -1
@@ -394,13 +397,7 @@ class StringMorph2 extends Morph
       @fittingFontSize = theValue
       @changed()
 
-  # this shenanigan of passing the alignments is only
-  # needed because we can't edit a TextMorph2 "in place"
-  # when it has an alignment other than top-left.
-  # When that changes, we can simplify this passing of
-  # parameters and simply use
-  # @horizontalAlignment and @verticalAlignment
-  createBufferCacheKey: (horizontalAlignment, verticalAlignment) ->
+  createBufferCacheKey: ->
     @extent().toString() + "-" +
     @isPassword  + "-" +
     @isShowingBlanks  + "-" +
@@ -415,8 +412,8 @@ class StringMorph2 extends Morph
     @startMark  + "-" +
     @endMark  + "-" +
     @markedBackgoundColor.toString()  + "-" +
-    horizontalAlignment  + "-" +
-    verticalAlignment  + "-" +
+    @horizontalAlignment  + "-" +
+    @verticalAlignment  + "-" +
     @fittingSpecWhenBoundsTooLarge  + "-" +
     @fittingSpecWhenBoundsTooSmall
 

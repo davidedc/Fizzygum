@@ -350,15 +350,15 @@ class TextMorph2 extends StringMorph2
 
     return @heightOfPossiblyCroppedText
 
+  createBufferCacheKey: ->
+    return super() +  "-" + @softWrap
+
   # no changes of position or extent should be
   # performed in here
   createRefreshOrGetBackBuffer: ->
-
-    verticalAlignment = @verticalAlignment
-    horizontalAlignment = @horizontalAlignment
-
     
-    cacheKey = @createBufferCacheKey horizontalAlignment, verticalAlignment
+    cacheKey = @createBufferCacheKey()
+
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit?
       # we might have hit a previously cached
@@ -409,7 +409,7 @@ class TextMorph2 extends StringMorph2
     i = 0
     for line in @wrappedLines
       width = Math.ceil(@measureText null, line)
-      x = switch horizontalAlignment
+      x = switch @horizontalAlignment
         when AlignmentSpecHorizontal.RIGHT
           @width() - width
         when AlignmentSpecHorizontal.CENTER
