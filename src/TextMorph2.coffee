@@ -561,9 +561,9 @@ class TextMorph2 extends StringMorph2
     menu = super()
     menu.addLine()
     if @softWrap
-      menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
-    else
       menu.addMenuItem "✓ " + "soft wrap", true, @, "toggleSoftWrap"
+    else
+      menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
     menu.addMenuItem "run contents", true, @, "doContents"
     menu
