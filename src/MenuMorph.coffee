@@ -80,7 +80,10 @@ class MenuMorph extends BoxMorph
     @onClickOutsideMeOrAnyOfMyChildren null
     pinMenuItem.firstParentThatIsAMenu().propagateKillMenus()
     world.destroyMorphsMarkedForDestruction()
-    world.add @
+    
+    # leave the menu attached to whatever it's attached,
+    # just remove the shadow.
+    @removeShadowMorph()
 
   # StringMorph menus:
   developersMenu: (morphOpeningTheMenu) ->
