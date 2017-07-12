@@ -212,6 +212,12 @@ class TriggerMorph extends Morph
     @changed()
     @startCountdownForBubbleHelp @hint  if @hint
   
+  # a copied trigger usually wants to un-highlight
+  # itself. This happens for example when you duplicate
+  # by clicking on a "duplicate" button INSIDE it.
+  justBeenCopied: ->
+    @mouseLeave()
+
   mouseLeave: ->
     @state = @STATE_NORMAL
     @changed()
