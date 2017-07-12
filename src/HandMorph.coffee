@@ -114,7 +114,7 @@ class HandMorph extends Morph
       contextMenu = morphTheMenuIsAbout.contextMenu()
 
     if contextMenu
-      contextMenu.menuThisMenuIsAbout = morphTheMenuIsAbout.firstParentThatIsAMenu()
+      contextMenu.parentMenu = morphTheMenuIsAbout.firstParentThatIsAMenu()
       contextMenu.popUpAtHand()
 
 
@@ -569,10 +569,11 @@ class HandMorph extends Morph
     # (including the one the user clicked on)
     # note that the hierarchy of the menus is actually
     # via the parentMenu property
+    debugger
     ascendingMorphs = morph.firstParentThatIsAMenu()
     world.hierarchyOfClickedMenus = [ascendingMorphs]
-    while ascendingMorphs.menuThisMenuIsAbout?
-      ascendingMorphs = ascendingMorphs.menuThisMenuIsAbout
+    while ascendingMorphs.parentMenu?
+      ascendingMorphs = ascendingMorphs.parentMenu
       world.hierarchyOfClickedMenus.push ascendingMorphs
     
     # go through the morphs that wanted a notification
