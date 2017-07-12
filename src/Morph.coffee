@@ -1630,7 +1630,7 @@ class Morph extends MorphicNode
   
   # Morph accessing - structure //////////////////////////////////////////////
 
-  # EXPLANATION of "silent" vs. "raw" vs. "normal" hyerarchy/bounds change methods
+  # EXPLANATION of "silent" vs. "raw" vs. "normal" hierarchy/bounds change methods
   # ------------------------------------------------------------------------------
   # “normal”: these are the highest-level methods and take into account layouts.
   #           Should use these ones as much as possible. Call the "raw"

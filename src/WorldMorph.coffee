@@ -505,7 +505,7 @@ class WorldMorph extends FrameMorph
       @pushBrokenRect brokenMorph, destinationBroken, false
 
 
-  checkARectWithHyerarchy: (aRect, brokenMorph, isSrc) ->
+  checkARectWithHierarchy: (aRect, brokenMorph, isSrc) ->
     brokenMorphAncestor = brokenMorph
 
     #if brokenMorph instanceof SliderMorph
@@ -546,18 +546,18 @@ class WorldMorph extends FrameMorph
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
         if brokenMorph.srcBrokenRect?
           aRect = @broken[brokenMorph.srcBrokenRect]
-          @checkARectWithHyerarchy aRect, brokenMorph, true
+          @checkARectWithHierarchy aRect, brokenMorph, true
         if brokenMorph.dstBrokenRect?
           aRect = @broken[brokenMorph.dstBrokenRect]
-          @checkARectWithHyerarchy aRect, brokenMorph, false
+          @checkARectWithHierarchy aRect, brokenMorph, false
 
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
         if brokenMorph.srcBrokenRect?
           aRect = @broken[brokenMorph.srcBrokenRect]
-          @checkARectWithHyerarchy aRect, brokenMorph
+          @checkARectWithHierarchy aRect, brokenMorph
         if brokenMorph.dstBrokenRect?
           aRect = @broken[brokenMorph.dstBrokenRect]
-          @checkARectWithHyerarchy aRect, brokenMorph
+          @checkARectWithHierarchy aRect, brokenMorph
 
   cleanupSrcAndDestRectsOfMorphs: ->
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
