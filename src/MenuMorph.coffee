@@ -111,20 +111,7 @@ class MenuMorph extends BoxMorph
     # console.log "menu create label"
     if @label?
       @label = @label.destroy()
-    text = new TextMorph(localize(@title),
-      @fontSize or WorldMorph.preferencesAndSettings.menuFontSize,
-      WorldMorph.preferencesAndSettings.menuFontName, true, false, "center")
-    text.alignment = "center"
-    text.color = new Color 255, 255, 255
-    text.backgroundColor = new Color 60,60,60
-
-    @label = new BoxMorph 3
-    @label.add text
-    if WorldMorph.preferencesAndSettings.isFlat
-      @label.cornerRadius = 0
-    @label.color = new Color 60,60,60
-    @label.rawSetExtent text.extent().add 2
-    @label.text = text
+    @label = new MenuHeader localize @title
 
   createMenuItem: (label, closesUnpinnedMenus = true, target, action, hint, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
     # console.log "menu creating MenuItemMorph "
@@ -269,8 +256,6 @@ class MenuMorph extends BoxMorph
     @children.forEach (item) =>
       trackChanges.push false
       item.rawSetWidth w
-      if item is @label
-        item.text.fullRawMoveTo item.center().subtract item.text.extent().floorDivideBy 2
       #console.log "new width of " + item + " : " + item.width()
       trackChanges.pop()
 
