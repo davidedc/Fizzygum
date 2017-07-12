@@ -1,4 +1,8 @@
 # MenuMorph ///////////////////////////////////////////////////////////
+# MenuMorphs are special Morphs that have quite complex logic for
+# opening themselves, closing themseves when users click outside,
+# popping up, opening sub-menus, and pinning them down.
+# Other than that, ideally they should be able to contain anything.
 
 class MenuMorph extends BoxMorph
   # this is so we can create objects from the object class name 
@@ -14,8 +18,9 @@ class MenuMorph extends BoxMorph
   killThisMenuIfClickOnDescendantsTriggers: true
   killThisMenuIfClickOutsideDescendants: true
   tempPromptEntryField: null
+  parentMenu: null
 
-  constructor: (@isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
+  constructor: (morphOpeningTheMenu, @isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
     # console.log "menu constructor"
     # console.log "menu super"
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
@@ -24,6 +29,21 @@ class MenuMorph extends BoxMorph
       if @killThisMenuIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "destroy"
     super()
+
+    # the morphOpeningTheMenu is only useful to get the "parent" menu.
+    # the "parent" menu is the menu that this menu is attached to,
+    # but we need this extra property because it's not the
+    # actual parent. The reason is that menus are actually attached
+    # to the world morph. This is for a couple of reasons:
+    # 1) they can still appear at the top even if the "parent menu"
+    #    or the parent object are not in the foreground. This is
+    #    what happens for example in OSX, you can right-click on a
+    #    morph that is not in the background but the menu that comes up
+    #    will be in the foreground.
+    # 2) they can appear unoccluded if the "parent morph" or "parent object"
+    #    are in a morph that clips at its boundaries.
+    if morphOpeningTheMenu?
+      @parentMenu = morphOpeningTheMenu.firstParentThatIsAMenu()
 
     if !@isListContents
       world.freshlyCreatedMenus.push @
@@ -40,26 +60,31 @@ class MenuMorph extends BoxMorph
         @silentAdd @label
 
 
+  # the propagation happens through the parentMenu property
+  # rather than the parent property
   propagateKillMenus: ->
     if @killThisMenuIfClickOnDescendantsTriggers
-      if @parent?
-        @parent.propagateKillMenus()
+      if @parentMenu?
+        @parentMenu.propagateKillMenus()
       @markForDestruction()
 
   isPinned: ->
     return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOutsideDescendants)
 
+  # this is invokes on the menu morph to be
+  # pinned. The triggering menu item is the first
+  # parameter.
   pin: (pinMenuItem)->
     @killThisMenuIfClickOnDescendantsTriggers = false
     @killThisMenuIfClickOutsideDescendants = false
     @onClickOutsideMeOrAnyOfMyChildren null
-    pinMenuItem.parent.propagateKillMenus()
+    pinMenuItem.firstParentThatIsAMenu().propagateKillMenus()
     world.destroyMorphsMarkedForDestruction()
     world.add @
 
   # StringMorph menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
     menu
@@ -272,37 +297,10 @@ class MenuMorph extends BoxMorph
       @addFullShadow()
 
 
-  popup: (morphToAttachTo, pos) ->
-    # console.log "menu popup"
-    @silentFullRawMoveTo pos
-    morphToAttachTo.add @
-    # the @fullRawMoveWithin method
-    # needs to know the extent of the morph
-    # so it must be called after the morphToAttachTo.add
-    # method. If you call before, there is
-    # nopainting happening and the morph doesn't
-    # know its extent.
-    @fullRawMoveWithin world
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-    # shadow must be added after the morph
-    # has been placed somewhere because
-    # otherwise there is no visible image
-    # to base the shadow on
-    # P.S. this is the thing that causes the MenuMorph buffer
-    # to be painted after the creation.
-    @addFullShadow()
-    @fullChanged()
-
   # shadow is added to a morph by
   # the HandMorph while floatDragging
   addFullShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
     super offset, alpha, color
-  
-  popUpAtHand: (morphToAttachTo)->
-    if !morphToAttachTo?
-      morphToAttachTo = world
-    @popup morphToAttachTo, world.hand.position()
   
   popUpCenteredAtHand: (world) ->
     @popup world, world.hand.position().subtract @extent().floorDivideBy 2

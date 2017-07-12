@@ -197,6 +197,11 @@ class Morph extends MorphicNode
   destroyed: false
 
   mouseClickRight: ->
+    # you could bring up what you right-click,
+    # however for example that's not how OSX works.
+    # Perhaps this could be a system setting?
+    #@bringToForegroud()
+
     world.hand.openContextMenuAtPointer @
 
   getTextDescription: ->
@@ -1961,7 +1966,8 @@ class Morph extends MorphicNode
         return @  
     @parent.rootForGrab()
 
-  firstContainerMenu: ->
+  # finds the first parent that is a menu
+  firstParentThatIsAMenu: ->
     scanningMorphs = @
     while scanningMorphs.parent?
       scanningMorphs = scanningMorphs.parent
@@ -2103,7 +2109,7 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph false, @, true, true, text
+    m = new MenuMorph @, false, @, true, true, text
     m.popUpCenteredAtHand world
   
   inform: (msg) ->
@@ -2112,17 +2118,17 @@ class Morph extends MorphicNode
       text = msg.toString()  if msg.toString
     else
       text = "NULL"
-    m = new MenuMorph false, @, true, true, text
+    m = new MenuMorph @, false, @, true, true, text
     m.addMenuItem "Ok"
     m.popUpCenteredAtHand world
 
   prompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
 
-    prompt = new PromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    prompt = new PromptMorph(@, msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
 
-    prompt.popUpAtHand @firstContainerMenu()
+    prompt.popUpAtHand()
     prompt.tempPromptEntryField.text.edit()
 
   textPrompt: (msg, target, callback, defaultContents, width, floorNum,
@@ -2137,7 +2143,7 @@ class Morph extends MorphicNode
     prompt.fullMoveTo world.hand.position().subtract new Point 50, 100
     prompt.fullRawMoveWithin world
 
-    #prompt.popUpAtHand @firstContainerMenu()
+    #prompt.popUpAtHand()
     #prompt.tempPromptEntryField.edit()
 
   reactToSliderAction1: (num, theMenu) ->
@@ -2158,7 +2164,7 @@ class Morph extends MorphicNode
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph defaultContents
-    menu = new MenuMorph false, @, true, true, msg or "", colorPicker
+    menu = new MenuMorph @, false, @, true, true, msg or "", colorPicker
     menu.silentAdd colorPicker
     menu.addLine 2
     menu.addMenuItem "Ok", true, @, callback
@@ -2166,7 +2172,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "Cancel", true, @, ->
       null
 
-    menu.popUpAtHand @firstContainerMenu()
+    menu.popUpAtHand()
 
   inspect: (anotherObject) ->
     @spawnInspector @
@@ -2198,16 +2204,11 @@ class Morph extends MorphicNode
   
   # Morph menus ////////////////////////////////////////////////////////////////
   
-  contextMenu: ->
-    # Spacial multiplexing
-    # (search "multiplexing" for the other parts of
-    # code where this matters)
-    # There are two interpretations of what this
-    # list should be:
-    #   1) all morphs "pierced through" by the pointer
-    #   2) all morphs parents of the topmost morph under the pointer
-    # 2 is what is used in Cuis
-    
+  # context Menus are whatever appears when one right-clicks
+  # on something. It could be a custom menu, or the standard
+  # menu on the desktop, or a menu to disambiguate which
+  # morph it's being selected...
+  contextMenu: ->    
     # commented-out addendum for the implementation of 1):
     #show the normal menu in case there is text selected,
     #otherwise show the spacial multiplexing list
@@ -2240,7 +2241,7 @@ class Morph extends MorphicNode
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
-    menu = new MenuMorph false, @, true, true, null
+    menu = new MenuMorph @, false, @, true, true, null
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
@@ -2250,12 +2251,40 @@ class Morph extends MorphicNode
 
     menu
 
-  popupDeveloperMenu: (morphTriggeringThis)->
-    @developersMenu().popUpAtHand morphTriggeringThis.firstContainerMenu()
+  popupDeveloperMenu: (morphOpeningTheMenu)->
+    @developersMenu(morphOpeningTheMenu).popUpAtHand()
 
 
   popUpColorSetter: ->
     @pickColor "color:", "setColor", new Color 0,0,0
+
+  popup: (morphToAttachTo, pos) ->
+    # console.log "menu popup"
+    @silentFullRawMoveTo pos
+    morphToAttachTo.add @
+    # the @fullRawMoveWithin method
+    # needs to know the extent of the morph
+    # so it must be called after the morphToAttachTo.add
+    # method. If you call before, there is
+    # nopainting happening and the morph doesn't
+    # know its extent.
+    @fullRawMoveWithin world
+    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+      world.alignIDsOfNextMorphsInSystemTests()
+    # shadow must be added after the morph
+    # has been placed somewhere because
+    # otherwise there is no visible image
+    # to base the shadow on
+    # P.S. this is the thing that causes the MenuMorph buffer
+    # to be painted after the creation.
+    @addFullShadow()
+    @fullChanged()
+
+
+  popUpAtHand: (morphToAttachTo)->
+    if !morphToAttachTo?
+      morphToAttachTo = world
+    @popup morphToAttachTo, world.hand.position()
 
   transparencyPopout: (menuItem)->
     @prompt menuItem.parent.title + "\nalpha\nvalue:",
@@ -2364,8 +2393,9 @@ class Morph extends MorphicNode
   removeOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.remove b
 
-  testMenu: (a,targetMorph)->
-    menu = new MenuMorph false, targetMorph, true, true, null
+  testMenu: (morphOpeningTheMenu,targetMorph)->
+    debugger
+    menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, null
     menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
@@ -2394,7 +2424,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "others ➜", false, @, "popUpSecondMenu", "others"
 
 
-    menu.popUpAtHand a.firstContainerMenu()
+    menu.popUpAtHand()
 
   underTheCarpetIconAndText: ->
     world.create new UnderTheCarpetOpenerMorph()
@@ -2402,8 +2432,8 @@ class Morph extends MorphicNode
   analogClock: ->
     world.create new AnalogClockMorph()
 
-  popUpIconsMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph false, @, true, true, "icons"
+  popUpIconsMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
     menu.addMenuItem "Destroy icon", true, @, "createDestroyIconMorph"
     menu.addMenuItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
     menu.addMenuItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
@@ -2414,10 +2444,10 @@ class Morph extends MorphicNode
     menu.addMenuItem "Scooter icon", true, @, "createScooterIconMorph"
     menu.addMenuItem "Heart icon", true, @, "createHeartIconMorph"
 
-    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
+    menu.popUpAtHand()
 
-  popUpSecondMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph false, @, true, true, "others"
+  popUpSecondMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
@@ -2428,7 +2458,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     
 
-    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
+    menu.popUpAtHand()
 
   serialiseToMemory: ->
     world.lastSerializationString = @serialize()
@@ -2441,10 +2471,10 @@ class Morph extends MorphicNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
 
-  developersMenuOfMorph: ->
+  developersMenuOfMorph: (morphOpeningTheMenu) ->
     # 'name' is not an official property of a function, hence:
     userMenu = @userMenu() or (@parent and @parent.userMenu())
-    menu = new MenuMorph(false, 
+    menu = new MenuMorph(morphOpeningTheMenu, false, 
       @,
       true,
       true,
@@ -2453,7 +2483,7 @@ class Morph extends MorphicNode
     if window.location.href.contains "worldWithSystemTestHarness"
       if userMenu
         menu.addMenuItem "user features...", true, @, ->
-          userMenu.popUpAtHand @firstContainerMenu()
+          userMenu.popUpAtHand()
 
         menu.addLine()
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
@@ -2527,8 +2557,8 @@ class Morph extends MorphicNode
 
     menu
 
-  developersMenu: ->
-    menu = @developersMenuOfMorph()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = @developersMenuOfMorph(morphOpeningTheMenu)
     if @addShapeSpecificMenus?
       menu = @addShapeSpecificMenus menu
     menu
@@ -2658,7 +2688,7 @@ class Morph extends MorphicNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph false, @, true, true, "choose new parent:"
+      menu = new MenuMorph @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
     else
@@ -2670,8 +2700,8 @@ class Morph extends MorphicNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph false, @, true, true, "no morphs to attach to"
-    menu.popUpAtHand @firstContainerMenu()
+      menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+    menu.popUpAtHand()
 
   attachWithHorizLayout: ->
     choices = world.plausibleTargetAndDestinationMorphs @
@@ -2684,7 +2714,7 @@ class Morph extends MorphicNode
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph false, @, true, true, "choose new parent:"
+      menu = new MenuMorph @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
     else
@@ -2696,8 +2726,8 @@ class Morph extends MorphicNode
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph false, @, true, true, "no morphs to attach to"
-    menu.popUpAtHand @firstContainerMenu()
+      menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+    menu.popUpAtHand()
   
   # does nothing, keeping it for the peace of
   # some tests

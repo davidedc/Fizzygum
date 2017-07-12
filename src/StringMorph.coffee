@@ -240,8 +240,8 @@ class StringMorph extends Morph
       null, 6, 500, true
 
   # StringMorph menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     menu.addMenuItem "edit", true, @, "edit"
     menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"

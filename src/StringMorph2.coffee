@@ -779,7 +779,7 @@ class StringMorph2 extends Morph
       @changed()
 
   fontsMenu: (a,targetMorph)->
-    menu = new MenuMorph false, targetMorph, true, true, null
+    menu = new MenuMorph @, false, targetMorph, true, true, null
 
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
@@ -817,11 +817,11 @@ class StringMorph2 extends Morph
     menu.addMenuItem heavyFontStackTick + "Heavy", true, @, "setFontName", null, null, null, null, null, @heavyFontStack
     menu.addMenuItem monoFontStackTick + "Mono", true, @, "setFontName", null, null, null, null, null, @monoFontStack
 
-    menu.popUpAtHand a.firstContainerMenu()
+    menu.popUpAtHand()
 
   # StringMorph2 menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"

@@ -557,8 +557,8 @@ class TextMorph2 extends StringMorph2
     world.stopEditing()
 
   # TextMorph menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     if @softWrap
       menu.addMenuItem "✓ " + "soft wrap", true, @, "toggleSoftWrap"

@@ -113,8 +113,9 @@ class HandMorph extends Morph
       morphTheMenuIsAbout = morphTheMenuIsAbout.parent
       contextMenu = morphTheMenuIsAbout.contextMenu()
 
-    if contextMenu 
-      contextMenu.popUpAtHand morphTheMenuIsAbout.firstContainerMenu()
+    if contextMenu
+      contextMenu.menuThisMenuIsAbout = morphTheMenuIsAbout.firstParentThatIsAMenu()
+      contextMenu.popUpAtHand()
 
 
   # not used in ZK yet
@@ -532,6 +533,7 @@ class HandMorph extends Morph
   cleanupMenuMorphs: (expectedClick, morph)->
 
     world.hierarchyOfClickedMorphs = []
+    world.hierarchyOfClickedMenus = []
 
     # note that all the actions due to the clicked
     # morphs have been performed, now we can destroy
@@ -551,21 +553,38 @@ class HandMorph extends Morph
     # collect all morphs up the hierarchy of
     # the one the user clicked on.
     # (including the one the user clicked on)
-    world.hierarchyOfClickedMorphs = [morph]
     ascendingMorphs = morph
+    world.hierarchyOfClickedMorphs = [ascendingMorphs]
     while ascendingMorphs.parent?
       ascendingMorphs = ascendingMorphs.parent
       world.hierarchyOfClickedMorphs.push ascendingMorphs
+
+    # remove menus that have requested
+    # to be removed when a click happens outside
+    # of their bounds OR the bounds of their
+    # children
+    #if expectedClick == "mouseClickLeft"
+    # collect all the menus up the hierarchy of
+    # the one the user clicked on.
+    # (including the one the user clicked on)
+    # note that the hierarchy of the menus is actually
+    # via the parentMenu property
+    ascendingMorphs = morph.firstParentThatIsAMenu()
+    world.hierarchyOfClickedMenus = [ascendingMorphs]
+    while ascendingMorphs.menuThisMenuIsAbout?
+      ascendingMorphs = ascendingMorphs.menuThisMenuIsAbout
+      world.hierarchyOfClickedMenus.push ascendingMorphs
     
     # go through the morphs that wanted a notification
     # in case there is a click outside of them or any
-    # of their children morphs.
-    # Check which ones are not in the hierarchy of the clicked morphs
+    # of their children.
+    # i.e. check from the notification list which ones are not
+    # in the hierarchy of the clicked morphs
     # and call their callback.
-    console.log "morphs wanting to be notified: " + world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
-    console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedMorphs
+    #console.log "morphs wanting to be notified: " + world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
+    #console.log "hierarchy of clicked morphs: " + world.hierarchyOfClickedMorphs
+    #console.log "hierarchy of clicked menus: " + world.hierarchyOfClickedMenus
     
-
 
     # here we do a shallow copy of world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
     # because we might remove elements of the array while we
@@ -574,7 +593,8 @@ class HandMorph extends Morph
     # so we need to do a shallow copy to avoid to mangle the for loop
     morphsDetectingClickOutsideMeOrAnyOfMeChildren = arrayShallowCopy world.morphsDetectingClickOutsideMeOrAnyOfMeChildren
     for eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren in morphsDetectingClickOutsideMeOrAnyOfMeChildren
-      if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs
+      if (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMenus) and
+         (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
         if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedMenus

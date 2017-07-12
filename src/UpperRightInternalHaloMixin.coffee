@@ -41,7 +41,7 @@ UpperRightInternalHaloMixin =
       # menu:
       attach: ->
         choices = world.plausibleTargetAndDestinationMorphs @
-        menu = new MenuMorph false, @, true, true, "choose parent:"
+        menu = new MenuMorph @, false, @, true, true, "choose parent:"
         if choices.length > 0
           choices.forEach (each) =>
             menu.addMenuItem each.toString().slice(0, 50) + " ➜", true, @, 'makeSolidWithParentMorph', null, null, null, null, null, each, null, true
@@ -54,5 +54,5 @@ UpperRightInternalHaloMixin =
           # this list if the user invokes the
           # command, and if there are no good
           # morphs then show some kind of message.
-          menu = new MenuMorph false, @, true, true, "no morphs to attach to"
-        menu.popUpAtHand @firstContainerMenu() if choices.length
+          menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
+        menu.popUpAtHand() if choices.length

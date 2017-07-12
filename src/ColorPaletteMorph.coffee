@@ -83,8 +83,8 @@ class ColorPaletteMorph extends Morph
   
     
   # ColorPaletteMorph menu:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     menu.addMenuItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
     menu
@@ -97,10 +97,10 @@ class ColorPaletteMorph extends Morph
 
   setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.colorSetters()
-    menu = new MenuMorph false, @, true, true, "choose target property:"
+    menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
       menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
 
     if choices.length == 0
-      menu = new MenuMorph false, @, true, true, "no target properties available"
-    menu.popUpAtHand @firstContainerMenu()
+      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+    menu.popUpAtHand()

@@ -279,8 +279,8 @@ class FrameMorph extends Morph
         @parent.adjustScrollBars()
 
   # FrameMorph menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     if @children.length
       menu.addLine()
       menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"

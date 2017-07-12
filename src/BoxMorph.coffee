@@ -63,7 +63,7 @@ class BoxMorph extends Morph
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph false, @, true, true, "choose Morph to put as inset:"
+      menu = new MenuMorph @, false, @, true, true, "choose Morph to put as inset:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
     else
@@ -75,6 +75,6 @@ class BoxMorph extends Morph
       # this list if the user invokes the
       # command, and if there are no good
       # morphs then show some kind of message.
-      menu = new MenuMorph false, @, true, true, "no morphs to pick"
-    menu.popUpAtHand @firstContainerMenu()
+      menu = new MenuMorph @, false, @, true, true, "no morphs to pick"
+    menu.popUpAtHand()
 

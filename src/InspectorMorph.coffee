@@ -239,17 +239,17 @@ class InspectorMorph extends BoxMorph
 
 
   openShowMenu: ->
-    menu = new MenuMorph false
+    menu = new MenuMorph @, false
     menu.addMenuItem "attributes", true, @, "showAttributes"
     menu.addMenuItem "methods", true, @, "showMethods"
     menu.addMenuItem "all", true, @, "showAttributesAndMethods"
     menu.addLine()
     menu.addMenuItem ((if @markOwnershipOfProperties then "un-mark ownership" else "mark ownership")), true, @, "highlightOwnershipOfProperties", "highlight\nownership of properties"
-    menu.popUpAtHand @firstContainerMenu()
+    menu.popUpAtHand()
 
   openInspectorMenu: ->
     if isObject @currentProperty
-      menu = new MenuMorph false
+      menu = new MenuMorph @, false
       menu.addMenuItem "in new inspector...", true, @, =>
         inspector = new @constructor @currentProperty
         inspector.fullRawMoveTo world.hand.position()
@@ -260,18 +260,18 @@ class InspectorMorph extends BoxMorph
       menu.addMenuItem "here...", true, @, =>
         @setTarget @currentProperty
 
-      menu.popUpAtHand @firstContainerMenu()
+      menu.popUpAtHand()
     else
       @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
 
   openEditMenu: ->
-    menu = new MenuMorph false
+    menu = new MenuMorph @, false
     menu.addMenuItem "save", true, @, "save", "accept changes"
     menu.addLine()
     menu.addMenuItem "add property...", true, @, "addPropertyPopout"
     menu.addMenuItem "rename...", true, @, "renamePropertyPopout"
     menu.addMenuItem "remove", true, @, "removeProperty"
-    menu.popUpAtHand @firstContainerMenu()
+    menu.popUpAtHand()
 
 
   filterProperties: (staticProperties, targetOwnMethods)->

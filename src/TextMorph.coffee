@@ -313,8 +313,8 @@ class TextMorph extends StringMorph
     @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1
   
   # TextMorph menus:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addLine()
     menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
     menu.addMenuItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"

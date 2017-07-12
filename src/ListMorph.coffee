@@ -61,7 +61,7 @@ class ListMorph extends ScrollFrameMorph
   buildAndConnectChildren: ->
     if @listContents
       @listContents = @listContents.destroy()
-    @listContents = new MenuMorph true, @, false, false, null, null
+    @listContents = new MenuMorph @, true, @, false, false, null, null
     @elements = ["(empty)"]  if !@elements.length
     trackChanges.push false
     @elements.forEach (element) =>

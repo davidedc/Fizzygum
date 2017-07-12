@@ -16,34 +16,6 @@ class TextPromptMorph extends WindowMorph
   constructor: (@msg, @target, @callback, @defaultContents) ->
     super "Edit tool code"
 
-  popup: (morphToAttachTo, pos) ->
-    # console.log "menu popup"
-    @silentFullRawMoveTo pos
-    morphToAttachTo.add @
-    # the @fullRawMoveWithin method
-    # needs to know the extent of the morph
-    # so it must be called after the morphToAttachTo.add
-    # method. If you call before, there is
-    # nopainting happening and the morph doesn't
-    # know its extent.
-    @fullRawMoveWithin world
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-    # shadow must be added after the morph
-    # has been placed somewhere because
-    # otherwise there is no visible image
-    # to base the shadow on
-    # P.S. this is the thing that causes the MenuMorph buffer
-    # to be painted after the creation.
-    @addFullShadow()
-    @fullChanged()
-
-
-  popUpAtHand: (morphToAttachTo)->
-    if !morphToAttachTo?
-      morphToAttachTo = world
-    @popup morphToAttachTo, world.hand.position()
-
   buildAndConnectChildren: ->
     debugger
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism

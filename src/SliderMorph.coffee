@@ -102,8 +102,8 @@ class SliderMorph extends CircleBoxMorph
     
   
   # SliderMorph menu:
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
     menu.addMenuItem "floor...", true, @, (->
       @prompt menu.title + "\nfloor:",
@@ -240,12 +240,12 @@ class SliderMorph extends CircleBoxMorph
   
   setTargetSetter: (ignored, ignored2, theTarget) ->
     choices = theTarget.numericalSetters()
-    menu = new MenuMorph false, @, true, true, "choose target property:"
+    menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
       menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
     if choices.length == 0
-      menu = new MenuMorph false, @, true, true, "no target properties available"
-    menu.popUpAtHand @firstContainerMenu()
+      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+    menu.popUpAtHand()
 
   
   numericalSetters: ->

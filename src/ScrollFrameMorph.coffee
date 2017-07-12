@@ -442,8 +442,8 @@ class ScrollFrameMorph extends FrameMorph
       @adjustScrollBars()
   
   
-  developersMenu: ->
-    menu = super()
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
     if @isTextLineWrapping
       menu.addMenuItem "auto line wrap off...", true, @, "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
     else

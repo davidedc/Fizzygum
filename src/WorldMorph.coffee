@@ -134,6 +134,7 @@ class WorldMorph extends FrameMorph
 
   morphsDetectingClickOutsideMeOrAnyOfMeChildren: []
   hierarchyOfClickedMorphs: []
+  hierarchyOfClickedMenus: []
   markedForDestruction: []
   freshlyCreatedMenus: []
   openMenus: []
@@ -270,9 +271,9 @@ class WorldMorph extends FrameMorph
     if !window.location.href.contains "worldWithSystemTestHarness"
       @contextMenu= ->
         if @isDevMode
-          menu = new MenuMorph false, @, true, true, "Fizzygum"
+          menu = new MenuMorph @, false, @, true, true, "Fizzygum"
         else
-          menu = new MenuMorph false, @, true, true, "Morphic"
+          menu = new MenuMorph @, false, @, true, true, "Morphic"
         if @isDevMode
           menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
           menu.addMenuItem "delete all", true, @, "fullDestroy"
@@ -1692,10 +1693,10 @@ class WorldMorph extends FrameMorph
 
   contextMenu: ->
     if @isDevMode
-      menu = new MenuMorph(false, 
+      menu = new MenuMorph(@, false, 
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuMorph false, @, true, true, "Morphic"
+      menu = new MenuMorph @, false, @, true, true, "Morphic"
     if @isDevMode
       menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
@@ -1725,7 +1726,7 @@ class WorldMorph extends FrameMorph
     menu
 
   popUpSystemTestsMenu: ->
-    menu = new MenuMorph false, @, true, true, "system tests"
+    menu = new MenuMorph @, false, @, true, true, "system tests"
 
     menu.addMenuItem "run system tests", true, @automatorRecorderAndPlayer, "runAllSystemTests", "runs all the system tests"
     menu.addMenuItem "run system tests force slow", true, @automatorRecorderAndPlayer, "runAllSystemTestsForceSlow", "runs all the system tests"
@@ -1743,7 +1744,7 @@ class WorldMorph extends FrameMorph
     menu.addMenuItem "save recorded test", true, @automatorRecorderAndPlayer, "saveTest", "save the recorded test"
     menu.addMenuItem "save failed screenshots", true, @automatorRecorderAndPlayer, "saveFailedScreenshots", "save failed screenshots"
 
-    menu.popUpAtHand @firstContainerMenu()
+    menu.popUpAtHand()
 
   create: (aMorph) ->
     aMorph.pickUp()
@@ -1868,9 +1869,10 @@ class WorldMorph extends FrameMorph
     @create newMorph
 
 
-  popUpDemoMenu: (a,b,c,d) ->
+  popUpDemoMenu: (morphOpeningTheMenu,b,c,d) ->
+    debugger
     if window.location.href.contains "worldWithSystemTestHarness"
-      menu = new MenuMorph false, @, true, true, "make a morph"
+      menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -1899,7 +1901,7 @@ class WorldMorph extends FrameMorph
       menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
       menu.addMenuItem "closing window", true, @, "closingWindow"
     else
-      menu = new MenuMorph false, @, true, true, "parts bin"
+      menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "parts bin"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -1920,14 +1922,14 @@ class WorldMorph extends FrameMorph
       menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
       menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
 
-    menu.popUpAtHand a.firstContainerMenu()
+    menu.popUpAtHand()
 
-  layoutTestsMenu: (morphTriggeringThis) ->
-    menu = new MenuMorph false, @, true, true, "Layout tests"
+  layoutTestsMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Layout tests"
     menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
     menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
     menu.addMenuItem "test screen 1", true, Morph, "setupTestScreen1"
-    menu.popUpAtHand morphTriggeringThis.firstContainerMenu()
+    menu.popUpAtHand()
     
   
   toggleDevMode: ->
