@@ -58,7 +58,7 @@ class AnalogClockMorph extends Morph
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 
-      @renderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
+      @renderingHelper aContext, new Color(255, 255, 255)
 
       aContext.restore()
 
