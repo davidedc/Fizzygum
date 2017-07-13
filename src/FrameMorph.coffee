@@ -234,13 +234,16 @@ class FrameMorph extends Morph
     
     # this mess for the shadow is because technically
     # the shadow would be outside the clipping area
-    # of the Freame so it wouldn't be drawn.
+    # of the Frame so it wouldn't be drawn.
     # So just for the shadow we do regress to the clippingRectangle
     # which doesn't clip the bounds of this Frame
     @children.forEach (child) =>
       if (child instanceof ShadowMorph) and (!noShadow)
+        # the shadow can paint itself all over the damaged area
         child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
       else
+        # things other than the shadow can paint themselves only
+        # within the clipping area of the frame
         child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
 
 

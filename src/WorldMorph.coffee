@@ -448,7 +448,7 @@ class WorldMorph extends FrameMorph
       rect.isIntersecting fb
   
   
-  # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pices of
+  # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
   # morphs done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
   # The paintIntoAreaOrBlitFromBackBuffer function is defined in Morph.
