@@ -439,6 +439,11 @@ class TextMorph2 extends StringMorph2
   # answer the logical position point of the given index ("slot")
   # i.e. the row and the column where a particular character is.
   slotRowAndColumn: (slot) ->
+
+    #if !window.globCounter2? then window.globCounter2 = 0
+    #window.globCounter2++
+    #console.log "slotRowAndColumn " + window.globCounter2
+
     @reflowText()
     idx = 0
     # Note that this solution scans all the characters
@@ -460,6 +465,10 @@ class TextMorph2 extends StringMorph2
   # This is in absolute world coordinates.
   # This function assumes that the text is left-justified.
   slotCoordinates: (slot) ->
+
+    #if !window.globCounter3? then window.globCounter3 = 0
+    #window.globCounter3++
+    #console.log "slotCoordinates " + window.globCounter3
 
     # this makes it so when you type and the string becomes too big
     # then the edit stops to be directly in the screen and the

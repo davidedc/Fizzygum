@@ -12,7 +12,7 @@
 # use a TextMorph instead.
 # It's like StringMorph BUT it fits any given size, so to
 # behave well in layouts.
-
+#
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
 # REQUIRES AlignmentSpecHorizontal
@@ -215,6 +215,7 @@ class StringMorph2 extends Morph
   # from the current one, so you can try to narrow the bracket
   # a lot at the very start.
   searchLargestFittingFont: (textToFit) ->
+
     # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
     # in the font size. This is so the resizing of the
     # text is less "jumpy".
@@ -230,10 +231,11 @@ class StringMorph2 extends Morph
             PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
     
     if !@doesTextFitInExtent textToFit, start
-       return -1
+      return -1
+
 
     if @doesTextFitInExtent textToFit, stop
-       return stop / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
+      return stop / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
     # since we round the pivot to the floor, we
     # always end up start and pivot coinciding
@@ -250,7 +252,7 @@ class StringMorph2 extends Morph
         # a one at the pivot
         stop = pivot
 
-    start / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
+    return start / Math.pow 10, PreferencesAndSettings.decimalFloatFiguresOfFontSizeGranularity
 
   generateTextWithEllipsis: (startingText) ->
     if startingText != ""
@@ -460,7 +462,13 @@ class StringMorph2 extends Morph
     # make the font size bigger if that's the policy.
     # If it doesn't fit, then we either crop it or make the
     # font smaller.
+    
+    #if !window.globCounter? then window.globCounter = 0
+    #window.globCounter++
+    #console.log "fitting to extent " + window.globCounter
+
     textToFit = @transformTextOneToOne @text
+
     if @doesTextFitInExtent textToFit, @originallySetFontSize
       @textPossiblyCroppedToFit = textToFit
       #console.log "@textPossiblyCroppedToFit = textToFit 3"
@@ -622,6 +630,14 @@ class StringMorph2 extends Morph
   # Draw the selection. This is done by re-drawing the
   # selected text, one character at the time, just with
   # a background rectangle.
+  #
+  # TODO would really benefit from some batching, it's often the
+  # case that entire lines can be done in one shot instead of doing
+  # them char by char. It's not just the painting that is slow, it's
+  # also the slot coordinates calculations that become quite taxing done
+  # this way. I profiled this, just see how highlighting gets slower
+  # and slower as selection gets longer.
+  #
   drawSelection: (backBufferContext) ->
     startSlot = @firstSelectedSlot()
     endSlot = @lastSelectedSlot()
@@ -694,8 +710,8 @@ class StringMorph2 extends Morph
     # other parts to move on to now.
     while true
       if charX > xPosition - @left()
-        console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
-        console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
+        #console.log "xPosition - @left(): " + (xPosition - @left()) + " charXMinusOne " + charXMinusOne + "  charX " + charX 
+        #console.log "Math.abs(xPosition - @left() - charXMinusOne) " + Math.abs(xPosition - @left() - charXMinusOne) + "  Math.abs(xPosition - @left() - charX) " + Math.abs(xPosition - @left() - charX) 
         if Math.abs(xPosition - @left() - charXMinusOne) < Math.abs(xPosition - @left() - charX)
           return idx - 1
         break

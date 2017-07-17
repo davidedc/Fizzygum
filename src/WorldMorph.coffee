@@ -218,7 +218,7 @@ class WorldMorph extends FrameMorph
 
     super()
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
-    console.log WorldMorph.preferencesAndSettings.menuFontName
+    #console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color 205, 205, 205 # (130, 130, 130)
     @alpha = 1
 
@@ -575,6 +575,7 @@ class WorldMorph extends FrameMorph
     sourceBroken = null
     destinationBroken = null
 
+
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
       # let's see if this Morph that marked itself as broken
@@ -626,6 +627,8 @@ class WorldMorph extends FrameMorph
     destinationBroken = null
 
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
+
+      #console.log "fleshOutFullBroken: " + brokenMorph
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
@@ -761,6 +764,7 @@ class WorldMorph extends FrameMorph
     # and nearby rectangles.
 
     window.healingRectanglesPhase = true
+
     @broken.forEach (rect) =>
       if !rect?
         return
@@ -1677,7 +1681,7 @@ class WorldMorph extends FrameMorph
       i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
     for eachMorphClass in ListOfMorphs
       if eachMorphClass != "WorldMorph"
-        console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
+        #console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
         # the actual count is in another variable "instancesCounter"
         # but all labels are built using instanceNumericID
         # which is set based on lastBuiltInstanceNumericID
@@ -1870,7 +1874,6 @@ class WorldMorph extends FrameMorph
 
 
   popUpDemoMenu: (morphOpeningTheMenu,b,c,d) ->
-    debugger
     if window.location.href.contains "worldWithSystemTestHarness"
       menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"

@@ -569,7 +569,6 @@ class HandMorph extends Morph
     # (including the one the user clicked on)
     # note that the hierarchy of the menus is actually
     # via the parentMenu property
-    debugger
     ascendingMorphs = morph.firstParentThatIsAMenu()
     world.hierarchyOfClickedMenus = [ascendingMorphs]
     while ascendingMorphs.parentMenu?

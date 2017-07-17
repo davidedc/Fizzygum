@@ -603,7 +603,7 @@ class AutomatorRecorderAndPlayer
   # So it neatly highlights where the differences
   # are.
   subtractScreenshots: (expected, obtained, diffNumber, andThen) ->
-    console.log "subtractScreenshots"
+    #console.log "subtractScreenshots"
     expectedCanvas = document.createElement "canvas"
     expectedImage = new Image
     # unfortunately the operation of loading
@@ -614,12 +614,12 @@ class AutomatorRecorderAndPlayer
     # to make it all work, as we need to load
     # two such images.
     expectedImage.onload = =>
-      console.log "expectedCanvas.imageData: " + expectedCanvas.imageData
+      #console.log "expectedCanvas.imageData: " + expectedCanvas.imageData
       expectedCanvas.width = expectedImage.width
       expectedCanvas.height = expectedImage.height
       expectedCanvasContext = expectedCanvas.getContext "2d"
-      console.log "expectedCanvas.width: " + expectedCanvas.width
-      console.log "expectedCanvas.height: " + expectedCanvas.height
+      #console.log "expectedCanvas.width: " + expectedCanvas.width
+      #console.log "expectedCanvas.height: " + expectedCanvas.height
       expectedCanvasContext.drawImage(expectedImage,0,0)
       expectedImageData = expectedCanvasContext.getImageData(0, 0, expectedCanvas.width, expectedCanvas.height)
 
@@ -664,8 +664,8 @@ class AutomatorRecorderAndPlayer
           else
             equalPixels++
           i += 4
-        console.log "equalPixels: " + equalPixels
-        console.log "differentPixels: " + differentPixels
+        #console.log "equalPixels: " + equalPixels
+        #console.log "differentPixels: " + differentPixels
         subtractionCanvasContext.putImageData subtractionImageData, 0, 0
         #errorRatio = Math.ceil((differentPixels/(equalPixels+differentPixels))*1000)
         errorRatio = differentPixels
@@ -703,7 +703,7 @@ class AutomatorRecorderAndPlayer
    # since they are quite big and they accumulate.
    AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = AutomatorRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
    for eachImage in AutomatorRecorderAndPlayer.loadedImages["#{testNameWithImageNumber}"]
-     console.log "length of obtained: " + eachImage.imageData.length
+     #console.log "length of obtained: " + eachImage.imageData.length
      if eachImage.imageData == screenshotObtained
       message = "PASS - screenshot " + eachImage.fileName + " matched"
       AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = null

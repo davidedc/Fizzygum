@@ -334,7 +334,7 @@ class Morph extends MorphicNode
   # being created will all be aligned and
   # minor discrepancies are ironed-out
   @roundNumericIDsToNextThousand: ->
-    console.log "@roundNumericIDsToNextThousand"
+    #console.log "@roundNumericIDsToNextThousand"
     # this if is because zero and multiples of 1000
     # don't go up to 1000
     if @lastBuiltInstanceNumericID % 1000 == 0
@@ -1316,6 +1316,8 @@ class Morph extends MorphicNode
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
 
+    # this check also skips drawing the shadow if we dont't
+    # want to draw it.
     if @preliminaryCheckNothingToDraw noShadow, clippingRectangle, aContext
       return
 

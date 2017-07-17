@@ -20,7 +20,6 @@ class SliderButtonMorph extends CircleBoxMorph
   # see note above about Colors and shared objects
   pressColor: new Color 100, 100, 100
   normalColor: new Color 0, 0, 0
-  is3D: false
 
   state: 0
   STATE_NORMAL: 0

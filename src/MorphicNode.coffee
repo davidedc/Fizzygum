@@ -24,6 +24,7 @@ class MorphicNode
   # at a textMorph being added to a box morph: it is
   # added to the children list of the box morph, at the end,
   # and it's painted on top (otherwise it wouldn't be visible).
+  #
   # Note that when you add a morph A to a morph B, it doesn't
   # mean that A is cointained in B. The two potentially might
   # not even overlap.
