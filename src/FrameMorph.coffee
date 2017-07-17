@@ -61,6 +61,7 @@ class FrameMorph extends Morph
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
+        (@ not instanceof ShadowMorph) and
         !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -223,7 +224,7 @@ class FrameMorph extends Morph
     dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
     
     # if there is no dirty part in the frame then do nothing
-    return null if dirtyPartOfFrame.isEmpty()
+    #return null if dirtyPartOfFrame.isEmpty()
     
     if aContext == world.worldCanvasContext
       @recordDrawnAreaForNextBrokenRects()
@@ -231,6 +232,14 @@ class FrameMorph extends Morph
     # this draws the background of the frame itself, which could
     # contain an image or a pentrail    
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+
+    # since the morph clips at its boundaries, then we know that all of
+    # its children are inside. Hence, if the frame is fully opaque, then
+    # if we are just drawing it to draw the shadow, we can just
+    # draw the frame itself and skip all of the children.
+    if noShadow and @alpha == 1
+      #console.log "optimisation: not drawing children of morph while drawing shadow"
+      return
     
     # this mess for the shadow is because technically
     # the shadow would be outside the clipping area

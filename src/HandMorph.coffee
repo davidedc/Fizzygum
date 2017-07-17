@@ -52,6 +52,7 @@ class HandMorph extends Morph
   topMorphUnderPointer: ->
     result = @world.topMorphSuchThat (m) =>
       m.clippedThroughBounds().containsPoint(@position()) and
+        (m not instanceof ShadowMorph) and
         m.visibleBasedOnIsVisibleProperty() and
         !m.isCollapsed() and
         (m.noticesTransparentClick or (not m.isTransparentAt(@position()))) and
@@ -180,7 +181,11 @@ class HandMorph extends Morph
       # This is a particularly "floaty" shadow
       # which illustrates how things being dragged
       # are above anything else.
-      aMorph.addFullShadow new Point(7, 7), 0.2
+
+      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+        aMorph.addFullShadow new Point(7, 7), 0.2
+      else
+        aMorph.addFullShadow new Point(6, 6), 0.1
       
       #debugger
       @fullChanged()

@@ -463,7 +463,16 @@ class Morph extends MorphicNode
     @onClickOutsideMeOrAnyOfMyChildren null
 
     if @parent?
-      @fullChanged()
+
+      # if the morph contributes to a shadow, unfortunately
+      # we have to walk towards the top to
+      # break the morph that has the shadow.
+      firstParentOwningMyShadow = @firstParentOwningMyShadow()
+      if firstParentOwningMyShadow?
+        firstParentOwningMyShadow.fullChanged()
+      else
+        @fullChanged()
+
       @parent.removeChild @
     return null
   
@@ -476,6 +485,38 @@ class Morph extends MorphicNode
     until @children.length == 0
       @children[0].fullDestroy()
     @destroy()
+    return null
+
+  # assumes that the ShadowMorph is always in the
+  # first position.
+  fullDestroyChildrenButNotTheShadow: ->
+    if @children.length == 0
+      return null
+
+    if (@children.length == 1) and (@children[0] instanceof ShadowMorph)
+      return null
+
+    # if we are here we know that we are going to eliminate
+    # at least a child, because we either
+    # - have one child that is not a ShadowMorph
+    # - have more than one child
+
+    WorldMorph.numberOfAddsAndRemoves++
+
+    # ok so at this point there are two options:
+    # either the first child is a ShadowMorph,
+    # in which case we have to eliminate all the
+    # children past it until only one child remains:
+
+    if (@children[0] instanceof ShadowMorph)
+      until @children.length == 1
+        @children[1].fullDestroy()
+      return null
+
+    # ...or the first child is not a ShadowMorph, in
+    # which case we just have to destroy all the children
+
+    @fullDestroyChildren()
     return null
 
   fullDestroyChildren: ->
@@ -673,6 +714,7 @@ class Morph extends MorphicNode
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
+        (@ not instanceof ShadowMorph) and
         !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -1350,7 +1392,19 @@ class Morph extends MorphicNode
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @fullChanged()
+
+    # TODO refactor this, it appears more than one time
+    # if the morph contributes to a shadow, unfortunately
+    # we have to walk towards the top to
+    # break the morph that has the shadow.
+    # ALSO there are many other "@fullChanged" that really
+    # should do this instead.
+    firstParentOwningMyShadow = @firstParentOwningMyShadow()
+    if firstParentOwningMyShadow?
+      firstParentOwningMyShadow.fullChanged()
+    else
+      @fullChanged()
+
 
   show: ->
     if @isVisible
@@ -1361,7 +1415,13 @@ class Morph extends MorphicNode
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
-    @fullChanged()
+
+    firstParentOwningMyShadow = @firstParentOwningMyShadow()
+    debugger
+    if firstParentOwningMyShadow?
+      firstParentOwningMyShadow.fullChanged()
+    else
+      @fullChanged()
   
   toggleVisibility: ->
     @isVisible = not @isVisible
@@ -1561,6 +1621,19 @@ class Morph extends MorphicNode
   # shadow is added to a morph by
   # the HandMorph while floatDragging
   addFullShadow: (offset, alpha, color) ->
+
+    if !offset?
+      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+        offset = new Point(2, 2)
+      else
+        offset = new Point(4, 4)
+
+    if !alpha?
+      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+        alpha = 0.8
+      else
+        alpha = 0.2
+
     shadow = @silentAddFullShadow offset, alpha, color
     shadow.reLayout()
     
@@ -1672,6 +1745,12 @@ class Morph extends MorphicNode
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
   add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+    if (aMorph not instanceof ShadowMorph) and (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
+      if @ == world
+        aMorph.addFullShadow()
+      else
+        aMorph.removeShadowMorph()
+
     @addRaw arguments...
   
   # attaches submorph on top
@@ -1689,6 +1768,16 @@ class Morph extends MorphicNode
       return null
 
     aMorph.parent?.invalidateLayout()
+
+    # if the morph contributes to a shadow, unfortunately
+    # we have to walk towards the top to
+    # break the morph that has the shadow.
+    firstParentOwningMyShadow = aMorph.firstParentOwningMyShadow()
+    if firstParentOwningMyShadow?
+      firstParentOwningMyShadow.fullChanged()
+    else
+      aMorph.fullChanged()
+
 
     aMorph.layoutSpec = layoutSpec
     if layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -1974,6 +2063,27 @@ class Morph extends MorphicNode
         return @  
     @parent.rootForGrab()
 
+  # the only trick here is that we stop at the first
+  # clipping morph, because if a morph is inside a clipping
+  # morph, it doesn't contribute to any shadow.
+  firstParentOwningMyShadow: ->
+    if @getShadowMorph()
+      return @
+
+    scanningMorphs = @
+    while scanningMorphs.parent?
+      scanningMorphs = scanningMorphs.parent
+      # TODO actually stop at the first
+      # CLIPPING morph (more generic), not
+      # just a FrameMorph
+      if scanningMorphs instanceof FrameMorph
+        return null
+      if scanningMorphs.getShadowMorph()?
+        return scanningMorphs
+
+    return null
+
+
   # finds the first parent that is a menu
   firstParentThatIsAMenu: ->
     scanningMorphs = @
@@ -2028,7 +2138,6 @@ class Morph extends MorphicNode
       world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
   justDropped: ->
-      @removeShadowMorph()
     
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops
@@ -2252,7 +2361,7 @@ class Morph extends MorphicNode
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
-      if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
+      if (each.developersMenu) and (each isnt world) and (each not instanceof ShadowMorph) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice 0, 50
         menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
 

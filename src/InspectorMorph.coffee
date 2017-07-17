@@ -44,7 +44,7 @@ class InspectorMorph extends BoxMorph
     # THE ONES THAT ARE STILL
     # submorphs of the inspector. If they
     # have been peeled away, they still live
-    @fullDestroyChildren()
+    @fullDestroyChildrenButNotTheShadow()
 
     # label
     @label = new TextMorph @target.toString()

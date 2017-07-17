@@ -289,7 +289,19 @@ class MenuMorph extends BoxMorph
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addFullShadow: (offset = new Point(2, 2), alpha = 0.8, color) ->
+  addFullShadow: (offset, alpha, color) ->
+    if !offset?
+      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+        offset = new Point(2, 2)
+      else
+        offset = new Point(4, 4)
+
+    if !alpha?
+      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
+        alpha = 0.8
+      else
+        alpha = 0.2
+
     super offset, alpha, color
   
   popUpCenteredAtHand: (world) ->

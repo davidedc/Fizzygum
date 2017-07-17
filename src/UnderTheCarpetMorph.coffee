@@ -27,7 +27,7 @@ class UnderTheCarpetMorph extends BoxMorph
     @attribs = []
 
     # remove existing panes
-    @fullDestroyChildren()
+    @fullDestroyChildrenButNotTheShadow()
 
     # label
     @label = new TextMorph "Under the carpet"

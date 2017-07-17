@@ -584,7 +584,7 @@ class WorldMorph extends FrameMorph
       # even if the Morph is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted
+          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.expandBy 12
 
         #if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
@@ -601,7 +601,7 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread()
+          destinationBroken = boundsToBeChanged.spread().expandBy 12
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
@@ -643,7 +643,12 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread()
+          # TODO all these .expandBy 12 at the very least should be done
+          # only if the morph contains a shadow.
+          # also they should be parametric on the shadow size.
+          # also, the shadow is not exactly symmetric, it has an
+          # offset...
+          destinationBroken = boundsToBeChanged.spread().expandBy 12
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       

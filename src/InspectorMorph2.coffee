@@ -110,7 +110,7 @@ class InspectorMorph2 extends WindowMorph
     # THE ONES THAT ARE STILL
     # submorphs of the inspector. If they
     # have been peeled away, they still live
-    @fullDestroyChildren()
+    @fullDestroyChildrenButNotTheShadow()
 
     super
     attribs = []
