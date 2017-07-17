@@ -49,7 +49,7 @@ class PreferencesAndSettings
   @decimalFloatFiguresOfFontSizeGranularity: 0
 
   constructor: ->
-    @useBlurredShadows = true
+    @useBlurredShadows = false
     @setMouseInputMode()
     console.log("constructing PreferencesAndSettings")
 
