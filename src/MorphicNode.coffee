@@ -20,6 +20,18 @@ class MorphicNode
   # children of this node. First child is at the
   # back relative to other children, last child is at the
   # top.
+  #
+  # The repaint mechanism in Fizzygum is back-to-front,
+  # so first the "parent" morph is drawn, then the children,
+  # where first child is re-painted first.
+  #
+  # The slight exception is the shadow, which, when it exists,
+  # is the first
+  # child, but includes the shadow of the parent morph.
+  # So, the shadow is drawn AFTER the parent morph, but it's
+  # drawn with a special blending mode, such that it can be
+  # painted over and it still looks like it's at the back.
+  #
   # This makes intuitive sense if you think for example
   # at a textMorph being added to a box morph: it is
   # added to the children list of the box morph, at the end,
@@ -28,9 +40,6 @@ class MorphicNode
   # Note that when you add a morph A to a morph B, it doesn't
   # mean that A is cointained in B. The two potentially might
   # not even overlap.
-  # The shadow is added as the first child, and it's
-  # actually a special child that gets drawn before the
-  # others.
   children: null
 
   rootCache: null
@@ -68,9 +77,9 @@ class MorphicNode
   
   # currently used to add the shadow. The shadow
   # is in the background in respect to everything
-  # else so it's drawn as the first child
-  # (after the morph itself, but the shadow has a hole
-  # or semi-transparency for it)
+  # else, BUT it's drawn as the first child
+  # (i.e. AFTER the morph itself, but the shadow has a hole
+  # or semi-transparency for it!)
   addChildFirst: (aMorphicNode) ->
     
     @addChild aMorphicNode, 0
