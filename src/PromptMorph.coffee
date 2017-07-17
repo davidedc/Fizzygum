@@ -60,8 +60,7 @@ class PromptMorph extends MenuMorph
     @addLine 2
     @addMenuItem "Ok", true, @target, @callback
 
-    @addMenuItem "Cancel", true, @, ->
-      null
+    @addMenuItem "Cancel", true, @, ""
 
     @reLayout()
 

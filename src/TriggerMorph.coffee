@@ -181,6 +181,7 @@ class TriggerMorph extends Morph
     if @action
       if typeof @action is "function"
         console.log "trigger invoked with function"
+        alert "trigger invoked with function, this shouldn't happen"
         debugger
         @action.call @target, @dataSourceMorphForTarget
       else # assume it's a String

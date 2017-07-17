@@ -2171,8 +2171,7 @@ class Morph extends MorphicNode
     menu.addLine 2
     menu.addMenuItem "Ok", true, @, callback
 
-    menu.addMenuItem "Cancel", true, @, ->
-      null
+    menu.addMenuItem "Cancel", true, @, ""
 
     menu.popUpAtHand()
 
