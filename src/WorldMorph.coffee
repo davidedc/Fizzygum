@@ -820,7 +820,7 @@ class WorldMorph extends FrameMorph
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
       if eachMorphNeedingHighlight not in @morphsBeingHighlighted
-        hM = new RectangleMorph()
+        hM = new HighlighterMorph()
         world.add hM
         hM.morphThisMorphIsHighlighting = eachMorphNeedingHighlight
         hM.rawSetBounds eachMorphNeedingHighlight.clippedThroughBounds()
