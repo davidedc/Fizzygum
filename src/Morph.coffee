@@ -479,6 +479,9 @@ class Morph extends MorphicNode
     return null
 
   fullDestroyChildren: ->
+    if @children.length == 0
+      return
+
     WorldMorph.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
     # we are iterating over an array that changes
