@@ -2445,7 +2445,7 @@ class Morph extends MorphicNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",null,null,null,null,null,new Color(255, 255, 54), 0.5)
+      "nisi.",null,null,null,null,null,new Color(230, 230, 130), 1)
     newMorph.isEditable = true
     #newMorph.maxTextWidth = 300
     world.create newMorph
@@ -2472,7 +2472,7 @@ class Morph extends MorphicNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",null,null,null,null,null,new Color(230, 230, 130), 1)
+      "nisi.",null,null,null,null,null,new Color(255, 255, 54), 0.5)
     newMorph.isEditable = true
     #newMorph.maxTextWidth = 300
     world.create newMorph
