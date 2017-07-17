@@ -368,7 +368,7 @@ class TextMorph2 extends StringMorph2
       # knowing whether the buffer we are gonna paint
       # is the same as the one being shown now. If
       # not, then we mark the caret as broken.
-      if backBuffer != cacheHit[0]
+      if @backBuffer != cacheHit[0]
         if world.caret?
           world.caret.changed()      
       return cacheHit
