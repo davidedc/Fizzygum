@@ -1521,6 +1521,7 @@ class Morph extends MorphicNode
       ctx.shadowBlur = blur * pixelRatio
     ctx.shadowColor = clr.toString()
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
+
     # now redraw the image in destination-out mode so that
     # it "cuts-out" everything that is not the actual shadow
     # around the edges. This is so we can draw the shadow ON TOP
@@ -1532,6 +1533,7 @@ class Morph extends MorphicNode
     ctx.shadowBlur = 0
     ctx.globalCompositeOperation = "destination-out"
     ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
+
     sha
   
   isBeingFloatDragged: ->
@@ -1619,6 +1621,7 @@ class Morph extends MorphicNode
   # property above for more info.
   fullChanged: ->
     if trackChanges[trackChanges.length - 1]
+      # check if we already issued a fullChanged on this morph
       if !@fullGeometryOrPositionPossiblyChanged
         window.morphsThatMaybeChangedFullGeometryOrPosition.push @
         @fullGeometryOrPositionPossiblyChanged = true
@@ -2091,7 +2094,7 @@ class Morph extends MorphicNode
             null,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
-      console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
+      #console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
 
       if (@firstSiblingAfterMeSuchThat((m) -> m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED)?) and !@siblingAfterMeIsA(StackElementsSizeAdjustingMorph)
         world.temporaryHandlesAndLayoutAdjusters.push \
@@ -2482,11 +2485,6 @@ class Morph extends MorphicNode
       @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
 
     if window.location.href.contains "worldWithSystemTestHarness"
-      if userMenu
-        menu.addMenuItem "user features...", true, @, ->
-          userMenu.popUpAtHand()
-
-        menu.addLine()
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
       menu.addMenuItem "resize/move...", true, @, "showResizeAndMoveHandlesAndLayoutAdjusters", "show a handle\nwhich can be floatDragged\nto change this morph's" + " extent"
@@ -2584,7 +2582,7 @@ class Morph extends MorphicNode
     else
       padding = paddingOrMorphGivingPadding
 
-    console.log " >>>>>>>>>>>>> padding: " + padding
+    #console.log " >>>>>>>>>>>>> padding: " + padding
     #if padding == 1
     #  debugger
     if @paddingTop != padding or @paddingBottom != padding or @paddingLeft != padding or @paddingRight != padding
