@@ -1674,8 +1674,11 @@ class Morph extends MorphicNode
       # you could check directly if it's in the array
       # but we use a flag because it's faster.
       if !@geometryOrPositionPossiblyChanged
-        window.morphsThatMaybeChangedGeometryOrPosition.push @
-        @geometryOrPositionPossiblyChanged = true
+        # if we already issued a fullChanged on this morph
+        # then there is no point issuing a change too.
+        if !@fullGeometryOrPositionPossiblyChanged
+          window.morphsThatMaybeChangedGeometryOrPosition.push @
+          @geometryOrPositionPossiblyChanged = true
 
     @parent.childChanged @  if @parent
 
