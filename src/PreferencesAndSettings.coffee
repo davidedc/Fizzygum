@@ -49,7 +49,7 @@ class PreferencesAndSettings
   @decimalFloatFiguresOfFontSizeGranularity: 0
 
   constructor: ->
-    @useBlurredShadows = getBlurredShadowSupport() # check for Chrome-bug
+    @useBlurredShadows = true
     @setMouseInputMode()
     console.log("constructing PreferencesAndSettings")
 

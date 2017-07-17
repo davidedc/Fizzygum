@@ -313,27 +313,6 @@ getMinimumFontHeight = ->
   0
 
 
-getBlurredShadowSupport = ->
-  # check for Chrome issue 90001
-  # http://code.google.com/p/chromium/issues/detail?id=90001
-  source = document.createElement "canvas"
-  source.width = 10
-  source.height = 10
-  ctx = source.getContext "2d"
-  ctx.fillStyle = "rgb(255, 0, 0)"
-  ctx.beginPath()
-  ctx.arc 5, 5, 5, 0, Math.PI * 2, true
-  ctx.closePath()
-  ctx.fill()
-  target = document.createElement "canvas"
-  target.width = 10
-  target.height = 10
-  ctx = target.getContext "2d"
-  ctx.shadowBlur = 10
-  ctx.shadowColor = "rgba(0, 0, 255, 1)"
-  ctx.drawImage source, 0, 0
-  (if ctx.getImageData(0, 0, 1, 1).data[3] then true else false)
-
 getDocumentPositionOf = (aDOMelement) ->
   # answer the absolute coordinates of a DOM element in the document
   if aDOMelement is null
