@@ -115,7 +115,7 @@ BackBufferMixin =
 
           aContext.save()
 
-          aContext.globalAlpha = @alpha
+          aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
 
           aContext.drawImage @backBuffer,
             Math.round(sl),

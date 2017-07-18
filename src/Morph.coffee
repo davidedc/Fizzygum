@@ -1297,6 +1297,14 @@ class Morph extends MorphicNode
   #    inside the effect of the scope of
   #    "scale pixelRatio, pixelRatio", or
   # Mostly, the first pattern is used.
+  # Note that the resulting rectangle WILL reflect
+  # if it's being painted as a shadow or not,
+  # so it can't be used to paint on a backbuffer,
+  # since you always want to paint on a backbuffer
+  # "pristine", since the shadow effect is applied
+  # when the backbuffer is in turn blitte to
+  # screen, LATER.
+
   paintRectangle: (
     aContext,
     al, at, w, h,
@@ -1313,7 +1321,7 @@ class Morph extends MorphicNode
 
       aContext.fillStyle = color.toString()
       if transparency?
-        aContext.globalAlpha = transparency
+        aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * transparency
 
       aContext.fillRect  Math.round(al),
           Math.round(at),
@@ -1360,6 +1368,42 @@ class Morph extends MorphicNode
 
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
+
+    if @children[0] instanceof ShadowMorph
+      clippingRectangle2 = clippingRectangle.translateBy -@children[0].offset.x, -@children[0].offset.y
+
+      # this check also skips drawing the shadow if we dont't
+      # want to draw it.
+      if !@preliminaryCheckNothingToDraw noShadow, clippingRectangle2, aContext
+
+        aContext.save()
+        aContext.translate @children[0].offset.x, @children[0].offset.y
+        world.shadowAlpha.push @children[0].alpha
+
+        # in general, the children of a Morph could be outside the
+        # bounds of the parent (they could also be much larger
+        # then the parent). This means that we have to traverse
+        # all the children to find out whether any of those overlap
+        # the clipping rectangle. Note that we can be smarter with
+        # FrameMorphs, as their children are actually all contained
+        # within the parent's boundary.
+
+        # Note that if we could dynamically and cheaply keep an updated
+        # fullBounds property, then we could be smarter
+        # in discarding whole sections of the scene graph.
+        # (see https://github.com/davidedc/Fizzygum/issues/150 )
+        
+
+        if aContext == world.worldCanvasContext
+          @recordDrawnAreaForNextBrokenRects()
+        @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle2
+        @children.forEach (child) ->
+          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle2, noShadow
+
+
+        aContext.restore()
+        world.shadowAlpha.pop()
+
 
     # this check also skips drawing the shadow if we dont't
     # want to draw it.

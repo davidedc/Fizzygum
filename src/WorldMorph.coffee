@@ -192,6 +192,8 @@ class WorldMorph extends FrameMorph
   # solution is more ad-hoc and is much much slower.
   outstandingTimerTriggeredOperationsCounter: []
 
+  shadowAlpha: [1]
+
   isFloatDraggable: ->
     return false
 
@@ -463,6 +465,7 @@ class WorldMorph extends FrameMorph
     #    (which could contain a Morph being floatDragged)
     #    is painted on top of everything.
     super aContext, aRect
+
     # the mouse cursor is always drawn on top of everything
     # and it's not attached to the WorldMorph.
     @hand.fullPaintIntoAreaOrBlitFromBackBuffer aContext, aRect
@@ -632,7 +635,7 @@ class WorldMorph extends FrameMorph
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted
+          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.expandBy 12
 
       # for the "destination" broken rectangle we can actually
       # check whether the Morph is still visible because we
@@ -751,6 +754,9 @@ class WorldMorph extends FrameMorph
     @fleshOutBroken()
     @rectAlreadyIncludedInParentBrokenMorph()
     @cleanupSrcAndDestRectsOfMorphs()
+
+    if @broken.length != 0
+      debugger
 
     @clearGeometryOrPositionPossiblyChangedFlags()
     @clearFullGeometryOrPositionPossiblyChangedFlags()

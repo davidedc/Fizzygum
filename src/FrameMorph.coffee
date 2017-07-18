@@ -96,19 +96,11 @@ class FrameMorph extends Morph
   # stops and we can ignore the bounds of potentially
   # hundreds of morphs that might be in here.
   SLOWfullBounds: ->
-    shadow = @getShadowMorph()
-    if shadow?
-      result = @bounds.merge shadow.bounds
-    else
-      result = @bounds
-    result
+    @bounds
 
   SLOWfullClippedBounds: ->
-    shadow = @getShadowMorph()
     if @isOrphan() or !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       result = Rectangle.EMPTY
-    else if shadow?
-      result = @clippedThroughBounds().merge shadow.bounds
     else
       result = @clippedThroughBounds()
     #if this != world and result.corner.x > 400 and result.corner.y > 100 and result.origin.x ==0 and result.origin.y ==0
@@ -127,11 +119,7 @@ class FrameMorph extends Morph
           alert "fullBounds is broken (cached)"
       return @cachedFullBounds
 
-    shadow = @getShadowMorph()
-    if shadow?
-      result = @bounds.merge shadow.bounds
-    else
-      result = @bounds
+    result = @bounds
 
     if world.doubleCheckCachedMethodsResults
       if !result.eq @SLOWfullBounds()
@@ -152,11 +140,7 @@ class FrameMorph extends Morph
               alert "fullClippedBounds is broken"
           return @cachedFullClippedBounds
 
-      shadow = @getShadowMorph()
-      if shadow?
-        result = @clippedThroughBounds().merge shadow.bounds
-      else
-        result = @clippedThroughBounds()
+      result = @clippedThroughBounds()
 
     if world.doubleCheckCachedMethodsResults
       if !result.eq @SLOWfullClippedBounds()
@@ -172,6 +156,47 @@ class FrameMorph extends Morph
 
   
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @clippedThroughBounds(), noShadow = false) ->
+
+    if @children[0] instanceof ShadowMorph
+      clippingRectangle2 = clippingRectangle.translateBy -@children[0].offset.x, -@children[0].offset.y
+
+      if !@preliminaryCheckNothingToDraw noShadow, clippingRectangle2, aContext
+
+        # the part to be redrawn could be outside the frame entirely,
+        # in which case we can stop going down the morphs inside the frame
+        # since the whole point of the frame is to clip everything to a specific
+        # rectangle.
+        # So, check which part of the Frame should be redrawn:
+        dirtyPartOfFrame = @boundingBox().intersect clippingRectangle2
+        
+        # if there is no dirty part in the frame then do nothing
+        if !dirtyPartOfFrame.isEmpty()
+
+          aContext.save()
+          aContext.translate @children[0].offset.x, @children[0].offset.y
+          world.shadowAlpha.push @children[0].alpha
+        
+          # this draws the background of the frame itself, which could
+          # contain an image or a pentrail    
+          @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+
+          # since the morph clips at its boundaries, then we know that all of
+          # its children are inside. Hence, if the frame is fully opaque, then
+          # if we are just drawing it to draw the shadow, we can just
+          # draw the frame itself and skip all of the children.
+          if @alpha != 1
+          
+            # this mess for the shadow is because technically
+            # the shadow would be outside the clipping area
+            # of the Frame so it wouldn't be drawn.
+            # So just for the shadow we do regress to the clippingRectangle
+            # which doesn't clip the bounds of this Frame
+            @children.forEach (child) =>
+              child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
+
+          aContext.restore()
+          world.shadowAlpha.pop()
+
 
     if @preliminaryCheckNothingToDraw noShadow, clippingRectangle, aContext
       return
@@ -224,7 +249,7 @@ class FrameMorph extends Morph
     dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
     
     # if there is no dirty part in the frame then do nothing
-    #return null if dirtyPartOfFrame.isEmpty()
+    return null if dirtyPartOfFrame.isEmpty()
     
     if aContext == world.worldCanvasContext
       @recordDrawnAreaForNextBrokenRects()
@@ -233,27 +258,15 @@ class FrameMorph extends Morph
     # contain an image or a pentrail    
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
 
-    # since the morph clips at its boundaries, then we know that all of
-    # its children are inside. Hence, if the frame is fully opaque, then
-    # if we are just drawing it to draw the shadow, we can just
-    # draw the frame itself and skip all of the children.
-    if noShadow and @alpha == 1
-      #console.log "optimisation: not drawing children of morph while drawing shadow"
-      return
-    
     # this mess for the shadow is because technically
     # the shadow would be outside the clipping area
     # of the Frame so it wouldn't be drawn.
     # So just for the shadow we do regress to the clippingRectangle
     # which doesn't clip the bounds of this Frame
     @children.forEach (child) =>
-      if (child instanceof ShadowMorph) and (!noShadow)
-        # the shadow can paint itself all over the damaged area
-        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
-      else
-        # things other than the shadow can paint themselves only
-        # within the clipping area of the frame
-        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
+      # things other than the shadow can paint themselves only
+      # within the clipping area of the frame
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, noShadow
 
 
   # FrameMorph scrolling optimization:

@@ -33,7 +33,7 @@ class DestroyIconMorph extends Morph
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @alpha
+      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
 
       aContext.scale pixelRatio, pixelRatio
 

@@ -53,7 +53,7 @@ class LayoutSpacerMorph extends Morph
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @alpha
+      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
 
       # paintRectangle here is made to work with
       # al, at, w, h which are actual pixels

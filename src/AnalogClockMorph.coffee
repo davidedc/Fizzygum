@@ -46,7 +46,7 @@ class AnalogClockMorph extends Morph
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @backgroundTransparency
+      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @backgroundTransparency
 
       # paintRectangle here is made to work with
       # al, at, w, h which are actual pixels
@@ -89,7 +89,7 @@ class AnalogClockMorph extends Morph
     context.lineCap = "round"
 
     context.save()
-    context.globalAlpha = @alpha
+    context.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
 
     height = @height()
     width = @width()

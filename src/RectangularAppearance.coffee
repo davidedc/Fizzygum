@@ -56,7 +56,7 @@ class RectangularAppearance extends Appearance
       @morph.justBeforeBeingPainted?()
 
       aContext.save()
-      aContext.globalAlpha = @morph.alpha
+      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @morph.alpha
       aContext.fillStyle = @morph.color.toString()
 
       if !@morph.color?

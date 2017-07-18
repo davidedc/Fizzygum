@@ -70,7 +70,7 @@ class BoxyAppearance extends Appearance
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = @morph.alpha
+      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @morph.alpha
 
       aContext.scale pixelRatio, pixelRatio
       morphPosition = @morph.position()
