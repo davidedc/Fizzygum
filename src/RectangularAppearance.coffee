@@ -22,6 +22,12 @@ class RectangularAppearance extends Appearance
   #    inside the effect of the scope of
   #    "scale pixelRatio, pixelRatio", or
   # Mostly, the first pattern is used.
+  #
+  # useful for example when hovering over references
+  # to morphs. Can only modify the rendering of a morph,
+  # so any highlighting is only visible in the measure that
+  # the morph is visible (as opposed to HighlighterMorph being
+  # used to highlight a morph)
   paintHighlight: (aContext, al, at, w, h) ->
     return
     ###

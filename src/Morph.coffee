@@ -373,6 +373,11 @@ class Morph extends MorphicNode
   isTransparentAt: (aPoint) ->
     @appearance?.isTransparentAt aPoint
 
+  # useful for example when hovering over references
+  # to morphs. Can only modify the rendering of a morph,
+  # so any highlighting is only visible in the measure that
+  # the morph is visible (as opposed to HighlighterMorph being
+  # used to highlight a morph)
   paintHighlight: (aContext, al, at, w, h) ->
     @appearance?.paintHighlight aContext, al, at, w, h
 
