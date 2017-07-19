@@ -60,7 +60,7 @@ class IconAppearance extends Appearance
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if @morph.preliminaryCheckNothingToDraw false, clippingRectangle, aContext
+    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle

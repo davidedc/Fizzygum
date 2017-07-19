@@ -51,7 +51,7 @@ class PenMorph extends Morph
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
 
-    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
+    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle

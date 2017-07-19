@@ -1292,7 +1292,7 @@ class Morph extends MorphicNode
         aContext.restore()
 
 
-  preliminaryCheckNothingToDraw: (noShadow, clippingRectangle, aContext) ->
+  preliminaryCheckNothingToDraw: (clippingRectangle, aContext) ->
 
     if !@isVisible
       return true
@@ -1323,70 +1323,49 @@ class Morph extends MorphicNode
       #if (@ instanceof MenuMorph) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
 
+  # in general, the children of a Morph could be outside the
+  # bounds of the parent (they could also be much larger
+  # then the parent). This means that we have to traverse
+  # all the children to find out whether any of those overlap
+  # the clipping rectangle. Note that we can be smarter with
+  # FrameMorphs, as their children are actually all contained
+  # within the parent's boundary.
+  #
+  # Note that if we could dynamically and cheaply keep an updated
+  # fullBounds property, then we could be smarter
+  # in discarding whole sections of the scene graph.
+  # (see https://github.com/davidedc/Fizzygum/issues/150 )
 
-  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
-
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+    # if there is a shadow "property" object
+    # then first draw the shadow of the treee
     if @shadowInfo?
-      clippingRectangle2 = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
+      @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle
 
-      # this check also skips drawing the shadow if we dont't
-      # want to draw it.
-      if !@preliminaryCheckNothingToDraw noShadow, clippingRectangle2, aContext
+    # draw the proper contents of the tree
+    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
+      if aContext == world.worldCanvasContext
+        @recordDrawnAreaForNextBrokenRects()
+      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle
 
-        aContext.save()
-        aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
-        world.shadowAlpha.push @shadowInfo.alpha
+  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle) ->
+    clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
-        # in general, the children of a Morph could be outside the
-        # bounds of the parent (they could also be much larger
-        # then the parent). This means that we have to traverse
-        # all the children to find out whether any of those overlap
-        # the clipping rectangle. Note that we can be smarter with
-        # FrameMorphs, as their children are actually all contained
-        # within the parent's boundary.
+    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
+      aContext.save()
+      aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
+      world.shadowAlpha.push @shadowInfo.alpha        
 
-        # Note that if we could dynamically and cheaply keep an updated
-        # fullBounds property, then we could be smarter
-        # in discarding whole sections of the scene graph.
-        # (see https://github.com/davidedc/Fizzygum/issues/150 )
-        
+      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle
 
-        if aContext == world.worldCanvasContext
-          @recordDrawnAreaForNextBrokenRects()
-        @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle2
-        @children.forEach (child) ->
-          child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle2, noShadow
+      aContext.restore()
+      world.shadowAlpha.pop()
+  
 
-
-        aContext.restore()
-        world.shadowAlpha.pop()
-
-
-    # this check also skips drawing the shadow if we dont't
-    # want to draw it.
-    if @preliminaryCheckNothingToDraw noShadow, clippingRectangle, aContext
-      return
-
-    # in general, the children of a Morph could be outside the
-    # bounds of the parent (they could also be much larger
-    # then the parent). This means that we have to traverse
-    # all the children to find out whether any of those overlap
-    # the clipping rectangle. Note that we can be smarter with
-    # FrameMorphs, as their children are actually all contained
-    # within the parent's boundary.
-
-    # Note that if we could dynamically and cheaply keep an updated
-    # fullBounds property, then we could be smarter
-    # in discarding whole sections of the scene graph.
-    # (see https://github.com/davidedc/Fizzygum/issues/150 )
-    
-
-    if aContext == world.worldCanvasContext
-      @recordDrawnAreaForNextBrokenRects()
+  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
     @children.forEach (child) ->
-      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, noShadow
-  
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
 
   hide: ->
     @isVisible = false
@@ -1497,7 +1476,7 @@ class Morph extends MorphicNode
     # so that the origin of the entire bounds is at the
     # very top-left of the "img" canvas.
     ctx.translate -bounds.origin.x * pixelRatio , -bounds.origin.y * pixelRatio
-    @fullPaintIntoAreaOrBlitFromBackBuffer ctx, bounds, noShadow
+    @fullPaintIntoAreaOrBlitFromBackBuffer ctx, bounds
     img
 
   fullImageNoShadow: ->

@@ -39,7 +39,7 @@ class LayoutSpacerMorph extends Morph
     if @thisSpacerIsTransparent
       return
 
-    if @preliminaryCheckNothingToDraw false, clippingRectangle, aContext
+    if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
