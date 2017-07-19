@@ -3,6 +3,10 @@
 # opening themselves, closing themseves when users click outside,
 # popping up, opening sub-menus, and pinning them down.
 # Other than that, ideally they should be able to contain anything.
+#
+# Menus have 3 different shadows: "normal", "when dragged" and
+# "pinned on desktop", plus no shadow when pinned on anything
+# else other than the desktop.
 
 class MenuMorph extends BoxMorph
   # this is so we can create objects from the object class name 
