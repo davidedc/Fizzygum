@@ -170,8 +170,7 @@ class FrameMorph extends Morph
           aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
           world.shadowAlpha.push @shadowInfo.alpha
         
-          # this draws the background of the frame itself, which could
-          # contain an image or a pentrail    
+          # this draws the background of the frame itself
           @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
 
           # since the morph clips at its boundaries, then we know that all of
@@ -248,8 +247,7 @@ class FrameMorph extends Morph
     if aContext == world.worldCanvasContext
       @recordDrawnAreaForNextBrokenRects()
 
-    # this draws the background of the frame itself, which could
-    # contain an image or a pentrail    
+    # this draws the background of the frame itself
     @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
 
     # this mess for the shadow is because technically
