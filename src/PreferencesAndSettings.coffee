@@ -16,8 +16,6 @@ class PreferencesAndSettings
   @INPUT_MODE_MOUSE: 0
   @INPUT_MODE_TOUCH: 1
 
-  useBlurredShadows: null
-  
   # all these properties can be modified
   # by the input mode.
   inputMode: null
@@ -49,12 +47,8 @@ class PreferencesAndSettings
   @decimalFloatFiguresOfFontSizeGranularity: 0
 
   constructor: ->
-    @useBlurredShadows = false
     @setMouseInputMode()
     console.log("constructing PreferencesAndSettings")
-
-  toggleBlurredShadows: ->
-    @useBlurredShadows = not @useBlurredShadows
 
   toggleInputMode: ->
     if @inputMode == PreferencesAndSettings.INPUT_MODE_MOUSE

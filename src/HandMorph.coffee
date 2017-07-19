@@ -180,10 +180,7 @@ class HandMorph extends Morph
       # which illustrates how things being dragged
       # are above anything else.
 
-      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-        aMorph.addShadow new Point(7, 7), 0.2
-      else
-        aMorph.addShadow new Point(6, 6), 0.1
+      aMorph.addShadow new Point(6, 6), 0.1
       
       #debugger
       @fullChanged()

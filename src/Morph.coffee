@@ -1544,22 +1544,8 @@ class Morph extends MorphicNode
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addShadow: (offset, alpha) ->
-
-    if !offset?
-      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-        offset = new Point(2, 2)
-      else
-        offset = new Point(4, 4)
-
-    if !alpha?
-      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-        alpha = 0.8
-      else
-        alpha = 0.2
-
-    @silentAddShadow offset, alpha
-    
+  addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
+    @silentAddShadow offset, alpha    
     @fullChanged()
 
   silentAddShadow: (offset, alpha) ->

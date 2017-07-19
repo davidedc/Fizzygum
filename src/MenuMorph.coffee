@@ -84,8 +84,9 @@ class MenuMorph extends BoxMorph
     @parentMenu = @parent
     
     # leave the menu attached to whatever it's attached,
-    # just remove the shadow.
-    @removeShadow()
+    # just change the shadow.
+    @updateShadow()
+
 
   # StringMorph menus:
   developersMenu: (morphOpeningTheMenu) ->
@@ -281,27 +282,20 @@ class MenuMorph extends BoxMorph
       @destroy()
 
   justDropped: ->
-    if @isPinned()
-      @removeShadow()
-    else
-      @addShadow()
+    @updateShadow()
 
+  updateShadow: ->
+    if @isPinned()
+      if @parent == world
+        @addShadow new Point(3, 3), 0.5
+      else
+        @removeShadow()
+    else 
+      @addShadow()
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addShadow: (offset, alpha, color) ->
-    if !offset?
-      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-        offset = new Point(2, 2)
-      else
-        offset = new Point(4, 4)
-
-    if !alpha?
-      if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
-        alpha = 0.8
-      else
-        alpha = 0.2
-
+  addShadow: (offset = new Point(5, 5), alpha = 0.15, color) ->
     super offset, alpha
   
   popUpCenteredAtHand: (world) ->
