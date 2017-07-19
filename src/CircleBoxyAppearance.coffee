@@ -54,7 +54,7 @@ class CircleBoxyAppearance extends Appearance
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
@@ -70,7 +70,7 @@ class CircleBoxyAppearance extends Appearance
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @morph.alpha
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
 
       aContext.scale pixelRatio, pixelRatio
       morphPosition = @morph.position()

@@ -97,7 +97,7 @@ BackBufferMixin =
       # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
       # Note that this morph might paint something on the screen even if
       # it's not a "leaf".
-      paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+      paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
         @justBeforeBeingPainted?()
 
         if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
@@ -115,7 +115,7 @@ BackBufferMixin =
 
           aContext.save()
 
-          aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
+          aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
           aContext.drawImage @backBuffer,
             Math.round(sl),

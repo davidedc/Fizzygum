@@ -121,7 +121,7 @@ class TriggerMorph extends Morph
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
       return null
@@ -149,7 +149,8 @@ class TriggerMorph extends Morph
         al, at, w, h,
         color,
         @alpha,
-        true # push and pop the context
+        true, # push and pop the context
+        appliedShadow
 
       # paintHighlight is usually made to work with
       # al, at, w, h which are actual pixels

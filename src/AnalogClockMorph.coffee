@@ -30,7 +30,7 @@ class AnalogClockMorph extends Morph
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
@@ -46,7 +46,7 @@ class AnalogClockMorph extends Morph
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @backgroundTransparency
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @backgroundTransparency
 
       # paintRectangle here is made to work with
       # al, at, w, h which are actual pixels
@@ -58,7 +58,7 @@ class AnalogClockMorph extends Morph
       morphPosition = @position()
       aContext.translate morphPosition.x, morphPosition.y
 
-      @renderingHelper aContext, new Color(255, 255, 255)
+      @renderingHelper aContext, new Color(255, 255, 255), appliedShadow
 
       aContext.restore()
 
@@ -84,12 +84,12 @@ class AnalogClockMorph extends Morph
     @minutesHandAngle = Math.PI / 30 * min + Math.PI / 1800 * sec
     @secondsHandAngle = sec * Math.PI / 30
 
-  renderingHelper: (context, color, shadowColor) ->
+  renderingHelper: (context, color, appliedShadow) ->
     context.lineWidth = 1
     context.lineCap = "round"
 
     context.save()
-    context.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
+    context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
     height = @height()
     width = @width()

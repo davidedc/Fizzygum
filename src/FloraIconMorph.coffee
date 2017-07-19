@@ -17,7 +17,7 @@ class FloraIconMorph extends Morph
   # eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
@@ -33,7 +33,7 @@ class FloraIconMorph extends Morph
       # going to paint the whole of the box
       aContext.clipToRectangle al,at,w,h
 
-      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @alpha
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
 
       aContext.scale pixelRatio, pixelRatio
 

@@ -192,8 +192,6 @@ class WorldMorph extends FrameMorph
   # solution is more ad-hoc and is much much slower.
   outstandingTimerTriggeredOperationsCounter: []
 
-  shadowAlpha: [1]
-
   isFloatDraggable: ->
     return false
 
@@ -776,7 +774,8 @@ class WorldMorph extends FrameMorph
     @broken.forEach (rect) =>
       if !rect?
         return
-      @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect  if rect.isNotEmpty()
+      if rect.isNotEmpty()
+        @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
     if world.showRedraws
       @showBrokenRects @worldCanvasContext
 

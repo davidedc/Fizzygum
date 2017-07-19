@@ -23,6 +23,8 @@ class RectangularAppearance extends Appearance
   #    "scale pixelRatio, pixelRatio", or
   # Mostly, the first pattern is used.
   paintHighlight: (aContext, al, at, w, h) ->
+    return
+    ###
     if !@morph.highlighted
       return
 
@@ -35,6 +37,7 @@ class RectangularAppearance extends Appearance
       "orange",
       0.5,
       true # push and pop the context
+    ###
 
 
   # This method only paints this very morph
@@ -43,7 +46,7 @@ class RectangularAppearance extends Appearance
   # which eventually invokes paintIntoAreaOrBlitFromBackBuffer.
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return null
@@ -56,7 +59,7 @@ class RectangularAppearance extends Appearance
       @morph.justBeforeBeingPainted?()
 
       aContext.save()
-      aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * @morph.alpha
+      aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @morph.alpha
       aContext.fillStyle = @morph.color.toString()
 
       if !@morph.color?
@@ -71,7 +74,7 @@ class RectangularAppearance extends Appearance
 
       # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
-      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @morph.backgroundColor, @morph.backgroundTransparency
+      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @morph.backgroundColor
 
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)

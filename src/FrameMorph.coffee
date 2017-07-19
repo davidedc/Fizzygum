@@ -150,7 +150,7 @@ class FrameMorph extends Morph
     @cachedFullClippedBounds = result
 
   
-  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle) ->
+  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
 
     # a FrameMorph has the special property that all of its children
     # are actually inside its boundary.
@@ -208,12 +208,12 @@ class FrameMorph extends Morph
         @recordDrawnAreaForNextBrokenRects()
 
       # this draws the background of the frame itself
-      @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+      @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
       @children.forEach (child) =>
-        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+        child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
-  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle) ->
+  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
@@ -230,10 +230,9 @@ class FrameMorph extends Morph
 
         aContext.save()
         aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
-        world.shadowAlpha.push @shadowInfo.alpha
       
         # this draws the background of the frame itself
-        @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+        @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
         # since the morph clips at its boundaries, then we know that all of
         # its children are inside. Hence, if the frame is fully opaque, then
@@ -241,10 +240,9 @@ class FrameMorph extends Morph
         # draw the shadow of the frame itself and skip all of the children.
         if @alpha != 1
           @children.forEach (child) =>
-            child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame
+            child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
         aContext.restore()
-        world.shadowAlpha.pop()
 
 
   # FrameMorph scrolling optimization:

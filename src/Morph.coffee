@@ -376,8 +376,8 @@ class Morph extends MorphicNode
   paintHighlight: (aContext, al, at, w, h) ->
     @appearance?.paintHighlight aContext, al, at, w, h
 
-  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
-    @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
+  paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   addShapeSpecificMenus: (menu) ->
     if @appearance?.addShapeSpecificMenus?
@@ -1253,7 +1253,7 @@ class Morph extends MorphicNode
   #  * passing actual pixels, when used
   #    outside the effect of the scope of
   #    "scale pixelRatio, pixelRatio", or
-  #  * passing logiacl pixels, when used
+  #  * passing logical pixels, when used
   #    inside the effect of the scope of
   #    "scale pixelRatio, pixelRatio", or
   # Mostly, the first pattern is used.
@@ -1270,7 +1270,8 @@ class Morph extends MorphicNode
     al, at, w, h,
     color,
     transparency = null,
-    pushAndPopContext = false
+    pushAndPopContext = false,
+    appliedShadow
   ) ->
 
       if !color?
@@ -1281,7 +1282,7 @@ class Morph extends MorphicNode
 
       aContext.fillStyle = color.toString()
       if transparency?
-        aContext.globalAlpha = world.shadowAlpha[world.shadowAlpha.length - 1] * transparency
+        aContext.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * transparency
 
       aContext.fillRect  Math.round(al),
           Math.round(at),
@@ -1336,36 +1337,35 @@ class Morph extends MorphicNode
   # in discarding whole sections of the scene graph.
   # (see https://github.com/davidedc/Fizzygum/issues/150 )
 
-  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle) ->
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     # if there is a shadow "property" object
     # then first draw the shadow of the treee
     if @shadowInfo?
-      @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle
+      @fullPaintIntoAreaOrBlitFromBackBufferJustShadow aContext, clippingRectangle, @shadowInfo
 
     # draw the proper contents of the tree
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       if aContext == world.worldCanvasContext
         @recordDrawnAreaForNextBrokenRects()
-      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle
+      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
 
-  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle) ->
+
+  fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
       aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
-      world.shadowAlpha.push @shadowInfo.alpha        
 
-      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle
+      @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
 
       aContext.restore()
-      world.shadowAlpha.pop()
   
 
-  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle) ->
-    @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
+  fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
+    @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
-      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle
+      child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   hide: ->
     @isVisible = false
