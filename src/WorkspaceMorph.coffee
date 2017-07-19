@@ -33,7 +33,7 @@ class WorkspaceMorph extends BoxMorph
     attribs = []
 
     # remove existing panes
-    @fullDestroyChildrenButNotTheShadow()
+    @fullDestroyChildren()
 
     # label
     @label = new TextMorph "Morphs List"

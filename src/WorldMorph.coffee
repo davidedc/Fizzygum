@@ -755,9 +755,6 @@ class WorldMorph extends FrameMorph
     @rectAlreadyIncludedInParentBrokenMorph()
     @cleanupSrcAndDestRectsOfMorphs()
 
-    if @broken.length != 0
-      debugger
-
     @clearGeometryOrPositionPossiblyChangedFlags()
     @clearFullGeometryOrPositionPossiblyChangedFlags()
 

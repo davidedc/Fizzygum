@@ -196,6 +196,8 @@ class Morph extends MorphicNode
 
   destroyed: false
 
+  shadowInfo: null
+
   mouseClickRight: ->
     # you could bring up what you right-click,
     # however for example that's not how OSX works.
@@ -487,38 +489,6 @@ class Morph extends MorphicNode
     @destroy()
     return null
 
-  # assumes that the ShadowMorph is always in the
-  # first position.
-  fullDestroyChildrenButNotTheShadow: ->
-    if @children.length == 0
-      return null
-
-    if (@children.length == 1) and (@children[0] instanceof ShadowMorph)
-      return null
-
-    # if we are here we know that we are going to eliminate
-    # at least a child, because we either
-    # - have one child that is not a ShadowMorph
-    # - have more than one child
-
-    WorldMorph.numberOfAddsAndRemoves++
-
-    # ok so at this point there are two options:
-    # either the first child is a ShadowMorph,
-    # in which case we have to eliminate all the
-    # children past it until only one child remains:
-
-    if (@children[0] instanceof ShadowMorph)
-      until @children.length == 1
-        @children[1].fullDestroy()
-      return null
-
-    # ...or the first child is not a ShadowMorph, in
-    # which case we just have to destroy all the children
-
-    @fullDestroyChildren()
-    return null
-
   fullDestroyChildren: ->
     if @children.length == 0
       return
@@ -531,7 +501,6 @@ class Morph extends MorphicNode
     until @children.length == 0
       @children[0].fullDestroy()
     return null
-
 
 
   # not used within Fizzygum yet.
@@ -714,7 +683,6 @@ class Morph extends MorphicNode
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
-        (@ not instanceof ShadowMorph) and
         !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -898,14 +866,6 @@ class Morph extends MorphicNode
     @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
-  fullBoundsNoShadow: ->
-    # answer my full bounds but ignore any shadow
-    result = @bounds
-    @children.forEach (child) ->
-      if (child not instanceof ShadowMorph) and (child.visibleBasedOnIsVisibleProperty()) and (!child.isCollapsed()) 
-        result = result.merge child.fullBoundsNoShadow()
-    result
-
   # this one does take into account orphanage and
   # visibility. The reason is that this is used to
   # find the smallest broken rectangle created by
@@ -1337,9 +1297,6 @@ class Morph extends MorphicNode
     if !@isVisible
       return true
 
-    if noShadow and (@ instanceof ShadowMorph)
-      return true
-
     if clippingRectangle.isEmpty()
       return true
 
@@ -1369,16 +1326,16 @@ class Morph extends MorphicNode
 
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @fullClippedBounds(), noShadow = false) ->
 
-    if @children[0] instanceof ShadowMorph
-      clippingRectangle2 = clippingRectangle.translateBy -@children[0].offset.x, -@children[0].offset.y
+    if @shadowInfo?
+      clippingRectangle2 = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
       # this check also skips drawing the shadow if we dont't
       # want to draw it.
       if !@preliminaryCheckNothingToDraw noShadow, clippingRectangle2, aContext
 
         aContext.save()
-        aContext.translate @children[0].offset.x, @children[0].offset.y
-        world.shadowAlpha.push @children[0].alpha
+        aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
+        world.shadowAlpha.push @shadowInfo.alpha
 
         # in general, the children of a Morph could be outside the
         # bounds of the parent (they could also be much larger
@@ -1544,7 +1501,7 @@ class Morph extends MorphicNode
     img
 
   fullImageNoShadow: ->
-    boundsWithNoShadow = @fullBoundsNoShadow()
+    boundsWithNoShadow = @fullBounds()
     return @fullImage boundsWithNoShadow, true
 
   fullImageData: ->
@@ -1586,62 +1543,6 @@ class Morph extends MorphicNode
   fullImageHashCode: ->
     return hashCode @fullImageData()
   
-  # Morph shadow.
-  # The canvas with the shadow is completely
-  # transparent apart from the shadow
-  # "overflowing" from the edges.
-  # For example if you create the shadow for
-  # a blue rectangle by running this method,
-  # you'll get a canvas with
-  # a transparent rectangle in the middle and the
-  # "leaking" shadow.
-  # The "completely" transparent bit is actually
-  # partially transparent if the fill of the
-  # rectangle is semi-transparent, i.e. you can
-  # see the shadow through a semitransparent
-  # morph.
-  # So, the shadow of a blue semi-transparent box
-  # *will* contain some semi-transparent fill of
-  # the box.
-  shadowImage: (
-    offset = (new Point 7, 7),
-    clr = (new Color 0, 0, 0),
-    blurred
-    ) ->
-    
-    blur = @shadowBlur
-    fb = @fullBoundsNoShadow().extent().add blur * 2
-
-    # take "the image" which is the image of all the
-    # morphs. This image contains no shadows, the shadow
-    # will be made starting from this image in a second.
-    img = @fullImageNoShadow()
-
-    # draw the image in special "shadowBlur" mode
-    # http://www.w3schools.com/tags/canvas_shadowblur.asp
-    sha = newCanvas fb.scaleBy pixelRatio
-    ctx = sha.getContext "2d"
-    #ctx.scale pixelRatio, pixelRatio
-    ctx.shadowOffsetX = offset.x * pixelRatio
-    ctx.shadowOffsetY = offset.y * pixelRatio
-    if blurred
-      ctx.shadowBlur = blur * pixelRatio
-    ctx.shadowColor = clr.toString()
-    ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
-
-    # now redraw the image in destination-out mode so that
-    # it "cuts-out" everything that is not the actual shadow
-    # around the edges. This is so we can draw the shadow ON TOP
-    # of the morph and it's gonna loook OK (cause there is a hole
-    # where the morph can peek through as it's drawn after the
-    # shadow)
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 0
-    ctx.shadowBlur = 0
-    ctx.globalCompositeOperation = "destination-out"
-    ctx.drawImage img, Math.round((blur - offset.x)*pixelRatio), Math.round((blur - offset.y)*pixelRatio)
-
-    sha
   
   isBeingFloatDragged: ->
 
@@ -1664,7 +1565,7 @@ class Morph extends MorphicNode
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addFullShadow: (offset, alpha, color) ->
+  addShadow: (offset, alpha) ->
 
     if !offset?
       if WorldMorph.preferencesAndSettings.useBlurredShadows and !WorldMorph.preferencesAndSettings.isFlat
@@ -1678,27 +1579,20 @@ class Morph extends MorphicNode
       else
         alpha = 0.2
 
-    shadow = @silentAddFullShadow offset, alpha, color
-    shadow.reLayout()
+    @silentAddShadow offset, alpha
     
     @fullChanged()
-    shadow
 
-  silentAddFullShadow: (offset, alpha, color) ->
-    @removeShadowMorph()
-    shadow = new ShadowMorph @, offset, alpha, color
-    @addChildFirst shadow
-    shadow
+  silentAddShadow: (offset, alpha) ->
+    @shadowInfo = new ShadowInfo offset, alpha
   
-  getShadowMorph: ->
-    return @topmostChildSuchThat (child) ->
-      child instanceof ShadowMorph
+  hasShadow: ->
+    @shadowInfo?
   
-  removeShadowMorph: ->
-    shadow = @getShadowMorph()
-    if shadow?
+  removeShadow: ->
+    if @hasShadow()
+      @shadowInfo = null
       @fullChanged()
-      @removeChild shadow
   
   
   
@@ -1792,11 +1686,11 @@ class Morph extends MorphicNode
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
   add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
-    if (aMorph not instanceof ShadowMorph) and (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
+    if (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
       if @ == world
-        aMorph.addFullShadow()
+        aMorph.addShadow()
       else
-        aMorph.removeShadowMorph()
+        aMorph.removeShadow()
 
     @addRaw arguments...
   
@@ -1843,10 +1737,7 @@ class Morph extends MorphicNode
     @insetMorph = aMorph
 
     if @children.length > 0
-      if @children[0] instanceof ShadowMorph
-        @add aMorph, 1
-      else
-        @add aMorph, 0
+      @add aMorph, 0
     else
       @add aMorph, 0
 
@@ -2102,8 +1993,6 @@ class Morph extends MorphicNode
     return false
 
   rootForGrab: ->
-    if @ instanceof ShadowMorph
-      return @parent.rootForGrab()
     if @parent is null or
       @parent instanceof WorldMorph or
       ((@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph))
@@ -2114,7 +2003,7 @@ class Morph extends MorphicNode
   # clipping morph, because if a morph is inside a clipping
   # morph, it doesn't contribute to any shadow.
   firstParentOwningMyShadow: ->
-    if @getShadowMorph()
+    if @hasShadow()
       return @
 
     scanningMorphs = @
@@ -2125,7 +2014,7 @@ class Morph extends MorphicNode
       # just a FrameMorph
       if scanningMorphs instanceof FrameMorph
         return null
-      if scanningMorphs.getShadowMorph()?
+      if scanningMorphs.hasShadow()
         return scanningMorphs
 
     return null
@@ -2141,16 +2030,12 @@ class Morph extends MorphicNode
           return scanningMorphs
     return scanningMorphs
 
-    if @ instanceof ShadowMorph
-      return @parent.rootForFocus()
     if @parent is null or
       @parent instanceof WorldMorph
         return @  
     @parent.rootForFocus()
 
   rootForFocus: ->
-    if @ instanceof ShadowMorph
-      return @parent.rootForFocus()
     if @parent is null or
       @parent instanceof WorldMorph
         return @  
@@ -2197,7 +2082,7 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @fullRawMoveTo world.hand.position().subtract @fullBoundsNoShadow().extent().floorDivideBy 2
+    @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
   
   # note how this verified that
   # at *any point* up in the
@@ -2408,7 +2293,7 @@ class Morph extends MorphicNode
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
-      if (each.developersMenu) and (each isnt world) and (each not instanceof ShadowMorph) and (!each.anyParentMarkedForDestruction())
+      if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice 0, 50
         menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
 
@@ -2440,7 +2325,7 @@ class Morph extends MorphicNode
     # to base the shadow on
     # P.S. this is the thing that causes the MenuMorph buffer
     # to be painted after the creation.
-    @addFullShadow()
+    @addShadow()
     @fullChanged()
 
 

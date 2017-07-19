@@ -67,7 +67,7 @@ class MenuItemMorph extends TriggerMorph
     icon.backBufferContext = icon.backBuffer.getContext "2d"
 
     # adjust shadow dimensions
-    if source instanceof Morph and source.getShadowMorph()
+    if source instanceof Morph and source.hasShadow()
       src = icon.backBuffer
       icon.backBuffer = newCanvas(
         source.fullBounds().extent().subtract(

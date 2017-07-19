@@ -25,7 +25,7 @@ class TextPromptMorph extends WindowMorph
     # THE ONES THAT ARE STILL
     # submorphs of the inspector. If they
     # have been peeled away, they still live
-    #@fullDestroyChildrenButNotTheShadow()
+    #@fullDestroyChildren()
 
     super
     

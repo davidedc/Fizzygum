@@ -61,7 +61,6 @@ class FrameMorph extends Morph
     result = []
     if @visibleBasedOnIsVisibleProperty() and
         !@isCollapsed() and
-        (@ not instanceof ShadowMorph) and
         !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
         !@anyParentMarkedForDestruction()
@@ -150,15 +149,10 @@ class FrameMorph extends Morph
     @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
   
-  fullBoundsNoShadow: ->
-    # answer my full bounds but ignore any shadow
-    @bounds
-
-  
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle = @clippedThroughBounds(), noShadow = false) ->
 
-    if @children[0] instanceof ShadowMorph
-      clippingRectangle2 = clippingRectangle.translateBy -@children[0].offset.x, -@children[0].offset.y
+    if @shadowInfo?
+      clippingRectangle2 = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
       if !@preliminaryCheckNothingToDraw noShadow, clippingRectangle2, aContext
 
@@ -173,8 +167,8 @@ class FrameMorph extends Morph
         if !dirtyPartOfFrame.isEmpty()
 
           aContext.save()
-          aContext.translate @children[0].offset.x, @children[0].offset.y
-          world.shadowAlpha.push @children[0].alpha
+          aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
+          world.shadowAlpha.push @shadowInfo.alpha
         
           # this draws the background of the frame itself, which could
           # contain an image or a pentrail    

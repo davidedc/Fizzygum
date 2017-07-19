@@ -192,7 +192,7 @@ class ScrollFrameMorph extends FrameMorph
   setContents: (aMorph, extraPadding) ->
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
-    @contents.fullDestroyChildrenButNotTheShadow()
+    @contents.fullDestroyChildren()
 
     aMorph.fullRawMoveTo @position().add @padding + @extraPadding
     @add aMorph
