@@ -22,7 +22,10 @@ class FrameMorph extends Morph
   constructor: (@scrollFrame = null) ->
     super()
     @appearance = new RectangularAppearance @
+
     @color = new Color 255, 250, 245
+    @strokeColor = new Color 100, 100, 100
+
     if @scrollFrame
       @noticesTransparentClick = false
 

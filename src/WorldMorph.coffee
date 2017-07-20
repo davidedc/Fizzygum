@@ -220,6 +220,8 @@ class WorldMorph extends FrameMorph
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     #console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color 205, 205, 205 # (130, 130, 130)
+    @strokeColor = null
+
     @alpha = 1
 
     # additional properties:

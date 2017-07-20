@@ -10,6 +10,7 @@ class MenuHeader extends BoxMorph
 
   constructor: (textContents) ->
     super 3
+    @color = new Color 77,77,77
 
     @text = new TextMorph(
       textContents,
@@ -20,10 +21,9 @@ class MenuHeader extends BoxMorph
       "center")
     @text.alignment = "center"
     @text.color = new Color 255, 255, 255
-    @text.backgroundColor = new Color 60,60,60
+    @text.backgroundColor = @color.copy()
 
     @add @text
-    @color = new Color 60,60,60
     @rawSetExtent @text.extent().add 2
 
   rawSetWidth: (theWidth) ->

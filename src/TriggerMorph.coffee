@@ -131,13 +131,16 @@ class TriggerMorph extends Morph
       if w < 1 or h < 1
         return null
 
-      color = switch @state
-        when @STATE_NORMAL
-          @color
-        when @STATE_HIGHLIGHTED
-          @highlightColor
-        when @STATE_PRESSED
-          @pressColor
+      if appliedShadow?
+        color = "black"
+      else
+        color = switch @state
+          when @STATE_NORMAL
+            @color
+          when @STATE_HIGHLIGHTED
+            @highlightColor
+          when @STATE_PRESSED
+            @pressColor
 
       # paintRectangle is usually made to work with
       # al, at, w, h which are actual pixels

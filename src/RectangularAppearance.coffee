@@ -80,12 +80,42 @@ class RectangularAppearance extends Appearance
 
       # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
-      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @morph.backgroundColor
+      if @morph.backgroundColor?
+
+        color = @morph.backgroundColor
+        if appliedShadow?
+          color = "black"
+
+        @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)
       toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
-      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), @morph.color
+
+      color = @morph.color
+      if appliedShadow?
+        color = "black"
+
+      @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
+
+
+      if !appliedShadow?
+        if @morph.strokeColor?
+          aContext.beginPath()
+          aContext.rect Math.round(toBePainted.left()),
+            Math.round(toBePainted.top()),
+            Math.round(toBePainted.width()),
+            Math.round(toBePainted.height())
+          aContext.clip()
+          aContext.globalAlpha = 1
+          aContext.lineWidth = 1
+          aContext.strokeStyle = @morph.strokeColor
+          aContext.strokeRect  Math.round(@morph.left())-0.5+1,
+              Math.round(@morph.top())-0.5+1,
+              Math.round(@morph.width()+0.5-2),
+              Math.round(@morph.height()-0.5-1)
+
+      
 
       aContext.restore()
 

@@ -62,6 +62,7 @@ class Morph extends MorphicNode
   bounds: null
   minimumExtent: null
   color: new Color 80, 80, 80
+  strokeColor: null
   texture: null # optional url of a fill-image
   cachedTexture: null # internal cache of actual bg image
   lastTime: null

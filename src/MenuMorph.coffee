@@ -8,7 +8,7 @@
 # "pinned on desktop", plus no shadow when pinned on anything
 # else other than the desktop.
 
-class MenuMorph extends BoxMorph
+class MenuMorph extends Morph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
   namedClasses[@name] = @prototype
@@ -33,6 +33,7 @@ class MenuMorph extends BoxMorph
       if @killThisMenuIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "destroy"
     super()
+    @appearance = new MenuAppearance @
 
     # the morphOpeningTheMenu is only useful to get the "parent" menu.
     # the "parent" menu is the menu that this menu is attached to,
@@ -199,7 +200,7 @@ class MenuMorph extends BoxMorph
 
     unless @isListContents
       @cornerRadius = if WorldMorph.preferencesAndSettings.isFlat then 0 else 5
-    @color = new Color 255, 255, 255
+    @color = new Color 238, 238, 238
     @silentRawSetExtent new Point 0, 0
     y = @top()
     x = @left() + 2
@@ -291,7 +292,7 @@ class MenuMorph extends BoxMorph
   updateShadow: ->
     if @isPinned()
       if @parent == world
-        @addShadow new Point(3, 3), 0.5
+        @addShadow new Point(3, 3), 0.3
       else
         @removeShadow()
     else 
@@ -299,7 +300,7 @@ class MenuMorph extends BoxMorph
 
   # shadow is added to a morph by
   # the HandMorph while floatDragging
-  addShadow: (offset = new Point(5, 5), alpha = 0.15, color) ->
+  addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
     super offset, alpha
   
   popUpCenteredAtHand: (world) ->

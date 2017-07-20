@@ -81,7 +81,11 @@ class CircleBoxyAppearance extends Appearance
       # the centers of two circles
       points = [center1.toLocalCoordinatesOf(@morph), center2.toLocalCoordinatesOf(@morph)]
 
-      aContext.fillStyle = @morph.color.toString()
+      color = @morph.color.toString()
+      if appliedShadow?
+        color = "black"
+
+      aContext.fillStyle = color
       aContext.beginPath()
 
       # the two circles (one at each end)

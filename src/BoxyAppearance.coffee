@@ -77,6 +77,9 @@ class BoxyAppearance extends Appearance
       aContext.translate morphPosition.x, morphPosition.y
       aContext.fillStyle = @morph.color.toString()
       
+      if appliedShadow?
+        aContext.fillStyle = "black"
+
       aContext.beginPath()
       @outlinePath aContext, Math.max @getCornerRadius(), 0
       aContext.closePath()
