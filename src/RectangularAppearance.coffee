@@ -98,24 +98,8 @@ class RectangularAppearance extends Appearance
 
       @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
-
       if !appliedShadow?
-        if @morph.strokeColor?
-          aContext.beginPath()
-          aContext.rect Math.round(toBePainted.left()),
-            Math.round(toBePainted.top()),
-            Math.round(toBePainted.width()),
-            Math.round(toBePainted.height())
-          aContext.clip()
-          aContext.globalAlpha = 1
-          aContext.lineWidth = 1
-          aContext.strokeStyle = @morph.strokeColor
-          aContext.strokeRect  Math.round(@morph.left())-0.5+1,
-              Math.round(@morph.top())-0.5+1,
-              Math.round(@morph.width()+0.5-2),
-              Math.round(@morph.height()-0.5-1)
-
-      
+        @paintStroke aContext, clippingRectangle
 
       aContext.restore()
 
@@ -125,3 +109,40 @@ class RectangularAppearance extends Appearance
       # outside the effect of the scaling because
       # of the pixelRatio
       @paintHighlight aContext, al, at, w, h
+
+  paintStroke: (aContext, clippingRectangle) ->
+
+    if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
+      return null
+
+    [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
+    if area.isNotEmpty()
+      if w < 1 or h < 1
+        return null
+
+      @morph.justBeforeBeingPainted?()
+
+      aContext.save()
+
+      toBePainted = new Rectangle al, at, al + w, at + h
+      toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
+
+      if @morph.strokeColor?
+        aContext.beginPath()
+        aContext.rect Math.round(toBePainted.left()),
+          Math.round(toBePainted.top()),
+          Math.round(toBePainted.width()),
+          Math.round(toBePainted.height())
+        aContext.clip()
+        aContext.globalAlpha = @morph.alpha
+        aContext.lineWidth = 1
+        aContext.strokeStyle = @morph.strokeColor
+        aContext.strokeRect  Math.round(@morph.left())-0.5+1,
+            Math.round(@morph.top())-0.5+1,
+            Math.round(@morph.width()+0.5-2),
+            Math.round(@morph.height()-0.5-1)
+
+      
+
+      aContext.restore()
+

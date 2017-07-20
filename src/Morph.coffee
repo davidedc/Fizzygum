@@ -385,6 +385,26 @@ class Morph extends MorphicNode
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     @appearance?.paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
+  # painting strokes is a little delicate because they need to
+  # be painted INSIDE the morph (otherwise a) adjacent morphs, of morphs
+  # within a layout would make a mess and b) clipping morph would
+  # present a problem).
+  # Also, Frames are tricky
+  # because they need to paint the strokes after they paint their
+  # content (because the content could paint everywhere inside the
+  # Frame).
+  # If you are thinking that you could paint the stroke before
+  # the contents, by just
+  # painting the contents of the frame slightly clipped "inside" the
+  # border of the frame, that could potentially work with enough
+  # changes, but it would only be easy to do with rectangular Frames,
+  # since clipping "on the inside" of a border of arbitrary shape is
+  # not trivial, maybe you'd have to examine how the lines cross at
+  # different angles to paint "inside" of the lines, looks very messy.
+  # Much easier to just paint the stroke after the content.
+  paintStroke: (aContext, clippingRectangle) ->
+    @appearance?.paintStroke aContext, clippingRectangle
+
   addShapeSpecificMenus: (menu) ->
     if @appearance?.addShapeSpecificMenus?
       return @appearance.addShapeSpecificMenus menu

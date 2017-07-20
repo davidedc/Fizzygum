@@ -152,6 +152,18 @@ class FrameMorph extends Morph
     @checkFullClippedBoundsCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
     @cachedFullClippedBounds = result
 
+  fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+    super
+
+    # after all the contents are drawn,
+    # draw the border of the frame again.
+    # This is because the border has to be drawn inside the Frame,
+    # but the contents might paint over it. So, we need to
+    # paint them AFTER the content has been painted.
+    if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
+      if !appliedShadow?
+        @paintStroke aContext, clippingRectangle
+
   
   fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
 
