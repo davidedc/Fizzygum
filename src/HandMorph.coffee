@@ -391,7 +391,6 @@ class HandMorph extends Morph
     @destroyTemporaries()
     world.freshlyCreatedMenus = []
 
-    @nonFloatDraggedMorph = null
 
     if @floatDraggingSomething()
       @drop()
@@ -508,8 +507,19 @@ class HandMorph extends Morph
             else
               @rememberTripleClickMorphsForAWhile morph
 
-      @cleanupMenuMorphs expectedClick, morph
+      # some pop-overs can contain horizontal sliders
+      # and when the user interacts with them, it's easy
+      # that she can "drag" them outside the range and
+      # do the mouse-up outside the boundaries
+      # of the pop-over. So we avoid that here, if there
+      # is a non-float drag ongoing then we avoid
+      # cleaning-up the pop-overs
+      if !@nonFloatDraggedMorph?
+        @cleanupMenuMorphs expectedClick, morph
+
     @mouseButton = null
+    @nonFloatDraggedMorph = null
+
 
   rememberDoubleClickMorphsForAWhile: (morph) ->
     @doubleClickMorph = morph
