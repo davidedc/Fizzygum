@@ -169,6 +169,19 @@ class WorldMorph extends FrameMorph
 
   underTheCarpetMorph: null
 
+  # since the shadow is just a "rendering" effect
+  # there is no morph for it, we need to just clean up
+  # the shadow area ad-hoc. We do that by just growing any
+  # broken rectangle by the maximum shadow offset.
+  # We could be more surgical and remember the offset of the
+  # shadow (if any) in the start and end location of the
+  # morph, just like we do with the position, but it
+  # would complicate things and probably be overkill.
+  # The downside of this is that if we change the
+  # shadow sizes, we have to check that this max size
+  # still captures the biggest.
+  maxShadowSize: 6
+
   events: []
 
   # Some operations are triggered by a callback
@@ -587,7 +600,7 @@ class WorldMorph extends FrameMorph
       # even if the Morph is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.expandBy 12
+          sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.growBy @maxShadowSize
 
         #if brokenMorph!= world and (brokenMorph.clippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
         #  debugger
@@ -604,7 +617,7 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.clippedThroughBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          destinationBroken = boundsToBeChanged.spread().expandBy 12
+          destinationBroken = boundsToBeChanged.spread().growBy @maxShadowSize
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint new Point 10, 10)
           #  debugger
 
@@ -635,7 +648,7 @@ class WorldMorph extends FrameMorph
 
       if brokenMorph.fullClippedBoundsWhenLastPainted?
         if brokenMorph.fullClippedBoundsWhenLastPainted.isNotEmpty()
-          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.expandBy 12
+          sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
       # check whether the Morph is still visible because we
@@ -646,12 +659,7 @@ class WorldMorph extends FrameMorph
         boundsToBeChanged = brokenMorph.fullClippedBounds()
 
         if boundsToBeChanged.isNotEmpty()
-          # TODO all these .expandBy 12 at the very least should be done
-          # only if the morph contains a shadow.
-          # also they should be parametric on the shadow size.
-          # also, the shadow is not exactly symmetric, it has an
-          # offset...
-          destinationBroken = boundsToBeChanged.spread().expandBy 12
+          destinationBroken = boundsToBeChanged.spread().growBy @maxShadowSize
           #if brokenMorph!= world and (boundsToBeChanged.spread().containsPoint (new Point(10,10)))
           #  debugger
       
