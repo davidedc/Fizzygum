@@ -1381,7 +1381,7 @@ class Morph extends MorphicNode
 
     if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
       aContext.save()
-      aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
+      aContext.translate @shadowInfo.offset.x * pixelRatio, @shadowInfo.offset.y * pixelRatio
 
       @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
 

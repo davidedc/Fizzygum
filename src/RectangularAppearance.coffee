@@ -128,21 +128,24 @@ class RectangularAppearance extends Appearance
       toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
 
       if @morph.strokeColor?
+
         aContext.beginPath()
         aContext.rect Math.round(toBePainted.left()),
           Math.round(toBePainted.top()),
           Math.round(toBePainted.width()),
           Math.round(toBePainted.height())
         aContext.clip()
+
         aContext.globalAlpha = @morph.alpha
         aContext.lineWidth = 1
         aContext.strokeStyle = @morph.strokeColor
-        aContext.strokeRect  Math.round(@morph.left())-0.5+1,
-            Math.round(@morph.top())-0.5+1,
-            Math.round(@morph.width()+0.5-2),
-            Math.round(@morph.height()-0.5-1)
-
-      
+        # half-pixel adjustments are needed in HTML5 Canvas to draw
+        # pixel-perfect lines. Also note how we have to multiply the
+        # morph metrics to bring them to physical pixels coords.
+        aContext.strokeRect  (Math.round(@morph.left() * pixelRatio)+0.5),
+            (Math.round(@morph.top() * pixelRatio)+0.5),
+            (Math.round(@morph.width() * pixelRatio)-1),
+            (Math.round(@morph.height() * pixelRatio)-1)
 
       aContext.restore()
 

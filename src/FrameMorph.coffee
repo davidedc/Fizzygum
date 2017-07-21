@@ -244,7 +244,7 @@ class FrameMorph extends Morph
       if !dirtyPartOfFrame.isEmpty()
 
         aContext.save()
-        aContext.translate @shadowInfo.offset.x, @shadowInfo.offset.y
+        aContext.translate @shadowInfo.offset.x * pixelRatio, @shadowInfo.offset.y * pixelRatio
       
         # this draws the background of the frame itself
         @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
