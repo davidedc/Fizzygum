@@ -54,8 +54,6 @@ class SwitchButtonMorph extends Morph
   
 
   mouseClickLeft: ->
-    debugger
-
     @buttonShown++
     @buttonShown = @buttonShown % @buttons.length
 

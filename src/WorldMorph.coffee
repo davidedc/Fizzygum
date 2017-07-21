@@ -1276,12 +1276,9 @@ class WorldMorph extends FrameMorph
 
   processCopy: (selectedText) ->
     console.log "processing copy"
-    debugger
     @automatorRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (clipboardText) ->
-    debugger
-      
     if @caret
       # Needs a few msec to execute paste
       console.log "about to insert text: " + clipboardText
@@ -1489,8 +1486,6 @@ class WorldMorph extends FrameMorph
     document.body.addEventListener "cut", @cutEventListener, false
     
     @copyEventListener = (event) =>
-      debugger
-
       selectedText = ""
       if @caret
         if clipboardTextIfTestRunning?
@@ -1511,8 +1506,6 @@ class WorldMorph extends FrameMorph
     document.body.addEventListener "copy", @copyEventListener, false
 
     @pasteEventListener = (event) =>
-      debugger
-
       if @caret
         if event?
           if event.clipboardData
@@ -1596,18 +1589,6 @@ class WorldMorph extends FrameMorph
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
     
-    ###
-    window.onbeforeunload = (e) ->
-      # If we haven't been passed the event get the window.event
-      e = e or window.event
-      message = 'Are you sure you want to leave?'
-      # For IE6-8 and Firefox prior to version 4
-      if e
-        e.returnValue = message
-      # For Chrome, Safari, IE8+ and Opera 12+
-      message
-    ###
-
   
   removeEventListeners: ->
     canvas = @worldCanvas

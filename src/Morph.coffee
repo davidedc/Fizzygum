@@ -1423,7 +1423,6 @@ class Morph extends MorphicNode
     @invalidateFullClippedBoundsCache @
 
     firstParentOwningMyShadow = @firstParentOwningMyShadow()
-    debugger
     if firstParentOwningMyShadow?
       firstParentOwningMyShadow.fullChanged()
     else
@@ -2434,7 +2433,6 @@ class Morph extends MorphicNode
     world.morphsToBePinouted.remove b
 
   testMenu: (morphOpeningTheMenu,targetMorph)->
-    debugger
     menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, null
     menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"

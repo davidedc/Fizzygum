@@ -15,13 +15,10 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
     super true, @, 'injectCodeIntoTarget', face
 
   editInjectableSource: ->
-    debugger
     @textPrompt "Code", @, "modifyCodeToBeInjected", @codeToBeInjected
 
   injectCodeIntoTarget: ->
-    debugger
     @morphWhereToInject.injectProperties @codeToBeInjected
 
   modifyCodeToBeInjected: (unused,textMorph) ->
-    debugger
     @codeToBeInjected = textMorph.text

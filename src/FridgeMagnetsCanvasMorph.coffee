@@ -15,7 +15,6 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
-    debugger
     @paintNewFrame()
     return [@backBuffer, @backBufferContext]
 
@@ -24,7 +23,6 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   graphicsCode: ->
 
   newGraphicsCode: (newCode) ->
-    debugger
     @oldGraphicsCode = @graphicsCode
     compilation = @codeCompiler.compileCode newCode
     if compilation.program?

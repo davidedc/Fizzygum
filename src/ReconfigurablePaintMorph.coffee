@@ -69,7 +69,6 @@ class ReconfigurablePaintMorph extends WindowMorph
 
 
     modifyCodeToBeInjected = (unused,textMorph) ->
-        debugger
         @codeToBeInjected = textMorph.text
         if @isToolPressed()
             @injectCodeIntoTarget()
@@ -335,7 +334,6 @@ class ReconfigurablePaintMorph extends WindowMorph
                     previousPos = @queue[0]
                     @queue.shift()
                     if previousPos?
-                        debugger
                         contextMain.save()
                         contextMain.translate previousPos.x, previousPos.y
                         contextMain.fillStyle = "white"
@@ -380,7 +378,6 @@ class ReconfigurablePaintMorph extends WindowMorph
                 previousPos = @queue[0]
                 @queue.shift()
                 if previousPos?
-                    debugger
                     contextMain.save()
                     contextMain.translate previousPos.x, previousPos.y
                     contextMain.fillStyle = "white"
@@ -468,7 +465,7 @@ class ReconfigurablePaintMorph extends WindowMorph
   
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of the reconf paint morph"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

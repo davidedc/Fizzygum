@@ -17,7 +17,6 @@ class TextPromptMorph extends WindowMorph
     super "Edit tool code"
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -62,7 +61,6 @@ class TextPromptMorph extends WindowMorph
     @layoutSubmorphs()
 
   informTarget: ->
-    debugger
     @target[@callback].call @target, null, @textMorph
 
   informTargetAndDestroy: ->
@@ -71,7 +69,7 @@ class TextPromptMorph extends WindowMorph
 
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of the text prompt morph"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

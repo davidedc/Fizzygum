@@ -102,7 +102,7 @@ class FridgeMagnetsMorph extends WindowMorph
   
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of the FridgeMagnetsMorph"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

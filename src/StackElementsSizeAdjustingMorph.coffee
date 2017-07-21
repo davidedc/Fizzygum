@@ -63,7 +63,6 @@ class StackElementsSizeAdjustingMorph extends Morph
       for C in @parent.children
         totalMax += C.getMaxDim().x
 
-      debugger
       deltaX = deltaX * (totalMax / biggestMaxOfTheTwo)
 
       console.log "(@parent.width() * 100): " + (@parent.width() * 100) + " deltax 3: " + deltaX

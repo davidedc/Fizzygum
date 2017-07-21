@@ -31,7 +31,6 @@ class MenuHeader extends BoxMorph
     @text.fullRawMoveTo @center().subtract @text.extent().floorDivideBy 2
 
   mouseClickLeft: ->
-    debugger
     super
     if @parent?
       parentMenu = @firstParentThatIsAMenu()

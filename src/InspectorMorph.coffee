@@ -343,7 +343,7 @@ class InspectorMorph extends BoxMorph
   
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of the inspector"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

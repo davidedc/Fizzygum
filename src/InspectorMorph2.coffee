@@ -91,7 +91,6 @@ class InspectorMorph2 extends WindowMorph
       @buildAndConnectChildren()
 
   constructor: (@target) ->
-    debugger
     @classesButtons = []
     @classesNames = []
     @angledArrows = []
@@ -301,7 +300,6 @@ class InspectorMorph2 extends WindowMorph
     classInspector.fullRawMoveWithin world
     world.add classInspector
     classInspector.bringToForegroud()
-    debugger
     classInspector.changed()
 
   showAttributes: ->
@@ -384,7 +382,7 @@ class InspectorMorph2 extends WindowMorph
   
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of the inspector"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

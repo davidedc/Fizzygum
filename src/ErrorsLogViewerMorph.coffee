@@ -39,7 +39,6 @@ class ErrorsLogViewerMorph extends WindowMorph
 
 
   buildAndConnectChildren: ->
-    debugger
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -90,7 +89,6 @@ class ErrorsLogViewerMorph extends WindowMorph
     @textMorph.setText ""    
 
   informTarget: ->
-    debugger
     @target[@callback].call @target, null, @textMorph
 
   informTargetAndDestroy: ->
@@ -99,7 +97,7 @@ class ErrorsLogViewerMorph extends WindowMorph
 
   layoutSubmorphs: (morphStartingTheChange = null) ->
     super morphStartingTheChange
-    console.log "fixing the layout of the inspector"
+    #console.log "fixing the layout of errors log viewer"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

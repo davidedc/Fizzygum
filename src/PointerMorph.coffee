@@ -58,7 +58,6 @@ class PointerMorph extends BoxMorph
 
 
   mouseClickLeft: (pos) ->
-    debugger
     if @target.destroyed
       @inform "The pointed morph\nis dead!"
       return

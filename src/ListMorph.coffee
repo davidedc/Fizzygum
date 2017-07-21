@@ -86,7 +86,7 @@ class ListMorph extends ScrollFrameMorph
       #italic = false,
       #doubleClickAction # optional, when used as list contents
 
-      console.log "@labelGetter(element): " + @labelGetter(element)
+      #console.log "@labelGetter(element): " + @labelGetter(element)
       @listContents.addMenuItem(
         @labelGetter(element), # labelString
         true,
