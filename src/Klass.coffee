@@ -12,7 +12,7 @@ class Klass
   instances: null
 
   # adds code into the constructor, such that when a
-  # Morph is created, ire registers itself as in instance
+  # Morph is created, it registers itself as in instance
   # on the Klass it belongs to.
   # The check:
   #     @constructor.name == arguments.callee.name\
