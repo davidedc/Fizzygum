@@ -569,6 +569,7 @@ class StringMorph2 extends Morph
     # be really small so to fit, say, the width, while a lot of height of
     # the morph could be "wasted" in memory.
     widthOfText = @calculateTextWidth text
+    heightOfText = fontHeight @fittingFontSize
     if @backgroundColor? or
      @verticalAlignment != AlignmentSpecVertical.TOP or
      @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
@@ -577,7 +578,7 @@ class StringMorph2 extends Morph
       height = @height()
     else
       width = widthOfText
-      height = fontHeight @fittingFontSize
+      height = heightOfText
 
     backBuffer = newCanvas (new Point width, height).scaleBy pixelRatio
 
@@ -614,10 +615,10 @@ class StringMorph2 extends Morph
     if @isHeaderLine
       backBufferContext.strokeStyle = @color.toString()
       backBufferContext.beginPath()
-      backBufferContext.moveTo 0, textVerticalPosition - height / 2
-      backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - height / 2
-      backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVerticalPosition - height / 2
-      backBufferContext.lineTo @width(), textVerticalPosition - height / 2
+      backBufferContext.moveTo 0, textVerticalPosition - heightOfText / 2
+      backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - heightOfText / 2
+      backBufferContext.moveTo textHorizontalPosition + widthOfText + 5, textVerticalPosition - heightOfText / 2
+      backBufferContext.lineTo @width(), textVerticalPosition - heightOfText / 2
       backBufferContext.stroke()
 
 
