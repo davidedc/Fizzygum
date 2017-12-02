@@ -440,7 +440,6 @@ class StringMorph2 extends Morph
   transformTextOneToOne: (theText) ->
     return (if @isPassword then @obfuscateAsPassword("*", theText.length) else theText)
 
-  # notice the thick arrow here!
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
   # the font size here because is the one we are going to
@@ -571,9 +570,9 @@ class StringMorph2 extends Morph
     # the morph could be "wasted" in memory.
     widthOfText = @calculateTextWidth text
     if @backgroundColor? or
-    @verticalAlignment != AlignmentSpecVertical.TOP or
-    @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
-    @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
+     @verticalAlignment != AlignmentSpecVertical.TOP or
+     @horizontalAlignment != AlignmentSpecHorizontal.LEFT or
+     @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.FLOAT
       width = @width()
       height = @height()
     else
