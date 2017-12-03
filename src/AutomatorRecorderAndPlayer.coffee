@@ -593,15 +593,31 @@ class AutomatorRecorderAndPlayer
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
       return systemTestCommand
 
-  # a lenghty method because there
-  # is a lot of API dancing, but the
-  # concept is really easy: return
-  # a new canvas with an image that is
-  # red in all areas where the
-  # "expected" and "obtained" images
-  # are different.
-  # So it neatly highlights where the differences
+  # So it's a lot of API dancing, but the concept is easy: return
+  # a (promise of creating a) new canvas with an image that is
+  # red in all areas where the "expected" and "obtained" images
+  # are different, so it neatly highlights where the differences
   # are.
+  #
+  # It returns a promise for the _whole_ of this to be done:
+  #  loading the expected image
+  #   .then
+  #    loading the obtained image
+  #     .then
+  #       doing the subtraction of the two
+  #
+  # the API dancing is because the "expected" and "obtained"
+  # are actually objects that contain imageData, which is a
+  # compressed stream of data.
+  # In order to be able to read that data in RGB format,
+  # we need to _load_ that compressed image data into an Image
+  # (using .src = ...), then paint the image into a canvas, then
+  # get the RGB data from the canvas.
+  #
+  # ...and the loading of the compressed image data into an Image
+  # is infortunatelt asynchronous, so we need to chain promises...
+  #
+
   subtractScreenshots: (expected, obtained, diffNumber, andThen) ->
     #console.log "subtractScreenshots"
     expectedCanvas = document.createElement "canvas"
@@ -610,10 +626,8 @@ class AutomatorRecorderAndPlayer
     # the base64 data into the image is asynchronous
     # (seems to work immediately in Chrome but it's
     # recommended to consider it asynchronous)
-    # so here we need to chain two callbacks
-    # to make it all work, as we need to load
-    # two such images.
-    expectedImage.onload = =>
+
+    return createImageFromImageData(expected.imageData).then (expectedImage) ->
       #console.log "expectedCanvas.imageData: " + expectedCanvas.imageData
       expectedCanvas.width = expectedImage.width
       expectedCanvas.height = expectedImage.height
@@ -624,8 +638,7 @@ class AutomatorRecorderAndPlayer
       expectedImageData = expectedCanvasContext.getImageData(0, 0, expectedCanvas.width, expectedCanvas.height)
 
       obtainedCanvas = document.createElement "canvas"
-      obtainedImage = new Image
-      obtainedImage.onload = =>
+      createImageFromImageData(obtained.imageData).then (obtainedImage) ->
         obtainedCanvas.width = obtainedImage.width
         obtainedCanvas.height = obtainedImage.height
 
@@ -670,10 +683,6 @@ class AutomatorRecorderAndPlayer
         #errorRatio = Math.ceil((differentPixels/(equalPixels+differentPixels))*1000)
         errorRatio = differentPixels
         andThen subtractionCanvas, expected, errorRatio, diffNumber
-
-      obtainedImage.src = obtained.imageData
-
-    expectedImage.src = expected.imageData
 
   compareScreenshots: (testNameWithImageNumber, screenshotTakenOfAParticularMorph = false) ->
    SystemTestsControlPanelUpdater.blinkLink(SystemTestsControlPanelUpdater.takeScreenshot)
@@ -993,6 +1002,8 @@ class AutomatorRecorderAndPlayer
     systemInfo = new SystemTestsSystemInfo()
     pixelRatioString = (""+pixelRatio).replace(/\.+/g, "_")
 
+    allSubtractionJobsPromises = []
+
     for i in [0...@collectedFailureImages.length]
       failedImage = @collectedFailureImages[i]
 
@@ -1030,7 +1041,8 @@ class AutomatorRecorderAndPlayer
         # the subtractScreenshots needs to create some Images and
         # load them with data from base64 string. The operation
         # of loading the data is asynchronous...
-        @subtractScreenshots failedImage, eachGoodImage, diffNumber, (subtractionCanvas, failedImage, errorRatio, diffNumber) ->
+        allSubtractionJobsPromises.push @subtractScreenshots failedImage, eachGoodImage, diffNumber,
+         (subtractionCanvas, failedImage, errorRatio, diffNumber) ->
           console.log "zipping diff file:" + "diff-"+failedImage.imageName+".png"
           zip.file(
             "diff-"+
@@ -1047,28 +1059,23 @@ class AutomatorRecorderAndPlayer
 
     zip.file "replace_all_images.sh", renamerScript
 
-    # OK the images are all put in the zip
-    # asynchronously. So, in theory what we should do is to
-    # check that we have all the image packed
-    # and then save the zip. In practice we just wait
-    # some time (200ms for each image)
-    # and then save the zip.
-    setTimeout \
-      =>
-        console.log "saving failed screenshots"
-        if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
-          # Safari can't save blobs nicely with a nice
-          # file name, see
-          # http://stuk.github.io/jszip/documentation/howto/write_zip.html
-          # so what this does is it saves a file "Unknown". User
-          # then has to rename it and open it.
-          location.href="data:application/zip;base64," + zip.generate({type:"base64"})
-        else
-          console.log "not safari"
-          content = zip.generate({type:"blob"})
-          saveAs(content, "SystemTest_#{@testName}_failedScreenshots.zip")        
-      , (@collectedFailureImages.length+1) * 200 
-
+    # after all the subtractions promises are fullfilled
+    # then generate the whole zip
+    Promise.all(allSubtractionJobsPromises).then ->
+      console.log "saving failed screenshots"
+      if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
+        console.log "safari"
+        # Safari can't save blobs nicely with a nice
+        # file name, see
+        # http://stuk.github.io/jszip/documentation/howto/write_zip.html
+        # so what this does is it saves a file "Unknown". User
+        # then has to rename it and open it.
+        zip.generateAsync({type: "base64"}).then (base64Screenshot) ->
+            location.href="data:application/zip;base64," + base64Screenshot
+      else
+        console.log "not safari"
+        zip.generateAsync({type: "blob"}).then (blobScreenshot) ->
+            saveAs(blobScreenshot, "SystemTest_#{@testName}_failedScreenshots.zip")                  
 
 
   saveTest: ->
@@ -1097,17 +1104,20 @@ class AutomatorRecorderAndPlayer
     
 
     if navigator.userAgent.search("Safari") >= 0 and navigator.userAgent.search("Chrome") < 0
+      console.log "safari"
       # Safari can't save blobs nicely with a nice
       # file name, see
       # http://stuk.github.io/jszip/documentation/howto/write_zip.html
       # so what this does is it saves a file "Unknown". User
       # then has to rename it and open it.
-      console.log "safari"
-      location.href="data:application/zip;base64," + zip.generate({type:"base64"})
+      zip.generateAsync({type: "base64"}).then (base64Screenshot) ->
+          location.href="data:application/zip;base64," + base64Screenshot
+
     else
       console.log "not safari"
-      content = zip.generate({type:"blob"})
-      saveAs(content, "SystemTest_#{@testName}.zip")    
+      zip.generateAsync({type: "blob"}).then (blobScreenshot) ->
+          saveAs(blobScreenshot, "SystemTest_#{@testName}_failedScreenshots.zip")
+
 
   loadTest: (testNumber, andThenDoThis)->
     script = document.createElement('script')

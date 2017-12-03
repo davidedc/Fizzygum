@@ -583,6 +583,17 @@ continueBooting2 = ->
   window.menusHelper = new MenusHelper()
   world.boot()
 
+# a helper function to use Promise style
+# instead of callback style when creating
+# an Image from the image data
+createImageFromImageData = (theImageData) ->
+  return new Promise (resolve, reject) ->
+    img = new Image()
+    img.onload = ->
+        resolve(img)
+    img.onerror = ->
+        reject(img)
+    img.src = theImageData
 
 # these two are to build klasses
 extend = (child, parent) ->

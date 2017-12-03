@@ -76,9 +76,9 @@ fi
 cp src/index.html ../Fizzygum-builds/latest/
 
 # copy the interesting js files from the submodules
-cp auxiliary\ files/FileSaver\ submodule/FileSaver.js ../Fizzygum-builds/latest/js/libs/
-cp auxiliary\ files/JSZip\ submodule/dist/jszip.min.js ../Fizzygum-builds/latest/js/libs/
-cp auxiliary\ files/CoffeeScript\ submodule/coffee-script.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/CoffeeScript/coffee-script.js ../Fizzygum-builds/latest/js/libs/
 
 # copy aux icon files
 cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/

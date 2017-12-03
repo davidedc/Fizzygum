@@ -1,6 +1,0 @@
-[submodule "auxiliary files/FileSaver submodule"]
-	path = auxiliary files/FileSaver submodule
-	url = https://github.com/eligrey/FileSaver.js.git
-[submodule "auxiliary files/JSZip submodule"]
-	path = auxiliary files/JSZip submodule
-	url = https://github.com/Stuk/jszip.git
