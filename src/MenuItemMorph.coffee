@@ -28,6 +28,17 @@ class MenuItemMorph extends TriggerMorph
   #reLayout: ->
   #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
 
+  toggleTick: ->
+    if @label.text[0] == "✓"
+      @label.text = @label.text.replace "✓", "   "
+      @label.reLayout()
+      @label.changed()
+    else if @label.text[0] == " " and @label.text[1] == " " and @label.text[2] == " "
+      @label.text = @label.text.replace "   ", "✓"
+      @label.reLayout()
+      @label.changed()
+
+
   createLabel: ->
     # console.log "menuitem createLabel"
     if @label?
