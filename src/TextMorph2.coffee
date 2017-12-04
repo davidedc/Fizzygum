@@ -56,7 +56,6 @@ class TextMorph2 extends StringMorph2
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.CROP
   
 
-  # notice the thick arrow here!
   # there are many factors beyond the font size that affect
   # the measuring, such as font style, but we only pass
   # the font size here because is the one we are going to
