@@ -10,4 +10,4 @@ class AutomatorCommand
 
   constructor: (automatorRecorderAndPlayer) ->
     @millisecondsSincePreviousCommand = (new Date().getTime()) -
-    	automatorRecorderAndPlayer.timeOfPreviouslyRecordedCommand
+      automatorRecorderAndPlayer.timeOfPreviouslyRecordedCommand

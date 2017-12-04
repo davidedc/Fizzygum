@@ -161,9 +161,9 @@ class Arg
     @signatureAtLastCalculation = newSig
     if WorldMorph.preferencesAndSettings.printoutsReactiveValuesCode
       if signatureChanged
-      	console.log "checked signature of argument: " + @id + " and it changed was: " + oldSig + " now is: " + newSig
+        console.log "checked signature of argument: " + @id + " and it changed was: " + oldSig + " now is: " + newSig
       else
-      	console.log "checked signature of argument: " + @id + " and it didn't change was: " + oldSig + " now is: " + newSig
+        console.log "checked signature of argument: " + @id + " and it didn't change was: " + oldSig + " now is: " + newSig
     return signatureChanged
 
   updateSignatureAndHeal: () ->

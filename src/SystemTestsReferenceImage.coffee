@@ -32,13 +32,13 @@ class SystemTestsReferenceImage
     @fileName = @imageName + "-systemInfoHash" + @hashOfSystemInfo + "-dataHash" + @hashOfData
 
   createJSContent: ->
-  	  return "if (!AutomatorRecorderAndPlayer.loadedImages.hasOwnProperty('" + @imageName + "')) { " + "AutomatorRecorderAndPlayer.loadedImages." + @imageName + ' = []; } ' + "AutomatorRecorderAndPlayer.loadedImages." + @imageName + '.push(' + JSON.stringify(@) + ');'
+    return "if (!AutomatorRecorderAndPlayer.loadedImages.hasOwnProperty('" + @imageName + "')) { " + "AutomatorRecorderAndPlayer.loadedImages." + @imageName + ' = []; } ' + "AutomatorRecorderAndPlayer.loadedImages." + @imageName + '.push(' + JSON.stringify(@) + ');'
 
   addToZipAsJS: (zip) ->
-  	zip.file(
-  	  @fileName + ".js",
-  	  @createJSContent()
-  	)
+    zip.file(
+      @fileName + ".js",
+      @createJSContent()
+    )
 
   # This method does the same of the one above
   # but it eliminates the "obtained-" text everywhere
@@ -48,10 +48,10 @@ class SystemTestsReferenceImage
   # right away withouth having to open it and doing
   # the change manually.
   addToZipAsJSIgnoringItsAnObtained: (zip) ->
-  	zip.file(
-  	  @fileName + ".js",
-  	  @createJSContent().replace(/obtained-/g,"")
-  	)
+    zip.file(
+      @fileName + ".js",
+      @createJSContent().replace(/obtained-/g,"")
+    )
 
   addToZipAsPNG: (zip) ->
     # the imageData string contains a little bit of string
