@@ -147,7 +147,16 @@ class Klass
       constructorDeclaration = @_equivalentforSuper "constructor", @propertiesSources["constructor"]
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS: " + constructorDeclaration
-      constructorDeclaration = "window." + @name + " = " + CoffeeScript.compile constructorDeclaration,{"bare":true}
+
+      try
+        compiled = CoffeeScript.compile constructorDeclaration,{"bare":true}
+      catch err
+        console.log "source:"
+        console.log constructorDeclaration
+        console.log "error:"
+        console.log err
+
+      constructorDeclaration = "window." + @name + " = " + compiled
       constructorDeclaration = @_removeHelperFunctions constructorDeclaration
 
       console.log "constructor declaration JS: " + constructorDeclaration
@@ -187,7 +196,16 @@ class Klass
         console.log "building field " + fieldName + " ===== "
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
-        fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + CoffeeScript.compile fieldDeclaration,{"bare":true}
+
+        try
+          compiled = CoffeeScript.compile fieldDeclaration,{"bare":true}
+        catch err
+          console.log "source:"
+          console.log fieldDeclaration
+          console.log "error:"
+          console.log err
+
+        fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
 
         console.log "field declaration: " + fieldDeclaration
@@ -201,7 +219,16 @@ class Klass
         console.log "building STATIC field " + fieldName + " ===== "
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
-        fieldDeclaration = "window." + @name + "." + fieldName + " = " + CoffeeScript.compile fieldDeclaration,{"bare":true}
+
+        try
+          compiled = CoffeeScript.compile fieldDeclaration,{"bare":true}
+        catch err
+          console.log "source:"
+          console.log fieldDeclaration
+          console.log "error:"
+          console.log err
+
+        fieldDeclaration = "window." + @name + "." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
 
         console.log fieldDeclaration

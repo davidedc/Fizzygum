@@ -518,7 +518,15 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
       loadingLogDiv.innerHTML = "compiling and evalling " + eachClass
 
       # give life to the loaded and translated coffeescript klass now!
-      eval.call window, CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
+      try
+        compiled = CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
+      catch err
+        console.log "source:"
+        console.log window[eachClass + "_coffeSource"]
+        console.log "error:"
+        console.log err
+
+      eval.call window, compiled
 
   setTimeout ( ->
     compileAndEvalAllSrcFiles srcNumber+1 , inclusion_order
