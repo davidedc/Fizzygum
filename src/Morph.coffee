@@ -2372,6 +2372,12 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
+  createNewStringMorph3WithBackground: ->
+    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
+    newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(230, 230, 130), 1
+    newMorph.isEditable = true
+    world.create newMorph
+
   createNewTextMorph3WithBackground: ->
     newMorph = new TextMorph3(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
@@ -2445,6 +2451,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
     if targetMorph in world.morphsToBePinouted
       menu.addMenuItem "remove output pins", true, @, "removeOutputPins"
@@ -2494,7 +2501,6 @@ class Morph extends MorphicNode
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
-    
 
     menu.popUpAtHand()
 
