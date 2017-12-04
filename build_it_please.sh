@@ -22,6 +22,9 @@ if [ ! -d ../Fizzygum-builds ]; then
   mkdir ../Fizzygum-builds
 fi
 
+echo coffeescript version -------------
+coffee --version
+
 if [ ! -d ../Fizzygum-builds/latest ]; then
   mkdir ../Fizzygum-builds/latest
 fi
@@ -78,7 +81,9 @@ cp src/index.html ../Fizzygum-builds/latest/
 # copy the interesting js files from the submodules
 cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
-cp auxiliary\ files/CoffeeScript/coffee-script.js ../Fizzygum-builds/latest/js/libs/
+
+cp auxiliary\ files/CoffeeScript/coffee-script_1.9.3.js ../Fizzygum-builds/latest/js/libs/
+cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
 
 # copy aux icon files
 cp auxiliary\ files/additional-icons/*.png ../Fizzygum-builds/latest/icons/
