@@ -595,14 +595,15 @@ class StringMorph2 extends Morph
     # rather than actual pixels, contrary to how it's used
     # most other places. This is because it's inside
     # the scope of the "scale pixelRatio, pixelRatio".
-    backBufferContext.save()
-    backBufferContext.fillStyle = @backgroundColor.toString()
-    backBufferContext.globalAlpha = @backgroundTransparency
-    backBufferContext.fillRect  0,
-        0,
-        Math.round(@width()),
-        Math.round(@height())
-    backBufferContext.restore()
+    if @backgroundColor
+      backBufferContext.save()
+      backBufferContext.fillStyle = @backgroundColor.toString()
+      backBufferContext.globalAlpha = @backgroundTransparency
+      backBufferContext.fillRect  0,
+          0,
+          Math.round(@width()),
+          Math.round(@height())
+      backBufferContext.restore()
 
 
     textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
