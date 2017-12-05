@@ -385,6 +385,22 @@ loadTestManifests = ->
     aTestScriptHasBeenLoaded()
   document.head.appendChild script2
 
+compileFGCode = (codeSource, bare, version = 1) ->
+  try
+    switch version
+      when 1
+        compiled = CoffeeScript.compile codeSource,{"bare":bare}
+      when 2
+        compiled = CoffeeScript2.compile codeSource,{"bare":bare}
+  catch err
+    errorMessage =  "error in compiling:\n"
+    errorMessage += codeSource + "\n"
+    errorMessage += "error:\n"
+    errorMessage += err + "\n"
+    world.errorConsole?.popUpWithError errorMessage
+
+  return compiled
+
 loadKlass = ->
 
   script = document.createElement "script"
@@ -393,7 +409,7 @@ loadKlass = ->
   script.onload = ->
     # give life to the loaded and translated coffeescript klass now!
     console.log "compiling and evalling Klass from souce code"
-    eval.call window, CoffeeScript.compile window["Klass_coffeSource"],{"bare":true}
+    eval.call window, compileFGCode window["Klass_coffeSource"], true, 1
     loadAllSources()
 
 
@@ -503,6 +519,8 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
   eachClass = inclusion_order[srcNumber]
   console.log "checking whether " + eachClass + " is already in the system "
 
+  # loading via Klass means that we register all the source
+  # code and manually create any extensions
   if eachClass == "MorphicNode" or
    eachClass == "Morph" or
    eachClass == "AnalogClockMorph" or
@@ -519,7 +537,7 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
       # give life to the loaded and translated coffeescript klass now!
       try
-        compiled = CoffeeScript.compile window[eachClass + "_coffeSource"],{"bare":true}
+        compiled = compileFGCode window[eachClass + "_coffeSource"], true, 1
       catch err
         console.log "source:"
         console.log window[eachClass + "_coffeSource"]

@@ -150,13 +150,7 @@ class Klass
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS: " + constructorDeclaration
 
-      try
-        compiled = CoffeeScript.compile constructorDeclaration,{"bare":true}
-      catch err
-        console.log "source:"
-        console.log constructorDeclaration
-        console.log "error:"
-        console.log err
+      compiled = compileFGCode constructorDeclaration, true, 1
 
       constructorDeclaration = "window." + @name + " = " + compiled
       constructorDeclaration = @_removeHelperFunctions constructorDeclaration
@@ -199,13 +193,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        try
-          compiled = CoffeeScript.compile fieldDeclaration,{"bare":true}
-        catch err
-          console.log "source:"
-          console.log fieldDeclaration
-          console.log "error:"
-          console.log err
+        compiled = compileFGCode fieldDeclaration, true, 1
 
         fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
@@ -222,13 +210,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        try
-          compiled = CoffeeScript.compile fieldDeclaration,{"bare":true}
-        catch err
-          console.log "source:"
-          console.log fieldDeclaration
-          console.log "error:"
-          console.log err
+        compiled = compileFGCode fieldDeclaration, true, 1
 
         fieldDeclaration = "window." + @name + "." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration

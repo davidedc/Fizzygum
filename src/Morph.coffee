@@ -2865,9 +2865,9 @@ class Morph extends MorphicNode
   
   
   # Morph eval. Used by the Inspector and the TextMorph.
-  evaluateString: (code) ->
+  evaluateString: (codeSource) ->
     try
-      result = eval CoffeeScript.compile code, {"bare":true}
+      result = eval compileFGCode codeSource, true, 1
       @reLayout()
       
       @changed()

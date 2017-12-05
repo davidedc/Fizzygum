@@ -38,16 +38,9 @@ class IconAppearance extends Appearance
 
 
   compilePaintFunction: ->
-    try
-      console.log "compiling icon: " + @paintFunctionSource
-      compiledOutput = CoffeeScript.compile(@paintFunctionSource,
-        bare: "on"
-      )
-      console.log compiledOutput
-    catch e
-      # coffescript compiler has caught a syntax error.
-      @inform err
-      return
+    console.log "compiling icon: " + @paintFunctionSource
+    compiledOutput = compileFGCode @paintFunctionSource, true, 1
+    console.log compiledOutput
 
     @paintFunction = new Function 'context', compiledOutput
 
