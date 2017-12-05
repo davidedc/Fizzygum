@@ -26,11 +26,11 @@ class IconAppearance extends Appearance
     """
 
 
-  constructor: (morph, paintFunction) ->
+  constructor: (morph, paintFunctionSource) ->
     super morph
     
-    if paintFunction?
-      @paintFunctionSource = paintFunction
+    if paintFunctionSource?
+      @paintFunctionSource = paintFunctionSource
       @compilePaintFunction()
     else
       # use the default icon image (a simple circle)
