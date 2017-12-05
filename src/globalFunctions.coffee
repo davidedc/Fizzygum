@@ -237,9 +237,6 @@ localize = (string) ->
   # override this function with custom localizations
   string
 
-isNil = (thing) ->
-  thing is `undefined` or thing is null
-
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
   # true, otherwise answer null
