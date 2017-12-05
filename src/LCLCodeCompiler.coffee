@@ -1,15 +1,15 @@
 ###
-## CodeCompiler makes available the user sketch
+## LCLCodeCompiler makes available the user sketch
 ## (written in simplified syntax) as a runnable javascript function.
-## Also note that CodeCompiler might return a program
+## Also note that LCLCodeCompiler might return a program
 ## that substituted the program passed as input.
 ## This is because doOnce statements get transformed by pre-prending a
 ## tick once they are run, which prevents them from being run again.
-## Note that CodeCompiler doesn't run the user sketch, it just
-## makes it available to the ProgramRunner.
+## Note that LCLCodeCompiler doesn't run the user sketch, it just
+## makes it available to the LCLProgramRunner.
 ###
 
-class CodeCompiler
+class LCLCodeCompiler
   currentCodeString: null
   codePreprocessor: null
   lastCorrectOutput: null
@@ -31,7 +31,7 @@ class CodeCompiler
 
     # we do a couple of special resets when
     # the code is the empty string.
-    if @whitespaceCheck.test(code)
+    if @whitespaceCheck.test code
       output.status = 'empty'
       return output
 
@@ -79,9 +79,9 @@ class CodeCompiler
     return output
 
   # this function is used externally after the code has been
-  # run, so we need to attach it to the CodeCompiler object.
+  # run, so we need to attach it to the LCLCodeCompiler object.
   addCheckMarksAndUpdateCodeAndNotifyChange: \
-      (CodeCompiler, doOnceOccurrencesLineNumbers) ->
+      (LCLCodeCompiler, doOnceOccurrencesLineNumbers) ->
     elaboratedSource = undefined
     elaboratedSourceByLine = undefined
     drawFunction = undefined

@@ -1,5 +1,5 @@
 ###
-## ProgramRunner manages the running function as it runs. E.g. this is not a
+## LCLProgramRunner manages the running function as it runs. E.g. this is not a
 ## translation step, this is managing things such as the actually running of the
 ## latest "stable" function and keeping track of when a function appears
 ## to be stable, and reinstating the last stable function if the current one
@@ -7,7 +7,7 @@
 ###
 
 
-class ProgramRunner
+class LCLProgramRunner
   
   # this array is used to keep track of all the instances of "doOnce" in the
   # code we need to keep this so we can put the ticks next to doOnce once
@@ -29,7 +29,7 @@ class ProgramRunner
   # LiveCodeLab might be running an older version.
   currentCodeString = ""
   
-  constructor: (@eventRouter, @codeCompiler, @globalScope) ->
+  constructor: (@eventRouter, @lclCodeCompiler, @globalScope) ->
 
   addToScope: (scope) ->
 
@@ -76,10 +76,10 @@ class ProgramRunner
     @doOnceOccurrencesLineNumbers = []
 
   putTicksNextToDoOnceBlocksThatHaveBeenRun: ->
-    codeCompiler = @codeCompiler
+    lclCodeCompiler = @lclCodeCompiler
     if @doOnceOccurrencesLineNumbers.length
-      p = codeCompiler.addCheckMarksAndUpdateCodeAndNotifyChange(
-        codeCompiler, @doOnceOccurrencesLineNumbers
+      p = lclCodeCompiler.addCheckMarksAndUpdateCodeAndNotifyChange(
+        lclCodeCompiler, @doOnceOccurrencesLineNumbers
       )
       @setProgram(p)
 

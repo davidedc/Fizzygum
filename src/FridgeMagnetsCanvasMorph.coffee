@@ -11,7 +11,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   namedClasses[@name] = @prototype
 
   primitiveTypes: {}
-  codeCompiler: new CodeCompiler()
+  lclCodeCompiler: new LCLCodeCompiler()
 
   createRefreshOrGetBackBuffer: ->
     [@backBuffer, @backBufferContext] = super
@@ -24,7 +24,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   newGraphicsCode: (newCode) ->
     @oldGraphicsCode = @graphicsCode
-    compilation = @codeCompiler.compileCode newCode
+    compilation = @lclCodeCompiler.compileCode newCode
     if compilation.program?
       @graphicsCode = compilation.program
 
