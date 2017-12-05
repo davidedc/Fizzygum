@@ -24,7 +24,7 @@ class BasicCalculatedVal extends GroundVal
   # children Morphs dynamically so they way to find this
   # val might be through the name as a string
   constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph) ->
-    super(@valName, null, @ownerMorph)
+    super(@valName, nil, @ownerMorph)
 
     ProfilerData.reactiveValues_createdBasicCalculatedValues++
 

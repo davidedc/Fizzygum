@@ -5,21 +5,21 @@ class InspectorMorph extends BoxMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  target: null
-  currentProperty: null
+  target: nil
+  currentProperty: nil
   showing: "attributes"
   markOwnershipOfProperties: false
   # panes:
-  label: null
-  list: null
-  detail: null
-  work: null
-  buttonInspect: null
-  buttonClose: null
-  buttonSubset: null
-  buttonEdit: null
-  resizer: null
-  padding: null
+  label: nil
+  list: nil
+  detail: nil
+  work: nil
+  buttonInspect: nil
+  buttonClose: nil
+  buttonSubset: nil
+  buttonEdit: nil
+  resizer: nil
+  padding: nil
 
   constructor: (@target) ->
     super()
@@ -32,7 +32,7 @@ class InspectorMorph extends BoxMorph
   
   setTarget: (target) ->
     @target = target
-    @currentProperty = null
+    @currentProperty = nil
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
@@ -138,14 +138,14 @@ class InspectorMorph extends BoxMorph
       @, # target
       "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
-      null, #labelGetter
+      nil, #labelGetter
       @filterProperties(staticProperties, targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
     @list.disableDrops()
 
     # we know that the content of this list in this pane is not going to need the
-    # step function, so we disable that from here by setting it to null, which
+    # step function, so we disable that from here by setting it to nil, which
     # prevents the recursion to children. We could have disabled that from the
     # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph
     # with some animated content? We know that in this specific case it won't need animation so
@@ -262,7 +262,7 @@ class InspectorMorph extends BoxMorph
 
       menu.popUpAtHand()
     else
-      @inform ((if @currentProperty is null then "null" else typeof @currentProperty)) + "\nis not inspectable"
+      @inform ((if !@currentProperty? then "nil" else typeof @currentProperty)) + "\nis not inspectable"
 
   openEditMenu: ->
     menu = new MenuMorph @, false
@@ -320,7 +320,7 @@ class InspectorMorph extends BoxMorph
         ]
       ]
     else
-      return null
+      return nil
 
   selectionFromList: (selected) ->
     if selected == undefined then return
@@ -329,8 +329,8 @@ class InspectorMorph extends BoxMorph
     if val is undefined
       val = @target.constructor[selected]
     @currentProperty = val
-    if val is null
-      txt = "null"
+    if !val?
+      txt = "nil"
     else if isString val
       txt = '"'+val+'"'
     else
@@ -341,7 +341,7 @@ class InspectorMorph extends BoxMorph
     cnts.setReceiver @target
     @detail.setContents cnts, 2
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of the inspector"
 
@@ -457,7 +457,7 @@ class InspectorMorph extends BoxMorph
     if prop?
       if prop.getValue?
         prop = prop.getValue()
-      @target[prop] = null
+      @target[prop] = nil
       @buildAndConnectChildren()
       @target.reLayout?()      
       @target.changed?()
@@ -488,7 +488,7 @@ class InspectorMorph extends BoxMorph
     try
       delete @target[propertyName]
 
-      @currentProperty = null
+      @currentProperty = nil
       @buildAndConnectChildren()
       @target.reLayout?()      
       @target.changed?()

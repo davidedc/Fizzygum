@@ -55,12 +55,12 @@ class RectangularAppearance extends Appearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return null
+      return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       @morph.justBeforeBeingPainted?()
 
@@ -113,12 +113,12 @@ class RectangularAppearance extends Appearance
   paintStroke: (aContext, clippingRectangle) ->
 
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return null
+      return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       @morph.justBeforeBeingPainted?()
 

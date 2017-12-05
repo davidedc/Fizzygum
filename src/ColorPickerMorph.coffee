@@ -14,10 +14,10 @@ class ColorPickerMorph extends Morph
   # initialised in the constructor if a "lazy initialisation"
   # approach is taken. So it's good practice
   # to list them here so they can be duplicated either way.
-  feedback: null
-  choice: null
-  colorPalette: null
-  grayPalette: null
+  feedback: nil
+  choice: nil
+  colorPalette: nil
+  grayPalette: nil
 
   constructor: (
     @choice = (new Color 255, 255, 255)

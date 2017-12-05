@@ -6,8 +6,8 @@ class FridgeMorph extends FrameMorph
   namedClasses[@name] = @prototype
 
   tabs: []
-  sourceCodeHolder: null
-  fridgeMagnetsCanvas: null
+  sourceCodeHolder: nil
+  fridgeMagnetsCanvas: nil
 
   topMostMagnet: (setOfMorphs = @children) ->
     filtered = setOfMorphs.filter (m) ->
@@ -16,7 +16,7 @@ class FridgeMorph extends FrameMorph
     calculated = filtered.map (m) ->
       m.top()
     calcIndex = calculated.indexOf(Math.min(calculated...))
-    if calcIndex == -1 then return null
+    if calcIndex == -1 then return nil
 
     return filtered[calcIndex]
 
@@ -40,7 +40,7 @@ class FridgeMorph extends FrameMorph
     calculated = correctSide.map (m) ->
       m.rightCenter().distanceTo(aMagnet.leftCenter())
     calcIndex = calculated.indexOf(Math.min(calculated...))
-    if calcIndex == -1 then return null
+    if calcIndex == -1 then return nil
     return correctSide[calcIndex]
 
   # the magnet following another magnet is
@@ -93,7 +93,7 @@ class FridgeMorph extends FrameMorph
       left = @magnetToLeftOf eachMagnet
       if !left? or left.rightCenter().distanceTo(eachMagnet.leftCenter()) > aMagnet.rightCenter().distanceTo(eachMagnet.leftCenter())
         return eachMagnet
-    return null
+    return nil
 
 
   # the idea is that we first find the top most one
@@ -105,11 +105,11 @@ class FridgeMorph extends FrameMorph
     bag = @children.filter (m) ->
       m.putIntoWords? and !m.putIntoWords
 
-    topMostMagnet = null
+    topMostMagnet = nil
 
     while bag.length > 0
       topMostMagnet = @topMostMagnet bag
-      if !topMostMagnet? then return null
+      if !topMostMagnet? then return nil
 
       # filter through the ones on the left
       bag = bag.filter (m) ->

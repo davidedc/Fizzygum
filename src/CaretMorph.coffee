@@ -8,11 +8,11 @@ class CaretMorph extends BlinkerMorph
   namedClasses[@name] = @prototype
 
   keyDownEventUsed: false
-  target: null
-  originalContents: null
-  slot: null
+  target: nil
+  originalContents: nil
+  slot: nil
   viewPadding: 1
-  currentCaretFontSize: null
+  currentCaretFontSize: nil
 
   constructor: (@target) ->
     # additional properties:
@@ -46,7 +46,7 @@ class CaretMorph extends BlinkerMorph
     if @keyDownEventUsed
       @keyDownEventUsed = false
       @updateDimension()
-      return null
+      return nil
     if ctrlKey
       @ctrl charCode
     # in Chrome/OSX cmd-a and cmd-z
@@ -67,13 +67,13 @@ class CaretMorph extends BlinkerMorph
     if ctrlKey
       @ctrl scanCode
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
+      @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
       @updateDimension()
       return
     else if metaKey
       @cmd scanCode
       # notify target's parent of key event
-      @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
+      @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
       @updateDimension()
       return
     switch scanCode
@@ -116,7 +116,7 @@ class CaretMorph extends BlinkerMorph
       else
     # @inspectKeyEvent event
     # notify target's parent of key event
-    @target.escalateEvent "reactToKeystroke", scanCode, null, shiftKey, ctrlKey, altKey, metaKey
+    @target.escalateEvent "reactToKeystroke", scanCode, nil, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
   
   
@@ -217,7 +217,7 @@ class CaretMorph extends BlinkerMorph
 
   updateSelection: (shift) ->
     if shift
-      if (@target.endMark is null) and (@target.startMark is null)
+      if (!@target.endMark?) and (!@target.startMark?)
         @target.selectBetween @slot, @slot
       else if @target.endMark isnt @slot
         @target.setEndMark @slot
@@ -229,13 +229,13 @@ class CaretMorph extends BlinkerMorph
   # User presses enter on a stringMorph
   accept: ->
     world.stopEditing()
-    @escalateEvent "accept", null
+    @escalateEvent "accept", nil
   
   # User presses ESC
   cancel: ->
     @undo()
     world.stopEditing()
-    @escalateEvent 'cancel', null
+    @escalateEvent 'cancel', nil
     
   # User presses CTRL-Z or CMD-Z
   # Note that this is not a real undo,

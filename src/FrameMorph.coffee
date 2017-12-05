@@ -13,13 +13,13 @@ class FrameMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  scrollFrame: null
+  scrollFrame: nil
   extraPadding: 0
   _acceptsDrops: true
 
   # if this frame belongs to a scrollFrame, then
   # the @scrollFrame points to it
-  constructor: (@scrollFrame = null) ->
+  constructor: (@scrollFrame = nil) ->
     super()
     @appearance = new RectangularAppearance @
 

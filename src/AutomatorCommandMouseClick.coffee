@@ -2,16 +2,16 @@
 
 
 class AutomatorCommandMouseClick extends AutomatorCommand
-  button: null
-  ctrlKey: null
-  morphIdentifierViaTextLabel: null
-  pointerPositionFractionalInMorph: null
-  pointerPositionPixelsInMorph: null
-  pointerPositionPixelsInWorld: null
-  absoluteBoundsOfMorphRelativeToWorld: null
-  morphUniqueIDString: null
-  morphPathRelativeToWorld: null
-  isPartOfListMorph: null
+  button: nil
+  ctrlKey: nil
+  morphIdentifierViaTextLabel: nil
+  pointerPositionFractionalInMorph: nil
+  pointerPositionPixelsInMorph: nil
+  pointerPositionPixelsInWorld: nil
+  absoluteBoundsOfMorphRelativeToWorld: nil
+  morphUniqueIDString: nil
+  morphPathRelativeToWorld: nil
+  isPartOfListMorph: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
 

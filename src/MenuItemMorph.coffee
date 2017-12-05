@@ -106,7 +106,7 @@ class MenuItemMorph extends TriggerMorph
     #  debugger
 
     if @representsAMorph
-      morphToBeHighlighted = null
+      morphToBeHighlighted = nil
       if @argumentToAction1?
         # this first case handles when you pick a morph
         # as a target
@@ -123,7 +123,7 @@ class MenuItemMorph extends TriggerMorph
   
   mouseLeave: ->
     if @representsAMorph
-      morphToBeHighlighted = null
+      morphToBeHighlighted = nil
       if @argumentToAction1?
         # this first case handles when you pick a morph
         # as a target

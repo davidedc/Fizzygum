@@ -16,9 +16,9 @@ class UpperRightTriangleAnnotation extends UpperRightTriangle
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  pencilIconMorph = null
+  pencilIconMorph = nil
 
-  constructor: (parent = null) ->
+  constructor: (parent = nil) ->
     super
     @pencilIconMorph = new PencilIconMorph new Color 0,0,0
 

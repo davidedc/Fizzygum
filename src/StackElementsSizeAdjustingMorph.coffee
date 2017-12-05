@@ -8,8 +8,8 @@ class StackElementsSizeAdjustingMorph extends Morph
   namedClasses[@name] = @prototype
 
 
-  hand: null
-  indicator: null
+  hand: nil
+  indicator: nil
   category: 'Morphic-Layouts'
 
 
@@ -123,7 +123,7 @@ class StackElementsSizeAdjustingMorph extends Morph
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 

@@ -5,11 +5,11 @@ class OverlayCanvasMorph extends CanvasMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  underlyingCanvasMorph: null
+  underlyingCanvasMorph: nil
 
   constructor: ->
   	super
-  	@color = null
+  	@color = nil
 
   isFloatDraggable: ->
     false

@@ -165,10 +165,10 @@ class Color
     yellow:               [0xff,0xff,0x00]
     yellowgreen:          [0x9a,0xcd,0x32]
 
-  a: null
-  r: null
-  g: null
-  b: null
+  a: nil
+  r: nil
+  g: nil
+  b: nil
 
   constructor: (@r = 0, @g = 0, @b = 0, a) ->
     # all values are optional, just (r, g, b) is fine

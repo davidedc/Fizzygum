@@ -7,7 +7,7 @@ class BoxMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  cornerRadius: null
+  cornerRadius: nil
 
   constructor: (@cornerRadius = 4) ->
     super()

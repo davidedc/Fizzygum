@@ -5,13 +5,13 @@ class TextPromptMorph extends WindowMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  tempPromptEntryField: null
+  tempPromptEntryField: nil
   defaultContents: ""
-  textMorph: null
+  textMorph: nil
 
-  cancelButton: null
-  saveButton: null
-  okButton: null
+  cancelButton: nil
+  saveButton: nil
+  okButton: nil
 
   constructor: (@msg, @target, @callback, @defaultContents) ->
     super "Edit tool code"
@@ -28,7 +28,7 @@ class TextPromptMorph extends WindowMorph
 
     super
     
-    #@tempPromptEntryField = new TextMorph2 @defaultContents,null,null,null,null,null,new Color(255, 255, 54), 0.5
+    #@tempPromptEntryField = new TextMorph2 @defaultContents,nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5
     #@tempPromptEntryField.isEditable = true
     #@add @tempPromptEntryField
 
@@ -61,13 +61,13 @@ class TextPromptMorph extends WindowMorph
     @layoutSubmorphs()
 
   informTarget: ->
-    @target[@callback].call @target, null, @textMorph
+    @target[@callback].call @target, nil, @textMorph
 
   informTargetAndDestroy: ->
     @informTarget()
     @fullDestroy()
 
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of the text prompt morph"
 

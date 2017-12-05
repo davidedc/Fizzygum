@@ -10,7 +10,7 @@ class SystemTestsReferenceImage
   # the image data as string, like
   # e.g. "data:image/png;base64,iVBORw0KGgoAA..."
   imageData: ''
-  systemInfo: null
+  systemInfo: nil
   hashOfData: 0
   hashOfSystemInfo: 0
   fileName = ''

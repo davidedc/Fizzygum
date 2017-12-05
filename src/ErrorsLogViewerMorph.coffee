@@ -5,13 +5,13 @@ class ErrorsLogViewerMorph extends WindowMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  tempPromptEntryField: null
+  tempPromptEntryField: nil
   defaultContents: ""
-  textMorph: null
+  textMorph: nil
 
-  clearButton: null
-  pauseToggle: null
-  okButton: null
+  clearButton: nil
+  pauseToggle: nil
+  okButton: nil
 
   paused: false
 
@@ -44,7 +44,7 @@ class ErrorsLogViewerMorph extends WindowMorph
 
     super
     
-    #@tempPromptEntryField = new TextMorph2 @defaultContents,null,null,null,null,null,new Color(255, 255, 54), 0.5
+    #@tempPromptEntryField = new TextMorph2 @defaultContents,nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5
     #@tempPromptEntryField.isEditable = true
     #@add @tempPromptEntryField
 
@@ -89,13 +89,13 @@ class ErrorsLogViewerMorph extends WindowMorph
     @textMorph.setText ""    
 
   informTarget: ->
-    @target[@callback].call @target, null, @textMorph
+    @target[@callback].call @target, nil, @textMorph
 
   informTargetAndDestroy: ->
     @informTarget()
     @fullDestroy()
 
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of errors log viewer"
 

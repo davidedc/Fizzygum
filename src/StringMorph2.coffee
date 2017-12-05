@@ -35,17 +35,17 @@ class StringMorph2 extends Morph
   # and cropping.
   textPossiblyCroppedToFit: ""
 
-  fittingFontSize: null
-  originallySetFontSize: null
+  fittingFontSize: nil
+  originallySetFontSize: nil
 
-  fontName: null
-  isBold: null
-  isItalic: null
-  isHeaderLine: null
+  fontName: nil
+  isBold: nil
+  isItalic: nil
+  isHeaderLine: nil
   isEditable: false
   # if "isNumeric", it rejects all inputs
   # other than numbers and "-" and "."
-  isNumeric: null
+  isNumeric: nil
   isPassword: false
   isShowingBlanks: false
   # careful: Objects are shared with all the instances of this class.
@@ -65,8 +65,8 @@ class StringMorph2 extends Morph
   # i.e. startMark might be higher than endMark if
   # text had been selected starting from the
   # right and "going left"
-  startMark: null
-  endMark: null
+  startMark: nil
+  endMark: nil
 
   # see note above about Colors and shared objects
   markedTextColor: new Color 255, 255, 255
@@ -79,7 +79,7 @@ class StringMorph2 extends Morph
   fittingSpecWhenBoundsTooLarge: FittingSpecTextInLargerBounds.FLOAT
   fittingSpecWhenBoundsTooSmall: FittingSpecTextInSmallerBounds.CROP
 
-  caretHorizPositionForVertMovement: null
+  caretHorizPositionForVertMovement: nil
 
   emptyCharacter: '\u2063'
 
@@ -649,7 +649,7 @@ class StringMorph2 extends Morph
       p = @slotCoordinates(i).subtract @position()
       c = @textPossiblyCroppedToFit.charAt(i)
       backBufferContext.fillStyle = @markedBackgoundColor.toString()
-      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText null, c) + 1, Math.ceil fontHeight @fittingFontSize
+      backBufferContext.fillRect p.x, p.y, Math.ceil(@measureText nil, c) + 1, Math.ceil fontHeight @fittingFontSize
       backBufferContext.fillStyle = @markedTextColor.toString()
       backBufferContext.fillText c, p.x, p.y + Math.ceil fontHeight @fittingFontSize
     
@@ -663,7 +663,7 @@ class StringMorph2 extends Morph
     if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
-      return null
+      return nil
 
     # answer the position point of the given index ("slot")
     # where the caret should be placed
@@ -779,7 +779,7 @@ class StringMorph2 extends Morph
       @,
       "setFontSize",
       @originallySetFontSize.toString(),
-      null, 6, 500, true
+      nil, 6, 500, true
 
   editPopup: (menuItem)->
     if menuItem?
@@ -791,7 +791,7 @@ class StringMorph2 extends Morph
       @,
       "setText",
       @text,
-      null, 6, null, true
+      nil, 6, nil, true
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if @fontName != theNewFontName
@@ -799,7 +799,7 @@ class StringMorph2 extends Morph
       @changed()
 
   fontsMenu: (a,targetMorph)->
-    menu = new MenuMorph @, false, targetMorph, true, true, null
+    menu = new MenuMorph @, false, targetMorph, true, true, nil
 
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
@@ -827,15 +827,15 @@ class StringMorph2 extends Morph
       when @monoFontStack
         monoFontStackTick = tick
 
-    menu.addMenuItem justArialFontStackTick + "Arial", true, @, "setFontName", null, null, null, null, null, @justArialFontStack
-    menu.addMenuItem timesFontStackTick + "Times", true, @, "setFontName", null, null, null, null, null, @timesFontStack
-    menu.addMenuItem georgiaFontStackTick + "Georgia", true, @, "setFontName", null, null, null, null, null, @georgiaFontStack
-    menu.addMenuItem garamoFontStackTick + "Garamo", true, @, "setFontName", null, null, null, null, null, @garamoFontStack
-    menu.addMenuItem helveFontStackTick + "Helve", true, @, "setFontName", null, null, null, null, null, @helveFontStack
-    menu.addMenuItem verdaFontStackTick + "Verda", true, @, "setFontName", null, null, null, null, null, @verdaFontStack
-    menu.addMenuItem trebuFontStackTick + "Treby", true, @, "setFontName", null, null, null, null, null, @trebuFontStack
-    menu.addMenuItem heavyFontStackTick + "Heavy", true, @, "setFontName", null, null, null, null, null, @heavyFontStack
-    menu.addMenuItem monoFontStackTick + "Mono", true, @, "setFontName", null, null, null, null, null, @monoFontStack
+    menu.addMenuItem justArialFontStackTick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
+    menu.addMenuItem timesFontStackTick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
+    menu.addMenuItem georgiaFontStackTick + "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, @georgiaFontStack
+    menu.addMenuItem garamoFontStackTick + "Garamo", true, @, "setFontName", nil, nil, nil, nil, nil, @garamoFontStack
+    menu.addMenuItem helveFontStackTick + "Helve", true, @, "setFontName", nil, nil, nil, nil, nil, @helveFontStack
+    menu.addMenuItem verdaFontStackTick + "Verda", true, @, "setFontName", nil, nil, nil, nil, nil, @verdaFontStack
+    menu.addMenuItem trebuFontStackTick + "Treby", true, @, "setFontName", nil, nil, nil, nil, nil, @trebuFontStack
+    menu.addMenuItem heavyFontStackTick + "Heavy", true, @, "setFontName", nil, nil, nil, nil, nil, @heavyFontStack
+    menu.addMenuItem monoFontStackTick + "Mono", true, @, "setFontName", nil, nil, nil, nil, nil, @monoFontStack
 
     menu.popUpAtHand()
 
@@ -1004,7 +1004,7 @@ class StringMorph2 extends Morph
       return true
     else
       @editPopup()
-      return null
+      return nil
 
   selection: ->
     start = Math.min @startMark, @endMark
@@ -1013,12 +1013,12 @@ class StringMorph2 extends Morph
   
   firstSelectedSlot: ->
     if !@startMark? or !@endMark?
-      return null
+      return nil
     return Math.min @startMark, @endMark
 
   lastSelectedSlot: ->
     if !@startMark? or !@endMark?
-      return null
+      return nil
     return Math.max @startMark, @endMark
 
   currentlySelecting: ->
@@ -1027,8 +1027,8 @@ class StringMorph2 extends Morph
     return true
   
   clearSelection: ->
-    @startMark = null
-    @endMark = null
+    @startMark = nil
+    @endMark = nil
     @changed()
 
   setEndMark: (slot) ->
@@ -1095,7 +1095,7 @@ class StringMorph2 extends Morph
     world.caret?.bringToForegroud()
     if @isEditable
       # doesn't matter what we set editResult to initially,
-      # just not undefined or null cause that's
+      # just not undefined or nil cause that's
       # going to be significant
       editResult = true
       previousCaretSlot = world.caret?.slot

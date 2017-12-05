@@ -9,27 +9,27 @@ class HandMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  world: null
-  mouseButton: null
+  world: nil
+  mouseButton: nil
   # used for example to check that
   # mouseDown and mouseUp happen on the
   # same Morph (otherwise clicks happen for
   # example when resizing a button via the
   # handle)
-  mouseDownMorph: null
-  mouseDownPosition: null
-  morphToGrab: null
-  grabOrigin: null
-  mouseOverList: null
-  temporaries: null
-  touchHoldTimeout: null
-  doubleClickMorph: null
-  tripleClickMorph: null
-  nonFloatDraggedMorph: null
-  nonFloatDragPositionWithinMorphAtStart: null
+  mouseDownMorph: nil
+  mouseDownPosition: nil
+  morphToGrab: nil
+  grabOrigin: nil
+  mouseOverList: nil
+  temporaries: nil
+  touchHoldTimeout: nil
+  doubleClickMorph: nil
+  tripleClickMorph: nil
+  nonFloatDraggedMorph: nil
+  nonFloatDragPositionWithinMorphAtStart: nil
   # this is useful during nonFloatDrags to pass the morph
   # the delta position since the last invokation
-  previousNonFloatDraggingPos: null
+  previousNonFloatDraggingPos: nil
 
   constructor: (@world) ->
     @mouseOverList = []
@@ -143,7 +143,7 @@ class HandMorph extends Morph
     target
   
   grab: (aMorph, displacementDueToGrabDragThreshold) ->
-    return null  if aMorph instanceof WorldMorph
+    return nil  if aMorph instanceof WorldMorph
     oldParent = aMorph.parent
     if !@floatDraggingSomething()
 
@@ -289,7 +289,7 @@ class HandMorph extends Morph
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     @destroyTemporaries()
-    @morphToGrab = null
+    @morphToGrab = nil
 
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
@@ -304,7 +304,7 @@ class HandMorph extends Morph
     # of a floatDrag/drop operation
     if @floatDraggingSomething()
       @drop()
-      @mouseButton = null
+      @mouseButton = nil
     else
       morph = @topMorphUnderPointer()
 
@@ -395,14 +395,14 @@ class HandMorph extends Morph
     if @floatDraggingSomething()
       @drop()
     else
-      @previousNonFloatDraggingPos = null
+      @previousNonFloatDraggingPos = nil
       # let's check if the user clicked on a menu item,
       # in which case we add a special dedicated command
       # [TODO] you need to do some of this only if you
       # are recording a test, it's worth saving
       # these steps...
       #debugger
-      ignored = null
+      ignored = nil
       toDestructure = morph.parentThatIsA MenuItemMorph
       if toDestructure?
         [menuItemMorph, ignored]= toDestructure
@@ -449,11 +449,11 @@ class HandMorph extends Morph
           switch expectedClick
             when "mouseClickLeft"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.automatorRecorderAndPlayer.addMouseClickCommand 0, null, pointerAndMorphInfo...
+              world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndMorphInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.automatorRecorderAndPlayer.addMouseClickCommand 2, null, pointerAndMorphInfo...
+              world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndMorphInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
@@ -466,7 +466,7 @@ class HandMorph extends Morph
 
           if @doubleClickMorph?
             if @doubleClickMorph == morph
-              @doubleClickMorph = null
+              @doubleClickMorph = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
@@ -495,7 +495,7 @@ class HandMorph extends Morph
             if @tripleClickMorph?
               #debugger
               if @tripleClickMorph == morph
-                @tripleClickMorph = null
+                @tripleClickMorph = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
                 if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                   if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
@@ -517,8 +517,8 @@ class HandMorph extends Morph
       if !@nonFloatDraggedMorph?
         @cleanupMenuMorphs expectedClick, morph
 
-    @mouseButton = null
-    @nonFloatDraggedMorph = null
+    @mouseButton = nil
+    @nonFloatDraggedMorph = nil
 
 
   rememberDoubleClickMorphsForAWhile: (morph) ->
@@ -526,7 +526,7 @@ class HandMorph extends Morph
     setTimeout (=>
       if @doubleClickMorph?
         console.log "single click"
-      @doubleClickMorph = null
+      @doubleClickMorph = nil
       return false
     ), 300
 
@@ -536,7 +536,7 @@ class HandMorph extends Morph
     setTimeout (=>
       if @tripleClickMorph?
         console.log "not a triple click, just a double click"
-      @tripleClickMorph = null
+      @tripleClickMorph = nil
       return false
     ), 500
 
@@ -613,7 +613,7 @@ class HandMorph extends Morph
 
   processDoubleClick: (morph = @topMorphUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
-    world.automatorRecorderAndPlayer.addMouseDoubleClickCommand null, pointerAndMorphInfo...
+    world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
 
     @destroyTemporaries()
     if @floatDraggingSomething()
@@ -621,11 +621,11 @@ class HandMorph extends Morph
     else
       morph = morph.parent  while morph and not morph.mouseDoubleClick
       morph.mouseDoubleClick @position() if morph
-    @mouseButton = null
+    @mouseButton = nil
 
   processTripleClick: (morph = @topMorphUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
-    world.automatorRecorderAndPlayer.addMouseTripleClickCommand null, pointerAndMorphInfo...
+    world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
 
     @destroyTemporaries()
     if @floatDraggingSomething()
@@ -633,7 +633,7 @@ class HandMorph extends Morph
     else
       morph = morph.parent  while morph and not morph.mouseTripleClick
       morph.mouseTripleClick @position() if morph
-    @mouseButton = null
+    @mouseButton = nil
   
   processMouseScroll: (event) ->
     morph = @topMorphUnderPointer()
@@ -667,8 +667,8 @@ class HandMorph extends Morph
     #    ```droppedBinary(anArrayBuffer, name)```
 
     files = (if event instanceof FileList then event else (event.target.files || event.dataTransfer.files))
-    url = (if event.dataTransfer then event.dataTransfer.getData("URL") else null)
-    txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else null)
+    url = (if event.dataTransfer then event.dataTransfer.getData("URL") else nil)
+    txt = (if event.dataTransfer then event.dataTransfer.getData("Text/HTML") else nil)
     targetDrop = @topMorphUnderPointer()
     img = new Image()
 
@@ -725,13 +725,13 @@ class HandMorph extends Morph
     parseImgURL = (html) ->
       url = ""
       start = html.indexOf "<img src=\""
-      return null  if start is -1
+      return nil  if start is -1
       start += 10
       for i in [start...html.length]
         c = html[i]
         return url  if c is "\""
         url = url.concat c
-      null
+      nil
     
     if files.length
       for file in files
@@ -836,7 +836,7 @@ class HandMorph extends Morph
     # not a "later" point once the threshold is passed.
 
     # so we have to bypass this mechanism for those.
-    displacementDueToGrabDragThreshold = null
+    displacementDueToGrabDragThreshold = nil
     skipGrabDragThreshold = false
     
     if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -847,7 +847,7 @@ class HandMorph extends Morph
     if !skipGrabDragThreshold
       if @morphToGrab.parent != world or (!@morphToGrab.isEditable? or @morphToGrab.isEditable )
         if (@mouseDownPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold
-          return [true,null]
+          return [true,nil]
       displacementDueToGrabDragThreshold = @position().subtract @mouseDownPosition
 
     return [false, displacementDueToGrabDragThreshold]
@@ -923,7 +923,7 @@ class HandMorph extends Morph
         if @previousNonFloatDraggingPos?
           deltaDragFromPreviousCall = pos.subtract @previousNonFloatDraggingPos
         else
-          deltaDragFromPreviousCall = null
+          deltaDragFromPreviousCall = nil
         @previousNonFloatDraggingPos = pos.copy()
         @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
     

@@ -4,24 +4,24 @@
 
 class SystemInfo
 
-  userAgent: null
-  screenWidth: null
-  screenHeight: null
-  screenColorDepth: null
-  screenPixelRatio: null
-  appCodeName: null
-  appName: null
-  appVersion: null
-  cookieEnabled: null
-  platform: null
-  systemLanguage: null
+  userAgent: nil
+  screenWidth: nil
+  screenHeight: nil
+  screenColorDepth: nil
+  screenPixelRatio: nil
+  appCodeName: nil
+  appName: nil
+  appVersion: nil
+  cookieEnabled: nil
+  platform: nil
+  systemLanguage: nil
 
-  browser: null
-  browserVersion: null
-  mobile: null
-  os: null
-  osVersion: null
-  cookies: null
+  browser: nil
+  browserVersion: nil
+  mobile: nil
+  os: nil
+  osVersion: nil
+  cookies: nil
 
   constructor: ->
     @userAgent = navigator.userAgent

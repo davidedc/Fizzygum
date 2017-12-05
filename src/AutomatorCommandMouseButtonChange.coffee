@@ -2,23 +2,23 @@
 
 
 class AutomatorCommandMouseButtonChange extends AutomatorCommand
-  upOrDown: null
-  button: null
-  ctrlKey: null
+  upOrDown: nil
+  button: nil
+  ctrlKey: nil
 
-  buttons: null
-  shiftKey: null
-  altKey: null
-  metaKey: null
+  buttons: nil
+  shiftKey: nil
+  altKey: nil
+  metaKey: nil
 
-  morphIdentifierViaTextLabel: null
-  pointerPositionFractionalInMorph: null
-  pointerPositionPixelsInMorph: null
-  pointerPositionPixelsInWorld: null
-  absoluteBoundsOfMorphRelativeToWorld: null
-  morphUniqueIDString: null
-  morphPathRelativeToWorld: null
-  isPartOfListMorph: null
+  morphIdentifierViaTextLabel: nil
+  pointerPositionFractionalInMorph: nil
+  pointerPositionPixelsInMorph: nil
+  pointerPositionPixelsInWorld: nil
+  absoluteBoundsOfMorphRelativeToWorld: nil
+  morphUniqueIDString: nil
+  morphPathRelativeToWorld: nil
+  isPartOfListMorph: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)

@@ -15,7 +15,7 @@ class PenMorph extends Morph
   namedClasses[@name] = @prototype
   
   heading: 0
-  penSize: null
+  penSize: nil
   isDown: true
   penPoint: 'tip' # or 'center'
   
@@ -57,7 +57,7 @@ class PenMorph extends Morph
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 

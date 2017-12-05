@@ -2,7 +2,7 @@
 
 
 class AutomatorCommandScreenshot extends AutomatorCommand
-  screenShotImageName: null
+  screenShotImageName: nil
   # The screenshot can be of the entire
   # world or of a particular morph (through
   # the "take pic" menu entry.

@@ -14,10 +14,10 @@ class PromptMorph extends MenuMorph
   # initialised in the constructor if a "lazy initialisation"
   # approach is taken. So it's good practice
   # to list them here so they can be duplicated either way.
-  #feedback: null
-  #choice: null
-  #colorPalette: null
-  #grayPalette: null
+  #feedback: nil
+  #choice: nil
+  #colorPalette: nil
+  #grayPalette: nil
 
   constructor: (morphOpeningTheMenu, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->

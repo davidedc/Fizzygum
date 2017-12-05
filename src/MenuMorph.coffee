@@ -13,18 +13,18 @@ class MenuMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  target: null
-  title: null
-  environment: null
-  fontSize: null
-  label: null
+  target: nil
+  title: nil
+  environment: nil
+  fontSize: nil
+  label: nil
   isListContents: false
   killThisMenuIfClickOnDescendantsTriggers: true
   killThisMenuIfClickOutsideDescendants: true
-  tempPromptEntryField: null
-  parentMenu: null
+  tempPromptEntryField: nil
+  parentMenu: nil
 
-  constructor: (morphOpeningTheMenu, @isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = null, @environment = null, @fontSize = null) ->
+  constructor: (morphOpeningTheMenu, @isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
     # console.log "menu super"
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
@@ -56,7 +56,7 @@ class MenuMorph extends Morph
     # important not to traverse all the children for stepping through, because
     # there could be a lot of entries for example in the inspector the number
     # of properties of an object - there could be a 100 of those and we don't
-    # want to traverse them all. Setting step to null (as opposed to nop)
+    # want to traverse them all. Setting step to nil (as opposed to nop)
     # achieves that.
 
     unless @isListContents
@@ -82,7 +82,7 @@ class MenuMorph extends Morph
   pin: (pinMenuItem)->
     @killThisMenuIfClickOnDescendantsTriggers = false
     @killThisMenuIfClickOutsideDescendants = false
-    @onClickOutsideMeOrAnyOfMyChildren null
+    @onClickOutsideMeOrAnyOfMyChildren nil
     pinMenuItem.firstParentThatIsAMenu().propagateKillMenus()
     world.destroyMorphsMarkedForDestruction()
 
@@ -113,7 +113,7 @@ class MenuMorph extends Morph
 
   prependLine: (height) ->
     item = @createLine height
-    @silentAdd item,null,0
+    @silentAdd item,nil,0
   
   createLabel: ->
     # console.log "menu create label"
@@ -157,7 +157,7 @@ class MenuMorph extends Morph
   prependMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
     item = @createMenuItem label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph
-    @silentAdd item, null, 0
+    @silentAdd item, nil, 0
 
   # this is used by the test system to check that the menu
   # has the correct number of items. Note that we count the

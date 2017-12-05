@@ -9,7 +9,7 @@ class Appearance
 
   @augmentWith DeepCopierMixin
 
-  morph: null
+  morph: nil
 
   constructor: (@morph) ->
 

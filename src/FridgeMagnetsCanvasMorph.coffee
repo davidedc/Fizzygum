@@ -70,7 +70,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
       ) / 0.05
     )
 
-  scale: (a, b = 1, c = 1, d = null) ->
+  scale: (a, b = 1, c = 1, d = nil) ->
     arg_a = a
     arg_b = b
     arg_c = c
@@ -112,13 +112,13 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
-        if result == null
+        if !result?
           context.restore()
           return
         appendedFunctionsStartIndex++
       context.restore()
 
-  rotate: (a, b, c = 0, d = null) ->
+  rotate: (a, b, c = 0, d = nil) ->
     arg_a = a
     arg_b = b
     arg_c = c
@@ -152,13 +152,13 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
-        if result == null
+        if !result?
           context.restore()
           return
         appendedFunctionsStartIndex++
       context.restore()
 
-  move: (a, b, c = 0, d = null) ->
+  move: (a, b, c = 0, d = nil) ->
     arg_a = a
     arg_b = b
     arg_c = c
@@ -196,13 +196,13 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
         result = arguments[appendedFunctionsStartIndex].apply @
         # we find out that the function is actually
         # a fake so we have to undo the push and leave
-        if result == null
+        if !result?
           context.restore()
           return
         appendedFunctionsStartIndex++
       context.restore()
 
-  box: (a, b, c, d = null) ->
+  box: (a, b, c, d = nil) ->
     # primitive-specific initialisations:
     primitiveProperties =
       canFill: true

@@ -6,11 +6,11 @@ class FizzytilesCodeMorph extends TextMorph2
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  fridgeMagnetsCanvas: null
+  fridgeMagnetsCanvas: nil
 
 
   showCompiledCode: (theTextContent) ->
-    @setText theTextContent, null, true
+    @setText theTextContent, nil, true
 
   setText: (theTextContent, stringFieldMorph, skipCompilation) ->
     super

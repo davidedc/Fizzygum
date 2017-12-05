@@ -83,5 +83,5 @@ class CloseIconButtonMorph extends EmptyButtonMorph
   isFloatDraggable: ->
     false
   rootForGrab: ->
-    return null
+    return nil
 

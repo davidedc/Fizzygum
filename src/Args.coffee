@@ -18,26 +18,26 @@ class Args
   # not the case for children Args as
   # obviously you may have many children and hence
   # many arguments)
-  argById: null
-  parentArgByName: null
-  childrenArgByName: null
+  argById: nil
+  parentArgByName: nil
+  childrenArgByName: nil
   # we want to group together all children
   # values under the same name
   # so we keep this count separate
   # rather than counting navigating the keys
-  childrenArgByNameCount: null
-  localArgByName: null
-  calculatedDirectlyOfIndirectlyFromParentById: null
+  childrenArgByNameCount: nil
+  localArgByName: nil
+  calculatedDirectlyOfIndirectlyFromParentById: nil
   calculatedDirectlyOfIndirectlyFromParentByIdCount: 0
 
   countOfDamaged: 0
-  morphContainingTheseArgs: null
+  morphContainingTheseArgs: nil
 
   # just some flags to keep track of which
   # args might have changed. Again, we might
   # not know for sure because we don't necessarily
   # recalculate them
-  argsMaybeChangedSinceLastCalculationById: null
+  argsMaybeChangedSinceLastCalculationById: nil
 
   constructor: (@valContainingTheseArgs) ->
     @argById = {}
@@ -129,7 +129,7 @@ class Args
       existingArg.markedForRemoval = false
       existingArg.valContainingThisArg.argMightHaveChanged parentOrChildVal
       return existingArg
-    return null
+    return nil
 
 
   # connects a val depending on a children val to a child val.

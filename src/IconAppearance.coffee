@@ -39,7 +39,7 @@ class IconAppearance extends Appearance
 
   compilePaintFunction: ->
     console.log "compiling icon: " + @paintFunctionSource
-    compiledOutput = compileFGCode @paintFunctionSource, true, 1
+    compiledOutput = compileFGCode @paintFunctionSource, true, 2
     console.log compiledOutput
 
     @paintFunction = new Function 'context', compiledOutput
@@ -59,7 +59,7 @@ class IconAppearance extends Appearance
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 

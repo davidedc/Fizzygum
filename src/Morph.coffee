@@ -41,9 +41,9 @@ class Morph extends MorphicNode
   # unused - can't afford the time right now to change a
   # script that hangs
   # TODO
-  aspectRatio: null
+  aspectRatio: nil
 
-  appearance: null
+  appearance: nil
 
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
@@ -59,13 +59,13 @@ class Morph extends MorphicNode
   # into a single property (a Rectangle). Only
   # a few geometry-related methods should directly
   # access this property.
-  bounds: null
-  minimumExtent: null
+  bounds: nil
+  minimumExtent: nil
   color: new Color 80, 80, 80
-  strokeColor: null
-  texture: null # optional url of a fill-image
-  cachedTexture: null # internal cache of actual bg image
-  lastTime: null
+  strokeColor: nil
+  texture: nil # optional url of a fill-image
+  cachedTexture: nil # internal cache of actual bg image
+  lastTime: nil
 
   # 1: fully opaque, 0: fully transparent
   alpha: 1
@@ -93,7 +93,7 @@ class Morph extends MorphicNode
   # entire rectangular bounds of the morph.
   # I.e. they area they fill is not affected by the
   # padding or the actual design of the morph.
-  backgroundColor: null
+  backgroundColor: nil
   backgroundTransparency: 1
 
   # for a Morph, being visible and collapsed
@@ -115,19 +115,19 @@ class Morph extends MorphicNode
   _acceptsDrops: false
   noticesTransparentClick: false
   fps: 0
-  customContextMenu: null
+  customContextMenu: nil
   shadowBlur: 10
-  onNextStep: null # optional function to be run once. Not currently used in Fizzygum
+  onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
   # contains all the reactive vals
-  allValsInMorphByName: null
-  morphValsDependingOnChildrenVals: null
-  morphValsDirectlyDependingOnParentVals: null
+  allValsInMorphByName: nil
+  morphValsDependingOnChildrenVals: nil
+  morphValsDirectlyDependingOnParentVals: nil
 
-  clickOutsideMeOrAnyOfMeChildrenCallback: [null]
+  clickOutsideMeOrAnyOfMeChildrenCallback: [nil]
   isMarkedForDestruction: false
 
-  textDescription: null
+  textDescription: nil
 
   # note that not all the changed morphs have this flag set
   # because if a parent does a fullChange, we don't set this
@@ -139,7 +139,7 @@ class Morph extends MorphicNode
   # See comment below on fullGeometryOrPositionPossiblyChanged
   # for more information.
   geometryOrPositionPossiblyChanged: false
-  clippedBoundsWhenLastPainted: null
+  clippedBoundsWhenLastPainted: nil
 
   # you'd be tempted to check this flag to figure out
   # whether any morph has possibly changed position but
@@ -164,25 +164,25 @@ class Morph extends MorphicNode
   # array to do that. Seems quite a bit more work and complication,
   # so just use the method.
   fullGeometryOrPositionPossiblyChanged: false
-  fullClippedBoundsWhenLastPainted: null
+  fullClippedBoundsWhenLastPainted: nil
 
-  cachedFullBounds: null
+  cachedFullBounds: nil
   childrenBoundsUpdatedAt: -1
 
-  cachedFullClippedBounds: null
-  checkFullClippedBoundsCache: null
+  cachedFullClippedBounds: nil
+  checkFullClippedBoundsCache: nil
 
-  visibleBasedOnIsVisiblePropertyCache: null
+  visibleBasedOnIsVisiblePropertyCache: nil
   checkVisibleBasedOnIsVisiblePropertyCache: ""
 
-  clippedThroughBoundsCache: null
+  clippedThroughBoundsCache: nil
   checkClippedThroughBoundsCache: ""
 
-  clipThroughCache: null
-  checkClipThroughCache: null
+  clipThroughCache: nil
+  checkClipThroughCache: nil
 
-  srcBrokenRect: null
-  dstBrokenRect: null
+  srcBrokenRect: nil
+  dstBrokenRect: nil
 
   layoutIsValid: true
   layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -193,11 +193,11 @@ class Morph extends MorphicNode
   # if this morph has the purpose of highlighting
   # another morph, then this field points to the
   # morph that this morph is supposed to highlight
-  morphThisMorphIsHighlighting: null
+  morphThisMorphIsHighlighting: nil
 
   destroyed: false
 
-  shadowInfo: null
+  shadowInfo: nil
 
   mouseClickRight: ->
     # you could bring up what you right-click,
@@ -513,7 +513,7 @@ class Morph extends MorphicNode
 
     # remove callback when user clicks outside
     # me or any of my children
-    @onClickOutsideMeOrAnyOfMyChildren null
+    @onClickOutsideMeOrAnyOfMyChildren nil
 
     if @parent?
 
@@ -527,7 +527,7 @@ class Morph extends MorphicNode
         @fullChanged()
 
       @parent.removeChild @
-    return null
+    return nil
   
   fullDestroy: ->
     WorldMorph.numberOfAddsAndRemoves++
@@ -538,7 +538,7 @@ class Morph extends MorphicNode
     until @children.length == 0
       @children[0].fullDestroy()
     @destroy()
-    return null
+    return nil
 
   fullDestroyChildren: ->
     if @children.length == 0
@@ -551,7 +551,7 @@ class Morph extends MorphicNode
     # while we are iterating on it.
     until @children.length == 0
       @children[0].fullDestroy()
-    return null
+    return nil
 
 
   # not used within Fizzygum yet.
@@ -565,7 +565,7 @@ class Morph extends MorphicNode
   # leaving this function as step means that the morph wants to do nothing
   # but the children *are* traversed and their step function is invoked.
   # If a Morph wants to do nothing and wants to prevent the children to be
-  # traversed, then this function should be set to null.
+  # traversed, then this function should be set to nil.
   step: noOperation
   
   
@@ -635,7 +635,7 @@ class Morph extends MorphicNode
 
     @rawSetExtent newBounds.extent()
 
-  setBounds: (aRectangle, morphStartingTheChange = null) ->
+  setBounds: (aRectangle, morphStartingTheChange = nil) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -818,14 +818,14 @@ class Morph extends MorphicNode
   invalidateFullBoundsCache: ->
     if !@cachedFullBounds?
       return
-    @cachedFullBounds = null
+    @cachedFullBounds = nil
     if @parent?.cachedFullBounds?
         @parent.invalidateFullBoundsCache @
 
   invalidateFullClippedBoundsCache: ->
     if !@checkFullClippedBoundsCache?
       return
-    @checkFullClippedBoundsCache = null
+    @checkFullClippedBoundsCache = nil
     if @parent?.checkFullClippedBoundsCache?
         @parent.invalidateFullClippedBoundsCache @
 
@@ -853,7 +853,7 @@ class Morph extends MorphicNode
 
   # for FrameMorph scrolling support
   subMorphsMergedFullBounds: ->
-    result = null
+    result = nil
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
@@ -1081,7 +1081,7 @@ class Morph extends MorphicNode
   parentHasReLayouted: ->
     @notifyChildrenThatParentHasReLayouted()
 
-  layoutInset: (morphStartingTheChange = null) ->
+  layoutInset: (morphStartingTheChange = nil) ->
     if @insetMorph?
       if @insetMorph != morphStartingTheChange
         @insetMorph.fullRawMoveTo @insetPosition()
@@ -1096,7 +1096,7 @@ class Morph extends MorphicNode
   # , but things like
   # the inspector might well want to
   # tweak many of their children...
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     @layoutInset morphStartingTheChange
 
     for child in @children.slice()
@@ -1121,11 +1121,11 @@ class Morph extends MorphicNode
   setMinimumExtent: (@minimumExtent) ->
 
   # Morph accessing - dimensional changes requiring a complete redraw
-  rawSetExtent: (aPoint, morphStartingTheChange = null) ->
+  rawSetExtent: (aPoint, morphStartingTheChange = nil) ->
     #console.log "move 8"
     if @ == morphStartingTheChange
       return
-    if morphStartingTheChange == null
+    if !morphStartingTheChange?
       morphStartingTheChange = @
     # check whether we are actually changing the extent.
     unless aPoint.eq @extent()
@@ -1141,7 +1141,7 @@ class Morph extends MorphicNode
           @parent.childChangedExtent @
 
   # Morph accessing - dimensional changes requiring a complete redraw
-  setExtent: (aPoint, morphStartingTheChange = null) ->
+  setExtent: (aPoint, morphStartingTheChange = nil) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1320,7 +1320,7 @@ class Morph extends MorphicNode
     aContext,
     al, at, w, h,
     color,
-    transparency = null,
+    transparency = nil,
     pushAndPopContext = false,
     appliedShadow
   ) ->
@@ -1606,7 +1606,7 @@ class Morph extends MorphicNode
   
   removeShadow: ->
     if @hasShadow()
-      @shadowInfo = null
+      @shadowInfo = nil
       @fullChanged()
   
   
@@ -1683,11 +1683,11 @@ class Morph extends MorphicNode
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
 
-  addAsSiblingAfterMe: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingAfterMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent.add aMorph, (myPosition + 1), layoutSpec
 
-  addAsSiblingBeforeMe: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addAsSiblingBeforeMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     myPosition = @positionAmongSiblings()
     @parent.add aMorph, myPosition, layoutSpec
 
@@ -1700,7 +1700,7 @@ class Morph extends MorphicNode
   # both a high-level and a low-level.
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
-  add: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
     if (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
       if @ == world
         aMorph.addShadow()
@@ -1714,14 +1714,14 @@ class Morph extends MorphicNode
   #     being added to itself and the case of
   # ??? TODO a Morph being added to one of its
   #     children
-  addRaw: (aMorph, position = null, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addRaw: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
     # That would be impossible to do,
-    # so we return null to signal the error.
+    # so we return nil to signal the error.
     if aMorph.isAncestorOf @
-      return null
+      return nil
 
     aMorph.parent?.invalidateLayout()
 
@@ -1776,7 +1776,7 @@ class Morph extends MorphicNode
 
   calculateAndUpdateExtent: ->
 
-  silentAdd: (aMorph, avoidExtentCalculation, position = null) ->
+  silentAdd: (aMorph, avoidExtentCalculation, position = nil) ->
     # the morph that is being
     # attached might be attached to
     # a clipping morph. So we
@@ -1805,9 +1805,9 @@ class Morph extends MorphicNode
   # at the first morph satisfying the test.
   morphAt: (aPoint) ->
     morphs = @allChildrenTopToBottom()
-    result = null
+    result = nil
     morphs.forEach (m) ->
-      if m.fullBounds().containsPoint(aPoint) and (result is null)
+      if m.fullBounds().containsPoint(aPoint) and (!result?)
         result = m
 
     result
@@ -1860,7 +1860,7 @@ class Morph extends MorphicNode
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     if copiedMorph instanceof MenuMorph
-      copiedMorph.onClickOutsideMeOrAnyOfMyChildren null
+      copiedMorph.onClickOutsideMeOrAnyOfMyChildren nil
       copiedMorph.killThisMenuIfClickOnDescendantsTriggers = false
       copiedMorph.killThisMenuIfClickOutsideDescendants = false
 
@@ -1978,7 +1978,7 @@ class Morph extends MorphicNode
     # ([a-zA-Z_$][0-9a-zA-Z_$]*) is the variable name
     regex = /^([a-zA-Z_$][0-9a-zA-Z_$]*)[ \t]*=[ \t]*([^]*?)(?=^[\w#$])/gm
 
-    while (m = regex.exec(codeBlurb)) != null
+    while (m = regex.exec(codeBlurb))?
       # This is necessary to avoid infinite loops with zero-width matches
       if m.index == regex.lastIndex
         regex.lastIndex++
@@ -2008,7 +2008,7 @@ class Morph extends MorphicNode
     return false
 
   rootForGrab: ->
-    if @parent is null or
+    if !@parent? or
       @parent instanceof WorldMorph or
       ((@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph))
         return @  
@@ -2028,11 +2028,11 @@ class Morph extends MorphicNode
       # CLIPPING morph (more generic), not
       # just a FrameMorph
       if scanningMorphs instanceof FrameMorph
-        return null
+        return nil
       if scanningMorphs.hasShadow()
         return scanningMorphs
 
-    return null
+    return nil
 
 
   # finds the first parent that is a menu
@@ -2045,13 +2045,13 @@ class Morph extends MorphicNode
           return scanningMorphs
     return scanningMorphs
 
-    if @parent is null or
+    if !@parent? or
       @parent instanceof WorldMorph
         return @  
     @parent.rootForFocus()
 
   rootForFocus: ->
-    if @parent is null or
+    if !@parent? or
       @parent instanceof WorldMorph
         return @  
     @parent.rootForFocus()
@@ -2113,7 +2113,7 @@ class Morph extends MorphicNode
         origin: @parent
         position: @position().subtract @parent.position()
       )
-    null
+    nil
   
   slideBackTo: (situation, steps = 5) ->
     pos = situation.origin.position().add situation.position
@@ -2150,7 +2150,7 @@ class Morph extends MorphicNode
         world.temporaryHandlesAndLayoutAdjusters.push \
           @addAsSiblingBeforeMe \
             new StackElementsSizeAdjustingMorph(),
-            null,
+            nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
       #console.log "@: " + @.toString() + " amITheLastSibling: " + @amITheLastSibling()
@@ -2159,7 +2159,7 @@ class Morph extends MorphicNode
         world.temporaryHandlesAndLayoutAdjusters.push \
           @addAsSiblingAfterMe \
             new StackElementsSizeAdjustingMorph(),
-            null,
+            nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       if @parent?
         @parent.showResizeAndMoveHandlesAndLayoutAdjusters()
@@ -2304,13 +2304,13 @@ class Morph extends MorphicNode
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
-    menu = new MenuMorph @, false, @, true, true, null
+    menu = new MenuMorph @, false, @, true, true, nil
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
       if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice 0, 50
-        menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", null, null, null, null, null, null, null, true
+        menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
 
     menu
 
@@ -2354,14 +2354,14 @@ class Morph extends MorphicNode
       @,
       "setAlphaScaled",
       (@alpha * 100).toString(),
-      null,
+      nil,
       1,
       100,
       true
 
   createNewStringMorph2WithBackground: ->
-    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
-    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(230, 230, 130), 1
+    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
+    newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2392,14 +2392,14 @@ class Morph extends MorphicNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",null,null,null,null,null,new Color(230, 230, 130), 1)
+      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     newMorph.isEditable = true
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
   createNewStringMorph3WithBackground: ->
-    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(255, 255, 54), 0.5
-    newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",null,null,null,null,null,null,null, new Color(230, 230, 130), 1
+    #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
+    newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
     newMorph.isEditable = true
     world.create newMorph
 
@@ -2425,7 +2425,7 @@ class Morph extends MorphicNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",null,null,null,null,null,new Color(255, 255, 54), 0.5)
+      "nisi.",nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5)
     newMorph.isEditable = true
     #newMorph.maxTextWidth = 300
     world.create newMorph
@@ -2464,7 +2464,7 @@ class Morph extends MorphicNode
     world.morphsToBePinouted.remove b
 
   testMenu: (morphOpeningTheMenu,targetMorph)->
-    menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, null
+    menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, nil
     menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
@@ -2628,7 +2628,7 @@ class Morph extends MorphicNode
     menu
 
   userMenu: ->
-    null  
+    nil  
   
   # Morph menu actions
   calculateAlphaScaled: (alpha) ->
@@ -2736,7 +2736,7 @@ class Morph extends MorphicNode
   newParentChoiceWithHorizLayout: (ignored, theMorphToBeAttached) ->
     # this is what happens when "each" is
     # selected: we attach the selected morph
-    @add theMorphToBeAttached, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add theMorphToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     if @ instanceof ScrollFrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()
@@ -2754,7 +2754,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", null, null, null, null, null, null, null, true
+        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoice", nil, nil, nil, nil, nil, nil, nil, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -2780,7 +2780,7 @@ class Morph extends MorphicNode
     if choicesExcludingParent.length > 0
       menu = new MenuMorph @, false, @, true, true, "choose new parent:"
       choicesExcludingParent.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", null, null, null, null, null, null, null, true
+        menu.addMenuItem each.toString().slice(0, 50), true, each, "newParentChoiceWithHorizLayout", nil, nil, nil, nil, nil, nil, nil, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the
@@ -2892,7 +2892,7 @@ class Morph extends MorphicNode
   # Morph eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
     try
-      result = eval compileFGCode codeSource, true, 1
+      result = eval compileFGCode codeSource, true, 2
       @reLayout()
       
       @changed()
@@ -2908,7 +2908,7 @@ class Morph extends MorphicNode
     data = oImg.getContext("2d").getImageData(1, 1, oImg.width, oImg.height).data
     detect(data, (each) ->
       each isnt 0
-    ) isnt null
+    )?
   
   overlappingImage: (otherMorph) ->
     fb = @fullBounds()
@@ -3051,8 +3051,8 @@ class Morph extends MorphicNode
     #if @checkDesiredDimCache
     #  return @desiredDimCache
 
-    desiredWidth = null
-    desiredHeight = null
+    desiredWidth = nil
+    desiredHeight = nil
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getDesiredDim()
@@ -3084,19 +3084,23 @@ class Morph extends MorphicNode
     #  # the widget
     #  return Math.min @minDimCache, @getRecursiveDesiredDim()
 
-    minWidth = null
-    minHeight = null
+    minWidth = 0
+    minHeight = 0
+    gotAMinWidth = false
+    gotAMinHeight = false
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getMinDim()
+        gotAMinWidth = true
         minWidth += childSize.width()
         if minHeight < childSize.height()
+          gotAMinHeight = true
           minHeight = childSize.height()
 
-    if !minWidth?
+    if !gotAMinWidth
       minWidth = @minWidth
 
-    if !minHeight?
+    if !gotAMinHeight
       minHeight = @minHeight
 
     # TBD the exact shape of @checkMinDimCache
@@ -3118,19 +3122,23 @@ class Morph extends MorphicNode
     #  # the widget
     #  return Math.max @maxDimCache, @getRecursiveDesiredDim()
 
-    maxWidth = null
-    maxHeight = null
+    maxWidth = 0
+    maxHeight = 0
+    gotAMaxWidth = false
+    gotAMaxHeight = false
     for C in @children
       if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
         childSize = C.getMaxDim()
+        gotAMaxWidth = true
         maxWidth += childSize.width()
         if maxHeight < childSize.height()
+          gotAMaxHeight = true
           maxHeight = childSize.height()
 
-    if !maxWidth?
+    if !gotAMaxWidth
       maxWidth = @maxWidth
 
-    if !maxHeight?
+    if !gotAMaxHeight
       maxHeight = @maxHeight
 
     # TBD the exact shape of @checkMaxDimCache
@@ -3255,11 +3263,12 @@ class Morph extends MorphicNode
     else
       maxMargin = max.width() - desired.width()
       totDesWidth = desired.width()
-      maxWidth = null
-      desWidth = null
+      maxWidth = nil
+      desWidth = nil
       extraSpace = newBoundsForThisLayout.width() - desired.width()
       if extraSpace < 0
-        alert "extraSpace is negative"
+        alert "extraSpace is negative: " + extraSpace
+        debugger
       if @parent == world then console.log "case 3 maxMargin: " + maxMargin
 
       if maxMargin > 0
@@ -3267,7 +3276,8 @@ class Morph extends MorphicNode
       else if maxMargin == 0
         ssss = 1
       else
-        alert "maxMargin negative"
+        alert "maxMargin negative: " + maxMargin + " max.width(): " + max.width() + " desired.width(): " + desired.width()
+        debugger
 
       childLeft = newBoundsForThisLayout.left()
       for C in @children
@@ -3300,7 +3310,7 @@ class Morph extends MorphicNode
     if @children.length == 0
       @add \
         new LayoutElementAdderOrDropletMorph(),
-        null,
+        nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @invalidateLayout()
 
@@ -3320,7 +3330,7 @@ class Morph extends MorphicNode
     if @children.length == 0
       @add \
         new LayoutElementAdderOrDropletMorph(),
-        null,
+        nil,
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
     while true
@@ -3347,7 +3357,7 @@ class Morph extends MorphicNode
         break
       leftToDo.addAsSiblingBeforeMe \
             new LayoutElementAdderOrDropletMorph(),
-            null,
+            nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
     # this code is duplicate of the one above and is only needed for
@@ -3377,7 +3387,7 @@ class Morph extends MorphicNode
         break
       leftToDo.addAsSiblingAfterMe \
             new LayoutElementAdderOrDropletMorph(),
-            null,
+            nil,
             LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
 
@@ -3400,9 +3410,9 @@ class Morph extends MorphicNode
     lmAdj = new StackElementsSizeAdjustingMorph()
     lmContent2 = new RectangleMorph()
 
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3422,9 +3432,9 @@ class Morph extends MorphicNode
     lmAdj = new StackElementsSizeAdjustingMorph()
     lmContent2 = new RectangleMorph()
 
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3445,10 +3455,10 @@ class Morph extends MorphicNode
     lmContent2 = new RectangleMorph()
     lmContent3 = new RectangleMorph()
 
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3472,11 +3482,11 @@ class Morph extends MorphicNode
     lmAdj2 = new StackElementsSizeAdjustingMorph()
     lmContent3 = new RectangleMorph()
 
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3505,15 +3515,15 @@ class Morph extends MorphicNode
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph()
 
-    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3542,15 +3552,15 @@ class Morph extends MorphicNode
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
-    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3579,15 +3589,15 @@ class Morph extends MorphicNode
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
-    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255
@@ -3616,15 +3626,15 @@ class Morph extends MorphicNode
     lmAdj4 = new StackElementsSizeAdjustingMorph()
     lmSpacer2 = new LayoutSpacerMorph 2
 
-    lmHolder.add lmSpacer1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmAdj4, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    lmHolder.add lmSpacer2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmAdj4, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    lmHolder.add lmSpacer2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     lmContent1.setColor new Color 0, 255, 0
     lmContent2.setColor new Color 0, 0, 255

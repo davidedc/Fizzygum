@@ -47,7 +47,7 @@ window.ifFunctional = ifFunctional if window?
 
 class CodePreprocessor
 
-  testCases: null
+  testCases: nil
 
   # We separate Commands from Expressions here.
   # Expressions return a value that is potentially
@@ -929,7 +929,7 @@ class CodePreprocessor
     code = code.replace(rx, "($1♠)")
 
     rx = RegExp("<[\\s]*(("+allFunctionsRegex+")[^\\r\\n]*?)>",'gm')
-    code = code.replace(rx, "((parametersForBracketedFunctions)->($1, -> (if parametersForBracketedFunctions? then parametersForBracketedFunctions() else null)))")
+    code = code.replace(rx, "((parametersForBracketedFunctions)->($1, -> (if parametersForBracketedFunctions? then parametersForBracketedFunctions() else nil)))")
 
     code = code.replace(/→/g, "->")
 
@@ -1868,7 +1868,7 @@ class CodePreprocessor
           appendString = 's'
           prependString = 't'
 
-          [mootInput, ignore, errorMoot] = @stripCommentsAndStrings(testCase.input,null)
+          [mootInput, ignore, errorMoot] = @stripCommentsAndStrings(testCase.input,nil)
           [mootInput, ignore, errorMoot] = @beautifyCode(mootInput,errorMoot)
 
           if !errorMoot?
@@ -1876,16 +1876,16 @@ class CodePreprocessor
             mootInputAppend = mootInput.replace(rx, "$2"+appendString+"$3")
             mootInputPrepend = mootInput.replace(rx, prependString+"$2$3")
 
-            mootInputAppend = @normaliseCode(mootInputAppend,null)[0]
+            mootInputAppend = @normaliseCode(mootInputAppend,nil)[0]
             [transformedMootAppend, errorMootAppend,] = @preprocess(mootInputAppend)
-            mootInputPrepend = @normaliseCode(mootInputPrepend,null)[0]
+            mootInputPrepend = @normaliseCode(mootInputPrepend,nil)[0]
             [transformedMootPrepend, errorMootPrepend,] = @preprocess(mootInputPrepend)            
 
           if !errorMootAppend?
             if userDefinedFunctions != ""
               rx = RegExp("("+userDefinedFunctions+")"+appendString+"\\(\\)",'gm');
               transformedMootAppend = transformedMootAppend.replace(rx, "$1"+appendString)
-            transformedMootAppend = @stripCommentsAndStrings(transformedMootAppend,null)[0]
+            transformedMootAppend = @stripCommentsAndStrings(transformedMootAppend,nil)[0]
             if mootInputAppend != transformedMootAppend
               failedMootAppends++
               console.log "unexpected transformation"
@@ -1896,7 +1896,7 @@ class CodePreprocessor
             if userDefinedFunctions != ""
               rx = RegExp(prependString+"("+userDefinedFunctions+")\\(\\)",'gm');
               transformedMootPrepend = transformedMootPrepend.replace(rx, prependString+"$1")            
-            transformedMootPrepend = @stripCommentsAndStrings(transformedMootPrepend,null)[0]
+            transformedMootPrepend = @stripCommentsAndStrings(transformedMootPrepend,nil)[0]
             if mootInputPrepend != transformedMootPrepend
               failedMootPrepends++
               console.log "unexpected transformation"

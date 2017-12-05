@@ -10,9 +10,9 @@
 ###
 
 class LCLCodeCompiler
-  currentCodeString: null
-  codePreprocessor: null
-  lastCorrectOutput: null
+  currentCodeString: nil
+  codePreprocessor: nil
+  lastCorrectOutput: nil
 
   whitespaceCheck: /^\s*$/
 

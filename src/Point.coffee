@@ -12,8 +12,8 @@ class Point
 
   @augmentWith DeepCopierMixin
 
-  x: null
-  y: null
+  x: nil
+  y: nil
    
   constructor: (@x = 0, @y = 0) ->
 
@@ -79,8 +79,7 @@ class Point
   
   min: (aPoint) ->
     @debugIfFloats()
-    new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)
-  
+    new @constructor Math.min(@x, aPoint.x), Math.min(@y, aPoint.y)  
   
   # Point conversion:
   round: ->

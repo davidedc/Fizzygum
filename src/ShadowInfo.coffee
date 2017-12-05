@@ -9,7 +9,7 @@ class ShadowInfo
 
   @augmentWith DeepCopierMixin
 
-  offset: null
+  offset: nil
   alpha: 0
 
   # alpha should be between zero (transparent)

@@ -5,13 +5,13 @@ class ReconfigurablePaintMorph extends WindowMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  mainCanvas: null
-  overlayCanvas: null
-  pencilToolButton: null
-  brushToolButton: null
-  toothpasteToolButton: null
-  eraserToolButton: null
-  radioButtonsHolderMorph: null
+  mainCanvas: nil
+  overlayCanvas: nil
+  pencilToolButton: nil
+  brushToolButton: nil
+  toothpasteToolButton: nil
+  eraserToolButton: nil
+  radioButtonsHolderMorph: nil
 
   constructor: (@target) ->
     super "Fizzypaint"
@@ -317,7 +317,7 @@ class ReconfigurablePaintMorph extends WindowMorph
         # from outside the canvas
         initialiseQueueIfNeeded = ->
             if !@queue?
-                @queue = [0..24].map -> null
+                @queue = [0..24].map -> nil
             console.log "resetting the queue"
 
         mouseUpLeft = ->
@@ -463,7 +463,7 @@ class ReconfigurablePaintMorph extends WindowMorph
     @layoutSubmorphs()
 
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of the reconf paint morph"
 

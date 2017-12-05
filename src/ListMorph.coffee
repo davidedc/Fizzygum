@@ -5,15 +5,15 @@ class ListMorph extends ScrollFrameMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
   
-  elements: null
-  labelGetter: null
-  format: null
-  listContents: null # a MenuMorph with the contents of the list
-  selected: null # actual element currently selected
-  active: null # menu item representing the selected element
-  action: null
-  target: null
-  doubleClickAction: null
+  elements: nil
+  labelGetter: nil
+  format: nil
+  listContents: nil # a MenuMorph with the contents of the list
+  selected: nil # actual element currently selected
+  active: nil # menu item representing the selected element
+  action: nil
+  target: nil
+  doubleClickAction: nil
 
   constructor: (
     @target,
@@ -26,7 +26,7 @@ class ListMorph extends ScrollFrameMorph
     ,
 
     @format = [],
-    @doubleClickAction = null
+    @doubleClickAction = nil
     ) ->
     #
     #    passing a format is optional. If the format parameter is specified
@@ -54,22 +54,22 @@ class ListMorph extends ScrollFrameMorph
     @color = new Color 255, 255, 255
     @buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
-    # instead of null because the scrollbars (inherited from scrollframe)
+    # instead of nil because the scrollbars (inherited from scrollframe)
     # need the step function to react to mouse floatDrag.
   
   # builds the list contents
   buildAndConnectChildren: ->
     if @listContents
       @listContents = @listContents.destroy()
-    @listContents = new MenuMorph @, true, @, false, false, null, null
+    @listContents = new MenuMorph @, true, @, false, false, nil, nil
     @elements = ["(empty)"]  if !@elements.length
     trackChanges.push false
     @elements.forEach (element) =>
-      color = null
+      color = nil
       bold = false
       italic = false
       @format.forEach (pair) ->
-        if pair[1].call null, element
+        if pair[1].call nil, element
           switch pair[0]
             when 'bold'
               bold = true
@@ -92,7 +92,7 @@ class ListMorph extends ScrollFrameMorph
         true,
         @, # target
         "select", # action
-        null, # hint
+        nil, # hint
         color, # color
         bold, # bold
         italic, # italic

@@ -10,10 +10,10 @@ class PointerMorph extends BoxMorph
   namedClasses[@name] = @prototype
 
   # panes:
-  scrollFrame: null
-  buttonClose: null
-  resizer: null
-  underTheCarpetMorph: null
+  scrollFrame: nil
+  buttonClose: nil
+  resizer: nil
+  underTheCarpetMorph: nil
 
   constructor: (@target) ->
     super()
@@ -24,14 +24,14 @@ class PointerMorph extends BoxMorph
     lmContent1 = new CollapsedStateIconMorph()
     lmContent2 = new StringMorph2(
       @target.toString(),
-      null, #@originallySetFontSize,
-      null, #@fontStyle,
-      null, #@isBold,
-      null, #@isItalic,
+      nil, #@originallySetFontSize,
+      nil, #@fontStyle,
+      nil, #@isBold,
+      nil, #@isItalic,
       false, # isNumeric
-      null, #color,
+      nil, #color,
       new Color 255, 255, 255, #@backgroundColor,
-      null, #@backgroundTransparency
+      nil, #@backgroundTransparency
     )
     # override inherited properties:
     lmContent2.noticesTransparentClick = true
@@ -43,9 +43,9 @@ class PointerMorph extends BoxMorph
 
     lmContent3 = new CloseIconButtonMorph @
 
-    @add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @add lmContent3, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add lmContent3, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     #lmContent1.setColor new Color 0, 255, 0
     #lmContent2.setColor new Color 0, 0, 255

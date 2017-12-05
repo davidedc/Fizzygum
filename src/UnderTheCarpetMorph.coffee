@@ -6,9 +6,9 @@ class UnderTheCarpetMorph extends BoxMorph
   namedClasses[@name] = @prototype
 
   # panes:
-  scrollFrame: null
-  buttonClose: null
-  resizer: null
+  scrollFrame: nil
+  buttonClose: nil
+  resizer: nil
 
   constructor: (target) ->
     super()
@@ -20,7 +20,7 @@ class UnderTheCarpetMorph extends BoxMorph
   
   setTarget: (target) ->
     @target = target
-    @currentProperty = null
+    @currentProperty = nil
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->

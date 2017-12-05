@@ -2,14 +2,14 @@
 
 class Klass
   @allKlasses: []
-  propertiesSources: null
-  staticPropertiesSources: null
+  propertiesSources: nil
+  staticPropertiesSources: nil
   name: ""
-  superClassName: null
-  augmentedWith: null
-  superKlass: null
-  subKlasses: null
-  instances: null
+  superClassName: nil
+  augmentedWith: nil
+  superKlass: nil
+  subKlasses: nil
+  instances: nil
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
@@ -114,7 +114,7 @@ class Klass
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
     regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*): ([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*):)/gm
-    lastField = null
+    lastField = nil
     while (m = regex.exec(sourceWithoutComments))?
         if (m.index == regex.lastIndex)
             regex.lastIndex++
@@ -155,7 +155,7 @@ class Klass
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS: " + constructorDeclaration
 
-      compiled = compileFGCode constructorDeclaration, true, 1
+      compiled = compileFGCode constructorDeclaration, true, 2
 
       constructorDeclaration = "window." + @name + " = " + compiled
       constructorDeclaration = @_removeHelperFunctions constructorDeclaration
@@ -202,7 +202,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true, 1
+        compiled = compileFGCode fieldDeclaration, true, 2
 
         fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
@@ -219,7 +219,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true, 1
+        compiled = compileFGCode fieldDeclaration, true, 2
 
         fieldDeclaration = "window." + @name + "." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration

@@ -2,15 +2,15 @@
 
 
 class AutomatorCommandMouseMove extends AutomatorCommand
-  mouseX: null
-  mouseY: null
-  floatDraggingSomething: null
-  button: null
-  buttons: null
-  ctrlKey: null
-  shiftKey: null
-  altKey: null
-  metaKey: null
+  mouseX: nil
+  mouseY: nil
+  floatDraggingSomething: nil
+  button: nil
+  buttons: nil
+  ctrlKey: nil
+  shiftKey: nil
+  altKey: nil
+  metaKey: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     automatorRecorderAndPlayer.handMorph.processMouseMove \

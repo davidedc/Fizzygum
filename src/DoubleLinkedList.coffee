@@ -3,7 +3,7 @@
 
 class DoubleLinkedList
   constructor:  ->
-    @headNode = @tailNode = null
+    @headNode = @tailNode = nil
 
   # removes the last element. Since
   # we move used elements to head, the last
@@ -33,4 +33,4 @@ class DoubleLinkedList
     @insertBeginning node
 
   clear: ->
-    @headNode = @tailNode = null
+    @headNode = @tailNode = nil

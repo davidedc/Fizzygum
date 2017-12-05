@@ -9,7 +9,7 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
   namedClasses[@name] = @prototype
 
   codeToBeInjected: ""
-  morphWhereToInject: null
+  morphWhereToInject: nil
 
   constructor: (@morphWhereToInject, face) ->
     super true, @, 'injectCodeIntoTarget', face

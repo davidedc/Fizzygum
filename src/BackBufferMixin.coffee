@@ -43,8 +43,8 @@ BackBufferMixin =
       # morph with all of the submorphs. I.e. for an inspector, this will only
       # contain the background of the window pane. Not any of its contents.
       # for the worldMorph, this only contains the background
-      backBuffer: null
-      backBufferContext: null
+      backBuffer: nil
+      backBufferContext: nil
 
       # just a flag to indicate that the
       # backBufferContext value can be derived from others
@@ -101,17 +101,17 @@ BackBufferMixin =
         @justBeforeBeingPainted?()
 
         if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-          return null
+          return nil
 
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
 
         if !@backBuffer?
-          return null
+          return nil
 
         [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
         if area.isNotEmpty()
           if w < 1 or h < 1
-            return null
+            return nil
 
           aContext.save()
 

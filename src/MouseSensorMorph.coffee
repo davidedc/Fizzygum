@@ -34,7 +34,7 @@ class MouseSensorMorph extends BoxMorph
           @alpha = @alpha - @downStep
         else
           @alpha = 0
-          @step = null
+          @step = nil
           world.removeSteppingMorph @
         @changed()
       world.addSteppingMorph @

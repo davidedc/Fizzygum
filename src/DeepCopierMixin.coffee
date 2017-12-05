@@ -48,7 +48,7 @@ DeepCopierMixin =
             #if property == "backBufferContext"
             #  debugger
             if !@[property]?
-              cloneOfMe[property] = null
+              cloneOfMe[property] = nil
             else if typeof @[property] == 'object'
               # if the value can be rebuilt after the cloning
               # then skip it, otherwise clone it. We know when
@@ -56,7 +56,7 @@ DeepCopierMixin =
               # rebuildDerivedValue method to be used to
               # rebuild it
               if @[property].rebuildDerivedValue?
-                cloneOfMe[property] = null
+                cloneOfMe[property] = nil
               else
                 if !@[property].deepCopy? then debugger
                 cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure

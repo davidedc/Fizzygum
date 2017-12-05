@@ -17,16 +17,16 @@ class WorldMorph extends FrameMorph
   # the event listeners so we are
   # going to put them all in properties
   # here.
-  # dblclickEventListener: null
-  mousedownEventListener: null
-  touchstartEventListener: null
-  mouseupEventListener: null
-  touchendEventListener: null
-  mousemoveEventListener: null
-  touchmoveEventListener: null
-  gesturestartEventListener: null
-  gesturechangeEventListener: null
-  contextmenuEventListener: null
+  # dblclickEventListener: nil
+  mousedownEventListener: nil
+  touchstartEventListener: nil
+  mouseupEventListener: nil
+  touchendEventListener: nil
+  mousemoveEventListener: nil
+  touchmoveEventListener: nil
+  gesturestartEventListener: nil
+  gesturechangeEventListener: nil
+  contextmenuEventListener: nil
   # Note how there can be two handlers for
   # keyboard events.
   # This one is attached
@@ -36,15 +36,15 @@ class WorldMorph extends FrameMorph
   # handler. See "initVirtualKeyboard"
   # method to see where and when this input and
   # these handlers are set up.
-  keydownEventListener: null
-  keyupEventListener: null
-  keypressEventListener: null
-  mousewheelEventListener: null
-  DOMMouseScrollEventListener: null
-  copyEventListener: null
-  pasteEventListener: null
-  clipboardTextIfTestRunning: null
-  errorConsole: null
+  keydownEventListener: nil
+  keyupEventListener: nil
+  keypressEventListener: nil
+  mousewheelEventListener: nil
+  DOMMouseScrollEventListener: nil
+  copyEventListener: nil
+  pasteEventListener: nil
+  clipboardTextIfTestRunning: nil
+  errorConsole: nil
 
   # the string for the last serialised morph
   # is kept in here, to make serialization
@@ -58,50 +58,50 @@ class WorldMorph extends FrameMorph
   # attached to a hidden
   # "input" div which keeps track of the
   # text that is being input.
-  inputDOMElementForVirtualKeyboardKeydownEventListener: null
-  inputDOMElementForVirtualKeyboardKeyupEventListener: null
-  inputDOMElementForVirtualKeyboardKeypressEventListener: null
+  inputDOMElementForVirtualKeyboardKeydownEventListener: nil
+  inputDOMElementForVirtualKeyboardKeyupEventListener: nil
+  inputDOMElementForVirtualKeyboardKeypressEventListener: nil
 
-  keyComboResetWorldEventListener: null
-  keyComboTurnOnAnimationsPacingControl: null
-  keyComboTurnOffAnimationsPacingControl: null
-  keyComboTakeScreenshotEventListener: null
-  keyComboStopTestRecordingEventListener: null
-  keyComboTakeScreenshotEventListener: null
-  keyComboCheckStringsOfItemsInMenuOrderImportant: null
-  keyComboCheckStringsOfItemsInMenuOrderUnimportant: null
-  keyComboAddTestCommentEventListener: null
-  keyComboCheckNumberOfMenuItemsEventListener: null
+  keyComboResetWorldEventListener: nil
+  keyComboTurnOnAnimationsPacingControl: nil
+  keyComboTurnOffAnimationsPacingControl: nil
+  keyComboTakeScreenshotEventListener: nil
+  keyComboStopTestRecordingEventListener: nil
+  keyComboTakeScreenshotEventListener: nil
+  keyComboCheckStringsOfItemsInMenuOrderImportant: nil
+  keyComboCheckStringsOfItemsInMenuOrderUnimportant: nil
+  keyComboAddTestCommentEventListener: nil
+  keyComboCheckNumberOfMenuItemsEventListener: nil
 
-  dragoverEventListener: null
-  dropEventListener: null
-  resizeEventListener: null
+  dragoverEventListener: nil
+  dropEventListener: nil
+  resizeEventListener: nil
   otherTasksToBeRunOnStep: []
 
   # these variables shouldn't be static to the WorldMorph, because
   # in pure theory you could have multiple worlds in the same
   # page with different settings
   # (but anyways, it was global before, so it's not any worse than before)
-  @preferencesAndSettings: null
-  @currentTime: null
+  @preferencesAndSettings: nil
+  @currentTime: nil
   showRedraws: false
   doubleCheckCachedMethodsResults: false
-  automatorRecorderAndPlayer: null
+  automatorRecorderAndPlayer: nil
 
   # this is the actual reference to the canvas
   # on the html page, where the world is
   # finally painted to.
-  worldCanvas: null
-  worldCanvasContext: null
+  worldCanvas: nil
+  worldCanvasContext: nil
 
-  canvasForTextMeasurements: null
-  canvasContextForTextMeasurements: null
-  cacheForTextMeasurements: null
-  cacheForTextParagraphSplits: null
-  cacheForParagraphsWordsSplits: null
-  cacheForParagraphsWrappingData: null
-  cacheForTextWrappingData: null
-  cacheForTextBreakingIntoLinesTopLevel: null
+  canvasForTextMeasurements: nil
+  canvasContextForTextMeasurements: nil
+  cacheForTextMeasurements: nil
+  cacheForTextParagraphSplits: nil
+  cacheForParagraphsWordsSplits: nil
+  cacheForParagraphsWrappingData: nil
+  cacheForTextWrappingData: nil
+  cacheForTextBreakingIntoLinesTopLevel: nil
 
   # By default the world will always fill
   # the entire page, also when browser window
@@ -152,8 +152,8 @@ class WorldMorph extends FrameMorph
   @numberOfCollapseFlagsChanges: 0
   @numberOfRawMovesAndResizes: 0
 
-  broken: null
-  duplicatedBrokenRectsTracker: null
+  broken: nil
+  duplicatedBrokenRectsTracker: nil
   numberOfDuplicatedBrokenRects: 0
   numberOfMergedSourceAndDestination: 0
 
@@ -167,7 +167,7 @@ class WorldMorph extends FrameMorph
 
   steppingMorphs: []
 
-  underTheCarpetMorph: null
+  underTheCarpetMorph: nil
 
   # since the shadow is just a "rendering" effect
   # there is no morph for it, we need to just clean up
@@ -233,7 +233,7 @@ class WorldMorph extends FrameMorph
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     #console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color 205, 205, 205 # (130, 130, 130)
-    @strokeColor = null
+    @strokeColor = nil
 
     @alpha = 1
 
@@ -241,11 +241,11 @@ class WorldMorph extends FrameMorph
     @stamp = Date.now() # reference in multi-world setups
     @isDevMode = false
     @hand = new HandMorph @
-    @keyboardEventsReceiver = null
-    @lastEditedText = null
-    @caret = null
+    @keyboardEventsReceiver = nil
+    @lastEditedText = nil
+    @caret = nil
     @temporaryHandlesAndLayoutAdjusters = []
-    @inputDOMElementForVirtualKeyboard = null
+    @inputDOMElementForVirtualKeyboard = nil
 
     if @automaticallyAdjustToFillEntireBrowserAlsoOnResize and !window.location.href.contains "worldWithSystemTestHarness"
       @stretchWorldToFillEntirePage()
@@ -337,7 +337,7 @@ class WorldMorph extends FrameMorph
       Right-click on the desktop to try more widgets!
       """
 
-      welcomeBody = new TextMorph2 welcomeMessage,null,null,null,null,null,null,null
+      welcomeBody = new TextMorph2 welcomeMessage,nil,nil,nil,nil,nil,nil,nil
       welcomeBody.isEditable = true
       @add welcomeBody
       welcomeBody.fullRawMoveTo new Point 37, 80
@@ -416,7 +416,7 @@ class WorldMorph extends FrameMorph
     return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
 
   mostRecentlyCreatedMenu: ->
-    mostRecentMenu = null
+    mostRecentMenu = nil
     mostRecentMenuID = -1
 
     # we have to check which menus
@@ -534,28 +534,28 @@ class WorldMorph extends FrameMorph
           debugger
         if @broken[brokenMorphAncestor.srcBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenMorph.srcBrokenRect] = null
-            brokenMorph.srcBrokenRect = null
+            @broken[brokenMorph.srcBrokenRect] = nil
+            brokenMorph.srcBrokenRect = nil
           else
-            @broken[brokenMorph.dstBrokenRect] = null
-            brokenMorph.dstBrokenRect = null
+            @broken[brokenMorph.dstBrokenRect] = nil
+            brokenMorph.dstBrokenRect = nil
         else if aRect.containsRectangle @broken[brokenMorphAncestor.srcBrokenRect]
-          @broken[brokenMorphAncestor.srcBrokenRect] = null
-          brokenMorphAncestor.srcBrokenRect = null
+          @broken[brokenMorphAncestor.srcBrokenRect] = nil
+          brokenMorphAncestor.srcBrokenRect = nil
 
       if brokenMorphAncestor.dstBrokenRect?
         if !@broken[brokenMorphAncestor.dstBrokenRect]?
           debugger
         if @broken[brokenMorphAncestor.dstBrokenRect].containsRectangle aRect
           if isSrc
-            @broken[brokenMorph.srcBrokenRect] = null
-            brokenMorph.srcBrokenRect = null
+            @broken[brokenMorph.srcBrokenRect] = nil
+            brokenMorph.srcBrokenRect = nil
           else
-            @broken[brokenMorph.dstBrokenRect] = null
-            brokenMorph.dstBrokenRect = null
+            @broken[brokenMorph.dstBrokenRect] = nil
+            brokenMorph.dstBrokenRect = nil
         else if aRect.containsRectangle @broken[brokenMorphAncestor.dstBrokenRect]
-          @broken[brokenMorphAncestor.dstBrokenRect] = null
-          brokenMorphAncestor.dstBrokenRect = null      
+          @broken[brokenMorphAncestor.dstBrokenRect] = nil
+          brokenMorphAncestor.dstBrokenRect = nil      
 
 
   rectAlreadyIncludedInParentBrokenMorph: ->
@@ -577,19 +577,19 @@ class WorldMorph extends FrameMorph
 
   cleanupSrcAndDestRectsOfMorphs: ->
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
-      brokenMorph.srcBrokenRect = null
-      brokenMorph.dstBrokenRect = null
+      brokenMorph.srcBrokenRect = nil
+      brokenMorph.dstBrokenRect = nil
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
-      brokenMorph.srcBrokenRect = null
-      brokenMorph.dstBrokenRect = null
+      brokenMorph.srcBrokenRect = nil
+      brokenMorph.dstBrokenRect = nil
 
 
   fleshOutBroken: ->
     #if window.morphsThatMaybeChangedGeometryOrPosition.length > 0
     #  debugger
 
-    sourceBroken = null
-    destinationBroken = null
+    sourceBroken = nil
+    destinationBroken = nil
 
 
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
@@ -631,7 +631,7 @@ class WorldMorph extends FrameMorph
           @pushBrokenRect brokenMorph, destinationBroken, true
 
       brokenMorph.geometryOrPositionPossiblyChanged = false
-      brokenMorph.clippedBoundsWhenLastPainted = null
+      brokenMorph.clippedBoundsWhenLastPainted = nil
 
     
 
@@ -639,8 +639,8 @@ class WorldMorph extends FrameMorph
     #if window.morphsThatMaybeChangedFullGeometryOrPosition.length > 0
     #  debugger
 
-    sourceBroken = null
-    destinationBroken = null
+    sourceBroken = nil
+    destinationBroken = nil
 
     for brokenMorph in window.morphsThatMaybeChangedFullGeometryOrPosition
 
@@ -673,7 +673,7 @@ class WorldMorph extends FrameMorph
           @pushBrokenRect brokenMorph, destinationBroken, true
 
       brokenMorph.fullGeometryOrPositionPossiblyChanged = false
-      brokenMorph.fullClippedBoundsWhenLastPainted = null
+      brokenMorph.fullClippedBoundsWhenLastPainted = nil
 
 
   showBrokenRects: (aContext) ->
@@ -809,7 +809,7 @@ class WorldMorph extends FrameMorph
       else
         @currentPinoutingMorphs.remove eachPinoutingMorph
         @morphsBeingPinouted.remove eachPinoutingMorph.morphThisMorphIsPinouting
-        eachPinoutingMorph.morphThisMorphIsPinouting = null
+        eachPinoutingMorph.morphThisMorphIsPinouting = nil
         eachPinoutingMorph.destroy()
 
     for eachMorphNeedingPinout in @morphsToBePinouted.slice()
@@ -832,7 +832,7 @@ class WorldMorph extends FrameMorph
       else
         @currentHighlightingMorphs.remove eachHighlightingMorph
         @morphsBeingHighlighted.remove eachHighlightingMorph.morphThisMorphIsHighlighting
-        eachHighlightingMorph.morphThisMorphIsHighlighting = null
+        eachHighlightingMorph.morphThisMorphIsHighlighting = nil
         eachHighlightingMorph.destroy()
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
@@ -1005,7 +1005,7 @@ class WorldMorph extends FrameMorph
         eachSteppingMorph.lastTime = WorldMorph.currentTime
         if eachSteppingMorph.onNextStep
           nxt = eachSteppingMorph.onNextStep
-          eachSteppingMorph.onNextStep = null
+          eachSteppingMorph.onNextStep = nil
           nxt.call eachSteppingMorph
         if !eachSteppingMorph.step?
           debugger
@@ -1065,7 +1065,7 @@ class WorldMorph extends FrameMorph
   initVirtualKeyboard: ->
     if @inputDOMElementForVirtualKeyboard
       document.body.removeChild @inputDOMElementForVirtualKeyboard
-      @inputDOMElementForVirtualKeyboard = null
+      @inputDOMElementForVirtualKeyboard = nil
     unless (WorldMorph.preferencesAndSettings.isTouchDevice and WorldMorph.preferencesAndSettings.useVirtualKeyboard)
       return
     @inputDOMElementForVirtualKeyboard = document.createElement "input"
@@ -1179,7 +1179,7 @@ class WorldMorph extends FrameMorph
     else if event.which isnt 0 and event.charCode isnt 0
       String.fromCharCode event.which # the rest
     else
-      null # special key
+      nil # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
@@ -1227,19 +1227,19 @@ class WorldMorph extends FrameMorph
     # good alternatives.
     if event?
       # don't manage external keypad if we are playing back
-      # the tests (i.e. when event is null)
+      # the tests (i.e. when event is nil)
       if symbol == @constructor.KEYPAD_0_mappedToThaiKeyboard_Q
         unless @doublePressOfZeroKeypadKey?
           @doublePressOfZeroKeypadKey = 1
           setTimeout (=>
             if @doublePressOfZeroKeypadKey is 1
               console.log "single keypress"
-            @doublePressOfZeroKeypadKey = null
+            @doublePressOfZeroKeypadKey = nil
             event.keyCode = 0
             return false
           ), 300
         else
-          @doublePressOfZeroKeypadKey = null
+          @doublePressOfZeroKeypadKey = nil
           console.log "double keypress"
           event.keyCode = 0
         return false
@@ -1417,7 +1417,7 @@ class WorldMorph extends FrameMorph
     # commands. The only added complexity is about
     # the "00" key of such keypads - see
     # note below.
-    doublePressOfZeroKeypadKey: null
+    doublePressOfZeroKeypadKey: nil
     
     @keypressEventListener = (event) =>
       @events.push "keypressEventListener"
@@ -1584,7 +1584,7 @@ class WorldMorph extends FrameMorph
     
     @resizeEventListener = =>
       @events.push "resizeEventListener"
-      @events.push null
+      @events.push nil
 
     # this is a DOM thing, little to do with other r e s i z e methods
     window.addEventListener "resize", @resizeEventListener, false
@@ -1625,10 +1625,10 @@ class WorldMorph extends FrameMorph
     noOperation
       
   droppedImage: ->
-    null
+    nil
 
   droppedSVG: ->
-    null  
+    nil  
 
   # WorldMorph text field tabbing:
   nextTab: (editField) ->
@@ -1652,7 +1652,7 @@ class WorldMorph extends FrameMorph
     @hand.drop()
     @changed() # redraw the whole screen
     @hand.mouseOverList = []
-    @hand.nonFloatDraggedMorph = null
+    @hand.nonFloatDraggedMorph = nil
     @fullDestroyChildren()
     # some tests might change the background
     # color of the world so let's reset it.
@@ -1953,7 +1953,7 @@ class WorldMorph extends FrameMorph
   edit: (aStringMorphOrTextMorph) ->
     # first off, if the Morph is not editable
     # then there is nothing to do
-    # return null  unless aStringMorphOrTextMorph.isEditable
+    # return nil  unless aStringMorphOrTextMorph.isEditable
 
     # there is only one caret in the World, so destroy
     # the previous one if there was one.
@@ -2001,10 +2001,10 @@ class WorldMorph extends FrameMorph
 
     # the only place where the @keyboardEventsReceiver is unset
     # (and the hidden input is removed)
-    @keyboardEventsReceiver = null
+    @keyboardEventsReceiver = nil
     if @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard.blur()
       document.body.removeChild @inputDOMElementForVirtualKeyboard
-      @inputDOMElementForVirtualKeyboard = null
+      @inputDOMElementForVirtualKeyboard = nil
     @worldCanvas.focus()
     

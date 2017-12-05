@@ -6,9 +6,9 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
   namedClasses[@name] = @prototype
 
   # panes:
-  scrollFrame: null
-  buttonClose: null
-  resizer: null
+  scrollFrame: nil
+  buttonClose: nil
+  resizer: nil
 
   constructor: (target) ->
     super()
@@ -19,8 +19,8 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
     lmContent1 = new UnderCarpetIconMorph()
     lmContent2 = new TextMorph2 "under the carpet"
 
-    @add lmContent1, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    @add lmContent2, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    @add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     
     #lmContent1.setColor new Color 0, 255, 0
     #lmContent2.setColor new Color 0, 0, 255

@@ -15,22 +15,22 @@ class SystemTestsControlPanelUpdater
   # This requires tweaking the css of the canvas
   # as well.
 
-  SystemTestsControlPanelDiv: null
-  @SystemTestsControlPanelOutputConsoleDiv: null
+  SystemTestsControlPanelDiv: nil
+  @SystemTestsControlPanelOutputConsoleDiv: nil
 
-  @resetWorldLink: null
-  @tieAnimations: null
-  @alignMorphIDs: null
-  @hideGeometry: null
-  @hideMorphContentExtracts: null
-  @hideMorphIDs: null
-  @takeScreenshot: null
-  @checkNumnberOfItems: null
-  @checkMenuEntriesInOrder: null
-  @checkMenuEntriesNotInOrder: null
-  @addTestComment: null
-  @evaluateString: null
-  @stopTestRec: null
+  @resetWorldLink: nil
+  @tieAnimations: nil
+  @alignMorphIDs: nil
+  @hideGeometry: nil
+  @hideMorphContentExtracts: nil
+  @hideMorphIDs: nil
+  @takeScreenshot: nil
+  @checkNumnberOfItems: nil
+  @checkMenuEntriesInOrder: nil
+  @checkMenuEntriesNotInOrder: nil
+  @addTestComment: nil
+  @evaluateString: nil
+  @stopTestRec: nil
 
   @highlightOnLink: (theElementName) ->
     theElement = document.getElementById(theElementName + "On")

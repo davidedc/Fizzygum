@@ -12,13 +12,13 @@ class TextMorph extends StringMorph
   words: []
   lines: []
   lineSlots: []
-  alignment: null
-  maxTextWidth: null
+  alignment: nil
+  maxTextWidth: nil
   maxLineWidth: 0
-  backgroundColor: null
+  backgroundColor: nil
 
   #additional properties for ad-hoc evaluation:
-  receiver: null
+  receiver: nil
 
   constructor: (
     @text = (if text is "" then text else "TextMorph"),
@@ -30,7 +30,7 @@ class TextMorph extends StringMorph
     @maxTextWidth = 0,
     @fontName = "",
     @shadowOffset = (new Point 0, 0),
-    @shadowColor = null
+    @shadowColor = nil
     ) ->
 
       super \
@@ -39,10 +39,10 @@ class TextMorph extends StringMorph
         @fontStyle,
         @isBold,
         @isItalic,
-        null,
+        nil,
         @shadowOffset,
         @shadowColor,
-        null,
+        nil,
         @fontName
       # override inherited properties:
       @markedTextColor = new Color 255, 255, 255

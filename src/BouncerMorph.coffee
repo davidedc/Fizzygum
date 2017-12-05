@@ -9,9 +9,9 @@ class BouncerMorph extends Morph
   namedClasses[@name] = @prototype
 
   isStopped: false
-  type: null
-  direction: null
-  speed: null
+  type: nil
+  direction: nil
+  speed: nil
 
   constructor: (@type = "vertical", @speed = 1) ->
     super()

@@ -23,10 +23,10 @@ class MenusHelper
     reconfPaint.setExtent new Point 460, 400
 
   createSimpleButton: ->
-    world.create new SimpleRectangularButtonMorph true, @, null, new IconMorph(null)
+    world.create new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
 
   createSwitchButtonMorph: ->
-    button1 = new SimpleRectangularButtonMorph true, @, null, new IconMorph(null)
-    button2 = new SimpleRectangularButtonMorph true, @, null, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
+    button1 = new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
+    button2 = new SimpleRectangularButtonMorph true, @, nil, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 

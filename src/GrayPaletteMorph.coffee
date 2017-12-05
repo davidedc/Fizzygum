@@ -5,7 +5,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  constructor: (@target = null, sizePoint) ->
+  constructor: (@target = nil, sizePoint) ->
     super @target, sizePoint or new Point 80, 10
   
   # no changes of position or extent should be

@@ -5,50 +5,50 @@ class InspectorMorph2 extends WindowMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  target: null
-  currentProperty: null
+  target: nil
+  currentProperty: nil
   showing: "attributes"
   markOwnershipOfProperties: true
   # panes:
-  list: null
-  detail: null
+  list: nil
+  detail: nil
 
-  classesButtons: null
-  classesNames: null
-  angledArrows: null
-  hierarchyHeaderString: null
-  propertyHeaderString: null
+  classesButtons: nil
+  classesNames: nil
+  angledArrows: nil
+  hierarchyHeaderString: nil
+  propertyHeaderString: nil
 
-  showMethodsOnButton: null
-  showMethodsOffButton: null
-  showMethodsToggle: null
+  showMethodsOnButton: nil
+  showMethodsOffButton: nil
+  showMethodsToggle: nil
 
-  showFieldsOnButton: null
-  showFieldsOffButton: null
-  showFieldsToggle: null
+  showFieldsOnButton: nil
+  showFieldsOffButton: nil
+  showFieldsToggle: nil
 
-  showInheritedOnButton: null
-  showInheritedOffButton: null
-  showInheritedToggle: null
+  showInheritedOnButton: nil
+  showInheritedOffButton: nil
+  showInheritedToggle: nil
 
-  showOwnPropsOnlyOnButton: null
-  showOwnPropsOnlyOffButton: null
-  showOwnPropsOnlyToggle: null
+  showOwnPropsOnlyOnButton: nil
+  showOwnPropsOnlyOffButton: nil
+  showOwnPropsOnlyToggle: nil
 
-  lastLabelInHierarchy: null
-  lastArrowInHierarchy: null
+  lastLabelInHierarchy: nil
+  lastArrowInHierarchy: nil
 
-  hierarchyBackgroundPanel: null
+  hierarchyBackgroundPanel: nil
 
   showingFields: true
   showingMethods: true
   showingInherited: false
   showingOwnPropsOnly: false
 
-  addPropertyButton: null
-  renamePropertyButton: null
-  removePropertyButton: null
-  saveButton: null
+  addPropertyButton: nil
+  renamePropertyButton: nil
+  removePropertyButton: nil
+  saveButton: nil
 
   showFields: ->
     if !@showingFields
@@ -98,7 +98,7 @@ class InspectorMorph2 extends WindowMorph
   
   setTarget: (target) ->
     @target = target
-    @currentProperty = null
+    @currentProperty = nil
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
@@ -173,7 +173,7 @@ class InspectorMorph2 extends WindowMorph
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass),null,null,null,null,eachNamedClass
+      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass),nil,nil,nil,nil,eachNamedClass
       @classesButtons.push classButton
       @add classButton
 
@@ -234,14 +234,14 @@ class InspectorMorph2 extends WindowMorph
       @, # target
       "selectionFromList", #action
       (if @target instanceof Array then attribs else attribs.sort()), #elements
-      null, #labelGetter
+      nil, #labelGetter
       @filterProperties(targetOwnMethods), #format
       doubleClickAction #doubleClickAction
     )
     @list.disableDrops()
 
     # we know that the content of this list in this pane is not going to need the
-    # step function, so we disable that from here by setting it to null, which
+    # step function, so we disable that from here by setting it to nil, which
     # prevents the recursion to children. We could have disabled that from the
     # constructor of MenuMorph, but who knows, maybe someone might intend to use a MenuMorph
     # with some animated content? We know that in this specific case it won't need animation so
@@ -340,7 +340,7 @@ class InspectorMorph2 extends WindowMorph
         ]
       ]
     else
-      return null
+      return nil
 
   selectionFromList: (selected) ->
     if selected == undefined then return
@@ -367,8 +367,8 @@ class InspectorMorph2 extends WindowMorph
       if val is undefined
         val = @target.constructor[selected]
       
-      if val is null
-        txt = "null"
+      if !val?
+        txt = "nil"
       else if isString val
         txt = '"'+val+'"'
       else
@@ -380,7 +380,7 @@ class InspectorMorph2 extends WindowMorph
     cnts.setReceiver @target
     @detail.setContents cnts, 2
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of the inspector"
 
@@ -509,7 +509,7 @@ class InspectorMorph2 extends WindowMorph
     if prop?
       if prop.getValue?
         prop = prop.getValue()
-      @target[prop] = null
+      @target[prop] = nil
       @buildAndConnectChildren()
       @notifyInstancesOfSourceChange([prop])
   
@@ -542,7 +542,7 @@ class InspectorMorph2 extends WindowMorph
     try
       delete @target[propertyName]
 
-      @currentProperty = null
+      @currentProperty = nil
       @buildAndConnectChildren()
       @notifyInstancesOfSourceChange([propertyName])
     catch err

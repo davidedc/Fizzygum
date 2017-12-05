@@ -7,9 +7,9 @@ class SystemTestsSystemInfo extends SystemInfo
   # cause we are going to make a JSON
   # out of this and these would not
   # be picked up.
-  AutomatorVersionMajor: null
-  AutomatorVersionMinor: null
-  AutomatorVersionRelease: null
+  AutomatorVersionMajor: nil
+  AutomatorVersionMinor: nil
+  AutomatorVersionRelease: nil
 
   constructor: ->
     super()

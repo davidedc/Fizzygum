@@ -12,21 +12,21 @@ class TriggerMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  target: null
-  action: null
-  dataSourceMorphForTarget: null
-  morphEnv: null
-  label: null
-  labelString: null
-  labelColor: null
-  labelBold: null
-  labelItalic: null
-  doubleClickAction: null
-  argumentToAction1: null
-  argumentToAction2: null
-  hint: null
-  fontSize: null
-  fontStyle: null
+  target: nil
+  action: nil
+  dataSourceMorphForTarget: nil
+  morphEnv: nil
+  label: nil
+  labelString: nil
+  labelColor: nil
+  labelBold: nil
+  labelItalic: nil
+  doubleClickAction: nil
+  argumentToAction1: nil
+  argumentToAction2: nil
+  hint: nil
+  fontSize: nil
+  fontStyle: nil
   # careful: Objects are shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
   # but if you replace it with a new Color, then that will only affect the
@@ -52,21 +52,21 @@ class TriggerMorph extends Morph
 
   constructor: (
       @closesUnpinnedMenus = true,
-      @target = null,
-      @action = null,
-      @labelString = null,
+      @target = nil,
+      @action = nil,
+      @labelString = nil,
       @fontSize = (WorldMorph.preferencesAndSettings.menuFontSize),
       @fontStyle = "sans-serif",
       @centered = false,
-      @dataSourceMorphForTarget = null,
+      @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = null,
+      @hint = nil,
       @labelColor = (new Color 0, 0, 0),
       @labelBold = false,
       @labelItalic = false,
-      @doubleClickAction = null,
-      @argumentToAction1 = null,
-      @argumentToAction2 = null,
+      @doubleClickAction = nil,
+      @argumentToAction1 = nil,
+      @argumentToAction2 = nil,
       @representsAMorph = false
       ) ->
 
@@ -79,7 +79,7 @@ class TriggerMorph extends Morph
     if @labelString?
       @layoutSubmorphs()
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super()
     if not @label?
       @createLabel()
@@ -124,12 +124,12 @@ class TriggerMorph extends Morph
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if !@visibleBasedOnIsVisibleProperty() or @isCollapsed()
-      return null
+      return nil
 
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       if appliedShadow?
         color = "black"
@@ -251,7 +251,7 @@ class TriggerMorph extends Morph
   rootForGrab: ->
     if @isFloatDraggable()
       return super()
-    null
+    nil
   
   # TriggerMorph bubble help:
   startCountdownForBubbleHelp: (contents) ->

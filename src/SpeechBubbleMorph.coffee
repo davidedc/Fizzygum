@@ -11,10 +11,10 @@ class SpeechBubbleMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  contents: null
-  padding: null # additional vertical pixels
+  contents: nil
+  padding: nil # additional vertical pixels
   isClickable: false
-  morphInvokingThis: null
+  morphInvokingThis: nil
 
   constructor: (
     @contents="",
@@ -36,7 +36,7 @@ class SpeechBubbleMorph extends Morph
     # and the mouse is still over it, otherwise
     # do nothing.
     if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
-      theBubble = new @ localize(contents), morphInvokingThis, null, null
+      theBubble = new @ localize(contents), morphInvokingThis, nil, nil
       theBubble.popUp theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
@@ -80,7 +80,7 @@ class SpeechBubbleMorph extends Morph
       @contentsMorph = new TextMorph(
         @contents,
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
-        null,
+        nil,
         false,
         true,
         "center")
@@ -94,7 +94,7 @@ class SpeechBubbleMorph extends Morph
       @contentsMorph = new TextMorph(
         @contents.toString(),
         WorldMorph.preferencesAndSettings.bubbleHelpFontSize,
-        null,
+        nil,
         false,
         true,
         "center")

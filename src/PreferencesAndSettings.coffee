@@ -18,22 +18,22 @@ class PreferencesAndSettings
 
   # all these properties can be modified
   # by the input mode.
-  inputMode: null
-  minimumFontHeight: null
-  menuFontName: null
-  menuFontSize: null
-  bubbleHelpFontSize: null
-  prompterFontName: null
-  prompterFontSize: null
-  prompterSliderSize: null
-  handleSize: null
-  scrollBarSize: null
-  mouseScrollAmount: null
-  useSliderForInput: null
-  useVirtualKeyboard: null
-  isTouchDevice: null
-  rasterizeSVGs: null
-  isFlat: null
+  inputMode: nil
+  minimumFontHeight: nil
+  menuFontName: nil
+  menuFontSize: nil
+  bubbleHelpFontSize: nil
+  prompterFontName: nil
+  prompterFontSize: nil
+  prompterSliderSize: nil
+  handleSize: nil
+  scrollBarSize: nil
+  mouseScrollAmount: nil
+  useSliderForInput: nil
+  useVirtualKeyboard: nil
+  isTouchDevice: nil
+  rasterizeSVGs: nil
+  isFlat: nil
   grabDragThreshold: 7
 
   printoutsReactiveValuesCode: true

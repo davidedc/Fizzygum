@@ -6,7 +6,7 @@ class MenuHeader extends BoxMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  text: null
+  text: nil
 
   constructor: (textContents) ->
     super 3

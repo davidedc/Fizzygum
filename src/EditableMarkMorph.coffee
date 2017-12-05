@@ -5,10 +5,10 @@ class EditableMarkMorph extends UpperRightTriangleAnnotation
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  editObject: null
+  editObject: nil
   editMethodAsString: ""
 
-  constructor: (parent = null, @editObject, @editMethodAsString) ->
+  constructor: (parent = nil, @editObject, @editMethodAsString) ->
     super parent
 
   mouseClickLeft: ->

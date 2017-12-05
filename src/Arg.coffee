@@ -13,7 +13,7 @@
 # REQUIRES ProfilerData
 
 class Arg
-  valWrappedByThisArg: null
+  valWrappedByThisArg: nil
   maybeChangedSinceLastCalculation: true
   
   # an argument can either be
@@ -39,8 +39,8 @@ class Arg
   # depend on a parent value at some stage.
   directlyOrIndirectlyCalculatedFromParent: false
   
-  morphContainingThisArg: null
-  args: null
+  morphContainingThisArg: nil
+  args: nil
   markedForRemoval: false
   # we keep the vals of the args we
   # used to calculate the last val. This is so

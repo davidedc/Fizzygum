@@ -5,8 +5,8 @@ class BubblyAppearance extends BoxyAppearance
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  isThought: null
-  isPointingRight: null
+  isThought: nil
+  isPointingRight: nil
 
   constructor: (morph, @isThought, @isPointingRight) ->
     super morph

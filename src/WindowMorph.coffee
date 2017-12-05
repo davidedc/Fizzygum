@@ -5,11 +5,11 @@ class WindowMorph extends BoxMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  label: null
-  topLeftButton: null
-  labelContent: null
-  resizer: null
-  padding: null
+  label: nil
+  topLeftButton: nil
+  labelContent: nil
+  resizer: nil
+  padding: nil
 
   constructor: (@labelContent, @topLeftButton) ->
     super()
@@ -71,7 +71,7 @@ class WindowMorph extends BoxMorph
 
     @changed()
 
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     @layoutLabelAndTopLeftButton()
 

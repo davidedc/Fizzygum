@@ -53,9 +53,9 @@ class AutomatorRecorderAndPlayer
   @state: 2
   playingAllSystemTests: false
   indexOfSystemTestBeingPlayed: 0
-  timeOfPreviouslyRecordedCommand: null
-  handMorph: null
-  worldMorph: null
+  timeOfPreviouslyRecordedCommand: nil
+  handMorph: nil
+  worldMorph: nil
   collectedImages: [] # array of SystemTestsReferenceImage
   collectedFailureImages: [] # array of SystemTestsReferenceImage
   testName: ''
@@ -63,7 +63,7 @@ class AutomatorRecorderAndPlayer
   testTags: ['noTags']
   @loadedImages: {}
   @loadedImagesToBeKeptForLaterDiff: {}
-  ongoingTestPlayingTask: null
+  ongoingTestPlayingTask: nil
   timeOfPreviouslyPlayedCommand: 0
   indexOfTestCommandBeingPlayedFromSequence: 0
 
@@ -78,9 +78,9 @@ class AutomatorRecorderAndPlayer
   # data of a morph.
   # the test player will wait for this data
   # before doing the comparison.
-  imageDataOfAParticularMorph: null
-  lastMouseDownCommand: null
-  lastMouseUpCommand: null
+  imageDataOfAParticularMorph: nil
+  lastMouseDownCommand: nil
+  lastMouseUpCommand: nil
   selectedTestsBasedOnTags: []
 
   numberOfGroups: 1
@@ -118,7 +118,7 @@ class AutomatorRecorderAndPlayer
       console.log "deleting #{testName}_image_#{imageNumber}"
       delete AutomatorRecorderAndPlayer.loadedImages["#{testName}_image_#{imageNumber}"]
     console.log "deleting SystemTest_#{testName}"
-    window["#{testName}" + "_automationCommands"] = null
+    window["#{testName}" + "_automationCommands"] = nil
     delete window["#{testName}" + "_automationCommands"]
 
   # clear any test with the same name
@@ -205,7 +205,7 @@ class AutomatorRecorderAndPlayer
       @runNextSystemTest()
 
   showTestSource: ->
-    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @automatorCommandsSequence, null, 4 )))
+    window.open("data:text/text;charset=utf-8," + encodeURIComponent(JSON.stringify( @automatorCommandsSequence, nil, 4 )))
 
   turnOnAnimationsPacingControl: ->
     @constructor.animationsPacingControl = true
@@ -374,13 +374,13 @@ class AutomatorRecorderAndPlayer
 
   addCutCommand: () ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandCut null, @
+    systemTestCommand = new AutomatorCommandCut nil, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
   addCopyCommand: () ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandCopy null, @
+    systemTestCommand = new AutomatorCommandCopy nil, @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
@@ -405,7 +405,7 @@ class AutomatorRecorderAndPlayer
   resetWorld: ->
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
     systemTestCommand = new AutomatorCommandResetWorld @
-    window[systemTestCommand.automatorCommandName].replayFunction @, null
+    window[systemTestCommand.automatorCommandName].replayFunction @, nil
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
@@ -692,7 +692,7 @@ class AutomatorRecorderAndPlayer
      # todo this seems broken, this image data is not
      # actually fetched anywhere?
      screenshotObtained = @imageDataOfAParticularMorph
-     @imageDataOfAParticularMorph = null
+     @imageDataOfAParticularMorph = nil
    else
      console.log "comparing pic of whole desktop"
      screenshotObtained = @worldMorph.fullImageAsItAppearsOnScreen()
@@ -715,7 +715,7 @@ class AutomatorRecorderAndPlayer
      #console.log "length of obtained: " + eachImage.imageData.length
      if eachImage.imageData == screenshotObtained
       message = "PASS - screenshot " + eachImage.fileName + " matched"
-      AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = null
+      AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"] = nil
       delete AutomatorRecorderAndPlayer.loadedImagesToBeKeptForLaterDiff["#{testNameWithImageNumber}"]
       console.log message
       if SystemTestsControlPanelUpdater?
@@ -939,7 +939,7 @@ class AutomatorRecorderAndPlayer
   // environment.
   var SystemTest_#{@testName};
 
-  SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialized, null, 4)};
+  SystemTest_#{@testName} = #{JSON.stringify(testToBeSerialized, nil, 4)};
     """
 
   automatorCommandsFileContentCreator: (commands) ->
@@ -962,7 +962,7 @@ class AutomatorRecorderAndPlayer
   // environment.
   var SystemTest_#{testNameExtended}
 
-  SystemTest_#{testNameExtended} = #{JSON.stringify(testToBeSerialized, null, 4)}
+  SystemTest_#{testNameExtended} = #{JSON.stringify(testToBeSerialized, nil, 4)}
     """
 
   saveFailedScreenshots: ->
@@ -1164,7 +1164,7 @@ class AutomatorRecorderAndPlayer
 
 
   testsList: ->
-    preselectionBeforeSplittingGroups = null
+    preselectionBeforeSplittingGroups = nil
     if @selectedTestsBasedOnTags.length != 0
       preselectionBeforeSplittingGroups = @selectedTestsBasedOnTags
     else

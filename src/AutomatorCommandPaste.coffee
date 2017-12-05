@@ -2,7 +2,7 @@
 
 
 class AutomatorCommandPaste extends AutomatorCommand
-  clipboardText: null
+  clipboardText: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     console.log "test player inserting text: " + commandBeingPlayed.clipboardText

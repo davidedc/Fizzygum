@@ -24,15 +24,15 @@ class SliderMorph2 extends CircleBoxMorph
 
   @augmentWith ControllerMixin
 
-  target: null
-  action: null
-  start: null
-  stop: null
-  value: null
-  size: null
-  offset: null
-  button: null
-  argumentToAction: null
+  target: nil
+  action: nil
+  start: nil
+  stop: nil
+  value: nil
+  size: nil
+  offset: nil
+  button: nil
+  argumentToAction: nil
 
   constructor: (
     @start = 0,
@@ -42,7 +42,7 @@ class SliderMorph2 extends CircleBoxMorph
     @color = (new Color 0, 0, 0)
     ) ->
     @button = new SliderButtonMorph()
-    super  # if null, then a vertical one will be created
+    super  # if nil, then a vertical one will be created
     @alpha = 0.1
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button
@@ -118,7 +118,7 @@ class SliderMorph2 extends CircleBoxMorph
       @prompt menu.title + "\nfloor:",
         @setStart,
         @start.toString(),
-        null,
+        nil,
         0,
         @stop - @size,
         true
@@ -127,7 +127,7 @@ class SliderMorph2 extends CircleBoxMorph
       @prompt menu.title + "\nceiling:",
         @setStop,
         @stop.toString(),
-        null,
+        nil,
         @start + @size,
         @size * 100,
         true
@@ -136,7 +136,7 @@ class SliderMorph2 extends CircleBoxMorph
       @prompt menu.title + "\nbutton size:",
         @setSize,
         @size.toString(),
-        null,
+        nil,
         1,
         @stop - @start,
         true
@@ -251,7 +251,7 @@ class SliderMorph2 extends CircleBoxMorph
     choices = theTarget.numericalSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null,theTarget, each
+      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", nil, nil, nil, nil, nil,theTarget, each
     if choices.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()

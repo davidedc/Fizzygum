@@ -13,17 +13,17 @@ class EmptyButtonMorph extends Morph
 
   @augmentWith HighlightableMixin, @name
 
-  target: null
-  action: null
-  dataSourceMorphForTarget: null
-  morphEnv: null
+  target: nil
+  action: nil
+  dataSourceMorphForTarget: nil
+  morphEnv: nil
  
  
-  doubleClickAction: null
-  argumentToAction1: null
-  argumentToAction2: null
+  doubleClickAction: nil
+  argumentToAction1: nil
+  argumentToAction2: nil
  
-  hint: null
+  hint: nil
  
   closesUnpinnedMenus: true
   
@@ -37,18 +37,18 @@ class EmptyButtonMorph extends Morph
 
   constructor: (
       @closesUnpinnedMenus = true,
-      @target = null,
-      @action = null,
+      @target = nil,
+      @action = nil,
 
-      @faceMorph = null,
+      @faceMorph = nil,
 
-      @dataSourceMorphForTarget = null,
+      @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = null,
+      @hint = nil,
 
-      @doubleClickAction = null,
-      @argumentToAction1 = null,
-      @argumentToAction2 = null,
+      @doubleClickAction = nil,
+      @argumentToAction1 = nil,
+      @argumentToAction2 = nil,
       @representsAMorph = false
       ) ->
 
@@ -62,7 +62,7 @@ class EmptyButtonMorph extends Morph
       @add @faceMorph
       @layoutSubmorphs()
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super()
     if @faceMorph.parent == @
       @faceMorph.setBounds @bounds
@@ -117,7 +117,7 @@ class EmptyButtonMorph extends Morph
   rootForGrab: ->
     if @isFloatDraggable()
       return super()
-    null
+    nil
   
   # TriggerMorph bubble help:
   startCountdownForBubbleHelp: (contents) ->

@@ -25,7 +25,7 @@ class HeartIconMorph extends Morph
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 

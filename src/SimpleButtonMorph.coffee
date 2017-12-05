@@ -11,18 +11,18 @@ class SimpleButtonMorph extends EmptyButtonMorph
 
   constructor: (
       @closesUnpinnedMenus = true,
-      @target = null,
-      @action = null,
+      @target = nil,
+      @action = nil,
 
-      @faceMorph = null,
+      @faceMorph = nil,
 
-      @dataSourceMorphForTarget = null,
+      @dataSourceMorphForTarget = nil,
       @morphEnv,
-      @hint = null,
+      @hint = nil,
 
-      @doubleClickAction = null,
-      @argumentToAction1 = null,
-      @argumentToAction2 = null,
+      @doubleClickAction = nil,
+      @argumentToAction1 = nil,
+      @argumentToAction2 = nil,
       @representsAMorph = false
       ) ->
 

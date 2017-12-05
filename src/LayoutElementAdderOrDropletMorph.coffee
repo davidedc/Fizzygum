@@ -29,7 +29,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 
@@ -134,18 +134,18 @@ class LayoutElementAdderOrDropletMorph extends Morph
       newMorph = new Morph()
       @parent.add newMorph
       newMorph.rawSetBounds @boundingBox()
-      newMorph.add @, null, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+      newMorph.add @, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
       newMorph.showAdders()
 
     @addAsSiblingAfterMe \
       (new LayoutElementAdderOrDropletMorph()),
-      null,
+      nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
   reactToDropOf: (morphBeingDropped) ->
     @addAsSiblingAfterMe \
       morphBeingDropped,
-      null,
+      nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED    
     @destroy()
 

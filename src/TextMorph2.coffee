@@ -15,12 +15,12 @@ class TextMorph2 extends StringMorph2
   softWrap: true
   #emptyCharacter: '^'
 
-  backgroundColor: null
+  backgroundColor: nil
 
   #additional properties for ad-hoc evaluation:
-  receiver: null
-  heightOfPossiblyCroppedText: null
-  widthOfPossiblyCroppedText: null
+  receiver: nil
+  heightOfPossiblyCroppedText: nil
+  widthOfPossiblyCroppedText: nil
 
   constructor: (
    @text = (if text is "" then text else "TextMorph2"),
@@ -30,8 +30,8 @@ class TextMorph2 extends StringMorph2
    @isItalic = false,
    #@isNumeric = false,
    @color = (new Color 0, 0, 0),
-   @backgroundColor = null,
-   @backgroundTransparency = null
+   @backgroundColor = nil,
+   @backgroundTransparency = nil
    ) ->
 
     super(
@@ -412,7 +412,7 @@ class TextMorph2 extends StringMorph2
     backBufferContext.fillStyle = @color.toString()
     i = 0
     for line in @wrappedLines
-      width = Math.ceil(@measureText null, line)
+      width = Math.ceil(@measureText nil, line)
       x = switch @horizontalAlignment
         when AlignmentSpecHorizontal.RIGHT
           @width() - width
@@ -478,13 +478,13 @@ class TextMorph2 extends StringMorph2
     if (@transformTextOneToOne @text) != @textPossiblyCroppedToFit and @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
       world.stopEditing()
       @edit()
-      return null
+      return nil
 
     @reflowText()
     [slotRow, slotColumn] = @slotRowAndColumn slot
 
-    lineWidth = @measureText null, @wrappedLines[slotRow]
-    xOffset = Math.ceil @measureText null, (@wrappedLines[slotRow]).substring(0,slotColumn)
+    lineWidth = @measureText nil, @wrappedLines[slotRow]
+    xOffset = Math.ceil @measureText nil, (@wrappedLines[slotRow]).substring(0,slotColumn)
     yOffset = slotRow * Math.ceil fontHeight @fittingFontSize
 
     textVerticalPosition = @textVerticalPosition @heightOfPossiblyCroppedText

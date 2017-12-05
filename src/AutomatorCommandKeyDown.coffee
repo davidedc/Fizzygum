@@ -2,15 +2,15 @@
 
 
 class AutomatorCommandKeyDown extends AutomatorCommand
-  scanCode: null
-  shiftKey: null
-  ctrlKey: null
-  altKey: null
-  metaKey: null
+  scanCode: nil
+  shiftKey: nil
+  ctrlKey: nil
+  altKey: nil
+  metaKey: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     console.log "replaying key"
-    automatorRecorderAndPlayer.worldMorph.processKeydown null, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
+    automatorRecorderAndPlayer.worldMorph.processKeydown nil, commandBeingPlayed.scanCode, commandBeingPlayed.shiftKey, commandBeingPlayed.ctrlKey, commandBeingPlayed.altKey, commandBeingPlayed.metaKey
 
 
   constructor: (@scanCode, @shiftKey, @ctrlKey, @altKey, @metaKey, automatorRecorderAndPlayer) ->

@@ -12,13 +12,13 @@ class StringMorph extends Morph
   @augmentWith BackBufferMixin
 
   text: ""
-  fontSize: null
-  fontName: null
-  fontStyle: null
-  isBold: null
-  isItalic: null
+  fontSize: nil
+  fontName: nil
+  fontStyle: nil
+  isBold: nil
+  isItalic: nil
   isEditable: false
-  isNumeric: null
+  isNumeric: nil
   isPassword: false
   isShowingBlanks: false
   # careful: Objects are shared with all the instances of this class.
@@ -31,8 +31,8 @@ class StringMorph extends Morph
   # Properties for text-editing
   isScrollable: true
   currentlySelecting: false
-  startMark: null
-  endMark: null
+  startMark: nil
+  endMark: nil
   # see note above about Colors and shared objects
   markedTextColor: new Color 255, 255, 255
   # see note above about Colors and shared objects
@@ -237,7 +237,7 @@ class StringMorph extends Morph
       @,
       "setFontSize",
       @fontSize.toString(),
-      null, 6, 500, true
+      nil, 6, 500, true
 
   # StringMorph menus:
   developersMenu: (morphOpeningTheMenu) ->
@@ -347,18 +347,18 @@ class StringMorph extends Morph
   firstSelectedSlot: ->
     Math.min @startMark, @endMark
     if !@startMark? or !@endMark?
-      return null
+      return nil
     return Math.min @startMark, @endMark
 
   lastSelectedSlot: ->
     if !@startMark? or !@endMark?
-      return null
+      return nil
     return Math.max @startMark, @endMark
 
   clearSelection: ->
     @currentlySelecting = false
-    @startMark = null
-    @endMark = null
+    @startMark = nil
+    @endMark = nil
     
     @changed()
 

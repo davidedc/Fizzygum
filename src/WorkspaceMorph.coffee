@@ -10,9 +10,9 @@ class WorkspaceMorph extends BoxMorph
   namedClasses[@name] = @prototype
 
   # panes:
-  morphsList: null
-  buttonClose: null
-  resizer: null
+  morphsList: nil
+  buttonClose: nil
+  resizer: nil
 
   constructor: (target) ->
     super()
@@ -26,7 +26,7 @@ class WorkspaceMorph extends BoxMorph
   
   setTarget: (target) ->
     @target = target
-    @currentProperty = null
+    @currentProperty = nil
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
@@ -46,13 +46,13 @@ class WorkspaceMorph extends BoxMorph
     theWordMorph = "Morph"
     ListOfMorphs = (Object.keys(window)).filter (i) ->
       i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
-    @morphsList = new ListMorph ListOfMorphs, null
+    @morphsList = new ListMorph ListOfMorphs, nil
 
     # so far nothing happens when items are selected
     #@morphsList.action = (selected) ->
     #  val = myself.target[selected]
     #  myself.currentProperty = val
-    #  if val is null
+    #  if !val?
     #    txt = "NULL"
     #  else if isString(val)
     #    txt = val

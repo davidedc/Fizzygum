@@ -2,15 +2,15 @@
 
 
 class AutomatorCommandMouseDoubleClick extends AutomatorCommand
-  ctrlKey: null
-  morphIdentifierViaTextLabel: null
-  pointerPositionFractionalInMorph: null
-  pointerPositionPixelsInMorph: null
-  pointerPositionPixelsInWorld: null
-  absoluteBoundsOfMorphRelativeToWorld: null
-  morphUniqueIDString: null
-  morphPathRelativeToWorld: null
-  isPartOfListMorph: null
+  ctrlKey: nil
+  morphIdentifierViaTextLabel: nil
+  pointerPositionFractionalInMorph: nil
+  pointerPositionPixelsInMorph: nil
+  pointerPositionPixelsInWorld: nil
+  absoluteBoundsOfMorphRelativeToWorld: nil
+  morphUniqueIDString: nil
+  morphPathRelativeToWorld: nil
+  isPartOfListMorph: nil
 
 
   # you'd ask why can't we *always* trigger the double click action

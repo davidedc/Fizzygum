@@ -10,11 +10,11 @@ class ColorPaletteMorph extends Morph
   @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
 
-  target: null
+  target: nil
   targetSetter: "color"
-  choice: null
+  choice: nil
 
-  constructor: (@target = null, sizePoint) ->
+  constructor: (@target = nil, sizePoint) ->
     super()
     @silentRawSetExtent sizePoint or new Point 80, 50
   
@@ -59,7 +59,7 @@ class ColorPaletteMorph extends Morph
   # if it's disabled, say. (but we don't have this
   # "disabled" concept implemented now).
   rootForGrab: ->
-    return null
+    return nil
   
   mouseMove: (pos, mouseButton) ->
     # effectively takes care of drag as well
@@ -99,7 +99,7 @@ class ColorPaletteMorph extends Morph
     choices = theTarget.colorSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", null, null, null, null, null, theTarget, each
+      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", nil, nil, nil, nil, nil, theTarget, each
 
     if choices.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"

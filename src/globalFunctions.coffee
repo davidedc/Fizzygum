@@ -12,6 +12,18 @@ MixedClassKeywords = ['onceAddedClassProperties', 'included']
 # (for the deserialization process)
 namedClasses = {}
 
+# we use "nil" everywhere instead of "null"
+# and this "nil" we use is really "undefined"
+# The reason is the following: Coffeescript2 has the
+# same "default values" policy as ES2015 i.e.
+# "null" values DON'T get defaults anymore.
+# Since we used that a lot, we devise the trick that
+# we replace "null" with "nil" everywhere and we get the
+# same behaviour as before (because existential operators
+# such as "?" work the same on "undefined" and "null").
+# The only thing we have to do is to never use "undefined"
+# and "null" explicitly.
+nil = undefined
 
 HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure) ->
   haveIBeenCopiedAlready = objOriginalsClonedAlready.indexOf(@)
@@ -71,7 +83,7 @@ Array::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClones, allMorp
 
   for i in [0... @.length]
     if !@[i]?
-        cloneOfMe[i] = null
+        cloneOfMe[i] = nil
     else if typeof @[i] == 'object'
       if !@[i].deepCopy?
         # this should never happen
@@ -172,7 +184,7 @@ getParameterByName = (name) ->
   if results?
     return decodeURIComponent results[1].replace(/\+/g, ' ')
   else
-    return null
+    return nil
 
 ## -------------------------------------------------------
 # These two methods are for mixins
@@ -225,10 +237,10 @@ hashCode = (stringToBeHashed) ->
 nop = ->
   # this is the function that does nothing:
   ->
-    null
+    nil
 
 noOperation = ->
-    null
+    nil
 
 isFunction = (functionToCheck) ->
   typeof(functionToCheck) is "function"
@@ -239,10 +251,10 @@ localize = (string) ->
 
 detect = (list, predicate) ->
   # answer the first element of list for which predicate evaluates
-  # true, otherwise answer null
+  # true, otherwise answer nil
   for element in list
-    return element  if predicate.call null, element
-  null
+    return element  if predicate.call nil, element
+  nil
 
 sizeOf = (object) ->
   # answer the number of own properties
@@ -312,7 +324,7 @@ getMinimumFontHeight = ->
 
 getDocumentPositionOf = (aDOMelement) ->
   # answer the absolute coordinates of a DOM element in the document
-  if aDOMelement is null
+  if !aDOMelement?
     return (
       x: 0
       y: 0
@@ -406,7 +418,7 @@ loadKlass = ->
   script.onload = ->
     # give life to the loaded and translated coffeescript klass now!
     console.log "compiling and evalling Klass from souce code"
-    eval.call window, compileFGCode window["Klass_coffeSource"], true, 1
+    eval.call window, compileFGCode window["Klass_coffeSource"], true, 2
     loadAllSources()
 
 
@@ -600,7 +612,7 @@ continueBooting2 = ->
   # to the right where helper commands can be
   # clicked.
   if window.location.href.contains "worldWithSystemTestHarness"
-    if SystemTestsControlPanelUpdater != null
+    if SystemTestsControlPanelUpdater?
       new SystemTestsControlPanelUpdater
 
   window.menusHelper = new MenusHelper()

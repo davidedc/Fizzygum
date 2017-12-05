@@ -15,7 +15,7 @@ class GroundVal
   # we use "lastCalculatedValContent" here just as a matter of
   # uniformity. The cached val of a GroundVal
   # is always up to date, it's always good for use.
-  lastCalculatedValContent: null
+  lastCalculatedValContent: nil
 
   # always false for GroundVals, because there is never
   # a recalculation to be done here, the val is always
@@ -23,9 +23,9 @@ class GroundVal
   lastCalculatedValContentMaybeOutdated: false
   # these vals are affected by change of this
   # val
-  localValsAffectedByChangeOfThisVal: null
+  localValsAffectedByChangeOfThisVal: nil
 
-  args: null
+  args: nil
 
   constructor: (@valName, @lastCalculatedValContent, @ownerMorph) ->
 
@@ -37,7 +37,7 @@ class GroundVal
       ProfilerData.reactiveValues_createdGroundVals++
 
       if !@lastCalculatedValContent?
-        contentOfLastCalculatedVal = null
+        contentOfLastCalculatedVal = nil
       else
         contentOfLastCalculatedVal = @lastCalculatedValContent
 

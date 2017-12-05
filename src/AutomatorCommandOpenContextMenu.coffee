@@ -2,7 +2,7 @@
 
 
 class AutomatorCommandOpenContextMenu extends AutomatorCommand
-  morphToOpenContextMenuAgainst_UniqueIDString: null
+  morphToOpenContextMenuAgainst_UniqueIDString: nil
 
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
     #automatorRecorderAndPlayer.handMorph.openContextMenuAtPointer (Morph.morphFromUniqueIDString commandBeingPlayed.morphToOpenContextMenuAgainst_UniqueIDString)

@@ -6,7 +6,7 @@ class SwitchButtonMorph extends Morph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  buttons: null
+  buttons: nil
  
   # careful: Objects are shared with all the instances of this class.
   # if you modify it, then all the objects will get the change
@@ -36,7 +36,7 @@ class SwitchButtonMorph extends Morph
       @add eachButton
     @layoutSubmorphs()
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super()
     counter = 0
     for eachButton in @buttons

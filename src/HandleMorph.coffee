@@ -11,15 +11,15 @@ class HandleMorph extends Morph
   namedClasses[@name] = @prototype
 
 
-  target: null
-  inset: null
-  type: null
+  target: nil
+  inset: nil
+  type: nil
 
   state: 0
   STATE_NORMAL: 0
   STATE_HIGHLIGHTED: 1
 
-  constructor: (@target = null, @type = "resizeBothDimensionsHandle") ->
+  constructor: (@target = nil, @type = "resizeBothDimensionsHandle") ->
     if @target?.padding?
       @inset = new Point @target.padding, @target.padding
     else
@@ -117,7 +117,7 @@ class HandleMorph extends Morph
     [area,sl,st,al,at,w,h] = @calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 
@@ -233,7 +233,7 @@ class HandleMorph extends Morph
   # anything, otherwise the handle on a button
   # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
-    return null  unless @target
+    return nil  unless @target
     @target.bringToForegroud()
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
@@ -284,7 +284,7 @@ class HandleMorph extends Morph
     menu = new MenuMorph @, false, @, true, true, "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', null, null, null, null, null, each, null, true
+        menu.addMenuItem each.toString().slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', nil, nil, nil, nil, nil, each, nil, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

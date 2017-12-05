@@ -15,7 +15,7 @@
 
 class MorphicNode
 
-  parent: null
+  parent: nil
   # "children" is an ordered list of the immediate
   # children of this node. First child is at the
   # back relative to other children, last child is at the
@@ -40,15 +40,15 @@ class MorphicNode
   # Note that when you add a morph A to a morph B, it doesn't
   # mean that A is cointained in B. The two potentially might
   # not even overlap.
-  children: null
+  children: nil
 
-  rootCache: null
-  rootCacheChecker: null
+  rootCache: nil
+  rootCacheChecker: nil
 
-  checkFirstFrameParentCache: null
-  cachedFirstFrameParent: null
+  checkFirstFrameParentCache: nil
+  cachedFirstFrameParent: nil
 
-  constructor: (@parent = null, @children = []) ->
+  constructor: (@parent = nil, @children = []) ->
 
   
   # MorphicNode string representation: e.g. 'a MorphicNode[3]'
@@ -64,7 +64,7 @@ class MorphicNode
     arrayShallowCopyAndReverse @children
   
   # MorphicNode accessing:
-  addChild: (aMorphicNode, position = null) ->
+  addChild: (aMorphicNode, position = nil) ->
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
@@ -111,7 +111,7 @@ class MorphicNode
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @children.remove aMorphicNode
-    aMorphicNode.parent = null
+    aMorphicNode.parent = nil
     ## @disconnectValuesFromRemovedChild aMorphicNode
   
   # is this Morph attached to neither the world nor to
@@ -155,7 +155,7 @@ class MorphicNode
   # of children positions relative to the world.
   # Meaning that if the morph is not attached to the
   # world or if it's attached to the hand, then
-  # null is returned.
+  # nil is returned.
   # Example: [0, 2, 1] means that this morph is
   # at
   #  world.children[0].children[2].children[1]
@@ -175,7 +175,7 @@ class MorphicNode
         pathSoFar.lengthOfChildrenArrays.reverse()
         return pathSoFar
       else
-        return null
+        return nil
 
   
   # currently unused
@@ -217,7 +217,7 @@ class MorphicNode
     # children, we add ourselves to the last position
     # of the list since this node is at the bottom of all of
     # its children...
-    if predicate.call null, @
+    if predicate.call nil, @
       collected.push @ # include myself
 
     return collected
@@ -240,7 +240,7 @@ class MorphicNode
   # This is the simplest and cheapest way to visit all Morphs in
   # a tree of morphs.
   forAllChildrenBottomToTop: (aFunction) ->
-    aFunction.call null, @
+    aFunction.call nil, @
     if @children.length
       @children.forEach (child) ->
         child.forAllChildrenBottomToTop aFunction
@@ -284,13 +284,13 @@ class MorphicNode
     result = []
     if @parent?
       result = @parent.allParentsBottomToTopSuchThat predicate
-    if predicate.call(null, @)
+    if predicate.call(nil, @)
       result.push @
     result
 
   allParentsTopToBottomSuchThat: (predicate) ->
     collected = []
-    if predicate.call null, @
+    if predicate.call nil, @
       collected = [@] # include myself
     if @parent?
       collected = collected.concat @parent.allParentsTopToBottomSuchThat predicate
@@ -345,9 +345,9 @@ class MorphicNode
 
   firstSiblingsSuchThat: (predicate) ->
     for eachSibling in @parent.children
-      if predicate.call null, eachSibling
+      if predicate.call nil, eachSibling
         return eachSibling
-    return null
+    return nil
 
   amITheFirstSibling: ->
     if @parent.children[0] == @
@@ -394,34 +394,34 @@ class MorphicNode
     for eachSibling in @parent.children
       if eachSibling == @
         return theCount
-      if predicate.call null, eachSibling
+      if predicate.call nil, eachSibling
         theCount++
     return theCount
 
   lastSiblingBeforeMeSuchThat: (predicate) ->
     theCount = 0
-    indexOfMorph = null
+    indexOfMorph = nil
     for eachSibling in @parent.children
       if eachSibling == @
         break
-      if predicate.call null, eachSibling
+      if predicate.call nil, eachSibling
         indexOfMorph = theCount
       theCount++
 
     if indexOfMorph?
       return @parent.children[indexOfMorph]
     else
-      return null
+      return nil
 
   firstSiblingAfterMeSuchThat: (predicate) ->
     searchActuallyOngoing = false
     for eachSibling in @parent.children
       if searchActuallyOngoing
-        if predicate.call null, eachSibling
+        if predicate.call nil, eachSibling
           return eachSibling
       if eachSibling == @
         searchActuallyOngoing = true
-    return null
+    return nil
 
   # find the nth child satisfying
   # a property.
@@ -433,11 +433,11 @@ class MorphicNode
   nthChildSuchThat: (n, predicate) ->
     theCount = 0
     for eachChild in @children
-      if predicate.call null, eachChild
+      if predicate.call nil, eachChild
         theCount++
         if theCount is n
           return eachChild
-    return null
+    return nil
 
   firstChildSuchThat: (predicate) ->
     @nthChildSuchThat 1, predicate
@@ -449,7 +449,7 @@ class MorphicNode
       else
         return morphToStartFrom.parent.SLOWfirstFrameParent()
     else
-      return null
+      return nil
 
   firstFrameParent: (morphToStartFrom = @) ->
     if @checkFirstFrameParentCache == WorldMorph.numberOfAddsAndRemoves
@@ -464,7 +464,7 @@ class MorphicNode
       else
         result = morphToStartFrom.parent.firstFrameParent()
     else
-      result =  null
+      result =  nil
 
     if world.doubleCheckCachedMethodsResults
       if result != @SLOWfirstFrameParent morphToStartFrom
@@ -484,7 +484,7 @@ class MorphicNode
     for eachConstructor in constructors
       if @ instanceof eachConstructor
         return [@, eachConstructor]
-    return null  unless @parent
+    return nil  unless @parent
     @parent.parentThatIsA constructors...
 
   # checks whether the morph is a child,
@@ -510,12 +510,12 @@ class MorphicNode
   topMorphSuchThat: (predicate) ->
     # base case - I am a leaf child, so I just test
     # the predicate on myself and return myself
-    # if I satisfy, else I return null
+    # if I satisfy, else I return nil
     if @children.length == 0
-      if predicate.call null, @
+      if predicate.call nil, @
         return @
       else
-        return null
+        return nil
     # if I have children, then start to test from
     # the top one (the last one in the array)
     # and proceed to test "towards the back" i.e.
@@ -528,13 +528,13 @@ class MorphicNode
       if foundMorph?
         return foundMorph
     # now that all children are tested, test myself
-    if predicate.call null, @
+    if predicate.call nil, @
       return @
     else
-      return null
+      return nil
     # ok none of my children nor me test positive,
-    # so return null.
-    return null
+    # so return nil.
+    return nil
 
   topmostChildSuchThat: (predicate) ->
     # start to test from
@@ -545,15 +545,15 @@ class MorphicNode
     # over.
     for morphNumber in [@children.length-1..0] by -1
       morph = @children[morphNumber]
-      if predicate.call null, morph
+      if predicate.call nil, morph
         return morph
     # ok none of my children test positive,
-    # so return null.
-    return null
+    # so return nil.
+    return nil
 
   collectAllChildrenBottomToTopSuchThat: (predicate) ->
     collected = []
-    if predicate.call(null, @)
+    if predicate.call(nil, @)
       collected = [@] # include myself
     @children.forEach (child) ->
       collected = collected.concat(child.collectAllChildrenBottomToTopSuchThat(predicate))

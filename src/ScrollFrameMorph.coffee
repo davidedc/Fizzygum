@@ -8,16 +8,16 @@ class ScrollFrameMorph extends FrameMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  autoScrollTrigger: null
+  autoScrollTrigger: nil
   hasVelocity: true # dto.
   padding: 0 # around the scrollable area
   growth: 0 # pixels or Point to grow right/left when near edge
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
-  scrollBarSize: null
-  contents: null
-  vBar: null
-  hBar: null
+  scrollBarSize: nil
+  contents: nil
+  vBar: nil
+  hBar: nil
 
   # there are several ways in which we allow
   # scrolling when a scrollframe is scrollable
@@ -51,13 +51,13 @@ class ScrollFrameMorph extends FrameMorph
     #@setColor = @contents.setColor
     #@setAlphaScaled = @contents.setAlphaScaled
 
-    @hBar = new SliderMorph null, null, null, null, @sliderColor
+    @hBar = new SliderMorph nil, nil, nil, nil, @sliderColor
     @hBar.rawSetHeight @scrollBarSize
 
     @hBar.target = @
     @addRaw @hBar
 
-    @vBar = new SliderMorph null, null, null, null, @sliderColor
+    @vBar = new SliderMorph nil, nil, nil, nil, @sliderColor
     @vBar.rawSetWidth @scrollBarSize
     @vBar.target = @
     @addRaw @vBar
@@ -308,7 +308,7 @@ class ScrollFrameMorph extends FrameMorph
   # by floatDragging its contents. This is particularly
   # useful in touch devices.
   mouseDownLeft: (pos) ->
-    return null  unless @isScrollingByfloatDragging
+    return nil  unless @isScrollingByfloatDragging
     oldPos = pos
     deltaX = 0
     deltaY = 0
@@ -357,7 +357,7 @@ class ScrollFrameMorph extends FrameMorph
   
   startAutoScrolling: ->
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
-    if @isOrphan() then return null
+    if @isOrphan() then return nil
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
     world.addSteppingMorph @
@@ -371,10 +371,10 @@ class ScrollFrameMorph extends FrameMorph
       else
         @step = noOperation
         world.removeSteppingMorph @
-        @autoScrollTrigger = null
+        @autoScrollTrigger = nil
   
   autoScroll: (pos) ->
-    return null  if Date.now() - @autoScrollTrigger < 500
+    return nil  if Date.now() - @autoScrollTrigger < 500
     inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false

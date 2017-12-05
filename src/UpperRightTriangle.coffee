@@ -17,7 +17,7 @@ class UpperRightTriangle extends EmptyButtonMorph
 
   @augmentWith UpperRightInternalHaloMixin
 
-  constructor: (parent = null) ->
+  constructor: (parent = nil) ->
     super()
     @appearance = new UpperRightTriangleAppearance @
 

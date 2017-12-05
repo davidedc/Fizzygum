@@ -6,15 +6,15 @@ class FridgeMagnetsMorph extends WindowMorph
   namedClasses[@name] = @prototype
 
   # panes:
-  fridge: null
-  codeOutput: null
-  magnetsBox: null
-  visualOutput: null
+  fridge: nil
+  codeOutput: nil
+  magnetsBox: nil
+  visualOutput: nil
 
-  dragTheTilesHereHeader: null
-  tilesBinHeader: null
-  liveCodeLangOutputHeader: null
-  outputAnimationHeader: null
+  dragTheTilesHereHeader: nil
+  tilesBinHeader: nil
+  liveCodeLangOutputHeader: nil
+  outputAnimationHeader: nil
 
 
   constructor: ->
@@ -32,7 +32,7 @@ class FridgeMagnetsMorph extends WindowMorph
     @add @visualOutput
     
     # source code output pane
-    @codeOutput = new FizzytilesCodeMorph "",null,null,null,null,null,(new Color 255, 250, 245), 1
+    @codeOutput = new FizzytilesCodeMorph "",nil,nil,nil,nil,nil,(new Color 255, 250, 245), 1
     @codeOutput.fridgeMagnetsCanvas = @visualOutput
     @codeOutput.isEditable = true
     @codeOutput.enableSelecting()
@@ -100,7 +100,7 @@ class FridgeMagnetsMorph extends WindowMorph
     @layoutSubmorphs()
 
   
-  layoutSubmorphs: (morphStartingTheChange = null) ->
+  layoutSubmorphs: (morphStartingTheChange = nil) ->
     super morphStartingTheChange
     #console.log "fixing the layout of the FridgeMagnetsMorph"
 

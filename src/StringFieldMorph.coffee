@@ -8,14 +8,14 @@ class StringFieldMorph extends FrameMorph
   # (for the deserialization process)
   namedClasses[@name] = @prototype
 
-  defaultContents: null
-  minTextWidth: null
-  fontSize: null
-  fontStyle: null
-  isBold: null
-  isItalic: null
-  isNumeric: null
-  text: null
+  defaultContents: nil
+  minTextWidth: nil
+  fontSize: nil
+  fontStyle: nil
+  isBold: nil
+  isItalic: nil
+  isNumeric: nil
+  text: nil
   isEditable: true
 
   constructor: (
@@ -45,7 +45,7 @@ class StringFieldMorph extends FrameMorph
   reLayout: ->
     super()
     txt = (if @text then @getValue() else @defaultContents)
-    @text = null
+    @text = nil
     @fullDestroyChildren()
     @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
     @text.isNumeric = @isNumeric # for whichever reason...

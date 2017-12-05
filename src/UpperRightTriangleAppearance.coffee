@@ -22,7 +22,7 @@ class UpperRightTriangleAppearance extends Appearance
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
       if w < 1 or h < 1
-        return null
+        return nil
 
       aContext.save()
 

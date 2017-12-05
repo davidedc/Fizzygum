@@ -4,8 +4,8 @@
 class ReactiveValuesTestsRectangleMorph extends Morph
 
   count: 1
-  countVal: null
-  countOfDirectRectangleChildren: null
+  countVal: nil
+  countOfDirectRectangleChildren: nil
 
   constructor: (extent, color) ->
     super()
