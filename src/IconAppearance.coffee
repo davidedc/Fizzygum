@@ -122,7 +122,12 @@ class IconAppearance extends Appearance
       ## at this point, you draw in a squareSize x squareSize
       ## canvas, and it gets painted in a square that fits
       ## the morph, right in the middle.
-      @paintFunction aContext
+      try
+        @paintFunction aContext
+      catch err
+        console.log err
+        world.errorConsole?.popUpWithError err
+
 
       aContext.restore()
 
