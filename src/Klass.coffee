@@ -13,20 +13,21 @@ class Klass
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
-  # on the Klass it belongs to.
-  # The check:
-  #     @constructor.name == arguments.callee.name\
-  # is added so that the morph registers itself only
-  # for the immediate klass it belongs to and not all the
-  # other superclasses (in cases for example the constructor
-  # calls "super", we want to avoid that any constructor
-  # up the chain causes the object to register itself
+  # on the Klass it belongs to AND TO ALL THE SUPERKLASSES
+  # The way it's added to all the superclasses is via
+  # the constructor always calling "super", so constructors
+  # up the chain cause the object to register itself
   # with all the superclasses.
   # this mechanism can be tested by opening an AnalogClockMorph and
   # then from the console:
-  # world.children[0].constructor.klass.instances[0] === world.children[0]
+  #  world.children[0].constructor.klass.instances[0] === world.children[0]
   # or
-  # AnalogClockMorph.klass.instances[0] === world.children[0]
+  #  AnalogClockMorph.klass.instances[0] === world.children[0]
+  # or
+  #  AnalogClockMorph.klass.instances
+  # to check whether AnalogClockMorph was removed from the superklass'
+  # (i.e. Morph) list:
+  #  AnalogClockMorph.klass.superKlass.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
   _addInstancesTracker: (aString) ->
     # the regex to get the actual spacing under the constructor
     # is:
@@ -34,7 +35,7 @@ class Klass
     # but let's keep it simple: there are going to be four spaces under for the
     # body of the constructor
     aString += "\n    return\n"
-    aString.replace(/^([ \t]*)return/gm, "$1if @constructor.name == arguments.callee.name\n$1  this.constructor.klass.instances.push @\n$1  return")
+    aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance();\n$1return")
     
   _equivalentforSuper: (fieldName, aString) ->
     # coffeescript won't compile "super" unless it's an instance
@@ -142,10 +143,14 @@ class Klass
 
     console.dir @propertiesSources
 
-    # the class itself is a function, the constructor:
+    # the class itself is a constructor function, the constructor.
+    # we have to find its source (if it exists), and
+    # we have to slightly modify it and then we have to run
+    # it so that the class is born.
     console.log "adding the constructor"
     if @propertiesSources["constructor"]?
 
+      # if there is a source for the constructor
       constructorDeclaration = @_equivalentforSuper "constructor", @propertiesSources["constructor"]
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS: " + constructorDeclaration
@@ -159,12 +164,16 @@ class Klass
       #if @name == "StringMorph2" then debugger
       eval.call window, constructorDeclaration
     else
+      # there is no constructor source, so we
+      # just have to synthesize one that does:
+      #  constructor ->
+      #    super
+      #    register instance
       window[@name] = ->
         # first line here is equivalent to super()
         window[@name].__super__.constructor.call(this);
         # register instance
-        if @constructor.name == arguments.callee.name
-          this.constructor.klass.instances.push @
+        @registerThisInstance()
 
     # if you declare a constructor (i.e. a Function) like this then you don't
     # get the "name" property set as it normally is when

@@ -127,8 +127,7 @@ DeepCopierMixin =
           # since they test positive as typeof "object"
           theClone = Object.create(@constructor::)
           # add to the instances tracking
-          if @constructor.klass?
-            @constructor.klass.instances.push theClone
+          theClone.registerThisInstance?()
           if addClassNameFieldIfObjectNotArray
             theClone.className = @constructor.name
           #console.log "theClone class:" + theClone.constructor.name

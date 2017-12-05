@@ -371,6 +371,37 @@ class Morph extends MorphicNode
 
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
+  # this happens when the Morph's constructor runs
+  # and also when the Morph is duplicated
+  registerThisInstance: ->
+    goingUpKlassHyerarchy = @constructor.klass
+    loop
+      if !goingUpKlassHyerarchy?
+        break
+      if @ not in goingUpKlassHyerarchy.instances
+        goingUpKlassHyerarchy.instances.push @
+      if !goingUpKlassHyerarchy.superKlass?
+        break
+      goingUpKlassHyerarchy = goingUpKlassHyerarchy.superKlass
+
+  # this happens when the Morph is destroyed
+  unregisterThisInstance: ->
+    # remove instance from the instances tracker
+    # in the class. To see this: just create an
+    # AnalogClockMorph, see that
+    # AnalogClockMorph.klass.instances[0] has one
+    # element. Then delete the clock, and see that the
+    # tracker is now an empty array.
+    goingUpKlassHyerarchy = @constructor.klass
+    loop
+      if !goingUpKlassHyerarchy?
+        break
+      goingUpKlassHyerarchy.instances.remove @
+      if !goingUpKlassHyerarchy.superKlass?
+        break
+      goingUpKlassHyerarchy = goingUpKlassHyerarchy.superKlass
+
+
   isTransparentAt: (aPoint) ->
     @appearance?.isTransparentAt aPoint
 
@@ -464,13 +495,7 @@ class Morph extends MorphicNode
   # Morph deleting:
   destroy: ->
 
-    # remove instance from the instances tracker
-    # in the class. To see this: just create an
-    # AnalogClockMorph, see that
-    # AnalogClockMorph.klass.instances[0] has one
-    # element. Then delete the clock, and see that the
-    # tracker is now an empty array.
-    @constructor.klass.instances.remove @
+    @unregisterThisInstance()
 
     @destroyed = true
     @parent?.invalidateLayout()
