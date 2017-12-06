@@ -395,6 +395,7 @@ loadTestManifests = ->
   document.head.appendChild script2
 
 compileFGCode = (codeSource, bare, version = 1) ->
+  t0 = performance.now()
   try
     switch version
       when 1
@@ -407,6 +408,9 @@ compileFGCode = (codeSource, bare, version = 1) ->
     errorMessage += "error:\n"
     errorMessage += err + "\n"
     world.errorConsole?.popUpWithError errorMessage
+
+  t1 = performance.now()
+  console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."
 
   return compiled
 
@@ -525,6 +529,8 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
     loadTestManifests()
     return
 
+  t0 = performance.now()
+
   eachClass = inclusion_order[srcNumber]
   console.log "checking whether " + eachClass + " is already in the system "
 
@@ -554,6 +560,10 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
         console.log err
 
       eval.call window, compiled
+
+  t1 = performance.now()
+  console.log "compileAndEvalAllSrcFiles call time: " + (t1 - t0) + " milliseconds."
+
 
   setTimeout ( ->
     compileAndEvalAllSrcFiles srcNumber+1 , inclusion_order
