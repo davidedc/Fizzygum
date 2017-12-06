@@ -77,7 +77,7 @@ class Klass
 
     # remove the bit we use to identify classe because it's going to
     # mangle the parsing and we can add it transparently
-    sourceWithoutComments = sourceWithoutComments.replace("namedClasses[@name] = @prototype\n","")
+    sourceWithoutComments = sourceWithoutComments.replace(/^  namedClasses[@name] = @prototype\n/m,"")
 
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
     if (m = classRegex.exec(sourceWithoutComments))?
@@ -117,7 +117,7 @@ class Klass
 
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
-    regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*): ([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*):)/gm
+    regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: ([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
     while (m = regex.exec(sourceWithoutComments))?
         if (m.index == regex.lastIndex)
             regex.lastIndex++
@@ -162,8 +162,9 @@ class Klass
       #    register instance
       constructorDeclaration = """
         #{@name} = ->
-          # first line here is equivalent to super()
-          #{@name}.__super__.constructor.call(this);
+          # first line here is equivalent to "super" the one
+          # passing all the arguments
+          #{@name}.__super__.constructor.apply this, arguments
           # register instance
           @registerThisInstance()
           return

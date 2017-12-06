@@ -532,6 +532,9 @@ continueBooting = ->
 
 compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
+  if !window.CS1CompiledClasses?
+    window.CS1CompiledClasses = []
+
   if srcNumber == inclusion_order.length
 
     # remove the log div
@@ -550,7 +553,6 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
   # code and manually create any extensions
   if eachClass in [
    "MorphicNode",
-   "TextMorph2",
    "Morph",
    # --------
    "AnalogClockMorph",
@@ -587,13 +589,65 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
    "TriggerMorph",
    "UncollapsedStateIconMorph",
    "UnderCarpetIconMorph",
-
+   # --------
+   "TextMorph",
+   "TextMorph2",
+   # --------
+   "AngledArrowUpLeftIconMorph",
+   "BrushIconMorph",
+   "CanvasMorph",
+   "CaretMorph",
+   "WindowMorph",
+   "InspectorMorph2",
+   "ClassInspectorMorph",
+   "CloseIconButtonMorph",
+   "SimpleRectangularButtonMorph",
+   "CodeInjectingSimpleRectangularButtonMorph",
+   "EditableMarkMorph",
+   "EraserIconMorph",
+   "ErrorsLogViewerMorph",
+   "WorldMorph",
+   "FizzytilesCodeMorph",
+   "FridgeMagnetsCanvasMorph",
+   "FridgeMagnetsMorph",
+   "FridgeMorph",
+   "GrayPaletteMorph",
+   "HideIconButtonMorph",
+   "HighlighterMorph",
+   "InspectorMorph",
+   "ScrollFrameMorph",
+   "ListMorph",
+   "MagnetMorph",
+   "MenuItemMorph",
+   "MorphsListMorph",
+   "MouseSensorMorph",
+   "OverlayCanvasMorph",
+   "Pencil2IconMorph",
+   "PencilIconMorph",
+   "PointerMorph",
+   "PromptMorph",
+   "ReconfigurablePaintMorph",
+   "SimpleButtonMorph",
+   "SliderButtonMorph",
+   "SliderMorph",
+   "SliderMorph2",
+   "StringFieldMorph",
+   "TextPromptMorph",
+   "ToggleButtonMorph",
+   "ToothpasteIconMorph",
+   "UnderTheCarpetMorph",
+   "UnderTheCarpetOpenerMorph",
+   "WorkspaceMorph",
    ]
     morphKlass = new Klass(window[eachClass + "_coffeSource"])
 
 
   if !window[eachClass]?
     if eachClass + "_coffeSource" in sourcesManifests
+
+      window.CS1CompiledClasses.push eachClass
+      # CS1CompiledClasses.filter((each) => each.indexOf("Morph")!= -1).map((each) => console.log(each + "\n"))
+
       console.log "compiling and evalling " + eachClass + " from souce code"
       loadingLogDiv = document.getElementById 'loadingLog'
       loadingLogDiv.innerHTML = "compiling and evalling " + eachClass

@@ -23,7 +23,7 @@ class TextMorph2 extends StringMorph2
   widthOfPossiblyCroppedText: nil
 
   constructor: (
-   @text = (if text is "" then text else "TextMorph2"),
+   @text = "TextMorph2",
    @originallySetFontSize = 12,
    @fontName = @justArialFontStack,
    @isBold = false,

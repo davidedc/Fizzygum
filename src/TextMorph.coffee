@@ -21,34 +21,34 @@ class TextMorph extends StringMorph
   receiver: nil
 
   constructor: (
-    @text = (if text is "" then text else "TextMorph"),
-    @fontSize = 12,
-    @fontStyle = "sans-serif",
-    @isBold = false,
-    @isItalic = false,
-    @alignment = "left",
-    @maxTextWidth = 0,
-    @fontName = "",
-    @shadowOffset = (new Point 0, 0),
-    @shadowColor = nil
-    ) ->
+   @text = "TextMorph",
+   @fontSize = 12,
+   @fontStyle = "sans-serif",
+   @isBold = false,
+   @isItalic = false,
+   @alignment = "left",
+   @maxTextWidth = 0,
+   @fontName = "",
+   @shadowOffset = (new Point 0, 0),
+   @shadowColor = nil
+   ) ->
 
-      super \
-        @text,
-        @fontSize,
-        @fontStyle,
-        @isBold,
-        @isItalic,
-        nil,
-        @shadowOffset,
-        @shadowColor,
-        nil,
-        @fontName
-      # override inherited properties:
-      @markedTextColor = new Color 255, 255, 255
-      @markedBackgoundColor = new Color 60, 60, 120
-      @color = new Color 0, 0, 0
-      @noticesTransparentClick = true
+    super \
+      @text,
+      @fontSize,
+      @fontStyle,
+      @isBold,
+      @isItalic,
+      nil,
+      @shadowOffset,
+      @shadowColor,
+      nil,
+      @fontName
+    # override inherited properties:
+    @markedTextColor = new Color 255, 255, 255
+    @markedBackgoundColor = new Color 60, 60, 120
+    @color = new Color 0, 0, 0
+    @noticesTransparentClick = true
   
   breakTextIntoLines: ->
     paragraphs = @text.split "\n"
