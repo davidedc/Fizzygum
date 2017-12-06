@@ -742,7 +742,7 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
       # give life to the loaded and translated coffeescript klass now!
       try
-        compiled = compileFGCode window[eachClass + "_coffeSource"], true, 1
+        compiled = compileFGCode window[eachClass + "_coffeSource"], true, 2
       catch err
         console.log "source:"
         console.log window[eachClass + "_coffeSource"]
