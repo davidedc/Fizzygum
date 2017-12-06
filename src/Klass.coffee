@@ -201,8 +201,8 @@ class Klass
       if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
         console.log "building field " + fieldName + " ===== "
 
-        if fieldName == "invalidateFullBoundsCache"
-          debugger
+        #if fieldName == "invalidateFullBoundsCache"
+        #  debugger
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
