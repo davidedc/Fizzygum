@@ -61,9 +61,9 @@ class Arg
   fetchVal: () ->
     @valWrappedByThisArg.fetchVal()
 
-  ################################################
+  #-----------------------------------------------
   #  signature checking / calculation
-  ################################################
+  #-----------------------------------------------
 
   # we give the opportunity to specify a custom signature
   # for args, in case we have a signature that
@@ -172,9 +172,9 @@ class Arg
     return signatureChanged
 
 
-  ################################################
+  #-----------------------------------------------
   #  breaking / healing
-  ################################################
+  #-----------------------------------------------
 
   heal: () ->
     @maybeChangedSinceLastCalculation = false
@@ -197,9 +197,9 @@ class Arg
       @valContainingThisArg.checkAndPropagateChangeBasedOnArgChange()
 
 
-  ################################################
+  #-----------------------------------------------
   #  removal
-  ################################################
+  #-----------------------------------------------
 
   # we don't completely destroy the argument
   # (like removeFromArgs does)
@@ -230,9 +230,9 @@ class Arg
 
 
 
-  ################################################
+  #-----------------------------------------------
   #  disconnection
-  ################################################
+  #-----------------------------------------------
 
   disconnectChildArg: () ->
     @fromChild = false
@@ -246,10 +246,10 @@ class Arg
     delete @args.parentArgByName[@valContainingThisArg.valName]
     @markForRemoval()
 
-  ################################################
+  #-----------------------------------------------
   #  (un)turning into argument
   #  directly or indirectly depending on parent
-  ################################################
+  #-----------------------------------------------
 
   turnIntoArgDirectlyOrIndirectlyDependingOnParent: () ->
     @args.calculatedDirectlyOfIndirectlyFromParentById[@valWrappedByThisArg.id] = true

@@ -3,7 +3,7 @@
 
 class ProfilingDataCollector
 
-  # Overall profiling flags #########################
+  # Overall profiling flags -----------------------------
 
   @overallProfilingEnabled: false
 
@@ -12,7 +12,7 @@ class ProfilingDataCollector
   @disableProfiling: ->
     @overallProfilingEnabled = false
 
-  # Broken rectangles ###############################
+  # Broken rectangles -----------------------------
 
   @brokenRectsProfilingEnabled: false
   @shortSessionCumulativeNumberOfBrokenRects: 0
@@ -50,7 +50,7 @@ class ProfilingDataCollector
 
   
 
-  # Broken rectangles ###############################
+  # Broken rectangles -----------------------------
 
   @enableBrokenRectsProfiling: ->
     @overallProfilingEnabled = true

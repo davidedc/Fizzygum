@@ -1,4 +1,4 @@
-###
+##
 ## LCLCodeCompiler makes available the user sketch
 ## (written in simplified syntax) as a runnable javascript function.
 ## Also note that LCLCodeCompiler might return a program
@@ -7,7 +7,7 @@
 ## tick once they are run, which prevents them from being run again.
 ## Note that LCLCodeCompiler doesn't run the user sketch, it just
 ## makes it available to the LCLProgramRunner.
-###
+##
 
 class LCLCodeCompiler
   currentCodeString: nil

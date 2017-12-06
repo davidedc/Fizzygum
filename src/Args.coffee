@@ -51,27 +51,27 @@ class Args
     @morphContainingTheseArgs = @valContainingTheseArgs.ownerMorph
 
 
-  ################################################
+  #-----------------------------------------------
   #  breaking / healing
-  ################################################
+  #-----------------------------------------------
 
   healAll: () ->
     for eachArg of @argsMaybeChangedSinceLastCalculationById
       eachArg.heal()
 
 
-  ################################################
+  #-----------------------------------------------
   #  accessors
-  ################################################
+  #-----------------------------------------------
 
   getByVal: (theVal) ->
     return @getById theVal.id
 
-  ################################################
+  #-----------------------------------------------
   #  setup methods - these are called in the
   #  constructors of each value to prepare
   #  for the arguments.
-  ################################################
+  #-----------------------------------------------
 
   # for local arguments, you can
   # actually create the arguments as they are static
@@ -112,13 +112,13 @@ class Args
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar] ?= {}
       @morphContainingTheseArgs.morphValsDependingOnChildrenVals[eachVar][@valContainingTheseArgs.valName] = @valContainingTheseArgs
 
-  ################################################
+  #-----------------------------------------------
   #  argument connection methods
   #  these are called when Morphs are moved
   #  around so we need to connect/disconnect
   #  the arguments of each value to/from the
   #  (new) parent/children
-  ################################################
+  #-----------------------------------------------
 
   # check whether you are reconnecting
   # an arg that was temporarily
@@ -168,10 +168,10 @@ class Args
     argumentToBeConnected.directlyCalculatedFromParent = true
     argumentToBeConnected.turnIntoArgDirectlyOrIndirectlyDependingOnParent()
 
-  ################################################
+  #-----------------------------------------------
   #  handling update of argument coming from
   #  other values
-  ################################################
+  #-----------------------------------------------
 
   argFromChildMightHaveChanged: (childValThatMightHaveChanged) ->
 
@@ -202,9 +202,9 @@ class Args
     if !@valContainingTheseArgs.directlyOrIndirectlyDependsOnAParentVal
       @valContainingTheseArgs.checkAndPropagateChangeBasedOnArgChange()
 
-  ################################################
+  #-----------------------------------------------
   #  fetching correct arguments values
-  ################################################
+  #-----------------------------------------------
 
   # all @calculatedDirectlyOfIndirectlyFromParentById
   # always need

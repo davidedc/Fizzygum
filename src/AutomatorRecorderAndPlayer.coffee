@@ -1,4 +1,4 @@
-##########################################################################################
+# -------------------------------------------------------------------------
 # REQUIRES SystemTestsReferenceImage
 # REQUIRES SystemTestsSystemInfo
 # REQUIRES globalFunctions

@@ -1,4 +1,4 @@
-###
+##
 ## CodePreprocessor takes care of translating the simplified syntax
 ## of livecodelb to a coffeescript that is degestible by the
 ## coffeescript compiler.
@@ -10,7 +10,7 @@
 ##   testPreprocessor()
 ## or, to run a subset (useful for bisection in case something goes wrong):
 ##   testPreprocessor(rangeMin, rangeMax)
-###
+##
 
 detailedDebug = false
 
@@ -180,7 +180,7 @@ class CodePreprocessor
 
     @colorsCommandsRegex = @colorCommands.join "|"
 
-  ###
+  ##
   ## Stops ticked doOnce blocks from running
   ##
   ## doOnce statements which have a tick mark next to them
@@ -201,7 +201,7 @@ class CodePreprocessor
   ## @param {string} code    the code to re-write
   ##
   ## @returns {string}
-  ###
+  ##
   removeTickedDoOnce: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
@@ -477,7 +477,7 @@ class CodePreprocessor
     # that was passed
     return [code, error]
 
-  ###
+  ##
   ## Some of the functions can be used with postfix notation
   ##
   ## e.g.
@@ -488,6 +488,7 @@ class CodePreprocessor
   ##      black background
   ##
   ## We need to switch this round before coffee script compilation
+  ###
   adjustPostfixNotations: (code, error) ->
     # if there is an error, just propagate it
     return [undefined, error] if error?
@@ -1929,7 +1930,7 @@ class CodePreprocessor
               + '\ninstead of:\n' + testCase.expected \
               + '\nwith error:\n' + testCase.error
             failedTests++
-      console.log "######### summary #######"
+      console.log "========= summary ========="
       console.log "      passed: #{successfulTest}"
       console.log "      failed: #{failedTests}"
       console.log "      failed moot appends: #{failedMootAppends}"
