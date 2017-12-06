@@ -236,7 +236,7 @@ class Klass
       namedClasses[@name] = window[@name].prototype
 
     window[@name].klass = @
-    if @name == "FrameMorph" then debugger
+    #if @name == "WorldMorph" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     for eachInstance in @instances

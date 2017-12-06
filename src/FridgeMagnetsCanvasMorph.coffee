@@ -216,11 +216,10 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
   
   commonPrimitiveDrawingLogic: (a, b, c, d, primitiveProperties) ->
 
-    ###
-    if @liveCodeLabCoreInstance.animationLoop.noDrawFrame
-      #console.log "skipping the frame"
-      return
-    ###
+    
+    #if @liveCodeLabCoreInstance.animationLoop.noDrawFrame
+    #  #console.log "skipping the frame"
+    #  return
 
     # b and c are not functional in some geometric
     # primitives, but we handle them here in all cases
@@ -240,13 +239,11 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     else if isFunction d
       appendedFunction = d
 
-    ###
-    context.beginPath();
-    context.lineWidth="6";
-    context.strokeStyle="red";
-    context.rect(5,5,290,140); 
-    context.stroke();
-    ###
+    #context.beginPath();
+    #context.lineWidth="6";
+    #context.strokeStyle="red";
+    #context.rect(5,5,290,140); 
+    #context.stroke();
 
     @backBufferContext.strokeStyle = "black"
     @backBufferContext.beginPath()
