@@ -126,7 +126,9 @@ DeepCopierMixin =
           # note that this case ALSO handles arrays
           # since they test positive as typeof "object"
           theClone = Object.create(@constructor::)
-          # add to the instances tracking
+          # add to the instances tracking.
+          # note that only Morphs have that kind
+          # of tracking
           theClone.registerThisInstance?()
           if addClassNameFieldIfObjectNotArray
             theClone.className = @constructor.name

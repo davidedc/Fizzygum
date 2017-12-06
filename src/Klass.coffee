@@ -28,6 +28,9 @@ class Klass
   # to check whether AnalogClockMorph was removed from the superklass'
   # (i.e. Morph) list:
   #  AnalogClockMorph.klass.superKlass.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
+  # Note that only Morphs have that kind
+  # of tracking and hence the existence check of
+  # the registerThisInstance function
   _addInstancesTracker: (aString) ->
     # the regex to get the actual spacing under the constructor
     # is:
@@ -35,7 +38,7 @@ class Klass
     # but let's keep it simple: there are going to be four spaces under for the
     # body of the constructor
     aString += "\n    return\n"
-    aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance();\n$1return")
+    aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance?();\n$1return")
     
   _equivalentforSuper: (fieldName, aString) ->
     console.log "removing super from: " + aString
@@ -165,8 +168,8 @@ class Klass
           # first line here is equivalent to "super" the one
           # passing all the arguments
           #{@name}.__super__.constructor.apply this, arguments
-          # register instance
-          @registerThisInstance()
+          # register instance (only Morphs have this method)
+          @registerThisInstance?()
           return
       """
       console.log "constructor declaration CS:\n" + constructorDeclaration
@@ -190,6 +193,9 @@ class Klass
       console.log "extend: " + @name + " extends " + @superClassName
       window[@name].__super__ = window[@superClassName].prototype
       window[@name] = extend window[@name], window[@superClassName]
+    else
+      console.log "no extension (extends Object) for " + @name
+      window[@name].__super__ = Object.prototype
 
 
     # if the class is augmented with one or more Mixins
