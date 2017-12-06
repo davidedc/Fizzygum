@@ -68,7 +68,7 @@ class ScratchAreaIconMorph extends Morph
       # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
-  arc = (context, x, y, w, h, startAngle, endAngle, isClosed) ->
+  arc: (context, x, y, w, h, startAngle, endAngle, isClosed) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -121,22 +121,22 @@ class ScratchAreaIconMorph extends Morph
     context.lineWidth = 4.5
     context.stroke()
     #// Oval Drawing
-    arc context, 128.5, 94.5, 33, 49, 180, 273, false
+    @arc context, 128.5, 94.5, 33, 49, 180, 273, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 2 Drawing
-    arc context, 22, 93, 33, 49, 180, 273, false
+    @arc context, 22, 93, 33, 49, 180, 273, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 3 Drawing
-    arc context, 135, 93, 26, 49, 266, 355, false
+    @arc context, 135, 93, 26, 49, 266, 355, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 4 Drawing
-    arc context, 162.5, 67.5, 26, 49, 266, 355, false
+    @arc context, 162.5, 67.5, 26, 49, 266, 355, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
@@ -149,12 +149,12 @@ class ScratchAreaIconMorph extends Morph
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 5 Drawing
-    arc context, -9.5, 76, 51, 49, 254, 339, false
+    @arc context, -9.5, 76, 51, 49, 254, 339, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 6 Drawing
-    arc context, 17, 52.5, 51, 49, 254, 339, false
+    @arc context, 17, 52.5, 51, 49, 254, 339, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
@@ -189,12 +189,12 @@ class ScratchAreaIconMorph extends Morph
     context.lineWidth = 4
     context.stroke()
     #// Oval 7 Drawing
-    arc context, 171.5, 45.5, 33, 49, 180, 273, false
+    @arc context, 171.5, 45.5, 33, 49, 180, 273, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 8 Drawing
-    arc context, 92, 80, 18, 18.5, 181, 0, false
+    @arc context, 92, 80, 18, 18.5, 181, 0, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()
@@ -223,7 +223,7 @@ class ScratchAreaIconMorph extends Morph
     context.lineWidth = 4.5
     context.stroke()
     #// Oval 9 Drawing
-    arc context, 64.5, 27, 22.5, 23.5, 181, 180, false
+    @arc context, 64.5, 27, 22.5, 23.5, 181, 180, false
     context.strokeStyle = color2
     context.lineWidth = 4.5
     context.stroke()

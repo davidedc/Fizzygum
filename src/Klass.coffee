@@ -38,10 +38,12 @@ class Klass
     aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance();\n$1return")
     
   _equivalentforSuper: (fieldName, aString) ->
+    console.log "removing super from: " + aString
     # coffeescript won't compile "super" unless it's an instance
     # method (i.e. if it comes inside a class), so we need to
     # translate that manually into valid CS that doesn't use super.
     aString = aString.replace(/super\(\)/g, @name + ".__super__." + fieldName + ".call(this)")
+    aString = aString.replace(/super /g, @name + ".__super__." + fieldName + ".call this, ")
     aString = aString.replace(/super\(/g, @name + ".__super__." + fieldName + ".call(this, ")
     aString = aString.replace(/super$/gm, @name + ".__super__." + fieldName + ".apply(this, arguments)")
 
@@ -107,73 +109,71 @@ class Klass
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
-    sourceWithoutComments = sourceWithoutComments.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm,"")
+    sourceWithoutComments = sourceWithoutComments.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
     console.log "sourceWithoutComments ---------\n" + sourceWithoutComments
+
+    sourceWithoutComments += "\n  $$$STOPTOKENFORMETHODS:"
 
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
     regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*): ([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*):)/gm
-    lastField = nil
     while (m = regex.exec(sourceWithoutComments))?
         if (m.index == regex.lastIndex)
             regex.lastIndex++
         m.forEach((match, groupIndex) ->
-            if groupIndex == 3
-              lastField = match
             console.log("Found match, group #{groupIndex}: #{match}");
         )
+
+        if m[1].valueOf() == "$$$STOPTOKENFORMETHODS"
+          break
+        else
+          console.log "not the stop method: " + m[1].valueOf()
+
         if m[1].substring(0, 1) == "@"
           @staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
         else
           @propertiesSources[m[1]] = m[2]
 
-    console.log "last one !!!!!!!!!!!!!!!!!!!!!!!!"
-    regexLast = ///#{lastField}:([^]*)///g
-    while (m = regexLast.exec(sourceWithoutComments))?
-        if (m.index == regexLast.lastIndex)
-            regexLast.lastIndex++
-        m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}");
-        )
-        if lastField.substring(0, 1) == "@"
-          @staticPropertiesSources[lastField.substring(1, lastField.length)] = m[1]
-        else
-          @propertiesSources[lastField] = m[1]
-
     console.dir @propertiesSources
 
     # the class itself is a constructor function, the constructor.
     # we have to find its source (if it exists), and
-    # we have to slightly modify it and then we have to run
-    # it so that the class is born.
+    # we have to slightly modify it and then we have to
+    # actually create this function, hence creating the class.
     console.log "adding the constructor"
-    if @propertiesSources["constructor"]?
+    if @propertiesSources.hasOwnProperty('constructor')
 
+      console.log "CS sources of constructor: " + @propertiesSources["constructor"]
       # if there is a source for the constructor
       constructorDeclaration = @_equivalentforSuper "constructor", @propertiesSources["constructor"]
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
-      console.log "constructor declaration CS: " + constructorDeclaration
+      console.log "constructor declaration CS:\n" + constructorDeclaration
 
       compiled = compileFGCode constructorDeclaration, true, 2
 
-      constructorDeclaration = "window." + @name + " = " + compiled
+      constructorDeclaration = @name + " = " + compiled
       constructorDeclaration = @_removeHelperFunctions constructorDeclaration
-
-      console.log "constructor declaration JS: " + constructorDeclaration
-      #if @name == "StringMorph2" then debugger
-      eval.call window, constructorDeclaration
     else
       # there is no constructor source, so we
       # just have to synthesize one that does:
       #  constructor ->
       #    super
       #    register instance
-      window[@name] = ->
-        # first line here is equivalent to super()
-        window[@name].__super__.constructor.call(this);
-        # register instance
-        @registerThisInstance()
+      constructorDeclaration = """
+        #{@name} = ->
+          # first line here is equivalent to super()
+          #{@name}.__super__.constructor.call(this);
+          # register instance
+          @registerThisInstance()
+          return
+      """
+      console.log "constructor declaration CS:\n" + constructorDeclaration
+      constructorDeclaration = compileFGCode constructorDeclaration, true, 2
+
+    console.log "constructor declaration JS: " + constructorDeclaration
+    #if @name == "StringMorph2" then debugger
+    eval.call window, constructorDeclaration
 
     # if you declare a constructor (i.e. a Function) like this then you don't
     # get the "name" property set as it normally is when
@@ -187,24 +187,28 @@ class Klass
     # if the class extends another one
     if @superClassName?
       console.log "extend: " + @name + " extends " + @superClassName
+      window[@name].__super__ = window[@superClassName].prototype
       window[@name] = extend window[@name], window[@superClassName]
 
 
     # if the class is augmented with one or more Mixins
     for eachAugmentation in @augmentedWith
       console.log "augmentedWith: " + eachAugmentation
-      window[@name].augmentWith window[eachAugmentation]
+      window[@name].augmentWith window[eachAugmentation], @name
 
     # non-static fields, which are put in the prototype
     for own fieldName, fieldValue of @propertiesSources
       if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
         console.log "building field " + fieldName + " ===== "
 
+        if fieldName == "invalidateFullBoundsCache"
+          debugger
+
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
         compiled = compileFGCode fieldDeclaration, true, 2
 
-        fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + compiled
+        fieldDeclaration = @name + ".prototype." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
 
         console.log "field declaration: " + fieldDeclaration
@@ -221,7 +225,7 @@ class Klass
 
         compiled = compileFGCode fieldDeclaration, true, 2
 
-        fieldDeclaration = "window." + @name + "." + fieldName + " = " + compiled
+        fieldDeclaration = @name + "." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
 
         console.log fieldDeclaration
@@ -232,6 +236,7 @@ class Klass
       namedClasses[@name] = window[@name].prototype
 
     window[@name].klass = @
+    if @name == "FrameMorph" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     for eachInstance in @instances

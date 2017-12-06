@@ -17,17 +17,17 @@ class SpeechBubbleMorph extends Morph
   morphInvokingThis: nil
 
   constructor: (
-    @contents="",
-    @morphInvokingThis,
-    @color = (new Color 230, 230, 230),
-    cornerRadius,
-    @padding = 0,
-    isThought = false) ->
-      # console.log "bubble super"
-      super()
-      @cornerRadius = cornerRadius or 6
-      @appearance = new BubblyAppearance @, isThought, true
-      # console.log @color
+   @contents="",
+   @morphInvokingThis,
+   @color = (new Color 230, 230, 230),
+   cornerRadius,
+   @padding = 0,
+   isThought = false) ->
+    # console.log "bubble super"
+    super()
+    @cornerRadius = cornerRadius or 6
+    @appearance = new BubblyAppearance @, isThought, true
+    # console.log @color
   
   @createBubbleHelpIfHandStillOnMorph: (contents, morphInvokingThis) ->
     # console.log "bubble createBubbleHelpIfHandStillOnMorph"

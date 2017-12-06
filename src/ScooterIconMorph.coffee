@@ -67,7 +67,7 @@ class ScooterIconMorph extends Morph
       # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
-  oval = (context, x, y, w, h) ->
+  oval: (context, x, y, w, h) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -77,7 +77,7 @@ class ScooterIconMorph extends Morph
     context.restore()
     return
 
-  arc = (context, x, y, w, h, startAngle, endAngle, isClosed) ->
+  arc: (context, x, y, w, h, startAngle, endAngle, isClosed) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -93,17 +93,17 @@ class ScooterIconMorph extends Morph
     #// Color Declarations
     color2 = 'rgba(0, 0, 0, 1)'
     #// Oval Drawing
-    oval context, 10.5, 136.5, 34.5, 34.5
+    @oval context, 10.5, 136.5, 34.5, 34.5
     context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
     #// Oval 2 Drawing
-    oval context, 154, 135.5, 34.5, 34.5
+    @oval context, 154, 135.5, 34.5, 34.5
     context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
     #// Oval 3 Drawing
-    arc context, 141, 123, 57, 57, 176, 268, false
+    @arc context, 141, 123, 57, 57, 176, 268, false
     context.strokeStyle = color2
     context.lineWidth = 7.5
     context.stroke()

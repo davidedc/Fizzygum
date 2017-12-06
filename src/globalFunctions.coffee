@@ -200,13 +200,25 @@ Object::augmentWith = (obj, fromClass) ->
 # adds instance properties
 # these are added to the prototype
 Object::addInstanceProperties = (fromClass, obj) ->
-  for key, value of obj when key not in MixedClassKeywords
+  for own key, value of obj when key not in MixedClassKeywords
     # Assign properties to the prototype
     @::[key] = value
+
+    # this is so we can use "super" in a mixin.
+    # we normally can't compile "super" in a mixin because
+    # we can't tell which klass this will be mixed in in advance,
+    # i.e. at compile time it doesn't
+    # belong to a klass, so at compile time it doesn't know which klass
+    # it will be injected in.
+    # So that's why _at time of injection_ we need
+    # to store the klass it's injected in in a special
+    # variable... and then at runtime we use that variable to
+    # implement super
     if fromClass?
       if isFunction value
         @::[key + "_class_injected_in"] = fromClass
         console.log "addingClassToMixin " + key + "_class_injected_in"
+
   obj.included?.apply @
   this
 ##--------------- end of mixins methods -------------------
@@ -536,11 +548,47 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
   # loading via Klass means that we register all the source
   # code and manually create any extensions
-  if eachClass == "MorphicNode" or
-   eachClass == "Morph" or
-   eachClass == "AnalogClockMorph" or
-   eachClass == "StringMorph2" or
-   eachClass == "TextMorph2"
+  if eachClass in [
+   "MorphicNode",
+   "TextMorph2",
+   "Morph",
+   # --------
+   "AnalogClockMorph",
+   "BlinkerMorph",
+   "BouncerMorph",
+   "BoxMorph",
+   "CircleBoxMorph",
+   "CollapsedStateIconMorph",
+   "ColorPaletteMorph",
+   "ColorPickerMorph",
+   "DestroyIconMorph",
+   "EmptyButtonMorph",
+   "FloraIconMorph",
+   "FrameMorph",
+   "HandMorph",
+   "HandleMorph",
+   "HeartIconMorph",
+   "IconMorph",
+   "LayoutElementAdderOrDropletMorph",
+   "LayoutSpacerMorph",
+   "MenuMorph",
+   "PenMorph",
+   "RadioButtonsHolderMorph",
+   "ReactiveValuesTestsRectangleMorph",
+   "RectangleMorph",
+   "ScooterIconMorph",
+   "ScratchAreaIconMorph",
+   "SpeechBubbleMorph",
+   "StackElementsSizeAdjustingMorph",
+   "StringMorph",
+   "StringMorph2",
+   "StringMorph3",
+   "SwitchButtonMorph",
+   "TriggerMorph",
+   "UncollapsedStateIconMorph",
+   "UnderCarpetIconMorph",
+
+   ]
     morphKlass = new Klass(window[eachClass + "_coffeSource"])
 
 

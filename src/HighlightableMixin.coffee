@@ -49,10 +49,19 @@ HighlightableMixin =
         @state = @STATE_PRESSED
         @updateColor()
 
-        # instead of super
-        # we can't call "super" in a mixin because it doesn't know which class
-        # it was injected in. So that's why we need to store that in a special
-        # variable when we inject functions...
+        if !window[@[arguments.callee.name + "_class_injected_in"]]?
+          debugger
+
+        # rephrasing "super" here...
+        # we can't compile "super" in a mixin because we can't tell which
+        # class this will be mixed in in advance, i.e. at compile time it doesn't
+        # belong to a class, so at compile time it doesn't know which class
+        # it will be injected in.
+        # So that's why _at time of injection_ we need
+        # to store the class it's injected in in a special
+        # variable... and then at runtime here we use that variable to
+        # implement super
+        # TODO This rephrasing of "super" can be done at compile time
         window[@[arguments.callee.name + "_class_injected_in"]].__super__[arguments.callee.name]
 
       mouseUpLeft: ->

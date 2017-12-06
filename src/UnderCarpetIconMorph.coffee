@@ -67,7 +67,7 @@ class UnderCarpetIconMorph extends Morph
       # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
-  oval = (context, x, y, w, h) ->
+  oval: (context, x, y, w, h) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -77,7 +77,7 @@ class UnderCarpetIconMorph extends Morph
     context.restore()
     return
 
-  arc = (context, x, y, w, h, startAngle, endAngle, isClosed) ->
+  arc: (context, x, y, w, h, startAngle, endAngle, isClosed) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -101,7 +101,7 @@ class UnderCarpetIconMorph extends Morph
     context.lineWidth = 10
     context.stroke()
     #// Oval Drawing
-    arc context, 264, 112, 61, 61, 285, 21, false
+    @arc context, 264, 112, 61, 61, 285, 21, false
     context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
@@ -114,7 +114,7 @@ class UnderCarpetIconMorph extends Morph
     context.lineWidth = 10
     context.stroke()
     #// Oval 2 Drawing
-    arc context, 188, 297, 63, 63, 285, 86, false
+    @arc context, 188, 297, 63, 63, 285, 86, false
     context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
@@ -247,66 +247,66 @@ class UnderCarpetIconMorph extends Morph
     context.lineWidth = 10
     context.stroke()
     #// Oval 3 Drawing
-    oval context, 312, 275, 10, 9
+    @oval context, 312, 275, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 4 Drawing
-    oval context, 332, 350, 10, 9
+    @oval context, 332, 350, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 5 Drawing
-    oval context, 321, 324, 10, 9
+    @oval context, 321, 324, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 6 Drawing
-    oval context, 302, 314, 10, 9
+    @oval context, 302, 314, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 7 Drawing
-    oval context, 313, 300, 10, 9
+    @oval context, 313, 300, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 8 Drawing
-    oval context, 342, 314, 10, 9
+    @oval context, 342, 314, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 9 Drawing
-    oval context, 334, 286, 10, 9
+    @oval context, 334, 286, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 10 Drawing
-    oval context, 353, 271, 10, 9
+    @oval context, 353, 271, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 11 Drawing
-    oval context, 327, 262, 10, 9
+    @oval context, 327, 262, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 12 Drawing
-    oval context, 341, 251, 10, 9
+    @oval context, 341, 251, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 13 Drawing
-    oval context, 356, 243, 10, 9
+    @oval context, 356, 243, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 14 Drawing
-    oval context, 322, 238, 10, 9
+    @oval context, 322, 238, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 15 Drawing
-    oval context, 338, 224, 10, 9
+    @oval context, 338, 224, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 16 Drawing
-    oval context, 361, 225, 10, 9
+    @oval context, 361, 225, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 17 Drawing
-    oval context, 348, 206, 10, 9
+    @oval context, 348, 206, 10, 9
     context.fillStyle = color2
     context.fill()
     #// Oval 18 Drawing
-    oval context, 372, 198, 10, 9
+    @oval context, 372, 198, 10, 9
     context.fillStyle = color2
     context.fill()

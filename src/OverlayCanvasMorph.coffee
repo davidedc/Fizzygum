@@ -8,8 +8,8 @@ class OverlayCanvasMorph extends CanvasMorph
   underlyingCanvasMorph: nil
 
   constructor: ->
-  	super
-  	@color = nil
+    super
+    @color = nil
 
   isFloatDraggable: ->
     false

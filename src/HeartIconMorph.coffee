@@ -67,7 +67,7 @@ class HeartIconMorph extends Morph
       # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
-  oval = (context, x, y, w, h) ->
+  oval: (context, x, y, w, h) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -77,7 +77,7 @@ class HeartIconMorph extends Morph
     context.restore()
     return
 
-  arc = (context, x, y, w, h, startAngle, endAngle, isClosed) ->
+  arc: (context, x, y, w, h, startAngle, endAngle, isClosed) ->
     context.save()
     context.beginPath()
     context.translate x, y
@@ -94,17 +94,17 @@ class HeartIconMorph extends Morph
     color = 'rgba(226, 0, 75, 1)'
     color2 = 'rgba(0, 0, 0, 1)'
     #// Oval Drawing
-    arc context, 11, 21, 99, 99, 136, 326, false
+    @arc context, 11, 21, 99, 99, 136, 326, false
     context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Oval 2 Drawing
-    arc context, 91, 21, 99, 99, 214, 46, false
+    @arc context, 91, 21, 99, 99, 214, 46, false
     context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Oval 3 Drawing
-    oval context, 98, 41, 5, 5
+    @oval context, 98, 41, 5, 5
     context.fillStyle = color
     context.fill()
     context.strokeStyle = color2
@@ -125,24 +125,24 @@ class HeartIconMorph extends Morph
     context.lineWidth = 8
     context.stroke()
     #// Oval 4 Drawing
-    arc context, 87.5, 154.5, 26, 26, 26, 143, false
+    @arc context, 87.5, 154.5, 26, 26, 26, 143, false
     context.strokeStyle = color2
     context.lineWidth = 7.5
     context.stroke()
     #// Oval 5 Drawing
-    arc context, 33.5, 44, 53, 54, 181, 273, false
+    @arc context, 33.5, 44, 53, 54, 181, 273, false
     context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
     #// Oval 6 Drawing
-    oval context, 56, 39, 10, 10
+    @oval context, 56, 39, 10, 10
     context.fillStyle = color
     context.fill()
     context.strokeStyle = color2
     context.lineWidth = 1
     context.stroke()
     #// Oval 7 Drawing
-    oval context, 29, 66, 10, 10
+    @oval context, 29, 66, 10, 10
     context.fillStyle = color
     context.fill()
     context.strokeStyle = color2

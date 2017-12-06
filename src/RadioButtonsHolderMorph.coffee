@@ -11,11 +11,11 @@ class RadioButtonsHolderMorph extends Morph
   color: new Color 0,0,0,0.2
 
   constructor: ->
-  	super()
-  	@appearance = new RectangularAppearance @
+    super()
+    @appearance = new RectangularAppearance @
 
 
   mouseClickLeft: (morphThatFired) ->
     for eachChild in @children
-    	if eachChild != morphThatFired
-    		eachChild.resetSwitchButton?()
+      if eachChild != morphThatFired
+        eachChild.resetSwitchButton?()
