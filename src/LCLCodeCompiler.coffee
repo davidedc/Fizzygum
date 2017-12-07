@@ -48,7 +48,7 @@ class LCLCodeCompiler
       return output
 
     try
-      compiledOutput = CoffeeScript.compile(code,
+      compiledOutput = CoffeeScript2.compile(code,
         bare: "on"
       )
     catch e
