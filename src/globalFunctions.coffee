@@ -689,7 +689,7 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
    "BubblyAppearance",
    "RectangularAppearance",
    "CircleBoxyAppearance",
-   #"CodePreprocessor",
+   #"LCLCodePreprocessor",
    #"ColourLiterals",
    "DoubleLinkedList",
    "UpperRightTriangle",

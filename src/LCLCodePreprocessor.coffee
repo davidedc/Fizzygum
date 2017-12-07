@@ -1,5 +1,5 @@
 ##
-## CodePreprocessor takes care of translating the simplified syntax
+## LCLCodePreprocessor takes care of translating the simplified syntax
 ## of livecodelb to a coffeescript that is degestible by the
 ## coffeescript compiler.
 ## This pre-processing step can raise some errors - which are
@@ -44,7 +44,7 @@ ifFunctional = (condition, thenCode, elseCode) ->
 
 window.ifFunctional = ifFunctional if window?
 
-class CodePreprocessor
+class LCLCodePreprocessor
 
   testCases: [
      notes:    """

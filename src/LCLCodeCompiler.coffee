@@ -9,6 +9,8 @@
 ## makes it available to the LCLProgramRunner.
 ##
 
+# REQUIRES LCLCodePreprocessor
+
 class LCLCodeCompiler
   currentCodeString: nil
   codePreprocessor: nil
@@ -17,10 +19,10 @@ class LCLCodeCompiler
   whitespaceCheck: /^\s*$/
 
   constructor: (@eventRouter) ->
-    # the code compiler needs the CodePreprocessor
+    # the code compiler needs the LCLCodePreprocessor
     
-    @codePreprocessor = new CodePreprocessor()
-    #@codePreprocessor = new CodePreprocessor()
+    @codePreprocessor = new LCLCodePreprocessor()
+    #@codePreprocessor = new LCLCodePreprocessor()
 
 
   compileCode: (code) ->
