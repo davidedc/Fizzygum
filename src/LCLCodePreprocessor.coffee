@@ -3582,10 +3582,10 @@ class LCLCodePreprocessor
 
     # build the regex for the colour literals
     @colorsRegex = ""
-    colourLiterals = new ColourLiterals
-    for key of colourLiterals.colourNamesValues
-      if colourLiterals.colourNamesValues.hasOwnProperty key
-        @colorsRegex = @colorsRegex + "|"+key
+    for own key, value of Color
+      if key.startsWith "byName_"
+        @colorsRegex = @colorsRegex + "|"+key.substring 7
+
     # delete the pre-pended pipe character
     @colorsRegex = @colorsRegex.substring(1, @colorsRegex.length)
 
