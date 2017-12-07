@@ -702,7 +702,7 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
    "PreferencesAndSettings",
    "ProfilingDataCollector",
    "SystemTestsControlPanelUpdater",
-   #"LCLCodeCompiler",
+   "LCLCodeCompiler",
    "IconAppearance",
    "LCLProgramRunner",
    "MenuAppearance",
