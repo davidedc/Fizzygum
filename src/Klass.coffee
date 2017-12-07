@@ -153,7 +153,7 @@ class Klass
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS:\n" + constructorDeclaration
 
-      compiled = compileFGCode constructorDeclaration, true, 2
+      compiled = compileFGCode constructorDeclaration, true
 
       constructorDeclaration = @name + " = " + compiled
       constructorDeclaration = @_removeHelperFunctions constructorDeclaration
@@ -173,7 +173,7 @@ class Klass
           return
       """
       console.log "constructor declaration CS:\n" + constructorDeclaration
-      constructorDeclaration = compileFGCode constructorDeclaration, true, 2
+      constructorDeclaration = compileFGCode constructorDeclaration, true
 
     console.log "constructor declaration JS: " + constructorDeclaration
     #if @name == "StringMorph2" then debugger
@@ -213,7 +213,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true, 2
+        compiled = compileFGCode fieldDeclaration, true
 
         fieldDeclaration = @name + ".prototype." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration
@@ -230,7 +230,7 @@ class Klass
 
         fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true, 2
+        compiled = compileFGCode fieldDeclaration, true
 
         fieldDeclaration = @name + "." + fieldName + " = " + compiled
         fieldDeclaration = @_removeHelperFunctions fieldDeclaration

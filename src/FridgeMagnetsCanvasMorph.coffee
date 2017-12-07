@@ -24,6 +24,7 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
 
   newGraphicsCode: (newCode) ->
     @oldGraphicsCode = @graphicsCode
+    # Coffeescript v2 is used
     compilation = @lclCodeCompiler.compileCode newCode
     if compilation.program?
       @graphicsCode = compilation.program

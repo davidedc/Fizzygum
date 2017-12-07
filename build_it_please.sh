@@ -82,7 +82,6 @@ cp src/index.html ../Fizzygum-builds/latest/
 cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs/
 cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
 
-cp auxiliary\ files/CoffeeScript/coffee-script_1.9.3.js ../Fizzygum-builds/latest/js/libs/
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
 
 # copy aux icon files

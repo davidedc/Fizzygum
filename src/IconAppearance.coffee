@@ -39,7 +39,7 @@ class IconAppearance extends Appearance
 
   compilePaintFunction: ->
     console.log "compiling icon: " + @paintFunctionSource
-    compiledOutput = compileFGCode @paintFunctionSource, true, 2
+    compiledOutput = compileFGCode @paintFunctionSource, true
     console.log compiledOutput
 
     @paintFunction = new Function 'context', compiledOutput

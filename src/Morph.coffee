@@ -2892,7 +2892,7 @@ class Morph extends MorphicNode
   # Morph eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
     try
-      result = eval compileFGCode codeSource, true, 2
+      result = eval compileFGCode codeSource, true
       @reLayout()
       
       @changed()

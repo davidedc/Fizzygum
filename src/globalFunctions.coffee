@@ -406,14 +406,11 @@ loadTestManifests = ->
     aTestScriptHasBeenLoaded()
   document.head.appendChild script2
 
-compileFGCode = (codeSource, bare, version = 1) ->
+compileFGCode = (codeSource, bare) ->
   t0 = performance.now()
   try
-    switch version
-      when 1
-        compiled = CoffeeScript.compile codeSource,{"bare":bare}
-      when 2
-        compiled = CoffeeScript2.compile codeSource,{"bare":bare}
+    # Coffeescript v2 is used
+    compiled = CoffeeScript.compile codeSource,{"bare":bare}
   catch err
     errorMessage =  "error in compiling:\n"
     errorMessage += codeSource + "\n"
@@ -434,7 +431,7 @@ loadKlass = ->
   script.onload = ->
     # give life to the loaded and translated coffeescript klass now!
     console.log "compiling and evalling Klass from souce code"
-    eval.call window, compileFGCode window["Klass_coffeSource"], true, 2
+    eval.call window, compileFGCode window["Klass_coffeSource"], true
     loadAllSources()
 
 
@@ -742,7 +739,7 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
       # give life to the loaded and translated coffeescript klass now!
       try
-        compiled = compileFGCode window[eachClass + "_coffeSource"], true, 2
+        compiled = compileFGCode window[eachClass + "_coffeSource"], true
       catch err
         console.log "source:"
         console.log window[eachClass + "_coffeSource"]
