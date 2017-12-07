@@ -31,5 +31,5 @@ class ReactiveValuesTestsRectangleMorph extends Morph
 
     #constructor: (@valName, @functionToRecalculate, @localInputVals, parentArgsNames, childrenArgsNames, @ownerMorph)
     #debugger
-    @countOfDirectRectangleChildren = new BasicCalculatedVal("countOfDirectRectangleChildren", functionToRecalculate, [], [], ["countVal"], @)
+    @countOfDirectRectangleChildren = new BasicCalculatedValue("countOfDirectRectangleChildren", functionToRecalculate, [], [], ["countVal"], @)
 

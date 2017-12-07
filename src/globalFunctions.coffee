@@ -689,13 +689,13 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
    "BubblyAppearance",
    "RectangularAppearance",
    "CircleBoxyAppearance",
-   #"LCLCodePreprocessor",
+   "LCLCodePreprocessor",
    "DoubleLinkedList",
    "UpperRightTriangle",
    "UpperRightTriangleAnnotation",
    "FittingSpecText",
    "FittingSpecTextBoxFittingTextTightOrLoose",
-   "FittingSpecTextBoxFittingTextWitchDimensionAdjusts",
+   "FittingSpecTextBoxFittingTextWhichDimensionAdjusts",
    "FittingSpecTextInLargerBounds",
    "FittingSpecTextInSmallerBounds",
    "LRUCache",
@@ -838,3 +838,4 @@ extend = (child, parent) ->
   child.prototype = new ctor()
   child.__super__ = parent.prototype
   return child
+

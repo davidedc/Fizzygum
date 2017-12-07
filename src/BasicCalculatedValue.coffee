@@ -3,7 +3,7 @@
 
 # REQUIRES ProfilerData
 
-class BasicCalculatedVal extends GroundVal
+class BasicCalculatedValue extends GroundVal
   # sometimes we know that the cached val
   # might be out of date but we don't want to
   # trigger a recalculation to actually check.
@@ -32,7 +32,7 @@ class BasicCalculatedVal extends GroundVal
       collectionOfChildrenValuesNames = ""
       for eachName in childrenArgsNames
         collectionOfChildrenValuesNames = collectionOfChildrenValuesNames + ", " + eachName
-      console.log "building BasicCalculatedVal named " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " depending on children variables: " + collectionOfChildrenValuesNames
+      console.log "building BasicCalculatedValue named " + @valName + " in morph "+ @ownerMorph.uniqueIDString() + " depending on children variables: " + collectionOfChildrenValuesNames
     
     # we don't mark immediately this value as
     # depending on parent, the reason is that there might be
