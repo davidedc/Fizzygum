@@ -13,7 +13,7 @@ class SystemTestsReferenceImage
   systemInfo: nil
   hashOfData: 0
   hashOfSystemInfo: 0
-  fileName = ''
+  fileName: ''
 
   constructor: (@imageName, @imageData, @systemInfo) ->
     @hashOfData = HashCalculator.calculateHash(@imageData)
