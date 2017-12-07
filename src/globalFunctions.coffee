@@ -14,7 +14,7 @@ namedClasses = {}
 
 # we use "nil" everywhere instead of "null"
 # and this "nil" we use is really "undefined"
-# The reason is the following: Coffeescript2 has the
+# The reason is the following: Coffeescript v2 has the
 # same "default values" policy as ES2015 i.e.
 # "null" values DON'T get defaults anymore.
 # Since we used that a lot, we devise the trick that

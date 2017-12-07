@@ -48,9 +48,8 @@ class LCLCodeCompiler
       return output
 
     try
-      compiledOutput = CoffeeScript2.compile(code,
-        bare: "on"
-      )
+      # Coffeescript v2 is used
+      compiledOutput = CoffeeScript.compile code, {"bare":on}
     catch e
       # coffescript compiler has caught a syntax error.
       output.status = 'error'
