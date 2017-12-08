@@ -2,7 +2,7 @@
 
 class Klass
   @allKlasses: []
-  propertiesSources: nil
+  nonStaticPropertiesSources: nil
   staticPropertiesSources: nil
   name: ""
   superClassName: nil
@@ -10,6 +10,7 @@ class Klass
   superKlass: nil
   subKlasses: nil
   instances: nil
+  defineWithSingleEval: true
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
@@ -71,12 +72,10 @@ class Klass
 
     return aString
 
-  _addSuperClass: (theSuperClassName) ->
-    @superKlass = window[theSuperClassName].klass
-    window[theSuperClassName].klass.subKlasses.push @
-    @superClassName = theSuperClassName
-
   constructor: (source) ->
+
+    if !window.classDefinitionAsJS?
+      window.classDefinitionAsJS = []
 
     # We remove these Coffeescript helper functions from
     # all compiled code, so make sure that they are available.
@@ -86,7 +85,7 @@ class Klass
     window.indexOf = [].indexOf
     window.slice = [].slice
 
-    @propertiesSources = {}
+    @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
     @subKlasses = []
     @instances = []
@@ -102,10 +101,11 @@ class Klass
       if (! /^[ \t]*#/m.test(eachLine)) and (!multilineComment)
         sourceWithoutComments += eachLine + "\n"
 
-    # remove the bit we use to identify classe because it's going to
+    # remove the bit we use to identify classes because it's going to
     # mangle the parsing and we can add it transparently
     sourceWithoutComments = sourceWithoutComments.replace(/^  namedClasses[@name] = @prototype\n/m,"")
 
+    # find the class name
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
     if (m = classRegex.exec(sourceWithoutComments))?
         m.forEach((match, groupIndex) ->
@@ -114,14 +114,18 @@ class Klass
         @name = m[1]
         console.log "name: " + @name
 
+    # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
     if (m = extendsRegex.exec(sourceWithoutComments))?
         m.forEach((match, groupIndex) ->
             console.log("Found match, group #{groupIndex}: #{match}")
         )
-        @_addSuperClass m[1]
+        @superClassName = m[1]
+        @superKlass = window[@superClassName].klass
+
         console.log "superClassName: " + @superClassName
 
+    # find which mixins need to be mixed-in
     @augmentedWith = []
     augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm;
     while (m = augmentRegex.exec(sourceWithoutComments))?
@@ -140,7 +144,12 @@ class Klass
 
     console.log "sourceWithoutComments ---------\n" + sourceWithoutComments
 
-    sourceWithoutComments += "\n  $$$STOPTOKENFORMETHODS:"
+    sourceWithoutComments += "\n  $$$STOPTOKEN_LASTFIELD :"
+
+    # Now find all the fields definitions
+    # note that the constructor, methods, properties and static properties
+    # are ALL fields definitions, so we are basically going to cycle through
+    # everything
 
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
@@ -152,35 +161,43 @@ class Klass
             console.log("Found match, group #{groupIndex}: #{match}");
         )
 
-        if m[1].valueOf() == "$$$STOPTOKENFORMETHODS"
+        if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
           break
         else
-          console.log "not the stop method: " + m[1].valueOf()
+          console.log "not the stop field: " + m[1].valueOf()
 
         if m[1].substring(0, 1) == "@"
           @staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
         else
-          @propertiesSources[m[1]] = m[2]
+          @nonStaticPropertiesSources[m[1]] = m[2]
 
-    console.dir @propertiesSources
+    console.dir @nonStaticPropertiesSources
+
+    # --------------------
+    # OK we collected all the fields definitions, now go through them
+    # and put them into action
+    # --------------------
+
+    # collect all the definitions in JS form here
+    JS_string_definitions = "// class " + @name + "\n\n"
 
     # the class itself is a constructor function, the constructor.
     # we have to find its source (if it exists), and
     # we have to slightly modify it and then we have to
     # actually create this function, hence creating the class.
     console.log "adding the constructor"
-    if @propertiesSources.hasOwnProperty('constructor')
+    if @nonStaticPropertiesSources.hasOwnProperty('constructor')
 
-      console.log "CS sources of constructor: " + @propertiesSources["constructor"]
+      console.log "CS sources of constructor: " + @nonStaticPropertiesSources["constructor"]
       # if there is a source for the constructor
-      constructorDeclaration = @_equivalentforSuper "constructor", @propertiesSources["constructor"]
+      constructorDeclaration = @_equivalentforSuper "constructor", @nonStaticPropertiesSources["constructor"]
       constructorDeclaration = @_addInstancesTracker constructorDeclaration
       console.log "constructor declaration CS:\n" + constructorDeclaration
 
       compiled = compileFGCode constructorDeclaration, true
 
       constructorDeclaration = @_removeHelperFunctions compiled
-      constructorDeclaration = @name + " = " + constructorDeclaration
+      constructorDeclaration = "window." + @name + " = " + constructorDeclaration
     else
       # there is no constructor source, so we
       # just have to synthesize one that does:
@@ -188,10 +205,10 @@ class Klass
       #    super
       #    register instance
       constructorDeclaration = """
-        #{@name} = ->
+        window.#{@name} = ->
           # first line here is equivalent to "super" the one
           # passing all the arguments
-          #{@name}.__super__.constructor.apply this, arguments
+          window.#{@name}.__super__.constructor.apply this, arguments
           # register instance (only Morphs have this method)
           @registerThisInstance?()
           return
@@ -201,7 +218,9 @@ class Klass
 
     console.log "constructor declaration JS: " + constructorDeclaration
     #if @name == "StringMorph2" then debugger
-    eval.call window, constructorDeclaration
+    JS_string_definitions += constructorDeclaration + "\n"
+    if !@defineWithSingleEval 
+      eval.call window, constructorDeclaration
 
     # if you declare a constructor (i.e. a Function) like this then you don't
     # get the "name" property set as it normally is when
@@ -210,25 +229,34 @@ class Klass
     # the name property is tricky, see:
     # see http://stackoverflow.com/questions/5871040/how-to-dynamically-set-a-function-object-name-in-javascript-as-it-is-displayed-i
     # just doing this is not sufficient: window[@name].name = @name
-    Object.defineProperty(window[@name], "name", { value: @name });
+    if !@defineWithSingleEval 
+      Object.defineProperty(window[@name], 'name', { value: @name });
+    JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
     # if the class extends another one
     if @superClassName?
       console.log "extend: " + @name + " extends " + @superClassName
-      window[@name].__super__ = window[@superClassName].prototype
-      window[@name] = extend window[@name], window[@superClassName]
+      if !@defineWithSingleEval 
+        window[@name].__super__ = window[@superClassName].prototype
+        window[@name] = extend window[@name], window[@superClassName]
+      JS_string_definitions += "window.#{@name}.__super__ = window.#{@superClassName}.prototype;" + "\n"
+      JS_string_definitions += "window.#{@name} = extend(window.#{@name}, window.#{@superClassName});" + "\n"
     else
       console.log "no extension (extends Object) for " + @name
-      window[@name].__super__ = Object.prototype
+      if !@defineWithSingleEval 
+        window[@name].__super__ = Object.prototype
+      JS_string_definitions += "window.#{@name}.__super__ = Object.prototype;" + "\n\n"
 
 
     # if the class is augmented with one or more Mixins
     for eachAugmentation in @augmentedWith
       console.log "augmentedWith: " + eachAugmentation
-      window[@name].augmentWith window[eachAugmentation], @name
+      if !@defineWithSingleEval 
+        window[@name].augmentWith window[eachAugmentation], @name
+      JS_string_definitions += "window.#{@name}.augmentWith(window.#{eachAugmentation}, '#{@name}');" + "\n"
 
     # non-static fields, which are put in the prototype
-    for own fieldName, fieldValue of @propertiesSources
+    for own fieldName, fieldValue of @nonStaticPropertiesSources
       if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
         console.log "building field " + fieldName + " ===== "
 
@@ -240,11 +268,13 @@ class Klass
         compiled = compileFGCode fieldDeclaration, true
 
         fieldDeclaration = @_removeHelperFunctions compiled
-        fieldDeclaration = @name + ".prototype." + fieldName + " = " + fieldDeclaration
+        fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
 
         console.log "field declaration: " + fieldDeclaration
         #if @name == "StringMorph2" then debugger
-        eval.call window, fieldDeclaration
+        JS_string_definitions += fieldDeclaration + "\n"
+        if !@defineWithSingleEval 
+          eval.call window, fieldDeclaration
 
     # now the static fields, which are put in the constructor
     # rather than in the prototype
@@ -257,16 +287,32 @@ class Klass
         compiled = compileFGCode fieldDeclaration, true
 
         fieldDeclaration = @_removeHelperFunctions compiled
-        fieldDeclaration = @name + "." + fieldName + " = " + fieldDeclaration
+        fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
 
         console.log fieldDeclaration
-        eval.call window, fieldDeclaration
+        JS_string_definitions += fieldDeclaration + "\n"
+        if !@defineWithSingleEval 
+          eval.call window, fieldDeclaration
 
     # finally, add the class to the namedClasses index
     if @name != "MorphicNode"
-      namedClasses[@name] = window[@name].prototype
+      if !@defineWithSingleEval 
+        namedClasses[@name] = window[@name].prototype
+      JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
+
+    if @defineWithSingleEval 
+      try
+        eval.call window, JS_string_definitions
+      catch err
+        alert " error " + err + " evaling : " + JS_string_definitions
+
+
+    window.classDefinitionAsJS.push JS_string_definitions
 
     window[@name].klass = @
+    if @superklass? 
+      @superklass.subKlasses.push @
+
     #if @name == "LCLCodePreprocessor" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
@@ -278,6 +324,6 @@ class Klass
         # if a subclass redefined a property, then
         # the change doesn't apply, so there is no
         # notification to propagate
-        if !eachSubKlass.propertiesSources[eachProperty]?
+        if !eachSubKlass.nonStaticPropertiesSources[eachProperty]?
           eachSubKlass.notifyInstancesOfSourceChange([eachProperty])
 
