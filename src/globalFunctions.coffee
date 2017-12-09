@@ -357,36 +357,42 @@ getDocumentPositionOf = (aDOMelement) ->
 
 # -------------------------------------------
 
-howManySourcesLoaded = 0
 howManyTestManifestsLoaded = 0
 howManySourcesCompiledAndEvalled = 0
 
-aSourceHasBeenLoaded = ->
-  howManySourcesLoaded++
-  # the -1 here is due to the fact that we load
-  # "klass" separately in advance, so there is no
-  # need to wait for it here.
-  if howManySourcesLoaded == sourcesManifests.length - 1
-    loadingLogDiv = document.getElementById 'loadingLog'
-    loadingLogDiv.innerHTML = ""
-    continueBooting()
+# a helper function to use Promise style
+# instead of callback style when loading a JS
+loadJSFile = (fileName) ->
+  return new Promise (resolve, reject) ->
 
-
-
-loadAllSources = ->
-  for eachClass in sourcesManifests
-
-    if eachClass == "Klass_coffeSource" then continue
     script = document.createElement "script"
-    script.src = "js/sourceCode/" + eachClass + ".js"
+    script.src = fileName
 
     script.onload = ->
       loadingLogDiv = document.getElementById 'loadingLog'
       loadingLogDiv.innerHTML += "loading " + this.src + "</br>"
       console.log "loading " + this.src
-      aSourceHasBeenLoaded()
+      resolve(script)
 
     document.head.appendChild script
+
+    script.onerror = ->
+        reject(script)
+
+
+loadAllSources = ->
+
+  allSourceLoadsPromises = []
+
+  for eachFile in sourcesManifests
+    
+    # just skip this one cause it's already loaded
+    if eachFile == "Klass_coffeSource" then continue
+    
+    allSourceLoadsPromises.push loadJSFile "js/sourceCode/" + eachFile + ".js"
+
+  (Promise.all allSourceLoadsPromises).then continueBooting
+
 
 aTestScriptHasBeenLoaded = ->
   howManyTestManifestsLoaded++
@@ -481,6 +487,9 @@ generate_inclusion_order = (dependencies) ->
 
 continueBooting = ->
 
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv.innerHTML = ""
+
   console.log "--------------------------------"
   # find out the dependencies looking at each klass'
   # source code and hints in it.
@@ -491,14 +500,14 @@ continueBooting = ->
   IS_CLASS = ///\s*class\s+(\w+)///
   TRIPLE_QUOTES = ///'''///
   #debugger
-  for eachClass in sourcesManifests
+  for eachFile in sourcesManifests
 
-    eachClass = eachClass.replace "_coffeSource",""
-    if eachClass == "Klass" then continue
-    #if namedClasses.hasOwnProperty eachClass
-    console.log eachClass + " - "
-    dependencies[eachClass] = []
-    lines = window[eachClass + "_coffeSource"].split '\n'
+    eachFile = eachFile.replace "_coffeSource",""
+    if eachFile == "Klass" then continue
+    #if namedClasses.hasOwnProperty eachFile
+    console.log eachFile + " - "
+    dependencies[eachFile] = []
+    lines = window[eachFile + "_coffeSource"].split '\n'
     i = 0
     while i < lines.length
       #console.log lines[i]
@@ -506,49 +515,76 @@ continueBooting = ->
       matches = lines[i].match EXTENDS
       if matches?
         #console.log matches
-        dependencies[eachClass].push matches[1]
-        console.log eachClass + " extends " + matches[1]
+        dependencies[eachFile].push matches[1]
+        console.log eachFile + " extends " + matches[1]
 
       matches = lines[i].match REQUIRES
       if matches?
         #console.log matches
-        dependencies[eachClass].push matches[1]
-        console.log eachClass + " requires " + matches[1]
+        dependencies[eachFile].push matches[1]
+        console.log eachFile + " requires " + matches[1]
 
       matches = lines[i].match DEPENDS
       if matches?
         #console.log matches
-        dependencies[eachClass].push matches[1]
-        console.log eachClass + " has klass init in instance variable " + matches[1]
+        dependencies[eachFile].push matches[1]
+        console.log eachFile + " has klass init in instance variable " + matches[1]
 
       i++
   inclusion_order = generate_inclusion_order dependencies
   console.log "--------------------------------"
-  compileAndEvalAllSrcFiles 0, inclusion_order
+  compileAndEvalAllSrcFiles inclusion_order
+
+# see https://gist.github.com/joepie91/2664c85a744e6bd0629c
+# for this useful function to pace "then" steps
+waitNextTurn = ->
+  (args...) ->
+    new Promise (resolve, reject) ->
+      setTimeout () ->
+        resolve args...
+      , 1
 
 
-compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
+compileAndEvalAllSrcFiles = (inclusion_order) ->
+
+  # to return a function where the argument is bound
+  createCompileSourceFunction = (fileName) ->
+    -> compileSource fileName
+
+
+  # start of the promise. It will "trigger" the chain
+  # in 1 ms
+  promiseChain = new Promise (resolve) ->
+    setTimeout ->
+      resolve()
+    , 1
+
+  # chain two steps at for each file, one to compile the file
+  # and one to wait for the next turn
+  for eachFile in inclusion_order
+    compileEachFileFunction = createCompileSourceFunction eachFile
+    promiseChain = promiseChain.then compileEachFileFunction
+    promiseChain = promiseChain.then waitNextTurn()
+
+  # final step, proceed with the boot sequence
+  promiseChain.then ->
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv.parentElement.removeChild loadingLogDiv
+    loadTestManifests()
+
+
+compileSource = (fileContents) ->
 
   if !window.CS1CompiledClasses?
     window.CS1CompiledClasses = []
 
-  if srcNumber == inclusion_order.length
-
-    # remove the log div
-    loadingLogDiv = document.getElementById 'loadingLog'
-    loadingLogDiv.parentElement.removeChild loadingLogDiv
-
-    loadTestManifests()
-    return
-
   t0 = performance.now()
 
-  eachClass = inclusion_order[srcNumber]
-  console.log "checking whether " + eachClass + " is already in the system "
+  console.log "checking whether " + fileContents + " is already in the system "
 
   # loading via Klass means that we register all the source
   # code and manually create any extensions
-  if eachClass in [
+  if fileContents in [
    "MorphicNode",
    "Morph",
    # --------
@@ -723,25 +759,25 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
    #"ContainerMixin",
    #"UpperRightInternalHaloMixin",
    ]
-    morphKlass = new Klass(window[eachClass + "_coffeSource"])
+    morphKlass = new Klass(window[fileContents + "_coffeSource"])
 
 
-  if !window[eachClass]?
-    if eachClass + "_coffeSource" in sourcesManifests
+  if !window[fileContents]?
+    if fileContents + "_coffeSource" in sourcesManifests
 
-      window.CS1CompiledClasses.push eachClass
+      window.CS1CompiledClasses.push fileContents
       # CS1CompiledClasses.filter((each) => each.indexOf("Morph")!= -1).map((each) => console.log(each + "\n"))
 
-      console.log "compiling and evalling " + eachClass + " from souce code"
+      console.log "compiling and evalling " + fileContents + " from souce code"
       loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv.innerHTML = "compiling and evalling " + eachClass
+      loadingLogDiv.innerHTML = "compiling and evalling " + fileContents
 
       # give life to the loaded and translated coffeescript klass now!
       try
-        compiled = compileFGCode window[eachClass + "_coffeSource"], true
+        compiled = compileFGCode window[fileContents + "_coffeSource"], true
       catch err
         console.log "source:"
-        console.log window[eachClass + "_coffeSource"]
+        console.log window[fileContents + "_coffeSource"]
         console.log "error:"
         console.log err
 
@@ -749,11 +785,6 @@ compileAndEvalAllSrcFiles = (srcNumber, inclusion_order) ->
 
   t1 = performance.now()
   console.log "compileAndEvalAllSrcFiles call time: " + (t1 - t0) + " milliseconds."
-
-
-  setTimeout ( ->
-    compileAndEvalAllSrcFiles srcNumber+1 , inclusion_order
-  ), 1
 
 
 
