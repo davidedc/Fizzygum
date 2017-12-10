@@ -76,10 +76,11 @@ class Klass
   # as part of the sources. Note that the presence of multiline
   # comments (and strings, for that matter) could mangle the
   # parsing.
-  # Maybe a more correct way of doing this is to remove comments
-  # and strings into a "clean version", and maintaining
-  # line-to-line correspondence between this "clean" version and
-  # the original version. Then do the regexing on the "clean"
+  # Maybe a more correct way of doing this is to remove
+  # only multiline comments and strings into a "clean version",
+  # and maintaining line-to-line correspondence between this
+  # "clean" version and the original version.
+  # Then do the regexing on the "clean"
   # version, but getting the source from the "original"
   # version (which should be relatively easy if we know from which
   # line to which line each field is defined in)
