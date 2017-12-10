@@ -388,6 +388,7 @@ loadAllSources = ->
     
     # just skip this one cause it's already loaded
     if eachFile == "Klass_coffeSource" then continue
+    if eachFile == "Mixin_coffeSource" then continue
     
     allSourceLoadsPromises.push loadJSFile "js/sourceCode/" + eachFile + ".js"
 
@@ -429,23 +430,18 @@ compileFGCode = (codeSource, bare) ->
 
   return compiled
 
-loadKlass = ->
-
-  script = document.createElement "script"
-  script.src = "js/sourceCode/Klass_coffeSource.js"
-
-  script.onload = ->
-    # give life to the loaded and translated coffeescript klass now!
-    console.log "compiling and evalling Klass from souce code"
-    eval.call window, compileFGCode window["Klass_coffeSource"], true
-    loadAllSources()
-
-
-  document.head.appendChild script
-
-
 boot = ->
-  loadKlass()
+  # load Klass
+  (Promise.all [
+    loadJSFile("js/sourceCode/Klass_coffeSource.js"),
+    loadJSFile("js/sourceCode/Mixin_coffeSource.js")
+  ]).then( ->
+    eval.call window, compileFGCode window["Mixin_coffeSource"], true
+  ).then( ->
+    eval.call window, compileFGCode window["Klass_coffeSource"], true
+  ).then( ->
+    loadAllSources()
+  )
 
 
 # The whole idea here is that
@@ -504,6 +500,7 @@ continueBooting = ->
 
     eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Klass" then continue
+    if eachFile == "Mixin" then continue
     #if namedClasses.hasOwnProperty eachFile
     console.log eachFile + " - "
     dependencies[eachFile] = []
@@ -570,6 +567,8 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
   # chain two steps at for each file, one to compile the file
   # and one to wait for the next turn
   for eachFile in inclusion_order
+    if eachFile == "Klass" or eachFile == "Mixin" or eachFile == "globalFunctions"
+      continue
     compileEachFileFunction = createCompileSourceFunction eachFile
     promiseChain = promiseChain.then compileEachFileFunction
     promiseChain = promiseChain.then waitNextTurn()
@@ -581,215 +580,28 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
     loadTestManifests()
 
 
-compileSource = (fileContents) ->
+compileSource = (fileName) ->
 
   if !window.CS1CompiledClasses?
     window.CS1CompiledClasses = []
 
+  fileContents = window[fileName + "_coffeSource"]
+
   t0 = performance.now()
 
-  console.log "checking whether " + fileContents + " is already in the system "
+  console.log "checking whether " + fileName + " is already in the system "
 
   # loading via Klass means that we register all the source
   # code and manually create any extensions
-  if fileContents in [
-   "MorphicNode",
-   "Morph",
-   # --------
-   "AnalogClockMorph",
-   "BlinkerMorph",
-   "BouncerMorph",
-   "BoxMorph",
-   "CircleBoxMorph",
-   "CollapsedStateIconMorph",
-   "ColorPaletteMorph",
-   "ColorPickerMorph",
-   "DestroyIconMorph",
-   "EmptyButtonMorph",
-   "FloraIconMorph",
-   "FrameMorph",
-   "HandMorph",
-   "HandleMorph",
-   "HeartIconMorph",
-   "IconMorph",
-   "LayoutElementAdderOrDropletMorph",
-   "LayoutSpacerMorph",
-   "MenuMorph",
-   "PenMorph",
-   "RadioButtonsHolderMorph",
-   "ReactiveValuesTestsRectangleMorph",
-   "RectangleMorph",
-   "ScooterIconMorph",
-   "ScratchAreaIconMorph",
-   "SpeechBubbleMorph",
-   "StackElementsSizeAdjustingMorph",
-   "StringMorph",
-   "StringMorph2",
-   "StringMorph3",
-   "SwitchButtonMorph",
-   "TriggerMorph",
-   "UncollapsedStateIconMorph",
-   "UnderCarpetIconMorph",
-   # --------
-   "TextMorph",
-   "TextMorph2",
-   # --------
-   "AngledArrowUpLeftIconMorph",
-   "BrushIconMorph",
-   "CanvasMorph",
-   "CaretMorph",
-   "WindowMorph",
-   "InspectorMorph2",
-   "ClassInspectorMorph",
-   "CloseIconButtonMorph",
-   "SimpleRectangularButtonMorph",
-   "CodeInjectingSimpleRectangularButtonMorph",
-   "EditableMarkMorph",
-   "EraserIconMorph",
-   "ErrorsLogViewerMorph",
-   "WorldMorph",
-   "FizzytilesCodeMorph",
-   "FridgeMagnetsCanvasMorph",
-   "FridgeMagnetsMorph",
-   "FridgeMorph",
-   "GrayPaletteMorph",
-   "HideIconButtonMorph",
-   "HighlighterMorph",
-   "InspectorMorph",
-   "ScrollFrameMorph",
-   "ListMorph",
-   "MagnetMorph",
-   "MenuItemMorph",
-   "MorphsListMorph",
-   "MouseSensorMorph",
-   "OverlayCanvasMorph",
-   "Pencil2IconMorph",
-   "PencilIconMorph",
-   "PointerMorph",
-   "PromptMorph",
-   "ReconfigurablePaintMorph",
-   "SimpleButtonMorph",
-   "SliderButtonMorph",
-   "SliderMorph",
-   "SliderMorph2",
-   "StringFieldMorph",
-   "TextPromptMorph",
-   "ToggleButtonMorph",
-   "ToothpasteIconMorph",
-   "UnderTheCarpetMorph",
-   "UnderTheCarpetOpenerMorph",
-   "WorkspaceMorph",
-   # --------
-   "AlignmentSpecHorizontal",
-   "AlignmentSpecVertical",
-   "LayoutSpec",
-   "Color",
-   "Appearance",
-   "ProfilerData",
-   "Arg",
-   "Args",
-   "AutomatorCommand",
-   "AutomatorCommandCheckNumberOfItemsInMenu",
-   "AutomatorCommandCheckStringsOfItemsInMenuOrderImportant",
-   "AutomatorCommandCheckStringsOfItemsInMenuOrderUnimportant",
-   "AutomatorCommandCopy",
-   "AutomatorCommandCut",
-   "AutomatorCommandDoNothing",
-   "AutomatorCommandDrop",
-   "AutomatorCommandEvaluateString",
-   "AutomatorCommandGrab",
-   "AutomatorCommandKeyDown",
-   "AutomatorCommandKeyPress",
-   "AutomatorCommandKeyUp",
-   "AutomatorCommandLeftOrRightClickOnMenuItem",
-   "AutomatorCommandMouseButtonChange",
-   "AutomatorCommandMouseClick",
-   "AutomatorCommandMouseDoubleClick",
-   "AutomatorCommandMouseMove",
-   "AutomatorCommandMouseTripleClick",
-   "AutomatorCommandOpenContextMenu",
-   "AutomatorCommandPaste",
-   "AutomatorCommandResetWorld",
-   "AutomatorCommandScreenshot",
-   "AutomatorCommandShowComment",
-   "AutomatorCommandTurnOffAlignmentOfMorphIDsMechanism",
-   "AutomatorCommandTurnOffAnimationsPacingControl",
-   "AutomatorCommandTurnOffHidingOfMorphsContentExtractInLabels",
-   "AutomatorCommandTurnOffHidingOfMorphsGeometryInfoInLabels",
-   "AutomatorCommandTurnOffHidingOfMorphsNumberIDInLabels",
-   "AutomatorCommandTurnOnAlignmentOfMorphIDsMechanism",
-   "AutomatorCommandTurnOnAnimationsPacingControl",
-   "AutomatorCommandTurnOnHidingOfMorphsContentExtractInLabels",
-   "AutomatorCommandTurnOnHidingOfMorphsGeometryInfoInLabels",
-   "AutomatorCommandTurnOnHidingOfMorphsNumberIDInLabels",
-   "HashCalculator",
-   "SystemTestsReferenceImage",
-   "SystemInfo",
-   "SystemTestsSystemInfo",
-   "AutomatorRecorderAndPlayer",
-   "GroundVal",
-   "BasicCalculatedValue",
-   "BoxyAppearance",
-   "BubblyAppearance",
-   "RectangularAppearance",
-   "CircleBoxyAppearance",
-   "LCLCodePreprocessor",
-   "DoubleLinkedList",
-   "UpperRightTriangle",
-   "UpperRightTriangleAnnotation",
-   "FittingSpecText",
-   "FittingSpecTextBoxFittingTextTightOrLoose",
-   "FittingSpecTextBoxFittingTextWhichDimensionAdjusts",
-   "FittingSpecTextInLargerBounds",
-   "FittingSpecTextInSmallerBounds",
-   "LRUCache",
-   "PreferencesAndSettings",
-   "ProfilingDataCollector",
-   "SystemTestsControlPanelUpdater",
-   "LCLCodeCompiler",
-   "IconAppearance",
-   "LCLProgramRunner",
-   "MenuAppearance",
-   "MenuHeader",
-   "MenusHelper",
-   "PinType",
-   "Pin",
-   "Point",
-   "ReactiveValuesTests",
-   "Rectangle",
-   "ShadowInfo",
-   "UpperRightTriangleAppearance",
-   # --------
-   #"DeepCopierMixin",
-   #"BackBufferMixin",
-   #"HighlightableMixin",
-   #"ControllerMixin",
-   #"ContainerMixin",
-   #"UpperRightInternalHaloMixin",
-   ]
-    morphKlass = new Klass(window[fileContents + "_coffeSource"])
+  if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
+    morphKlass = new Klass fileContents
+  # Loaded Mixins here:
+  else if /^  onceAddedClassProperties:/m.test fileContents
+    new Mixin fileContents
 
-
-  if !window[fileContents]?
-    if fileContents + "_coffeSource" in sourcesManifests
-
-      window.CS1CompiledClasses.push fileContents
-      # CS1CompiledClasses.filter((each) => each.indexOf("Morph")!= -1).map((each) => console.log(each + "\n"))
-
-      console.log "compiling and evalling " + fileContents + " from souce code"
-      loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv.innerHTML = "compiling and evalling " + fileContents
-
-      # give life to the loaded and translated coffeescript klass now!
-      try
-        compiled = compileFGCode window[fileContents + "_coffeSource"], true
-      catch err
-        console.log "source:"
-        console.log window[fileContents + "_coffeSource"]
-        console.log "error:"
-        console.log err
-
-      eval.call window, compiled
+  console.log "compiling and evalling " + fileName + " from souce code"
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv.innerHTML = "compiling and evalling " + fileName
 
   t1 = performance.now()
   console.log "compileAndEvalAllSrcFiles call time: " + (t1 - t0) + " milliseconds."
