@@ -102,14 +102,6 @@ class Klass
     if !window.classDefinitionAsJS?
       window.classDefinitionAsJS = []
 
-    # We remove these Coffeescript helper functions from
-    # all compiled code, so make sure that they are available.
-    # It's rather crude to add them to the global scope but
-    # it works.
-    window.hasProp = {}.hasOwnProperty
-    window.indexOf = [].indexOf
-    window.slice = [].slice
-
     @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
     @subKlasses = []
