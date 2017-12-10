@@ -1140,20 +1140,21 @@ class AutomatorRecorderAndPlayer
             # todo: you should be able to remove the script once it's loaded/executed...
             # any implication of that? debugger still working OK finding the source code?
             script = document.createElement('script')
-            ###
-            systemInfo = new SystemTestsSystemInfo()
+
+            
+            #systemInfo = new SystemTestsSystemInfo()
             # some devices have non-integer pixel ratios so
             # let's handle the dot there.
-            pixelRatioString = (""+pixelRatio).replace(/\.+/g, "_")
-            alert "js/tests/assets/" +
-              systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
-              systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
-              systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
-              systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
-              "devicePixelRatio_" + pixelRatioString + "/" +
-              eachAssetInManifest +
-              ".js"
-            ###
+            #pixelRatioString = (""+pixelRatio).replace(/\.+/g, "_")
+            #alert "js/tests/assets/" +
+            #  systemInfo.os.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+            #  systemInfo.osVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+            #  systemInfo.browser.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+            #  systemInfo.browserVersion.replace(/\s+/g, "-").replace(/\.+/g, "_") + "/" +
+            #  "devicePixelRatio_" + pixelRatioString + "/" +
+            #  eachAssetInManifest +
+            #  ".js"
+            
             script.src = "js/tests/assets/"+ eachAssetInManifest + ".js"
             document.head.appendChild script
 

@@ -36,10 +36,9 @@ class SystemInfo
     @platform = navigator.platform
     @systemLanguage = navigator.systemLanguage
 
-    ###*
+    
     # code here is from "JavaScript Client Detection"
     # (C) viazenetti GmbH (Christian Ludwig)
-    ###
 
     unknown = '-'
     #browser

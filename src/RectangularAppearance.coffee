@@ -30,20 +30,19 @@ class RectangularAppearance extends Appearance
   # used to highlight a morph)
   paintHighlight: (aContext, al, at, w, h) ->
     return
-    ###
-    if !@morph.highlighted
-      return
-
+    
+    #if !@morph.highlighted
+    #  return
+    #
     # paintRectangle here is usually made to work with
     # al, at, w, h which are actual pixels
     # rather than logical pixels.
-    @morph.paintRectangle \
-      aContext,
-      al, at, w, h,
-      "orange",
-      0.5,
-      true # push and pop the context
-    ###
+    #@morph.paintRectangle \
+    #  aContext,
+    #  al, at, w, h,
+    #  "orange",
+    #  0.5,
+    #  true # push and pop the context
 
 
   # This method only paints this very morph

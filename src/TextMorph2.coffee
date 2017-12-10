@@ -121,38 +121,36 @@ class TextMorph2 extends StringMorph2
       # So this can be done only if the textbox is
       # constrained horizontally but not vertically...
 
-      ###
-      if !word.substr(0, word.length-1).contains(" ")
-        console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-        console.log "> no space word: " + word
-        checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
-        console.log "> length of: " + word + " : " + checkingLongerSingleWorld
-        console.log "> maxTextWidth: " + maxTextWidth
-
-        while checkingLongerSingleWorld > maxTextWidth
-          console.log "> " + word + " is too long at overrideFontSize: " + overrideFontSize
-          maxLengthNotOverflowing = 0
-          for scanning in [0..word.length]
-            subword = word.substring 0, scanning
-            checkingLongerSingleWorld2 = Math.ceil @measureText overrideFontSize, subword
-            console.log "> length at size " + overrideFontSize + " of subword: " + subword + " : " + checkingLongerSingleWorld2
-            if checkingLongerSingleWorld2 > maxTextWidth
-              maxLengthNotOverflowing = scanning - 1
-              break
-          console.log "> maxLengthNotOverflowing: " + maxLengthNotOverflowing
-          if maxLengthNotOverflowing == 0
-            word = word.substring 1, word.length
-          else
-            currentLineCanStayInLine = word.substring 0, maxLengthNotOverflowing
-            carryoverFromWrappingLine = word.substring maxLengthNotOverflowing, word.length
-            console.log "> part that is not overflowing: " + currentLineCanStayInLine
-            console.log "> part that is overflowing: " + carryoverFromWrappingLine
-            slotsInParagraph += currentLineCanStayInLine.length
-            wrappedLinesOfThisParagraph.push currentLineCanStayInLine
-            wrappedLineSlotsOfThisParagraph.push slotsInParagraph
-            word = carryoverFromWrappingLine
-          checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
-      ###
+      #if !word.substr(0, word.length-1).contains(" ")
+      #  console.log ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+      #  console.log "> no space word: " + word
+      #  checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
+      #  console.log "> length of: " + word + " : " + checkingLongerSingleWorld
+      #  console.log "> maxTextWidth: " + maxTextWidth
+      #
+      #  while checkingLongerSingleWorld > maxTextWidth
+      #    console.log "> " + word + " is too long at overrideFontSize: " + overrideFontSize
+      #    maxLengthNotOverflowing = 0
+      #    for scanning in [0..word.length]
+      #      subword = word.substring 0, scanning
+      #      checkingLongerSingleWorld2 = Math.ceil @measureText overrideFontSize, subword
+      #      console.log "> length at size " + overrideFontSize + " of subword: " + subword + " : " + checkingLongerSingleWorld2
+      #      if checkingLongerSingleWorld2 > maxTextWidth
+      #        maxLengthNotOverflowing = scanning - 1
+      #        break
+      #    console.log "> maxLengthNotOverflowing: " + maxLengthNotOverflowing
+      #    if maxLengthNotOverflowing == 0
+      #      word = word.substring 1, word.length
+      #    else
+      #      currentLineCanStayInLine = word.substring 0, maxLengthNotOverflowing
+      #      carryoverFromWrappingLine = word.substring maxLengthNotOverflowing, word.length
+      #      console.log "> part that is not overflowing: " + currentLineCanStayInLine
+      #      console.log "> part that is overflowing: " + carryoverFromWrappingLine
+      #      slotsInParagraph += currentLineCanStayInLine.length
+      #      wrappedLinesOfThisParagraph.push currentLineCanStayInLine
+      #      wrappedLineSlotsOfThisParagraph.push slotsInParagraph
+      #      word = carryoverFromWrappingLine
+      #    checkingLongerSingleWorld = Math.ceil @measureText overrideFontSize, word
 
       if word is "\n"
         # we reached the end of the line in the

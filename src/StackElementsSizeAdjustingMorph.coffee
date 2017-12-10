@@ -97,18 +97,15 @@ class StackElementsSizeAdjustingMorph extends Morph
   mouseLeave: ->
     document.getElementById("world").style.cursor = "auto"
 
-  ###
-  adoptWidgetsColor: (paneColor) ->
-    super adoptWidgetsColor paneColor
-    @color = paneColord
-
-  cursor: ->
-    if @owner.direction == "#horizontal"
-      Cursor.resizeLeft()
-    else
-      Cursor.resizeTop()
-  ###
-
+  #adoptWidgetsColor: (paneColor) ->
+  #  super adoptWidgetsColor paneColor
+  #  @color = paneColord
+  #
+  #cursor: ->
+  #  if @owner.direction == "#horizontal"
+  #    Cursor.resizeLeft()
+  #  else
+  #    Cursor.resizeTop()
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children

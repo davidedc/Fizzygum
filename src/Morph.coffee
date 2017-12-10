@@ -246,64 +246,62 @@ class Morph extends MorphicNode
     return false
 
 
-  ###
-  connectValuesToAddedChild: (theChild) ->
-    #if theChild.constructor.name == "RectangleMorph"
-    #  debugger
-
-    # we have a data structure that contains,
-    # for each child valName, all vals of this
-    # morph that depend on it. Go through
-    # all child val names, find the
-    # actual val in the child, and connect all
-    # to the vals in this morph that depend on it.
-    for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
-        @morphValsDependingOnChildrenVals
-      childVal = theChild.allValsInMorphByName[ nameOfChildrenVar ]
-      if childVal?
-        for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
-          valDependingOnChildrenVal.args.connectToChildVal valDependingOnChildrenVal, childVal
-
-    # we have a data structure that contains,
-    # for each parent (me) valName, all vals of the child
-    # morph that depend on it. Go through
-    # all parent (me) val names, find the
-    # actual val in the parent (me), and connect it
-    # to the vals in the child morph that depend on it.
-    for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
-        theChild.morphValsDirectlyDependingOnParentVals
-      parentVal = @allValsInMorphByName[ nameOfParentVar ]
-      if parentVal?
-        for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
-          valDependingOnParentVal.args.connectToParentVal valDependingOnParentVal, parentVal
-
-  disconnectValuesFromRemovedChild: (theChild) ->
-    # we have a data structure that contains,
-    # for each child valName, all vals of this
-    # morph that depend on it. Go through
-    # all child val names, find the
-    # actual val in the child, and DISconnect it
-    # FROM the vals in this morph that depended on it.
-    for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
-        @morphValsDependingOnChildrenVals
-      for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
-        childArg = valDependingOnChildrenVal.args.argById[theChild.id]
-        if childArg?
-          childArg.disconnectChildArg()
-
-    # we have a data structure that contains,
-    # for each parent (me) valName, all vals of the child
-    # morph that depend on it. Go through
-    # all parent (me) val names, find the
-    # actual val in the parent (me), and connect it
-    # to the vals in the child morph that depend on it.
-    for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
-        theChild.morphValsDirectlyDependingOnParentVals
-      for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
-        parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
-        if parentArg?
-          parentArg.disconnectParentArg()
-  ###
+  # connectValuesToAddedChild: (theChild) ->
+  #   #if theChild.constructor.name == "RectangleMorph"
+  #   #  debugger
+  #
+  #   # we have a data structure that contains,
+  #   # for each child valName, all vals of this
+  #   # morph that depend on it. Go through
+  #   # all child val names, find the
+  #   # actual val in the child, and connect all
+  #   # to the vals in this morph that depend on it.
+  #   for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
+  #       @morphValsDependingOnChildrenVals
+  #     childVal = theChild.allValsInMorphByName[ nameOfChildrenVar ]
+  #     if childVal?
+  #       for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
+  #         valDependingOnChildrenVal.args.connectToChildVal valDependingOnChildrenVal, childVal
+  #
+  #   # we have a data structure that contains,
+  #   # for each parent (me) valName, all vals of the child
+  #   # morph that depend on it. Go through
+  #   # all parent (me) val names, find the
+  #   # actual val in the parent (me), and connect it
+  #   # to the vals in the child morph that depend on it.
+  #   for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
+  #       theChild.morphValsDirectlyDependingOnParentVals
+  #     parentVal = @allValsInMorphByName[ nameOfParentVar ]
+  #     if parentVal?
+  #       for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
+  #         valDependingOnParentVal.args.connectToParentVal valDependingOnParentVal, parentVal
+  #
+  # disconnectValuesFromRemovedChild: (theChild) ->
+  #   # we have a data structure that contains,
+  #   # for each child valName, all vals of this
+  #   # morph that depend on it. Go through
+  #   # all child val names, find the
+  #   # actual val in the child, and DISconnect it
+  #   # FROM the vals in this morph that depended on it.
+  #   for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
+  #       @morphValsDependingOnChildrenVals
+  #     for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
+  #       childArg = valDependingOnChildrenVal.args.argById[theChild.id]
+  #       if childArg?
+  #         childArg.disconnectChildArg()
+  #
+  #   # we have a data structure that contains,
+  #   # for each parent (me) valName, all vals of the child
+  #   # morph that depend on it. Go through
+  #   # all parent (me) val names, find the
+  #   # actual val in the parent (me), and connect it
+  #   # to the vals in the child morph that depend on it.
+  #   for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
+  #       theChild.morphValsDirectlyDependingOnParentVals
+  #     for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
+  #       parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
+  #       if parentArg?
+  #         parentArg.disconnectParentArg()
 
 
   ## ------------ end of reactive values ----------------------
@@ -2998,14 +2996,12 @@ class Morph extends MorphicNode
 
   setMaxDim: (overridingMaxDim) ->
 
-    ###
-    currentMax = @getRecursiveMaxDim()
-    ratio = currentMax.x / overridingMaxDim.x
-
-    for C in @children
-      if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-        C.setMaxDim C.getRecursiveMaxDim().divideBy ratio
-    ###
+    #   currentMax = @getRecursiveMaxDim()
+    #   ratio = currentMax.x / overridingMaxDim.x
+    #
+    #   for C in @children
+    #     if C.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
+    #       C.setMaxDim C.getRecursiveMaxDim().divideBy ratio
 
 
     @maxWidth = overridingMaxDim.x
@@ -3017,17 +3013,15 @@ class Morph extends MorphicNode
   # we have a system where you CAN easily resize things to any
   # size, so to have maximum flexibility we are not binding the
   # minimum of a container to the minimums of the contents.
-  ###
-  getDesiredDim: ->
-    desiredDim = new Point @desiredWidth, @desiredHeight
-    return desiredDim.min @getMaxDim()
-  getMinDim: ->
-    minDim = new Point @minWidth, @minHeight
-    return minDim.min @getMaxDim()
-  getMaxDim: ->
-    maxDim = new Point @maxWidth, @maxHeight
-    return maxDim
-  ###
+  # getDesiredDim: ->
+  #   desiredDim = new Point @desiredWidth, @desiredHeight
+  #   return desiredDim.min @getMaxDim()
+  # getMinDim: ->
+  #   minDim = new Point @minWidth, @minHeight
+  #   return minDim.min @getMaxDim()
+  # getMaxDim: ->
+  #   maxDim = new Point @maxWidth, @maxHeight
+  #   return maxDim
 
   # if you use this paragraph, then the container of further
   # layouts will have a minimum equal to the sum of minimums

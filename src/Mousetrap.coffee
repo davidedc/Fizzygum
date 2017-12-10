@@ -1,35 +1,32 @@
-###
-Copyright 2013 Craig Campbell
-coffeescript port by Davide Della Casa
+# Copyright 2013 Craig Campbell
+# coffeescript port by Davide Della Casa
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# 
+# Mousetrap is a simple keyboard shortcut library for Javascript with
+# no external dependencies
+# 
+# @version 1.3.1
+# @url craig.is/killing/mice
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+# mapping of special keycodes to their corresponding keys
+# 
+# everything in this dictionary cannot use keypress events
+# so it has to be here to map to the correct keycodes for
+# keyup/keydown events
+# 
+# @type {Object}
 
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
-Mousetrap is a simple keyboard shortcut library for Javascript with
-no external dependencies
-
-@version 1.3.1
-@url craig.is/killing/mice
-###
-
-###
-mapping of special keycodes to their corresponding keys
-
-everything in this dictionary cannot use keypress events
-so it has to be here to map to the correct keycodes for
-keyup/keydown events
-
-@type {Object}
-###
 
 _MAP =
   8: "backspace"
@@ -55,14 +52,13 @@ _MAP =
   93: "meta"
   224: "meta"
 
-###
-mapping for special characters so they can support
+#mapping for special characters so they can support
+#
+#this dictionary is only used incase you want to bind a
+#keyup or keydown event to one of these keys
+#
+#@type {Object}
 
-this dictionary is only used incase you want to bind a
-keyup or keydown event to one of these keys
-
-@type {Object}
-###
 _KEYCODE_MAP =
   106: "*"
   107: "+"
@@ -81,16 +77,15 @@ _KEYCODE_MAP =
   221: "]"
   222: "'"
 
-###
-this is a mapping of keys that require shift on a US keypad
-back to the non shift equivelents
+#this is a mapping of keys that require shift on a US keypad
+#back to the non shift equivelents
+#
+#this is so you can use keyup events with these keys
+#
+#note that this will only work reliably on US keyboards
+#
+#@type {Object}
 
-this is so you can use keyup events with these keys
-
-note that this will only work reliably on US keyboards
-
-@type {Object}
-###
 _SHIFT_MAP =
   "~": "`"
   "!": "1"
@@ -112,109 +107,102 @@ _SHIFT_MAP =
   "?": "/"
   "|": "\\"
 
-###
-this is a list of special strings you can use to map
-to modifier keys when you specify your keyboard shortcuts
+#this is a list of special strings you can use to map
+#to modifier keys when you specify your keyboard shortcuts
+#
+#@type {Object}
 
-@type {Object}
-###
 _SPECIAL_ALIASES =
   option: "alt"
   command: "meta"
   return: "enter"
   escape: "esc"
 
-###
-variable to store the flipped version of _MAP from above
-needed to check if we should use keypress or not when no action
-is specified
 
-@type {Object|undefined}
-###
+#variable to store the flipped version of _MAP from above
+#needed to check if we should use keypress or not when no action
+#is specified
+#
+#@type {Object|undefined}
 _REVERSE_MAP = undefined
 
-###
-a list of all the callbacks setup via Mousetrap.bind()
+#a list of all the callbacks setup via Mousetrap.bind()
+#
+#@type {Object}
 
-@type {Object}
-###
 _callbacks = {}
 
-###
-direct map of string combinations to callbacks used for trigger()
 
-@type {Object}
-###
+#direct map of string combinations to callbacks used for trigger()
+#
+#@type {Object}
+
 _directMap = {}
 
-###
-keeps track of what level each sequence is at since multiple
-sequences can start out with the same sequence
+#keeps track of what level each sequence is at since multiple
+#sequences can start out with the same sequence
+#
+#@type {Object}
 
-@type {Object}
-###
 _sequenceLevels = {}
 
-###
-variable to store the setTimeout call
+#variable to store the setTimeout call
+#
+#@type {null|number}
 
-@type {null|number}
-###
 _resetTimer = undefined
 
-###
-temporary state where we will ignore the next keyup
+#temporary state where we will ignore the next keyup
+#
+#@type {boolean|string}
 
-@type {boolean|string}
-###
 _ignoreNextKeyup = false
 
-###
-are we currently inside of a sequence?
-type of action ("keyup" or "keydown" or "keypress") or false
 
-@type {boolean|string}
-###
+#are we currently inside of a sequence?
+#type of action ("keyup" or "keydown" or "keypress") or false
+#
+#@type {boolean|string}
+
 _sequenceType = false
 
-###
-loop through the f keys, f1 to f19 and add them to the map
-programmatically
-###
+
+#loop through the f keys, f1 to f19 and add them to the map
+#programmatically
+
 i = 1
 while i < 20
   _MAP[111 + i] = "f" + i
   ++i
 
-###
-loop through to map numbers on the numeric keypad
-###
+
+#loop through to map numbers on the numeric keypad
+
 i = 0
 while i <= 9
   _MAP[i + 96] = i
   ++i
 
 
-###
-cross browser add event method
+#cross browser add event method
+#
+#@param {Element|HTMLDocument} object
+#@param {string} type
+#@param {Function} callback
+#@returns void
 
-@param {Element|HTMLDocument} object
-@param {string} type
-@param {Function} callback
-@returns void
-###
 _addEvent = (object, type, callback) ->
   if object.addEventListener
     object.addEventListener type, callback, false
     return
   object.attachEvent "on" + type, callback
 
-###
-takes the event and returns the key character
 
-@param {Event} e
-@return {string}
-###
+#takes the event and returns the key character
+#
+#@param {Event} e
+#@return {string}
+
 _characterFromEvent = (e) ->
   
   # for keypress events we should return the character as is
@@ -227,22 +215,20 @@ _characterFromEvent = (e) ->
   # if it is not in the special map
   String.fromCharCode(e.which).toLowerCase()
 
-###
-checks if two arrays are equal
+#checks if two arrays are equal
+#
+#@param {Array} modifiers1
+#@param {Array} modifiers2
+#@returns {boolean}
 
-@param {Array} modifiers1
-@param {Array} modifiers2
-@returns {boolean}
-###
 _modifiersMatch = (modifiers1, modifiers2) ->
   modifiers1.sort().join(",") is modifiers2.sort().join(",")
 
-###
-resets all sequence counters except for the ones passed in
+#resets all sequence counters except for the ones passed in
+#
+#@param {Object} doNotReset
+#@returns void
 
-@param {Object} doNotReset
-@returns void
-###
 _resetSequences = (doNotReset, maxLevel) ->
   doNotReset = doNotReset or {}
   activeSequences = false
@@ -254,17 +240,17 @@ _resetSequences = (doNotReset, maxLevel) ->
     _sequenceLevels[key] = 0
   _sequenceType = false  unless activeSequences
 
-###
-finds all callbacks that match based on the keycode, modifiers,
-and action
 
-@param {string} character
-@param {Array} modifiers
-@param {Event|Object} e
-@param {boolean=} remove - should we remove any matches
-@param {string=} combination
-@returns {Array}
-###
+#finds all callbacks that match based on the keycode, modifiers,
+#and action
+#
+#@param {string} character
+#@param {Array} modifiers
+#@param {Event|Object} e
+#@param {boolean=} remove - should we remove any matches
+#@param {string=} combination
+#@returns {Array}
+
 _getMatches = (character, modifiers, e, remove, combination) ->
   i = undefined
   callback = undefined
@@ -305,12 +291,12 @@ _getMatches = (character, modifiers, e, remove, combination) ->
       matches.push callback
   matches
 
-###
-takes a key event and figures out what the modifiers are
 
-@param {Event} e
-@returns {Array}
-###
+#takes a key event and figures out what the modifiers are
+#
+#@param {Event} e
+#@returns {Array}
+
 _eventModifiers = (e) ->
   modifiers = []
   modifiers.push "shift"  if e.shiftKey
@@ -319,16 +305,16 @@ _eventModifiers = (e) ->
   modifiers.push "meta"  if e.metaKey
   modifiers
 
-###
-actually calls the callback function
 
-if your callback function returns false this will use the jquery
-convention - prevent default and stop propagation on the event
+#actually calls the callback function
+#
+#if your callback function returns false this will use the jquery
+#convention - prevent default and stop propagation on the event
+#
+#@param {Function} callback
+#@param {Event} e
+#@returns void
 
-@param {Function} callback
-@param {Event} e
-@returns void
-###
 _fireCallback = (callback, e, combo) ->
   
   # if this event should not happen stop here
@@ -339,13 +325,12 @@ _fireCallback = (callback, e, combo) ->
     e.returnValue = false
     e.cancelBubble = true
 
-###
-handles a character key event
+#handles a character key event
+#
+#@param {string} character
+#@param {Event} e
+#@returns void
 
-@param {string} character
-@param {Event} e
-@returns void
-###
 _handleCharacter = (character, e) ->
   callbacks = _getMatches(character, _eventModifiers(e), e)
   i = undefined
@@ -384,12 +369,12 @@ _handleCharacter = (character, e) ->
   # that were not matched by this key event
   _resetSequences doNotReset, maxLevel  if e.type is _sequenceType and not _isModifier(character)
 
-###
-handles a keydown event
 
-@param {Event} e
-@returns void
-###
+#handles a keydown event
+#
+#@param {Event} e
+#@returns void
+
 _handleKey = (e) ->
   
   # normalize e.which for key events
@@ -404,33 +389,32 @@ _handleKey = (e) ->
     return
   _handleCharacter character, e
 
-###
-determines if the keycode specified is a modifier key or not
 
-@param {string} key
-@returns {boolean}
-###
+#determines if the keycode specified is a modifier key or not
+#
+#@param {string} key
+#@returns {boolean}
+
 _isModifier = (key) ->
   key is "shift" or key is "ctrl" or key is "alt" or key is "meta"
 
-###
-called to set a 1 second timeout on the specified sequence
 
-this is so after each key press in the sequence you have 1 second
-to press the next key before you have to start over
+#called to set a 1 second timeout on the specified sequence
+#
+#this is so after each key press in the sequence you have 1 second
+#to press the next key before you have to start over
+#
+#@returns void
 
-@returns void
-###
 _resetSequenceTimer = ->
   clearTimeout _resetTimer
   _resetTimer = setTimeout(_resetSequences, 1000)
 
-###
-reverses the map lookup so that we can look for specific keys
-to see what can and can't use keypress
+#reverses the map lookup so that we can look for specific keys
+#to see what can and can't use keypress
+#
+#@return {Object}
 
-@return {Object}
-###
 _getReverseMap = ->
   unless _REVERSE_MAP
     _REVERSE_MAP = {}
@@ -442,13 +426,12 @@ _getReverseMap = ->
       _REVERSE_MAP[_MAP[key]] = key  if _MAP.hasOwnProperty(key)
   _REVERSE_MAP
 
-###
-picks the best action based on the key combination
+#picks the best action based on the key combination
+#
+#@param {string} key - character for key
+#@param {Array} modifiers
+#@param {string=} action passed in
 
-@param {string} key - character for key
-@param {Array} modifiers
-@param {string=} action passed in
-###
 _pickBestAction = (key, modifiers, action) ->
   
   # if no action was picked in we should try to pick the one
@@ -460,15 +443,14 @@ _pickBestAction = (key, modifiers, action) ->
   action = "keydown"  if action is "keypress" and modifiers.length
   action
 
-###
-binds a key sequence to an event
+#binds a key sequence to an event
+#
+#@param {string} combo - combo specified in bind call
+#@param {Array} keys
+#@param {Function} callback
+#@param {string=} action
+#@returns void
 
-@param {string} combo - combo specified in bind call
-@param {Array} keys
-@param {Function} callback
-@param {string=} action
-@returns void
-###
 _bindSequence = (combo, keys, callback, action) ->
   
   # start off by adding a sequence level record for this combination
@@ -479,26 +461,22 @@ _bindSequence = (combo, keys, callback, action) ->
   # in the sequence
   action = _pickBestAction(keys[0], [])  unless action
   
-  ###
-  callback to increase the sequence level for this sequence and reset
-  all other sequences that were active
-  
-  @param {Event} e
-  @returns void
-  ###
+  #callback to increase the sequence level for this sequence and reset
+  #all other sequences that were active
+  #
+  #@param {Event} e
+  #@returns void
   _increaseSequence = ->
     _sequenceType = action
     ++_sequenceLevels[combo]
     _resetSequenceTimer()
 
   
-  ###
-  wraps the specified callback inside of another function in order
-  to reset all sequence counters as soon as this sequence is done
-  
-  @param {Event} e
-  @returns void
-  ###
+  #wraps the specified callback inside of another function in order
+  #to reset all sequence counters as soon as this sequence is done
+  #
+  #@param {Event} e
+  #@returns void
   _callbackAndReset = (e) ->
     _fireCallback callback, e, combo
     
@@ -521,16 +499,15 @@ _bindSequence = (combo, keys, callback, action) ->
     _bindSingle keys[i], (if i < keys.length - 1 then _increaseSequence else _callbackAndReset), action, combo, i
     ++i
 
-###
-binds a single keyboard combination
+#binds a single keyboard combination
+#
+#@param {string} combination
+#@param {Function} callback
+#@param {string=} action
+#@param {string=} sequenceName - name of sequence if part of sequence
+#@param {number=} level - what part of the sequence the command is
+#@returns void
 
-@param {string} combination
-@param {Function} callback
-@param {string=} action
-@param {string=} sequenceName - name of sequence if part of sequence
-@param {number=} level - what part of the sequence the command is
-@returns void
-###
 _bindSingle = (combination, callback, action, sequenceName, level) ->
   
   # store a direct mapped reference for use with Mousetrap.trigger
@@ -599,14 +576,13 @@ _bindSingle = (combination, callback, action, sequenceName, level) ->
     combo: combination
 
 
-###
-binds multiple combinations to the same callback
+#binds multiple combinations to the same callback
+#
+#@param {Array} combinations
+#@param {Function} callback
+#@param {string|undefined} action
+#@returns void
 
-@param {Array} combinations
-@param {Function} callback
-@param {string|undefined} action
-@returns void
-###
 _bindMultiple = (combinations, callback, action) ->
   i = 0
 
@@ -621,80 +597,72 @@ _addEvent document, "keydown", _handleKey
 _addEvent document, "keyup", _handleKey
 Mousetrap =
   
-  ###
-  binds an event to mousetrap
   
-  can be a single key, a combination of keys separated with +,
-  an array of keys, or a sequence of keys separated by spaces
-  
-  be sure to list the modifier keys first to make sure that the
-  correct key ends up getting bound (the last key in the pattern)
-  
-  @param {string|Array} keys
-  @param {Function} callback
-  @param {string=} action - 'keypress', 'keydown', or 'keyup'
-  @returns void
-  ###
+  #binds an event to mousetrap
+  #
+  #can be a single key, a combination of keys separated with +,
+  #an array of keys, or a sequence of keys separated by spaces
+  #
+  #be sure to list the modifier keys first to make sure that the
+  #correct key ends up getting bound (the last key in the pattern)
+  #
+  #@param {string|Array} keys
+  #@param {Function} callback
+  #@param {string=} action - 'keypress', 'keydown', or 'keyup'
+  #@returns void
   bind: (keys, callback, action) ->
     keys = (if keys instanceof Array then keys else [keys])
     _bindMultiple keys, callback, action
     this
 
   
-  ###
-  unbinds an event to mousetrap
-  
-  the unbinding sets the callback function of the specified key combo
-  to an empty function and deletes the corresponding key in the
-  _directMap dict.
-  
-  TODO: actually remove this from the _callbacks dictionary instead
-  of binding an empty function
-  
-  the keycombo+action has to be exactly the same as
-  it was defined in the bind method
-  
-  @param {string|Array} keys
-  @param {string} action
-  @returns void
-  ###
+  #unbinds an event to mousetrap
+  #
+  #the unbinding sets the callback function of the specified key combo
+  #to an empty function and deletes the corresponding key in the
+  #_directMap dict.
+  #
+  #TODO: actually remove this from the _callbacks dictionary instead
+  #of binding an empty function
+  #
+  #the keycombo+action has to be exactly the same as
+  #it was defined in the bind method
+  #
+  #@param {string|Array} keys
+  #@param {string} action
+  #@returns void
+
   unbind: (keys, action) ->
     Mousetrap.bind keys, (->
     ), action
 
   
-  ###
-  triggers an event that has already been bound
-  
-  @param {string} keys
-  @param {string=} action
-  @returns void
-  ###
+  #triggers an event that has already been bound
+  #
+  #@param {string} keys
+  #@param {string=} action
+  #@returns void
   trigger: (keys, action) ->
     _directMap[keys + ":" + action] {}, keys  if _directMap[keys + ":" + action]
     this
 
   
-  ###
-  resets the library back to its initial state.  this is useful
-  if you want to clear out the current keyboard shortcuts and bind
-  new ones - for example if you switch to another page
-  
-  @returns void
-  ###
+  #resets the library back to its initial state.  this is useful
+  #if you want to clear out the current keyboard shortcuts and bind
+  #new ones - for example if you switch to another page
+  #
+  #@returns void
   reset: ->
     _callbacks = {}
     _directMap = {}
     this
 
   
-  ###
-  should we stop this event before firing off callbacks
-  
-  @param {Event} e
-  @param {Element} element
-  @return {boolean}
-  ###
+  #should we stop this event before firing off callbacks
+  #
+  #@param {Event} e
+  #@param {Element} element
+  #@return {boolean}
   stopCallback: (e, element) ->
     
     # if the element has the class "mousetrap" then no need to stop

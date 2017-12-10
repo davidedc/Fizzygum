@@ -1052,11 +1052,9 @@ class StringMorph3 extends Morph
       @synchroniseTextAndActualText()
       @changed()
   
-  ###
-  doLayout: ->
-    extentOccupiedByText = new Point Math.ceil(@measureText @originallySetFontSize, @text), fontHeight(@originallySetFontSize)
-  ###
-
+  #doLayout: ->
+  #  extentOccupiedByText = new Point Math.ceil(@measureText @originallySetFontSize, @text), fontHeight(@originallySetFontSize)
+  
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?
       size = morphGivingSize.getValue()

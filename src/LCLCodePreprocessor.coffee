@@ -3900,23 +3900,22 @@ class LCLCodePreprocessor
   ##      black background
   ##
   ## We need to switch this round before coffee script compilation
-  ###
-  adjustPostfixNotations: (code, error) ->
-    # if there is an error, just propagate it
-    return [undefined, error] if error?
-
-    # red background
-    # red fill;box
-
-    # if there is an error, just propagate it
-    return [undefined, error] if error?
-
-    code = code.replace(/(\d+)[ ]+bpm(\s|$|;)/g, "bpm $1$2")
-    code = code.replace(/([a-zA-Z]+)[ ]+fill(\s|$|;)/g, "fill $1$2")
-    code = code.replace(/([a-zA-Z]+)[ ]+stroke(\s|$|;)/g, "stroke $1$2")
-    code = code.replace(/([a-zA-Z]+)[ ]+background(\s|$|;)/g, "background $1$2")
-    return [code, error]
-  ###
+  
+  #adjustPostfixNotations: (code, error) ->
+  #  # if there is an error, just propagate it
+  #  return [undefined, error] if error?
+  #
+  #  # red background
+  #  # red fill;box
+  #
+  #  # if there is an error, just propagate it
+  #  return [undefined, error] if error?
+  #
+  #  code = code.replace(/(\d+)[ ]+bpm(\s|$|;)/g, "bpm $1$2")
+  #  code = code.replace(/([a-zA-Z]+)[ ]+fill(\s|$|;)/g, "fill $1$2")
+  #  code = code.replace(/([a-zA-Z]+)[ ]+stroke(\s|$|;)/g, "stroke $1$2")
+  #  code = code.replace(/([a-zA-Z]+)[ ]+background(\s|$|;)/g, "background $1$2")
+  #  return [code, error]
 
   normaliseCode:(code, error) ->
     # if there is an error, just propagate it
@@ -4824,29 +4823,28 @@ class LCLCodePreprocessor
     code = code.replace(/>>/g, " ")
     return [code, error]
 
-  ###
-  Errors cases, subdivided by number of colors involved
-
-  --- 0 colors
-  stroke stroke -> redundant stroke
-  fill fill -> redundant fill
-
-  --- 1 color
-  stroke color1 stroke -> redundant stroke
-  fill color1 fill -> redundant fill
-  noColor fill color stroke noColor -> missing color
-
-  ---2 colors
-  noFill/Stroke color color noFill/Stroke -> redundant color
-  fill color color noFill/Stroke -> redundant color
-  noFill/Stroke color color fill -> redundant color
-  noFill/Stroke color fill colour noFill/Stroke
-
-  ----3 colors
-  color stroke/fill color color
-  color color stroke/fill color
-  color color color
-  ###
+  
+  # Errors cases, subdivided by number of colors involved
+  # 
+  # --- 0 colors
+  # stroke stroke -> redundant stroke
+  # fill fill -> redundant fill
+  # 
+  # --- 1 color
+  # stroke color1 stroke -> redundant stroke
+  # fill color1 fill -> redundant fill
+  # noColor fill color stroke noColor -> missing color
+  # 
+  # ---2 colors
+  # noFill/Stroke color color noFill/Stroke -> redundant color
+  # fill color color noFill/Stroke -> redundant color
+  # noFill/Stroke color color fill -> redundant color
+  # noFill/Stroke color fill colour noFill/Stroke
+  # 
+  # ----3 colors
+  # color stroke/fill color color
+  # color color stroke/fill color
+  # color color color
 
   rearrangeColorCommands: (code, error) ->
     # if there is an error, just propagate it
