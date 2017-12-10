@@ -300,6 +300,12 @@ def main():
         is_class_file = IS_CLASS.search(content)
         is_mixin_file = IS_MIXIN.search(content)
 
+        if (is_class_file):
+            print("#### not appending because is a class: %s " % (filename))
+
+        if (is_mixin_file):
+            print("#### not appending because is a mixin: %s " % (filename))
+
         if not (is_class_file or is_mixin_file):
             print("#### appending %s " % (filename))
             text.append(content)
