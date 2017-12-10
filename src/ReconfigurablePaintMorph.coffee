@@ -524,14 +524,10 @@ class ReconfigurablePaintMorph extends WindowMorph
       @mainCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
 
     # overlayCanvas ----------------------
-    overlayCanvasWidth = eachPaneWidth
-    overlayCanvasHeight = b - labelBottom
-    overlayCanvasBottom = labelBottom + overlayCanvasHeight
-    overlayCanvasLeft = mainCanvasLeft
-
+    # has exact same size and position of the main canvas
     if @overlayCanvas.parent == @mainCanvas
-      @overlayCanvas.fullRawMoveTo new Point overlayCanvasLeft, labelBottom
-      @overlayCanvas.rawSetExtent new Point eachPaneWidth, overlayCanvasHeight
+      @overlayCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom + @padding
+      @overlayCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
 
     # ----------------------------------------------
 
