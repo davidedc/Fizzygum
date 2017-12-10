@@ -72,6 +72,30 @@ class Klass
 
     return aString
 
+  # not used as of now because we prefer to load the comments
+  # as part of the sources. Note that the presence of multiline
+  # comments (and strings, for that matter) could mangle the
+  # parsing.
+  # Maybe a more correct way of doing this is to remove comments
+  # and strings into a "clean version", and maintaining
+  # line-to-line correspondence between this "clean" version and
+  # the original version. Then do the regexing on the "clean"
+  # version, but getting the source from the "original"
+  # version (which should be relatively easy if we know from which
+  # line to which line each field is defined in)
+  removeComments: (source) ->
+    splitSource = source.split "\n"
+    sourceWithoutComments = ""
+    multilineComment = false
+    for eachLine in splitSource
+      #console.log "eachLine: " + eachLine
+      if /^[ \t]*###/m.test(eachLine)
+        multilineComment = !multilineComment
+
+      if (! /^[ \t]*#/m.test(eachLine)) and (!multilineComment)
+        sourceWithoutComments += eachLine + "\n"
+    return sourceWithoutComments
+
   constructor: (source) ->
 
     if !window.classDefinitionAsJS?
@@ -89,25 +113,14 @@ class Klass
     @staticPropertiesSources = {}
     @subKlasses = []
     @instances = []
-    splitSource = source.split "\n"
-    console.log "splitSource: " + splitSource
-    sourceWithoutComments = ""
-    multilineComment = false
-    for eachLine in splitSource
-      #console.log "eachLine: " + eachLine
-      if /^[ \t]*###/m.test(eachLine)
-        multilineComment = !multilineComment
-
-      if (! /^[ \t]*#/m.test(eachLine)) and (!multilineComment)
-        sourceWithoutComments += eachLine + "\n"
 
     # remove the bit we use to identify classes because it's going to
     # mangle the parsing and we can add it transparently
-    sourceWithoutComments = sourceWithoutComments.replace(/^  namedClasses[@name] = @prototype\n/m,"")
+    source = source.replace(/^  namedClasses[@name] = @prototype\n/m,"")
 
     # find the class name
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
-    if (m = classRegex.exec(sourceWithoutComments))?
+    if (m = classRegex.exec(source))?
         m.forEach((match, groupIndex) ->
             console.log("Found match, group #{groupIndex}: #{match}")
         )
@@ -116,7 +129,7 @@ class Klass
 
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
-    if (m = extendsRegex.exec(sourceWithoutComments))?
+    if (m = extendsRegex.exec(source))?
         m.forEach((match, groupIndex) ->
             console.log("Found match, group #{groupIndex}: #{match}")
         )
@@ -128,7 +141,7 @@ class Klass
     # find which mixins need to be mixed-in
     @augmentedWith = []
     augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm;
-    while (m = augmentRegex.exec(sourceWithoutComments))?
+    while (m = augmentRegex.exec(source))?
         if (m.index == augmentRegex.lastIndex)
             augmentRegex.lastIndex++
         m.forEach((match, groupIndex) ->
@@ -140,11 +153,11 @@ class Klass
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
-    sourceWithoutComments = sourceWithoutComments.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
+    source = source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
-    console.log "sourceWithoutComments ---------\n" + sourceWithoutComments
+    console.log "source ---------\n" + source
 
-    sourceWithoutComments += "\n  $$$STOPTOKEN_LASTFIELD :"
+    source += "\n  $$$STOPTOKEN_LASTFIELD :"
 
     # Now find all the fields definitions
     # note that the constructor, methods, properties and static properties
@@ -154,7 +167,7 @@ class Klass
     # to match a valid JS variable name (we just ignore the keywords):
     #    [a-zA-Z_$][0-9a-zA-Z_$]*
     regex = /^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *: *([^]*?)(?=^  (@?[a-zA-Z_$][0-9a-zA-Z_$]*) *:)/gm
-    while (m = regex.exec(sourceWithoutComments))?
+    while (m = regex.exec(source))?
         if (m.index == regex.lastIndex)
             regex.lastIndex++
         m.forEach((match, groupIndex) ->
