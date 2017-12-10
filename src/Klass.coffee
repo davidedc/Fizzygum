@@ -129,7 +129,7 @@ class Klass
         console.log "name: " + @name
 
     # find if it extends some other class
-    extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
+    extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = extendsRegex.exec(source))?
         m.forEach((match, groupIndex) ->
             console.log("Found match, group #{groupIndex}: #{match}")
