@@ -53,7 +53,7 @@ class Mixin
 
     return aString
 
-  constructor: (source) ->
+  constructor: (source, generatePreCompiledJS, createMixin) ->
 
     @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
@@ -94,14 +94,15 @@ class Mixin
 
         @nonStaticPropertiesSources[m[1]] = m[2]
 
-    JS_string_definitions = compileFGCode (@_equivalentforSuper source), true
-
-    JSSourcesContainer.content += JS_string_definitions + "\n"
-    try
-      eval.call window, JS_string_definitions
-    catch err
-      console.log " error " + err + " evaling : " + JS_string_definitions
-      debugger
+    if generatePreCompiledJS or createMixin
+      JS_string_definitions = compileFGCode (@_equivalentforSuper source), true
+      JSSourcesContainer.content += JS_string_definitions + "\n"
+      if createMixin
+        try
+          eval.call window, JS_string_definitions
+        catch err
+          console.log " error " + err + " evaling : " + JS_string_definitions
+          debugger
 
 
     #if @name == "LCLCodePreprocessor" then debugger

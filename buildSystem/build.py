@@ -160,11 +160,10 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
     manifest = manifest + "// order of the tests or limit the tests to a subset" + "\n"
     manifest = manifest + "// Just note that this file is loaded as soon as the" + "\n"
     manifest = manifest + "// world starts. Editing afterwards will have no effect." + "\n"
-    manifest = manifest + "if (!AutomatorRecorderAndPlayer.hasOwnProperty('testsManifest')) {" + "\n"
-    manifest = manifest + " AutomatorRecorderAndPlayer.testsManifest = []; }" + "\n"
+    manifest = manifest + "testsManifest = [];" + "\n\n"
 
     for filename in filenames2:
-        manifest = manifest + "AutomatorRecorderAndPlayer.testsManifest.push('"+ntpath.basename(filename)+"');\n"
+        manifest = manifest + "testsManifest.push('"+ntpath.basename(filename)+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Fizzygum-builds/latest/js/tests/testsManifest.js", "w", "utf-8") as f:
@@ -188,10 +187,10 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
           #print("%s" % (os.path.join(root,filename)))
     filenames2 = sorted(filenames2)
 
-    manifest = "if (!AutomatorRecorderAndPlayer.hasOwnProperty('testsAssetsManifest')) {\nAutomatorRecorderAndPlayer.testsAssetsManifest = []; }\n"
+    manifest = "testsAssetsManifest = [];\n\n"
 
     for filename in filenames2:
-        manifest = manifest + "AutomatorRecorderAndPlayer.testsAssetsManifest.push('"+filename+"');\n"
+        manifest = manifest + "testsAssetsManifest.push('"+filename+"');\n"
 
     # 'build/indexWithTests.html'
     with codecs.open("../Fizzygum-builds/latest/js/tests/testsAssetsManifest.js", "w", "utf-8") as f:

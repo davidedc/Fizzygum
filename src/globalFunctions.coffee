@@ -370,7 +370,7 @@ loadJSFile = (fileName) ->
 
     script.onload = ->
       loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv.innerHTML += "loading " + this.src + "</br>"
+      loadingLogDiv?.innerHTML += "loading " + this.src + "</br>"
       console.log "loading " + this.src
       resolve(script)
 
@@ -380,7 +380,7 @@ loadJSFile = (fileName) ->
         reject(script)
 
 
-loadAllSources = ->
+loadJSFilesWithCoffeescriptSources = ->
 
   allSourceLoadsPromises = []
 
@@ -392,26 +392,8 @@ loadAllSources = ->
     
     allSourceLoadsPromises.push loadJSFile "js/sourceCode/" + eachFile + ".js"
 
-  (Promise.all allSourceLoadsPromises).then continueBooting
+  return (Promise.all allSourceLoadsPromises)
 
-
-aTestScriptHasBeenLoaded = ->
-  howManyTestManifestsLoaded++
-  if howManyTestManifestsLoaded == 2
-    continueBooting2()
-
-loadTestManifests = ->
-  script = document.createElement "script"
-  script.src = "js/tests/testsManifest.js"
-  script.onload = =>
-    aTestScriptHasBeenLoaded()
-  document.head.appendChild script
-
-  script2 = document.createElement "script"
-  script2.src = "js/tests/testsAssetsManifest.js"
-  script2.onload = =>
-    aTestScriptHasBeenLoaded()
-  document.head.appendChild script2
 
 compileFGCode = (codeSource, bare) ->
   t0 = performance.now()
@@ -442,10 +424,20 @@ boot = ->
   ).then( ->
     if window.preCompiled
       loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv.parentElement.removeChild loadingLogDiv
-      loadTestManifests()
+      loadingLogDiv?.parentElement.removeChild loadingLogDiv
+
+      loadJSFilesWithCoffeescriptSources().then ->
+        # this will run asynchronously
+        loadSourcesAndPotentiallyCompileThem true
+
+      kickOffWorldStepping()
+
     else
-      loadAllSources()
+      loadJSFilesWithCoffeescriptSources().then ->
+        loadSourcesAndPotentiallyCompileThem false
+      .then ->
+        kickOffWorldStepping()
+
   )
 
 
@@ -486,12 +478,18 @@ generate_inclusion_order = (dependencies) ->
   console.log "inclusion_order: " + inclusion_order
   return inclusion_order
 
-continueBooting = ->
 
-  loadingLogDiv = document.getElementById 'loadingLog'
-  loadingLogDiv.innerHTML = ""
+# see https://gist.github.com/joepie91/2664c85a744e6bd0629c
+# for this useful function to pace "then" steps
+waitNextTurn = ->
+  (args...) ->
+    new Promise (resolve, reject) ->
+      setTimeout () ->
+        resolve args...
+      , 1
 
-  console.log "--------------------------------"
+
+generateInclusionOrder = ->
   # find out the dependencies looking at each klass'
   # source code and hints in it.
   dependencies = []
@@ -534,21 +532,16 @@ continueBooting = ->
 
       i++
   inclusion_order = generate_inclusion_order dependencies
+
+loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
+
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv?.innerHTML = ""
+
+
   console.log "--------------------------------"
+  inclusion_order = generateInclusionOrder()
 
-  compileAndEvalAllSrcFiles inclusion_order
-
-# see https://gist.github.com/joepie91/2664c85a744e6bd0629c
-# for this useful function to pace "then" steps
-waitNextTurn = ->
-  (args...) ->
-    new Promise (resolve, reject) ->
-      setTimeout () ->
-        resolve args...
-      , 1
-
-
-compileAndEvalAllSrcFiles = (inclusion_order) ->
 
   # We remove these Coffeescript helper functions from
   # all compiled code, so make sure that they are available.
@@ -559,8 +552,9 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
   window.slice = [].slice
 
   # to return a function where the argument is bound
-  createCompileSourceFunction = (fileName) ->
-    -> compileSource fileName
+  createCompileSourceFunction = (fileName, justLoadSources2) ->
+    debugger
+    return -> compileSource fileName, justLoadSources2
 
 
   # start of the promise. It will "trigger" the chain
@@ -575,7 +569,7 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
   for eachFile in inclusion_order
     if eachFile == "Klass" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
-    compileEachFileFunction = createCompileSourceFunction eachFile
+    compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
     promiseChain = promiseChain.then compileEachFileFunction
     promiseChain = promiseChain.then waitNextTurn()
 
@@ -591,11 +585,10 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
 
 
     loadingLogDiv = document.getElementById 'loadingLog'
-    loadingLogDiv.parentElement.removeChild loadingLogDiv
-    loadTestManifests()
+    loadingLogDiv?.parentElement.removeChild loadingLogDiv
 
 
-compileSource = (fileName) ->
+compileSource = (fileName, justLoadSources) ->
 
   if !window.CS1CompiledClasses?
     window.CS1CompiledClasses = []
@@ -612,17 +605,23 @@ compileSource = (fileName) ->
   # loading via Klass means that we register all the source
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
-    morphKlass = new Klass fileContents, JSSourcesContainer
+    if justLoadSources
+      morphKlass = new Klass fileContents, false, false
+    else
+      morphKlass = new Klass fileContents, true, true
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
-    new Mixin fileContents, JSSourcesContainer
+    if justLoadSources
+      new Mixin fileContents, false, false
+    else
+      new Mixin fileContents, true, true
 
   console.log "compiling and evalling " + fileName + " from souce code"
   loadingLogDiv = document.getElementById 'loadingLog'
-  loadingLogDiv.innerHTML = "compiling and evalling " + fileName
+  loadingLogDiv?.innerHTML = "compiling and evalling " + fileName
 
   t1 = performance.now()
-  console.log "compileAndEvalAllSrcFiles call time: " + (t1 - t0) + " milliseconds."
+  console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
 
 
 
@@ -643,7 +642,11 @@ window.morphsThatMaybeChangedGeometryOrPosition = []
 window.morphsThatMaybeChangedFullGeometryOrPosition = []
 window.morphsThatMaybeChangedLayout = []
 
-continueBooting2 = ->
+kickOffWorldStepping = ->
+
+  AutomatorRecorderAndPlayer.testsManifest = testsManifest
+  AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+
   # Add "false" as second parameter below
   # to fit the world in canvas as per dimensions
   # specified in the canvas element. Fill entire

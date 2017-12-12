@@ -10,7 +10,6 @@ class Klass
   superKlass: nil
   subKlasses: nil
   instances: nil
-  defineWithSingleEval: true
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
@@ -97,7 +96,7 @@ class Klass
         sourceWithoutComments += eachLine + "\n"
     return sourceWithoutComments
 
-  constructor: (source) ->
+  constructor: (source, generatePreCompiledJS, createClass) ->
 
     if !window.classDefinitionAsJS?
       window.classDefinitionAsJS = []
@@ -185,7 +184,8 @@ class Klass
     # --------------------
 
     # collect all the definitions in JS form here
-    JS_string_definitions = "// class " + @name + "\n\n"
+    if generatePreCompiledJS or createClass
+      JS_string_definitions = "// class " + @name + "\n\n"
 
     # the class itself is a constructor function, the constructor.
     # we have to find its source (if it exists), and
@@ -224,9 +224,8 @@ class Klass
 
     console.log "constructor declaration JS: " + constructorDeclaration
     #if @name == "StringMorph2" then debugger
-    JS_string_definitions += constructorDeclaration + "\n"
-    if !@defineWithSingleEval 
-      eval.call window, constructorDeclaration
+    if generatePreCompiledJS or createClass
+      JS_string_definitions += constructorDeclaration + "\n"
 
     # if you declare a constructor (i.e. a Function) like this then you don't
     # get the "name" property set as it normally is when
@@ -235,31 +234,35 @@ class Klass
     # the name property is tricky, see:
     # see http://stackoverflow.com/questions/5871040/how-to-dynamically-set-a-function-object-name-in-javascript-as-it-is-displayed-i
     # just doing this is not sufficient: window[@name].name = @name
-    if !@defineWithSingleEval 
-      Object.defineProperty(window[@name], 'name', { value: @name });
-    JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
+    if generatePreCompiledJS or createClass
+      # analogous to
+      # Object.defineProperty(window[@name], 'name', { value: @name });
+      JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
     # if the class extends another one
     if @superClassName?
       console.log "extend: " + @name + " extends " + @superClassName
-      if !@defineWithSingleEval 
-        window[@name].__super__ = window[@superClassName].prototype
-        window[@name] = extend window[@name], window[@superClassName]
-      JS_string_definitions += "window.#{@name}.__super__ = window.#{@superClassName}.prototype;" + "\n"
-      JS_string_definitions += "window.#{@name} = extend(window.#{@name}, window.#{@superClassName});" + "\n"
+      if generatePreCompiledJS or createClass
+        # analogous to
+        #window[@name].__super__ = window[@superClassName].prototype
+        #window[@name] = extend window[@name], window[@superClassName]
+        JS_string_definitions += "window.#{@name}.__super__ = window.#{@superClassName}.prototype;" + "\n"
+        JS_string_definitions += "window.#{@name} = extend(window.#{@name}, window.#{@superClassName});" + "\n"
     else
       console.log "no extension (extends Object) for " + @name
-      if !@defineWithSingleEval 
-        window[@name].__super__ = Object.prototype
-      JS_string_definitions += "window.#{@name}.__super__ = Object.prototype;" + "\n\n"
+      if generatePreCompiledJS or createClass
+        # analogous to
+        #window[@name].__super__ = Object.prototype
+        JS_string_definitions += "window.#{@name}.__super__ = Object.prototype;" + "\n\n"
 
 
     # if the class is augmented with one or more Mixins
     for eachAugmentation in @augmentedWith
       console.log "augmentedWith: " + eachAugmentation
-      if !@defineWithSingleEval 
-        window[@name].augmentWith window[eachAugmentation], @name
-      JS_string_definitions += "window.#{@name}.augmentWith(window.#{eachAugmentation}, '#{@name}');" + "\n"
+      if generatePreCompiledJS or createClass
+        # analogous to
+        #window[@name].augmentWith window[eachAugmentation], @name
+        JS_string_definitions += "window.#{@name}.augmentWith(window.#{eachAugmentation}, '#{@name}');" + "\n"
 
     # non-static fields, which are put in the prototype
     for own fieldName, fieldValue of @nonStaticPropertiesSources
@@ -278,9 +281,8 @@ class Klass
 
         console.log "field declaration: " + fieldDeclaration
         #if @name == "StringMorph2" then debugger
-        JS_string_definitions += fieldDeclaration + "\n"
-        if !@defineWithSingleEval 
-          eval.call window, fieldDeclaration
+        if generatePreCompiledJS or createClass
+          JS_string_definitions += fieldDeclaration + "\n"
 
     # now the static fields, which are put in the constructor
     # rather than in the prototype
@@ -296,19 +298,22 @@ class Klass
         fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
 
         console.log fieldDeclaration
-        JS_string_definitions += fieldDeclaration + "\n"
-        if !@defineWithSingleEval 
-          eval.call window, fieldDeclaration
+        if generatePreCompiledJS or createClass
+          JS_string_definitions += fieldDeclaration + "\n"
 
     # finally, add the class to the namedClasses index
     if @name != "MorphicNode"
-      if !@defineWithSingleEval 
-        namedClasses[@name] = window[@name].prototype
-      JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
+      if generatePreCompiledJS or createClass
+        # analogous to
+        #namedClasses[@name] = window[@name].prototype
+        JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
 
-    JSSourcesContainer.content += JS_string_definitions + "\n"
-    if @defineWithSingleEval 
+    if generatePreCompiledJS or createClass
+      JSSourcesContainer.content += JS_string_definitions + "\n"
+
+    if createClass
       try
+        console.log "actually evalling " + @name + " to crete Class"
         eval.call window, JS_string_definitions
       catch err
         alert " error " + err + " evaling : " + JS_string_definitions
