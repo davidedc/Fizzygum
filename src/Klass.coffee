@@ -9,7 +9,6 @@ class Klass
   augmentedWith: nil
   superKlass: nil
   subKlasses: nil
-  instances: nil
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
@@ -20,14 +19,14 @@ class Klass
   # with all the superclasses.
   # this mechanism can be tested by opening an AnalogClockMorph and
   # then from the console:
-  #  world.children[0].constructor.klass.instances[0] === world.children[0]
+  #  world.children[0].constructor.instances[0] === world.children[0]
   # or
-  #  AnalogClockMorph.klass.instances[0] === world.children[0]
+  #  AnalogClockMorph.instances[0] === world.children[0]
   # or
-  #  AnalogClockMorph.klass.instances
+  #  AnalogClockMorph.instances
   # to check whether AnalogClockMorph was removed from the superklass'
   # (i.e. Morph) list:
-  #  AnalogClockMorph.klass.superKlass.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
+  #  AnalogClockMorph.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
   # Note that only Morphs have that kind
   # of tracking and hence the existence check of
   # the registerThisInstance function
@@ -104,7 +103,6 @@ class Klass
     @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
     @subKlasses = []
-    @instances = []
 
     # remove the bit we use to identify classes because it's going to
     # mangle the parsing and we can add it transparently
@@ -239,6 +237,11 @@ class Klass
       # Object.defineProperty(window[@name], 'name', { value: @name });
       JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
+    if generatePreCompiledJS or createClass
+      # analogous to
+      # window[@name].instances = []
+      JS_string_definitions += "window.#{@name}.instances = [];" + "\n"
+
     # if the class extends another one
     if @superClassName?
       console.log "extend: " + @name + " extends " + @superClassName
@@ -328,7 +331,7 @@ class Klass
     #if @name == "LCLCodePreprocessor" then debugger
 
   notifyInstancesOfSourceChange: (propertiesArray)->
-    for eachInstance in @instances
+    for eachInstance in window[@name].instances
       eachInstance.sourceChanged()
   
     for eachProperty in propertiesArray
