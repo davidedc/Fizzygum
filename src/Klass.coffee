@@ -306,6 +306,7 @@ class Klass
         namedClasses[@name] = window[@name].prototype
       JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
 
+    JSSourcesContainer.content += JS_string_definitions + "\n"
     if @defineWithSingleEval 
       try
         eval.call window, JS_string_definitions

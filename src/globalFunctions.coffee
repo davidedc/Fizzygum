@@ -440,7 +440,12 @@ boot = ->
   ).then( ->
     eval.call window, compileFGCode window["Klass_coffeSource"], true
   ).then( ->
-    loadAllSources()
+    if window.preCompiled
+      loadingLogDiv = document.getElementById 'loadingLog'
+      loadingLogDiv.parentElement.removeChild loadingLogDiv
+      loadTestManifests()
+    else
+      loadAllSources()
   )
 
 
@@ -530,6 +535,7 @@ continueBooting = ->
       i++
   inclusion_order = generate_inclusion_order dependencies
   console.log "--------------------------------"
+
   compileAndEvalAllSrcFiles inclusion_order
 
 # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
@@ -564,7 +570,7 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
       resolve()
     , 1
 
-  # chain two steps at for each file, one to compile the file
+  # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
   for eachFile in inclusion_order
     if eachFile == "Klass" or eachFile == "Mixin" or eachFile == "globalFunctions"
@@ -575,6 +581,15 @@ compileAndEvalAllSrcFiles = (inclusion_order) ->
 
   # final step, proceed with the boot sequence
   promiseChain.then ->
+
+    if window.location.href.contains "generatePreCompiled"
+      zip = new JSZip
+      zip.file 'pre-compiled.js', "window.preCompiled = true;\n\n" + window.JSSourcesContainer.content
+      zip.generateAsync(type: 'blob').then (content) ->
+        saveAs content, 'pre-compiled.zip'
+        return
+
+
     loadingLogDiv = document.getElementById 'loadingLog'
     loadingLogDiv.parentElement.removeChild loadingLogDiv
     loadTestManifests()
@@ -585,6 +600,9 @@ compileSource = (fileName) ->
   if !window.CS1CompiledClasses?
     window.CS1CompiledClasses = []
 
+  if !window.JSSourcesContainer?
+    window.JSSourcesContainer = {content: ""}
+
   fileContents = window[fileName + "_coffeSource"]
 
   t0 = performance.now()
@@ -594,10 +612,10 @@ compileSource = (fileName) ->
   # loading via Klass means that we register all the source
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
-    morphKlass = new Klass fileContents
+    morphKlass = new Klass fileContents, JSSourcesContainer
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
-    new Mixin fileContents
+    new Mixin fileContents, JSSourcesContainer
 
   console.log "compiling and evalling " + fileName + " from souce code"
   loadingLogDiv = document.getElementById 'loadingLog'

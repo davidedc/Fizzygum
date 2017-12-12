@@ -96,6 +96,7 @@ class Mixin
 
     JS_string_definitions = compileFGCode (@_equivalentforSuper source), true
 
+    JSSourcesContainer.content += JS_string_definitions + "\n"
     try
       eval.call window, JS_string_definitions
     catch err
