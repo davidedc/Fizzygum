@@ -5,7 +5,8 @@ if [ ! -d ../Fizzygum-builds ]; then
   exit
 fi
 
-cp ~/Downloads/pre-compiled.zip ../Fizzygum-builds/latest/js
-yes | unzip  ../Fizzygum-builds/latest/js/pre-compiled.zip -d ../Fizzygum-builds/latest/js/
-rm  ../Fizzygum-builds/latest/js/pre-compiled.zip
+unzip -o ~/Downloads/pre-compiled.zip -d ../Fizzygum-builds/latest/js/
 uglifyjs --compress --output ../Fizzygum-builds/latest/js/pre-compiled.js -- ../Fizzygum-builds/latest/js/pre-compiled.js
+
+say precompiled
+echo done!!!!!!!!!!!!
