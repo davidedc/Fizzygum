@@ -1,4 +1,6 @@
-# Global Functions ////////////////////////////////////////////////////
+# Globals ////////////////////////////////////////////////////
+
+world = {} # we make "world" global
 
 
 # This is used for mixins: MixedClassKeywords is used
@@ -649,10 +651,6 @@ compileSource = (fileName, justLoadSources) ->
   t1 = performance.now()
   console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
 
-
-
-
-world = {} # we make "world" global
 
 # we use the trackChanges array as a stack to
 # keep track whether a whole segment of code
