@@ -293,10 +293,6 @@ class WorldMorph extends FrameMorph
     ProfilingDataCollector.enableBrokenRectsProfiling()
 
     WorldMorph.ongoingUrlActionNumber= 0
-    startupActions = getParameterByName "startupActions"
-    console.log "startupActions: " + startupActions
-    if startupActions?
-      @nextStartupAction()
 
     if !window.location.href.contains "worldWithSystemTestHarness"
       @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"

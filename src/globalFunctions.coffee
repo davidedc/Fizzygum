@@ -413,32 +413,59 @@ compileFGCode = (codeSource, bare) ->
   return compiled
 
 boot = ->
-  # load Klass
-  (Promise.all [
-    loadJSFile("js/sourceCode/Klass_coffeSource.js"),
-    loadJSFile("js/sourceCode/Mixin_coffeSource.js")
-  ]).then( ->
-    eval.call window, compileFGCode window["Mixin_coffeSource"], true
-  ).then( ->
-    eval.call window, compileFGCode window["Klass_coffeSource"], true
-  ).then( ->
-    if window.preCompiled
-      loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv?.parentElement.removeChild loadingLogDiv
 
-      loadJSFilesWithCoffeescriptSources().then ->
-        # this will run asynchronously
-        loadSourcesAndPotentiallyCompileThem true
+  window.stillLoadingSources = true
 
-      kickOffWorldStepping()
+  # common load path
+  loadUpThingsPromise = (Promise.all [
+      loadJSFile("js/libs/FileSaver.min.js"),
+      loadJSFile("js/libs/jszip.min.js"),
+      loadJSFile("js/sourceCode/Klass_coffeSource.js"),
+      loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
+      loadJSFile("js/sourceCode/sourceCodeManifest.js"),
+      loadJSFile("js/tests/testsManifest.js"),
+      loadJSFile("js/tests/testsAssetsManifest.js"),
+    ]).then ->
+      eval.call window, compileFGCode window["Mixin_coffeSource"], true
+    .then ->
+      eval.call window, compileFGCode window["Klass_coffeSource"], true
+    .then ->
+      loadJSFilesWithCoffeescriptSources()
 
-    else
-      loadJSFilesWithCoffeescriptSources().then ->
-        loadSourcesAndPotentiallyCompileThem false
-      .then ->
-        kickOffWorldStepping()
+  if window.preCompiled
+    loadingLogDiv = document.getElementById 'loadingLog'
+    loadingLogDiv?.parentElement.removeChild loadingLogDiv
 
-  )
+    loadUpThingsPromise.then ->
+      # this will run asynchronously
+      loadSourcesAndPotentiallyCompileThem true
+    .then ->
+      window.stillLoadingSources = false
+      AutomatorRecorderAndPlayer.testsManifest = testsManifest
+      AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+      startupActions = getParameterByName "startupActions"
+      console.log "startupActions: " + startupActions
+      if startupActions?
+        world.nextStartupAction()
+
+    createWorldAndStartStepping()
+
+  else
+    loadUpThingsPromise.then ->
+      # this will run asynchronously
+      loadSourcesAndPotentiallyCompileThem false
+    .then ->
+      window.stillLoadingSources = false
+      AutomatorRecorderAndPlayer.testsManifest = testsManifest
+      AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+    .then ->
+      createWorldAndStartStepping()
+      startupActions = getParameterByName "startupActions"
+      console.log "startupActions: " + startupActions
+      if startupActions?
+        world.nextStartupAction()
+
+  
 
 
 # The whole idea here is that
@@ -553,7 +580,6 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
   # to return a function where the argument is bound
   createCompileSourceFunction = (fileName, justLoadSources2) ->
-    debugger
     return -> compileSource fileName, justLoadSources2
 
 
@@ -642,10 +668,7 @@ window.morphsThatMaybeChangedGeometryOrPosition = []
 window.morphsThatMaybeChangedFullGeometryOrPosition = []
 window.morphsThatMaybeChangedLayout = []
 
-kickOffWorldStepping = ->
-
-  AutomatorRecorderAndPlayer.testsManifest = testsManifest
-  AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+createWorldAndStartStepping = ->
 
   # Add "false" as second parameter below
   # to fit the world in canvas as per dimensions
@@ -671,10 +694,7 @@ kickOffWorldStepping = ->
     world.doOneCycle()
     return
   )()
-  # place the rAF *before* the render() to assure as close to 
-  # 60fps with the setTimeout fallback.
-  if window.location.href.contains "runAllTests"
-    world.runAllSystemTests()
+
   # in case we want to set up the page
   # for the System Tests, then add a panel
   # to the right where helper commands can be
