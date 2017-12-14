@@ -929,6 +929,14 @@ class WorldMorph extends FrameMorph
 
     @events = []
 
+  # we keep the "pacing" promises in this
+  # srcLoadsSteps array, (or, more precisely,
+  # we keep their resolving functions) and each frame
+  # we resolve one, so we don't cause gitter.
+  loadAPartOfFizzyGumSourceIfNeeded: ->
+    if window.srcLoadsSteps.length > 0
+      resolvingFunction = window.srcLoadsSteps.shift()
+      resolvingFunction.call()
 
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
@@ -938,6 +946,7 @@ class WorldMorph extends FrameMorph
 
     # most notably replays test actions at the right time
     @runOtherTasksStepFunction()
+    @loadAPartOfFizzyGumSourceIfNeeded()
     
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()

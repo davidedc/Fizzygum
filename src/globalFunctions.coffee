@@ -2,6 +2,9 @@
 
 world = {} # we make "world" global
 
+window.srcLoadsSteps = []
+
+window.srcLoadCompileDebugWrites = false
 
 # This is used for mixins: MixedClassKeywords is used
 # to protect some methods so the are not copied to object,
@@ -508,15 +511,36 @@ generate_inclusion_order = (dependencies) ->
   return inclusion_order
 
 
-# see https://gist.github.com/joepie91/2664c85a744e6bd0629c
-# for this useful function to pace "then" steps
+# useful function to pace "then" steps,
+# we use it in two modes:
+#
+# 1. in "pre-compiled" mode we load all the
+# sources and we pace those loads triggering
+# the "waits" on animationFrames, so that
+# we don't create too much gitter as the
+# world is going.
+# We achieve this by storing the "resolve"
+# method in an array that we check in
+# doOneCycle. So when there is a frame running
+# we see if we can resolve one such "gate" so
+# that the next source can be loaded.
+#
+# 2. In non-precompiled mode we don't care about
+# the gitter because there is no running world,
+# so we can just wait each compilation step on
+# a timer.
 waitNextTurn = ->
   (args...) ->
-    new Promise (resolve, reject) ->
-      setTimeout () ->
-        resolve args...
-      , 1
-
+    if window.preCompiled
+      prms = new Promise (resolve, reject) ->
+        window.srcLoadsSteps.push resolve
+    else
+      # see https://gist.github.com/joepie91/2664c85a744e6bd0629c
+      prms = new Promise (resolve, reject) ->
+        setTimeout () ->
+          resolve args...
+        , 1
+    return prms
 
 generateInclusionOrder = ->
   # find out the dependencies looking at each klass'

@@ -9,6 +9,7 @@ class Klass
   augmentedWith: nil
   superKlass: nil
   subKlasses: nil
+  
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
@@ -40,7 +41,7 @@ class Klass
     aString.replace(/^([ \t]*)return/gm, "$1this.registerThisInstance?();\n$1return")
     
   _equivalentforSuper: (fieldName, aString) ->
-    console.log "removing super from: " + aString
+    if window.srcLoadCompileDebugWrites then console.log "removing super from: " + aString
     # coffeescript won't compile "super" unless it's an instance
     # method (i.e. if it comes inside a class), so we need to
     # translate that manually into valid CS that doesn't use super.
@@ -95,6 +96,20 @@ class Klass
         sourceWithoutComments += eachLine + "\n"
     return sourceWithoutComments
 
+  # You can create a Klass in 3 main "modes" of use:
+  #  1. you want to load up the CS source, turn it to JS
+  #     and eval the JS so to create the class:
+  #        generatePreCompiledJS == true
+  #        createClass == true
+  #  2. you want to load up the CS source, turn it to JS
+  #     and just store the JS somewhere to generate the
+  #     pre-compiled JS sources:
+  #        generatePreCompiledJS == true
+  #        createClass == false
+  #  3. you want to just load up the CS source so it
+  #     appears all neat in the inspectors:
+  #        generatePreCompiledJS == false
+  #        createClass == false
   constructor: (source, generatePreCompiledJS, createClass) ->
 
     if !window.classDefinitionAsJS?
@@ -112,21 +127,21 @@ class Klass
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
     if (m = classRegex.exec(source))?
         m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}")
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @name = m[1]
-        console.log "name: " + @name
+        if window.srcLoadCompileDebugWrites then console.log "name: " + @name
 
     # find if it extends some other class
     extendsRegex = /^class[ \t]*[a-zA-Z_$][0-9a-zA-Z_$]*[ \t]*extends[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = extendsRegex.exec(source))?
         m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}")
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @superClassName = m[1]
         @superKlass = window[@superClassName].klass
 
-        console.log "superClassName: " + @superClassName
+        if window.srcLoadCompileDebugWrites then console.log "superClassName: " + @superClassName
 
     # find which mixins need to be mixed-in
     @augmentedWith = []
@@ -135,17 +150,17 @@ class Klass
         if (m.index == augmentRegex.lastIndex)
             augmentRegex.lastIndex++
         m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}");
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}");
         )
         @augmentedWith.push m[1]
-        console.log "augmentedWith: " + @augmentedWith
+        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + @augmentedWith
 
 
     # remove the augmentations because we don't want
     # them to mangle up the parsing
     source = source.replace(/^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$, @]*)/gm,"")
 
-    console.log "source ---------\n" + source
+    if window.srcLoadCompileDebugWrites then console.log "source ---------\n" + source
 
     source += "\n  $$$STOPTOKEN_LASTFIELD :"
 
@@ -161,172 +176,166 @@ class Klass
         if (m.index == regex.lastIndex)
             regex.lastIndex++
         m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}");
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}");
         )
 
         if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
           break
         else
-          console.log "not the stop field: " + m[1].valueOf()
+          if window.srcLoadCompileDebugWrites then console.log "not the stop field: " + m[1].valueOf()
 
         if m[1].substring(0, 1) == "@"
           @staticPropertiesSources[m[1].substring(1, m[1].length)] = m[2]
         else
           @nonStaticPropertiesSources[m[1]] = m[2]
 
-    console.dir @nonStaticPropertiesSources
 
-    # --------------------
-    # OK we collected all the fields definitions, now go through them
-    # and put them into action
-    # --------------------
-
-    # collect all the definitions in JS form here
     if generatePreCompiledJS or createClass
+      # --------------------
+      # OK we collected all the fields definitions, now go through them
+      # and put them into action
+      # --------------------
+
+      # collect all the definitions in JS form here
       JS_string_definitions = "// class " + @name + "\n\n"
 
-    # the class itself is a constructor function, the constructor.
-    # we have to find its source (if it exists), and
-    # we have to slightly modify it and then we have to
-    # actually create this function, hence creating the class.
-    console.log "adding the constructor"
-    if @nonStaticPropertiesSources.hasOwnProperty('constructor')
+      # the class itself is a constructor function, the constructor.
+      # we have to find its source (if it exists), and
+      # we have to slightly modify it and then we have to
+      # actually create this function, hence creating the class.
+      if window.srcLoadCompileDebugWrites then console.log "adding the constructor"
+      if @nonStaticPropertiesSources.hasOwnProperty('constructor')
 
-      console.log "CS sources of constructor: " + @nonStaticPropertiesSources["constructor"]
-      # if there is a source for the constructor
-      constructorDeclaration = @_equivalentforSuper "constructor", @nonStaticPropertiesSources["constructor"]
-      constructorDeclaration = @_addInstancesTracker constructorDeclaration
-      console.log "constructor declaration CS:\n" + constructorDeclaration
+        if window.srcLoadCompileDebugWrites then console.log "CS sources of constructor: " + @nonStaticPropertiesSources["constructor"]
+        # if there is a source for the constructor
+        constructorDeclaration = @_equivalentforSuper "constructor", @nonStaticPropertiesSources["constructor"]
+        constructorDeclaration = @_addInstancesTracker constructorDeclaration
+        if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
 
-      compiled = compileFGCode constructorDeclaration, true
+        compiled = compileFGCode constructorDeclaration, true
 
-      constructorDeclaration = @_removeHelperFunctions compiled
-      constructorDeclaration = "window." + @name + " = " + constructorDeclaration
-    else
-      # there is no constructor source, so we
-      # just have to synthesize one that does:
-      #  constructor ->
-      #    super
-      #    register instance
-      constructorDeclaration = """
-        window.#{@name} = ->
-          # first line here is equivalent to "super" the one
-          # passing all the arguments
-          window.#{@name}.__super__.constructor.apply this, arguments
-          # register instance (only Morphs have this method)
-          @registerThisInstance?()
-          return
-      """
-      console.log "constructor declaration CS:\n" + constructorDeclaration
-      constructorDeclaration = compileFGCode constructorDeclaration, true
+        constructorDeclaration = @_removeHelperFunctions compiled
+        constructorDeclaration = "window." + @name + " = " + constructorDeclaration
+      else
+        # there is no constructor source, so we
+        # just have to synthesize one that does:
+        #  constructor ->
+        #    super
+        #    register instance
+        constructorDeclaration = """
+          window.#{@name} = ->
+            # first line here is equivalent to "super" the one
+            # passing all the arguments
+            window.#{@name}.__super__.constructor.apply this, arguments
+            # register instance (only Morphs have this method)
+            @registerThisInstance?()
+            return
+        """
+        if window.srcLoadCompileDebugWrites then console.log "constructor declaration CS:\n" + constructorDeclaration
+        constructorDeclaration = compileFGCode constructorDeclaration, true
 
-    console.log "constructor declaration JS: " + constructorDeclaration
-    #if @name == "StringMorph2" then debugger
-    if generatePreCompiledJS or createClass
+      if window.srcLoadCompileDebugWrites then console.log "constructor declaration JS: " + constructorDeclaration
+      #if @name == "StringMorph2" then debugger
       JS_string_definitions += constructorDeclaration + "\n"
 
-    # if you declare a constructor (i.e. a Function) like this then you don't
-    # get the "name" property set as it normally is when
-    # defining functions in ways that specify the name, so
-    # we add the name manually here.
-    # the name property is tricky, see:
-    # see http://stackoverflow.com/questions/5871040/how-to-dynamically-set-a-function-object-name-in-javascript-as-it-is-displayed-i
-    # just doing this is not sufficient: window[@name].name = @name
-    if generatePreCompiledJS or createClass
+      # if you declare a constructor (i.e. a Function) like this then you don't
+      # get the "name" property set as it normally is when
+      # defining functions in ways that specify the name, so
+      # we add the name manually here.
+      # the name property is tricky, see:
+      # see http://stackoverflow.com/questions/5871040/how-to-dynamically-set-a-function-object-name-in-javascript-as-it-is-displayed-i
+      # just doing this is not sufficient: window[@name].name = @name
+
       # analogous to
       # Object.defineProperty(window[@name], 'name', { value: @name });
       JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
-    if generatePreCompiledJS or createClass
       # analogous to
       # window[@name].instances = []
       JS_string_definitions += "window.#{@name}.instances = [];" + "\n"
 
-    # if the class extends another one
-    if @superClassName?
-      console.log "extend: " + @name + " extends " + @superClassName
-      if generatePreCompiledJS or createClass
+      # if the class extends another one
+      if @superClassName?
+        if window.srcLoadCompileDebugWrites then console.log "extend: " + @name + " extends " + @superClassName
         # analogous to
         #window[@name].__super__ = window[@superClassName].prototype
         #window[@name] = extend window[@name], window[@superClassName]
         JS_string_definitions += "window.#{@name}.__super__ = window.#{@superClassName}.prototype;" + "\n"
         JS_string_definitions += "window.#{@name} = extend(window.#{@name}, window.#{@superClassName});" + "\n"
-    else
-      console.log "no extension (extends Object) for " + @name
-      if generatePreCompiledJS or createClass
+      else
+        if window.srcLoadCompileDebugWrites then console.log "no extension (extends Object) for " + @name
         # analogous to
         #window[@name].__super__ = Object.prototype
         JS_string_definitions += "window.#{@name}.__super__ = Object.prototype;" + "\n\n"
 
 
-    # if the class is augmented with one or more Mixins
-    for eachAugmentation in @augmentedWith
-      console.log "augmentedWith: " + eachAugmentation
-      if generatePreCompiledJS or createClass
+      # if the class is augmented with one or more Mixins
+      for eachAugmentation in @augmentedWith
+        if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + eachAugmentation
         # analogous to
         #window[@name].augmentWith window[eachAugmentation], @name
         JS_string_definitions += "window.#{@name}.augmentWith(window.#{eachAugmentation}, '#{@name}');" + "\n"
 
-    # non-static fields, which are put in the prototype
-    for own fieldName, fieldValue of @nonStaticPropertiesSources
-      if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
-        console.log "building field " + fieldName + " ===== "
+      # non-static fields, which are put in the prototype
+      for own fieldName, fieldValue of @nonStaticPropertiesSources
+        if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
+          if window.srcLoadCompileDebugWrites then console.log "building field " + fieldName + " ===== "
 
-        #if fieldName == "invalidateFullBoundsCache"
-        #  debugger
+          #if fieldName == "invalidateFullBoundsCache"
+          #  debugger
 
-        fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
+          fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true
+          compiled = compileFGCode fieldDeclaration, true
 
-        fieldDeclaration = @_removeHelperFunctions compiled
-        fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
+          fieldDeclaration = @_removeHelperFunctions compiled
+          fieldDeclaration = "window." + @name + ".prototype." + fieldName + " = " + fieldDeclaration
 
-        console.log "field declaration: " + fieldDeclaration
-        #if @name == "StringMorph2" then debugger
-        if generatePreCompiledJS or createClass
+          if window.srcLoadCompileDebugWrites then console.log "field declaration: " + fieldDeclaration
+          #if @name == "StringMorph2" then debugger
           JS_string_definitions += fieldDeclaration + "\n"
 
-    # now the static fields, which are put in the constructor
-    # rather than in the prototype
-    for own fieldName, fieldValue of @staticPropertiesSources
-      if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
-        console.log "building STATIC field " + fieldName + " ===== "
+      # now the static fields, which are put in the constructor
+      # rather than in the prototype
+      for own fieldName, fieldValue of @staticPropertiesSources
+        if fieldName != "constructor" and fieldName != "augmentWith" and fieldName != "addInstanceProperties"
+          if window.srcLoadCompileDebugWrites then console.log "building STATIC field " + fieldName + " ===== "
 
-        fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
+          fieldDeclaration = @_equivalentforSuper fieldName, fieldValue
 
-        compiled = compileFGCode fieldDeclaration, true
+          compiled = compileFGCode fieldDeclaration, true
 
-        fieldDeclaration = @_removeHelperFunctions compiled
-        fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
+          fieldDeclaration = @_removeHelperFunctions compiled
+          fieldDeclaration = "window." + @name + "." + fieldName + " = " + fieldDeclaration
 
-        console.log fieldDeclaration
-        if generatePreCompiledJS or createClass
+          if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
           JS_string_definitions += fieldDeclaration + "\n"
 
-    # finally, add the class to the namedClasses index
-    if @name != "MorphicNode"
-      if generatePreCompiledJS or createClass
+      # finally, add the class to the namedClasses index
+      if @name != "MorphicNode"
         # analogous to
         #namedClasses[@name] = window[@name].prototype
         JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
 
-    if generatePreCompiledJS or createClass
       JSSourcesContainer.content += JS_string_definitions + "\n"
 
-    if createClass
-      try
-        console.log "actually evalling " + @name + " to crete Class"
-        eval.call window, JS_string_definitions
-      catch err
-        alert " error " + err + " evaling : " + JS_string_definitions
+      if createClass
+        try
+          if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to crete Class"
+          eval.call window, JS_string_definitions
+        catch err
+          alert " error " + err + " evaling : " + JS_string_definitions
 
 
-    window.classDefinitionAsJS.push JS_string_definitions
+      window.classDefinitionAsJS.push JS_string_definitions
 
+    # OK now that we have created the Class
+    # (or if already created anyways, in pre-compiled mode)
+    # then add the .klass field
     window[@name].klass = @
     if @superklass? 
       @superklass.subKlasses.push @
+
 
     #if @name == "LCLCodePreprocessor" then debugger
 
