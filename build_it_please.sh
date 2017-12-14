@@ -88,6 +88,8 @@ cp auxiliary\ files/FileSaver/FileSaver.min.js ../Fizzygum-builds/latest/js/libs
 cp auxiliary\ files/JSZip/jszip.min.js ../Fizzygum-builds/latest/js/libs/
 
 cp auxiliary\ files/CoffeeScript/coffee-script_2.0.3.js ../Fizzygum-builds/latest/js/libs/
+coffee -b -c -o ../Fizzygum-builds/latest/js/libs auxiliary\ files/Mousetrap/Mousetrap.coffee 
+uglifyjs --compress --output ../Fizzygum-builds/latest/js/libs/Mousetrap.min.js -- ../Fizzygum-builds/latest/js/libs/Mousetrap.js
 cp auxiliary\ files/pre-compiled.js ../Fizzygum-builds/latest/js/pre-compiled.js
 
 # copy aux icon files

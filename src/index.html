@@ -2,40 +2,12 @@
 <html>
 	<head>
 		<title>Fizzygum</title>
-
-		<script type="text/javascript" src="js/fizzygum.js"></script>
-		<script type="text/javascript" src="js/libs/coffee-script_2.0.3.js"></script>
-		<script type="text/javascript" src="js/pre-compiled.js"></script>
-
-		<script type="text/javascript">			
-
-			var	worldCanvas, pixelRatio;
-			// retina and high-dpi displays have something like
-			// 2 here
-			pixelRatio = window.devicePixelRatio;
-
-			window.onload = function () {
-				worldCanvas = document.getElementById('world');
-
-			    worldCanvas.width = 1;
-			    worldCanvas.height = 1;
-			    worldCanvas.style.width = "1px";
-			    worldCanvas.style.height = "1px";
-			    // "boot" here first loads the manifests for the
-			    // source code of the Morphs, and two manifests
-			    // for the tests.
-			    // Then it sets up the event handlers and
-			    // the requestAnimationFrame loop.
-			    boot();
-			};
-
-		</script>
 	</head>
 
 	<!-- the style below is for disabling any browser selection on
 	the DOM of the page, we don't want any of that, see
 	http://stackoverflow.com/questions/16805684/javascript-disable-text-select -->
-	<body style="margin: 0px; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
+	<body bgcolor="#f4f3f4" style="margin: 0px; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;">
 
 		<!-- note that the width and height of the
 		canvas below are ignored in case the WorldMorph
@@ -50,12 +22,32 @@
 			<p>Your browser doesn't support canvas.</p>
 		</canvas>
 
-		<!-- this "log" div shows info a) while loading all the source files and then
-		b) while compiling and evaluating them. Useful to give some feedback as these
-		can take in order of 10s of seconds. This div is removed after the last
-		log to it -->
-		<div id="loadingLog" style="position: absolute; left: 0px; top: 0px; width: 960px; background-color: rgb(245, 245, 245);">
-		</div>
-
 	</body>
+
+	<script type="text/javascript" src="js/fizzygum-min.js"></script>
+
+	<script type="text/javascript">			
+
+		var	worldCanvas, pixelRatio;
+		// retina and high-dpi displays have something like
+		// 2 here
+		pixelRatio = window.devicePixelRatio;
+
+		window.onload = function () {
+			worldCanvas = document.getElementById('world');
+
+		    worldCanvas.width = 1;
+		    worldCanvas.height = 1;
+		    worldCanvas.style.width = "1px";
+		    worldCanvas.style.height = "1px";
+		    // "boot" here first loads the manifests for the
+		    // source code of the Morphs, and two manifests
+		    // for the tests.
+		    // Then it sets up the event handlers and
+		    // the requestAnimationFrame loop.
+		    boot();
+		};
+
+	</script>
+
 </html>

@@ -6,6 +6,33 @@ window.srcLoadsSteps = []
 
 window.srcLoadCompileDebugWrites = false
 
+
+addLogDiv = ->
+  # this "log" div shows info a) while loading all the source files and then
+  # b) while compiling and evaluating them. Useful to give some feedback as these
+  # can take in order of 10s of seconds. This div is removed after the last
+  # log to it
+  loadingLogDiv = document.createElement 'div'
+  loadingLogDiv.id = 'loadingLog'
+  loadingLogDiv.style.position = 'absolute'
+  loadingLogDiv.style.width = "960px"
+  loadingLogDiv.style.backgroundColor = "rgb(245, 245, 245)"
+  loadingLogDiv.style.top = "0px"
+  loadingLogDiv.style.top = "0px"
+  document.getElementsByTagName('body')[0].appendChild(loadingLogDiv)
+
+removeLogDiv = ->
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv?.parentElement.removeChild loadingLogDiv
+
+emptyLogDiv = ->
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv?.innerHTML = ""
+
+addLineToLogDiv = (content) ->
+  loadingLogDiv = document.getElementById 'loadingLog'
+  loadingLogDiv?.innerHTML += content + "</br>"
+
 # This is used for mixins: MixedClassKeywords is used
 # to protect some methods so the are not copied to object,
 # because they have special meaning
@@ -367,15 +394,14 @@ howManySourcesCompiledAndEvalled = 0
 
 # a helper function to use Promise style
 # instead of callback style when loading a JS
-loadJSFile = (fileName) ->
+loadJSFile = (fileName, dontLogToDiv) ->
   return new Promise (resolve, reject) ->
 
     script = document.createElement "script"
     script.src = fileName
 
     script.onload = ->
-      loadingLogDiv = document.getElementById 'loadingLog'
-      loadingLogDiv?.innerHTML += "loading " + this.src + "</br>"
+      addLineToLogDiv "loading " + this.src
       console.log "loading " + this.src
       resolve(script)
 
@@ -422,7 +448,21 @@ boot = ->
   window.stillLoadingSources = true
 
   # common load path
-  loadUpThingsPromise = (Promise.all [
+  # note that all these can be loaded and "run" in any
+  # order.
+  # The only thing that is loaded already is fizzygum.js
+  # which is this very file of globals.
+  # the advantage of doing this asynchronous loading
+  # instead of plainly using script tags in the index
+  # is that script tags in the index file tend to load
+  # and execute in sequence because the running of a
+  # script could change the html afterwards that loads the
+  # others (although browsers can speculatively
+  # try to do everything in parallel).
+  # By doing this here instead we have exact control of what
+  # is loaded and what the logic of the order is, all
+  # in one place.
+  (Promise.all [
       loadJSFile("js/libs/FileSaver.min.js"),
       loadJSFile("js/libs/jszip.min.js"),
       loadJSFile("js/sourceCode/Klass_coffeSource.js"),
@@ -430,45 +470,41 @@ boot = ->
       loadJSFile("js/sourceCode/sourceCodeManifest.js"),
       loadJSFile("js/tests/testsManifest.js"),
       loadJSFile("js/tests/testsAssetsManifest.js"),
-    ]).then ->
-      eval.call window, compileFGCode window["Mixin_coffeSource"], true
-    .then ->
-      eval.call window, compileFGCode window["Klass_coffeSource"], true
-    .then ->
-      loadJSFilesWithCoffeescriptSources()
-
-  if window.preCompiled
-    loadingLogDiv = document.getElementById 'loadingLog'
-    loadingLogDiv?.parentElement.removeChild loadingLogDiv
-
-    loadUpThingsPromise.then ->
-      # this will run asynchronously
-      loadSourcesAndPotentiallyCompileThem true
-    .then ->
-      window.stillLoadingSources = false
-      AutomatorRecorderAndPlayer.testsManifest = testsManifest
-      AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
-      startupActions = getParameterByName "startupActions"
-      console.log "startupActions: " + startupActions
-      if startupActions?
-        world.nextStartupAction()
-
-    createWorldAndStartStepping()
-
-  else
-    loadUpThingsPromise.then ->
-      # this will run asynchronously
-      loadSourcesAndPotentiallyCompileThem false
-    .then ->
-      window.stillLoadingSources = false
-      AutomatorRecorderAndPlayer.testsManifest = testsManifest
-      AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
-    .then ->
+      loadJSFile("js/libs/coffee-script_2.0.3.js"),
+      loadJSFile("js/pre-compiled.js"),
+      loadJSFile("js/libs/Mousetrap.min.js"),
+  ]).then ->
+    if window.preCompiled
       createWorldAndStartStepping()
-      startupActions = getParameterByName "startupActions"
-      console.log "startupActions: " + startupActions
-      if startupActions?
-        world.nextStartupAction()
+    else
+      addLogDiv()
+  .then ->
+    eval.call window, compileFGCode window["Mixin_coffeSource"], true
+  .then ->
+    eval.call window, compileFGCode window["Klass_coffeSource"], true
+  .then ->
+    loadJSFilesWithCoffeescriptSources()
+  .then ->
+    if window.preCompiled
+      (loadSourcesAndPotentiallyCompileThem true).then ->
+        window.stillLoadingSources = false
+        AutomatorRecorderAndPlayer.testsManifest = testsManifest
+        AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+        startupActions = getParameterByName "startupActions"
+        console.log "startupActions: " + startupActions
+        if startupActions?
+          world.nextStartupAction()
+    else
+      (loadSourcesAndPotentiallyCompileThem false).then ->
+        window.stillLoadingSources = false
+        AutomatorRecorderAndPlayer.testsManifest = testsManifest
+        AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+      .then ->
+        createWorldAndStartStepping()
+        startupActions = getParameterByName "startupActions"
+        console.log "startupActions: " + startupActions
+        if startupActions?
+          world.nextStartupAction()
 
   
 
@@ -588,8 +624,7 @@ generateInclusionOrder = ->
 
 loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
 
-  loadingLogDiv = document.getElementById 'loadingLog'
-  loadingLogDiv?.innerHTML = ""
+  emptyLogDiv()
 
 
   console.log "--------------------------------"
@@ -636,8 +671,9 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
         return
 
 
-    loadingLogDiv = document.getElementById 'loadingLog'
-    loadingLogDiv?.parentElement.removeChild loadingLogDiv
+    removeLogDiv()
+
+  return promiseChain
 
 
 compileSource = (fileName, justLoadSources) ->
@@ -669,8 +705,8 @@ compileSource = (fileName, justLoadSources) ->
       new Mixin fileContents, true, true
 
   console.log "compiling and evalling " + fileName + " from souce code"
-  loadingLogDiv = document.getElementById 'loadingLog'
-  loadingLogDiv?.innerHTML = "compiling and evalling " + fileName
+  emptyLogDiv()
+  addLineToLogDiv "compiling and evalling " + fileName
 
   t1 = performance.now()
   console.log "loadSourcesAndPotentiallyCompileThem call time: " + (t1 - t0) + " milliseconds."
