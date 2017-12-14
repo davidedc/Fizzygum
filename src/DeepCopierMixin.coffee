@@ -39,8 +39,6 @@ DeepCopierMixin =
         objectClones.push  cloneOfMe
 
         for property of @
-          if property ==  "allValsInMorphByName" or property ==  "morphValsDependingOnChildrenVals" or property ==  "morphValsDirectlyDependingOnParentVals"
-            continue
 
           # also includes the "parent" property
           if @hasOwnProperty property

@@ -119,11 +119,6 @@ class Morph extends MorphicNode
   shadowBlur: 10
   onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
-  # contains all the reactive vals
-  allValsInMorphByName: nil
-  morphValsDependingOnChildrenVals: nil
-  morphValsDirectlyDependingOnParentVals: nil
-
   clickOutsideMeOrAnyOfMeChildrenCallback: [nil]
   isMarkedForDestruction: false
 
@@ -230,10 +225,6 @@ class Morph extends MorphicNode
   setTextDescription: (@textDescription) ->
 
 
-  ##
-  # Reactive Values start
-  ##
-
   markForDestruction: ->
     world.markedForDestruction.push @
     @isMarkedForDestruction = true
@@ -245,66 +236,6 @@ class Morph extends MorphicNode
       return @parent.anyParentMarkedForDestruction() 
     return false
 
-
-  # connectValuesToAddedChild: (theChild) ->
-  #   #if theChild.constructor.name == "RectangleMorph"
-  #   #  debugger
-  #
-  #   # we have a data structure that contains,
-  #   # for each child valName, all vals of this
-  #   # morph that depend on it. Go through
-  #   # all child val names, find the
-  #   # actual val in the child, and connect all
-  #   # to the vals in this morph that depend on it.
-  #   for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
-  #       @morphValsDependingOnChildrenVals
-  #     childVal = theChild.allValsInMorphByName[ nameOfChildrenVar ]
-  #     if childVal?
-  #       for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
-  #         valDependingOnChildrenVal.args.connectToChildVal valDependingOnChildrenVal, childVal
-  #
-  #   # we have a data structure that contains,
-  #   # for each parent (me) valName, all vals of the child
-  #   # morph that depend on it. Go through
-  #   # all parent (me) val names, find the
-  #   # actual val in the parent (me), and connect it
-  #   # to the vals in the child morph that depend on it.
-  #   for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
-  #       theChild.morphValsDirectlyDependingOnParentVals
-  #     parentVal = @allValsInMorphByName[ nameOfParentVar ]
-  #     if parentVal?
-  #       for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
-  #         valDependingOnParentVal.args.connectToParentVal valDependingOnParentVal, parentVal
-  #
-  # disconnectValuesFromRemovedChild: (theChild) ->
-  #   # we have a data structure that contains,
-  #   # for each child valName, all vals of this
-  #   # morph that depend on it. Go through
-  #   # all child val names, find the
-  #   # actual val in the child, and DISconnect it
-  #   # FROM the vals in this morph that depended on it.
-  #   for nameOfChildrenVar, morphValsDependingOnChildrenVals of \
-  #       @morphValsDependingOnChildrenVals
-  #     for valNameNotUsed, valDependingOnChildrenVal of morphValsDependingOnChildrenVals
-  #       childArg = valDependingOnChildrenVal.args.argById[theChild.id]
-  #       if childArg?
-  #         childArg.disconnectChildArg()
-  #
-  #   # we have a data structure that contains,
-  #   # for each parent (me) valName, all vals of the child
-  #   # morph that depend on it. Go through
-  #   # all parent (me) val names, find the
-  #   # actual val in the parent (me), and connect it
-  #   # to the vals in the child morph that depend on it.
-  #   for nameOfParentVar, morphValsDirectlyDependingOnParentVals of \
-  #       theChild.morphValsDirectlyDependingOnParentVals
-  #     for valNameNotUsed, valDependingOnParentVal of morphValsDirectlyDependingOnParentVals
-  #       parentArg = valDependingOnParentVal.args.parentArgByName[ nameOfParentVar ]
-  #       if parentArg?
-  #         parentArg.disconnectParentArg()
-
-
-  ## ------------ end of reactive values ----------------------
 
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID
@@ -362,10 +293,6 @@ class Morph extends MorphicNode
     # set more details of how it should look (e.g. size),
     # so we wait and we let the actual extending
     # morph to draw itself.
-
-    @allValsInMorphByName = {}
-    @morphValsDependingOnChildrenVals = {}
-    @morphValsDirectlyDependingOnParentVals = {}
 
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 

@@ -36,8 +36,6 @@ class PreferencesAndSettings
   isFlat: nil
   grabDragThreshold: 7
 
-  printoutsReactiveValuesCode: true
-
   # decimalFloatFiguresOfFontSizeGranularity allows you to go into sub-points
   # in the font size. This is so the resizing of the
   # text is less "jumpy".

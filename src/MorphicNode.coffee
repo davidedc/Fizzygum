@@ -73,7 +73,6 @@ class MorphicNode
     else
       @children.splice position, 0, aMorphicNode
     aMorphicNode.parent = @
-    ## @connectValuesToAddedChild aMorphicNode
   
   # currently used to add the shadow. The shadow
   # is in the background in respect to everything
@@ -112,7 +111,6 @@ class MorphicNode
     @invalidateFullClippedBoundsCache @
     @children.remove aMorphicNode
     aMorphicNode.parent = nil
-    ## @disconnectValuesFromRemovedChild aMorphicNode
   
   # is this Morph attached to neither the world nor to
   # the hand?
