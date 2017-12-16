@@ -1912,7 +1912,7 @@ class LCLCodePreprocessor
     sourceByLine = code.split("\n")
     transformedLines = []
     
-    countingLines = -1;
+    countingLines = -1
     for line in sourceByLine
       countingLines++
       if countingLines in linesWithBlockStart

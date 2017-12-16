@@ -83,9 +83,8 @@ class Mixin
     while (m = regex.exec(sourceToBeParsed))?
         if (m.index == regex.lastIndex)
             regex.lastIndex++
-        m.forEach((match, groupIndex) ->
-            console.log("Found match, group #{groupIndex}: #{match}");
-        )
+        m.forEach (match, groupIndex) ->
+            console.log "Found match, group #{groupIndex}: #{match}"
 
         if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
           break

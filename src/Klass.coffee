@@ -124,7 +124,7 @@ class Klass
     source = source.replace(/^  namedClasses[@name] = @prototype\n/m,"")
 
     # find the class name
-    classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m;
+    classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = classRegex.exec(source))?
         m.forEach((match, groupIndex) ->
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
@@ -145,12 +145,12 @@ class Klass
 
     # find which mixins need to be mixed-in
     @augmentedWith = []
-    augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm;
+    augmentRegex = /^  @augmentWith[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/gm
     while (m = augmentRegex.exec(source))?
         if (m.index == augmentRegex.lastIndex)
             augmentRegex.lastIndex++
         m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}");
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @augmentedWith.push m[1]
         if window.srcLoadCompileDebugWrites then console.log "augmentedWith: " + @augmentedWith
@@ -176,7 +176,7 @@ class Klass
         if (m.index == regex.lastIndex)
             regex.lastIndex++
         m.forEach((match, groupIndex) ->
-            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}");
+            if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
 
         if m[1].valueOf() == "$$$STOPTOKEN_LASTFIELD "
@@ -247,7 +247,7 @@ class Klass
       # just doing this is not sufficient: window[@name].name = @name
 
       # analogous to
-      # Object.defineProperty(window[@name], 'name', { value: @name });
+      # Object.defineProperty(window[@name], 'name', { value: @name })
       JS_string_definitions += "Object.defineProperty(window.#{@name}, 'name', { value: '#{@name}' });" + "\n"
 
       # analogous to

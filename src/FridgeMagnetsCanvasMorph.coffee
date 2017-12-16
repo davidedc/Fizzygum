@@ -240,11 +240,11 @@ class FridgeMagnetsCanvasMorph extends CanvasMorph
     else if isFunction d
       appendedFunction = d
 
-    #context.beginPath();
-    #context.lineWidth="6";
-    #context.strokeStyle="red";
-    #context.rect(5,5,290,140); 
-    #context.stroke();
+    #context.beginPath()
+    #context.lineWidth="6"
+    #context.strokeStyle="red"
+    #context.rect(5,5,290,140)
+    #context.stroke()
 
     @backBufferContext.strokeStyle = "black"
     @backBufferContext.beginPath()

@@ -3462,7 +3462,7 @@
           [mootInput, ignore, errorMoot] = @beautifyCode(mootInput,errorMoot)
 
           if !errorMoot?
-            rx = RegExp("(("+allFunctionsRegex+"|times|doOnce)([^\\w\\d]|$))",'gm');
+            rx = RegExp("(("+allFunctionsRegex+"|times|doOnce)([^\\w\\d]|$))",'gm')
             mootInputAppend = mootInput.replace(rx, "$2"+appendString+"$3")
             mootInputPrepend = mootInput.replace(rx, prependString+"$2$3")
 
@@ -3473,7 +3473,7 @@
 
           if !errorMootAppend?
             if userDefinedFunctions != ""
-              rx = RegExp("("+userDefinedFunctions+")"+appendString+"\\(\\)",'gm');
+              rx = RegExp("("+userDefinedFunctions+")"+appendString+"\\(\\)",'gm')
               transformedMootAppend = transformedMootAppend.replace(rx, "$1"+appendString)
             transformedMootAppend = @stripCommentsAndStrings(transformedMootAppend,nil)[0]
             if mootInputAppend != transformedMootAppend
@@ -3484,7 +3484,7 @@
 
           if !errorMootPrepend? and testMoots
             if userDefinedFunctions != ""
-              rx = RegExp(prependString+"("+userDefinedFunctions+")\\(\\)",'gm');
+              rx = RegExp(prependString+"("+userDefinedFunctions+")\\(\\)",'gm')
               transformedMootPrepend = transformedMootPrepend.replace(rx, prependString+"$1")            
             transformedMootPrepend = @stripCommentsAndStrings(transformedMootPrepend,nil)[0]
             if mootInputPrepend != transformedMootPrepend

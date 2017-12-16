@@ -1832,7 +1832,7 @@ class Morph extends MorphicNode
         theClone = newCanvas new Point eachObject.width, eachObject.height
         ctx = theClone.getContext "2d"
 
-        image = new Image();
+        image = new Image()
         image.src = eachObject.data
         # if something doesn't get painted here,
         # it might be because the allocation of the image
