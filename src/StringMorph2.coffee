@@ -1,14 +1,15 @@
 # StringMorph2 /////////////////////////////////////////////////////////
 
 # It's a SINGLE line of text, i.e.
-# it doesn't represent line breaks as multiple lines.
+# it doesn't represent line breaks as multiple lines
+# and there is no concept of soft-wrapping.
 # It's useful when you mean an "enter" from the user to mean
 # "accept the changes", and to represent things that are
 # necessarily on one line and one line only such as
 # numbers, booleans, method and property names, file names,
 # colors, passwords etc.
 # If there is a chance that the text might span more
-# than one line (e.g. most button actions) then do
+# than one line (e.g. most button captions) then do
 # use a TextMorph instead.
 # It's like StringMorph BUT it fits any given size, so to
 # behave well in layouts.
