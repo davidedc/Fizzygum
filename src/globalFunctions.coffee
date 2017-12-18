@@ -443,25 +443,95 @@ compileFGCode = (codeSource, bare) ->
 
   return compiled
 
+# there are two main ways of booting the world:
+# 1. without pre-compiled files. In this case the
+#    boot needs to load all the sources, compile
+#    them and build all the c l a s s e s and mixins.
+#    The c l a s s e s need to be appropriately chained
+#    into a c l a s s hyerarchy and they need to be
+#    augmented with the desired mixins.
+#    Only after all that the world will be able to
+#    start.
+# 2. with pre-compiled files. In this case there
+#    is a JS file that containes all the compiled
+#    JS versions of all the c l a s s e s and mixins, plus
+#    all the code to build the c l a s s hyerarchy and
+#    to augment the c l a s s e s with the correct mixins.
+#    So, no compilation of sources is needed for the
+#    world to start, so this is much faster. The
+#    world will still asynchronously load all the
+#    sources so one can edit the original coffeescript.
 boot = ->
 
   window.stillLoadingSources = true
 
-  # common load path
-  # note that all these can be loaded and "run" in any
-  # order.
-  # The only thing that is loaded already is fizzygum.js
+  # First loaded batch ----------------------------------------
+  #
+  # note that we assume that all the parts of this first batch
+  # can be loaded/"run" in any order.
+  # The only thing that is loaded already is fizzygum-boot.js
   # which is this very file of globals.
-  # the advantage of doing this asynchronous loading
+  #
+  # The advantage of doing this asynchronous loading
   # instead of plainly using script tags in the index
   # is that script tags in the index file tend to load
-  # and execute in sequence because the running of a
+  # and execute in sequence (because the running of a
   # script could change the html afterwards that loads the
-  # others (although browsers can speculatively
+  # others, although browsers can speculatively
   # try to do everything in parallel).
+  #
   # By doing this here instead we have exact control of what
   # is loaded and what the logic of the order is, all
-  # in one place.
+  # in one place, and all this loading and parsing can be
+  # done in parallel.
+  #
+  # Note that it's important that none of the code in each
+  # of these entries of this batch uses the code of any
+  # of the other entries of this batch. E.g. the pre-compiled
+  # c l a s s e s can't instantiate static or non-static properties
+  # with, say, the result of running the coffeescript compiler.
+  # (when you define a c l a s s, all static and nonstatic properties
+  #  are immediately initialised so for example doing
+  #
+  #    myCompiledCode: Coffeescript.compile(...)
+  #
+  # would run the compilation immediately during the c l a s s
+  # definition and would hence depend on Coffeescript being
+  # loaded already.
+  #
+  # Note however that since the pre-compiled c l a s s e s are pre-
+  # compiled in the correct dependency order (following the
+  # REQUIRES directives), each c l a s s *can*
+  # initialise static/nonstatic properties with objects
+  # created from other c l a s s e s (as long as the REQUIRES
+  # directives are well set). So for example a Morph can
+  # initialise a "color" property doing something like
+  #
+  #   myCol: new Color(...)
+  #
+  # Also note that we load "Coffeescript" here.
+  # Obviously if we don't have the pre-compiled file we need
+  # that to create the Morphs and all that is needed to
+  # start the world, that's a given.
+  # But *also* we need it now if we have the pre-compiled file,
+  # that's because actually the Fizzypaint application
+  # compiles the paint instruments on start, so we
+  # really need to have the Coffeescript compiler on
+  # world start if we open the world with Fizzypaint in it.
+  # If it wasn't for that, we could
+  # postpone the loading of the compiler to after
+  # world start.
+  #
+  # An alternative way of doing things here would be
+  # to try to generate at build time a SINGLE big JS file
+  # that includes all these parts, and hence loading all in
+  # one go.
+  # That wouldn't necessarily be more performant but it could
+  # be tried.
+  # (it could be better to load a few files in parallel
+  # and parse them ideally in parallel but I didn't measure
+  # that).
+
   (Promise.all [
       loadJSFile("js/libs/FileSaver.min.js"),
       loadJSFile("js/libs/jszip.min.js"),
@@ -474,6 +544,10 @@ boot = ->
       loadJSFile("js/pre-compiled.js"),
       loadJSFile("js/libs/Mousetrap.min.js"),
   ]).then ->
+
+  # end of first batch
+  # -----------------------------------------------------------
+
     if window.preCompiled
       createWorldAndStartStepping()
     else

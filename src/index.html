@@ -40,11 +40,9 @@
 		    worldCanvas.height = 1;
 		    worldCanvas.style.width = "1px";
 		    worldCanvas.style.height = "1px";
-		    // "boot" here first loads the manifests for the
-		    // source code of the Morphs, and two manifests
-		    // for the tests.
-		    // Then it sets up the event handlers and
-		    // the requestAnimationFrame loop.
+		    // "boot" here loads all the remaining files,
+		    // sets up the event handlers and
+		    // then kicks off the main loop.
 		    boot();
 		};
 
