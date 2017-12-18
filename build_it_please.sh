@@ -63,12 +63,12 @@ mkdir ../Fizzygum-builds/latest/js/tests/
 python ./buildSystem/build.py
 
 # turn the coffeescript file into js in the js directory
-coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum.coffee 
+coffee -b -c -o ../Fizzygum-builds/latest/js/ ../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee 
 
 # need to install uglify-es with:
 #   npm install uglify-es -g
 # why the executable has a different name than the package is beyond me
-uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-min.js -- ../Fizzygum-builds/latest/js/fizzygum.js
+uglifyjs --compress --output ../Fizzygum-builds/latest/js/fizzygum-boot-min.js -- ../Fizzygum-builds/latest/js/fizzygum-boot.js
 
 # compile all the files containing the coffeescript source for the morphs.
 # this creates javascript files which contain the original coffeescript source as text.

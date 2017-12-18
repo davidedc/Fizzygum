@@ -58,7 +58,7 @@ import ntpath
 import fnmatch
 
 # GLOBALS
-FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum.coffee'
+FINAL_OUTPUT_FILE = '../Fizzygum-builds/latest/delete_me/fizzygum-boot.coffee'
 
 
 DIRECTORY_WITH_TEST_FILES = "../Fizzygum-tests/tests/"
