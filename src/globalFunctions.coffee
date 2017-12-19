@@ -418,7 +418,7 @@ loadJSFilesWithCoffeescriptSources = ->
   for eachFile in sourcesManifests
     
     # just skip this one cause it's already loaded
-    if eachFile == "Klass_coffeSource" then continue
+    if eachFile == "Class_coffeSource" then continue
     if eachFile == "Mixin_coffeSource" then continue
     
     allSourceLoadsPromises.push loadJSFile "js/sourceCode/" + eachFile + ".js"
@@ -535,7 +535,7 @@ boot = ->
   (Promise.all [
       loadJSFile("js/libs/FileSaver.min.js"),
       loadJSFile("js/libs/jszip.min.js"),
-      loadJSFile("js/sourceCode/Klass_coffeSource.js"),
+      loadJSFile("js/sourceCode/Class_coffeSource.js"),
       loadJSFile("js/sourceCode/Mixin_coffeSource.js"),
       loadJSFile("js/sourceCode/sourceCodeManifest.js"),
       loadJSFile("js/tests/testsManifest.js"),
@@ -555,7 +555,7 @@ boot = ->
   .then ->
     eval.call window, compileFGCode window["Mixin_coffeSource"], true
   .then ->
-    eval.call window, compileFGCode window["Klass_coffeSource"], true
+    eval.call window, compileFGCode window["Class_coffeSource"], true
   .then ->
     loadJSFilesWithCoffeescriptSources()
   .then ->
@@ -665,7 +665,7 @@ generateInclusionOrder = ->
   for eachFile in sourcesManifests
 
     eachFile = eachFile.replace "_coffeSource",""
-    if eachFile == "Klass" then continue
+    if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
     #if namedClasses.hasOwnProperty eachFile
     console.log eachFile + " - "
@@ -728,7 +728,7 @@ loadSourcesAndPotentiallyCompileThem = (justLoadSources) ->
   # chain two steps for each file, one to compile the file
   # and one to wait for the next turn
   for eachFile in inclusion_order
-    if eachFile == "Klass" or eachFile == "Mixin" or eachFile == "globalFunctions"
+    if eachFile == "Class" or eachFile == "Mixin" or eachFile == "globalFunctions"
       continue
     compileEachFileFunction = createCompileSourceFunction eachFile, justLoadSources
     promiseChain = promiseChain.then compileEachFileFunction
@@ -764,13 +764,13 @@ compileSource = (fileName, justLoadSources) ->
 
   console.log "checking whether " + fileName + " is already in the system "
 
-  # loading via Klass means that we register all the source
+  # loading via Class means that we register all the source
   # code and manually create any extensions
   if /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m.test fileContents
     if justLoadSources
-      morphKlass = new Klass fileContents, false, false
+      morphClass = new Class fileContents, false, false
     else
-      morphKlass = new Klass fileContents, true, true
+      morphClass = new Class fileContents, true, true
   # Loaded Mixins here:
   else if /^  onceAddedClassProperties:/m.test fileContents
     if justLoadSources

@@ -1,19 +1,19 @@
-# Klass ////////////////////////////////////////////////////////////
+# Class ////////////////////////////////////////////////////////////
 
-class Klass
-  @allKlasses: []
+class Class
+  @allClasses: []
   nonStaticPropertiesSources: nil
   staticPropertiesSources: nil
   name: ""
   superClassName: nil
   augmentedWith: nil
-  superKlass: nil
-  subKlasses: nil
+  superClass: nil
+  subClasses: nil
   
 
   # adds code into the constructor, such that when a
   # Morph is created, it registers itself as in instance
-  # on the Klass it belongs to AND TO ALL THE SUPERKLASSES
+  # on the Class it belongs to AND TO ALL THE SUPERKLASSES
   # The way it's added to all the superclasses is via
   # the constructor always calling "super", so constructors
   # up the chain cause the object to register itself
@@ -25,7 +25,7 @@ class Klass
   #  AnalogClockMorph.instances[0] === world.children[0]
   # or
   #  AnalogClockMorph.instances
-  # to check whether AnalogClockMorph was removed from the superklass'
+  # to check whether AnalogClockMorph was removed from the superclass'
   # (i.e. Morph) list:
   #  AnalogClockMorph.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
   # Note that only Morphs have that kind
@@ -96,7 +96,7 @@ class Klass
         sourceWithoutComments += eachLine + "\n"
     return sourceWithoutComments
 
-  # You can create a Klass in 3 main "modes" of use:
+  # You can create a Class in 3 main "modes" of use:
   #  1. you want to load up the CS source, turn it to JS
   #     and eval the JS so to create the class:
   #        generatePreCompiledJS == true
@@ -117,7 +117,7 @@ class Klass
 
     @nonStaticPropertiesSources = {}
     @staticPropertiesSources = {}
-    @subKlasses = []
+    @subClasses = []
 
     # remove the bit we use to identify classes because it's going to
     # mangle the parsing and we can add it transparently
@@ -139,7 +139,7 @@ class Klass
             if window.srcLoadCompileDebugWrites then console.log("Found match, group #{groupIndex}: #{match}")
         )
         @superClassName = m[1]
-        @superKlass = window[@superClassName].klass
+        @superClass = window[@superClassName].class
 
         if window.srcLoadCompileDebugWrites then console.log "superClassName: " + @superClassName
 
@@ -331,10 +331,10 @@ class Klass
 
     # OK now that we have created the Class
     # (or if already created anyways, in pre-compiled mode)
-    # then add the .klass field
-    window[@name].klass = @
-    if @superklass? 
-      @superklass.subKlasses.push @
+    # then add the .class field
+    window[@name].class = @
+    if @superclass? 
+      @superclass.subClasses.push @
 
 
     #if @name == "LCLCodePreprocessor" then debugger
@@ -344,10 +344,10 @@ class Klass
       eachInstance.sourceChanged()
   
     for eachProperty in propertiesArray
-      for eachSubKlass in @subKlasses
+      for eachSubClass in @subClasses
         # if a subclass redefined a property, then
         # the change doesn't apply, so there is no
         # notification to propagate
-        if !eachSubKlass.nonStaticPropertiesSources[eachProperty]?
-          eachSubKlass.notifyInstancesOfSourceChange([eachProperty])
+        if !eachSubClass.nonStaticPropertiesSources[eachProperty]?
+          eachSubClass.notifyInstancesOfSourceChange([eachProperty])
 

@@ -299,15 +299,15 @@ class Morph extends MorphicNode
   # this happens when the Morph's constructor runs
   # and also when the Morph is duplicated
   registerThisInstance: ->
-    goingUpKlassHyerarchy = @constructor
+    goingUpClassHyerarchy = @constructor
     loop
       # __super__ will always get to Object,
       # which doesn't have the "instances" property
-      if !goingUpKlassHyerarchy.instances?
+      if !goingUpClassHyerarchy.instances?
         break
-      if @ not in goingUpKlassHyerarchy.instances
-        goingUpKlassHyerarchy.instances.push @
-      goingUpKlassHyerarchy = goingUpKlassHyerarchy.__super__.constructor
+      if @ not in goingUpClassHyerarchy.instances
+        goingUpClassHyerarchy.instances.push @
+      goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
 
   # this happens when the Morph is destroyed
   unregisterThisInstance: ->
@@ -317,14 +317,14 @@ class Morph extends MorphicNode
     # AnalogClockMorph.instances[0] has one
     # element. Then delete the clock, and see that the
     # tracker is now an empty array.
-    goingUpKlassHyerarchy = @constructor
+    goingUpClassHyerarchy = @constructor
     loop
       # __super__ will always get to Object,
       # which doesn't have the "instances" property
-      if !goingUpKlassHyerarchy.instances?
+      if !goingUpClassHyerarchy.instances?
         break
-      goingUpKlassHyerarchy.instances.remove @
-      goingUpKlassHyerarchy = goingUpKlassHyerarchy.__super__.constructor
+      goingUpClassHyerarchy.instances.remove @
+      goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
 
 
   isTransparentAt: (aPoint) ->

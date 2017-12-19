@@ -357,8 +357,8 @@ class InspectorMorph2 extends WindowMorph
       else
         goingUpTargetProtChain = @target
         while goingUpTargetProtChain != Object
-          if goingUpTargetProtChain.constructor.klass.nonStaticPropertiesSources[selected]?
-            val = goingUpTargetProtChain.constructor.klass.nonStaticPropertiesSources[selected]
+          if goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]?
+            val = goingUpTargetProtChain.constructor.class.nonStaticPropertiesSources[selected]
             break
           goingUpTargetProtChain = goingUpTargetProtChain.__proto__
       txt = val.toString()

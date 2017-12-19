@@ -6,7 +6,7 @@ class ClassInspectorMorph extends InspectorMorph2
   namedClasses[@name] = @prototype
 
   notifyInstancesOfSourceChange: (propertiesArray)->
-    @target.constructor.klass.notifyInstancesOfSourceChange propertiesArray
+    @target.constructor.class.notifyInstancesOfSourceChange propertiesArray
 
   buildAndConnectChildren: ->
     super
