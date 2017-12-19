@@ -12,7 +12,7 @@
 # [TODO] Also it can draw a border of its own cause of the padding, you can add enough padding so the border is drawn correctly, maybe the padding can be automatically determined based on the border color.
 
 ContainerMixin =
-  # klass properties here:
+  # class properties here:
   # none
 
   # instance properties to follow:

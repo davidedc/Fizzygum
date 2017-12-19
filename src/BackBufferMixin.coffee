@@ -32,7 +32,7 @@
 # but we are not there yet.
 
 BackBufferMixin =
-  # klass properties here:
+  # class properties here:
   # none
 
   # instance properties to follow:

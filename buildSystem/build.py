@@ -71,8 +71,8 @@ OUTPUT_FILE_WITH_TEST_INCLUDES = "../Fizzygum-builds/latest/worldWithSystemTestH
 REQUIRES = re.compile(r"\sREQUIRES\s*(\w+)")
 EXTENDS = re.compile(r"\sextends\s*(\w+)")
 DEPENDS = re.compile(r"\s\w+:\s*new\s*(\w+)")
-IS_CLASS = re.compile(r"\s*class\s+(\w+)")
-IS_MIXIN = re.compile(r"(\w+Mixin)[ \t]*=")
+IS_CLASS = re.compile(r"^class +(\w+)", re.MULTILINE)
+IS_MIXIN = re.compile(r"^(\w+Mixin)[ ]*=", re.MULTILINE)
 TRIPLE_QUOTES = re.compile(r"'''")
 
 # These two functions search for "requires" comments in the

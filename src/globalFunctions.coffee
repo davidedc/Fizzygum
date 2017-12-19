@@ -40,7 +40,7 @@ addLineToLogDiv = (content) ->
 # here: http://stackoverflow.com/a/8728164/1318347 )
 MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
-# this is so we can create objects from the object klass name 
+# this is so we can create objects from the object class name 
 # (for the deserialization process)
 namedClasses = {}
 
@@ -221,7 +221,7 @@ getParameterByName = (name) ->
 ## -------------------------------------------------------
 # These two methods are for mixins
 ## -------------------------------------------------------
-# adds klass properties
+# adds class properties
 # these are added to the constructor
 Object::augmentWith = (obj, fromClass) ->
   for key, value of obj when key not in MixedClassKeywords
@@ -238,12 +238,12 @@ Object::addInstanceProperties = (fromClass, obj) ->
 
     # this is so we can use "super" in a mixin.
     # we normally can't compile "super" in a mixin because
-    # we can't tell which klass this will be mixed in in advance,
+    # we can't tell which class this will be mixed in in advance,
     # i.e. at compile time it doesn't
-    # belong to a klass, so at compile time it doesn't know which klass
+    # belong to a class, so at compile time it doesn't know which class
     # it will be injected in.
     # So that's why _at time of injection_ we need
-    # to store the klass it's injected in in a special
+    # to store the class it's injected in in a special
     # variable... and then at runtime we use that variable to
     # implement super
     if fromClass?
@@ -446,17 +446,17 @@ compileFGCode = (codeSource, bare) ->
 # there are two main ways of booting the world:
 # 1. without pre-compiled files. In this case the
 #    boot needs to load all the sources, compile
-#    them and build all the c l a s s e s and mixins.
-#    The c l a s s e s need to be appropriately chained
-#    into a c l a s s hyerarchy and they need to be
+#    them and build all the classes and mixins.
+#    The classes need to be appropriately chained
+#    into a class hyerarchy and they need to be
 #    augmented with the desired mixins.
 #    Only after all that the world will be able to
 #    start.
 # 2. with pre-compiled files. In this case there
 #    is a JS file that containes all the compiled
-#    JS versions of all the c l a s s e s and mixins, plus
-#    all the code to build the c l a s s hyerarchy and
-#    to augment the c l a s s e s with the correct mixins.
+#    JS versions of all the classes and mixins, plus
+#    all the code to build the class hyerarchy and
+#    to augment the classes with the correct mixins.
 #    So, no compilation of sources is needed for the
 #    world to start, so this is much faster. The
 #    world will still asynchronously load all the
@@ -488,22 +488,22 @@ boot = ->
   # Note that it's important that none of the code in each
   # of these entries of this batch uses the code of any
   # of the other entries of this batch. E.g. the pre-compiled
-  # c l a s s e s can't instantiate static or non-static properties
+  # classes can't instantiate static or non-static properties
   # with, say, the result of running the coffeescript compiler.
-  # (when you define a c l a s s, all static and nonstatic properties
+  # (when you define a class, all static and nonstatic properties
   #  are immediately initialised so for example doing
   #
   #    myCompiledCode: Coffeescript.compile(...)
   #
-  # would run the compilation immediately during the c l a s s
+  # would run the compilation immediately during the class
   # definition and would hence depend on Coffeescript being
   # loaded already.
   #
-  # Note however that since the pre-compiled c l a s s e s are pre-
+  # Note however that since the pre-compiled classes are pre-
   # compiled in the correct dependency order (following the
-  # REQUIRES directives), each c l a s s *can*
+  # REQUIRES directives), each class *can*
   # initialise static/nonstatic properties with objects
-  # created from other c l a s s e s (as long as the REQUIRES
+  # created from other classes (as long as the REQUIRES
   # directives are well set). So for example a Morph can
   # initialise a "color" property doing something like
   #
@@ -592,13 +592,13 @@ boot = ->
 # by just doing a depth-first visit of that tree
 # and collecting the nodes in reverse "coming back" from
 # the leafs.
-visit = (dependencies, klass, inclusion_order) ->
-  if dependencies[klass]?
-    for key in dependencies[klass]
+visit = (dependencies, theClass, inclusion_order) ->
+  if dependencies[theClass]?
+    for key in dependencies[theClass]
       if key in inclusion_order
         break
       visit dependencies, key, inclusion_order
-  inclusion_order.push klass
+  inclusion_order.push theClass
 
 # we still need to evaluate the classes in the
 # correct order. We do that by looking at the sources
@@ -653,7 +653,7 @@ waitNextTurn = ->
     return prms
 
 generateInclusionOrder = ->
-  # find out the dependencies looking at each klass'
+  # find out the dependencies looking at each class'
   # source code and hints in it.
   dependencies = []
   REQUIRES = ///\sREQUIRES\s*(\w+)///
@@ -691,7 +691,7 @@ generateInclusionOrder = ->
       if matches?
         #console.log matches
         dependencies[eachFile].push matches[1]
-        console.log eachFile + " has klass init in instance variable " + matches[1]
+        console.log eachFile + " has class init in instance variable " + matches[1]
 
       i++
   inclusion_order = generate_inclusion_order dependencies
@@ -850,7 +850,7 @@ createImageFromImageData = (theImageData) ->
         reject(img)
     img.src = theImageData
 
-# these two are to build klasses
+# these two are to build classes
 extend = (child, parent) ->
   ctor = ->
     @constructor = child

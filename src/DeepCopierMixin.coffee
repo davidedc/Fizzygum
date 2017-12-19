@@ -5,7 +5,7 @@
 
 
 DeepCopierMixin =
-  # klass properties here:
+  # class properties here:
   # none
 
   # instance properties to follow:
