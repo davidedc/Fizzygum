@@ -28,13 +28,16 @@ class MenuItemMorph extends TriggerMorph
   #reLayout: ->
   #  @label.setExtent @extent().subtract (@label.bounds.origin.subtract @.bounds.origin)
 
+  isTicked: ->
+    @label.text.isTicked()
+
   toggleTick: ->
-    if @label.text[0] == "✓"
-      @label.text = @label.text.replace "✓", "   "
+    if @label.text.isTicked()
+      @label.text = @label.text.toggleTick()
       @label.reLayout()
       @label.changed()
-    else if @label.text[0] == " " and @label.text[1] == " " and @label.text[2] == " "
-      @label.text = @label.text.replace "   ", "✓"
+    else if @label.text.isUnticked()
+      @label.text = @label.text.toggleTick()
       @label.reLayout()
       @label.changed()
 

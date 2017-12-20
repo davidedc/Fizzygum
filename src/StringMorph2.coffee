@@ -804,9 +804,8 @@ class StringMorph2 extends Morph
 
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
-    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = "    "
+    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = untick
 
-    tick = "✓ "
 
     switch @fontName
       when @justArialFontStack

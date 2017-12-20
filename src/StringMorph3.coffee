@@ -814,9 +814,7 @@ class StringMorph3 extends Morph
 
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
-    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = "    "
-
-    tick = "✓ "
+    trebuFontStackTick = heavyFontStackTick = monoFontStackTick = untick
 
     switch @fontName
       when @justArialFontStack
@@ -914,11 +912,11 @@ class StringMorph3 extends Morph
     postponedArgument1 = []
     postponedArgument2 = []
     if @fittingSpec == FittingSpecText.FIT_TEXT_TO_BOX
-      mi1 = menu.createMenuItem "✓ fit text to box ➜", false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
-      mi2 = menu.createMenuItem "    fit box to text ➜", false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
+      mi1 = menu.createMenuItem "fit text to box ➜".tick(), false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
+      mi2 = menu.createMenuItem "fit box to text ➜".untick(), false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
     else
-      mi1 = menu.createMenuItem "    fit text to box ➜", false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
-      mi2 = menu.createMenuItem "✓ fit box to text ➜", false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
+      mi1 = menu.createMenuItem "fit text to box ➜".untick(), false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
+      mi2 = menu.createMenuItem "fit box to text ➜".tick(), false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
     postponedArgument1.push mi2
     postponedArgument2.push mi1
     menu.silentAdd mi1
@@ -929,13 +927,12 @@ class StringMorph3 extends Morph
 
   fixTextToBoxMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
 
-    if morphOpeningTheMenu.label.text[0] != "✓"
+
+    if otherMenuEntryToCheck[0].isTicked()
       morphOpeningTheMenu.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
       # todo actually do something that changes the
       # fitting mode of the morph
-
-    tick = "✓ "
 
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "fit text to box"
 
@@ -946,11 +943,11 @@ class StringMorph3 extends Morph
     tilesBinHeader.setHeight 16
 
     if @fittingSpecWhenBoundsTooSmall == FittingSpecTextInSmallerBounds.CROP
-      menu.addMenuItem tick + " crop text", true, @, "togglefittingSpecWhenBoundsTooSmall"
-      menu.addMenuItem "     shrink text", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "crop text".tick(), true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "shrink text".untick(), true, @, "togglefittingSpecWhenBoundsTooSmall"
     else
-      menu.addMenuItem "     crop text", true, @, "togglefittingSpecWhenBoundsTooSmall"
-      menu.addMenuItem tick + " shrink text", true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "crop text".untick(), true, @, "togglefittingSpecWhenBoundsTooSmall"
+      menu.addMenuItem "shrink text".tick(), true, @, "togglefittingSpecWhenBoundsTooSmall"
 
     tilesBinHeader = new StringMorph2 "if box is bigger"
     tilesBinHeader.toggleHeaderLine()
@@ -960,24 +957,22 @@ class StringMorph3 extends Morph
 
 
     if @fittingSpecWhenBoundsTooLarge == FittingSpecTextInLargerBounds.SCALEUP
-      menu.addMenuItem tick + " expand text", true, @, "togglefittingSpecWhenBoundsTooLarge"
-      menu.addMenuItem "     don't expand text", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "expand text".tick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "don't expand text".untick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
     else
-      menu.addMenuItem "     expand text", true, @, "togglefittingSpecWhenBoundsTooLarge"
-      menu.addMenuItem tick + " don't expand text", true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "expand text".untick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
+      menu.addMenuItem "don't expand text".tick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
 
 
     menu.popUpAtHand()
 
   fixBoxToTextMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
 
-    if morphOpeningTheMenu.label.text[0] != "✓"
+    if otherMenuEntryToCheck[0].isTicked()
       morphOpeningTheMenu.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
       # todo actually do something that changes the
       # fitting mode of the morph
-
-    tick = "✓ "
 
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "fit box to text"
 
@@ -987,8 +982,8 @@ class StringMorph3 extends Morph
     menu.add tilesBinHeader
     tilesBinHeader.setHeight 16
 
-    menu.addMenuItem tick + " tight", true, @, "togglefittingSpecWhenBoundsTooLarge"
-    menu.addMenuItem "     loose", true, @, "togglefittingSpecWhenBoundsTooLarge"
+    menu.addMenuItem "tight".tick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
+    menu.addMenuItem "loose".untick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
 
     tilesBinHeader = new StringMorph2 "try to adjust..."
     tilesBinHeader.toggleHeaderLine()
@@ -996,8 +991,8 @@ class StringMorph3 extends Morph
     menu.add tilesBinHeader
     tilesBinHeader.setHeight 16
 
-    menu.addMenuItem tick + " height based on width", true, @, "togglefittingSpecWhenBoundsTooLarge"
-    menu.addMenuItem "     width based on height", true, @, "togglefittingSpecWhenBoundsTooLarge"
+    menu.addMenuItem "height based on width".tick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
+    menu.addMenuItem "width based on height".untick(), true, @, "togglefittingSpecWhenBoundsTooLarge"
     
     menu.popUpAtHand()
 
