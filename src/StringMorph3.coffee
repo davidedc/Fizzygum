@@ -898,12 +898,42 @@ class StringMorph3 extends Morph
 
     menu.addLine()
 
-    menu.addMenuItem "fit text to box ➜", false, @, "fixTextToBoxMenu"
-    menu.addMenuItem "fit box to text ➜", false, @, "fixBoxToTextMenu"
+    # this shenanigan of the postponed argument
+    # is so that a menu entry can pass the other
+    # menu entry to the callback, so that both can
+    # toggle their ticks if needed.
+    # So, we need to pass the second menu entry to
+    # the first one, and the first menu entry to
+    # the second one. The way to do that is to pass
+    # an array, so we can modify the array once the
+    # "other" menu entry is made.
+    # This whenanigal should go away when menus
+    # will be able to listen to (and reflect) state changes,
+    # so the ticks will be refreshed automatically to
+    # reflect the fitting "mode"
+    postponedArgument1 = []
+    postponedArgument2 = []
+    if @fittingSpec == FittingSpecText.FIT_TEXT_TO_BOX
+      mi1 = menu.createMenuItem "✓ fit text to box ➜", false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
+      mi2 = menu.createMenuItem "    fit box to text ➜", false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
+    else
+      mi1 = menu.createMenuItem "    fit text to box ➜", false, @, "fixTextToBoxMenu", nil, nil, nil, nil, nil, postponedArgument1
+      mi2 = menu.createMenuItem "✓ fit box to text ➜", false, @, "fixBoxToTextMenu", nil, nil, nil, nil, nil, postponedArgument2
+    postponedArgument1.push mi2
+    postponedArgument2.push mi1
+    menu.silentAdd mi1
+    menu.silentAdd mi2
+
 
     menu
 
-  fixTextToBoxMenu: (morphOpeningTheMenu) ->
+  fixTextToBoxMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
+
+    if morphOpeningTheMenu.label.text[0] != "✓"
+      morphOpeningTheMenu.toggleTick()
+      otherMenuEntryToCheck[0].toggleTick()
+      # todo actually do something that changes the
+      # fitting mode of the morph
 
     tick = "✓ "
 
@@ -939,7 +969,13 @@ class StringMorph3 extends Morph
 
     menu.popUpAtHand()
 
-  fixBoxToTextMenu: (morphOpeningTheMenu) ->
+  fixBoxToTextMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
+
+    if morphOpeningTheMenu.label.text[0] != "✓"
+      morphOpeningTheMenu.toggleTick()
+      otherMenuEntryToCheck[0].toggleTick()
+      # todo actually do something that changes the
+      # fitting mode of the morph
 
     tick = "✓ "
 
