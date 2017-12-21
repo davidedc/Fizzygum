@@ -717,7 +717,7 @@ class WorldMorph extends FrameMorph
       # instead of stopping at the first morph with a
       # valid layout...
       while tryThisMorph.parent?
-        if tryThisMorph.parent.layoutIsValid
+        if tryThisMorph.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING or tryThisMorph.parent.layoutIsValid
           break
         tryThisMorph = tryThisMorph.parent
 

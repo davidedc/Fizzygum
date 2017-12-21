@@ -110,6 +110,24 @@ class Rectangle
     @corner = new Point(
       right or ((if (right is 0) then 0 else @right())),
       bottom or ((if (bottom is 0) then 0 else @bottom())))
+
+  # Rectangle accessing - setting
+  # This is used to create a bound with the specified
+  # width and height: the corner needs to be displaced
+  # of (width, bound) in respect to the origin 
+  setBoundsWidthAndHeight: (width, height) ->
+    copy = @copy()
+    if (typeof(width) is "number") and (typeof(height) is "number")
+      copy.corner = new Point(
+        width + copy.origin.x,
+        height + copy.origin.y
+      )
+    else if (width instanceof Point)
+      copy.corner = new Point(
+        width.x + copy.origin.x,
+        width.y + copy.origin.y
+      )
+    return copy
   
   # Rectangle accessing - getting:
   area: ->

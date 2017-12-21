@@ -66,6 +66,13 @@ class Morph extends MorphicNode
   texture: nil # optional url of a fill-image
   cachedTexture: nil # internal cache of actual bg image
   lastTime: nil
+  # when you use the high-level geometry-change APIs
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it.
+  # Here we store the desired extent and position.
+  desiredExtent: nil
+  desiredPosition: nil
 
   # 1: fully opaque, 0: fully transparent
   alpha: 1
@@ -560,12 +567,26 @@ class Morph extends MorphicNode
 
     @rawSetExtent newBounds.extent()
 
+  # high-level geometry-change API,
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it
   setBounds: (aRectangle, morphStartingTheChange = nil) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
-      @invalidateLayout()
-      @rawSetBounds arguments...
+      aRectangle = aRectangle.round()
+
+      newExtent = new Point aRectangle.width(), aRectangle.height()
+      unless @extent().eq newExtent
+        @desiredExtent = newExtent
+        @invalidateLayout()
+
+      newPos = aRectangle.origin.copy()
+      unless @position().eq newPos
+        @desiredPosition = newPos
+        @invalidateLayout()
+
 
   silentRawSetBounds: (newBounds) ->
     if @bounds.eq newBounds
@@ -947,12 +968,23 @@ class Morph extends MorphicNode
       @fullRawMoveBy delta
     @bounds.debugIfFloats()
 
+  # high-level geometry-change API,
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
-      @invalidateLayout()
-      @fullRawMoveTo arguments...
+      aPoint = aPoint.round()
+      newX = Math.max aPoint.x, 0
+      newY = Math.max aPoint.y, 0
+      newPos = new Point newX, newY
+      unless @position().eq newPos
+        @desiredPosition = newPos
+        @invalidateLayout()
+
+
   
   silentFullRawMoveTo: (aPoint) ->
     #console.log "move 7"
@@ -1065,13 +1097,21 @@ class Morph extends MorphicNode
         if @parent != morphStartingTheChange
           @parent.childChangedExtent @
 
-  # Morph accessing - dimensional changes requiring a complete redraw
+  # high-level geometry-change API,
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, morphStartingTheChange = nil) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
-      @invalidateLayout()
-      @rawSetExtent arguments...
+      aPoint = aPoint.round()
+      newWidth = Math.max aPoint.x, 0
+      newHeight = Math.max aPoint.y, 0
+      newExtent = new Point newWidth, newHeight
+      unless @extent().eq newExtent
+        @desiredExtent = newExtent
+        @invalidateLayout()
 
   
   silentRawSetExtent: (aPoint) ->
@@ -1096,12 +1136,19 @@ class Morph extends MorphicNode
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(width or 0, @height())
 
+  # high-level geometry-change API,
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
-      @invalidateLayout()
-      @rawSetWidth arguments...
+      newWidth = Math.max width, 0
+      newExtent = new Point newWidth, @height()
+      unless @extent().eq newExtent
+        @desiredExtent = newExtent
+        @invalidateLayout()
   
   silentRawSetWidth: (width) ->
     #console.log "move 11"
@@ -1114,12 +1161,19 @@ class Morph extends MorphicNode
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(@width(), height or 0)
 
+  # high-level geometry-change API,
+  # you don't actually change the geometry right away,
+  # you just ask for the desired change and wait for the
+  # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
-      @invalidateLayout()
-      @rawSetHeight arguments...
+      newHeight = Math.max 0, height
+      newExtent = new Point @width(), newHeight
+      unless @extent().eq newExtent
+        @desiredExtent = newExtent
+        @invalidateLayout()
 
   
   silentRawSetHeight: (height) ->
@@ -2904,7 +2958,7 @@ class Morph extends MorphicNode
     if @layoutIsValid
       window.morphsThatMaybeChangedLayout.push @
     @layoutIsValid = false
-    if @parent?
+    if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING and @parent?
       @parent.invalidateLayout()
 
   setMinAndMaxBoundsAndSpreadability: (minBounds, desiredBounds, spreadability = LayoutSpec.SPREADABILITY_MEDIUM) ->
@@ -3080,7 +3134,21 @@ class Morph extends MorphicNode
         count++
     return count
 
-  doLayout: (newBoundsForThisLayout = @boundingBox()) ->
+  doLayout: (newBoundsForThisLayout) ->
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
     if @isCollapsed()
       @layoutIsValid = true
       @notifyChildrenThatParentHasReLayouted()
@@ -3320,7 +3388,7 @@ class Morph extends MorphicNode
     for i in [0..5]
       lmHolder = new RectangleMorph()
       lmHolder.setExtent new Point 10 + i*10,10 + i*10
-      lmHolder.fullRawMoveTo new Point 10 + 60 * i, 10 + 50 * 0
+      lmHolder.fullMoveTo new Point 10 + 60 * i, 10 + 50 * 0
 
       world.add lmHolder
 
@@ -3341,7 +3409,7 @@ class Morph extends MorphicNode
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder 
@@ -3363,7 +3431,7 @@ class Morph extends MorphicNode
     lmContent1.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 1, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3389,7 +3457,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 2, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3417,7 +3485,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 10,10)
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 3, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3454,7 +3522,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 4, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3491,7 +3559,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 5, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3528,7 +3596,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60)
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 60,60), 2 * LayoutSpec.SPREADABILITY_MEDIUM
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
+    lmHolder.fullMoveTo new Point 10 + 60 * 6, 30 + 50 * 1
 
     world.add lmHolder
     new HandleMorph lmHolder
@@ -3565,7 +3633,7 @@ class Morph extends MorphicNode
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30), LayoutSpec.SPREADABILITY_NONE
 
-    lmHolder.fullRawMoveTo new Point 10 + 60 * 7, 30 + 50 * 1 
+    lmHolder.fullMoveTo new Point 10 + 60 * 7, 30 + 50 * 1 
 
     world.add lmHolder
     new HandleMorph lmHolder
