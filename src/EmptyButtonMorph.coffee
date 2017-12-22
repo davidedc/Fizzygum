@@ -82,16 +82,7 @@ class EmptyButtonMorph extends Morph
     # same as trigger() but use doubleClickAction instead of action property
     # note that specifying a doubleClickAction is optional
     return  unless @doubleClickAction
-    if typeof @target is "function"
-      if typeof @doubleClickAction is "function"
-        @target.call @dataSourceMorphForTarget, @doubleClickAction.call(), this
-      else
-        @target.call @dataSourceMorphForTarget, @doubleClickAction, this
-    else
-      if typeof @doubleClickAction is "function"
-        @doubleClickAction.call @target
-      else # assume it's a String
-        @target[@doubleClickAction]()  
+    @target[@doubleClickAction]()  
 
   
   mouseClickLeft: ->
