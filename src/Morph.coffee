@@ -557,6 +557,11 @@ class Morph extends MorphicNode
   # note that using this one, the children
   # morphs attached as floating don't move
   rawSetBounds: (newBounds) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     if @bounds.eq newBounds
       return
 
@@ -591,6 +596,11 @@ class Morph extends MorphicNode
 
 
   silentRawSetBounds: (newBounds) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     if @bounds.eq newBounds
       return
 
@@ -932,6 +942,11 @@ class Morph extends MorphicNode
   
   # Morph accessing - simple changes:
   fullRawMoveBy: (delta) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     if delta.isZero() then return
     # note that changed() is called two times
     # because there are two areas of the screens
@@ -946,6 +961,11 @@ class Morph extends MorphicNode
     @changed()
 
   silentFullRawMoveBy: (delta) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 5"
     @breakNumberOfRawMovesAndResizesCaches()
     @bounds = @bounds.translateBy delta
@@ -962,6 +982,11 @@ class Morph extends MorphicNode
 
   
   fullRawMoveTo: (aPoint) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     aPoint.debugIfFloats()
     delta = aPoint.toLocalCoordinatesOf @
     if !delta.isZero()
@@ -992,31 +1017,71 @@ class Morph extends MorphicNode
 
   
   silentFullRawMoveTo: (aPoint) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 7"
     @breakNumberOfRawMovesAndResizesCaches()
     delta = aPoint.toLocalCoordinatesOf @
     @silentFullRawMoveBy delta  if (delta.x isnt 0) or (delta.y isnt 0)
   
   fullRawMoveLeftSideTo: (x) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo new Point x, @top()
   
   fullRawMoveRightSideTo: (x) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo new Point x - @width(), @top()
   
   fullRawMoveTopSideTo: (y) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo new Point @left(), y
   
   fullRawMoveBottomSideTo: (y) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo new Point @left(), y - @height()
   
   fullRawMoveCenterTo: (aPoint) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo aPoint.subtract @extent().floorDivideBy 2
   
   fullRawMoveFullCenterTo: (aPoint) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     @fullRawMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
   # make sure I am completely within another Morph's bounds
   fullRawMoveWithin: (aMorph) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     leftOff = @fullBounds().left() - aMorph.left()
     @fullRawMoveBy new Point -leftOff, 0  if leftOff < 0
     rightOff = @fullBounds().right() - aMorph.right()
@@ -1084,6 +1149,11 @@ class Morph extends MorphicNode
 
   # Morph accessing - dimensional changes requiring a complete redraw
   rawSetExtent: (aPoint, morphStartingTheChange = nil) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 8"
     if @ == morphStartingTheChange
       return
@@ -1122,6 +1192,11 @@ class Morph extends MorphicNode
 
   
   silentRawSetExtent: (aPoint) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     aPoint = aPoint.round()
     #console.log "move 9"
 
@@ -1139,6 +1214,11 @@ class Morph extends MorphicNode
       @breakNumberOfRawMovesAndResizesCaches()
   
   rawSetWidth: (width) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 10"
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(width or 0, @height())
@@ -1160,12 +1240,22 @@ class Morph extends MorphicNode
         @invalidateLayout()
   
   silentRawSetWidth: (width) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 11"
     @breakNumberOfRawMovesAndResizesCaches()
     w = Math.max Math.round(width or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.origin.x + w, @bounds.corner.y
   
   rawSetHeight: (height) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 12"
     @breakNumberOfRawMovesAndResizesCaches()
     @rawSetExtent new Point(@width(), height or 0)
@@ -1188,6 +1278,11 @@ class Morph extends MorphicNode
 
   
   silentRawSetHeight: (height) ->
+    # TODO in theory the low-level APIs should only be
+    # in the "recalculateLayouts" phase
+    if false and !window.recalculatingLayouts
+      debugger
+
     #console.log "move 13"
     @breakNumberOfRawMovesAndResizesCaches()
     h = Math.max Math.round(height or 0), 0
