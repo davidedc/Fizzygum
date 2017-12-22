@@ -572,6 +572,8 @@ class Morph extends MorphicNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setBounds: (aRectangle, morphStartingTheChange = nil) ->
+    if window.recalculatingLayouts
+      debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1102,6 +1104,8 @@ class Morph extends MorphicNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setExtent: (aPoint, morphStartingTheChange = nil) ->
+    if window.recalculatingLayouts
+      debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1141,6 +1145,8 @@ class Morph extends MorphicNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setWidth: (width) ->
+    if window.recalculatingLayouts
+      debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -1166,6 +1172,8 @@ class Morph extends MorphicNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   setHeight: (height) ->
+    if window.recalculatingLayouts
+      debugger
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else

@@ -950,7 +950,9 @@ class WorldMorph extends FrameMorph
     
     @runChildrensStepFunction()
     @hand.reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges()
+    window.recalculatingLayouts = true
     @recalculateLayouts()
+    window.recalculatingLayouts = false
     @addPinoutingMorphs()
     @addHighlightingMorphs()
     @updateBroken()
