@@ -73,16 +73,9 @@ class EmptyButtonMorph extends Morph
     
   # TriggerMorph action:
   trigger: ->
-    if @action
-      if typeof @action is "function"
-        console.log "trigger invoked with function"
-        alert "trigger invoked with function, this shouldn't happen"
-        debugger
-        @action.call @target, @dataSourceMorphForTarget
-      else # assume it's a String
-        if @action != ""
-          #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-          @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
+    if @action? and @action != ""
+      #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
+      @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
     return
 
   triggerDoubleClick: ->

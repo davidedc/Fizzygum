@@ -182,18 +182,12 @@ class TriggerMorph extends Morph
   
   # TriggerMorph action:
   trigger: ->
-    if @action
-      if typeof @action is "function"
-        console.log "trigger invoked with function"
-        alert "trigger invoked with function, this shouldn't happen"
-        debugger
-        @action.call @target, @dataSourceMorphForTarget
-      else # assume it's a String
-        #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-        try
-          @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
-        catch err
-          world.errorConsole.popUpWithError err
+    if @action and @action != ""
+      #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
+      try
+        @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
+      catch err
+        world.errorConsole.popUpWithError err
     return
 
   triggerDoubleClick: ->

@@ -108,13 +108,10 @@ class ListMorph extends ScrollFrameMorph
   select: (item, trigger) ->
     @selected = item
     @active = trigger
-    if @action
-      if typeof @action is "function"
-        console.log "listmorph selection invoked with function"
-        debugger
-        @action.call @target, item.labelString
-      else # assume it's a String
-        @target[@action].call @target, item.labelString
+    if @action? and @action != ""
+      @target[@action].call @target, item.labelString
+    return
+
   
   rawSetExtent: (aPoint) ->
     unless aPoint.eq @extent()

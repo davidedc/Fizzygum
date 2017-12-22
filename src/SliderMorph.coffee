@@ -92,14 +92,9 @@ class SliderMorph extends CircleBoxMorph
       @updateTarget()
   
   updateTarget: ->
-    if @action
-      if typeof @action is "function"
-        console.log "scrollbar invoked with function"
-        debugger
-        @action.call @target, @value, @target
-      else # assume it's a String
-        @target[@action].call @target, @value, @argumentToAction
-    
+    if @action and @action != ""
+      @target[@action].call @target, @value, @argumentToAction
+    return    
   
   # SliderMorph menu:
   developersMenu: (morphOpeningTheMenu) ->
