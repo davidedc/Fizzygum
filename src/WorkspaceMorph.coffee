@@ -17,7 +17,7 @@ class WorkspaceMorph extends BoxMorph
   constructor: (target) ->
     super()
 
-    @silentRawSetExtent new Point(
+    @setExtent new Point(
       WorldMorph.preferencesAndSettings.handleSize * 10,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3)
     @cornerRadius = 5

@@ -242,7 +242,7 @@ class WorldMorph extends FrameMorph
 
     # @worldCanvas.width and height here are in phisical pixels
     # so we want to bring them back to logical pixels
-    @silentRawSetBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
+    @setBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
 
     @initEventListeners()
     @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
@@ -297,23 +297,23 @@ class WorldMorph extends FrameMorph
     if !window.location.href.contains "worldWithSystemTestHarness"
       @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
       @add @errorConsole
-      @errorConsole.fullRawMoveTo new Point 190,10
-      @errorConsole.rawSetExtent new Point 550,415
+      @errorConsole.fullMoveTo new Point 190,10
+      @errorConsole.setExtent new Point 550,415
       @errorConsole.hide()
 
       welcomeTitle = new StringMorph2 "Welcome to Fizzygum!"
       welcomeTitle.isEditable = true
       @add welcomeTitle
       welcomeTitle.togglefittingSpecWhenBoundsTooLarge()
-      welcomeTitle.fullRawMoveTo new Point 40, 15
-      welcomeTitle.rawSetExtent new Point 271, 35
+      welcomeTitle.fullMoveTo new Point 40, 15
+      welcomeTitle.setExtent new Point 271, 35
 
       version = new StringMorph2 "version 2017-05-26"
       version.isEditable = true
       @add version
       version.togglefittingSpecWhenBoundsTooLarge()
-      version.fullRawMoveTo new Point 41, 47
-      version.rawSetExtent new Point 134, 15
+      version.fullMoveTo new Point 41, 47
+      version.setExtent new Point 134, 15
 
       welcomeMessage = """
       ...a small dynamic web desktop environment for experimenting with live programming, prototyping and mashups.
@@ -324,22 +324,22 @@ class WorldMorph extends FrameMorph
       welcomeBody = new TextMorph2 welcomeMessage,nil,nil,nil,nil,nil,nil,nil
       welcomeBody.isEditable = true
       @add welcomeBody
-      welcomeBody.fullRawMoveTo new Point 37, 80
-      welcomeBody.rawSetExtent new Point 340, 175
+      welcomeBody.fullMoveTo new Point 37, 80
+      welcomeBody.setExtent new Point 340, 175
 
       reconfPaint = new ReconfigurablePaintMorph()
       @add reconfPaint
-      reconfPaint.fullRawMoveTo new Point 35, 275
+      reconfPaint.fullMoveTo new Point 35, 275
       reconfPaint.setExtent new Point 460, 400
 
       fmm = new FridgeMagnetsMorph()
       @add fmm
-      fmm.fullRawMoveTo new Point 505, 275
+      fmm.fullMoveTo new Point 505, 275
       fmm.setExtent new Point 570, 400
 
       acm = new AnalogClockMorph()
       @add acm
-      acm.fullRawMoveTo new Point 860, 40
+      acm.fullMoveTo new Point 860, 40
       acm.setExtent new Point 200, 200
 
   # some test urls:

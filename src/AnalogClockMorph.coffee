@@ -19,7 +19,7 @@ class AnalogClockMorph extends Morph
 
     super()
     @setColor new Color 255, 125, 125
-    @silentRawSetExtent new Point 200, 200
+    @setExtent new Point 200, 200
     return
 
     #@setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES

@@ -14,7 +14,7 @@ class WindowMorph extends BoxMorph
   constructor: (@labelContent, @topLeftButton) ->
     super()
     # override inherited properties:
-    @silentRawSetExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
+    @setExtent new Point(WorldMorph.preferencesAndSettings.handleSize * 20,
       WorldMorph.preferencesAndSettings.handleSize * 20 * 2 / 3.5).round()
     @padding = if WorldMorph.preferencesAndSettings.isFlat then 1 else 5
     @color = new Color 172, 172, 172

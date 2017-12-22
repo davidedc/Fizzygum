@@ -54,7 +54,7 @@ class PointerMorph extends BoxMorph
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_MEDIUM
     lmContent3.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), LayoutSpec.SPREADABILITY_NONE
 
-    @fullRawMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
+    @fullMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
 
 
   mouseClickLeft: (pos) ->
