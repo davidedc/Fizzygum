@@ -20,7 +20,6 @@ class AutomatorCommandMouseDoubleClick extends AutomatorCommand
   # clicks would always turn into double-clicks, so we check
   # for that.
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
-    debugger
     if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
       console.log ">>>>>>>>>>>>> executing AutomatorCommandMouseDoubleClick"
       theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)

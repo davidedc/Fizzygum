@@ -524,8 +524,8 @@ class HandMorph extends Morph
   rememberDoubleClickMorphsForAWhile: (morph) ->
     @doubleClickMorph = morph
     setTimeout (=>
-      if @doubleClickMorph?
-        console.log "single click"
+      #if @doubleClickMorph?
+      #  console.log "single click"
       @doubleClickMorph = nil
       return false
     ), 300
@@ -534,8 +534,8 @@ class HandMorph extends Morph
   rememberTripleClickMorphsForAWhile: (morph) ->
     @tripleClickMorph = morph
     setTimeout (=>
-      if @tripleClickMorph?
-        console.log "not a triple click, just a double click"
+      #if @tripleClickMorph?
+      #  console.log "not a triple click, just a double click"
       @tripleClickMorph = nil
       return false
     ), 500

@@ -430,7 +430,7 @@ class WorldMorph extends FrameMorph
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->
         i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
       for eachMorphClass in listOfMorphsClasses
-        console.log "bumping up ID of class: " + eachMorphClass
+        #console.log "bumping up ID of class: " + eachMorphClass
         window[eachMorphClass].roundNumericIDsToNextThousand?()
 
   destroyMorphsMarkedForDestruction: ->

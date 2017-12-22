@@ -1171,9 +1171,8 @@ class AutomatorRecorderAndPlayer
     else
       preselectionBeforeSplittingGroups = AutomatorRecorderAndPlayer.testsManifest
 
-    console.log "tests list before partitioning and picking: " + preselectionBeforeSplittingGroups
-
-    console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
+    #console.log "tests list before partitioning and picking: " + preselectionBeforeSplittingGroups
+    #console.log "tests list after partitioning and picking: " + preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 
     actualTestList = preselectionBeforeSplittingGroups.chunk(Math.ceil(preselectionBeforeSplittingGroups.length / @numberOfGroups))[@groupToBeRun]
 

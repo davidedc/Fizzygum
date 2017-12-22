@@ -38,7 +38,7 @@ class StringFieldMorph extends FrameMorph
   calculateAndUpdateExtent: ->
     txt = (if @text then @getValue() else @defaultContents)
     text = new StringMorph txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric
-    console.log "text morph extent: " + text.text + " : " + text.extent()
+    #console.log "text morph extent: " + text.text + " : " + text.extent()
     @rawSetWidth Math.max @minTextWidth, text.width()
     console.log "string fleid morph extent: " + @extent()
 

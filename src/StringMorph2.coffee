@@ -298,9 +298,9 @@ class StringMorph2 extends Morph
       if i != splitText.length - 1
         fittingText += "\n"
 
-      console.log "searchLongestFittingTextByMultiCroppingIt trying to fit one more paragraph:"
-      console.log "   " + eachParagraph
-      console.log " overal blurb we are fitting: " + fittingText
+      #console.log "searchLongestFittingTextByMultiCroppingIt trying to fit one more paragraph:"
+      #console.log "   " + eachParagraph
+      #console.log " overal blurb we are fitting: " + fittingText
 
       # add each new line of textToFit to the existing blurb to be tested
       # (if we are done with adding lines of textToFit, then we have our
@@ -315,19 +315,19 @@ class StringMorph2 extends Morph
         # always end up start and pivot coinciding
         while start != (pivot = Math.floor (start + stop) / 2)
 
-          console.log "start/stop/pivot: " + start + " / " + stop + " / " + pivot
+          #console.log "start/stop/pivot: " + start + " / " + stop + " / " + pivot
 
           textAtPivot = fittingText.substring 0, pivot
           itFitsAtPivot = @doesTextFitInExtent textAtPivot, @originallySetFontSize
           #console.log "  what fits: " + textAtPivot + " fits: " + valueAtPivot
 
           if itFitsAtPivot
-            console.log "fits at pivot of " + pivot + " : start = pivot now"
+            #console.log "fits at pivot of " + pivot + " : start = pivot now"
             # bring forward the start since there are still
             # zeroes at the pivot
             start = pivot
           else
-            console.log "doesn't fit at pivot of " + pivot + " : start = pivot now"
+            #console.log "doesn't fit at pivot of " + pivot + " : start = pivot now"
             # bring backwards the stop since there is already
             # a one at the pivot
             stop = pivot
@@ -392,7 +392,7 @@ class StringMorph2 extends Morph
       else
         fittingText = ""
 
-    console.log "_________fittingText: " + fittingText
+    #console.log "_________fittingText: " + fittingText
 
 
     return fittingText

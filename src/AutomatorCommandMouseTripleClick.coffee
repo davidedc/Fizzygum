@@ -20,7 +20,6 @@ class AutomatorCommandMouseTripleClick extends AutomatorCommand
   # clicks would always turn into triple-clicks, so we check
   # for that.
   @replayFunction: (automatorRecorderAndPlayer, commandBeingPlayed) ->
-    debugger
     if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
       console.log ">>>>>>>>>>>>> executing AutomatorCommandMouseTripleClick"
       theMorph = world.getMorphViaTextLabel(commandBeingPlayed.morphIdentifierViaTextLabel)
