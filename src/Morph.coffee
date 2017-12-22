@@ -975,6 +975,9 @@ class Morph extends MorphicNode
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
   fullMoveTo: (aPoint) ->
+    if window.recalculatingLayouts
+      debugger
+
     if @layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       return
     else
@@ -3143,6 +3146,8 @@ class Morph extends MorphicNode
     return count
 
   doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
 
     if !newBoundsForThisLayout?
       if @desiredExtent?
