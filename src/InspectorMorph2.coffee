@@ -224,7 +224,7 @@ class InspectorMorph2 extends WindowMorph
     doubleClickAction = =>
       if !isObject @currentProperty
         return
-      inspector = new InspectorMorph2 @currentProperty
+      inspector = new @constructor @currentProperty
       inspector.fullRawMoveTo world.hand.position()
       inspector.fullRawMoveWithin world
       world.add inspector
@@ -285,7 +285,7 @@ class InspectorMorph2 extends WindowMorph
     @resizer = new HandleMorph @
 
     # update layout
-    @layoutSubmorphs()
+    @invalidateLayout()
 
   buildAndConnectObjOwnPropsButton: ->
     @showOwnPropsOnlyOnButton = new SimpleButtonMorph true, @, "hideOwnPropsOnly", (new StringMorph2 "obj own props only: on").alignCenter()
@@ -380,9 +380,29 @@ class InspectorMorph2 extends WindowMorph
     cnts.setReceiver @target
     @detail.setContents cnts, 2
   
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    #console.log "fixing the layout of the inspector"
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -464,6 +484,10 @@ class InspectorMorph2 extends WindowMorph
 
     trackChanges.pop()
     @fullChanged()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
