@@ -452,7 +452,7 @@ class InspectorMorph extends BoxMorph
       @buttonClose.rawSetExtent new Point closeWidth, propertiesHeight
 
     trackChanges.pop()
-    @changed()
+    @fullChanged()
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()

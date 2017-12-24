@@ -132,7 +132,7 @@ class Morph extends MorphicNode
   textDescription: nil
 
   # note that not all the changed morphs have this flag set
-  # because if a parent does a fullChange, we don't set this
+  # because if a parent does a fullChanged, we don't set this
   # flag in the children. This is intentionally so,
   # as we don't want to navigate the children too many times.
   # If you want to know whether a morph has changed its

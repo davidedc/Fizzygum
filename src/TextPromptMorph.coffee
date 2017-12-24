@@ -124,7 +124,7 @@ class TextPromptMorph extends WindowMorph
 
 
     trackChanges.pop()
-    @changed()
+    @fullChanged()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 

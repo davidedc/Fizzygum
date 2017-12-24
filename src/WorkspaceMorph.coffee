@@ -116,7 +116,7 @@ class WorkspaceMorph extends BoxMorph
     @buttonClose.fullRawMoveTo new Point x, y
     @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
-    @changed()
+    @fullChanged()
   
   rawSetExtent: (aPoint) ->
     unless aPoint.eq @extent()

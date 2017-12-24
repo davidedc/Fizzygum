@@ -88,5 +88,5 @@ class UnderTheCarpetMorph extends BoxMorph
     @buttonClose.fullRawMoveTo new Point x, y
     @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
-    @changed()
+    @fullChanged()
   
