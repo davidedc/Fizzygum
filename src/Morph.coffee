@@ -1698,6 +1698,14 @@ class Morph extends MorphicNode
   
   # Morph updating ///////////////////////////////////////////////////////////////
   changed: ->
+    # tests should all pass even if you don't
+    # use the trackChanges flag, perhaps things
+    # should just be a bit slower (but probably not
+    # significantly). This is because there is no
+    # harm into changing children of a morph
+    # that is fullChanged, the checks should
+    # simplify the situation.
+    # I tested this was OK in December 2017
     if trackChanges[trackChanges.length - 1]
 
       # if the morph is attached to a hand then
@@ -1737,6 +1745,14 @@ class Morph extends MorphicNode
   # See comment on the fullGeometryOrPositionPossiblyChanged
   # property above for more info.
   fullChanged: ->
+    # tests should all pass even if you don't
+    # use the trackChanges flag, perhaps things
+    # should just be a bit slower (but probably not
+    # significantly). This is because there is no
+    # harm into changing children of a morph
+    # that is fullChanged, the checks should
+    # simplify the situation.
+    # I tested this was OK in December 2017
     if trackChanges[trackChanges.length - 1]
       # check if we already issued a fullChanged on this morph
       if !@fullGeometryOrPositionPossiblyChanged
