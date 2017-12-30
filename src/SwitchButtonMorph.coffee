@@ -34,24 +34,48 @@ class SwitchButtonMorph extends Morph
     #@color = new Color 255, 255, 255
     for eachButton in @buttons
       @add eachButton
-    @layoutSubmorphs()
+
+    @invalidateLayout()
   
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super()
   # so that when you duplicate a "selected" toggle
   # and you pick it up and you attach it somewhere else
   # it gets automatically unselected
   imBeingAddedTo: ->
     @resetSwitchButton()
+
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+
+    @rawSetBounds newBoundsForThisLayout
+
     counter = 0
     for eachButton in @buttons
       if eachButton.parent == @
-        eachButton.setBounds @bounds
+        eachButton.doLayout @bounds
         if counter % @buttons.length == @buttonShown
           eachButton.show()
         else
           eachButton.hide()
       counter++
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
 
   # TODO
   getTextDescription: ->
@@ -62,9 +86,9 @@ class SwitchButtonMorph extends Morph
     @buttonShown++
     @buttonShown = @buttonShown % @buttons.length
 
-    @layoutSubmorphs()
+    @invalidateLayout()
     @escalateEvent "mouseClickLeft", @
 
   resetSwitchButton: ->
     @buttonShown = 0
-    @layoutSubmorphs()
+    @invalidateLayout()

@@ -500,17 +500,21 @@ class InspectorMorph2 extends WindowMorph
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->
 
-    @showMethodsToggle.fullRawMoveTo new Point @left()+@padding , height
-    @showMethodsToggle.rawSetExtent (new Point (listWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @left()+@padding , height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@padding)/ 2,15).round()
+    @showMethodsToggle.doLayout toggleBounds
 
-    @showFieldsToggle.fullRawMoveTo new Point @showMethodsToggle.right() + @padding, height
-    @showFieldsToggle.rawSetExtent (new Point (listWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @padding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@padding)/ 2,15).round()
+    @showFieldsToggle.doLayout toggleBounds
+ 
+    toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @padding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@padding)/ 2,15).round()
+    @showInheritedToggle.doLayout toggleBounds
 
-    @showInheritedToggle.fullRawMoveTo new Point @showFieldsToggle.right() + @padding, height
-    @showInheritedToggle.rawSetExtent (new Point (detailWidth-@padding)/ 2,15).round()
-
-    @showOwnPropsOnlyToggle.fullRawMoveTo new Point @showInheritedToggle.right() + @padding, height
-    @showOwnPropsOnlyToggle.rawSetExtent (new Point (detailWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @showInheritedToggle.right() + @padding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@padding)/ 2,15).round()
+    @showOwnPropsOnlyToggle.doLayout toggleBounds
 
 
   layoutLastLabelInHierarchy: (posx, posy) ->

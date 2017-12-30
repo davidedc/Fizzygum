@@ -459,13 +459,31 @@ class ReconfigurablePaintMorph extends WindowMorph
     @radioButtonsHolderMorph.add @eraserToolButton
     # ----------------------------------------------
 
-    # update layout
-    @layoutSubmorphs()
+    @invalidateLayout()
 
-  
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    #console.log "fixing the layout of the reconf paint morph"
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -497,20 +515,24 @@ class ReconfigurablePaintMorph extends WindowMorph
       @radioButtonsHolderMorph.rawSetExtent new Point 2 * @padding + toolButtonSize.width(), b - (@label.bottom() + @padding)
 
     if @pencilToolButton.parent == @radioButtonsHolderMorph
-      @pencilToolButton.fullRawMoveTo new Point @radioButtonsHolderMorph.left() + @padding, labelBottom + 10
-      @pencilToolButton.rawSetExtent toolButtonSize
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, labelBottom + 10
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+      @pencilToolButton.doLayout buttonBounds
 
     if @brushToolButton.parent == @radioButtonsHolderMorph
-      @brushToolButton.fullRawMoveTo new Point @radioButtonsHolderMorph.left() + @padding, @pencilToolButton.bottom() + @padding
-      @brushToolButton.rawSetExtent toolButtonSize
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @pencilToolButton.bottom() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+      @brushToolButton.doLayout buttonBounds
 
     if @toothpasteToolButton.parent == @radioButtonsHolderMorph
-      @toothpasteToolButton.fullRawMoveTo new Point @radioButtonsHolderMorph.left() + @padding, @brushToolButton.bottom() + @padding
-      @toothpasteToolButton.rawSetExtent toolButtonSize
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @brushToolButton.bottom() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+      @toothpasteToolButton.doLayout buttonBounds
 
     if @eraserToolButton.parent == @radioButtonsHolderMorph
-      @eraserToolButton.fullRawMoveTo new Point @radioButtonsHolderMorph.left() + @padding, @toothpasteToolButton.bottom() + @padding
-      @eraserToolButton.rawSetExtent toolButtonSize
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @toothpasteToolButton.bottom() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
+      @eraserToolButton.doLayout buttonBounds 
 
     # mainCanvas --------------------------
     mainCanvasWidth = @width() - @radioButtonsHolderMorph.width() - 3*@padding
@@ -533,7 +555,9 @@ class ReconfigurablePaintMorph extends WindowMorph
 
 
     trackChanges.pop()
-    @fullChanged()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
 
