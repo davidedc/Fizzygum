@@ -1862,8 +1862,6 @@ class WorldMorph extends FrameMorph
     newMorph = new UnderTheCarpetMorph()
     @create newMorph
   closingWindow: ->
-    newMorph = new WorkspaceMorph()
-    @create newMorph
 
 
   popUpDemoMenu: (morphOpeningTheMenu,b,c,d) ->
