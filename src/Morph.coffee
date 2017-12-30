@@ -948,11 +948,6 @@ class Morph extends MorphicNode
       debugger
 
     if delta.isZero() then return
-    # note that changed() is called two times
-    # because there are two areas of the screens
-    # that are dirty: the starting
-    # position and the end position.
-    # Both need to be repainted.
     #console.log "move 4"
     @breakNumberOfRawMovesAndResizesCaches()
     @bounds = @bounds.translateBy delta
