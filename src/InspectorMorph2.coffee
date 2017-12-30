@@ -421,8 +421,9 @@ class InspectorMorph2 extends WindowMorph
     labelLeft = @label.left()
     labelBottom = @label.bottom() + 2
 
-    @hierarchyHeaderString.fullRawMoveTo new Point(Math.round(@left() + @padding), Math.round(labelBottom + @padding))
-    @hierarchyHeaderString.rawSetExtent new Point @width() - 2 * @padding,15
+    headerBounds = new Rectangle new Point(Math.round(@left() + @padding), Math.round(labelBottom + @padding))
+    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @padding, 15
+    @hierarchyHeaderString.doLayout headerBounds
 
 
     # classes diagram
@@ -433,8 +434,9 @@ class InspectorMorph2 extends WindowMorph
     @classesButtons.reverse()
     for eachClassButton in @classesButtons
       if eachClassButton.parent == @
-        eachClassButton.fullRawMoveTo new Point(Math.round(@left() + 2 * @padding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@padding + justAcounter))
-        eachClassButton.rawSetExtent new Point 120, 15
+        buttonBounds = new Rectangle new Point(Math.round(@left() + 2 * @padding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@padding + justAcounter))
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight 120, 15
+        eachClassButton.doLayout buttonBounds
 
         # the top class doesn't get an arrow pointing upwards
         if anotherCount > 0
@@ -451,8 +453,9 @@ class InspectorMorph2 extends WindowMorph
     @hierarchyBackgroundPanel.fullRawMoveTo new Point @left() + @padding, @hierarchyHeaderString.bottom() + @padding
     @hierarchyBackgroundPanel.rawSetExtent new Point @width() - 2 * @padding, justAcounter + 20 + @padding
 
-    @propertyHeaderString.fullRawMoveTo new Point @left() + @padding , @hierarchyBackgroundPanel.bottom()+ @padding
-    @propertyHeaderString.rawSetExtent new Point @width() - 2 * @padding , 15
+    headerBounds = new Rectangle new Point @left() + @padding , @hierarchyBackgroundPanel.bottom()+ @padding
+    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @padding , 15
+    @propertyHeaderString.doLayout headerBounds
 
     listWidth = Math.floor((@width() - 3 * @padding) / 3)
     detailWidth = 2*listWidth
@@ -470,17 +473,21 @@ class InspectorMorph2 extends WindowMorph
       @detail.fullRawMoveTo new Point @list.right() + @padding, @list.top()
       @detail.rawSetExtent new Point(detailWidth, listHeight).round()
 
-    @addPropertyButton.fullRawMoveTo new Point @left() + @padding, @bottom() - 15 - @padding
-    @addPropertyButton.rawSetExtent new Point (listWidth - 2 * @padding)/3,15
+    buttonBounds = new Rectangle new Point @left() + @padding, @bottom() - 15 - @padding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    @addPropertyButton.doLayout buttonBounds
 
-    @renamePropertyButton.fullRawMoveTo new Point @addPropertyButton.right() + @padding, @bottom() - 15 - @padding
-    @renamePropertyButton.rawSetExtent new Point (listWidth - 2 * @padding)/3,15
+    buttonBounds = new Rectangle new Point @addPropertyButton.right() + @padding, @bottom() - 15 - @padding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    @renamePropertyButton.doLayout buttonBounds
 
-    @removePropertyButton.fullRawMoveTo new Point @renamePropertyButton.right() + @padding, @bottom() - 15 - @padding
-    @removePropertyButton.rawSetExtent new Point (listWidth - 2 * @padding)/3,15
+    buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @padding, @bottom() - 15 - @padding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    @removePropertyButton.doLayout buttonBounds
 
-    @saveButton.fullRawMoveTo new Point @right() - @width()/4 - 2*@padding - WorldMorph.preferencesAndSettings.handleSize, @bottom() - 15 - @padding
-    @saveButton.rawSetExtent new Point @width()/4,15
+    buttonBounds = new Rectangle new Point @right() - @width()/4 - 2*@padding - WorldMorph.preferencesAndSettings.handleSize, @bottom() - 15 - @padding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight @width()/4, 15
+    @saveButton.doLayout buttonBounds
 
     trackChanges.pop()
     @fullChanged()

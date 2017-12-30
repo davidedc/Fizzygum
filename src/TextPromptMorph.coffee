@@ -56,9 +56,7 @@ class TextPromptMorph extends WindowMorph
     @okButton = new SimpleButtonMorph true, @, "informTargetAndDestroy", (new StringMorph2 "ok").alignCenter()
     @add @okButton
 
-
-
-    @layoutSubmorphs()
+    @invalidateLayout()
 
   informTarget: ->
     @target[@callback].call @target, nil, @textMorph
@@ -67,9 +65,29 @@ class TextPromptMorph extends WindowMorph
     @informTarget()
     @fullDestroy()
 
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    #console.log "fixing the layout of the text prompt morph"
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -109,16 +127,19 @@ class TextPromptMorph extends WindowMorph
     eachButtonWidth = (@width() - 5* @padding - WorldMorph.preferencesAndSettings.handleSize) / 3
 
     if @cancelButton.parent == @
-      @cancelButton.fullRawMoveTo new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @cancelButton.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @cancelButton.doLayout buttonBounds 
 
     if @saveButton.parent == @
-      @saveButton.fullRawMoveTo new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @saveButton.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @saveButton.doLayout buttonBounds 
 
     if @okButton.parent == @
-      @okButton.fullRawMoveTo new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @okButton.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @okButton.doLayout buttonBounds 
 
     # ----------------------------------------------
 
@@ -127,4 +148,7 @@ class TextPromptMorph extends WindowMorph
     @fullChanged()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
 

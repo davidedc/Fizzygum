@@ -60,12 +60,38 @@ class EmptyButtonMorph extends Morph
     #@color = new Color 255, 255, 255
     if @faceMorph?
       @add @faceMorph
-      @layoutSubmorphs()
+      @invalidateLayout()
   
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super()
-    if @faceMorph.parent == @
-      @faceMorph.setBounds @bounds
+
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
+
+    if @faceMorph?.parent == @
+      @faceMorph.rawSetBounds newBoundsForThisLayout
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
 
   # TODO
   getTextDescription: ->
