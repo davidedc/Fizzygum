@@ -950,10 +950,10 @@ class Morph extends MorphicNode
     if delta.isZero() then return
     #console.log "move 4"
     @breakNumberOfRawMovesAndResizesCaches()
+    @fullChanged()
     @bounds = @bounds.translateBy delta
     @children.forEach (child) ->
-      child.fullRawMoveBy delta
-    @changed()
+      child.silentFullRawMoveBy delta
 
   silentFullRawMoveBy: (delta) ->
     # TODO in theory the low-level APIs should only be
