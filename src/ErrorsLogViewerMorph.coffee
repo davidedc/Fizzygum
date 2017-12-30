@@ -1,5 +1,9 @@
 # ErrorsLogViewerMorph ///////////////////////////////////////////////////
 
+# to make this error log viewer come up, edit any code
+# in the inspector so to get a compilation error
+# (e.g. unmatched parens) and click "save"
+
 class ErrorsLogViewerMorph extends WindowMorph
   # this is so we can create objects from the object class name 
   # (for the deserialization process)
@@ -75,9 +79,7 @@ class ErrorsLogViewerMorph extends WindowMorph
     @okButton = new SimpleButtonMorph true, @, "hide", (new StringMorph2 "ok").alignCenter()
     @add @okButton
 
-
-
-    @layoutSubmorphs()
+    @invalidateLayout()
 
   pauseErrors: ->
     @paused = true
@@ -95,9 +97,29 @@ class ErrorsLogViewerMorph extends WindowMorph
     @informTarget()
     @fullDestroy()
 
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    #console.log "fixing the layout of errors log viewer"
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -137,22 +159,29 @@ class ErrorsLogViewerMorph extends WindowMorph
     eachButtonWidth = (@width() - 5* @padding - WorldMorph.preferencesAndSettings.handleSize) / 3
 
     if @clearButton.parent == @
-      @clearButton.fullRawMoveTo new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @clearButton.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @clearButton.doLayout buttonBounds
 
     if @pauseToggle.parent == @
-      @pauseToggle.fullRawMoveTo new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @pauseToggle.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @pauseToggle.doLayout buttonBounds
 
     if @okButton.parent == @
-      @okButton.fullRawMoveTo new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
-      @okButton.rawSetExtent new Point eachButtonWidth, 15
+      buttonBounds = new Rectangle new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
+      @okButton.doLayout buttonBounds
 
     # ----------------------------------------------
 
 
     trackChanges.pop()
-    @fullChanged()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
 
