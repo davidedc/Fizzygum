@@ -95,14 +95,31 @@ class FridgeMagnetsMorph extends WindowMorph
     @add @outputAnimationHeader
     # -----------------------------------------------
 
+    @invalidateLayout()
 
-    # update layout
-    @layoutSubmorphs()
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
 
-  
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    #console.log "fixing the layout of the FridgeMagnetsMorph"
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -194,7 +211,10 @@ class FridgeMagnetsMorph extends WindowMorph
 
 
     trackChanges.pop()
-    @fullChanged()
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
+
 
