@@ -61,6 +61,9 @@ class Rectangle
     else if (left instanceof Point) and (top instanceof Point)
       @origin = left
       @corner = top
+    else if left instanceof Point
+      @origin = left
+      @corner = new Point 0, 0
     else if left instanceof Rectangle
       @origin = left.origin
       @corner = top.origin
