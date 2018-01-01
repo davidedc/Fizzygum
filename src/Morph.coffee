@@ -2348,11 +2348,11 @@ class Morph extends MorphicNode
 
   spawnInspector2: (inspectee) ->
     inspector = new InspectorMorph2 inspectee
-    inspector.fullRawMoveTo world.hand.position()
+    inspector.fullMoveTo world.hand.position()
     inspector.setExtent new Point 560, 410
-    inspector.fullRawMoveWithin world
+    #inspector.fullRawMoveWithin world
     world.add inspector
-    inspector.changed()
+    #inspector.changed()
 
   spawnNextTo: (morphToBeNextTo) ->
     morphToBeNextTo.parent.add @

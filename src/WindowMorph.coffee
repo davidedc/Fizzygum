@@ -36,10 +36,31 @@ class WindowMorph extends BoxMorph
 
     @resizer = new HandleMorph @
 
-    @layoutLabelAndTopLeftButton()
+    @invalidateLayout()
 
-  
-  layoutLabelAndTopLeftButton: ->
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
 
     closeIconSize = 16
 
@@ -48,31 +69,22 @@ class WindowMorph extends BoxMorph
     labelTop = @top() + @padding
     labelRight = @right() - @padding
     labelWidth = labelRight - labelLeft
+
     if @label.parent == @
-      @label.fullRawMoveTo new Point labelLeft, labelTop
-      @label.rawSetWidth labelWidth
-      if @label.height() > @height() - 50
-        @silentRawSetHeight @label.height() + 50
-        # TODO run the tests when commenting this out
-        # because this one point to the Morph implementation
-        # which is empty.
-        @reLayout()
-        
-        @changed()
-        @resizer.silentUpdateResizerHandlePosition()
+      labelBounds = new Rectangle new Point labelLeft, labelTop
+      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, 15
+      @label.doLayout labelBounds
+      @resizer.silentUpdateResizerHandlePosition()
     labelBottom = labelTop + @label.height() + 2
 
     # close button
     if @topLeftButton.parent == @
-      @topLeftButton.fullRawMoveTo new Point @left() + @padding, @top() + @padding
-      @topLeftButton.rawSetHeight closeIconSize
-      @topLeftButton.rawSetWidth closeIconSize
+      buttonBounds = new Rectangle new Point @left() + @padding, @top() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
+      @topLeftButton.doLayout buttonBounds
 
 
-    @changed()
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
 
-  layoutSubmorphs: (morphStartingTheChange = nil) ->
-    super morphStartingTheChange
-    @layoutLabelAndTopLeftButton()
-
-
+  

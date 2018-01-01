@@ -465,25 +465,12 @@ class ReconfigurablePaintMorph extends WindowMorph
     if !window.recalculatingLayouts
       debugger
 
-    if !newBoundsForThisLayout?
-      if @desiredExtent?
-        newBoundsForThisLayout = @desiredExtent
-        @desiredExtent = nil
-      else
-        newBoundsForThisLayout = @extent()
-
-      if @desiredPosition?
-        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
-        @desiredPosition = nil
-      else
-        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
-
     if @isCollapsed()
       @layoutIsValid = true
       @notifyChildrenThatParentHasReLayouted()
       return
 
-    @rawSetBounds newBoundsForThisLayout
+    super
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the

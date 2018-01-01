@@ -53,11 +53,32 @@ class UnderTheCarpetMorph extends BoxMorph
     # resizer
     @resizer = new HandleMorph @
 
-    # update layout
-    @layoutSubmorphs()
+    @invalidateLayout()
   
-  layoutSubmorphs: ->
-    super()
+  doLayout: (newBoundsForThisLayout) ->
+    if !window.recalculatingLayouts
+      debugger
+
+    if !newBoundsForThisLayout?
+      if @desiredExtent?
+        newBoundsForThisLayout = @desiredExtent
+        @desiredExtent = nil
+      else
+        newBoundsForThisLayout = @extent()
+
+      if @desiredPosition?
+        newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+        @desiredPosition = nil
+      else
+        newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    if @isCollapsed()
+      @layoutIsValid = true
+      @notifyChildrenThatParentHasReLayouted()
+      return
+
+    @rawSetBounds newBoundsForThisLayout
+
     trackChanges.push false
 
     # label
@@ -88,5 +109,6 @@ class UnderTheCarpetMorph extends BoxMorph
     @buttonClose.fullRawMoveTo new Point x, y
     @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()
-    @fullChanged()
-  
+
+    @layoutIsValid = true
+    @notifyChildrenThatParentHasReLayouted()
