@@ -1,5 +1,10 @@
 # TriggerMorph ////////////////////////////////////////////////////////
 
+# **************************************
+# This Morph is now deprecated, use the
+# SimpleButton instead
+# **************************************
+
 # I provide basic button functionality.
 # All menu items and buttons are TriggerMorphs.
 # The handling of the triggering is not

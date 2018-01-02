@@ -44,10 +44,7 @@ class UnderTheCarpetMorph extends BoxMorph
     @add @scrollFrame
 
     # close button
-    @buttonClose = new TriggerMorph true, @
-    @buttonClose.setLabel "close"
-    @buttonClose.action = "removeFromTree"
-
+    @buttonClose = new SimpleButtonMorph true, @, "removeFromTree", (new StringMorph2 "close").alignCenter()
     @add @buttonClose
 
     # resizer
