@@ -58,12 +58,16 @@ class PromptMorph extends MenuMorph
         slider.action = "reactToSliderAction2"
       @silentAdd slider
     @addLine 2
-    @addMenuItem "Ok", true, @target, @callback
 
-    @addMenuItem "Cancel", true, @, ""
+    @addMenuItem "Ok", true, @target, @callback
+    # we name the button "Close" instead of "Cancel"
+    # because we are not undoing any change we made
+    # that would be rather difficult in case of
+    # multiple prompts being pinned down and changing
+    # the property concurrently
+    @addMenuItem "Close", true, @, "fullDestroy"
 
     @reLayout()
-
 
   reLayout: ->
     super()

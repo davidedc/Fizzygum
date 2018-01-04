@@ -2327,9 +2327,14 @@ class Morph extends MorphicNode
     menu = new MenuMorph @, false, @, true, true, msg or "", colorPicker
     menu.silentAdd colorPicker
     menu.addLine 2
-    menu.addMenuItem "Ok", true, @, callback
 
-    menu.addMenuItem "Cancel", true, @, ""
+    menu.addMenuItem "Ok", true, @, callback
+    # we name the button "Close" instead of "Cancel"
+    # because we are not undoing any change we made
+    # that would be rather difficult in case of
+    # multiple prompts being pinned down and changing
+    # the property concurrently
+    menu.addMenuItem "Close", true, menu, "fullDestroy"
 
     menu.popUpAtHand()
 
