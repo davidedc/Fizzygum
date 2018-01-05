@@ -9,9 +9,6 @@
 # else other than the desktop.
 
 class MenuMorph extends Morph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   target: nil
   title: nil

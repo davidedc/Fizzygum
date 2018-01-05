@@ -119,10 +119,6 @@ class Class
     @staticPropertiesSources = {}
     @subClasses = []
 
-    # remove the bit we use to identify classes because it's going to
-    # mangle the parsing and we can add it transparently
-    source = source.replace(/^  namedClasses[@name] = @prototype\n/m,"")
-
     # find the class name
     classRegex = /^class[ \t]*([a-zA-Z_$][0-9a-zA-Z_$]*)/m
     if (m = classRegex.exec(source))?
@@ -311,11 +307,6 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log fieldDeclaration
           JS_string_definitions += fieldDeclaration + "\n"
 
-      # finally, add the class to the namedClasses index
-      if @name != "MorphicNode"
-        # analogous to
-        #namedClasses[@name] = window[@name].prototype
-        JS_string_definitions += "namedClasses.#{@name} = window.#{@name}.prototype;" + "\n"
 
       JSSourcesContainer.content += JS_string_definitions + "\n"
 

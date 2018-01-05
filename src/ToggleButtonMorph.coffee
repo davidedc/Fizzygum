@@ -2,9 +2,6 @@
 
 
 class ToggleButtonMorph extends SwitchButtonMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
 
   constructor: (button1, button2, startingButton = 0) ->

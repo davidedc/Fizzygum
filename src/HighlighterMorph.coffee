@@ -21,7 +21,4 @@
 # highlighted even if it's (partially) occluded by other morphs.
 
 class HighlighterMorph extends RectangleMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 

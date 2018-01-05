@@ -1,9 +1,6 @@
 # MenuAppearance //////////////////////////////////////////////////////////////
 
 class MenuAppearance extends BoxyAppearance
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   
   # This method only paints this very morph's "image",

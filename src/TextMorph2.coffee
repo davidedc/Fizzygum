@@ -6,9 +6,6 @@
 # A multi-line, word-wrapping String
 
 class TextMorph2 extends StringMorph2
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   wrappedLines: []
   wrappedLineSlots: []

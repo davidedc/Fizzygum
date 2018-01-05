@@ -1,9 +1,6 @@
 # ClassInspectorMorph //////////////////////////////////////////////////////
 
 class ClassInspectorMorph extends InspectorMorph2
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   notifyInstancesOfSourceChange: (propertiesArray)->
     @target.constructor.class.notifyInstancesOfSourceChange propertiesArray

@@ -7,9 +7,6 @@
 # REQUIRES globalFunctions
 
 class SliderButtonMorph extends CircleBoxMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   # careful: Objects are shared with all the instances of this class.
   # if you modify it, then all the objects will get the change

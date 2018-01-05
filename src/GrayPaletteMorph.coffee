@@ -1,9 +1,6 @@
 # GrayPaletteMorph ///////////////////////////////////////////////////
 
 class GrayPaletteMorph extends ColorPaletteMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   constructor: (@target = nil, sizePoint) ->
     super @target, sizePoint or new Point 80, 10

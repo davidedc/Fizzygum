@@ -4,9 +4,6 @@
 # injected into another morph
 
 class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   codeToBeInjected: ""
   morphWhereToInject: nil

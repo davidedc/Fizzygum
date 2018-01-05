@@ -40,10 +40,6 @@ addLineToLogDiv = (content) ->
 # here: http://stackoverflow.com/a/8728164/1318347 )
 MixedClassKeywords = ['onceAddedClassProperties', 'included']
 
-# this is so we can create objects from the object class name 
-# (for the deserialization process)
-namedClasses = {}
-
 # we use "nil" everywhere instead of "null"
 # and this "nil" we use is really "undefined"
 # The reason is the following: Coffeescript v2 has the
@@ -709,7 +705,6 @@ generateInclusionOrder = ->
     eachFile = eachFile.replace "_coffeSource",""
     if eachFile == "Class" then continue
     if eachFile == "Mixin" then continue
-    #if namedClasses.hasOwnProperty eachFile
     console.log eachFile + " - "
     dependencies[eachFile] = []
     lines = window[eachFile + "_coffeSource"].split '\n'

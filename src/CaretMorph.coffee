@@ -3,9 +3,6 @@
 # I mark where the caret is in a String/Text while editing
 
 class CaretMorph extends BlinkerMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   keyDownEventUsed: false
   target: nil

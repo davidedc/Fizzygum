@@ -12,9 +12,6 @@
 # new UpperRightTriangleAnnotation(world.children[0])
 
 class UpperRightTriangleAnnotation extends UpperRightTriangle
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   pencilIconMorph = nil
 

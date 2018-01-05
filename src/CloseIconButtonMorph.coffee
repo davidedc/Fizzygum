@@ -12,9 +12,6 @@
 # of a non-ractangular button.
 
 class CloseIconButtonMorph extends EmptyButtonMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
 
   defaultCloseIconAppearance: """

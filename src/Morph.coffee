@@ -15,9 +15,6 @@
 # REQUIRES LayoutSpec
 
 class Morph extends MorphicNode
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   @augmentWith DeepCopierMixin
 
@@ -1998,7 +1995,7 @@ class Morph extends MorphicNode
     for eachObject in createdObjects
       # note that the constructor method is not run!
       #console.log "cloning:" + eachMorph.className
-      #console.log "with:" + namedClasses[eachMorph.className]
+      #console.log "with:" + window[eachObject.className].prototype
       if eachObject.className == "Canvas"
         theClone = newCanvas new Point eachObject.width, eachObject.height
         ctx = theClone.getContext "2d"
@@ -2013,7 +2010,7 @@ class Morph extends MorphicNode
         ctx.drawImage image, 0, 0
 
       else if eachObject.constructor != Array
-        theClone = Object.create namedClasses[eachObject.className]
+        theClone = Object.create window[eachObject.className].prototype
         if theClone.assignUniqueID?
           theClone.assignUniqueID()
       else

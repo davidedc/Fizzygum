@@ -5,9 +5,6 @@
 # a morph to be used as "face"
 
 class SimpleButtonMorph extends EmptyButtonMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   constructor: (
       @closesUnpinnedMenus = true,

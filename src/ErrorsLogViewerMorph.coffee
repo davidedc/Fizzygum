@@ -5,9 +5,6 @@
 # (e.g. unmatched parens) and click "save"
 
 class ErrorsLogViewerMorph extends WindowMorph
-  # this is so we can create objects from the object class name 
-  # (for the deserialization process)
-  namedClasses[@name] = @prototype
 
   tempPromptEntryField: nil
   defaultContents: ""
