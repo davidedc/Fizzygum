@@ -3317,7 +3317,7 @@ class Morph extends MorphicNode
     max = @getRecursiveMaxDim()
     
     # we are forced to be in a space smaller
-    # than the minimum. We obey.
+    # than the minimum needed. We obey.
     if min.width() >= newBoundsForThisLayout.width()
       if @parent == world then console.log "case 1"
       # Give all children under minimum
@@ -3344,6 +3344,8 @@ class Morph extends MorphicNode
 
     # the min is within the bounds but the desired is just
     # equal or larger than the bounds.
+    # i.e. we have more space then what is strictly needed
+    # but less of what is desired.
     # give min to all and then what is left available
     # redistribute proportionally based on desired
     else if desired.width() >= newBoundsForThisLayout.width()
@@ -3367,7 +3369,7 @@ class Morph extends MorphicNode
         C.doLayout childBounds
 
     # min and desired are strictly less than the bounds
-    # hence we have more space than needed,
+    # i.e. we have more space than needed or desired
     # allocate all the desired spaces, and on top of that
     # give extra space based on maximum widths
     else
