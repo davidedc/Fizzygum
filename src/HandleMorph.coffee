@@ -44,11 +44,12 @@ class HandleMorph extends Morph
 
 
   parentHasReLayouted: ->
+    # right now you can resize a morph only if it's
+    # free-floating, however this will change in the future
+    # as for example things inside vertically-stretchable
+    # frames can potentially change their width.
+    # so this handle has to go away now.
     if @parent.layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      # you can't resize a morph that is subject to a
-      # non-trivial freefloating layout.
-      # rather, you have to use specialised adjusters.
-      # so this handle has to go away now.
       @destroy()
     else
       @updateResizerHandlePosition()
