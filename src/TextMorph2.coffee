@@ -108,7 +108,7 @@ class TextMorph2 extends StringMorph2
       # handling a single token that is too long.
       # This works with the manual tests I've done so far
       # BUT it brought up a logical error, because the
-      # following can happen: when the line waps,
+      # following can happen: when the line wraps,
       # it pushes down the lines. In doing so, the text
       # might resize. In doing so, the line doesn't need
       # to wrap anymore, and hence the text can embiggen,
