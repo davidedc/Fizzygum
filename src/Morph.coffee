@@ -2495,6 +2495,33 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
+  createNewOldStyleTextMorphWithBackground: ->
+    newMorph = new OldStyleTextMorph(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+    newMorph.isEditable = true
+    #newMorph.maxTextWidth = 300
+    world.create newMorph
+
   createNewStringMorph3WithBackground: ->
     #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
     newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
@@ -2574,6 +2601,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
+    menu.addMenuItem "Old style TextMorph with background", true, @, "createNewOldStyleTextMorphWithBackground"
     menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
     if targetMorph in world.morphsToBePinouted

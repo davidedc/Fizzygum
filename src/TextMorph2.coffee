@@ -90,7 +90,7 @@ class TextMorph2 extends StringMorph2
     wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
 
 
-    if wrappingData? then return wrappingData
+    if wrappingData? and !@oldStyleTextMorph? then return wrappingData
     wrappedLinesOfThisParagraph = []
     wrappedLineSlotsOfThisParagraph = []
     maxWrappedLineWidthOfThisParagraph = 0
@@ -199,9 +199,13 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs, justCheckIfItFitsInThisExtent) ->
+    if @oldStyleTextMorph?
+      justCheckIfItFitsInThisExtent = null
+      overrideFontSize = @originallySetFontSize
+
     cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode(text) + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
-    if textWrappingData? then return textWrappingData
+    if textWrappingData? and !@oldStyleTextMorph? then return textWrappingData
     wrappedLinesOfWholeText = []
     wrappedLineSlotsOfWholeText = [0]
     maxWrappedLineWidthOfWholeText = 0
@@ -298,6 +302,9 @@ class TextMorph2 extends StringMorph2
   # see the largest fitting size.
   breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
     
+    if @oldStyleTextMorph?
+      overrideFontSize = @originallySetFontSize
+
     # Easy, lazy way to get soft-wrapping.
     # TODO you can actually simplify lots of code in the
     # case of soft-wrapping as really there is a lot
@@ -311,7 +318,7 @@ class TextMorph2 extends StringMorph2
 
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
-    if textWrappingData? then return textWrappingData
+    if textWrappingData? and !@oldStyleTextMorph? then return textWrappingData
 
     #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
 
@@ -368,6 +375,9 @@ class TextMorph2 extends StringMorph2
       return cacheHit
 
     contentHeight = @reflowText()
+
+    if @oldStyleTextMorph?
+      contentHeight = @wrappedLines.length *  Math.ceil fontHeight @originallySetFontSize
 
     # if we are calculating a new buffer then
     # for sure we have to mark the caret as broken
