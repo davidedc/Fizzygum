@@ -145,6 +145,27 @@ class MenuMorph extends Morph
 
     item
 
+  removeMenuItem: (label) ->
+    item = @firstChildSuchThat(
+      (m) ->
+        m.label? and m.label.text == label
+    )
+    if item?
+      item.destroy()
+
+  removeConsecutiveLines: ->
+    # have to copy the array with slice()
+    # because we are removing items from it
+    # while looping over it
+    destroyNextLines = false
+    for item in @children.slice()
+      if destroyNextLines and item instanceof RectangleMorph
+        item.destroy()
+      if item instanceof RectangleMorph
+        destroyNextLines = true
+        continue
+      else
+        destroyNextLines = false
 
   addMenuItem: (label, closesUnpinnedMenus, target, action, hint, color, bold, italic,doubleClickAction, arg1, arg2,representsAMorph)->
     # console.log "menu creating MenuItemMorph "
