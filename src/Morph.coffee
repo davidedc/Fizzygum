@@ -817,7 +817,7 @@ class Morph extends MorphicNode
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollFrames
         # actually end up in the frame inside them.)
-        if !(child instanceof HandleMorph)
+        if !(child instanceof HandleMorph) and !(child instanceof CaretMorph)
           result = result.merge child.fullBounds()
     result    
   

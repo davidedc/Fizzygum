@@ -36,22 +36,118 @@ class OldStyleTextMorph extends TextMorph2
     @maxTextWidth = true
     @reLayout()
 
+  developersMenu: (morphOpeningTheMenu) ->
+    menu = super
+    menu.removeMenuItem "soft wrap"
+    menu.removeMenuItem "soft wrap".tick()
+    menu.removeMenuItem "soft wrap"
+
+    menu.removeMenuItem "←☓→ don't expand to fill"
+    menu.removeMenuItem "←→ expand to fill"
+    menu.removeMenuItem "→← shrink to fit"
+    menu.removeMenuItem "→⋯← crop to fit"
+
+    menu.removeMenuItem "header line"
+    menu.removeMenuItem "no header line"
+
+    menu.removeMenuItem "↑ align top"
+    menu.removeMenuItem "⍿ align middle"
+    menu.removeMenuItem "↓ align bottom"
+
+    menu.removeConsecutiveLines()
+
+    if @amIInScrollFrame()
+      childrenNotCarets = @parent.children.filter (m) ->
+        !(m instanceof CaretMorph)
+      if childrenNotCarets.length == 1
+        menu.addLine()
+        if @parent.parent.isTextLineWrapping
+          menu.addMenuItem "☒ soft wrap", true, @, "softWrapOff"
+        else
+          menu.addMenuItem "☐ soft wrap", true, @, "softWrapOn"
+
+    menu
+
+  softWrapOn: ->
+    debugger
+
+    @parent.parent.isTextLineWrapping = true
+    @maxTextWidth = true
+
+    @parent.fullRawMoveTo @parent.parent.position()
+    @parent.rawSetExtent @parent.parent.extent()
+    @refreshScrollFrameIfIamInIt()
+
+  amIInScrollFrame: ->
+    if @parent?
+      if @parent instanceof FrameMorph
+        if @parent.parent?
+          if @parent.parent instanceof ScrollFrameMorph
+            return true
+    return false
+
+  refreshScrollFrameIfIamInIt: ->
+    if @amIInScrollFrame()
+      @parent.parent.adjustContentsBounds()
+      @parent.parent.adjustScrollBars()
+
+  softWrapOff: ->
+    debugger
+
+    @parent.parent.isTextLineWrapping = false
+    @maxTextWidth = null
+
+    @reLayout()
+
+    @refreshScrollFrameIfIamInIt()
+
+
   # This is also invoked for example when you take a slider
   # and set it to target this.
   setText: (theTextContent, stringFieldMorph) ->
     super
     @reLayout()
+    @refreshScrollFrameIfIamInIt()
+
+  toggleShowBlanks: ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
+  
+  toggleWeight: ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
+  
+  toggleItalic: ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
+
+  toggleIsPassword: ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
 
   rawSetWidth: (aPoint) ->
-    super aPoint
+    super
     @reLayout()
 
   rawSetExtent: (aPoint) ->
-    super aPoint
+    super
     @reLayout()
 
+  setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
+
+  setFontName: (ignored1, ignored2, theNewFontName) ->
+    super
+    @reLayout()
+    @refreshScrollFrameIfIamInIt()
+
   reLayout: ->
-    debugger
     super()
 
     if @maxTextWidth? and @maxTextWidth != 0
