@@ -96,8 +96,7 @@ class SliderButtonMorph extends CircleBoxMorph
     @state = @STATE_PRESSED
     @color = @pressColor.copy()
     @changed()
-    super
-  
+
   mouseClickLeft: ->
     @bringToForegroud()
     @state = @STATE_HIGHLIGHTED
