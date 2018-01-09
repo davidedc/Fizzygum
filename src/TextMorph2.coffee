@@ -90,7 +90,7 @@ class TextMorph2 extends StringMorph2
     wrappingData = world.cacheForParagraphsWrappingData.get cacheKey
 
 
-    if wrappingData? and !@oldStyleTextMorph? then return wrappingData
+    if wrappingData? then return wrappingData
     wrappedLinesOfThisParagraph = []
     wrappedLineSlotsOfThisParagraph = []
     maxWrappedLineWidthOfThisParagraph = 0
@@ -205,7 +205,7 @@ class TextMorph2 extends StringMorph2
 
     cacheKey = @buildCanvasFontProperty(overrideFontSize) + "-" + maxTextWidth + "-" + hashCode(text) + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextWrappingData.get cacheKey
-    if textWrappingData? and !@oldStyleTextMorph? then return textWrappingData
+    if textWrappingData? then return textWrappingData
     wrappedLinesOfWholeText = []
     wrappedLineSlotsOfWholeText = [0]
     maxWrappedLineWidthOfWholeText = 0
@@ -318,7 +318,7 @@ class TextMorph2 extends StringMorph2
 
     cacheKey = hashCode(text) + "-" + @buildCanvasFontProperty(overrideFontSize) + "-" + morphWidth + "-" + justCheckIfItFitsInThisExtent
     textWrappingData = world.cacheForTextBreakingIntoLinesTopLevel.get cacheKey
-    if textWrappingData? and !@oldStyleTextMorph? then return textWrappingData
+    if textWrappingData? then return textWrappingData
 
     #console.log "breakTextIntoLines // " + " morphWidth: " + morphWidth + " overrideFontSize: " + overrideFontSize
 
