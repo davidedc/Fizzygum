@@ -420,17 +420,24 @@ class ScrollFrameMorph extends FrameMorph
     fl = @left() + @padding
     fr = @right() - @padding
     @adjustContentsBounds()
+    marginAroundCaret = @padding
+    if @extraPadding?
+      marginAroundCaret += @extraPadding
     if caretMorph.top() < ft
-      @contents.fullRawMoveTopSideTo @contents.top() + ft - caretMorph.top()
+      newT = @contents.top() + ft - caretMorph.top()
+      @contents.fullRawMoveTopSideTo newT + marginAroundCaret
       caretMorph.fullRawMoveTopSideTo ft
     else if caretMorph.bottom() > fb
-      @contents.fullRawMoveBottomSideTo @contents.bottom() + fb - caretMorph.bottom()
+      newB = @contents.bottom() + fb - caretMorph.bottom()
+      @contents.fullRawMoveBottomSideTo newB - marginAroundCaret
       caretMorph.fullRawMoveBottomSideTo fb
     if caretMorph.left() < fl
-      @contents.fullRawMoveLeftSideTo @contents.left() + fl - caretMorph.left()
+      newL = @contents.left() + fl - caretMorph.left()
+      @contents.fullRawMoveLeftSideTo newL + marginAroundCaret
       caretMorph.fullRawMoveLeftSideTo fl
     else if caretMorph.right() > fr
-      @contents.fullRawMoveRightSideTo @contents.right() + fr - caretMorph.right()
+      newR = @contents.right() + fr - caretMorph.right()
+      @contents.fullRawMoveRightSideTo newR - marginAroundCaret
       caretMorph.fullRawMoveRightSideTo fr
     @adjustContentsBounds()
     @adjustScrollBars()
