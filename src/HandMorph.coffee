@@ -182,7 +182,7 @@ class HandMorph extends Morph
       #debugger
       @fullChanged()
       # this gives an occasion to the old parent
-      # morph to adjust itself e.g. the scrollmorph
+      # morph to adjust itself e.g. the ScrollFrame
       # readjusts itself if you take some morphs
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf

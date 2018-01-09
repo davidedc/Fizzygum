@@ -148,7 +148,7 @@ class ScrollFrameMorph extends FrameMorph
         @hBar.hide()
 
     # see comment on equivalent if line above.
-    if @vBar.target == @ 
+    if @vBar.target == @
       if @contents.height() >= @height() + 1
         @vBar.show()
         @vBar.rawSetHeight vHeight  if @vBar.height() isnt vHeight
@@ -167,8 +167,16 @@ class ScrollFrameMorph extends FrameMorph
       else
         @vBar.hide()
   
+  # when you add things to the ScrollFrame they actually
+  # end up in the frame inside it. This also applies to
+  # resizing handles!
   add: (aMorph) ->
     @contents.add aMorph
+    @adjustContentsBounds()
+    @adjustScrollBars()
+
+  showResizeAndMoveHandlesAndLayoutAdjusters: ->
+    super
     @adjustContentsBounds()
     @adjustScrollBars()
 
@@ -190,10 +198,13 @@ class ScrollFrameMorph extends FrameMorph
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
     @contents.fullDestroyChildren()
+    @contents.fullRawMoveTo @position()
 
     aMorph.fullRawMoveTo @position().add @padding + @extraPadding
+
     @add aMorph
-  
+
+
   rawSetExtent: (aPoint) ->
     unless aPoint.eq @extent()
       #console.log "move 15"
@@ -219,23 +230,23 @@ class ScrollFrameMorph extends FrameMorph
     # extend indefinitely as you are typing. Rather,
     # the width will be constrained and the text will
     # wrap.
+    padding = Math.floor @extraPadding + @padding
+    totalPadding = 2*padding
     if @isTextLineWrapping
       @contents.children.forEach (morph) =>
-        if morph instanceof TextMorph
-          totalPadding = 2*(@extraPadding + @padding)
+        if (morph instanceof TextMorph) or (morph instanceof OldStyleTextMorph)
           # this re-layouts the text to fit the width.
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
-          morph.maxTextWidth = 0
           morph.rawSetWidth @contents.width() - totalPadding
           morph.maxTextWidth = @contents.width() - totalPadding
-          @contents.rawSetHeight Math.max morph.height(), @height() - totalPadding
+          @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 
-    subBounds = @contents.subMorphsMergedFullBounds()
+    subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
     if subBounds
-      newBounds = subBounds.expandBy(@padding + @extraPadding).merge(@boundingBox())
+      newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
     else
-      newBounds = @boundingBox()
+      newBounds = @boundingBox()?.ceil()
 
     unless @contents.boundingBox().eq newBounds
       @contents.silentRawSetBounds newBounds
@@ -304,8 +315,17 @@ class ScrollFrameMorph extends FrameMorph
   # sometimes you can scroll the contents of a scrollframe
   # by floatDragging its contents. This is particularly
   # useful in touch devices.
+  # You can test this also in non-touch mode
+  # by anchoring a scrollframe to something
+  # non-draggable such as a color palette (can't drag it
+  # because user can drag on it to pick a color)
+  # Ten you chuck a long text into the scrollframe and
+  # drag the frame (on the side of the text, where there is no
+  # text) and you should see the scrollframe scrolling.
   mouseDownLeft: (pos) ->
+
     return nil  unless @isScrollingByfloatDragging
+
     oldPos = pos
     deltaX = 0
     deltaY = 0

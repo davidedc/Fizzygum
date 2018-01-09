@@ -1,6 +1,6 @@
 # SliderMorph ///////////////////////////////////////////////////
 # Sliders (and hence slider button morphs)
-# are also used in the ScrollMorphs .
+# are also used in the ScrollFrames .
 
 # In previous versions the user could force an orientation, so
 # that one could have a vertical slider even if the slider is
@@ -226,6 +226,7 @@ class SliderMorph extends CircleBoxMorph
   
   # setTarget: -> taken form the ControllerMixin
 
+  # TODO clean this name up
   swapTargetsTHISNAMEISRANDOM: (ignored, ignored2, theTarget, each) ->
     @target = theTarget
     @action = each

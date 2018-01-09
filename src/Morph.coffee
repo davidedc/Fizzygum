@@ -812,7 +812,13 @@ class Morph extends MorphicNode
     if @children.length
       result = @children[0].bounds
       @children.forEach (child) ->
-        result = result.merge child.fullBounds()
+        # we exclude the HandleMorphs because they
+        # mangle how the frame inside ScrollFrames
+        # calculate their size when they are resized
+        # (remember that the resizing handle of ScrollFrames
+        # actually end up in the frame inside them.)
+        if !(child instanceof HandleMorph)
+          result = result.merge child.fullBounds()
     result    
   
   # does not take into account orphanage or visibility
@@ -2522,6 +2528,78 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
+  createNewExpandingOldStyleTextMorphWithBackground: ->
+    newMorph = new OldStyleTextMorph(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim " +
+      "magna.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+    newMorph.isEditable = true
+    newMorph.maxTextWidth = null
+    #newMorph.maxTextWidth = 300
+    world.create newMorph
+
+  createScrollFramesWithOldTextStyleTextMorps: ->
+    SfA = new ScrollFrameMorph()
+    SfA.disableDrops()
+    SfA.contents.disableDrops()
+    SfA.isTextLineWrapping = true
+    SfA.color = new Color 255, 255, 255
+    ostmA = new OldStyleTextMorph(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+    ostmA.isEditable = true
+    ostmA.enableSelecting()
+    SfA.setContents ostmA, 10
+    world.add SfA
+    SfA.fullRawMoveTo new Point 40, 40
+    SfA.rawSetExtent new Point 500, 300
+
+    SfB = new ScrollFrameMorph()
+    SfB.disableDrops()
+    SfB.contents.disableDrops()
+    SfB.isTextLineWrapping = false
+    SfB.color = new Color 255, 255, 255
+    ostmB = new OldStyleTextMorph(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+    ostmB.isEditable = true
+    ostmB.maxTextWidth = 0
+    ostmB.enableSelecting()
+    SfB.setContents ostmB, 10
+    world.add SfB
+    SfB.fullRawMoveTo new Point 300, 40
+    SfB.rawSetExtent new Point 500, 300
+
   createNewStringMorph3WithBackground: ->
     #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
     newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
@@ -2602,6 +2680,8 @@ class Morph extends MorphicNode
     menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
     menu.addMenuItem "Old style TextMorph with background", true, @, "createNewOldStyleTextMorphWithBackground"
+    menu.addMenuItem "Old style TextMorph exp. with background", true, @, "createNewExpandingOldStyleTextMorphWithBackground"    
+    menu.addMenuItem "ScrollFramesWithOldTextStyleTextMorps", true, @, "createScrollFramesWithOldTextStyleTextMorps"
     menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
     if targetMorph in world.morphsToBePinouted
@@ -2944,7 +3024,9 @@ class Morph extends MorphicNode
       each.isEditable and
       (each instanceof StringMorph or
         each instanceof StringMorph2 or
-        each instanceof TextMorph)
+        each instanceof TextMorph or
+        each instanceof OldStyleTextMorph
+        )
   
   
   nextEntryField: (current) ->
@@ -3328,7 +3410,7 @@ class Morph extends MorphicNode
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Morphs for the new layouts mechanism
-    if @ instanceof TextMorph
+    if (@ instanceof TextMorph) or (@ instanceof OldStyleTextMorph)
       @rawSetBounds newBoundsForThisLayout
     else
       @rawSetExtent newBoundsForThisLayout.extent()

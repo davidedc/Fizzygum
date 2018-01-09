@@ -33,6 +33,7 @@ class OldStyleTextMorph extends TextMorph2
     @silentRawSetBounds new Rectangle 0,0,400,40
     @fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.FLOAT
     @fittingSpecWhenBoundsTooSmall = FittingSpecTextInSmallerBounds.SCALEDOWN
+    @maxTextWidth = true
     @reLayout()
 
   # This is also invoked for example when you take a slider
@@ -41,17 +42,33 @@ class OldStyleTextMorph extends TextMorph2
     super
     @reLayout()
 
-  setExtent: (aPoint) ->
-    super
+  rawSetWidth: (aPoint) ->
+    super aPoint
+    @reLayout()
+
+  rawSetExtent: (aPoint) ->
+    super aPoint
     @reLayout()
 
   reLayout: ->
     debugger
     super()
-    [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
-      @breakTextIntoLines @text, @originallySetFontSize, @extent()
+
+    if @maxTextWidth? and @maxTextWidth != 0
+      @softWrap = true
+      [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
+        @breakTextIntoLines @text, @originallySetFontSize, @extent()
+      width = @width()
+    else
+      @softWrap = false
+      veryWideExtent = new Point 10000000, 10000000
+      [@wrappedLines,@wrappedLineSlots,@widthOfPossiblyCroppedText,@heightOfPossiblyCroppedText] =
+        @breakTextIntoLines @text, @originallySetFontSize, veryWideExtent
+      width = @widthOfPossiblyCroppedText
+
     height = @wrappedLines.length *  Math.ceil fontHeight @originallySetFontSize
-    @silentRawSetExtent new Point @width(), height
+    @silentRawSetExtent new Point width, height
+
     @changed()
     @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @notifyChildrenThatParentHasReLayouted()
