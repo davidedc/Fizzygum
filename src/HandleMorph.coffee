@@ -148,7 +148,7 @@ class HandleMorph extends Morph
       # of the pixelRatio (i.e. after the restore)
       @paintHighlight aContext, al, at, w, h
 
-  doPath: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
+  drawArrow: (context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown) ->
     context.beginPath()
     context.moveTo 0.5 + leftArrowPoint.x, 0.5 + leftArrowPoint.y
     context.lineTo 0.5 + leftArrowPoint.x + arrowPieceLeftUp.x, 0.5 + leftArrowPoint.y + arrowPieceLeftUp.y
@@ -166,6 +166,8 @@ class HandleMorph extends Morph
     context.stroke()
 
   drawHandle: (context) ->
+
+    # horizontal arrow
     if @type is "resizeHorizontalHandle" or @type is "moveHandle"
       p0 = @bottomLeft().subtract(@position())
       p0 = p0.subtract new Point 0, Math.ceil(@height()/2)
@@ -177,8 +179,9 @@ class HandleMorph extends Morph
       arrowPieceLeftDown = new Point Math.ceil(@width()/5),Math.ceil(@height()/5)
       arrowPieceRightUp = new Point -Math.ceil(@width()/5),-Math.ceil(@height()/5)
       arrowPieceRightDown = new Point -Math.ceil(@width()/5),Math.ceil(@height()/5)
-      @doPath context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
+      @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
 
+    # vertical arrow
     if @type is "resizeVerticalHandle" or @type is "moveHandle"
       p0 = @bottomCenter().subtract @position()
       
@@ -189,19 +192,30 @@ class HandleMorph extends Morph
       arrowPieceLeftDown = new Point Math.ceil(@width()/5), -Math.ceil(@height()/5)
       arrowPieceRightUp = new Point -Math.ceil(@width()/5), Math.ceil(@height()/5)
       arrowPieceRightDown = new Point Math.ceil(@width()/5), Math.ceil(@height()/5)
-      @doPath context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
+      @drawArrow context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown
 
 
+    # draw the traditional "striped triangle" resizer
     if @type is "resizeBothDimensionsHandle"
-      leftArrowPoint = @extent().floorDivideBy 7
-      rightArrowPoint = @bottomRight().subtract(@position()).subtract @extent().floorDivideBy 7
+      bottomLeft = @bottomLeft().subtract(@position())
+      topRight = @topRight().subtract(@position())
 
-      arrowPieceLeftUp = new Point Math.ceil(@width()/4), 0
-      arrowPieceLeftDown = new Point 0, Math.ceil(@height()/4)
-      arrowPieceRightUp = new Point 0,-Math.ceil(@width()/4)
-      arrowPieceRightDown = new Point -Math.ceil(@width()/4),0
+      bottomLeftSweep = bottomLeft.copy()
+      topRightSweep = topRight.copy()
 
-      @doPath(context, leftArrowPoint, rightArrowPoint, arrowPieceLeftUp, arrowPieceLeftDown, arrowPieceRightUp, arrowPieceRightDown)
+      # draw the lines sweeping from long lines
+      # down to the short ones at the corner
+      for i in [0..@height()] by 6
+        # bottomLeftSweep moves right
+        bottomLeftSweep.x = bottomLeft.x + i
+        # topRightSweep moves down
+        topRightSweep.y = topRight.y + i
+        context.beginPath()
+        context.moveTo bottomLeftSweep.x, bottomLeftSweep.y
+        context.lineTo topRightSweep.x, topRightSweep.y
+        context.closePath()
+        context.stroke()
+
 
   handleMorphRenderingHelper: (context, color, shadowColor) ->
     context.lineWidth = 1
