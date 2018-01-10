@@ -235,11 +235,13 @@ class ScrollFrameMorph extends FrameMorph
     if @isTextLineWrapping
       @contents.children.forEach (morph) =>
         if (morph instanceof TextMorph) or (morph instanceof OldStyleTextMorph)
-          morph.maxTextWidth = true
           # this re-layouts the text to fit the width.
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
           morph.rawSetWidth @contents.width() - totalPadding
+          # the OldStyleTextMorph just needs this to be different from null
+          # while the TextMorph actually uses this number
+          morph.maxTextWidth = @contents.width() - totalPadding
           @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
