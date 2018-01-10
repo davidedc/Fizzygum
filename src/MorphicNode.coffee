@@ -252,7 +252,7 @@ class MorphicNode
       result = result.concat child.allLeafsBottomToTop()
     return result
 
-  # Return all "parent" nodes from the root up to this node (including both)
+  # Return all "parent" nodes from the root down to this node (including both)
   allParentsBottomToTop: ->
     if @parent?
       someParents = @parent.allParentsBottomToTop()
@@ -273,6 +273,7 @@ class MorphicNode
   #      result = result.concat(@parent.allParentsTopToBottom())
   #    result
 
+  # Return all "parent" nodes from this note up to the root (including both)
   allParentsTopToBottom: ->
     return @allParentsBottomToTop().reverse()
 
