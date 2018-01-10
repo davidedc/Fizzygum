@@ -120,6 +120,37 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
   customContextMenu: nil
+
+  # menu coalescing is useful when you want a "parent"
+  # menu to take over the menus of their children.
+  # This assumes that for certain morphs is OK to just exist
+  # "in their whole" without letting the user obviously take it
+  # apart or mess with its parts.
+  #
+  # The best example is scrollable text: when one right-clicks
+  # on scrollable text, the menu OF THE SCROLLFRAME that
+  # contains it takes over.
+  #
+  # Otherwise, without coalescing, there would FIRST be a
+  # multiple-selection menu to spacially demultiplex which
+  # morph is the one of interest
+  # (the TextMorph, or the Frame, or the ScrollFrame?). And
+  # if the user wanted to resize the scroll text, which Morph
+  # would the user have to pick? It would be very confusing.
+  #
+  # Instead, in this example above, one can naturally
+  # resize the scrollframe, or change its color, or delete it,
+  # instead of operating on the text content.
+  #
+  # Note that, on the other side, for this to work the menu of
+  # the ScrollFrame has to give menu entries "peeking" them
+  # from the TextMorph it contains, e.g. to change the font size
+  #
+  # Note that this mechanism could be overridden for "advanced"
+  # users who want to mangle with the sub-components of a scrollable
+  # text
+  takesOverAndCoalescesChildrensMenus: false
+
   shadowBlur: 10
   onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
@@ -2386,10 +2417,14 @@ class Morph extends MorphicNode
 
     morphToAskMenuTo = @
 
-    ppp = @allParentsTopToBottomSuchThat (m) ->
-      (m instanceof ScrollFrameMorph) and m.scrollableText
-    if ppp? and ppp.length > 0
-      morphToAskMenuTo = ppp[0]
+    # check if a parent wants to take over my menu (and hopefully
+    # coalesce some of my entries!). In such case let it open the
+    # menu. Used for example for scrollable text (which is text inside
+    # a ScrollFrame).
+    anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
+      (m instanceof ScrollFrameMorph) and m.takesOverAndCoalescesChildrensMenus
+    if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
+      morphToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
     if morphToAskMenuTo.customContextMenu
       return morphToAskMenuTo.customContextMenu()
@@ -2557,7 +2592,7 @@ class Morph extends MorphicNode
 
   createScrollFramesWithOldTextStyleTextMorps: ->
     SfA = new ScrollFrameMorph()
-    SfA.scrollableText = true
+    SfA.takesOverAndCoalescesChildrensMenus = true
     SfA.disableDrops()
     SfA.contents.disableDrops()
     SfA.isTextLineWrapping = true
@@ -2592,7 +2627,7 @@ class Morph extends MorphicNode
     SfA.rawSetExtent new Point 500, 300
 
     SfB = new ScrollFrameMorph()
-    SfB.scrollableText = true
+    SfB.takesOverAndCoalescesChildrensMenus = true
     SfB.disableDrops()
     SfB.contents.disableDrops()
     SfB.isTextLineWrapping = false
@@ -2837,6 +2872,8 @@ class Morph extends MorphicNode
 
     menu
 
+  # Morph-specific menu entries are basically the ones
+  # beyond the generic entries above.
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
 
   developersMenu: (morphOpeningTheMenu) ->

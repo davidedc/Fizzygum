@@ -470,7 +470,7 @@ class ScrollFrameMorph extends FrameMorph
   
 
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
-    if @scrollableText
+    if @takesOverAndCoalescesChildrensMenus
       @contents.children[0].addMorphSpecificMenuEntries morphOpeningTheMenu, menu
     else
       super
