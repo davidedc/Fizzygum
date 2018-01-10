@@ -1974,9 +1974,13 @@ class WorldMorph extends FrameMorph
       @inputDOMElementForVirtualKeyboard.style.top = @caret.top() + pos.y + "px"
       @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @inputDOMElementForVirtualKeyboard.focus()
-    if WorldMorph.preferencesAndSettings.useSliderForInput
-      if !aStringMorphOrTextMorph.parentThatIsA MenuMorph
-        @slide aStringMorphOrTextMorph
+    
+    # Morphic.js provides the "slide" method but I must have lost it
+    # in the way, so commenting this out for the time being
+    #
+    #if WorldMorph.preferencesAndSettings.useSliderForInput
+    #  if !aStringMorphOrTextMorph.parentThatIsA MenuMorph
+    #    @slide aStringMorphOrTextMorph
   
   # Editing can stop because of three reasons:
   #   cancel (user hits ESC)
