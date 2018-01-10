@@ -35,11 +35,6 @@ class Morph extends MorphicNode
   @lastBuiltInstanceNumericID: 0
   instanceNumericID: 0
 
-  # unused - can't afford the time right now to change a
-  # script that hangs
-  # TODO
-  aspectRatio: nil
-
   appearance: nil
 
   # Just some tests here ////////////////////
