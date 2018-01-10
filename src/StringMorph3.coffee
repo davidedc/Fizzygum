@@ -846,8 +846,8 @@ class StringMorph3 extends Morph
     menu.popUpAtHand()
 
   # StringMorph3 menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
@@ -918,9 +918,6 @@ class StringMorph3 extends Morph
     postponedArgument2.push mi1
     menu.silentAdd mi1
     menu.silentAdd mi2
-
-
-    menu
 
   fixTextToBoxMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
 

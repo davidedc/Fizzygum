@@ -310,14 +310,13 @@ class TextMorph extends StringMorph
     @startOfLine(slot) + @lines[@slotRowAndColumn(slot).y].length - 1
   
   # TextMorph menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "align left", true, @, "setAlignmentToLeft"  if @alignment isnt "left"
     menu.addMenuItem "align right", true, @, "setAlignmentToRight"  if @alignment isnt "right"
     menu.addMenuItem "align center", true, @, "setAlignmentToCenter"  if @alignment isnt "center"
     menu.addMenuItem "run contents", true, @, "doContents"
-    menu
   
   setAlignmentToLeft: ->
     @alignment = "left"

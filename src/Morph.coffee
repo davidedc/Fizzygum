@@ -2375,20 +2375,30 @@ class Morph extends MorphicNode
   # on something. It could be a custom menu, or the standard
   # menu on the desktop, or a menu to disambiguate which
   # morph it's being selected...
-  contextMenu: ->    
+  contextMenu: ->
+    debugger
     # commented-out addendum for the implementation of 1):
     #show the normal menu in case there is text selected,
     #otherwise show the spacial multiplexing list
     #if !@world().caret
     #  if @world().hand.allMorphsAtPointer().length > 2
     #    return @hierarchyMenu()
-    if @customContextMenu
-      return @customContextMenu()
+
+    morphToAskMenuTo = @
+
+    ppp = @allParentsTopToBottomSuchThat (m) ->
+      (m instanceof ScrollFrameMorph) and m.scrollableText
+    if ppp? and ppp.length > 0
+      morphToAskMenuTo = ppp[0]
+
+    if morphToAskMenuTo.customContextMenu
+      return morphToAskMenuTo.customContextMenu()
+
     if world.isDevMode
-      if @parent is world
-        return @developersMenu()
-      return @hierarchyMenu()
-    @userMenu() or (@parent and @parent.userMenu())
+      if morphToAskMenuTo.parent is world
+        return morphToAskMenuTo.developersMenu()
+      return morphToAskMenuTo.hierarchyMenu()
+    morphToAskMenuTo.userMenu() or (morphToAskMenuTo.parent and morphToAskMenuTo.parent.userMenu())
   
   # When user right-clicks on a morph that is a child of other morphs,
   # then it's ambiguous which of the morphs she wants to operate on.
@@ -2541,12 +2551,13 @@ class Morph extends MorphicNode
       "erat ac, lobortis dignissim " +
       "magna.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     newMorph.isEditable = true
-    newMorph.maxTextWidth = null
+    newMorph.maxTextWidth = nil
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
   createScrollFramesWithOldTextStyleTextMorps: ->
     SfA = new ScrollFrameMorph()
+    SfA.scrollableText = true
     SfA.disableDrops()
     SfA.contents.disableDrops()
     SfA.isTextLineWrapping = true
@@ -2581,6 +2592,7 @@ class Morph extends MorphicNode
     SfA.rawSetExtent new Point 500, 300
 
     SfB = new ScrollFrameMorph()
+    SfB.scrollableText = true
     SfB.disableDrops()
     SfB.contents.disableDrops()
     SfB.isTextLineWrapping = false
@@ -2747,7 +2759,6 @@ class Morph extends MorphicNode
     world.add derezzedObject
 
   developersMenuOfMorph: (morphOpeningTheMenu) ->
-    # 'name' is not an official property of a function, hence:
     userMenu = @userMenu() or (@parent and @parent.userMenu())
     menu = new MenuMorph(morphOpeningTheMenu, false, 
       @,
@@ -2824,11 +2835,14 @@ class Morph extends MorphicNode
       menu.addMenuItem "hide", true, @, "hide"
       menu.addMenuItem "delete", true, @, "fullDestroy"
 
-
     menu
+
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
 
   developersMenu: (morphOpeningTheMenu) ->
     menu = @developersMenuOfMorph(morphOpeningTheMenu)
+    @addMorphSpecificMenuEntries morphOpeningTheMenu, menu
+
     if @addShapeSpecificMenus?
       menu = @addShapeSpecificMenus menu
     menu

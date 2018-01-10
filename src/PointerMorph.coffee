@@ -78,9 +78,7 @@ class PointerMorph extends BoxMorph
     @target.destroy()
     @destroy()
 
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = @developersMenuOfMorph(morphOpeningTheMenu)
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     menu.addLine 1
     menu.addMenuItem "close this button", true, @, "closeThis"
     menu.addMenuItem "close target morph", true, @, "closeThisAndTarget"
-    menu

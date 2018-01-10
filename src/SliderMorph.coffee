@@ -94,8 +94,9 @@ class SliderMorph extends CircleBoxMorph
     return    
   
   # SliderMorph menu:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
+    menu.addLine()
     menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"
     menu.addMenuItem "floor...", true, @, (->
       @prompt menu.title + "\nfloor:",
@@ -126,7 +127,6 @@ class SliderMorph extends CircleBoxMorph
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
     menu.addMenuItem "set target", true, @, "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
-    menu
   
   showValue: ->
     @inform @value

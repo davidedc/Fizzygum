@@ -836,9 +836,8 @@ class StringMorph2 extends Morph
 
     menu.popUpAtHand()
 
-  # StringMorph2 menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
     menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
@@ -894,7 +893,6 @@ class StringMorph2 extends Morph
     else
       menu.addMenuItem "→⋯← crop to fit", true, @, "togglefittingSpecWhenBoundsTooSmall"
 
-    menu
 
   togglefittingSpecWhenBoundsTooSmall: ->
     @fittingSpecWhenBoundsTooSmall = not @fittingSpecWhenBoundsTooSmall

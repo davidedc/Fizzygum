@@ -80,11 +80,10 @@ class ColorPaletteMorph extends Morph
   
     
   # ColorPaletteMorph menu:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
-    menu
   
   # setTarget: -> taken form the ControllerMixin
 

@@ -36,8 +36,8 @@ class OldStyleTextMorph extends TextMorph2
     @maxTextWidth = true
     @reLayout()
 
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.removeMenuItem "soft wrap"
     menu.removeMenuItem "soft wrap".tick()
     menu.removeMenuItem "soft wrap"
@@ -54,8 +54,6 @@ class OldStyleTextMorph extends TextMorph2
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    menu.removeConsecutiveLines()
-
     if @amIInScrollFrame()
       childrenNotCarets = @parent.children.filter (m) ->
         !(m instanceof CaretMorph)
@@ -66,7 +64,8 @@ class OldStyleTextMorph extends TextMorph2
         else
           menu.addMenuItem "☐ soft wrap", true, @, "softWrapOn"
 
-    menu
+    menu.removeConsecutiveLines()
+
 
   softWrapOn: ->
     debugger
@@ -95,7 +94,7 @@ class OldStyleTextMorph extends TextMorph2
     debugger
 
     @parent.parent.isTextLineWrapping = false
-    @maxTextWidth = null
+    @maxTextWidth = nil
 
     @reLayout()
 

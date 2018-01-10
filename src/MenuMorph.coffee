@@ -90,12 +90,12 @@ class MenuMorph extends Morph
     @updateShadow()
 
 
+
   # StringMorph menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
-    menu
   
   createLine: (height = 1) ->
     item = new RectangleMorph()

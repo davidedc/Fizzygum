@@ -237,8 +237,8 @@ class StringMorph extends Morph
       nil, 6, 500, true
 
   # StringMorph menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     menu.addMenuItem "edit", true, @, "edit"
     menu.addMenuItem "font size...", true, @, "fontSizePopup", "set this String's\nfont point size"
@@ -265,8 +265,6 @@ class StringMorph extends Morph
     else
       menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
 
-    menu
-  
   toggleIsfloatDraggable: ->
   #  # for context menu demo purposes
   #  @isfloatDraggable = not @isfloatDraggable

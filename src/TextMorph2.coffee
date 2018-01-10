@@ -572,9 +572,8 @@ class TextMorph2 extends StringMorph2
     @changed()
     world.stopEditing()
 
-  # TextMorph menus:
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = super
+  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    super
     menu.addLine()
     if @softWrap
       menu.addMenuItem "soft wrap".tick(), true, @, "toggleSoftWrap"
@@ -582,7 +581,7 @@ class TextMorph2 extends StringMorph2
       menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
     menu.addMenuItem "run contents", true, @, "doContents"
-    menu
+
   
   setAlignmentToLeft: ->
     @alignment = "left"
