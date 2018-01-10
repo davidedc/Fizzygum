@@ -11,7 +11,7 @@ class ScrollFrameMorph extends FrameMorph
   growth: 0 # pixels or Point to grow right/left when near edge
   isTextLineWrapping: false
   isScrollingByfloatDragging: true
-  scrollBarSize: nil
+  scrollBarsThickness: nil
   contents: nil
   vBar: nil
   hBar: nil
@@ -28,7 +28,7 @@ class ScrollFrameMorph extends FrameMorph
 
   constructor: (
     @contents,
-    @scrollBarSize = (WorldMorph.preferencesAndSettings.scrollBarSize),
+    @scrollBarsThickness = (WorldMorph.preferencesAndSettings.scrollBarsThickness),
     @sliderColor
     ) ->
     # super() paints the scrollframe, which we don't want,
@@ -49,13 +49,13 @@ class ScrollFrameMorph extends FrameMorph
     #@setAlphaScaled = @contents.setAlphaScaled
 
     @hBar = new SliderMorph nil, nil, nil, nil, @sliderColor
-    @hBar.rawSetHeight @scrollBarSize
+    @hBar.rawSetHeight @scrollBarsThickness
 
     @hBar.target = @
     @addRaw @hBar
 
     @vBar = new SliderMorph nil, nil, nil, nil, @sliderColor
-    @vBar.rawSetWidth @scrollBarSize
+    @vBar.rawSetWidth @scrollBarsThickness
     @vBar.target = @
     @addRaw @vBar
 
@@ -105,8 +105,14 @@ class ScrollFrameMorph extends FrameMorph
     true
 
   adjustScrollBars: ->
-    hWidth = @width() - @scrollBarSize
-    vHeight = @height() - @scrollBarSize
+
+    # one typically has both scrollbars in view, plus a resizer
+    # in buttom right corner, so adjust the width/height of the
+    # scrollbars so that there is no overlap between the three things
+    spaceToLeaveOnOneSide = Math.max(@scrollBarsThickness, WorldMorph.preferencesAndSettings.handleSize) + 2 * @padding
+    hWidth = @width() - spaceToLeaveOnOneSide
+    vHeight = @height() - spaceToLeaveOnOneSide
+
     unless @parent instanceof ListMorph
       @changed()
 
@@ -375,7 +381,7 @@ class ScrollFrameMorph extends FrameMorph
     super
   
   startAutoScrolling: ->
-    inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
+    inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
     if @isOrphan() then return nil
     hand = world.hand
     @autoScrollTrigger = Date.now()  unless @autoScrollTrigger
@@ -394,7 +400,7 @@ class ScrollFrameMorph extends FrameMorph
   
   autoScroll: (pos) ->
     return nil  if Date.now() - @autoScrollTrigger < 500
-    inset = WorldMorph.preferencesAndSettings.scrollBarSize * 3
+    inset = WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
     area = @topLeft().extent new Point @width(), inset
     scrollbarJustChanged = false
     if area.containsPoint(pos)

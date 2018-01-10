@@ -24,7 +24,7 @@ class PreferencesAndSettings
   prompterFontSize: nil
   prompterSliderSize: nil
   handleSize: nil
-  scrollBarSize: nil
+  scrollBarsThickness: nil
   mouseScrollAmount: nil
   useSliderForInput: nil
   useVirtualKeyboard: nil
@@ -60,8 +60,13 @@ class PreferencesAndSettings
     @prompterFontName = "sans-serif"
     @prompterFontSize = 12
     @prompterSliderSize = 10
+
+    # handle and scrollbar should ideally be the
+    # same size because they often show next to
+    # each other
     @handleSize = 15
-    @scrollBarSize = 10
+    @scrollBarsThickness = 10
+
     @mouseScrollAmount = 40
     @useSliderForInput = false
     @useVirtualKeyboard = true
@@ -78,8 +83,13 @@ class PreferencesAndSettings
     @prompterFontName = "sans-serif"
     @prompterFontSize = 24
     @prompterSliderSize = 20
+
+    # handle and scrollbar should ideally be the
+    # same size because they often show next to
+    # each other
     @handleSize = 26
-    @scrollBarSize = 24
+    @scrollBarsThickness = 24
+
     @mouseScrollAmount = 40
     @useSliderForInput = true
     @useVirtualKeyboard = true

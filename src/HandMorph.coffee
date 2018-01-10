@@ -968,7 +968,7 @@ class HandMorph extends Morph
       if @floatDraggingSomething()
           if newMorph instanceof ScrollFrameMorph
               if !newMorph.boundingBox().insetBy(
-                WorldMorph.preferencesAndSettings.scrollBarSize * 3
+                WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()
                   newMorph.startAutoScrolling()
 
