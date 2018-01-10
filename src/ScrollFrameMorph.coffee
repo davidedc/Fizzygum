@@ -480,13 +480,6 @@ class ScrollFrameMorph extends FrameMorph
       @contents.children[0].addMorphSpecificMenuEntries morphOpeningTheMenu, menu
     else
       super
-
-    if @isTextLineWrapping
-      menu.addLine()
-      menu.addMenuItem "auto line wrap off...", true, @, "toggleTextLineWrapping", "turn automatic\nline wrapping\noff"
-    else
-      menu.addLine()
-      menu.addMenuItem "auto line wrap on...", true, @, "toggleTextLineWrapping", "enable automatic\nline wrapping"
   
   toggleTextLineWrapping: ->
     @isTextLineWrapping = not @isTextLineWrapping
