@@ -2433,7 +2433,6 @@ class Morph extends MorphicNode
       if morphToAskMenuTo.parent is world
         return morphToAskMenuTo.developersMenu()
       return morphToAskMenuTo.hierarchyMenu()
-    morphToAskMenuTo.userMenu() or (morphToAskMenuTo.parent and morphToAskMenuTo.parent.userMenu())
   
   # When user right-clicks on a morph that is a child of other morphs,
   # then it's ambiguous which of the morphs she wants to operate on.
@@ -2794,7 +2793,6 @@ class Morph extends MorphicNode
     world.add derezzedObject
 
   developersMenuOfMorph: (morphOpeningTheMenu) ->
-    userMenu = @userMenu() or (@parent and @parent.userMenu())
     menu = new MenuMorph(morphOpeningTheMenu, false, 
       @,
       true,
@@ -2884,9 +2882,6 @@ class Morph extends MorphicNode
       menu = @addShapeSpecificMenus menu
     menu
 
-  userMenu: ->
-    nil  
-  
   # Morph menu actions
   calculateAlphaScaled: (alpha) ->
     if typeof alpha is "number"
