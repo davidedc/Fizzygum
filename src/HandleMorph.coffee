@@ -17,10 +17,15 @@ class HandleMorph extends Morph
   STATE_HIGHLIGHTED: 1
 
   constructor: (@target = nil, @type = "resizeBothDimensionsHandle") ->
+
+    # some minimum padding with whatever edge we
+    # end up against, it looks better
+    minimumPadding = 2
+
     if @target?.padding?
-      @inset = new Point @target.padding, @target.padding
+      @inset = new Point Math.max(@target.padding, minimumPadding), Math.max(@target.padding, minimumPadding)
     else
-      @inset = new Point 0, 0
+      @inset = new Point minimumPadding, minimumPadding
     super()
     @color = new Color 255, 255, 255
     @noticesTransparentClick = true
