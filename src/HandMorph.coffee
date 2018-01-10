@@ -104,10 +104,10 @@ class HandMorph extends Morph
           fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
         , 100
     
-    contextMenu = morphTheMenuIsAbout.contextMenu()
+    contextMenu = morphTheMenuIsAbout.buildContextMenu()
     while !contextMenu and morphTheMenuIsAbout.parent
       morphTheMenuIsAbout = morphTheMenuIsAbout.parent
-      contextMenu = morphTheMenuIsAbout.contextMenu()
+      contextMenu = morphTheMenuIsAbout.buildContextMenu()
 
     if contextMenu
       contextMenu.parentMenu = morphTheMenuIsAbout.firstParentThatIsAMenu()

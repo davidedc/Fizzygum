@@ -365,11 +365,14 @@ class TextMorph extends StringMorph
     @clearSelection()
 
   # this is set by the inspector. It tells the TextMorph
-  # that any following doSelection/showSelection/inspectSelection action needs to be
-  # done apropos a particular obj
+  # that any following doSelection/showSelection/inspectSelection
+  # action needs to be done apropos a particular obj,
+  # and also replaces the normal context menu with the evaluation Menu
+  # because if you right click in these panes of the Inspector you
+  # want to "run" code that has been typed
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu
+    @overridingContextMenu = @evaluationMenu
   
   doSelection: ->
     @receiver.evaluateString @selection()

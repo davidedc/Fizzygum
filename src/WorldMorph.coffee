@@ -269,7 +269,7 @@ class WorldMorph extends FrameMorph
   boot: ->
 
     if !window.location.href.contains "worldWithSystemTestHarness"
-      @contextMenu= ->
+      @buildContextMenu= ->
         if @isDevMode
           menu = new MenuMorph @, false, @, true, true, "Fizzygum"
         else
@@ -1685,7 +1685,7 @@ class WorldMorph extends FrameMorph
 
     super()
 
-  contextMenu: ->
+  buildContextMenu: ->
     if @isDevMode
       menu = new MenuMorph(@, false, 
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])

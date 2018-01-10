@@ -119,7 +119,15 @@ class Morph extends MorphicNode
   _acceptsDrops: false
   noticesTransparentClick: false
   fps: 0
-  customContextMenu: nil
+
+  # if you place a menu construction function here,
+  # it gets the priority over the normal context
+  # menu. This is done for example in the Inspector
+  # panes, where the context menu is about running the
+  # code contained in the text panel, rather than
+  # to fiddle with the properties of the text panel
+  # itself.
+  overridingContextMenu: nil
 
   # menu coalescing is useful when you want a "parent"
   # menu to take over the menus of their children.
@@ -396,9 +404,9 @@ class Morph extends MorphicNode
   paintStroke: (aContext, clippingRectangle) ->
     @appearance?.paintStroke aContext, clippingRectangle
 
-  addShapeSpecificMenus: (menu) ->
-    if @appearance?.addShapeSpecificMenus?
-      return @appearance.addShapeSpecificMenus menu
+  addShapeSpecificMenuItems: (menu) ->
+    if @appearance?.addShapeSpecificMenuItems?
+      return @appearance.addShapeSpecificMenuItems menu
     return menu
 
   addShapeSpecificNumericalSetters: (list) ->
@@ -2406,8 +2414,7 @@ class Morph extends MorphicNode
   # on something. It could be a custom menu, or the standard
   # menu on the desktop, or a menu to disambiguate which
   # morph it's being selected...
-  contextMenu: ->
-    debugger
+  buildContextMenu: ->
     # commented-out addendum for the implementation of 1):
     #show the normal menu in case there is text selected,
     #otherwise show the spacial multiplexing list
@@ -2426,12 +2433,12 @@ class Morph extends MorphicNode
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       morphToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
-    if morphToAskMenuTo.customContextMenu
-      return morphToAskMenuTo.customContextMenu()
+    if morphToAskMenuTo.overridingContextMenu
+      return morphToAskMenuTo.overridingContextMenu()
 
     if world.isDevMode
       if morphToAskMenuTo.parent is world
-        return morphToAskMenuTo.developersMenu()
+        return morphToAskMenuTo.buildMorphContextMenu()
       return morphToAskMenuTo.hierarchyMenu()
   
   # When user right-clicks on a morph that is a child of other morphs,
@@ -2456,14 +2463,14 @@ class Morph extends MorphicNode
     # show an entry for each of the morphs in the hierarchy.
     # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
-      if (each.developersMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
+      if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
         textLabelForMorph = each.toString().slice 0, 50
         menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
 
     menu
 
   popupDeveloperMenu: (morphOpeningTheMenu)->
-    @developersMenu(morphOpeningTheMenu).popUpAtHand()
+    @buildMorphContextMenu(morphOpeningTheMenu).popUpAtHand()
 
 
   popUpColorSetter: ->
@@ -2792,7 +2799,7 @@ class Morph extends MorphicNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
 
-  developersMenuOfMorph: (morphOpeningTheMenu) ->
+  buildBaseMorphClassContextMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph(morphOpeningTheMenu, false, 
       @,
       true,
@@ -2874,12 +2881,12 @@ class Morph extends MorphicNode
   # beyond the generic entries above.
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
 
-  developersMenu: (morphOpeningTheMenu) ->
-    menu = @developersMenuOfMorph(morphOpeningTheMenu)
+  buildMorphContextMenu: (morphOpeningTheMenu) ->
+    menu = @buildBaseMorphClassContextMenu morphOpeningTheMenu
     @addMorphSpecificMenuEntries morphOpeningTheMenu, menu
 
-    if @addShapeSpecificMenus?
-      menu = @addShapeSpecificMenus menu
+    if @addShapeSpecificMenuItems?
+      menu = @addShapeSpecificMenuItems menu
     menu
 
   # Morph menu actions

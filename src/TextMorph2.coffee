@@ -595,7 +595,9 @@ class TextMorph2 extends StringMorph2
     @alignment = "center"
     @changed()
   
-  # TextMorph evaluation:
+  # TextMorph evaluation. This menu is placed as the
+  # "overridingContextMenu" in the Inspector panes, where
+  # the text contents is executed against the target Morph
   evaluationMenu: ->
     menu = @hierarchyMenu()
 
@@ -633,11 +635,14 @@ class TextMorph2 extends StringMorph2
     @receiver.evaluateString @text
    
   # this is set by the inspector. It tells the TextMorph
-  # that any following doSelection/showSelection/inspectSelection action needs to be
-  # done apropos a particular obj
+  # that any following doSelection/showSelection/inspectSelection
+  # action needs to be done apropos a particular obj,
+  # and also replaces the normal context menu with the evaluation Menu
+  # because if you right click in these panes of the Inspector you
+  # want to "run" code that has been typed
   setReceiver: (obj) ->
     @receiver = obj
-    @customContextMenu = @evaluationMenu
+    @overridingContextMenu = @evaluationMenu
   
   doSelection: ->
     @receiver.evaluateString @selection()
