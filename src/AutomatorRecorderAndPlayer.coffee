@@ -241,6 +241,7 @@ class AutomatorRecorderAndPlayer
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  # not used anymore, we are not showing morph geometry anymore
   turnOnHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = true
     SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideGeometry
@@ -249,6 +250,7 @@ class AutomatorRecorderAndPlayer
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
+  # not used anymore, we are not showing morph geometry anymore
   turnOffHidingOfMorphsGeometryInfoInLabels: ->
     @constructor.hidingOfMorphsGeometryInfoInLabels = false
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideGeometry

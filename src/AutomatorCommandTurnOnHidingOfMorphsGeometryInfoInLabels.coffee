@@ -1,4 +1,4 @@
-# 
+# not used anymore, we are not showing morph geometry anymore
 
 
 class AutomatorCommandTurnOnHidingOfMorphsGeometryInfoInLabels extends AutomatorCommand

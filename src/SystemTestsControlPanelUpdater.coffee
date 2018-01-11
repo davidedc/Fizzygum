@@ -170,11 +170,6 @@ class SystemTestsControlPanelUpdater
             "-",
             (-> window.world.automatorRecorderAndPlayer.turnOnAlignmentOfMorphIDsMechanism()),
             (-> window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism())
-    SystemTestsControlPanelUpdater.hideGeometry =
-        @addOnOffSwitchLink "hide Morph geometry in labels",
-            "-",
-            "-",
-            (-> window.world.automatorRecorderAndPlayer.turnOnHidingOfMorphsGeometryInfoInLabels()), (-> window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels())
 
     SystemTestsControlPanelUpdater.hideMorphContentExtracts =
         @addOnOffSwitchLink "hide Morph content extract in labels",

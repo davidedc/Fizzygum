@@ -192,8 +192,7 @@ class StringMorph3 extends Morph
   getTextDescription: ->
     if @textDescription?
       return @textDescription + " (adhoc description of string)"
-    textWithoutLocationOrInstanceNo = @text.replace /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
-    textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
+    textWithoutLocationOrInstanceNo = @text.replace /#\d*/, ""
     return textWithoutLocationOrInstanceNo.slice(0, 30) + " (content of string)"
   
   obfuscateAsPassword: (letter, length) ->

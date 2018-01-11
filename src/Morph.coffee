@@ -429,24 +429,14 @@ class Morph extends MorphicNode
   #	method of InspectorMorph
   
   
-  # Morph string representation: e.g. 'a Morph#2 [20@45 | 130@250]'
+  # Morph string representation: e.g. 'a Morph' or 'a Morph#2'
   toString: ->
     firstPart = "a "
 
     if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
-      firstPart = firstPart + @morphClassString()
+      return firstPart + @morphClassString()
     else
-      firstPart = firstPart + @uniqueIDString()
-
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsGeometryInfoInLabels
-      return firstPart
-    else
-      return firstPart + " " + @boundingBox()
-
-  # Morph string representation: e.g. 'a Morph#2'
-  toStringWithoutGeometry: ->
-    "a " +
-      @uniqueIDString()
+      return firstPart + @uniqueIDString()
 
   close: ->
     if world.underTheCarpetMorph?

@@ -13,8 +13,7 @@ class MenuItemMorph extends TriggerMorph
     if @textDescription?
       return @textDescription + " (adhoc description of menu item)"
     if @labelString
-      textWithoutLocationOrInstanceNo = @labelString.replace /\[\d*@\d*[ ]*\|[ ]*\d*@\d*\]/, ""
-      textWithoutLocationOrInstanceNo = textWithoutLocationOrInstanceNo.replace /#\d*/, ""
+      textWithoutLocationOrInstanceNo = @labelString.replace /#\d*/, ""
       return textWithoutLocationOrInstanceNo + " (text in button)"
     else
       return super()
