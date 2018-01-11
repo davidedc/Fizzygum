@@ -69,7 +69,6 @@ class AutomatorRecorderAndPlayer
 
   @animationsPacingControl: false
   @alignmentOfMorphIDsMechanism: false
-  @hidingOfMorphsGeometryInfoInLabels: false
   @hidingOfMorphsNumberIDInLabels: false
   @hidingOfMorphsContentExtractInLabels: false
 
@@ -238,24 +237,6 @@ class AutomatorRecorderAndPlayer
     SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.alignMorphIDs
     return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
     systemTestCommand = new AutomatorCommandTurnOffAlignmentOfMorphIDsMechanism @
-    @automatorCommandsSequence.push systemTestCommand
-    @timeOfPreviouslyRecordedCommand = new Date().getTime()
-
-  # not used anymore, we are not showing morph geometry anymore
-  turnOnHidingOfMorphsGeometryInfoInLabels: ->
-    @constructor.hidingOfMorphsGeometryInfoInLabels = true
-    SystemTestsControlPanelUpdater.highlightOnLink SystemTestsControlPanelUpdater.hideGeometry
-    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandTurnOnHidingOfMorphsGeometryInfoInLabels @
-    @automatorCommandsSequence.push systemTestCommand
-    @timeOfPreviouslyRecordedCommand = new Date().getTime()
-
-  # not used anymore, we are not showing morph geometry anymore
-  turnOffHidingOfMorphsGeometryInfoInLabels: ->
-    @constructor.hidingOfMorphsGeometryInfoInLabels = false
-    SystemTestsControlPanelUpdater.highlightOffLink SystemTestsControlPanelUpdater.hideGeometry
-    return if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.RECORDING
-    systemTestCommand = new AutomatorCommandTurnOffHidingOfMorphsGeometryInfoInLabels @
     @automatorCommandsSequence.push systemTestCommand
     @timeOfPreviouslyRecordedCommand = new Date().getTime()
 
