@@ -940,6 +940,21 @@ class HandMorph extends Morph
     #   }
     #
 
+  # this is used by the ScrollMorph: clicking on the slider
+  # (but OUTSIDE of the button), the (center of the) button
+  # is immediately non-float dragged to where clicked.
+  nonFloatDragMorphFarAwayToHere: (morphFarAway, pos) ->
+    mouseOverNew = morphFarAway.allParentsTopToBottom()
+    @previousNonFloatDraggingPos = morphFarAway.center()
+    @nonFloatDragPositionWithinMorphAtStart = (new Point morphFarAway.width()/2, morphFarAway.height()/2).round()
+    @nonFloatDraggedMorph = morphFarAway
+    # this one calls the morphFarAway's nonFloatDragging method,
+    # for example in case of a SliderMorph invoking this on its
+    # button, this causes the movement of the button
+    # and adjusting of the Slider values and potentially
+    # adjusting scrollFrame etc.
+    @determineGrabs pos, morphFarAway, mouseOverNew
+
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->
     topMorph = @topMorphUnderPointer()
     mouseOverNew = topMorph.allParentsTopToBottom()

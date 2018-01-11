@@ -199,6 +199,11 @@ class SliderMorph extends CircleBoxMorph
     
     @changed()
   
+  mouseDownLeft: (pos) ->
+    if @button.parent == @
+      world.hand.nonFloatDragMorphFarAwayToHere @button, pos
+    
+
   setSize: (sizeOrMorphGivingSize) ->
     if sizeOrMorphGivingSize.getValue?
       size = sizeOrMorphGivingSize.getValue()
