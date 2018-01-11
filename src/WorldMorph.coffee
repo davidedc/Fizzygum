@@ -1679,7 +1679,6 @@ class WorldMorph extends FrameMorph
 
     window.world.automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
     window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
-    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsGeometryInfoInLabels()
     window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
     window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
 
