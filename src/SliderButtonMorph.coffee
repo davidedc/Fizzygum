@@ -57,7 +57,9 @@ class SliderButtonMorph extends CircleBoxMorph
       @notifyChildrenThatParentHasReLayouted()
 
   isFloatDraggable: ->
-    false
+    if @parent instanceof SliderMorph
+      return false
+    return @isFloatDraggableByDefault
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart

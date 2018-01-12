@@ -74,11 +74,6 @@ class CloseIconButtonMorph extends EmptyButtonMorph
   actOnClick: ->
     @parent?.fullDestroy()
 
-  # otherwise the close button on windows causes
-  # a floatdrag most of the times instead of closing
-  # the window, because of the pointer noise.
-  isFloatDraggable: ->
-    false
   rootForGrab: ->
     return nil
 

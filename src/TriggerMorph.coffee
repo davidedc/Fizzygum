@@ -232,8 +232,13 @@ class TriggerMorph extends Morph
 
   # you shouldn't be able to floatDragging a compound
   # morphs containing a trigger by dragging the trigger
-  # User might still move the trigger itself though
-  # (if it's unlocked)
+  # (because you expect buttons attached to anything but the
+  # world to be "slippery", i.e.
+  # you can "skid" your drag over it in case you change
+  # your mind on pressing it)
+  # and at the same time (again if it's not on the desktop)
+  # you don't want it to be "floating"
+  # either
   rootForGrab: ->
     if @isFloatDraggable()
       return super()

@@ -9,19 +9,6 @@ UpperRightInternalHaloMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      isFloatDraggable: ->
-        if @parent?
-
-          # an instance of ScrollFrameMorph is also an instance of FrameMorph
-          # so gotta do this check first ahead of next paragraph.
-          #if @parentThatIsA(ScrollFrameMorph)?
-          #  return false
-
-          if @parent instanceof WorldMorph
-            return true
-        return false
-
-
       updateResizerPosition: ->
         @silentRawSetExtent new Point 100, 100
         @silentFullRawMoveTo new Point 100, 100

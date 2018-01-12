@@ -202,10 +202,6 @@ class WorldMorph extends FrameMorph
   # solution is more ad-hoc and is much much slower.
   outstandingTimerTriggeredOperationsCounter: []
 
-  isFloatDraggable: ->
-    return false
-
-
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true

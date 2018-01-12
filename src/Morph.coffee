@@ -115,6 +115,8 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
 
+  isFloatDraggableByDefault: true
+
   # if you place a menu construction function here,
   # it gets the priority over the normal context
   # menu. This is done for example in the Inspector
@@ -2115,19 +2117,38 @@ class Morph extends MorphicNode
   isFloatDraggable: ->
     if @parent?
 
+      if @parent instanceof WorldMorph
+        return @isFloatDraggableByDefault
+
+      # This whole check is because if something is inside
+      # a scrollable ScrollFrame, then it looks "solid" because
+      # you can use it to scroll the whole of the ScrollFrame
+      #
       # an instance of ScrollFrameMorph is also an instance of FrameMorph
-      # so gotta do this check first ahead of next paragraph.
+      # so gotta do this check first before doing the
+      # check on the FrameMorph in next paragraph
       maybeScrollFrameMorphAncestor = @parentThatIsA ScrollFrameMorph
       if maybeScrollFrameMorphAncestor?
         maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
         if maybeScrollFrameMorphAncestor.canScrollByDraggingForeground and
         maybeScrollFrameMorphAncestor.anyScrollBarShowing()
+          console.log "me: " + @ + " isFloatDraggable: " + false
           return false
         else
-          return true
+          console.log "me: " + @ + " isFloatDraggable: " + @isFloatDraggableByDefault
+          return @isFloatDraggableByDefault
 
-      if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)
-        return true
+      if @parent instanceof FrameMorph
+        return @isFloatDraggableByDefault
+
+      # not attached to WorldMorph, not inside a scrollable frame
+      # and not inside a frame.
+      # So, for example, when this morph is attached to another morph
+      # attached to the world (because then it should remain solid
+      # with the parent)
+      return false
+
+    # doesn't have a parent
     return false
 
   rootForGrab: ->
@@ -3037,11 +3058,8 @@ class Morph extends MorphicNode
       menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
   
-  # does nothing, keeping it for the peace of
-  # some tests
   toggleIsfloatDraggable: ->
-  #  # for context menu demo purposes
-  #  @isfloatDraggable = not @isfloatDraggable
+    @isFloatDraggableByDefault = not @isFloatDraggableByDefault
   
   colorSetters: ->
     # for context menu demo purposes

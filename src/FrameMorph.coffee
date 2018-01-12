@@ -296,9 +296,8 @@ class FrameMorph extends Morph
       if @parent instanceof ScrollFrameMorph
         return false
 
-      if (@parent instanceof WorldMorph) or (@parent instanceof FrameMorph)
-        return true
-    return false
+    return super
+
   
   reactToGrabOf: ->
     if @parent?
