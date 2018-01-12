@@ -906,7 +906,7 @@ class StringMorph2 extends Morph
   # this would be triggered by the "lock/unlock"
   # menu entry but unclear the specific use and
   # how to implement this right now.
-  toggleIsfloatDraggable: ->
+  toggleIsLocked: ->
   #  # for context menu demo purposes
   #  @isfloatDraggable = not @isfloatDraggable
   #  if @isfloatDraggable

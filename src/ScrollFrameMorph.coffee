@@ -102,7 +102,7 @@ class ScrollFrameMorph extends FrameMorph
   isFloatDraggable: ->
     if @canScrollByDraggingBackground and @anyScrollBarShowing()
       return false
-    return @isFloatDraggableByDefault
+    return !@isLocked
 
   adjustScrollBars: ->
 

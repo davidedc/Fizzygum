@@ -264,7 +264,7 @@ class StringMorph extends Morph
     else
       menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
 
-  toggleIsfloatDraggable: ->
+  toggleIsLocked: ->
   #  # for context menu demo purposes
   #  @isfloatDraggable = not @isfloatDraggable
   #  if @isfloatDraggable

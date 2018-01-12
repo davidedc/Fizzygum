@@ -115,7 +115,7 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
 
-  isFloatDraggableByDefault: true
+  isLocked: false
 
   # if you place a menu construction function here,
   # it gets the priority over the normal context
@@ -2114,11 +2114,31 @@ class Morph extends MorphicNode
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
+  # calculates if the Morph can be float
+  # dragged from their current position in respect to their parent.
+  #
+  # For example, a SliderButton should be able to do so (the fact that should
+  # stay within the bounds of the parent is another matter).
+  # On the other hand, usually when you "stick" a Morph onto another, it
+  # remains "solid" to its parent.
+  #
+  # Note that even if the Morph is not floatDraggable, it could
+  # still be picked up and moved: it would move
+  # SOLIDLY with the parent, but it could move!
+  #
+  # There is a way to make the Morph completely impervious
+  # to any float "grabs", and that is to tweak the "rootForGrab"
+  # method. In that way, for example for the ColorPaletteMorph, you can
+  # avoid ANY grab whatsoever (rather than just avoiding it being loose
+  # from the parent)
+  #
+  # On the other side, there is no away to avoid a "pick up" from picking
+  # up a Morph (which would be a FLOATING drag).
   isFloatDraggable: ->
     if @parent?
 
       if @parent instanceof WorldMorph
-        return @isFloatDraggableByDefault
+        return !@isLocked
 
       # This whole check is because if something is inside
       # a scrollable ScrollFrame, then it looks "solid" because
@@ -2132,14 +2152,12 @@ class Morph extends MorphicNode
         maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
         if maybeScrollFrameMorphAncestor.canScrollByDraggingForeground and
         maybeScrollFrameMorphAncestor.anyScrollBarShowing()
-          console.log "me: " + @ + " isFloatDraggable: " + false
           return false
         else
-          console.log "me: " + @ + " isFloatDraggable: " + @isFloatDraggableByDefault
-          return @isFloatDraggableByDefault
+          return !@isLocked
 
       if @parent instanceof FrameMorph
-        return @isFloatDraggableByDefault
+        return !@isLocked
 
       # not attached to WorldMorph, not inside a scrollable frame
       # and not inside a frame.
@@ -2859,9 +2877,9 @@ class Morph extends MorphicNode
 
       menu.addLine()
       if @isFloatDraggable()
-        menu.addMenuItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
       else
-        menu.addMenuItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+        menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"
       menu.addMenuItem "hide", true, @, "hide"
       menu.addMenuItem "delete", true, @, "fullDestroy"
     else
@@ -2875,9 +2893,9 @@ class Morph extends MorphicNode
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
       menu.addLine()
       if @isFloatDraggable()
-        menu.addMenuItem "lock", true, @, "toggleIsfloatDraggable", "make this morph\nunmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
       else
-        menu.addMenuItem "unlock", true, @, "toggleIsfloatDraggable", "make this morph\nmovable"
+        menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"
       menu.addMenuItem "hide", true, @, "hide"
       menu.addMenuItem "delete", true, @, "fullDestroy"
 
@@ -3058,8 +3076,8 @@ class Morph extends MorphicNode
       menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
   
-  toggleIsfloatDraggable: ->
-    @isFloatDraggableByDefault = not @isFloatDraggableByDefault
+  toggleIsLocked: ->
+    @isLocked = not @isLocked
   
   colorSetters: ->
     # for context menu demo purposes

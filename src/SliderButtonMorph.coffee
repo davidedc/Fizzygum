@@ -59,7 +59,7 @@ class SliderButtonMorph extends CircleBoxMorph
   isFloatDraggable: ->
     if @parent instanceof SliderMorph
       return false
-    return @isFloatDraggableByDefault
+    return !@isLocked
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart
