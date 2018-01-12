@@ -407,10 +407,7 @@ getMinimumFontHeight = ->
 getDocumentPositionOf = (aDOMelement) ->
   # answer the absolute coordinates of a DOM element in the document
   if !aDOMelement?
-    return (
-      x: 0
-      y: 0
-    )
+    return {x: 0, y: 0}
   pos =
     x: aDOMelement.offsetLeft
     y: aDOMelement.offsetTop

@@ -3578,11 +3578,9 @@ class Morph extends MorphicNode
 
     if !@_showsAdders
       allAddersToBeDestroyed =
-        @collectAllChildrenBottomToTopSuchThat(
-          (m) ->
-            m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
-            m instanceof LayoutElementAdderOrDropletMorph
-        )
+        @collectAllChildrenBottomToTopSuchThat (m) ->
+          m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
+          m instanceof LayoutElementAdderOrDropletMorph
       for C in allAddersToBeDestroyed
         C.destroy()
       return

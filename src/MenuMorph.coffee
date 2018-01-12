@@ -146,10 +146,8 @@ class MenuMorph extends Morph
     item
 
   removeMenuItem: (label) ->
-    item = @firstChildSuchThat(
-      (m) ->
-        m.label? and m.label.text == label
-    )
+    item = @firstChildSuchThat (m) ->
+      m.label? and m.label.text == label
     if item?
       item.destroy()
 
