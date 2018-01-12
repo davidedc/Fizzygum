@@ -200,8 +200,10 @@ class SliderMorph extends CircleBoxMorph
     @changed()
   
   mouseDownLeft: (pos) ->
-    if @button.parent == @
+    if @button.parent == @ and ((@parent instanceof ScrollFrameMorph) or (@parent instanceof PromptMorph))
       world.hand.nonFloatDragMorphFarAwayToHere @button, pos
+    else
+      @escalateEvent "mouseDownLeft", pos
     
 
   setSize: (sizeOrMorphGivingSize) ->
