@@ -865,11 +865,11 @@ class HandMorph extends Morph
           # this flag is not used anymore but not sure
           # if anything should replace this.
           # keeping it as a comment as a breadcrumb
-          # morph.isfloatDraggable = true
+          # morph.grabsToParentWhenDragged = true
           @grab morph, displacementDueToGrabDragThreshold
           @grabOrigin = @morphToGrab.situation()
 
-        else if @morphToGrab.isFloatDraggable()
+        else if @morphToGrab.grabsToParentWhenDragged()
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
@@ -929,12 +929,12 @@ class HandMorph extends Morph
     # retained in case of needing to fall back:
     #
     #   if (morph === this.morphToGrab) {
-    #     if (morph.isfloatDraggable) {
+    #     if (morph.grabsToParentWhenDragged) {
     #       this.grab(morph);
     #     } else if (morph.isTemplate) {
     #       morph = morph.fullCopy();
     #       morph.isTemplate = false;
-    #       morph.isfloatDraggable = true;
+    #       morph.grabsToParentWhenDragged = true;
     #       this.grab(morph);
     #     }
     #   }

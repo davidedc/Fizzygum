@@ -266,8 +266,8 @@ class StringMorph extends Morph
 
   toggleIsLocked: ->
   #  # for context menu demo purposes
-  #  @isfloatDraggable = not @isfloatDraggable
-  #  if @isfloatDraggable
+  #  @grabsToParentWhenDragged = not @grabsToParentWhenDragged
+  #  if @grabsToParentWhenDragged
   #    @disableSelecting()
   #  else
   #    @enableSelecting()
@@ -396,7 +396,7 @@ class StringMorph extends Morph
   enableSelecting: ->
     @mouseDownLeft = (pos) ->
       @clearSelection()
-      if @isEditable and !@isFloatDraggable()
+      if @isEditable and !@grabsToParentWhenDragged()
         @edit()
         world.caret.gotoPos pos
         @startMark = @slotAt pos

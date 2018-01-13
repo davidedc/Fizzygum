@@ -127,7 +127,7 @@ class EmptyButtonMorph extends Morph
   # you don't want it to be "floating"
   # either
   rootForGrab: ->
-    if @isFloatDraggable()
+    if @grabsToParentWhenDragged()
       return super()
     nil
   

@@ -2114,27 +2114,33 @@ class Morph extends MorphicNode
   
   # Morph floatDragging and dropping /////////////////////////////////////////
   
-  # calculates if the Morph can be float
-  # dragged from their current position in respect to their parent.
+  # Usually when you "stick" a Morph A onto another B, it
+  # remains "solid" to its parent, so A grabs to B when dragged.
   #
-  # For example, a SliderButton should be able to do so (the fact that should
-  # stay within the bounds of the parent is another matter).
-  # On the other hand, usually when you "stick" a Morph onto another, it
-  # remains "solid" to its parent.
+  # On the other hand, a SliderButton doesn't grab to the parent when
+  # dragged, rather it's loose (as it should be!). The fact that it
+  # stays within the bounds of the parent when dragged is another matter.
   #
-  # Note that even if the Morph is not floatDraggable, it could
-  # still be picked up and moved: it would move
-  # SOLIDLY with the parent, but it could move!
+  # So via this method the system can determine what the
+  # "grabbing chain" is for a Morph. If the morphs grab each other
+  # up to the WorldMorph, then all Morphs of such chain can't be
+  # dragged.
   #
-  # There is a way to make the Morph completely impervious
-  # to any float "grabs", and that is to tweak the "rootForGrab"
-  # method. In that way, for example for the ColorPaletteMorph, you can
-  # avoid ANY grab whatsoever (rather than just avoiding it being loose
-  # from the parent)
+  # Otherwise usually morphs can be dragged even if they grab to their
+  # parent, imagine a chain A grabs to B doesn't grab to C. So A can be
+  # dragged (the A B chain is dragged) even if it grabs to something.
+  #
+  # If you want a Morph to reject being dragged even when part of a chain
+  # as in the case above, then the thing to do is to tweak the "rootForGrab"
+  # method of that morph. In that way, for example for the ColorPaletteMorph,
+  # you can avoid grabs.
+  #
+  # So in the case above if B returns null in rootForGrab, then nor A nor B
+  # can be dragged.
   #
   # On the other side, there is no away to avoid a "pick up" from picking
-  # up a Morph (which would be a FLOATING drag).
-  isFloatDraggable: ->
+  # up a Morph and then do a drag (a FLOATING drag).
+  grabsToParentWhenDragged: ->
     if @parent?
 
       if @parent instanceof WorldMorph
@@ -2876,7 +2882,7 @@ class Morph extends MorphicNode
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
       menu.addLine()
-      if @isFloatDraggable()
+      if @grabsToParentWhenDragged()
         menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
       else
         menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"
@@ -2892,7 +2898,7 @@ class Morph extends MorphicNode
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
       menu.addLine()
-      if @isFloatDraggable()
+      if @grabsToParentWhenDragged()
         menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
       else
         menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"

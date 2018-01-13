@@ -288,7 +288,7 @@ class FrameMorph extends Morph
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars()
 
-  isFloatDraggable: ->
+  grabsToParentWhenDragged: ->
     if @parent?
 
       # otherwise you could detach a Frame contained in a

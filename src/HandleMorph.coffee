@@ -35,7 +35,7 @@ class HandleMorph extends Morph
       @target.add @
     @updateResizerHandlePosition()
 
-  isFloatDraggable: ->
+  grabsToParentWhenDragged: ->
     if @parent?
 
       # an instance of ScrollFrameMorph is also an instance of FrameMorph
