@@ -2942,13 +2942,6 @@ class Morph extends MorphicNode
 
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
-      menu.addLine()
-      if @isLockingToPanels
-        menu.addMenuItem "unlock", true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
-      else
-        menu.addMenuItem "lock", true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
-      menu.addMenuItem "hide", true, @, "hide"
-      menu.addMenuItem "delete", true, @, "fullDestroy"
     else
       menu.addMenuItem "color...", true, @, "popUpColorSetter" , "choose another color \nfor this morph"
       menu.addMenuItem "transparency...", true, @, "transparencyPopout", "set this morph's\nalpha value"
@@ -2958,13 +2951,19 @@ class Morph extends MorphicNode
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
-      menu.addLine()
-      if @isLockingToPanels
-        menu.addMenuItem "unlock", true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
+
+    menu.addLine()
+    if (@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph)
+      if @parent instanceof WorldMorph
+        whereToOrFrom = "desktop"
       else
-        menu.addMenuItem "lock", true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
-      menu.addMenuItem "hide", true, @, "hide"
-      menu.addMenuItem "delete", true, @, "fullDestroy"
+        whereToOrFrom = "panel"          
+      if @isLockingToPanels
+        menu.addMenuItem "unlock from " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
+      else
+        menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
+    menu.addMenuItem "hide", true, @, "hide"
+    menu.addMenuItem "delete", true, @, "fullDestroy"
 
     menu
 
