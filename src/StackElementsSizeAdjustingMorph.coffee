@@ -12,7 +12,6 @@ class StackElementsSizeAdjustingMorph extends Morph
 
   constructor: ->
     super()
-    @isLockingToPanels = false
     @noticesTransparentClick = true
     #@setColor new Color 0, 255, 0
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES

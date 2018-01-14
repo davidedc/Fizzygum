@@ -2194,6 +2194,9 @@ class Morph extends MorphicNode
     if @rejectDrags()
       return nil
 
+    if @nonFloatDragging?
+      return @
+
     if !@grabsToParentWhenDragged()
       return @
 
@@ -2203,6 +2206,9 @@ class Morph extends MorphicNode
 
       if scanningMorphs.rejectDrags()
         return nil
+
+      if scanningMorphs.nonFloatDragging?
+        return scanningMorphs
 
       if !scanningMorphs.grabsToParentWhenDragged()
         return scanningMorphs

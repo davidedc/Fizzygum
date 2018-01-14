@@ -27,7 +27,6 @@ class HandleMorph extends Morph
     else
       @inset = new Point minimumPadding, minimumPadding
     super()
-    @isLockingToPanels = false
     @color = new Color 255, 255, 255
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
@@ -257,7 +256,7 @@ class HandleMorph extends Morph
     return nil  unless @target
     @target.bringToForegroud()
 
-  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
     switch @type
       when "resizeBothDimensionsHandle"

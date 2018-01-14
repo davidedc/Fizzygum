@@ -13,20 +13,11 @@ class ColorPaletteMorph extends Morph
 
   constructor: (@target = nil, sizePoint) ->
     super()
-
-    # you can't grab the colorPaletteMorph because
-    # the drag operation currently picks a color.
-    # You could change that, you could pick color
-    # only by normal click for example.
-    # Or you could have either behaviour based on
-    # preference.
-    # Or you could perhaps allow it to be grabbed
-    # if it's disabled, say. (but we don't have this
-    # "disabled" concept implemented now).
-    @defaultRejectDrags = true
-
     @silentRawSetExtent sizePoint or new Point 80, 50
   
+  detachesWhenDragged: ->
+    false
+
   # no changes of position or extent should be
   # performed in here
   createRefreshOrGetBackBuffer: ->
@@ -58,17 +49,13 @@ class ColorPaletteMorph extends Morph
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
   
-  mouseMove: (pos, mouseButton) ->
-    # effectively takes care of drag as well
-
-    if mouseButton == "left"
-      @choice = @getPixelColor pos
-      @updateTarget()
+  nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
+    @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
+    @updateTarget()
   
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos
     @updateTarget()
-    super
   
   updateTarget: ->
     if @target instanceof Morph and @choice?

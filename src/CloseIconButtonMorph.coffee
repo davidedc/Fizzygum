@@ -66,7 +66,6 @@ class CloseIconButtonMorph extends EmptyButtonMorph
     # can't set the parent as the target directly because this morph
     # might not have a parent yet.
     super true, @, 'actOnClick', new Morph()
-    @defaultRejectDrags = true
     @color_hover = new Color 255,0,0
     @color_pressed = @color_hover
     @appearance = new IconAppearance @, @defaultCloseIconAppearance
