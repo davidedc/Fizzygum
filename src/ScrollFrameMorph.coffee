@@ -99,11 +99,6 @@ class ScrollFrameMorph extends FrameMorph
       return true
     return false
 
-  grabsToParentWhenDragged: ->
-    if @canScrollByDraggingBackground and @anyScrollBarShowing()
-      return false
-    return !@isLocked
-
   adjustScrollBars: ->
 
     # one typically has both scrollbars in view, plus a resizer
@@ -344,11 +339,13 @@ class ScrollFrameMorph extends FrameMorph
       if world.hand.mouseButton and
         !world.hand.floatDraggingSomething() and
         # if the Morph at hand is float draggable then
+        # we are probably about to detach it, so
         # we shouldn't move anything, because user might
         # just float-drag the morph as soon as the threshold is
         # reached, and we don't want to scroll until that happens
-        # that would be silly, we just want to hold steady
-        !world.hand.morphToGrab.grabsToParentWhenDragged() and
+        # that would be strange because it would be giving the
+        # wrong cue to the user, we just want to hold steady
+        !world.hand.morphToGrab.detachesWhenDragged() and
         @boundsContainPoint(world.hand.position())
           newPos = world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and

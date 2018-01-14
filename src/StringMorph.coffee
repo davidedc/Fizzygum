@@ -264,14 +264,6 @@ class StringMorph extends Morph
     else
       menu.addMenuItem "hide characters", true, @, "toggleIsPassword"
 
-  toggleIsLocked: ->
-  #  # for context menu demo purposes
-  #  @grabsToParentWhenDragged = not @grabsToParentWhenDragged
-  #  if @grabsToParentWhenDragged
-  #    @disableSelecting()
-  #  else
-  #    @enableSelecting()
-  
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks
     @reLayout()

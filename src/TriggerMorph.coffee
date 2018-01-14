@@ -76,6 +76,17 @@ class TriggerMorph extends Morph
 
     super()
 
+    # you shouldn't be able to drag a compound
+    # morphs containing a trigger by dragging the trigger
+    # (because you expect buttons attached to anything but the
+    # world to be "slippery", i.e.
+    # you can "skid" your drag over it in case you change
+    # your mind on pressing it)
+    # and at the same time (again if it's not on the desktop)
+    # you don't want it to be "floating"
+    # either
+    @defaultRejectDrags = true
+
     #@color = new Color 255, 152, 152
     #@color = new Color 255, 255, 255
     if @labelString?
@@ -180,6 +191,19 @@ class TriggerMorph extends Morph
     )
     @add @label
     
+  # you shouldn't be able to drag a compound
+  # morphs containing a button by dragging the button
+  # (because you expect buttons attached to anything but the
+  # world to be "slippery", i.e.
+  # you can "skid" your drag over it in case you change
+  # your mind on pressing it)
+  # and you shouldn't be able to drag the button away either
+  # so the drag is entirely rejected
+  rejectDrags: ->
+    if @parent instanceof WorldMorph
+      return false
+    else
+      return @defaultRejectDrags
   
   # TriggerMorph action:
   trigger: ->
@@ -230,20 +254,6 @@ class TriggerMorph extends Morph
   mouseDoubleClick: ->
     @triggerDoubleClick()
 
-  # you shouldn't be able to floatDragging a compound
-  # morphs containing a trigger by dragging the trigger
-  # (because you expect buttons attached to anything but the
-  # world to be "slippery", i.e.
-  # you can "skid" your drag over it in case you change
-  # your mind on pressing it)
-  # and at the same time (again if it's not on the desktop)
-  # you don't want it to be "floating"
-  # either
-  rootForGrab: ->
-    if @grabsToParentWhenDragged()
-      return super()
-    nil
-  
   # TriggerMorph bubble help:
   startCountdownForBubbleHelp: (contents) ->
     SpeechBubbleMorph.createInAWhileIfHandStillContainedInMorph @, contents

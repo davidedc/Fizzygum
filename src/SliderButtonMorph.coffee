@@ -25,13 +25,16 @@ class SliderButtonMorph extends CircleBoxMorph
 
   constructor: ->
     super
+    @isLockingToPanels = false
     @color = @normalColor.copy()
     @noticesTransparentClick = true
     @alpha = 0.4
 
-  # HandleMorph floatDragging and dropping:
-  rootForGrab: ->
-    @
+  detachesWhenDragged: ->
+    if @parent instanceof SliderMorph
+      return false
+    else
+      return true
 
   reLayout: ->
     super()
@@ -59,7 +62,7 @@ class SliderButtonMorph extends CircleBoxMorph
   grabsToParentWhenDragged: ->
     if @parent instanceof SliderMorph
       return false
-    return !@isLocked
+    return super
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos) ->
     @offset = pos.subtract nonFloatDragPositionWithinMorphAtStart

@@ -308,7 +308,7 @@ class HandMorph extends Morph
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
       @stopEditingIfActionIsElsewhere morph
 
-      @morphToGrab = morph.rootForGrab()
+      @morphToGrab = morph.findRootForGrab()
       if button is 2 or ctrlKey
         @mouseButton = "right"
         actualClick = "mouseDownRight"
@@ -851,10 +851,11 @@ class HandMorph extends Morph
 
   determineGrabs: (pos, topMorph, mouseOverNew) ->
     if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
-      morph = topMorph.rootForGrab()
+      debugger
+      morph = topMorph.findRootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
-      # if a morph is marked for grabbing, just grab it
+      # if a morph is marked for grabbing, grab it
       if @morphToGrab
         if @morphToGrab.isTemplate
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
@@ -862,14 +863,10 @@ class HandMorph extends Morph
 
           morph = @morphToGrab.fullCopy()
           morph.isTemplate = false
-          # this flag is not used anymore but not sure
-          # if anything should replace this.
-          # keeping it as a comment as a breadcrumb
-          # morph.grabsToParentWhenDragged = true
           @grab morph, displacementDueToGrabDragThreshold
           @grabOrigin = @morphToGrab.situation()
 
-        else if @morphToGrab.grabsToParentWhenDragged()
+        else if @morphToGrab.detachesWhenDragged()
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 

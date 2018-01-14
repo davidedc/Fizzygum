@@ -13,6 +13,18 @@ class ColorPaletteMorph extends Morph
 
   constructor: (@target = nil, sizePoint) ->
     super()
+
+    # you can't grab the colorPaletteMorph because
+    # the drag operation currently picks a color.
+    # You could change that, you could pick color
+    # only by normal click for example.
+    # Or you could have either behaviour based on
+    # preference.
+    # Or you could perhaps allow it to be grabbed
+    # if it's disabled, say. (but we don't have this
+    # "disabled" concept implemented now).
+    @defaultRejectDrags = true
+
     @silentRawSetExtent sizePoint or new Point 80, 50
   
   # no changes of position or extent should be
@@ -45,18 +57,6 @@ class ColorPaletteMorph extends Morph
     cacheEntry = [backBuffer, backBufferContext]
     world.cacheForImmutableBackBuffers.set cacheKey, cacheEntry
     return cacheEntry
-
-  # you can't grab the colorPaletteMorph because
-  # the drag operation currently picks a color.
-  # You could change that, you could pick color
-  # only by normal click for example.
-  # Or you could have either behaviour based on
-  # preference.
-  # Or you could perhaps allow it to be grabbed
-  # if it's disabled, say. (but we don't have this
-  # "disabled" concept implemented now).
-  rootForGrab: ->
-    return nil
   
   mouseMove: (pos, mouseButton) ->
     # effectively takes care of drag as well

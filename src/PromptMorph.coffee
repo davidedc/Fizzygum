@@ -75,5 +75,3 @@ class PromptMorph extends MenuMorph
 
   imBeingAddedTo: (newParentMorph) ->
   
-  rootForGrab: ->
-    @

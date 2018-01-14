@@ -30,6 +30,7 @@ class MenuMorph extends Morph
       if @killThisMenuIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "destroy"
     super()
+    @isLockingToPanels = false
     @appearance = new MenuAppearance @
 
     # the morphOpeningTheMenu is only useful to get the "parent" menu.

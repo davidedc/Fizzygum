@@ -288,7 +288,7 @@ class FrameMorph extends Morph
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars()
 
-  grabsToParentWhenDragged: ->
+  detachesWhenDragged: ->
     if @parent?
 
       # otherwise you could detach a Frame contained in a
@@ -296,8 +296,23 @@ class FrameMorph extends Morph
       if @parent instanceof ScrollFrameMorph
         return false
 
-    return super
+      return super
 
+  grabsToParentWhenDragged: ->
+    if @parent?
+
+      # otherwise you could detach a Frame contained in a
+      # ScrollFrameMorph which is very strange
+      if @parent instanceof ScrollFrameMorph
+        if @parent.canScrollByDraggingBackground and @parent.anyScrollBarShowing()
+          return false
+        else
+          return true
+
+      return super
+
+    # doesn't have a parent
+    return false
   
   reactToGrabOf: ->
     if @parent?

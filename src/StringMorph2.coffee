@@ -903,16 +903,6 @@ class StringMorph2 extends Morph
     @fittingSpecWhenBoundsTooLarge = not @fittingSpecWhenBoundsTooLarge
     @changed()
 
-  # this would be triggered by the "lock/unlock"
-  # menu entry but unclear the specific use and
-  # how to implement this right now.
-  toggleIsLocked: ->
-  #  # for context menu demo purposes
-  #  @grabsToParentWhenDragged = not @grabsToParentWhenDragged
-  #  if @grabsToParentWhenDragged
-  #    @disableSelecting()
-  #  else
-  #    @enableSelecting()
   
   toggleShowBlanks: ->
     @isShowingBlanks = not @isShowingBlanks

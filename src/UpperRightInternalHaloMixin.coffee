@@ -13,11 +13,8 @@ UpperRightInternalHaloMixin =
         @silentRawSetExtent new Point 100, 100
         @silentFullRawMoveTo new Point 100, 100
   
-
       # floatDragging and dropping:
-      rootForGrab: ->
-        @
-
+      isLockingToPanels: false
 
       makeSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
         morphAttachedTo.add @

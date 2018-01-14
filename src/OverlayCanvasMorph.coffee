@@ -12,4 +12,4 @@ class OverlayCanvasMorph extends CanvasMorph
     # just clip at its bounds via a mixin TODO ). So, usually
     # things inside a frame can be dragged-out of it, so we have
     # to avoid that here
-    @isLocked = true
+    @isLockingToPanels = true

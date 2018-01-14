@@ -48,5 +48,3 @@ class ColorPickerMorph extends Morph
   getColor: ->
     @feedback.color
   
-  rootForGrab: ->
-    @

@@ -12,17 +12,20 @@ class StackElementsSizeAdjustingMorph extends Morph
 
   constructor: ->
     super()
+    @isLockingToPanels = false
     @noticesTransparentClick = true
     #@setColor new Color 0, 255, 0
     @setMinAndMaxBoundsAndSpreadability (new Point 5,5) , (new Point 5,5), LayoutSpec.SPREADABILITY_HANDLES
     @minimumExtent = new Point 0,0
 
-  # HandleMorph floatDragging and dropping:
-  rootForGrab: ->
-    @
-
   @includeInNewMorphMenu: ->
     # Return true for all classes that can be instantiated from the menu
+    return false
+
+  detachesWhenDragged: ->
+    return false
+
+  grabsToParentWhenDragged: ->
     return false
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->

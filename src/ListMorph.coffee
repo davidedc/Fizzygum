@@ -59,7 +59,7 @@ class ListMorph extends ScrollFrameMorph
     if @listContents
       @listContents = @listContents.destroy()
     @listContents = new MenuMorph @, true, @, false, false, nil, nil
-    @listContents.isLocked = true
+    @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length
     trackChanges.push false
     @elements.forEach (element) =>

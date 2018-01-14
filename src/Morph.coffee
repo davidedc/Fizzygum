@@ -115,7 +115,31 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
 
-  isLocked: false
+  # usually Morphs can be detached from Frames
+  # by grabbing them (there are exceptions, for example
+  # buttons don't stick to the world but stick to Frames,
+  # morph that "select" based on dragging such as the ColorPanelMorph).
+  # However you can get them to stick to Frames (and the desktop)
+  # by toggling this flag
+  isLockingToPanels: false
+  # even if a Morph is locked to its parent (which is
+  # the default) or locks to Frames (because isLockingToPanels is
+  # set to true), it could be STILL BE dragged
+  # (if any of its parents is loose).
+  #
+  # Setting this flag prevents that: a Morph rejecting
+  # a drag can never be part of a chain that is dragged.
+  # An example is buttons that are part of a compund Morph
+  # (such as the Inspector):
+  # in those cases you can never drag the compound Morph by
+  # dragging a button (because it is a common behaviour to
+  # "drag away" from a button to avoid actioning it when one
+  # mousedowns on it). (Note however that buttont on the desktop
+  # are draggable).
+  # Another example are morphs like the ColorPanelMorph where
+  # users can drag the mouse on them to pick a color: it would be
+  # weird if that caused a drag of anything.
+  defaultRejectDrags: false
 
   # if you place a menu construction function here,
   # it gets the priority over the normal context
@@ -1681,26 +1705,6 @@ class Morph extends MorphicNode
   fullImageHashCode: ->
     return hashCode @fullImageData()
   
-  
-  isBeingFloatDragged: ->
-
-    if !world.hand?
-      return false
-
-    # first check if the hand is floatdragging
-    # anything, in that case if it's floatdragging
-    # it can't be non-floatdragging
-    if world.hand.nonFloatDraggedMorph?
-      return false
-
-    # then check if my root is the hand
-    if @root() instanceof HandMorph
-      return true
-
-    # if we are here it means we are not being
-    # nonfloatdragged
-    return false
-
   # shadow is added to a morph by
   # the HandMorph while floatDragging
   addShadow: (offset = new Point(4, 4), alpha = 0.2) ->
@@ -2112,75 +2116,101 @@ class Morph extends MorphicNode
       #  console.log ''
       @injectProperty m[1],m[2]
   
-  # Morph floatDragging and dropping /////////////////////////////////////////
+  # Morph dragging (and dropping) /////////////////////////////////////////
   
+  # (In this comment section "non-float" dragging and "dragging" are
+  # interchangeable unless made explicit)
+  #
   # Usually when you "stick" a Morph A onto another B, it
   # remains "solid" to its parent, so A grabs to B when dragged.
   #
   # On the other hand, a SliderButton doesn't grab to the parent when
-  # dragged, rather it's loose (as it should be!). The fact that it
-  # stays within the bounds of the parent when dragged is another matter.
+  # dragged, rather it's loose, as expected. (The fact that it
+  # stays within the bounds of the parent when dragged is another matter).
   #
   # So via this method the system can determine what the
-  # "grabbing chain" is for a Morph. If the morphs grab each other
-  # up to the WorldMorph, then all Morphs of such chain can't be
-  # dragged.
+  # "top of the drag" is starting from any Morph.
+  # The process of finding the top of the drag involves going up
+  # the chain and finding the first Morph that is loose. Then that
+  # will be the top of the drag, and the whole TREE under that morph
+  # will be dragged.
   #
-  # Otherwise usually morphs can be dragged even if they grab to their
-  # parent, imagine a chain A grabs to B doesn't grab to C. So A can be
-  # dragged (the A B chain is dragged) even if it grabs to something.
+  # If the morphs grab each other up to the WorldMorph, then the World
+  # can't be dragged, so there is no drag happening.
   #
-  # If you want a Morph to reject being dragged even when part of a chain
-  # as in the case above, then the thing to do is to tweak the "rootForGrab"
-  # method of that morph. In that way, for example for the ColorPaletteMorph,
-  # you can avoid grabs.
+  # Usually though at some point up the chain a morph won't
+  # grab to its parent, so a dragging top is indeed found.
   #
-  # So in the case above if B returns null in rootForGrab, then nor A nor B
-  # can be dragged.
+  # Example chain: A grabs to parent B doesn't grab to parent C.
+  # So A can be dragged: the whole tree under B is dragged (i.e. A B in
+  # this case).
   #
-  # On the other side, there is no away to avoid a "pick up" from picking
-  # up a Morph and then do a drag (a FLOATING drag).
+  # If going up the chain of "grabbing" Morphs a Morph rejects being
+  # dragged then the drag will be prevented. This rejection happens
+  # via the "rejectDrags" method. In that way, for example
+  # for the ColorPaletteMorph, you can avoid grabs (because drags on
+  # a ColorPaletteMorph are expected to pick colors).
+  #
+  # So in the case above if B returns true in rejectDrags, then B
+  # can be dragged and none of the children of B can be dragged either
+  # (so: nor A nor B can't be dragged).
+  #
+  # Note that there is no away to prevent userts from "picking up"
+  # a Morph and then do a drag (which in that case would be a FLOATING drag).
+
   grabsToParentWhenDragged: ->
     if @parent?
 
       if @parent instanceof WorldMorph
-        return !@isLocked
-
-      # This whole check is because if something is inside
-      # a scrollable ScrollFrame, then it looks "solid" because
-      # you can use it to scroll the whole of the ScrollFrame
-      #
-      # an instance of ScrollFrameMorph is also an instance of FrameMorph
-      # so gotta do this check first before doing the
-      # check on the FrameMorph in next paragraph
-      maybeScrollFrameMorphAncestor = @parentThatIsA ScrollFrameMorph
-      if maybeScrollFrameMorphAncestor?
-        maybeScrollFrameMorphAncestor = maybeScrollFrameMorphAncestor[0]
-        if maybeScrollFrameMorphAncestor.canScrollByDraggingForeground and
-        maybeScrollFrameMorphAncestor.anyScrollBarShowing()
-          return false
-        else
-          return !@isLocked
+        return @isLockingToPanels
 
       if @parent instanceof FrameMorph
-        return !@isLocked
+        if @parent.parent?
+          if @parent.parent instanceof ScrollFrameMorph
+            if @parent.parent.canScrollByDraggingForeground and
+            @parent.parent.anyScrollBarShowing()
+              return true
+
+        return @isLockingToPanels
 
       # not attached to WorldMorph, not inside a scrollable frame
       # and not inside a frame.
       # So, for example, when this morph is attached to another morph
       # attached to the world (because then it should remain solid
       # with the parent)
-      return false
+      return true
 
     # doesn't have a parent
     return false
 
-  rootForGrab: ->
-    if !@parent? or
-      @parent instanceof WorldMorph or
-      ((@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph))
-        return @  
-    @parent.rootForGrab()
+  rejectDrags: ->
+    @defaultRejectDrags
+
+  # finds the first morph (including this one)
+  # that doesn't grab to its parent
+  # returns nil if going up the grabbing chain
+  # a morph rejects the drag
+  findFirstLooseMorph: ->
+    if @rejectDrags()
+      return nil
+
+    if !@grabsToParentWhenDragged()
+      return @
+
+    scanningMorphs = @
+    while scanningMorphs.parent?
+      scanningMorphs = scanningMorphs.parent
+
+      if scanningMorphs.rejectDrags()
+        return nil
+
+      if !scanningMorphs.grabsToParentWhenDragged()
+        return scanningMorphs
+
+    return nil
+
+  findRootForGrab: ->
+    return @findFirstLooseMorph()
 
   # the only trick here is that we stop at the first
   # clipping morph, because if a morph is inside a clipping
@@ -2202,6 +2232,31 @@ class Morph extends MorphicNode
 
     return nil
 
+  # if true, then the drag will be a float drag
+  # otherwise it will be a nonfloating drag
+  detachesWhenDragged: ->
+    true
+  
+  isBeingFloatDragged: ->
+
+    if !world.hand?
+      return false
+
+    # first check if the hand is floatdragging
+    # anything, in that case if it's floatdragging
+    # it can't be non-floatdragging
+    if world.hand.nonFloatDraggedMorph?
+      return false
+
+    # then check if my root is the hand
+    if @root() instanceof HandMorph
+      return true
+
+    # if we are here it means we are not being
+    # nonfloatdragged
+    return false
+
+  # Morph dragging (and dropping) /////////////////////////////////////////
 
   # finds the first parent that is a menu
   firstParentThatIsAMenu: ->
@@ -2882,10 +2937,10 @@ class Morph extends MorphicNode
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 
       menu.addLine()
-      if @grabsToParentWhenDragged()
-        menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
+      if @isLockingToPanels
+        menu.addMenuItem "unlock", true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
       else
-        menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
       menu.addMenuItem "hide", true, @, "hide"
       menu.addMenuItem "delete", true, @, "fullDestroy"
     else
@@ -2898,10 +2953,10 @@ class Morph extends MorphicNode
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
       menu.addLine()
-      if @grabsToParentWhenDragged()
-        menu.addMenuItem "lock", true, @, "toggleIsLocked", "make this morph\nunmovable"
+      if @isLockingToPanels
+        menu.addMenuItem "unlock", true, @, "toggleIsLockingToPanels", "make this morph\nunmovable"
       else
-        menu.addMenuItem "unlock", true, @, "toggleIsLocked", "make this morph\nmovable"
+        menu.addMenuItem "lock", true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
       menu.addMenuItem "hide", true, @, "hide"
       menu.addMenuItem "delete", true, @, "fullDestroy"
 
@@ -3082,8 +3137,8 @@ class Morph extends MorphicNode
       menu = new MenuMorph @, false, @, true, true, "no morphs to attach to"
     menu.popUpAtHand()
   
-  toggleIsLocked: ->
-    @isLocked = not @isLocked
+  toggleIsLockingToPanels: ->
+    @isLockingToPanels = not @isLockingToPanels
   
   colorSetters: ->
     # for context menu demo purposes

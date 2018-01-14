@@ -27,6 +27,7 @@ class HandleMorph extends Morph
     else
       @inset = new Point minimumPadding, minimumPadding
     super()
+    @isLockingToPanels = false
     @color = new Color 255, 255, 255
     @noticesTransparentClick = true
     size = WorldMorph.preferencesAndSettings.handleSize
@@ -35,18 +36,21 @@ class HandleMorph extends Morph
       @target.add @
     @updateResizerHandlePosition()
 
+  detachesWhenDragged: ->
+    if (@parent instanceof WorldMorph)
+      return true
+    else
+      return false
+
+  # HandleMorphs are one of the few morphs that
+  # by default don't stick to their parents.
+  # Also SliderButtonMorphs tend do the same (if
+  # they are attached to a SliderMorph)
+  # The "move" HandleMorph COULD grab to its
+  # parent, in fact it would be easier, however for
+  # uniformity we don't do that
   grabsToParentWhenDragged: ->
-    if @parent?
-
-      # an instance of ScrollFrameMorph is also an instance of FrameMorph
-      # so gotta do this check first ahead of next paragraph.
-      #if @parentThatIsA(ScrollFrameMorph)?
-      #  return false
-
-      if @parent instanceof WorldMorph
-        return true
     return false
-
 
   parentHasReLayouted: ->
     # right now you can resize a morph only if it's
@@ -272,10 +276,6 @@ class HandleMorph extends Morph
         newHeight = newPos.y + @extent().y + @inset.y - @target.top()
         @target.setHeight newHeight
   
-  
-  # HandleMorph floatDragging and dropping:
-  rootForGrab: ->
-    @
   
   # HandleMorph events:
   mouseEnter: ->
