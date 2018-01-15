@@ -27,3 +27,6 @@ class MenusHelper
     button2 = new SimpleRectangularButtonMorph true, @, nil, new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ "
     world.create new SwitchButtonMorph [button1, button2]
 
+  createNewClippingBoxMorph: ->
+    world.create new ClippingBoxMorph()
+

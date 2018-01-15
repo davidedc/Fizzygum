@@ -423,7 +423,9 @@ class Morph extends MorphicNode
   # different angles to paint "inside" of the lines, looks very messy.
   # Much easier to just paint the stroke after the content.
   paintStroke: (aContext, clippingRectangle) ->
-    @appearance?.paintStroke aContext, clippingRectangle
+    if @appearance?
+      if @appearance.paintStroke?
+        @appearance.paintStroke aContext, clippingRectangle
 
   addShapeSpecificMenuItems: (menu) ->
     if @appearance?.addShapeSpecificMenuItems?
@@ -2911,6 +2913,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
+    menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxMorph"
 
     menu.popUpAtHand()
 

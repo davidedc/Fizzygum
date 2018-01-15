@@ -23,12 +23,12 @@ class Mixin
     # variable... and then at runtime here we use that variable to
     # implement super
 
-    aString = aString.replace(/super$/gm, "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name]")
+    aString = aString.replace(/super$/gm, "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name].apply(this, arguments)")
+    aString = aString.replace(/super /g, "window[@[arguments.callee.name + '_class_injected_in']].__super__[arguments.callee.name].call this, ")
 
     # TODO un-translated cases as of yet
-    #aString = aString.replace(/super\(\)/g, ...???...)
-    #aString = aString.replace(/super /g, ...???...)
-    #aString = aString.replace(/super\(/g, ...???...)
+    # /super\(\)/g -> ...???...
+    # /super\(/g -> ...???...
 
   # Coffeescript adds some helper functions at the top of the compiled code:
   #
