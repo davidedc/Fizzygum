@@ -2689,8 +2689,8 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createNewOldStyleTextMorphWithBackground: ->
-    newMorph = new OldStyleTextMorph(
+  createNewTextMorph2BridgeForWrappingTextWithBackground: ->
+    newMorph = new TextMorph2BridgeForWrappingText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2716,8 +2716,8 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createNewExpandingOldStyleTextMorphWithBackground: ->
-    newMorph = new OldStyleTextMorph(
+  createNewExpandingTextMorph2BridgeForWrappingTextWithBackground: ->
+    newMorph = new TextMorph2BridgeForWrappingText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2740,7 +2740,7 @@ class Morph extends MorphicNode
     SfA.contents.disableDrops()
     SfA.isTextLineWrapping = true
     SfA.color = new Color 255, 255, 255
-    ostmA = new OldStyleTextMorph(
+    ostmA = new TextMorph2BridgeForWrappingText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2775,7 +2775,7 @@ class Morph extends MorphicNode
     SfB.contents.disableDrops()
     SfB.isTextLineWrapping = false
     SfB.color = new Color 255, 255, 255
-    ostmB = new OldStyleTextMorph(
+    ostmB = new TextMorph2BridgeForWrappingText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "\n\n" +
@@ -2869,8 +2869,8 @@ class Morph extends MorphicNode
     menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
-    menu.addMenuItem "Old style TextMorph with background", true, @, "createNewOldStyleTextMorphWithBackground"
-    menu.addMenuItem "Old style TextMorph exp. with background", true, @, "createNewExpandingOldStyleTextMorphWithBackground"    
+    menu.addMenuItem "Old style TextMorph with background", true, @, "createNewTextMorph2BridgeForWrappingTextWithBackground"
+    menu.addMenuItem "Old style TextMorph exp. with background", true, @, "createNewExpandingTextMorph2BridgeForWrappingTextWithBackground"    
     menu.addMenuItem "ScrollFramesWithOldTextStyleTextMorps", true, @, "createScrollFramesWithOldTextStyleTextMorps"
     menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
@@ -3211,7 +3211,7 @@ class Morph extends MorphicNode
       (each instanceof StringMorph or
         each instanceof StringMorph2 or
         each instanceof TextMorph or
-        each instanceof OldStyleTextMorph
+        each instanceof TextMorph2BridgeForWrappingText
         )
   
   
@@ -3596,7 +3596,7 @@ class Morph extends MorphicNode
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Morphs for the new layouts mechanism
-    if (@ instanceof TextMorph) or (@ instanceof OldStyleTextMorph)
+    if (@ instanceof TextMorph) or (@ instanceof TextMorph2BridgeForWrappingText)
       @rawSetBounds newBoundsForThisLayout
     else
       @rawSetExtent newBoundsForThisLayout.extent()

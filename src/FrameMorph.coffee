@@ -268,7 +268,7 @@ class FrameMorph extends Morph
       if childrenNotCarets.length == 1
         item = @firstChildSuchThat (m) ->
           (m instanceof TextMorph) or
-          (m instanceof OldStyleTextMorph)
+          (m instanceof TextMorph2BridgeForWrappingText)
         item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
         
 

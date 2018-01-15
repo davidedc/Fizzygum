@@ -1,24 +1,23 @@
-# OldStyleTextMorph ///////////////////////////////////////////////////////////
+# TextMorph2BridgeForWrappingText ///////////////////////////////////////////////////////////
 
-# A multi-line, word-wrapping String
-# OldStyleTextMorph is a compatibility layer that lets us use the new
-# TextMorph2 as the old TextMorph.
+# A multi-line, word-wrapping string.
+# TextMorph2BridgeForWrappingText is a compatibility layer that lets us use the new
+# TextMorph2 with the current ScrollFrame and the current layout mechanism (which
+# we'd want to change with a more generic one but it's a complex process).
 #
-# We do this because the old TextMorph can still do stuff that
-# the TextMorph2 is not quite ready to do (i.e. old TextMorph could
-# adjust its vertical size to fit its contents, which is what normal
-# text editing looks like. TextMorph2 could also do that, but it can
-# do that within a larger layout work that has not been done yet)
-# but at the same time the underlying TextMorph2 can do a bunch
-# more stuff and it's what is being worked on moving
-# forward, hence this nasty but useful compatibility structure.
+# This Morph can do stuff that the TextMorph2 is not quite ready to do (i.e. can
+# adjust its vertical size to fit its contents in the given width, which is what
+# "normal" text editing looks like.
+#
+# TextMorph2 could also be used to do that, but it could do that within a larger
+# layout rework that has not been done yet. Note that TextMorph2 can do a bunch more
+# stuff (e.g. lets you edit in "centered" text, can fit the text to any given
+# bound etc...)
 
-class OldStyleTextMorph extends TextMorph2
-
-  oldStyleTextMorph: true
+class TextMorph2BridgeForWrappingText extends TextMorph2
 
   constructor: (
-   @text = "OldStyleTextMorph",
+   @text = "TextMorph2BridgeForWrappingText",
    @originallySetFontSize = 12,
    @fontName = @justArialFontStack,
    @isBold = false,
