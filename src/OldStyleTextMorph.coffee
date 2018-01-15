@@ -165,5 +165,4 @@ class OldStyleTextMorph extends TextMorph2
     @silentRawSetExtent new Point width, height
 
     @changed()
-    @parent.layoutChanged()  if @parent.layoutChanged  if @parent
     @notifyChildrenThatParentHasReLayouted()
