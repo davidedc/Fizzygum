@@ -65,7 +65,7 @@ class Mixin
             console.log("Found match, group #{groupIndex}: #{match}")
         )
         @name = m[1]
-        console.log "name: " + @name
+        console.log "mixin name: " + @name
 
     console.log "source ---------\n" + source
 

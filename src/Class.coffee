@@ -315,6 +315,7 @@ class Class
           if window.srcLoadCompileDebugWrites then console.log "actually evalling " + @name + " to crete Class"
           eval.call window, JS_string_definitions
         catch err
+          console.log " error " + err + " evaling : " + JS_string_definitions
           alert " error " + err + " evaling : " + JS_string_definitions
 
 

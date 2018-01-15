@@ -474,7 +474,7 @@ compileFGCode = (codeSource, bare) ->
     world.errorConsole?.popUpWithError errorMessage
 
   t1 = performance.now()
-  console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."
+  #console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."
 
   return compiled
 
