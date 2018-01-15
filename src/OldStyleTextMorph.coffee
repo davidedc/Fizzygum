@@ -54,7 +54,7 @@ class OldStyleTextMorph extends TextMorph2
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    if @amIInScrollFrame()
+    if @amIDirectlyInsideScrollFrame()
       childrenNotCarets = @parent.children.filter (m) ->
         !(m instanceof CaretMorph)
       if childrenNotCarets.length == 1
@@ -77,16 +77,8 @@ class OldStyleTextMorph extends TextMorph2
     @parent.rawSetExtent @parent.parent.extent()
     @refreshScrollFrameIfIamInIt()
 
-  amIInScrollFrame: ->
-    if @parent?
-      if @parent instanceof FrameMorph
-        if @parent.parent?
-          if @parent.parent instanceof ScrollFrameMorph
-            return true
-    return false
-
   refreshScrollFrameIfIamInIt: ->
-    if @amIInScrollFrame()
+    if @amIDirectlyInsideScrollFrame()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
 

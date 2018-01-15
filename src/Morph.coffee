@@ -1005,6 +1005,22 @@ class Morph extends MorphicNode
     @breakNumberOfRawMovesAndResizesCaches()
     @fullChanged()
     @bounds = @bounds.translateBy delta
+
+    # note that if I am a submorph of a morph directly
+    # inside a non-text-wrapping ScrollFrame then this
+    # is not going to work. So if I'm a box attached to a
+    # box inside a non-text-wrapping ScrollFrame then
+    # there will be no adjusting of bounds of the scrollframe
+    # not the adjusting of the scrollbars.
+    # This could be done, we could check up the chain to find
+    # if we are indirectly inside a scrollframe however
+    # there might be performance implications, so I'd probably
+    # have to introduce caching, and this whole mechanism should
+    # go away with proper layouts...
+    if @amIDirectlyInsideNonTextWrappingScrollFrame()
+      @parent.parent.adjustContentsBounds()
+      @parent.parent.adjustScrollBars()
+
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
 
@@ -1260,7 +1276,23 @@ class Morph extends MorphicNode
     unless @bounds.eq newBounds
       @bounds = newBounds
       @breakNumberOfRawMovesAndResizesCaches()
-  
+
+      # note that if I am a submorph of a morph directly
+      # inside a non-text-wrapping ScrollFrame then this
+      # is not going to work. So if I'm a box attached to a
+      # box inside a non-text-wrapping ScrollFrame then
+      # there will be no adjusting of bounds of the scrollframe
+      # not the adjusting of the scrollbars.
+      # This could be done, we could check up the chain to find
+      # if we are indirectly inside a scrollframe however
+      # there might be performance implications, so I'd probably
+      # have to introduce caching, and this whole mechanism should
+      # go away with proper layouts...
+      if @amIDirectlyInsideNonTextWrappingScrollFrame()
+        @parent.parent.adjustContentsBounds()
+        @parent.parent.adjustScrollBars()
+
+
   rawSetWidth: (width) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -2217,6 +2249,20 @@ class Morph extends MorphicNode
 
   findRootForGrab: ->
     return @findFirstLooseMorph()
+
+  amIDirectlyInsideScrollFrame: ->
+    if @parent?
+      if @parent instanceof FrameMorph
+        if @parent.parent?
+          if (@parent.parent instanceof ScrollFrameMorph) and !(@parent.parent instanceof ListMorph)
+            return true
+    return false
+
+  amIDirectlyInsideNonTextWrappingScrollFrame: ->
+    if @amIDirectlyInsideScrollFrame()
+      if !@parent.parent.isTextLineWrapping
+        return true
+    return false
 
   # the only trick here is that we stop at the first
   # clipping morph, because if a morph is inside a clipping
