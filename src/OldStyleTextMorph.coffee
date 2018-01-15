@@ -162,3 +162,4 @@ class OldStyleTextMorph extends TextMorph2
 
     @changed()
     @notifyChildrenThatParentHasReLayouted()
+

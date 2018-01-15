@@ -1016,7 +1016,7 @@ class Morph extends MorphicNode
 
     #console.log "move 5"
     @breakNumberOfRawMovesAndResizesCaches()
-    @bounds = @bounds.translateBy delta
+    @bounds = @bounds.translateBy delta    
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
   
