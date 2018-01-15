@@ -128,10 +128,6 @@ class OldStyleTextMorph extends TextMorph2
     @reLayout()
     @refreshScrollFrameIfIamInIt()
 
-  rawSetWidth: (aPoint) ->
-    super
-    @reLayout()
-
   rawSetExtent: (aPoint) ->
     super
     @reLayout()
