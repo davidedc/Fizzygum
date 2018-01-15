@@ -2734,13 +2734,8 @@ class Morph extends MorphicNode
     world.create newMorph
 
   createScrollFramesWithOldTextStyleTextMorps: ->
-    SfA = new ScrollFrameMorph()
-    SfA.takesOverAndCoalescesChildrensMenus = true
-    SfA.disableDrops()
-    SfA.contents.disableDrops()
-    SfA.isTextLineWrapping = true
-    SfA.color = new Color 255, 255, 255
-    ostmA = new TextMorph2BridgeForWrappingText(
+    debugger
+    SfA = new SimpleScrollingTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2761,31 +2756,18 @@ class Morph extends MorphicNode
       "Praesent varius ac erat id fringilla. Suspendisse " +
       "porta sollicitudin bibendum. Pellentesque imperdiet " +
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
-      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    ostmA.isEditable = true
-    ostmA.enableSelecting()
-    SfA.setContents ostmA, 10
+      "nisi.",true, 10)
     world.add SfA
     SfA.fullRawMoveTo new Point 40, 40
     SfA.rawSetExtent new Point 500, 300
 
-    SfB = new ScrollFrameMorph()
-    SfB.takesOverAndCoalescesChildrensMenus = true
-    SfB.disableDrops()
-    SfB.contents.disableDrops()
-    SfB.isTextLineWrapping = false
-    SfB.color = new Color 255, 255, 255
-    ostmB = new TextMorph2BridgeForWrappingText(
+    SfB = new SimpleScrollingTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "\n\n" +
       "Pellentesque commodo, nulla mattis vulputate " +
       "porttitor, elit augue vestibulum est, nec congue " +
-      "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    ostmB.isEditable = true
-    ostmB.maxTextWidth = 0
-    ostmB.enableSelecting()
-    SfB.setContents ostmB, 10
+      "nisi.",false, 10)
     world.add SfB
     SfB.fullRawMoveTo new Point 300, 40
     SfB.rawSetExtent new Point 500, 300
@@ -2869,9 +2851,6 @@ class Morph extends MorphicNode
     menu.addMenuItem "StringMorph2 without background", true, @, "createNewStringMorph2WithoutBackground"
     menu.addMenuItem "StringMorph2 with background", true, @, "createNewStringMorph2WithBackground"
     menu.addMenuItem "TextMorph2 with background", true, @, "createNewTextMorph2WithBackground"
-    menu.addMenuItem "Old style TextMorph with background", true, @, "createNewTextMorph2BridgeForWrappingTextWithBackground"
-    menu.addMenuItem "Old style TextMorph exp. with background", true, @, "createNewExpandingTextMorph2BridgeForWrappingTextWithBackground"    
-    menu.addMenuItem "ScrollFramesWithOldTextStyleTextMorps", true, @, "createScrollFramesWithOldTextStyleTextMorps"
     menu.addMenuItem "StringMorph3 with background", true, @, "createNewStringMorph3WithBackground"
     menu.addMenuItem "TextMorph3 with background", true, @, "createNewTextMorph3WithBackground"
     if targetMorph in world.morphsToBePinouted
@@ -2912,9 +2891,19 @@ class Morph extends MorphicNode
 
     menu.popUpAtHand()
 
+  popUpWrappingTextMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
+    menu.addMenuItem "TextMorph bridge wrapping", true, @, "createNewTextMorph2BridgeForWrappingTextWithBackground"
+    menu.addMenuItem "TextMorph bridge not wrapping", true, @, "createNewExpandingTextMorph2BridgeForWrappingTextWithBackground"    
+    menu.addMenuItem "Scrolling text (wrapping / no wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+
+    menu.popUpAtHand()
+
   popUpSecondMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
+    menu.addMenuItem "wrapping text ➜", false, @, "popUpWrappingTextMenu", "icons"
+    menu.addMenuItem "vertical stack ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
