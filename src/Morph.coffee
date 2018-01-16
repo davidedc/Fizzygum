@@ -2810,6 +2810,9 @@ class Morph extends MorphicNode
   createDestroyIconMorph: ->
     world.create new DestroyIconMorph()
 
+  createVerticalStackWdgt: ->
+    world.create new VerticalStackWdgt()
+
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
 
@@ -2893,6 +2896,12 @@ class Morph extends MorphicNode
 
     menu.popUpAtHand()
 
+  popUpVerticalStackMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "vert. stack"
+    menu.addMenuItem "vertical stack widget", true, @, "createVerticalStackWdgt"
+
+    menu.popUpAtHand()
+
   popUpWrappingTextMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
     menu.addMenuItem "TextMorph bridge wrapping", true, @, "createNewTextMorph2BridgeForWrappingTextWithBackground"
@@ -2905,7 +2914,7 @@ class Morph extends MorphicNode
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "wrapping text ➜", false, @, "popUpWrappingTextMenu", "icons"
-    menu.addMenuItem "vertical stack ➜", false, @, "popUpIconsMenu", "icons"
+    menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
