@@ -88,60 +88,51 @@ class HeartIconMorph extends Morph
 
   drawingIconInSquare: (context) ->
     #// Color Declarations
-    color = 'rgba(226, 0, 75, 1)'
-    color2 = 'rgba(0, 0, 0, 1)'
+    color = 'rgba(0, 0, 0)'
+
+    context.strokeStyle = color
+    context.fillStyle = color
+
     #// Oval Drawing
     @arc context, 11, 21, 99, 99, 136, 326, false
-    context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Oval 2 Drawing
     @arc context, 91, 21, 99, 99, 214, 46, false
-    context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Oval 3 Drawing
-    @oval context, 98, 41, 5, 5
-    context.fillStyle = color
+    @oval context, 98, 41, 4, 4
     context.fill()
-    context.strokeStyle = color2
     context.lineWidth = 1
     context.stroke()
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 23, 103
     context.lineTo 93, 178
-    context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Bezier 2 Drawing
     context.beginPath()
     context.moveTo 178, 103
     context.lineTo 107, 179
-    context.strokeStyle = color2
     context.lineWidth = 8
     context.stroke()
     #// Oval 4 Drawing
     @arc context, 87.5, 154.5, 26, 26, 26, 143, false
-    context.strokeStyle = color2
     context.lineWidth = 7.5
     context.stroke()
     #// Oval 5 Drawing
     @arc context, 33.5, 44, 53, 54, 181, 273, false
-    context.strokeStyle = color2
     context.lineWidth = 10
     context.stroke()
     #// Oval 6 Drawing
-    @oval context, 56, 39, 10, 10
-    context.fillStyle = color
+    @oval context, 57, 40, 8.5, 8.5
     context.fill()
-    context.strokeStyle = color2
     context.lineWidth = 1
     context.stroke()
     #// Oval 7 Drawing
-    @oval context, 29, 66, 10, 10
-    context.fillStyle = color
+    @oval context, 29.5, 66, 8.5, 8.5
     context.fill()
-    context.strokeStyle = color2
     context.lineWidth = 1
     context.stroke()
