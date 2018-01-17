@@ -3232,7 +3232,16 @@ class Morph extends MorphicNode
   
   toggleIsLockingToPanels: ->
     @isLockingToPanels = not @isLockingToPanels
-  
+
+  lockToPanels: ->
+    @isLockingToPanels = true
+
+  unlockFromPanels: ->
+    @isLockingToPanels = false
+
+  prepareToBeGrabbed: ->
+    @unlockFromPanels()
+
   colorSetters: ->
     # for context menu demo purposes
     ["color", "backgroundColor"]
