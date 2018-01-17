@@ -14,7 +14,7 @@ class SimpleScrollingVerticalStack extends ScrollFrameMorph
     @isTextLineWrapping = true
     @color = new Color 255, 255, 255
 
-    ostmA = new TextMorph2BridgeForWrappingText(
+    ostmA = new SimplePlainText(
       "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     ostmA.isEditable = true
     ostmA.enableSelecting()
@@ -69,6 +69,7 @@ class SimpleScrollingVerticalStack extends ScrollFrameMorph
 
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     super
+    menu.removeMenuItem "move all inside"
 
     childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
@@ -79,3 +80,5 @@ class SimpleScrollingVerticalStack extends ScrollFrameMorph
         menu.addMenuItem "unlock content", true, @, "unlockAllChildern", "lets you drag content in and out"
       else
         menu.addMenuItem "lock content", true, @, "lockAllChildern", "prevents dragging content in and out"
+
+    menu.removeConsecutiveLines()

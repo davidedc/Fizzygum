@@ -1,7 +1,12 @@
-# TextMorph2BridgeForWrappingText ///////////////////////////////////////////////////////////
+# SimplePlainText ///////////////////////////////////////////////////////////
 
-# A multi-line, word-wrapping string.
-# TextMorph2BridgeForWrappingText is a compatibility layer that lets us use the new
+# A multi-line, optionally word-wrapping string.
+# It's not "contained": it will literally blurt itself out allover the
+# screen. For "contained" text (the only practical solution for long
+# text) use the SimplePlainTextScrollPane, since that
+# one... scrolls.
+#
+# SimplePlainText is a compatibility layer that lets us use the new
 # TextMorph2 with the current ScrollFrame and the current layout mechanism (which
 # we'd want to change with a more generic one but it's a complex process).
 #
@@ -14,10 +19,10 @@
 # stuff (e.g. lets you edit in "centered" text, can fit the text to any given
 # bound etc...)
 
-class TextMorph2BridgeForWrappingText extends TextMorph2
+class SimplePlainText extends TextMorph2
 
   constructor: (
-   @text = "TextMorph2BridgeForWrappingText",
+   @text = "SimplePlainText",
    @originallySetFontSize = 12,
    @fontName = @justArialFontStack,
    @isBold = false,

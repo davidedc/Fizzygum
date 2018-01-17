@@ -2728,8 +2728,8 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createNewTextMorph2BridgeForWrappingTextWithBackground: ->
-    newMorph = new TextMorph2BridgeForWrappingText(
+  createNewSimplePlainTextWithBackground: ->
+    newMorph = new SimplePlainText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2755,8 +2755,8 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createNewExpandingTextMorph2BridgeForWrappingTextWithBackground: ->
-    newMorph = new TextMorph2BridgeForWrappingText(
+  createNewExpandingSimplePlainTextWithBackground: ->
+    newMorph = new SimplePlainText(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2774,7 +2774,7 @@ class Morph extends MorphicNode
 
   createScrollFramesWithOldTextStyleTextMorps: ->
     debugger
-    SfA = new SimpleScrollingTextWdgt(
+    SfA = new SimplePlainTextScrollPane(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2800,7 +2800,7 @@ class Morph extends MorphicNode
     SfA.fullRawMoveTo new Point 40, 40
     SfA.rawSetExtent new Point 500, 300
 
-    SfB = new SimpleScrollingTextWdgt(
+    SfB = new SimplePlainTextScrollPane(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "\n\n" +
@@ -2850,8 +2850,8 @@ class Morph extends MorphicNode
   createVerticalStackWdgt: ->
     world.create new VerticalStackWdgt()
 
-  createScrollingVerticalStack: ->
-    world.create new SimpleScrollingVerticalStack()
+  createSimpleDocumentScrollPane: ->
+    world.create new SimpleDocumentScrollPane()
 
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
@@ -2938,16 +2938,16 @@ class Morph extends MorphicNode
 
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "vert. stack"
-    menu.addMenuItem "vertical stack widget", true, @, "createVerticalStackWdgt"
-    menu.addMenuItem "scrolling vertical stack", true, @, "createScrollingVerticalStack"
+    menu.addMenuItem "bare vertical stack", true, @, "createVerticalStackWdgt"
+    menu.addMenuItem "bare document editor", true, @, "createSimpleDocumentScrollPane"
 
     menu.popUpAtHand()
 
   popUpWrappingTextMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
-    menu.addMenuItem "TextMorph bridge wrapping", true, @, "createNewTextMorph2BridgeForWrappingTextWithBackground"
-    menu.addMenuItem "TextMorph bridge not wrapping", true, @, "createNewExpandingTextMorph2BridgeForWrappingTextWithBackground"    
-    menu.addMenuItem "Scrolling text (wrapping / no wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+    menu.addMenuItem "TextMorph bridge wrapping", true, @, "createNewSimplePlainTextWithBackground"
+    menu.addMenuItem "TextMorph bridge not wrapping", true, @, "createNewExpandingSimplePlainTextWithBackground"    
+    menu.addMenuItem "Bare text editor(wrapping / no wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
 
     menu.popUpAtHand()
 
@@ -3262,7 +3262,7 @@ class Morph extends MorphicNode
       (each instanceof StringMorph or
         each instanceof StringMorph2 or
         each instanceof TextMorph or
-        each instanceof TextMorph2BridgeForWrappingText
+        each instanceof SimplePlainText
         )
   
   
@@ -3647,7 +3647,7 @@ class Morph extends MorphicNode
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
     # probably have split Morphs for the new layouts mechanism
-    if (@ instanceof TextMorph) or (@ instanceof TextMorph2BridgeForWrappingText)
+    if (@ instanceof TextMorph) or (@ instanceof SimplePlainText)
       @rawSetBounds newBoundsForThisLayout
     else
       @rawSetExtent newBoundsForThisLayout.extent()

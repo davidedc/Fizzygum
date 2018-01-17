@@ -36,7 +36,7 @@ class TextPromptMorph extends WindowMorph
     @tempPromptEntryField.isTextLineWrapping = true
     @tempPromptEntryField.color = new Color 255, 255, 255
 
-    @textMorph = new TextMorph2BridgeForWrappingText @defaultContents
+    @textMorph = new SimplePlainText @defaultContents
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
 

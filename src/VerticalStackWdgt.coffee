@@ -41,9 +41,9 @@ class VerticalStackWdgt extends Morph
       # this re-layouts each widget to fit the width.
       morph.rawSetWidth @width() - 2 * @padding
 
-      # the TextMorph2BridgeForWrappingText just needs this to be different from null
+      # the SimplePlainText just needs this to be different from null
       # while the TextMorph actually uses this number
-      if (morph instanceof TextMorph) or (morph instanceof TextMorph2BridgeForWrappingText)
+      if (morph instanceof TextMorph) or (morph instanceof SimplePlainText)
         morph.maxTextWidth = @width() - totalPadding
 
       morph.fullRawMoveTo new Point @left() + @padding, @top() + verticalPadding + stackHeight

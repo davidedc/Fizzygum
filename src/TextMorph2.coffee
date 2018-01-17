@@ -199,7 +199,7 @@ class TextMorph2 extends StringMorph2
   # change when we do the binary search for trying to
   # see the largest fitting size.
   getTextWrappingData: (overrideFontSize, maxTextWidth, text, paragraphs, justCheckIfItFitsInThisExtent) ->
-    if @ instanceof TextMorph2BridgeForWrappingText
+    if @ instanceof SimplePlainText
       justCheckIfItFitsInThisExtent = null
       overrideFontSize = @originallySetFontSize
 
@@ -302,7 +302,7 @@ class TextMorph2 extends StringMorph2
   # see the largest fitting size.
   breakTextIntoLines: (text = (@transformTextOneToOne @text), overrideFontSize, justCheckIfItFitsInThisExtent) ->
     
-    if @ instanceof TextMorph2BridgeForWrappingText
+    if @ instanceof SimplePlainText
       overrideFontSize = @originallySetFontSize
 
     # Easy, lazy way to get soft-wrapping.
@@ -376,7 +376,7 @@ class TextMorph2 extends StringMorph2
 
     contentHeight = @reflowText()
 
-    if @ instanceof TextMorph2BridgeForWrappingText
+    if @ instanceof SimplePlainText
       contentHeight = @wrappedLines.length *  Math.ceil fontHeight @originallySetFontSize
 
     # if we are calculating a new buffer then
