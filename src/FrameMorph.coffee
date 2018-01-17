@@ -51,7 +51,23 @@ class FrameMorph extends Morph
     return alpha
 
 
+  mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
+    @bringToForegroud()
 
+    # when you click on an "empty" part of a frame that contains
+    # a piece of text, we pass the click on to the text to it
+    # puts the caret at the end of the text.
+    # TODO the focusing and placing of the caret at the end of
+    # the text should happen via API rather than via spoofing
+    # a mouse event?
+    if @parent? and @parent instanceof ScrollFrameMorph
+      childrenNotCarets = @children.filter (m) ->
+        !(m instanceof CaretMorph)
+      if childrenNotCarets.length == 1
+        item = @firstChildSuchThat (m) ->
+          (m instanceof TextMorph) or
+          (m instanceof TextMorph2BridgeForWrappingText)
+        item?.mouseClickLeft item.bottomRight(), ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey
 
 
   reactToDropOf: ->
