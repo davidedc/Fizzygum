@@ -308,6 +308,14 @@ class HandMorph extends Morph
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
       @stopEditingIfActionIsElsewhere morph
 
+      # if we are doing a mousedown on anything outside a menu
+      # then all the menus must go, whether or not they have
+      # been freshly created or not. This came about because
+      # small movements of the mouse while clicking on the
+      # desktop would not dismiss menus.
+      if !(morph.firstParentThatIsAMenu() instanceof MenuMorph)
+        @cleanupMenuMorphs nil, morph, true
+
       @morphToGrab = morph.findRootForGrab()
       if button is 2 or ctrlKey
         @mouseButton = "right"
@@ -537,7 +545,7 @@ class HandMorph extends Morph
       return false
     ), 500
 
-  cleanupMenuMorphs: (expectedClick, morph)->
+  cleanupMenuMorphs: (expectedClick, morph, alsoKillFreshMenus)->
 
     world.hierarchyOfClickedMorphs = []
     world.hierarchyOfClickedMenus = []
@@ -604,7 +612,7 @@ class HandMorph extends Morph
          (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedMenus
+        if alsoKillFreshMenus or eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedMenus
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
@@ -851,7 +859,6 @@ class HandMorph extends Morph
 
   determineGrabs: (pos, topMorph, mouseOverNew) ->
     if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
-      debugger
       morph = topMorph.findRootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
