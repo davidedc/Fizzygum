@@ -100,7 +100,6 @@ class ScrollFrameMorph extends FrameMorph
     return false
 
   adjustScrollBars: ->
-
     # one typically has both scrollbars in view, plus a resizer
     # in buttom right corner, so adjust the width/height of the
     # scrollbars so that there is no overlap between the three things
@@ -210,7 +209,8 @@ class ScrollFrameMorph extends FrameMorph
     unless aPoint.eq @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
-      @contents.fullRawMoveTo @position()  if @isTextLineWrapping
+      if @isTextLineWrapping and !(@contents instanceof VerticalStackWdgt)
+        @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
       @adjustContentsBounds()

@@ -1022,6 +1022,8 @@ class Morph extends MorphicNode
     if @amIDirectlyInsideNonTextWrappingScrollFrame()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
+    if @parent instanceof VerticalStackWdgt
+      @parent.adjustContentsBounds()
 
     @children.forEach (child) ->
       child.silentFullRawMoveBy delta
@@ -1293,6 +1295,8 @@ class Morph extends MorphicNode
       if @amIDirectlyInsideNonTextWrappingScrollFrame()
         @parent.parent.adjustContentsBounds()
         @parent.parent.adjustScrollBars()
+      if @parent instanceof VerticalStackWdgt
+        @parent.adjustContentsBounds()
 
 
   rawSetWidth: (width) ->
@@ -1886,6 +1890,7 @@ class Morph extends MorphicNode
     if aMorph.isAncestorOf @
       return nil
 
+    previousParent = aMorph.parent
     aMorph.parent?.invalidateLayout()
 
     # if the morph contributes to a shadow, unfortunately
@@ -1905,6 +1910,8 @@ class Morph extends MorphicNode
     aMorph.fullChanged()
     @silentAdd aMorph, true, position
     aMorph.imBeingAddedTo @
+    if previousParent?.childRemoved?
+      previousParent.childRemoved @
     return aMorph
 
   addInset: (aMorph) ->
@@ -2198,16 +2205,16 @@ class Morph extends MorphicNode
       if @parent instanceof WorldMorph
         return @isLockingToPanels
 
-      if @parent instanceof FrameMorph
-        if @parent.parent?
-          if @parent.parent instanceof ScrollFrameMorph
-            if @parent.parent.canScrollByDraggingForeground and
-            @parent.parent.anyScrollBarShowing()
-              return true
+      if @amIDirectlyInsideScrollFrame()
+        if @parent.parent.canScrollByDraggingForeground and @parent.parent.anyScrollBarShowing()
+          return true
+        else
+          return @isLockingToPanels
 
+      if @parent instanceof FrameMorph
         return @isLockingToPanels
 
-      # not attached to WorldMorph, not inside a scrollable frame
+      # not attached to desktop, not inside a scrollable frame
       # and not inside a frame.
       # So, for example, when this morph is attached to another morph
       # attached to the world (because then it should remain solid
@@ -2254,10 +2261,16 @@ class Morph extends MorphicNode
 
   amIDirectlyInsideScrollFrame: ->
     if @parent?
-      if @parent instanceof FrameMorph
+      if (@parent instanceof FrameMorph) or (@parent instanceof VerticalStackWdgt)
         if @parent.parent?
           if (@parent.parent instanceof ScrollFrameMorph) and !(@parent.parent instanceof ListMorph)
             return true
+    return false
+
+  amIPanelOfScrollFrame: ->
+    if @parent?
+      if (@parent instanceof ScrollFrameMorph) and !(@parent instanceof ListMorph)
+        return true
     return false
 
   amIDirectlyInsideNonTextWrappingScrollFrame: ->
@@ -2567,6 +2580,7 @@ class Morph extends MorphicNode
     # coalesce some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollFrame).
+    debugger
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
       (m instanceof ScrollFrameMorph) and m.takesOverAndCoalescesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
@@ -2813,6 +2827,9 @@ class Morph extends MorphicNode
   createVerticalStackWdgt: ->
     world.create new VerticalStackWdgt()
 
+  createScrollingVerticalStack: ->
+    world.create new SimpleScrollingVerticalStack()
+
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
 
@@ -2899,6 +2916,7 @@ class Morph extends MorphicNode
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "vert. stack"
     menu.addMenuItem "vertical stack widget", true, @, "createVerticalStackWdgt"
+    menu.addMenuItem "scrolling vertical stack", true, @, "createScrollingVerticalStack"
 
     menu.popUpAtHand()
 

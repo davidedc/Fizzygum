@@ -74,12 +74,14 @@ class TextMorph2BridgeForWrappingText extends TextMorph2
 
     @parent.fullRawMoveTo @parent.parent.position()
     @parent.rawSetExtent @parent.parent.extent()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
-  refreshScrollFrameIfIamInIt: ->
+  refreshScrollFrameOrVerticalStackIfIamInIt: ->
     if @amIDirectlyInsideScrollFrame()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
+    if @parent instanceof VerticalStackWdgt
+      @parent.adjustContentsBounds()
 
   softWrapOff: ->
     debugger
@@ -89,7 +91,7 @@ class TextMorph2BridgeForWrappingText extends TextMorph2
 
     @reLayout()
 
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
 
   # This is also invoked for example when you take a slider
@@ -97,27 +99,27 @@ class TextMorph2BridgeForWrappingText extends TextMorph2
   setText: (theTextContent, stringFieldMorph) ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
   toggleShowBlanks: ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
   
   toggleWeight: ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
   
   toggleItalic: ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
   toggleIsPassword: ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
   rawSetExtent: (aPoint) ->
     super
@@ -126,12 +128,12 @@ class TextMorph2BridgeForWrappingText extends TextMorph2
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     super
     @reLayout()
-    @refreshScrollFrameIfIamInIt()
+    @refreshScrollFrameOrVerticalStackIfIamInIt()
 
   reLayout: ->
     super()

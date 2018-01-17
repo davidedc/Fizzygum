@@ -4,6 +4,7 @@
 class VerticalStackWdgt extends Morph
 
   _acceptsDrops: true
+  tight: true
 
   constructor: (extent, color, @padding) ->
     super()
@@ -11,20 +12,31 @@ class VerticalStackWdgt extends Morph
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
 
+  childRemoved: ->
+    if @amIPanelOfScrollFrame()
+      @parent.adjustContentsBounds()
+      @parent.adjustScrollBars()
+      return
+    @adjustContentsBounds()
+
   reactToDropOf: ->
+    if @amIPanelOfScrollFrame()
+      @parent.adjustContentsBounds()
+      @parent.adjustScrollBars()
+      return
     @adjustContentsBounds()
 
   adjustContentsBounds: ->
     @padding = 5
-    debugger
     totalPadding = 2 * @padding
 
     stackHeight = 0
     verticalPadding = 0
 
-    @children.forEach (morph) =>
-      if (morph instanceof HandleMorph) or (morph instanceof CaretMorph)
-        return
+    childrenNotHandlesNorCarets = @children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    childrenNotHandlesNorCarets.forEach (morph) =>
       verticalPadding += @padding
       # this re-layouts each widget to fit the width.
       morph.rawSetWidth @width() - 2 * @padding
@@ -37,7 +49,12 @@ class VerticalStackWdgt extends Morph
       morph.fullRawMoveTo new Point @left() + @padding, @top() + verticalPadding + stackHeight
       stackHeight += morph.height()
 
-    @rawSetHeight Math.max stackHeight + verticalPadding + @padding, @height()
+    newHeight = stackHeight + verticalPadding + @padding
+
+    if !@tight or childrenNotHandlesNorCarets.length == 0
+      newHeight = Math.max newHeight, @height()
+
+    @rawSetHeight newHeight
 
   rawSetExtent: (aPoint) ->
     unless aPoint.eq @extent()
