@@ -334,7 +334,7 @@ class TextMorph extends StringMorph
   
   # TextMorph evaluation:
   evaluationMenu: ->
-    menu = @hierarchyMenu()
+    menu = @buildHierarchyMenu()
 
     if @text.length > 0
       menu.prependLine()

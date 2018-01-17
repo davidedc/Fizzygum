@@ -599,7 +599,7 @@ class TextMorph2 extends StringMorph2
   # "overridingContextMenu" in the Inspector panes, where
   # the text contents is executed against the target Morph
   evaluationMenu: ->
-    menu = @hierarchyMenu()
+    menu = @buildHierarchyMenu()
 
     if @text.length > 0
       menu.prependLine()

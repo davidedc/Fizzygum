@@ -2572,7 +2572,7 @@ class Morph extends MorphicNode
     #otherwise show the spacial multiplexing list
     #if !@world().caret
     #  if @world().hand.allMorphsAtPointer().length > 2
-    #    return @hierarchyMenu()
+    #    return @buildHierarchyMenu()
 
     morphToAskMenuTo = @
 
@@ -2580,7 +2580,6 @@ class Morph extends MorphicNode
     # coalesce some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
     # a ScrollFrame).
-    debugger
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
       (m instanceof ScrollFrameMorph) and m.takesOverAndCoalescesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
@@ -2590,17 +2589,22 @@ class Morph extends MorphicNode
       return morphToAskMenuTo.overridingContextMenu()
 
     if world.isDevMode
+      hierarchyMenuMorphs = morphToAskMenuTo.getHierarchyMenuMorphs()
+      # if the morph is attached to the world then there is no
+      # disambiguation to do, just build the context menu.
+      # Same if there would be one only entry in the hierarchyMenu
+      # then again just build the context menu for that entry.
+      # Otherwise we actually have to build the spacial
+      # demultiplexing menu.
       if morphToAskMenuTo.parent is world
         return morphToAskMenuTo.buildMorphContextMenu()
-      return morphToAskMenuTo.hierarchyMenu()
-  
-  # When user right-clicks on a morph that is a child of other morphs,
-  # then it's ambiguous which of the morphs she wants to operate on.
-  # An example is right-clicking on a SpeechBubbleMorph: did she
-  # mean to operate on the BubbleMorph or did she mean to operate on
-  # the TextMorph contained in it?
-  # This menu lets her disambiguate.
-  hierarchyMenu: ->
+      else if hierarchyMenuMorphs.length < 2
+        return hierarchyMenuMorphs[0].buildMorphContextMenu()
+      else
+        return morphToAskMenuTo.buildHierarchyMenu hierarchyMenuMorphs
+
+  getHierarchyMenuMorphs: ->
+    hierarchyMenuMorphs = []
     # Spacial multiplexing
     # (search "multiplexing" for the other parts of
     # code where this matters)
@@ -2612,13 +2616,32 @@ class Morph extends MorphicNode
     # commented-out addendum for the implementation of 1):
     # parents = @world().hand.allMorphsAtPointer().reverse()
     parents = @allParentsTopToBottom()
-    menu = new MenuMorph @, false, @, true, true, nil
-    # show an entry for each of the morphs in the hierarchy.
-    # each entry will open the developer menu for each morph.
     parents.forEach (each) ->
+      # only add morphs that have a menu, and
+      # leave out the world itself and the morphs that are about
+      # to be destroyed
       if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
-        textLabelForMorph = each.toString().slice 0, 50
-        menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
+        # leave out VerticalStackWdgt when
+        # inside a SimpleScrollingVerticalStack
+        # because it's redundant
+        if !((each instanceof VerticalStackWdgt) and (each.parent instanceof SimpleScrollingVerticalStack))
+          hierarchyMenuMorphs.push each
+
+    hierarchyMenuMorphs
+  
+  # When user right-clicks on a morph that is a child of other morphs,
+  # then it's ambiguous which of the morphs she wants to operate on.
+  # An example is right-clicking on a SpeechBubbleMorph: did she
+  # mean to operate on the BubbleMorph or did she mean to operate on
+  # the TextMorph contained in it?
+  # This menu lets her disambiguate.
+  buildHierarchyMenu: (morphsHierarchy) ->
+    if !morphsHierarchy?
+      morphsHierarchy = @getHierarchyMenuMorphs()
+    menu = new MenuMorph @, false, @, true, true, nil
+    morphsHierarchy.forEach (each) ->
+      textLabelForMorph = each.toString().slice 0, 50
+      menu.addMenuItem textLabelForMorph + " ➜", false, each, "popupDeveloperMenu", nil, nil, nil, nil, nil, nil, nil, true
 
     menu
 
