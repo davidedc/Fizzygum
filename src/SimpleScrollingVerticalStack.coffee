@@ -10,7 +10,6 @@ class SimpleScrollingVerticalStack extends ScrollFrameMorph
     VS.tight = false
     VS.isLockingToPanels = true
     super VS
-    @takesOverAndCoalescesChildrensMenus = true
     @disableDrops()
     @isTextLineWrapping = true
     @color = new Color 255, 255, 255
