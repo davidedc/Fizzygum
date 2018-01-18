@@ -1,7 +1,7 @@
-# VerticalStackWdgt /////////////////////////////////////////////////////////
+# SimpleVerticalStack /////////////////////////////////////////////////////////
 
 
-class VerticalStackWdgt extends Morph
+class SimpleVerticalStack extends Morph
 
   _acceptsDrops: true
   tight: true

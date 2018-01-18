@@ -209,7 +209,7 @@ class ScrollFrameMorph extends FrameMorph
     unless aPoint.eq @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
-      if @isTextLineWrapping and !(@contents instanceof VerticalStackWdgt)
+      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStack)
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint

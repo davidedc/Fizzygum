@@ -1,12 +1,16 @@
-# SimpleScrollingVerticalStack ////////////////////////////////////////////////////
+# SimpleVerticalStackScrollPane ////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
+#
+# For non-native English speakers: a "pane" is not a "panel"
+# a "pane" is a "single sheet of glass". So, it comes
+# with no frame, no chrome, no buttons around it.
 
-class SimpleScrollingVerticalStack extends ScrollFrameMorph
+class SimpleVerticalStackScrollPane extends ScrollFrameMorph
 
   constructor: ->
-    VS = new VerticalStackWdgt()
+    VS = new SimpleVerticalStack()
     VS.tight = false
     VS.isLockingToPanels = true
     super VS

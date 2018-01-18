@@ -4,9 +4,13 @@
 # REQUIRES globalFunctions
 
 # this editor wraps the functionality of the
-# SimpleScrollingVerticalStack into something that has
+# SimpleVerticalStackScrollPane into something that has
 # a more human name. Also provides additional document-oriented
 # features such as "increase/decrease size" etc.
+#
+# For non-native English speakers: a "pane" is not a "panel"
+# a "pane" is a "single sheet of glass". So, it comes
+# with no frame, no chrome, no buttons around it.
 
-class SimpleDocumentScrollPane extends SimpleScrollingVerticalStack
+class SimpleDocumentScrollPane extends SimpleVerticalStackScrollPane
 

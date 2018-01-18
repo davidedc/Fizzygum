@@ -85,7 +85,7 @@ class SimplePlainText extends TextMorph2
     if @amIDirectlyInsideScrollFrame()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof VerticalStackWdgt
+    if @parent instanceof SimpleVerticalStack
       @parent.adjustContentsBounds()
 
   softWrapOff: ->

@@ -1022,7 +1022,7 @@ class Morph extends MorphicNode
     if @amIDirectlyInsideNonTextWrappingScrollFrame()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof VerticalStackWdgt
+    if @parent instanceof SimpleVerticalStack
       @parent.adjustContentsBounds()
 
     @children.forEach (child) ->
@@ -1295,7 +1295,7 @@ class Morph extends MorphicNode
       if @amIDirectlyInsideNonTextWrappingScrollFrame()
         @parent.parent.adjustContentsBounds()
         @parent.parent.adjustScrollBars()
-      if @parent instanceof VerticalStackWdgt
+      if @parent instanceof SimpleVerticalStack
         @parent.adjustContentsBounds()
 
 
@@ -2261,7 +2261,7 @@ class Morph extends MorphicNode
 
   amIDirectlyInsideScrollFrame: ->
     if @parent?
-      if (@parent instanceof FrameMorph) or (@parent instanceof VerticalStackWdgt)
+      if (@parent instanceof FrameMorph) or (@parent instanceof SimpleVerticalStack)
         if @parent.parent?
           if (@parent.parent instanceof ScrollFrameMorph) and !(@parent.parent instanceof ListMorph)
             return true
@@ -2621,10 +2621,10 @@ class Morph extends MorphicNode
       # leave out the world itself and the morphs that are about
       # to be destroyed
       if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
-        # leave out VerticalStackWdgt when
-        # inside a SimpleScrollingVerticalStack
+        # leave out SimpleVerticalStack when
+        # inside a SimpleVerticalStackScrollPane
         # because it's redundant
-        if !((each instanceof VerticalStackWdgt) and (each.parent instanceof SimpleScrollingVerticalStack))
+        if !((each instanceof SimpleVerticalStack) and (each.parent instanceof SimpleVerticalStackScrollPane))
           hierarchyMenuMorphs.push each
 
     hierarchyMenuMorphs
@@ -2847,8 +2847,8 @@ class Morph extends MorphicNode
   createDestroyIconMorph: ->
     world.create new DestroyIconMorph()
 
-  createVerticalStackWdgt: ->
-    world.create new VerticalStackWdgt()
+  createSimpleVerticalStack: ->
+    world.create new SimpleVerticalStack()
 
   createSimpleDocumentScrollPane: ->
     world.create new SimpleDocumentScrollPane()
@@ -2937,25 +2937,35 @@ class Morph extends MorphicNode
     menu.popUpAtHand()
 
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "vert. stack"
-    menu.addMenuItem "bare vertical stack", true, @, "createVerticalStackWdgt"
-    menu.addMenuItem "bare document editor", true, @, "createSimpleDocumentScrollPane"
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Vertical stack"
+    menu.addMenuItem "vertical stack", true, @, "createSimpleVerticalStack"
+    menu.addMenuItem "vertical stack scroll pane", true, @, "createSimpleVerticalStack"
 
     menu.popUpAtHand()
 
-  popUpWrappingTextMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
-    menu.addMenuItem "TextMorph bridge wrapping", true, @, "createNewSimplePlainTextWithBackground"
-    menu.addMenuItem "TextMorph bridge not wrapping", true, @, "createNewExpandingSimplePlainTextWithBackground"    
-    menu.addMenuItem "Bare text editor(wrapping / no wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+  popUpDocumentMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Document"
+    menu.addMenuItem "simple document scrollpane", true, @, "createSimpleDocumentScrollPane"
+
+    menu.popUpAtHand()
+
+  popUpSimplePlainTextMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Simple plain text"
+    menu.addMenuItem "simple plain text wrapping", true, @, "createNewSimplePlainTextWithBackground"
+    menu.addMenuItem "simple plain text not wrapping", true, @, "createNewExpandingSimplePlainTextWithBackground"    
+    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewExpandingSimplePlainTextWithBackground"    
+    menu.addMenuItem "simple plain text scrollpane wrapping", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text scrollpane not wrapping", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text scrollpane (wrapping / not wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
 
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
-    menu.addMenuItem "wrapping text ➜", false, @, "popUpWrappingTextMenu", "icons"
+    menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
+    menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
     menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
