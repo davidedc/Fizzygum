@@ -30,13 +30,13 @@ class TextPromptMorph extends WindowMorph
     #@add @tempPromptEntryField
 
 
-    @tempPromptEntryField = new ScrollPanel()
+    @tempPromptEntryField = new ScrollPanelWdgt()
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.isTextLineWrapping = true
     @tempPromptEntryField.color = new Color 255, 255, 255
 
-    @textMorph = new SimplePlainText @defaultContents
+    @textMorph = new SimplePlainTextWdgt @defaultContents
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
 

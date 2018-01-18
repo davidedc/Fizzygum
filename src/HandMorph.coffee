@@ -182,7 +182,7 @@ class HandMorph extends Morph
       #debugger
       @fullChanged()
       # this gives an occasion to the old parent
-      # morph to adjust itself e.g. the ScrollPanel
+      # morph to adjust itself e.g. the ScrollPanelWdgt
       # readjusts itself if you take some morphs
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
@@ -985,7 +985,7 @@ class HandMorph extends Morph
 
       # autoScrolling support:
       if @floatDraggingSomething()
-          if newMorph instanceof ScrollPanel
+          if newMorph instanceof ScrollPanelWdgt
               if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()

@@ -1,6 +1,6 @@
 # ListMorph ///////////////////////////////////////////////////////////
 
-class ListMorph extends ScrollPanel
+class ListMorph extends ScrollPanelWdgt
   
   elements: nil
   labelGetter: nil

@@ -1,9 +1,9 @@
-# ScrollPanel ////////////////////////////////////////////////////
+# ScrollPanelWdgt ////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-class ScrollPanel extends FrameMorph
+class ScrollPanelWdgt extends FrameMorph
 
   autoScrollTrigger: nil
   hasVelocity: true # dto.
@@ -167,7 +167,7 @@ class ScrollPanel extends FrameMorph
       else
         @vBar.hide()
   
-  # when you add things to the ScrollPanel they actually
+  # when you add things to the ScrollPanelWdgt they actually
   # end up in the frame inside it. This also applies to
   # resizing handles!
   add: (aMorph) ->
@@ -209,7 +209,7 @@ class ScrollPanel extends FrameMorph
     unless aPoint.eq @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
-      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanel)
+      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanelWdgt)
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
@@ -235,12 +235,12 @@ class ScrollPanel extends FrameMorph
     totalPadding = 2*padding
     if @isTextLineWrapping
       @contents.children.forEach (morph) =>
-        if (morph instanceof TextMorph) or (morph instanceof SimplePlainText)
+        if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
           # this re-layouts the text to fit the width.
           # The new height of the TextMorph will then be used
           # to redraw the vertical slider.
           morph.rawSetWidth @contents.width() - totalPadding
-          # the SimplePlainText just needs this to be different from null
+          # the SimplePlainTextWdgt just needs this to be different from null
           # while the TextMorph actually uses this number
           morph.maxTextWidth = @contents.width() - totalPadding
           @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
@@ -255,9 +255,9 @@ class ScrollPanel extends FrameMorph
       @contents.silentRawSetBounds newBounds
       @contents.reLayout()
       
-      @keepContentsInScrollPanel()
+      @keepContentsInScrollPanelWdgt()
 
-  keepContentsInScrollPanel: ->
+  keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()
       @contents.fullRawMoveBy new Point @left() - @contents.left(), 0
     if @contents.right() < @right()
@@ -267,7 +267,7 @@ class ScrollPanel extends FrameMorph
     if @contents.bottom() < @bottom()
       @contents.fullRawMoveBy 0, new Point @bottom() - @contents.bottom(), 0
   
-  # ScrollPanel scrolling by floatDragging:
+  # ScrollPanelWdgt scrolling by floatDragging:
   scrollX: (steps) ->
     cl = @contents.left()
     l = @left()
@@ -421,7 +421,7 @@ class ScrollPanel extends FrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()  
   
-  # ScrollPanel scrolling when editing text
+  # ScrollPanelWdgt scrolling when editing text
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretMorph) ->
     txt = caretMorph.target
@@ -453,7 +453,7 @@ class ScrollPanel extends FrameMorph
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # ScrollPanel events:
+  # ScrollPanelWdgt events:
   mouseScroll: (y, x) ->
     scrollbarJustChanged = false
 

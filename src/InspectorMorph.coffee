@@ -44,7 +44,7 @@ class InspectorMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph @target.toString()
+    @label = new TextMorph @target.toString().replace "Wdgt", ""
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color 255, 255, 255
@@ -158,7 +158,7 @@ class InspectorMorph extends BoxMorph
 
 
     # details pane
-    @detail = new ScrollPanel()
+    @detail = new ScrollPanelWdgt()
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
@@ -171,7 +171,7 @@ class InspectorMorph extends BoxMorph
     @add @detail
 
     # work ('evaluation') pane
-    @work = new ScrollPanel()
+    @work = new ScrollPanelWdgt()
     @work.disableDrops()
     @work.contents.disableDrops()
     @work.isTextLineWrapping = true

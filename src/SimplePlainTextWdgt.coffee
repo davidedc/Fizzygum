@@ -1,13 +1,13 @@
-# SimplePlainText ///////////////////////////////////////////////////////////
+# SimplePlainTextWdgt ///////////////////////////////////////////////////////////
 
 # A multi-line, optionally word-wrapping string.
 # It's not "contained": it will literally blurt itself out allover the
 # screen. For "contained" text (the only practical solution for long
-# text) use the SimplePlainTextScrollPanel, since that
+# text) use the SimplePlainTextWdgtScrollPanelWdgt, since that
 # one... scrolls.
 #
-# SimplePlainText is a compatibility layer that lets us use the new
-# TextMorph2 with the current ScrollPanel and the current layout mechanism (which
+# SimplePlainTextWdgt is a compatibility layer that lets us use the new
+# TextMorph2 with the current ScrollPanelWdgt and the current layout mechanism (which
 # we'd want to change with a more generic one but it's a complex process).
 #
 # This Morph can do stuff that the TextMorph2 is not quite ready to do (i.e. can
@@ -19,7 +19,7 @@
 # stuff (e.g. lets you edit in "centered" text, can fit the text to any given
 # bound etc...)
 
-class SimplePlainText extends TextMorph2
+class SimplePlainTextWdgt extends TextMorph2
 
   constructor: (
    @text = "SimplePlainText",
@@ -58,7 +58,7 @@ class SimplePlainText extends TextMorph2
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    if @amIDirectlyInsideScrollPanel()
+    if @amIDirectlyInsideScrollPanelWdgt()
       childrenNotCarets = @parent.children.filter (m) ->
         !(m instanceof CaretMorph)
       if childrenNotCarets.length == 1
@@ -79,13 +79,13 @@ class SimplePlainText extends TextMorph2
 
     @parent.fullRawMoveTo @parent.parent.position()
     @parent.rawSetExtent @parent.parent.extent()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
-  refreshScrollPanelOrVerticalStackIfIamInIt: ->
-    if @amIDirectlyInsideScrollPanel()
+  refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
+    if @amIDirectlyInsideScrollPanelWdgt()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStackPanel
+    if @parent instanceof SimpleVerticalStackPanelWdgt
       @parent.adjustContentsBounds()
 
   softWrapOff: ->
@@ -96,7 +96,7 @@ class SimplePlainText extends TextMorph2
 
     @reLayout()
 
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
 
   # This is also invoked for example when you take a slider
@@ -104,27 +104,27 @@ class SimplePlainText extends TextMorph2
   setText: (theTextContent, stringFieldMorph) ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   toggleShowBlanks: ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
   
   toggleWeight: ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
   
   toggleItalic: ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   toggleIsPassword: ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   rawSetExtent: (aPoint) ->
     super
@@ -133,12 +133,12 @@ class SimplePlainText extends TextMorph2
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     super
     @reLayout()
-    @refreshScrollPanelOrVerticalStackIfIamInIt()
+    @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   reLayout: ->
     super()

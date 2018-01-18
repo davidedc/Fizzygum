@@ -1,12 +1,12 @@
-# SimpleVerticalStackScrollPanel ////////////////////////////////////////////////////
+# SimpleVerticalStackScrollPanelWdgt ////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-class SimpleVerticalStackScrollPanel extends ScrollPanel
+class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
   constructor: ->
-    VS = new SimpleVerticalStackPanel()
+    VS = new SimpleVerticalStackPanelWdgt()
     VS.tight = false
     VS.isLockingToPanels = true
     super VS
@@ -14,7 +14,7 @@ class SimpleVerticalStackScrollPanel extends ScrollPanel
     @isTextLineWrapping = true
     @color = new Color 255, 255, 255
 
-    ostmA = new SimplePlainText(
+    ostmA = new SimplePlainTextWdgt(
       "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     ostmA.isEditable = true
     ostmA.enableSelecting()

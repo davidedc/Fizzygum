@@ -255,7 +255,7 @@ class InspectorMorph2 extends WindowMorph
 
 
     # details pane
-    @detail = new ScrollPanel()
+    @detail = new ScrollPanelWdgt()
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true

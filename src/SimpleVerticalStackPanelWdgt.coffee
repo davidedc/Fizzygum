@@ -1,7 +1,7 @@
-# SimpleVerticalStackPanel /////////////////////////////////////////////////////////
+# SimpleVerticalStackPanelWdgt /////////////////////////////////////////////////////////
 
 
-class SimpleVerticalStackPanel extends Morph
+class SimpleVerticalStackPanelWdgt extends Morph
 
   _acceptsDrops: true
   tight: true
@@ -13,14 +13,14 @@ class SimpleVerticalStackPanel extends Morph
     @color = color if color?
 
   childRemoved: ->
-    if @amIPanelOfScrollPanel()
+    if @amIPanelOfScrollPanelWdgt()
       @parent.adjustContentsBounds()
       @parent.adjustScrollBars()
       return
     @adjustContentsBounds()
 
   reactToDropOf: ->
-    if @amIPanelOfScrollPanel()
+    if @amIPanelOfScrollPanelWdgt()
       @parent.adjustContentsBounds()
       @parent.adjustScrollBars()
       return
@@ -41,9 +41,9 @@ class SimpleVerticalStackPanel extends Morph
       # this re-layouts each widget to fit the width.
       morph.rawSetWidth @width() - 2 * @padding
 
-      # the SimplePlainText just needs this to be different from null
+      # the SimplePlainTextWdgt just needs this to be different from null
       # while the TextMorph actually uses this number
-      if (morph instanceof TextMorph) or (morph instanceof SimplePlainText)
+      if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
         morph.maxTextWidth = @width() - totalPadding
 
       morph.fullRawMoveTo new Point @left() + @padding, @top() + verticalPadding + stackHeight

@@ -1,20 +1,20 @@
-# SimplePlainTextScrollPanel ////////////////////////////////////////////////////
+# SimplePlainTextScrollPanelWdgt ////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-# The SimplePlainTextScrollPanel allows you show/edit ONE
+# The SimplePlainTextScrollPanelWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
-# other Morphs like the SimpleVerticalStackPanel/DocumentEditor do.
+# other Morphs like the SimpleVerticalStackPanelWdgt/DocumentEditor do.
 #
-# However, what the SimplePlainTextScrollPanel DOES
-# in respect to the SimpleVerticalStackPanel/DocumentEditor is to
+# However, what the SimplePlainTextScrollPanelWdgt DOES
+# in respect to the SimpleVerticalStackPanelWdgt/DocumentEditor is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.
 
-class SimplePlainTextScrollPanel extends ScrollPanel
+class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
 
   constructor: (
     textAsString,
@@ -28,7 +28,7 @@ class SimplePlainTextScrollPanel extends ScrollPanel
     @contents.disableDrops()
     @isTextLineWrapping = wraps
     @color = new Color 255, 255, 255
-    ostmA = new SimplePlainText(
+    ostmA = new SimplePlainTextWdgt(
       textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     ostmA.isEditable = true
     if !wraps

@@ -1,6 +1,6 @@
 # SliderMorph ///////////////////////////////////////////////////
 # Sliders (and hence slider button morphs)
-# are also used in the ScrollPanels .
+# are also used in the ScrollPanelWdgts .
 
 # In previous versions the user could force an orientation, so
 # that one could have a vertical slider even if the slider is
@@ -200,7 +200,7 @@ class SliderMorph extends CircleBoxMorph
     @changed()
   
   mouseDownLeft: (pos) ->
-    if @button.parent == @ and ((@parent instanceof ScrollPanel) or (@parent instanceof PromptMorph))
+    if @button.parent == @ and ((@parent instanceof ScrollPanelWdgt) or (@parent instanceof PromptMorph))
       world.hand.nonFloatDragMorphFarAwayToHere @button, pos
     else
       @escalateEvent "mouseDownLeft", pos

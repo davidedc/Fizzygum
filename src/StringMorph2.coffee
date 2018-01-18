@@ -55,7 +55,7 @@ class StringMorph2 extends Morph
 
   # Used for when the cursor movement causes the
   # text to scroll, so that the caret is in-view when
-  # used, say, on a text in a ScrollPanel.
+  # used, say, on a text in a ScrollPanelWdgt.
   isScrollable: true
 
   # startMark and endMark contain the slot of the
