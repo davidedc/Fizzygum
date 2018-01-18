@@ -1756,8 +1756,8 @@ class WorldMorph extends FrameMorph
     newMorph = new FrameMorph()
     newMorph.rawSetExtent new Point 350, 250
     @create newMorph
-  createNewScrollFrameMorph: ->
-    newMorph = new ScrollFrameMorph()
+  createNewScrollPanel: ->
+    newMorph = new ScrollPanel()
     newMorph.adjustContentsBounds()
     newMorph.adjustScrollBars()
     newMorph.rawSetExtent new Point 350, 250
@@ -1865,7 +1865,7 @@ class WorldMorph extends FrameMorph
       menu.addLine()
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
       menu.addMenuItem "frame", true, @, "createNewFrameMorph"
-      menu.addMenuItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanel"
       menu.addMenuItem "canvas", true, @, "createNewCanvas"
       menu.addMenuItem "handle", true, @, "createNewHandle"
       menu.addLine()
@@ -1893,7 +1893,7 @@ class WorldMorph extends FrameMorph
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
       menu.addMenuItem "frame", true, @, "createNewFrameMorph"
-      menu.addMenuItem "scroll frame", true, @, "createNewScrollFrameMorph"
+      menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanel"
       menu.addMenuItem "canvas", true, @, "createNewCanvas"
       menu.addLine()
       menu.addMenuItem "string", true, @, "createNewStringMorph2WithoutBackground"

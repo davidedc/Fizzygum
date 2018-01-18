@@ -25,7 +25,7 @@ class BoxMorph extends Morph
     # this is what happens when "each" is
     # selected: we attach the selected morph
     morphPickingUp.addInset @
-    if @ instanceof ScrollFrameMorph
+    if @ instanceof ScrollPanel
       @adjustContentsBounds()
       @adjustScrollBars()
 

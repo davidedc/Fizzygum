@@ -1,7 +1,7 @@
-# SimpleVerticalStack /////////////////////////////////////////////////////////
+# SimpleVerticalStackPanel /////////////////////////////////////////////////////////
 
 
-class SimpleVerticalStack extends Morph
+class SimpleVerticalStackPanel extends Morph
 
   _acceptsDrops: true
   tight: true
@@ -13,14 +13,14 @@ class SimpleVerticalStack extends Morph
     @color = color if color?
 
   childRemoved: ->
-    if @amIPanelOfScrollFrame()
+    if @amIPanelOfScrollPanel()
       @parent.adjustContentsBounds()
       @parent.adjustScrollBars()
       return
     @adjustContentsBounds()
 
   reactToDropOf: ->
-    if @amIPanelOfScrollFrame()
+    if @amIPanelOfScrollPanel()
       @parent.adjustContentsBounds()
       @parent.adjustScrollBars()
       return

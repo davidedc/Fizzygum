@@ -158,7 +158,7 @@ class InspectorMorph extends BoxMorph
 
 
     # details pane
-    @detail = new ScrollFrameMorph()
+    @detail = new ScrollPanel()
     @detail.disableDrops()
     @detail.contents.disableDrops()
     @detail.isTextLineWrapping = true
@@ -171,7 +171,7 @@ class InspectorMorph extends BoxMorph
     @add @detail
 
     # work ('evaluation') pane
-    @work = new ScrollFrameMorph()
+    @work = new ScrollPanel()
     @work.disableDrops()
     @work.contents.disableDrops()
     @work.isTextLineWrapping = true

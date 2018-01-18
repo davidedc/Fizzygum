@@ -36,7 +36,7 @@ class UnderTheCarpetMorph extends BoxMorph
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
 
-    @scrollFrame = new ScrollFrameMorph()
+    @scrollFrame = new ScrollPanel()
 
     @add @scrollFrame
 

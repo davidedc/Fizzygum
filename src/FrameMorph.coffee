@@ -60,7 +60,7 @@ class FrameMorph extends Morph
     # TODO the focusing and placing of the caret at the end of
     # the text should happen via API rather than via spoofing
     # a mouse event?
-    if @parent? and @parent instanceof ScrollFrameMorph
+    if @parent? and @parent instanceof ScrollPanel
       childrenNotCarets = @children.filter (m) ->
         !(m instanceof CaretMorph)
       if childrenNotCarets.length == 1
@@ -80,8 +80,8 @@ class FrameMorph extends Morph
     if @parent?
 
       # otherwise you could detach a Frame contained in a
-      # ScrollFrameMorph which is very strange
-      if @parent instanceof ScrollFrameMorph
+      # ScrollPanel which is very strange
+      if @parent instanceof ScrollPanel
         return false
 
       return super
@@ -90,8 +90,8 @@ class FrameMorph extends Morph
     if @parent?
 
       # otherwise you could detach a Frame contained in a
-      # ScrollFrameMorph which is very strange
-      if @parent instanceof ScrollFrameMorph
+      # ScrollPanel which is very strange
+      if @parent instanceof ScrollPanel
         if @parent.canScrollByDraggingBackground and @parent.anyScrollBarShowing()
           return false
         else

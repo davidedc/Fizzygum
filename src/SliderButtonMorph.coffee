@@ -1,7 +1,7 @@
 # SliderButtonMorph ///////////////////////////////////////////////////
 # This is the handle in the middle of any slider.
 # Sliders (and hence this button)
-# are also used in the ScrollFrames.
+# are also used in the ScrollPanels.
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions

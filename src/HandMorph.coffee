@@ -182,7 +182,7 @@ class HandMorph extends Morph
       #debugger
       @fullChanged()
       # this gives an occasion to the old parent
-      # morph to adjust itself e.g. the ScrollFrame
+      # morph to adjust itself e.g. the ScrollPanel
       # readjusts itself if you take some morphs
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
@@ -913,7 +913,7 @@ class HandMorph extends Morph
 
       # OK so this is an interesting choice. You can avoid
       # this next line and have ZK to behave like OSX where you
-      # can scroll on a pane without bringing its window in the
+      # can scroll on a panel without bringing its window in the
       # foreground. OR you can have the window to automatically
       # pop into the foreground. I'm liking the OSX style
       # so I'm leaving this commented-out, but it's there.
@@ -985,7 +985,7 @@ class HandMorph extends Morph
 
       # autoScrolling support:
       if @floatDraggingSomething()
-          if newMorph instanceof ScrollFrameMorph
+          if newMorph instanceof ScrollPanel
               if !newMorph.boundingBox().insetBy(
                 WorldMorph.preferencesAndSettings.scrollBarsThickness * 3
                 ).containsPoint @position()

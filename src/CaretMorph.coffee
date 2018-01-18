@@ -142,7 +142,7 @@ class CaretMorph extends BlinkerMorph
       @show()
       @fullRawMoveTo pos.floor()
 
-      if @amIDirectlyInsideScrollFrame() and @target.isScrollable
+      if @amIDirectlyInsideScrollPanel() and @target.isScrollable
         @parent.parent.scrollCaretIntoView @
   
   goLeft: (shift) ->

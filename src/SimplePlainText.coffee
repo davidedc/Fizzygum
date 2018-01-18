@@ -3,11 +3,11 @@
 # A multi-line, optionally word-wrapping string.
 # It's not "contained": it will literally blurt itself out allover the
 # screen. For "contained" text (the only practical solution for long
-# text) use the SimplePlainTextScrollPane, since that
+# text) use the SimplePlainTextScrollPanel, since that
 # one... scrolls.
 #
 # SimplePlainText is a compatibility layer that lets us use the new
-# TextMorph2 with the current ScrollFrame and the current layout mechanism (which
+# TextMorph2 with the current ScrollPanel and the current layout mechanism (which
 # we'd want to change with a more generic one but it's a complex process).
 #
 # This Morph can do stuff that the TextMorph2 is not quite ready to do (i.e. can
@@ -58,7 +58,7 @@ class SimplePlainText extends TextMorph2
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
 
-    if @amIDirectlyInsideScrollFrame()
+    if @amIDirectlyInsideScrollPanel()
       childrenNotCarets = @parent.children.filter (m) ->
         !(m instanceof CaretMorph)
       if childrenNotCarets.length == 1
@@ -79,13 +79,13 @@ class SimplePlainText extends TextMorph2
 
     @parent.fullRawMoveTo @parent.parent.position()
     @parent.rawSetExtent @parent.parent.extent()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
-  refreshScrollFrameOrVerticalStackIfIamInIt: ->
-    if @amIDirectlyInsideScrollFrame()
+  refreshScrollPanelOrVerticalStackIfIamInIt: ->
+    if @amIDirectlyInsideScrollPanel()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStack
+    if @parent instanceof SimpleVerticalStackPanel
       @parent.adjustContentsBounds()
 
   softWrapOff: ->
@@ -96,7 +96,7 @@ class SimplePlainText extends TextMorph2
 
     @reLayout()
 
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
 
   # This is also invoked for example when you take a slider
@@ -104,27 +104,27 @@ class SimplePlainText extends TextMorph2
   setText: (theTextContent, stringFieldMorph) ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
   toggleShowBlanks: ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
   
   toggleWeight: ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
   
   toggleItalic: ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
   toggleIsPassword: ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
   rawSetExtent: (aPoint) ->
     super
@@ -133,12 +133,12 @@ class SimplePlainText extends TextMorph2
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     super
     @reLayout()
-    @refreshScrollFrameOrVerticalStackIfIamInIt()
+    @refreshScrollPanelOrVerticalStackIfIamInIt()
 
   reLayout: ->
     super()

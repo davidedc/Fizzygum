@@ -163,7 +163,7 @@ class Morph extends MorphicNode
   # Otherwise, without coalescing, there would FIRST be a
   # multiple-selection menu to spacially demultiplex which
   # morph is the one of interest
-  # (the TextMorph, or the Frame, or the ScrollFrame?). And
+  # (the TextMorph, or the Frame, or the ScrollPanel?). And
   # if the user wanted to resize the scroll text, which Morph
   # would the user have to pick? It would be very confusing.
   #
@@ -172,7 +172,7 @@ class Morph extends MorphicNode
   # instead of operating on the text content.
   #
   # Note that, on the other side, for this to work the menu of
-  # the ScrollFrame has to give menu entries "peeking" them
+  # the ScrollPanel has to give menu entries "peeking" them
   # from the TextMorph it contains, e.g. to change the font size
   #
   # Note that this mechanism could be overridden for "advanced"
@@ -865,9 +865,9 @@ class Morph extends MorphicNode
       result = @children[0].bounds
       @children.forEach (child) ->
         # we exclude the HandleMorphs because they
-        # mangle how the frame inside ScrollFrames
+        # mangle how the frame inside ScrollPanels
         # calculate their size when they are resized
-        # (remember that the resizing handle of ScrollFrames
+        # (remember that the resizing handle of ScrollPanels
         # actually end up in the frame inside them.)
         if !(child instanceof HandleMorph) and !(child instanceof CaretMorph)
           result = result.merge child.fullBounds()
@@ -1009,9 +1009,9 @@ class Morph extends MorphicNode
     @bounds = @bounds.translateBy delta
 
     # note that if I am a submorph of a morph directly
-    # inside a non-text-wrapping ScrollFrame then this
+    # inside a non-text-wrapping ScrollPanel then this
     # is not going to work. So if I'm a box attached to a
-    # box inside a non-text-wrapping ScrollFrame then
+    # box inside a non-text-wrapping ScrollPanel then
     # there will be no adjusting of bounds of the scrollframe
     # not the adjusting of the scrollbars.
     # This could be done, we could check up the chain to find
@@ -1019,10 +1019,10 @@ class Morph extends MorphicNode
     # there might be performance implications, so I'd probably
     # have to introduce caching, and this whole mechanism should
     # go away with proper layouts...
-    if @amIDirectlyInsideNonTextWrappingScrollFrame()
+    if @amIDirectlyInsideNonTextWrappingScrollPanel()
       @parent.parent.adjustContentsBounds()
       @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStack
+    if @parent instanceof SimpleVerticalStackPanel
       @parent.adjustContentsBounds()
 
     @children.forEach (child) ->
@@ -1282,9 +1282,9 @@ class Morph extends MorphicNode
       @breakNumberOfRawMovesAndResizesCaches()
 
       # note that if I am a submorph of a morph directly
-      # inside a non-text-wrapping ScrollFrame then this
+      # inside a non-text-wrapping ScrollPanel then this
       # is not going to work. So if I'm a box attached to a
-      # box inside a non-text-wrapping ScrollFrame then
+      # box inside a non-text-wrapping ScrollPanel then
       # there will be no adjusting of bounds of the scrollframe
       # not the adjusting of the scrollbars.
       # This could be done, we could check up the chain to find
@@ -1292,10 +1292,10 @@ class Morph extends MorphicNode
       # there might be performance implications, so I'd probably
       # have to introduce caching, and this whole mechanism should
       # go away with proper layouts...
-      if @amIDirectlyInsideNonTextWrappingScrollFrame()
+      if @amIDirectlyInsideNonTextWrappingScrollPanel()
         @parent.parent.adjustContentsBounds()
         @parent.parent.adjustScrollBars()
-      if @parent instanceof SimpleVerticalStack
+      if @parent instanceof SimpleVerticalStackPanel
         @parent.adjustContentsBounds()
 
 
@@ -1861,7 +1861,7 @@ class Morph extends MorphicNode
   # this level of indirection is needed because
   # you have a "raw" "tree" need of adding stuff
   # and a higher level way to "add".
-  # For example, a ScrollFrameMorph does a "high-level"
+  # For example, a ScrollPanel does a "high-level"
   # add of things in a different way, as it actually adds
   # stuff to a frame inside it. Hence a need to have
   # both a high-level and a low-level.
@@ -2205,7 +2205,7 @@ class Morph extends MorphicNode
       if @parent instanceof WorldMorph
         return @isLockingToPanels
 
-      if @amIDirectlyInsideScrollFrame()
+      if @amIDirectlyInsideScrollPanel()
         if @parent.parent.canScrollByDraggingForeground and @parent.parent.anyScrollBarShowing()
           return true
         else
@@ -2259,22 +2259,22 @@ class Morph extends MorphicNode
   findRootForGrab: ->
     return @findFirstLooseMorph()
 
-  amIDirectlyInsideScrollFrame: ->
+  amIDirectlyInsideScrollPanel: ->
     if @parent?
-      if (@parent instanceof FrameMorph) or (@parent instanceof SimpleVerticalStack)
+      if (@parent instanceof FrameMorph) or (@parent instanceof SimpleVerticalStackPanel)
         if @parent.parent?
-          if (@parent.parent instanceof ScrollFrameMorph) and !(@parent.parent instanceof ListMorph)
+          if (@parent.parent instanceof ScrollPanel) and !(@parent.parent instanceof ListMorph)
             return true
     return false
 
-  amIPanelOfScrollFrame: ->
+  amIPanelOfScrollPanel: ->
     if @parent?
-      if (@parent instanceof ScrollFrameMorph) and !(@parent instanceof ListMorph)
+      if (@parent instanceof ScrollPanel) and !(@parent instanceof ListMorph)
         return true
     return false
 
-  amIDirectlyInsideNonTextWrappingScrollFrame: ->
-    if @amIDirectlyInsideScrollFrame()
+  amIDirectlyInsideNonTextWrappingScrollPanel: ->
+    if @amIDirectlyInsideScrollPanel()
       if !@parent.parent.isTextLineWrapping
         return true
     return false
@@ -2579,9 +2579,9 @@ class Morph extends MorphicNode
     # check if a parent wants to take over my menu (and hopefully
     # coalesce some of my entries!). In such case let it open the
     # menu. Used for example for scrollable text (which is text inside
-    # a ScrollFrame).
+    # a ScrollPanel).
     anyParentsTakingOverMyMenu = @allParentsTopToBottomSuchThat (m) ->
-      (m instanceof ScrollFrameMorph) and m.takesOverAndCoalescesChildrensMenus
+      (m instanceof ScrollPanel) and m.takesOverAndCoalescesChildrensMenus
     if anyParentsTakingOverMyMenu? and anyParentsTakingOverMyMenu.length > 0
       morphToAskMenuTo = anyParentsTakingOverMyMenu[0]
 
@@ -2621,10 +2621,10 @@ class Morph extends MorphicNode
       # leave out the world itself and the morphs that are about
       # to be destroyed
       if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
-        # leave out SimpleVerticalStack when
-        # inside a SimpleVerticalStackScrollPane
+        # leave out SimpleVerticalStackPanel when
+        # inside a SimpleVerticalStackScrollPanel
         # because it's redundant
-        if !((each instanceof SimpleVerticalStack) and (each.parent instanceof SimpleVerticalStackScrollPane))
+        if !((each instanceof SimpleVerticalStackPanel) and (each.parent instanceof SimpleVerticalStackScrollPanel))
           hierarchyMenuMorphs.push each
 
     hierarchyMenuMorphs
@@ -2772,9 +2772,9 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createScrollFramesWithOldTextStyleTextMorps: ->
+  createScrollPanelsWithOldTextStyleTextMorps: ->
     debugger
-    SfA = new SimplePlainTextScrollPane(
+    SfA = new SimplePlainTextScrollPanel(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "lectus posuere a. Phasellus finibus blandit ex vitae " +
@@ -2800,7 +2800,7 @@ class Morph extends MorphicNode
     SfA.fullRawMoveTo new Point 40, 40
     SfA.rawSetExtent new Point 500, 300
 
-    SfB = new SimplePlainTextScrollPane(
+    SfB = new SimplePlainTextScrollPanel(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
       "\n\n" +
@@ -2847,11 +2847,11 @@ class Morph extends MorphicNode
   createDestroyIconMorph: ->
     world.create new DestroyIconMorph()
 
-  createSimpleVerticalStack: ->
-    world.create new SimpleVerticalStack()
+  createSimpleVerticalStackPanel: ->
+    world.create new SimpleVerticalStackPanel()
 
-  createSimpleDocumentScrollPane: ->
-    world.create new SimpleDocumentScrollPane()
+  createSimpleDocumentScrollPanel: ->
+    world.create new SimpleDocumentScrollPanel()
 
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
@@ -2938,14 +2938,14 @@ class Morph extends MorphicNode
 
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Vertical stack"
-    menu.addMenuItem "vertical stack", true, @, "createSimpleVerticalStack"
-    menu.addMenuItem "vertical stack scroll pane", true, @, "createSimpleVerticalStack"
+    menu.addMenuItem "vertical stack", true, @, "createSimpleVerticalStackPanel"
+    menu.addMenuItem "vertical stack scrollpanel", true, @, "createSimpleVerticalStackPanel"
 
     menu.popUpAtHand()
 
   popUpDocumentMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Document"
-    menu.addMenuItem "simple document scrollpane", true, @, "createSimpleDocumentScrollPane"
+    menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanel"
 
     menu.popUpAtHand()
 
@@ -2954,9 +2954,9 @@ class Morph extends MorphicNode
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewSimplePlainTextWithBackground"
     menu.addMenuItem "simple plain text not wrapping", true, @, "createNewExpandingSimplePlainTextWithBackground"    
     menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewExpandingSimplePlainTextWithBackground"    
-    menu.addMenuItem "simple plain text scrollpane wrapping", true, @, "createScrollFramesWithOldTextStyleTextMorps"
-    menu.addMenuItem "simple plain text scrollpane not wrapping", true, @, "createScrollFramesWithOldTextStyleTextMorps"
-    menu.addMenuItem "simple plain text scrollpane (wrapping / not wrapping)", true, @, "createScrollFramesWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text scrollpanel wrapping", true, @, "createScrollPanelsWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text scrollpanel not wrapping", true, @, "createScrollPanelsWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, @, "createScrollPanelsWithOldTextStyleTextMorps"
 
     menu.popUpAtHand()
 
@@ -3051,7 +3051,7 @@ class Morph extends MorphicNode
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
 
     menu.addLine()
-    if (@parent instanceof FrameMorph) and !(@parent instanceof ScrollFrameMorph)
+    if (@parent instanceof FrameMorph) and !(@parent instanceof ScrollPanel)
       if @parent instanceof WorldMorph
         whereToOrFrom = "desktop"
       else
@@ -3176,7 +3176,7 @@ class Morph extends MorphicNode
     # this is what happens when "each" is
     # selected: we attach the selected morph
     @add theMorphToBeAttached
-    if @ instanceof ScrollFrameMorph
+    if @ instanceof ScrollPanel
       @adjustContentsBounds()
       @adjustScrollBars()
 
@@ -3184,7 +3184,7 @@ class Morph extends MorphicNode
     # this is what happens when "each" is
     # selected: we attach the selected morph
     @add theMorphToBeAttached, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
-    if @ instanceof ScrollFrameMorph
+    if @ instanceof ScrollPanel
       @adjustContentsBounds()
       @adjustScrollBars()
 

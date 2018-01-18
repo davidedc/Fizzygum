@@ -50,7 +50,7 @@ class ErrorsLogViewerMorph extends WindowMorph
     #@add @tempPromptEntryField
 
 
-    @tempPromptEntryField = new ScrollFrameMorph()
+    @tempPromptEntryField = new ScrollPanel()
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.isTextLineWrapping = true

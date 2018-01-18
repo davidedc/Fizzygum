@@ -256,7 +256,7 @@ class MenuMorph extends Morph
   maxWidthOfMenuEntries: ->
     w = 0
     #if @parent instanceof FrameMorph
-    #  if @parent.scrollFrame instanceof ScrollFrameMorph
+    #  if @parent.scrollFrame instanceof ScrollPanel
     #    w = @parent.scrollFrame.width()    
     @children.forEach (item) ->
       if item instanceof MenuItemMorph

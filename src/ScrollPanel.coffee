@@ -1,9 +1,9 @@
-# ScrollFrameMorph ////////////////////////////////////////////////////
+# ScrollPanel ////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-class ScrollFrameMorph extends FrameMorph
+class ScrollPanel extends FrameMorph
 
   autoScrollTrigger: nil
   hasVelocity: true # dto.
@@ -167,7 +167,7 @@ class ScrollFrameMorph extends FrameMorph
       else
         @vBar.hide()
   
-  # when you add things to the ScrollFrame they actually
+  # when you add things to the ScrollPanel they actually
   # end up in the frame inside it. This also applies to
   # resizing handles!
   add: (aMorph) ->
@@ -209,7 +209,7 @@ class ScrollFrameMorph extends FrameMorph
     unless aPoint.eq @extent()
       #console.log "move 15"
       @breakNumberOfRawMovesAndResizesCaches()
-      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStack)
+      if @isTextLineWrapping and !(@contents instanceof SimpleVerticalStackPanel)
         @contents.fullRawMoveTo @position()
       super aPoint
       @contents.rawSetExtent aPoint
@@ -255,9 +255,9 @@ class ScrollFrameMorph extends FrameMorph
       @contents.silentRawSetBounds newBounds
       @contents.reLayout()
       
-      @keepContentsInScrollFrame()
+      @keepContentsInScrollPanel()
 
-  keepContentsInScrollFrame: ->
+  keepContentsInScrollPanel: ->
     if @contents.left() > @left()
       @contents.fullRawMoveBy new Point @left() - @contents.left(), 0
     if @contents.right() < @right()
@@ -267,7 +267,7 @@ class ScrollFrameMorph extends FrameMorph
     if @contents.bottom() < @bottom()
       @contents.fullRawMoveBy 0, new Point @bottom() - @contents.bottom(), 0
   
-  # ScrollFrameMorph scrolling by floatDragging:
+  # ScrollPanel scrolling by floatDragging:
   scrollX: (steps) ->
     cl = @contents.left()
     l = @left()
@@ -421,7 +421,7 @@ class ScrollFrameMorph extends FrameMorph
       @adjustContentsBounds()
       @adjustScrollBars()  
   
-  # ScrollFrameMorph scrolling when editing text
+  # ScrollPanel scrolling when editing text
   # so to bring the caret fully into view.
   scrollCaretIntoView: (caretMorph) ->
     txt = caretMorph.target
@@ -453,7 +453,7 @@ class ScrollFrameMorph extends FrameMorph
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # ScrollFrameMorph events:
+  # ScrollPanel events:
   mouseScroll: (y, x) ->
     scrollbarJustChanged = false
 
