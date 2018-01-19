@@ -1306,6 +1306,14 @@ class Morph extends MorphicNode
         @parent.adjustContentsBounds()
 
 
+  refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
+    if @amIDirectlyInsideScrollPanelWdgt()
+      @parent.parent.adjustContentsBounds()
+      @parent.parent.adjustScrollBars()
+    if @parent instanceof SimpleVerticalStackPanelWdgt
+      @parent.adjustContentsBounds()
+
+
   rawSetWidth: (width) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase

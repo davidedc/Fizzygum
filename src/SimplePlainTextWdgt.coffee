@@ -81,13 +81,6 @@ class SimplePlainTextWdgt extends TextMorph2
     @parent.rawSetExtent @parent.parent.extent()
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
-  refreshScrollPanelWdgtOrVerticalStackIfIamInIt: ->
-    if @amIDirectlyInsideScrollPanelWdgt()
-      @parent.parent.adjustContentsBounds()
-      @parent.parent.adjustScrollBars()
-    if @parent instanceof SimpleVerticalStackPanelWdgt
-      @parent.adjustContentsBounds()
-
   softWrapOff: ->
     debugger
 
