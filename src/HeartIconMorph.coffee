@@ -10,6 +10,12 @@ class HeartIconMorph extends Morph
   widthWithoutSpacing: ->
     Math.min @width(), @height()
 
+  rawResizeToWithoutSpacing: ->
+    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawSetExtent new Point newWidth, newWidth
+
   # This method only paints this very morph's "image",
   # it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer, which

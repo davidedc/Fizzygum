@@ -602,6 +602,11 @@ class Morph extends MorphicNode
   
   boundingBoxTight: ->
     new Rectangle @leftTight(), @topTight(), @rightTight(), @bottomTight()
+
+  rawResizeToWithoutSpacing: ->
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawSetWidth newWidth
   
   # note that using this one, the children
   # morphs attached as floating don't move

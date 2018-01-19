@@ -14,3 +14,12 @@ class IconMorph extends Morph
 
   widthWithoutSpacing: ->
     @appearance.widthWithoutSpacing()
+
+  rawResizeToWithoutSpacing: ->
+    @rawSetExtent @appearance.calculateRectangleOfIcon()
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawResizeToWithoutSpacing()
+    ratio = @height()/@width()
+    @rawSetExtent new Point newWidth, newWidth * ratio
+   
