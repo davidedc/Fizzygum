@@ -1,6 +1,9 @@
 # IconAppearance //////////////////////////////////////////////////////////////
+# REQUIRES Point
 
 class IconAppearance extends Appearance
+
+  preferredSize: new Point 200, 200
 
   # default icon is a circle
   paintFunctionSource: """
@@ -41,6 +44,41 @@ class IconAppearance extends Appearance
 
     @paintFunction = new Function 'context', compiledOutput
 
+  calculateRectangleOfIcon: ->
+    height = @morph.height()
+    width = @morph.width()
+
+    scaleW = Math.abs(width / @preferredSize.width())
+    scaleH = Math.abs(height / @preferredSize.height())
+
+
+    # default: stretch
+    # nothing to do
+
+
+    # aspect fit
+    scaleW = Math.min(scaleW, scaleH)
+    scaleH = scaleW
+
+    # aspect fill
+    #scaleW = Math.max(scaleW, scaleH)
+    #scaleH = scaleW
+
+    # center
+    #scaleW = 1
+    #scaleH = 1
+
+    result = new Rectangle(Math.min(0, @preferredSize.width()), Math.min(0, @preferredSize.height()), Math.abs(@preferredSize.width()), Math.abs(@preferredSize.height()))
+    result2W = result.width() * scaleW
+    result2H = result.height() * scaleH
+    result2X = @morph.left() + (width - (result2W)) / 2
+    result2Y = @morph.top() + (height - (result2H)) / 2
+
+    result = new Rectangle result2X, result2Y, result2X + result2W, result2Y + result2H
+    return result
+
+  widthWithoutSpacing: ->
+    @calculateRectangleOfIcon().width()
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -49,7 +87,6 @@ class IconAppearance extends Appearance
   # Note that this morph might paint something on the screen even if
   # it's not a "leaf".
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
-
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
       return
 
@@ -72,42 +109,11 @@ class IconAppearance extends Appearance
       #aContext.translate morphPosition.x, morphPosition.y
       #debugger
 
-      height = @morph.height()
-      width = @morph.width()
-
-
-      preferredSize = new Point 200, 200
-      scaleW = Math.abs(width / preferredSize.width())
-      scaleH = Math.abs(height / preferredSize.height())
-
-
-      # default: stretch
-      # nothing to do
-
-
-      # aspect fit
-      scaleW = Math.min(scaleW, scaleH)
-      scaleH = scaleW
-
-      # aspect fill
-      #scaleW = Math.max(scaleW, scaleH)
-      #scaleH = scaleW
-
-      # center
-      #scaleW = 1
-      #scaleH = 1
-
-      result = new Rectangle(Math.min(0, preferredSize.width()), Math.min(0, preferredSize.height()), Math.abs(preferredSize.width()), Math.abs(preferredSize.height()))
-      result2W = result.width() * scaleW
-      result2H = result.height() * scaleH
-      result2X = @morph.left() + (width - (result2W)) / 2
-      result2Y = @morph.top() + (height - (result2H)) / 2
-
-      result = new Rectangle result2X, result2Y, result2X + result2W, result2Y + result2H
+      result = @calculateRectangleOfIcon()
 
 
       aContext.translate(result.left(), result.top())
-      aContext.scale(result.width() / preferredSize.width(), result.height() / preferredSize.height())
+      aContext.scale(result.width() / @preferredSize.width(), result.height() / @preferredSize.height())
 
       ## at this point, you draw in a squareSize x squareSize
       ## canvas, and it gets painted in a square that fits

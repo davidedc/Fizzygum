@@ -7,6 +7,9 @@ class FloraIconMorph extends Morph
   #  super()
   #  @setColor new Color 0, 0, 0
 
+  widthWithoutSpacing: ->
+    Math.min @width(), @height()
+
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children

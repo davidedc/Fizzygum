@@ -11,3 +11,6 @@ class IconMorph extends Morph
   constructor: (paintFunction, @color = new Color 0,0,0) ->
     super()
     @appearance = new IconAppearance @, paintFunction
+
+  widthWithoutSpacing: ->
+    @appearance.widthWithoutSpacing()

@@ -686,6 +686,13 @@ class Morph extends MorphicNode
   
   width: ->
     @bounds.width()
+
+  # e.g. images can have a lot of spacing
+  # around them, so here is a method to get
+  # the width of the actual thing, ignoring all
+  # the spacing that might be around
+  widthWithoutSpacing: ->
+    @width()
   
   height: ->
     @bounds.height()
