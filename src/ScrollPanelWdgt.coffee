@@ -247,15 +247,38 @@ class ScrollPanelWdgt extends PanelWdgt
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
     if subBounds
-      newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
+      # in case of a SimpleVerticalStackScrollPanelWdgt then we really
+      # want to make sure that we don't stretch the view and the stack
+      # after the end of the contents (this can happen for example
+      # when you are completely scrolled to the bottom and remove a long
+      # chunk of text at the bottom: you don't want the extra vacant space
+      # to be in view, you want to shrink all that part up and reposition the
+      # stack so you actually see a bottom that has something in it)
+      # So we first size the stack according to the minimum area of the
+      # components in it, then we add the minimum space needed to fill
+      # the viewport, so we never end up with empty space filling the stack
+      # beyond the height of the viewport.
+      if @ instanceof SimpleVerticalStackScrollPanelWdgt
+        newBounds = subBounds.expandBy(padding)?.ceil()
+        if newBounds.height() < @height()
+          newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
+      else
+        newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
     else
       newBounds = @boundingBox()?.ceil()
 
     unless @contents.boundingBox().eq newBounds
       @contents.silentRawSetBounds newBounds
       @contents.reLayout()
-      
-      @keepContentsInScrollPanelWdgt()
+    
+    # you'd think that if @contents.boundingBox().eq newBounds
+    # then we don't need to check if the contents are "in good view"
+    # but actually for example a stack resizes itself automatically when the
+    # elements are resized (in the foreach loop above),
+    # so we need anyways to do this check and fix the view if the
+    # case. The good news is that it's a cheap check to do in case
+    # there is nothing to do.
+    @keepContentsInScrollPanelWdgt()
 
   keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()
@@ -265,7 +288,7 @@ class ScrollPanelWdgt extends PanelWdgt
     if @contents.top() > @top()
       @contents.fullRawMoveBy new Point 0, @top() - @contents.top()
     if @contents.bottom() < @bottom()
-      @contents.fullRawMoveBy 0, new Point @bottom() - @contents.bottom(), 0
+      @contents.fullRawMoveBy new Point 0, @bottom() - @contents.bottom()
   
   # ScrollPanelWdgt scrolling by floatDragging:
   scrollX: (steps) ->
