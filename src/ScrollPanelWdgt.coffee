@@ -478,6 +478,11 @@ class ScrollPanelWdgt extends PanelWdgt
 
   # ScrollPanelWdgt events:
   mouseScroll: (y, x) ->
+
+    # if we don't destroy the resizing handles,
+    # they'll follow the contents being moved!
+    world.hand.destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem @
+
     scrollbarJustChanged = false
 
     # this paragraph prevents too much
