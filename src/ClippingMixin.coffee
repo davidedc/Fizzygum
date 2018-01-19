@@ -33,7 +33,7 @@ ClippingMixin =
             !@anyParentMarkedForDestruction()
           result = [@]
 
-        # Since the FrameMorph clips its children
+        # Since the PanelWdgt clips its children
         # at its boundary, hence we need
         # to check that we don't consider overlaps with
         # morphs contained in this frame that are clipped and
@@ -135,7 +135,7 @@ ClippingMixin =
       
       fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
 
-        # a FrameMorph has the special property that all of its children
+        # a PanelWdgt has the special property that all of its children
         # are actually inside its boundary.
         # This allows
         # us to avoid the further traversal of potentially
@@ -145,7 +145,7 @@ ClippingMixin =
         # then we do have to continue traversing all the
         # children of the Frame.
 
-        # This is why as well it's good to use FrameMorphs whenever
+        # This is why as well it's good to use PanelWdgts whenever
         # it's clear that there is a "container" case. Think
         # for example that you could stick a small
         # RectangleMorph (not a Frame) on the desktop and then
@@ -167,7 +167,7 @@ ClippingMixin =
         # overlapping it.
 
         # Also note that in theory you could stop recursion on any
-        # FrameMorph completely covered by a large opaque morph
+        # PanelWdgt completely covered by a large opaque morph
         # (or on any Morph which fullBounds are completely
         # covered, for that matter). You could
         # keep for example a list of the top n biggest opaque morphs
@@ -181,7 +181,7 @@ ClippingMixin =
         # rectangle. (note that you can't do the same trick with a
         # generic tree of morphs since the root morph doesn't
         # necessarily contain all the submorphs in its boundaries like
-        # the FrameMorph does)
+        # the PanelWdgt does)
         # So, check which part of the Frame should be redrawn:
         dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
         
@@ -228,7 +228,7 @@ ClippingMixin =
             aContext.restore()
             
 
-      # FrameMorph scrolling optimization:
+      # PanelWdgt scrolling optimization:
       fullRawMoveBy: (delta) ->
         #console.log "moving all morphs in the frame"
         @bounds = @bounds.translateBy delta

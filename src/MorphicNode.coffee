@@ -443,7 +443,7 @@ class MorphicNode
 
   SLOWfirstFrameParent: (morphToStartFrom = @) ->
     if morphToStartFrom.parent?
-      if morphToStartFrom.parent instanceof FrameMorph
+      if morphToStartFrom.parent instanceof PanelWdgt
         return morphToStartFrom.parent
       else
         return morphToStartFrom.parent.SLOWfirstFrameParent()
@@ -458,7 +458,7 @@ class MorphicNode
           alert "firstFrameParent is broken (cached)"
 
     if morphToStartFrom.parent?
-      if morphToStartFrom.parent instanceof FrameMorph
+      if morphToStartFrom.parent instanceof PanelWdgt
         result = morphToStartFrom.parent
       else
         result = morphToStartFrom.parent.firstFrameParent()

@@ -1,4 +1,4 @@
-#| FrameMorph //////////////////////////////////////////////////////////
+#| PanelWdgt //////////////////////////////////////////////////////////
 #| 
 #| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
 #| 
@@ -12,7 +12,7 @@
 # REQUIRES ClippingMixin
 # TODO unclear whether this actually requires RectangularAppearance
 
-class FrameMorph extends Morph
+class PanelWdgt extends Morph
 
   @augmentWith ClippingMixin, @name
 
@@ -108,7 +108,7 @@ class FrameMorph extends Morph
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars()
 
-  # FrameMorph menus:
+  # PanelWdgt menus:
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     super
     if @children.length

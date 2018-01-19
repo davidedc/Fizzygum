@@ -3,7 +3,7 @@
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-class ScrollPanelWdgt extends FrameMorph
+class ScrollPanelWdgt extends PanelWdgt
 
   autoScrollTrigger: nil
   hasVelocity: true # dto.
@@ -36,7 +36,7 @@ class ScrollPanelWdgt extends FrameMorph
     @alpha = 0
     super()
 
-    @contents = new FrameMorph @ unless @contents?
+    @contents = new PanelWdgt @ unless @contents?
     @addRaw @contents
 
     # the scrollFrame is never going to paint itself,
@@ -226,7 +226,7 @@ class ScrollPanelWdgt extends FrameMorph
     @adjustScrollBars()
 
   adjustContentsBounds: ->
-    # if FrameMorph is of type isTextLineWrapping
+    # if PanelWdgt is of type isTextLineWrapping
     # it means that you don't want the TextMorph to
     # extend indefinitely as you are typing. Rather,
     # the width will be constrained and the text will

@@ -300,7 +300,7 @@ class HandleMorph extends Morph
     menu = new MenuMorph @, false, @, true, true, "choose target:"
     if choices.length > 0
       choices.forEach (each) =>
-        menu.addMenuItem each.toString().slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', nil, nil, nil, nil, nil, each, nil, true
+        menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", true, @, 'makeHandleSolidWithParentMorph', nil, nil, nil, nil, nil, each, nil, true
     else
       # the ideal would be to not show the
       # "attach" menu entry at all but for the

@@ -269,10 +269,10 @@ class Morph extends MorphicNode
   getTextDescription: ->
     if @textDescription?
       #console.log "got name: " + @textDescription + "" + @constructor.name + " (adhoc description of morph)"
-      return @textDescription + "" + @constructor.name + " (adhoc description of morph)"
+      return @textDescription + "" + (@constructor.name.replace "Wdgt", "") + " (adhoc description of morph)"
     else
       #console.log "got name: " + @constructor.name + " (class name)"
-      return @constructor.name + " (class name)"
+      return (@constructor.name.replace "Wdgt", "") + " (class name)"
 
   identifyViaTextLabel: ->
     myTextDescription = @getTextDescription()
@@ -727,7 +727,7 @@ class Morph extends MorphicNode
   # - for a SliderMorph's "set target" so you can change properties of another Morph
   # - by the HandleMorph when you attach it to some other morph
   # Note that this method has a slightly different
-  # version in FrameMorph (because it clips, so we need
+  # version in PanelWdgt (because it clips, so we need
   # to check that we don't consider overlaps with
   # morphs contained in a frame that are clipped and
   # hence *actually* not overlapping).
@@ -858,7 +858,7 @@ class Morph extends MorphicNode
     #  debugger
     result
 
-  # for FrameMorph scrolling support
+  # for PanelWdgt scrolling support
   subMorphsMergedFullBounds: ->
     result = nil
     if @children.length
@@ -986,7 +986,7 @@ class Morph extends MorphicNode
       firstFrameParent = world
     firstFrameClipThroughBounds = firstFrameParent.clipThrough()
     @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
-    if @ instanceof FrameMorph
+    if @ instanceof PanelWdgt
       @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
     else
       @clipThroughCache = firstFrameClipThroughBounds
@@ -1551,7 +1551,7 @@ class Morph extends MorphicNode
   # then the parent). This means that we have to traverse
   # all the children to find out whether any of those overlap
   # the clipping rectangle. Note that we can be smarter with
-  # FrameMorphs, as their children are actually all contained
+  # PanelWdgts, as their children are actually all contained
   # within the parent's boundary.
   #
   # Note that if we could dynamically and cheaply keep an updated
@@ -2211,7 +2211,7 @@ class Morph extends MorphicNode
         else
           return @isLockingToPanels
 
-      if @parent instanceof FrameMorph
+      if @parent instanceof PanelWdgt
         return @isLockingToPanels
 
       # not attached to desktop, not inside a scrollable frame
@@ -2261,7 +2261,7 @@ class Morph extends MorphicNode
 
   amIDirectlyInsideScrollPanelWdgt: ->
     if @parent?
-      if (@parent instanceof FrameMorph) or (@parent instanceof SimpleVerticalStackPanelWdgt)
+      if (@parent instanceof PanelWdgt) or (@parent instanceof SimpleVerticalStackPanelWdgt)
         if @parent.parent?
           if (@parent.parent instanceof ScrollPanelWdgt) and !(@parent.parent instanceof ListMorph)
             return true
@@ -2291,8 +2291,8 @@ class Morph extends MorphicNode
       scanningMorphs = scanningMorphs.parent
       # TODO actually stop at the first
       # CLIPPING morph (more generic), not
-      # just a FrameMorph
-      if scanningMorphs instanceof FrameMorph
+      # just a PanelWdgt
+      if scanningMorphs instanceof PanelWdgt
         return nil
       if scanningMorphs.hasShadow()
         return scanningMorphs
@@ -3053,7 +3053,7 @@ class Morph extends MorphicNode
       menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
 
     menu.addLine()
-    if (@parent instanceof FrameMorph) and !(@parent instanceof ScrollPanelWdgt)
+    if (@parent instanceof PanelWdgt) and !(@parent instanceof ScrollPanelWdgt)
       if @parent instanceof WorldMorph
         whereToOrFrom = "desktop"
       else

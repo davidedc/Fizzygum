@@ -43,7 +43,7 @@ class FridgeMagnetsMorph extends WindowMorph
     @add @fridge
 
     # magnets box
-    @magnetsBox = new FrameMorph()
+    @magnetsBox = new PanelWdgt()
     @add @magnetsBox
 
 

@@ -8,7 +8,7 @@
 # REQUIRES SystemTestsControlPanelUpdater
 
 # The WorldMorph takes over the canvas on the page
-class WorldMorph extends FrameMorph
+class WorldMorph extends PanelWdgt
 
   # We need to add and remove
   # the event listeners so we are
@@ -447,9 +447,9 @@ class WorldMorph extends FrameMorph
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
     # invokes the Morph's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
     #  * the default one by Morph which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
-    #  * the interesting one in FrameMorph which a) narrows the dirty
+    #  * the interesting one in PanelWdgt which a) narrows the dirty
     #    rectangle (intersecting it with its border
-    #    since the FrameMorph clips at its border) and b) stops recursion on all
+    #    since the PanelWdgt clips at its border) and b) stops recursion on all
     #    the children that are outside such intersection.
     #  * this implementation which just takes into account that the hand
     #    (which could contain a Morph being floatDragged)
@@ -751,7 +751,7 @@ class WorldMorph extends FrameMorph
     # redraw what's overlapping it. Not all Morphs are traversed
     # in particular the following can stop the recursion:
     #  - invisible Morphs
-    #  - FrameMorphs that don't overlap the broken rectangle
+    #  - PanelWdgts that don't overlap the broken rectangle
     # Since potentially there is a lot of traversal ongoin for
     # each broken rectangle, one might want to consolidate overlapping
     # and nearby rectangles.
@@ -1752,8 +1752,8 @@ class WorldMorph extends FrameMorph
     @create new CircleBoxMorph()
   createNewSliderMorph: ->
     @create new SliderMorph()
-  createNewFrameMorph: ->
-    newMorph = new FrameMorph()
+  createNewPanelWdgt: ->
+    newMorph = new PanelWdgt()
     newMorph.rawSetExtent new Point 350, 250
     @create newMorph
   createNewScrollPanelWdgt: ->
@@ -1864,7 +1864,7 @@ class WorldMorph extends FrameMorph
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
       menu.addLine()
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
-      menu.addMenuItem "frame", true, @, "createNewFrameMorph"
+      menu.addMenuItem "panel", true, @, "createNewPanelWdgt"
       menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanelWdgt"
       menu.addMenuItem "canvas", true, @, "createNewCanvas"
       menu.addMenuItem "handle", true, @, "createNewHandle"
@@ -1892,7 +1892,7 @@ class WorldMorph extends FrameMorph
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
       menu.addMenuItem "slider", true, @, "createNewSliderMorph"
-      menu.addMenuItem "frame", true, @, "createNewFrameMorph"
+      menu.addMenuItem "panel", true, @, "createNewPanelWdgt"
       menu.addMenuItem "scrollable panel", true, @, "createNewScrollPanelWdgt"
       menu.addMenuItem "canvas", true, @, "createNewCanvas"
       menu.addLine()

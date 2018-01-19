@@ -1,6 +1,6 @@
 #| FridgeMorph //////////////////////////////////////////////////////////
 
-class FridgeMorph extends FrameMorph
+class FridgeMorph extends PanelWdgt
 
   tabs: []
   sourceCodeHolder: nil

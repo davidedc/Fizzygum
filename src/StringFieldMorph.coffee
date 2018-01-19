@@ -3,7 +3,7 @@
 # but note that there are no scrollbars, since the container
 # is just a frame not a scrollframe.
 
-class StringFieldMorph extends FrameMorph
+class StringFieldMorph extends PanelWdgt
 
   defaultContents: nil
   minTextWidth: nil
