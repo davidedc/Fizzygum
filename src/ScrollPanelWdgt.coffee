@@ -233,17 +233,21 @@ class ScrollPanelWdgt extends PanelWdgt
     # wrap.
     padding = Math.floor @extraPadding + @padding
     totalPadding = 2*padding
+
     if @isTextLineWrapping
-      @contents.children.forEach (morph) =>
-        if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
-          # this re-layouts the text to fit the width.
-          # The new height of the TextMorph will then be used
-          # to redraw the vertical slider.
-          morph.rawSetWidth @contents.width() - totalPadding
-          # the SimplePlainTextWdgt just needs this to be different from null
-          # while the TextMorph actually uses this number
-          morph.maxTextWidth = @contents.width() - totalPadding
-          @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
+      if @contents instanceof SimpleVerticalStackPanelWdgt
+        @contents.adjustContentsBounds()
+      else if @contents instanceof PanelWdgt
+        @contents.children.forEach (morph) =>
+          if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
+            # this re-layouts the text to fit the width.
+            # The new height of the TextMorph will then be used
+            # to redraw the vertical slider.
+            morph.rawSetWidth @contents.width() - totalPadding
+            # the SimplePlainTextWdgt just needs this to be different from null
+            # while the TextMorph actually uses this number
+            morph.maxTextWidth = @contents.width() - totalPadding
+            @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
     if subBounds
@@ -258,10 +262,25 @@ class ScrollPanelWdgt extends PanelWdgt
       # components in it, then we add the minimum space needed to fill
       # the viewport, so we never end up with empty space filling the stack
       # beyond the height of the viewport.
-      if @ instanceof SimpleVerticalStackScrollPanelWdgt
+      if @isTextLineWrapping
         newBounds = subBounds.expandBy(padding)?.ceil()
+
+        # ok so this is tricky: say that you have a document with
+        # ONLY a centered icon in it.
+        # If you don't add this line, the subBounds will start at the
+        # origin of the icon, which is NOT aligned to the left of the
+        # viewport. So what will happen is that the panel will be moved
+        # so its left will coincide with the left of the viewport.
+        # So the icon will appear non-centered.
+        newBounds = newBounds.merge new Rectangle @left(), @top(), @right(), @top() + 1
+
         if newBounds.height() < @height()
           newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
+        # I don't think this check below is needed anymore,
+        # TODO verify when there are a healthy number of tests around
+        # vertical stack and text scroll panels
+        if newBounds.width() < @width()
+          newBounds = newBounds.growBy new Point @width() - newBounds.width(), 0
       else
         newBounds = subBounds.expandBy(padding).merge @boundingBox()?.ceil()
     else

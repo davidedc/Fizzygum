@@ -245,6 +245,7 @@ class Morph extends MorphicNode
 
   layoutIsValid: true
   layoutSpec: LayoutSpec.ATTACHEDAS_FREEFLOATING
+  layoutSpecDetails: nil
 
   _showsAdders: false
 
@@ -3090,6 +3091,8 @@ class Morph extends MorphicNode
   # Morph-specific menu entries are basically the ones
   # beyond the generic entries above.
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+    if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
+      @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningTheMenu, menu
 
   buildMorphContextMenu: (morphOpeningTheMenu) ->
     menu = @buildBaseMorphClassContextMenu morphOpeningTheMenu
@@ -3273,6 +3276,8 @@ class Morph extends MorphicNode
 
   prepareToBeGrabbed: ->
     @unlockFromPanels()
+    @layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING
+    @layoutSpecDetails = nil
 
   colorSetters: ->
     # for context menu demo purposes
