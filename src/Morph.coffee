@@ -2750,7 +2750,7 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createNewSimplePlainTextWdgtWithBackground: ->
+  createNewWrappingSimplePlainTextWdgtWithBackground: ->
     newMorph = new SimplePlainTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
@@ -2775,9 +2775,12 @@ class Morph extends MorphicNode
       "nisi.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
     newMorph.isEditable = true
     #newMorph.maxTextWidth = 300
-    world.create newMorph
 
-  createNewExpandingSimplePlainTextWdgtWithBackground: ->
+    world.add newMorph
+    newMorph.fullRawMoveTo new Point 25, 40
+    newMorph.rawSetExtent new Point 500, 300
+
+  createNewNonWrappingSimplePlainTextWdgtWithBackground: ->
     newMorph = new SimplePlainTextWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
@@ -2792,10 +2795,16 @@ class Morph extends MorphicNode
     newMorph.isEditable = true
     newMorph.maxTextWidth = nil
     #newMorph.maxTextWidth = 300
-    world.create newMorph
 
-  createScrollPanelWdgtsWithOldTextStyleTextMorps: ->
-    debugger
+    world.add newMorph
+    newMorph.fullRawMoveTo new Point 540, 40
+    newMorph.rawSetExtent new Point 500, 300
+
+  createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground: ->
+    @createNewWrappingSimplePlainTextWdgtWithBackground()
+    @createNewNonWrappingSimplePlainTextWdgtWithBackground()
+
+  createWrappingSimplePlainTextScrollPanelWdgt: ->
     SfA = new SimplePlainTextScrollPanelWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
@@ -2819,9 +2828,10 @@ class Morph extends MorphicNode
       "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
       "nisi.",true, 10)
     world.add SfA
-    SfA.fullRawMoveTo new Point 40, 40
-    SfA.rawSetExtent new Point 500, 300
+    SfA.fullRawMoveTo new Point 20, 25
+    SfA.rawSetExtent new Point 390, 305
 
+  createNonWrappingSimplePlainTextScrollPanelWdgt: ->
     SfB = new SimplePlainTextScrollPanelWdgt(
       "Lorem ipsum dolor sit amet, consectetur adipiscing " +
       "elit. Integer rhoncus pharetra nulla, vel maximus " +
@@ -2830,8 +2840,12 @@ class Morph extends MorphicNode
       "porttitor, elit augue vestibulum est, nec congue " +
       "nisi.",false, 10)
     world.add SfB
-    SfB.fullRawMoveTo new Point 300, 40
-    SfB.rawSetExtent new Point 500, 300
+    SfB.fullRawMoveTo new Point 430, 25
+    SfB.rawSetExtent new Point 390, 305
+
+  createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt: ->
+    @createWrappingSimplePlainTextScrollPanelWdgt()
+    @createNonWrappingSimplePlainTextScrollPanelWdgt()
 
   createNewStringMorph3WithBackground: ->
     #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
@@ -2870,10 +2884,26 @@ class Morph extends MorphicNode
     world.create new DestroyIconMorph()
 
   createSimpleVerticalStackPanelWdgt: ->
-    world.create new SimpleVerticalStackPanelWdgt()
+    svspw = new SimpleVerticalStackPanelWdgt()
+    world.add svspw
+    svspw.fullRawMoveTo new Point 35, 30
+    svspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackScrollPanelWdgt: ->
+    svsspw = new SimpleVerticalStackScrollPanelWdgt()
+    world.add svsspw
+    svsspw.fullRawMoveTo new Point 430, 25
+    svsspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackPanelWdgtAndScrollPanel: ->
+    @createSimpleVerticalStackPanelWdgt()
+    @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleDocumentScrollPanelWdgt: ->
-    world.create new SimpleDocumentScrollPanelWdgt()
+    sdspw = new SimpleDocumentScrollPanelWdgt()
+    world.add sdspw
+    sdspw.fullRawMoveTo new Point 35, 30
+    sdspw.rawSetExtent new Point 370, 325
 
   createUnderCarpetIconMorph: ->
     world.create new UnderCarpetIconMorph()
@@ -2961,7 +2991,8 @@ class Morph extends MorphicNode
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Vertical stack"
     menu.addMenuItem "vertical stack", true, @, "createSimpleVerticalStackPanelWdgt"
-    menu.addMenuItem "vertical stack scrollpanel", true, @, "createSimpleVerticalStackPanelWdgt"
+    menu.addMenuItem "vertical stack scrollpanel", true, @, "createSimpleVerticalStackScrollPanelWdgt"
+    menu.addMenuItem "vertical stack panel and scrollpanel", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
 
     menu.popUpAtHand()
 
@@ -2973,12 +3004,12 @@ class Morph extends MorphicNode
 
   popUpSimplePlainTextWdgtMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Simple plain text"
-    menu.addMenuItem "simple plain text wrapping", true, @, "createNewSimplePlainTextWdgtWithBackground"
-    menu.addMenuItem "simple plain text not wrapping", true, @, "createNewExpandingSimplePlainTextWdgtWithBackground"    
-    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewExpandingSimplePlainTextWdgtWithBackground"    
-    menu.addMenuItem "simple plain text scrollpanel wrapping", true, @, "createScrollPanelWdgtsWithOldTextStyleTextMorps"
-    menu.addMenuItem "simple plain text scrollpanel not wrapping", true, @, "createScrollPanelWdgtsWithOldTextStyleTextMorps"
-    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, @, "createScrollPanelWdgtsWithOldTextStyleTextMorps"
+    menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
+    menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"    
+    menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"    
+    menu.addMenuItem "simple plain text scrollpanel wrapping", true, @, "createWrappingSimplePlainTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel not wrapping", true, @, "createNonWrappingSimplePlainTextScrollPanelWdgt"
+    menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, @, "createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt"
 
     menu.popUpAtHand()
 
