@@ -262,7 +262,7 @@ class ScrollPanelWdgt extends PanelWdgt
       # components in it, then we add the minimum space needed to fill
       # the viewport, so we never end up with empty space filling the stack
       # beyond the height of the viewport.
-      if @isTextLineWrapping
+      if @isTextLineWrapping or (@ instanceof SimplePlainTextScrollPanelWdgt)
         newBounds = subBounds.expandBy(padding)?.ceil()
 
         # ok so this is tricky: say that you have a document with
