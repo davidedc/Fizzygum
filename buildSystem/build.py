@@ -238,8 +238,8 @@ def generateHTMLFileIncludingTests(testsDirectory, srcHTMLFile, destHTMLFile):
 def main():
     """
     Creates an ordered list of the coffee files, iterates through it, reads the
-    source code of each file and put each it its own .coffee containing the source
-    Also put together a manifest of all the sources.
+    source code of each file and puts each it its own .coffee containing the source
+    Also puts together a manifest of all the sources.
     """
     dependencies = OrderedDict()
 
