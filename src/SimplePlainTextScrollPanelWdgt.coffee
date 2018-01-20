@@ -35,4 +35,5 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
       ostmA.maxTextWidth = 0
     ostmA.enableSelecting()
     @setContents ostmA, padding
+    ostmA.lockToPanels()
 
