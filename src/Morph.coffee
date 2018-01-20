@@ -342,7 +342,7 @@ class Morph extends MorphicNode
     super()
     @assignUniqueID()
 
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
       if @constructor.name not in arr
         arr.push @constructor.name
@@ -462,7 +462,7 @@ class Morph extends MorphicNode
   toString: ->
     firstPart = "a "
 
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsNumberIDInLabels
       return firstPart + @morphClassString()
     else
       return firstPart + @uniqueIDString()
@@ -2685,7 +2685,7 @@ class Morph extends MorphicNode
     # nopainting happening and the morph doesn't
     # know its extent.
     @fullRawMoveWithin world
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     # shadow must be added after the morph
     # has been placed somewhere because
@@ -3072,24 +3072,30 @@ class Morph extends MorphicNode
       # going to replay but *waiting* for that screenshot
       # first.
       takePic = =>
-        switch AutomatorRecorderAndPlayer.state
-          when AutomatorRecorderAndPlayer.RECORDING
-            # While recording a test, just trigger for
-            # the takeScreenshot command to be recorded. 
-            window.world.automatorRecorderAndPlayer.takeScreenshot @
-          when AutomatorRecorderAndPlayer.PLAYING
-            # While playing a test, this command puts the
-            # screenshot of this morph in a special
-            # variable of the system test runner.
-            # The test runner will wait for this variable
-            # to contain the morph screenshot before
-            # doing the comparison as per command recorded
-            # in the case above.
-            window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
-          else
-            # no system tests recording/playing ongoing,
-            # just open new tab with image of morph.
-            window.open @fullImageData()
+        if AutomatorRecorderAndPlayer?
+          switch AutomatorRecorderAndPlayer.state
+            when AutomatorRecorderAndPlayer.RECORDING
+              # While recording a test, just trigger for
+              # the takeScreenshot command to be recorded. 
+              window.world.automatorRecorderAndPlayer.takeScreenshot @
+            when AutomatorRecorderAndPlayer.PLAYING
+              # While playing a test, this command puts the
+              # screenshot of this morph in a special
+              # variable of the system test runner.
+              # The test runner will wait for this variable
+              # to contain the morph screenshot before
+              # doing the comparison as per command recorded
+              # in the case above.
+              window.world.automatorRecorderAndPlayer.imageDataOfAParticularMorph = @fullImageData()
+            else
+              # no system tests recording/playing ongoing,
+              # just open new tab with image of morph.
+              window.open @fullImageData()
+        else
+          # no system tests recording/playing ongoing,
+          # just open new tab with image of morph.
+          window.open @fullImageData()
+
       menu.addMenuItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
 
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"

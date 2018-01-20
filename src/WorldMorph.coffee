@@ -238,7 +238,8 @@ class WorldMorph extends PanelWdgt
     @setBounds new Rectangle 0, 0, @worldCanvas.width / pixelRatio, @worldCanvas.height / pixelRatio
 
     @initEventListeners()
-    @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer = new AutomatorRecorderAndPlayer @, @hand
 
     @worldCanvasContext = @worldCanvas.getContext "2d"
 
@@ -350,10 +351,11 @@ class WorldMorph extends PanelWdgt
     if (!startupActions?) or (WorldMorph.ongoingUrlActionNumber == startupActions.actions.length)
       WorldMorph.bootState = WorldMorph.BOOT_COMPLETE
       WorldMorph.ongoingUrlActionNumber = 0
-      if window.location.href.indexOf("worldWithSystemTestHarness") != -1
-        if @automatorRecorderAndPlayer.atLeastOneTestHasBeenRun
-          if @automatorRecorderAndPlayer.allTestsPassedSoFar
-            document.getElementById("background").style.background = "green"
+      if AutomatorRecorderAndPlayer?
+        if window.location.href.indexOf("worldWithSystemTestHarness") != -1
+          if @automatorRecorderAndPlayer.atLeastOneTestHasBeenRun
+            if @automatorRecorderAndPlayer.allTestsPassedSoFar
+              document.getElementById("background").style.background = "green"
 
     if WorldMorph.bootState == WorldMorph.BOOT_COMPLETE
       return
@@ -361,7 +363,7 @@ class WorldMorph extends PanelWdgt
     console.log "nextStartupAction " + (WorldMorph.ongoingUrlActionNumber+1) + " / " + startupActions.actions.length
 
     currentAction = startupActions.actions[WorldMorph.ongoingUrlActionNumber]
-    if currentAction.name == "runTests"
+    if AutomatorRecorderAndPlayer? and currentAction.name == "runTests"
       @automatorRecorderAndPlayer.selectTestsFromTagsOrTestNames(currentAction.testsToRun)
 
       if currentAction.numberOfGroups?
@@ -417,7 +419,7 @@ class WorldMorph extends PanelWdgt
   # Morph for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
       # Check which objects end with the word Morph
       theWordMorph = "Morph"
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->
@@ -1121,8 +1123,9 @@ class WorldMorph extends PanelWdgt
 
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    pointerAndMorphInfo = @getPointerAndMorphInfo()
-    @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
+    if AutomatorRecorderAndPlayer?
+      pointerAndMorphInfo = @getPointerAndMorphInfo()
+      @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
 
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
@@ -1152,13 +1155,14 @@ class WorldMorph extends PanelWdgt
     # potential grab command.
 
     if @hand.floatDraggingSomething()
-      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         action = "floatDrag"
         arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
         if action not in arr
           arr.push action
     
-    @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
   # event.type must be keypress
   getChar: (event) ->
@@ -1170,7 +1174,8 @@ class WorldMorph extends PanelWdgt
       nil # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
 
@@ -1186,7 +1191,8 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     if @keyboardEventsReceiver
       # so far the caret is the only keyboard
@@ -1198,7 +1204,8 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    @automatorRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
     # it rejects the
@@ -1260,17 +1267,20 @@ class WorldMorph extends PanelWdgt
        @outstandingTimerTriggeredOperationsCounter.pop()
       ), 50, true
 
-    @automatorRecorderAndPlayer.addCutCommand selectedText
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addCutCommand selectedText
 
   processCopy: (selectedText) ->
     console.log "processing copy"
-    @automatorRecorderAndPlayer.addCopyCommand selectedText
+    if AutomatorRecorderAndPlayer?
+      @automatorRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (clipboardText) ->
     if @caret
       # Needs a few msec to execute paste
       console.log "about to insert text: " + clipboardText
-      @automatorRecorderAndPlayer.addPasteCommand clipboardText
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.addPasteCommand clipboardText
 
       # see comment on outstandingTimerTriggeredOperationsCounter
       # above where the property is declared and initialised.
@@ -1516,47 +1526,56 @@ class WorldMorph extends PanelWdgt
     #console.log "binding via mousetrap"
 
     @keyComboResetWorldEventListener = (event) =>
-      @automatorRecorderAndPlayer.resetWorld()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.resetWorld()
       false
     Mousetrap.bind ["alt+d"], @keyComboResetWorldEventListener
 
     @keyComboTurnOnAnimationsPacingControl = (event) =>
-      @automatorRecorderAndPlayer.turnOnAnimationsPacingControl()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.turnOnAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+e"], @keyComboTurnOnAnimationsPacingControl
 
     @keyComboTurnOffAnimationsPacingControl = (event) =>
-      @automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
       false
     Mousetrap.bind ["alt+u"], @keyComboTurnOffAnimationsPacingControl
 
     @keyComboTakeScreenshotEventListener = (event) =>
-      @automatorRecorderAndPlayer.takeScreenshot()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.takeScreenshot()
       false
     Mousetrap.bind ["alt+c"], @keyComboTakeScreenshotEventListener
 
     @keyComboStopTestRecordingEventListener = (event) =>
-      @automatorRecorderAndPlayer.stopTestRecording()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.stopTestRecording()
       false
     Mousetrap.bind ["alt+t"], @keyComboStopTestRecordingEventListener
 
     @keyComboAddTestCommentEventListener = (event) =>
-      @automatorRecorderAndPlayer.addTestComment()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.addTestComment()
       false
     Mousetrap.bind ["alt+m"], @keyComboAddTestCommentEventListener
 
     @keyComboCheckNumberOfMenuItemsEventListener = (event) =>
-      @automatorRecorderAndPlayer.checkNumberOfItemsInMenu()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.checkNumberOfItemsInMenu()
       false
     Mousetrap.bind ["alt+k"], @keyComboCheckNumberOfMenuItemsEventListener
 
     @keyComboCheckStringsOfItemsInMenuOrderImportant = (event) =>
-      @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderImportant()
       false
     Mousetrap.bind ["alt+a"], @keyComboCheckStringsOfItemsInMenuOrderImportant
 
     @keyComboCheckStringsOfItemsInMenuOrderUnimportant = (event) =>
-      @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant()
+      if AutomatorRecorderAndPlayer?
+        @automatorRecorderAndPlayer.checkStringsOfItemsInMenuOrderUnimportant()
       false
     Mousetrap.bind ["alt+z"], @keyComboCheckStringsOfItemsInMenuOrderUnimportant
 
@@ -1673,10 +1692,11 @@ class WorldMorph extends PanelWdgt
         # which is set based on lastBuiltInstanceNumericID
         window[eachMorphClass].lastBuiltInstanceNumericID = 0
 
-    window.world.automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
-    window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
-    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
-    window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
+    if AutomatorRecorderAndPlayer?
+      window.world.automatorRecorderAndPlayer.turnOffAnimationsPacingControl()
+      window.world.automatorRecorderAndPlayer.turnOffAlignmentOfMorphIDsMechanism()
+      window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsContentExtractInLabels()
+      window.world.automatorRecorderAndPlayer.turnOffHidingOfMorphsNumberIDInLabels()
 
     super()
 
@@ -1705,7 +1725,7 @@ class WorldMorph extends PanelWdgt
         menu.addMenuItem "standard settings", true, WorldMorph.preferencesAndSettings, "toggleInputMode", "smaller menu fonts\nand sliders"
       menu.addLine()
     
-    if window.location.href.contains "worldWithSystemTestHarness"
+    if AutomatorRecorderAndPlayer? and window.location.href.contains "worldWithSystemTestHarness"
       menu.addMenuItem "system tests ➜", false, @, "popUpSystemTestsMenu", ""
     if @isDevMode
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"

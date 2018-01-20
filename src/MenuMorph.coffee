@@ -24,7 +24,7 @@ class MenuMorph extends Morph
   constructor: (morphOpeningTheMenu, @isListContents = false, @target, @killThisMenuIfClickOutsideDescendants = true, @killThisMenuIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
     # console.log "menu super"
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants

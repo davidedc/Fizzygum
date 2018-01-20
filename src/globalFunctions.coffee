@@ -597,8 +597,9 @@ boot = ->
     if window.preCompiled
       (loadSourcesAndPotentiallyCompileThem true).then ->
         window.stillLoadingSources = false
-        AutomatorRecorderAndPlayer.testsManifest = testsManifest
-        AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+        if AutomatorRecorderAndPlayer?
+          AutomatorRecorderAndPlayer.testsManifest = testsManifest
+          AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
         startupActions = getParameterByName "startupActions"
         console.log "startupActions: " + startupActions
         if startupActions?
@@ -606,8 +607,9 @@ boot = ->
     else
       (loadSourcesAndPotentiallyCompileThem false).then ->
         window.stillLoadingSources = false
-        AutomatorRecorderAndPlayer.testsManifest = testsManifest
-        AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
+        if AutomatorRecorderAndPlayer?
+          AutomatorRecorderAndPlayer.testsManifest = testsManifest
+          AutomatorRecorderAndPlayer.testsAssetsManifest = testsAssetsManifest
       .then ->
         createWorldAndStartStepping()
         startupActions = getParameterByName "startupActions"

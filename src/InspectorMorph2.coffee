@@ -99,7 +99,7 @@ class InspectorMorph2 extends WindowMorph
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     # remove all submorhs i.e. panes and buttons
@@ -250,7 +250,7 @@ class InspectorMorph2 extends WindowMorph
 
     # we add a Morph alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
 
@@ -479,7 +479,7 @@ class InspectorMorph2 extends WindowMorph
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
 
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->

@@ -67,7 +67,7 @@ class StringMorph extends Morph
   toString: ->
     # e.g. 'a StringMorph("Hello World")'
     firstPart = super()
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
       return firstPart + " (\"" + @text.slice(0, 30) + "...\")"

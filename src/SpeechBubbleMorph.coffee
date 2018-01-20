@@ -38,7 +38,7 @@ class SpeechBubbleMorph extends Morph
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInMorph"
-    if AutomatorRecorderAndPlayer.animationsPacingControl and
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.animationsPacingControl and
      AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
         @createBubbleHelpIfHandStillOnMorph contents, morphInvokingThis
     else

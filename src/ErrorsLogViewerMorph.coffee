@@ -40,7 +40,9 @@ class ErrorsLogViewerMorph extends WindowMorph
 
 
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     super
@@ -174,7 +176,9 @@ class ErrorsLogViewerMorph extends WindowMorph
 
 
     trackChanges.pop()
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
 

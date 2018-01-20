@@ -246,6 +246,10 @@ def main():
     # create a list with the coffeescript files
     filenames = sorted(glob("src/*.coffee"))
 
+    if os.path.exists("../Fizzygum-tests"):
+        if os.path.exists("../Fizzygum-tests/Automator-and-test-harness-src"):
+            filenames = sorted(filenames + sorted(glob("../Fizzygum-tests/Automator-and-test-harness-src/*.coffee")))
+
     # Read each file and search it for each sort of dependency.
     # note that this is not strictly needed because it's not
     # kept anywhere, the loader

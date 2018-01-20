@@ -101,7 +101,7 @@ class BouncerMorph extends Morph
       # by the test step count only.
       #console.log "AutomatorRecorderAndPlayer.animationsPacingControl: " + AutomatorRecorderAndPlayer.animationsPacingControl
       #console.log "state: " + AutomatorRecorderAndPlayer.state
-      if AutomatorRecorderAndPlayer.animationsPacingControl
+      if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.animationsPacingControl
         if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
           @resetPosition()
           for i in [0... window.world.automatorRecorderAndPlayer.automatorCommandsSequence.length]

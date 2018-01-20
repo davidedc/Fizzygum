@@ -179,7 +179,7 @@ class StringMorph3 extends Morph
   toString: ->
     # e.g. 'a StringMorph3("Hello World")'
     firstPart = super()
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
     AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else

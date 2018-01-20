@@ -18,7 +18,9 @@ class FridgeMagnetsMorph extends WindowMorph
     super "Fizzytiles"
   
   buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     super
@@ -195,7 +197,9 @@ class FridgeMagnetsMorph extends WindowMorph
 
 
     trackChanges.pop()
-    if AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
+     AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
     @layoutIsValid = true

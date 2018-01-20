@@ -97,7 +97,8 @@ class HandMorph extends Morph
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morphTheMenuIsAbout
     @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
 
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       setTimeout \
         =>
@@ -144,12 +145,13 @@ class HandMorph extends Morph
     oldParent = aMorph.parent
     if !@floatDraggingSomething()
 
-      @world.automatorRecorderAndPlayer.addGrabCommand()
-      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        action = "grab"
-        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
-        if action not in arr
-          arr.push action
+      if AutomatorRecorderAndPlayer?
+        @world.automatorRecorderAndPlayer.addGrabCommand()
+        if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+          action = "grab"
+          arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          if action not in arr
+            arr.push action
 
 
       @world.stopEditing()
@@ -197,12 +199,13 @@ class HandMorph extends Morph
   drop: ->
     if @floatDraggingSomething()
 
-      @world.automatorRecorderAndPlayer.addDropCommand()
-      if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
-        action = "drop"
-        arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
-        if action not in arr
-          arr.push action
+      if AutomatorRecorderAndPlayer?
+        @world.automatorRecorderAndPlayer.addDropCommand()
+        if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+          action = "drop"
+          arr = window.world.automatorRecorderAndPlayer.tagsCollectedWhileRecordingTest
+          if action not in arr
+            arr.push action
 
       morphToDrop = @children[0]
       target = @dropTargetFor morphToDrop
@@ -288,7 +291,7 @@ class HandMorph extends Morph
     @destroyTemporaries()
     @morphToGrab = nil
 
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2 or ctrlKey
         fade 'rightMouseButtonIndicator', 0, 1, 10, new Date().getTime()
       else
@@ -384,7 +387,7 @@ class HandMorph extends Morph
    # note that the button param is not used,
    # but adding it for consistency...
   processMouseUp: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       if button is 2
         fade 'rightMouseButtonIndicator', 1, 0, 500, new Date().getTime()
       else
@@ -425,7 +428,8 @@ class HandMorph extends Morph
             # this method below is also going to remove
             # the mouse down/up commands that have
             # recently/just been added.
-            @world.automatorRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
+            if AutomatorRecorderAndPlayer?
+              @world.automatorRecorderAndPlayer.addCommandLeftOrRightClickOnMenuItem(@mouseButton, labelString, occurrenceNumber + 1)
             alreadyRecordedLeftOrRightClickOnMenuItem = true
 
       # TODO check if there is any other
@@ -441,7 +445,8 @@ class HandMorph extends Morph
           if !alreadyRecordedLeftOrRightClickOnMenuItem
             # this being a right click, pop
             # up a menu as needed.
-            @world.automatorRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
+            if AutomatorRecorderAndPlayer?
+              @world.automatorRecorderAndPlayer.addOpenContextMenuCommand morph.uniqueIDString()
 
       # trigger the action
       until morph[expectedClick]
@@ -454,11 +459,13 @@ class HandMorph extends Morph
           switch expectedClick
             when "mouseClickLeft"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndMorphInfo...
+              if AutomatorRecorderAndPlayer?
+                world.automatorRecorderAndPlayer.addMouseClickCommand 0, nil, pointerAndMorphInfo...
               morph.mouseUpLeft? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
             when "mouseClickRight"
               pointerAndMorphInfo = world.getPointerAndMorphInfo()
-              world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndMorphInfo...
+              if AutomatorRecorderAndPlayer?
+                world.automatorRecorderAndPlayer.addMouseClickCommand 2, nil, pointerAndMorphInfo...
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
@@ -473,7 +480,7 @@ class HandMorph extends Morph
             if @doubleClickMorph == morph
               @doubleClickMorph = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-              if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+              if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                 if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                   disableConsecutiveClicksFromSingleClicksDueToFastTests = true
               if !disableConsecutiveClicksFromSingleClicksDueToFastTests
@@ -502,7 +509,7 @@ class HandMorph extends Morph
               if @tripleClickMorph == morph
                 @tripleClickMorph = nil
                 disableConsecutiveClicksFromSingleClicksDueToFastTests = false
-                if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+                if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
                   if !window.world.automatorRecorderAndPlayer.runningInSlowMode()
                     disableConsecutiveClicksFromSingleClicksDueToFastTests = true
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
@@ -618,7 +625,8 @@ class HandMorph extends Morph
 
   processDoubleClick: (morph = @topMorphUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
-    world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
+    if AutomatorRecorderAndPlayer?
+      world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
 
     @destroyTemporaries()
     if @floatDraggingSomething()
@@ -630,7 +638,8 @@ class HandMorph extends Morph
 
   processTripleClick: (morph = @topMorphUnderPointer()) ->
     pointerAndMorphInfo = world.getPointerAndMorphInfo morph
-    world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
+    if AutomatorRecorderAndPlayer?
+      world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
 
     @destroyTemporaries()
     if @floatDraggingSomething()
@@ -799,7 +808,7 @@ class HandMorph extends Morph
     pos = new Point worldX, worldY
     @fullRawMoveTo pos
 
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       mousePointerIndicator = document.getElementById "mousePointerIndicator"
       mousePointerIndicator.style.display = 'block'
       posInDocument = getDocumentPositionOf @world.worldCanvas
@@ -844,7 +853,7 @@ class HandMorph extends Morph
     displacementDueToGrabDragThreshold = nil
     skipGrabDragThreshold = false
     
-    if AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
       currentlyPlayingTestName = world.automatorRecorderAndPlayer.currentlyPlayingTestName
       if !window["#{currentlyPlayingTestName}"].grabDragThreshold?
         skipGrabDragThreshold = true
