@@ -336,6 +336,10 @@ class InspectorMorph extends BoxMorph
     cnts.enableSelecting()
     cnts.setReceiver @target
     @detail.setContents cnts, 2
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    super
+    @invalidateLayout()
   
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
