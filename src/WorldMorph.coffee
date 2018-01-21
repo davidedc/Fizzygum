@@ -36,8 +36,7 @@ class WorldMorph extends PanelWdgt
   keydownEventListener: nil
   keyupEventListener: nil
   keypressEventListener: nil
-  mousewheelEventListener: nil
-  DOMMouseScrollEventListener: nil
+  wheelEventListener: nil
   copyEventListener: nil
   pasteEventListener: nil
   clipboardTextIfTestRunning: nil
@@ -889,10 +888,7 @@ class WorldMorph extends PanelWdgt
         when "keypressEventListener"
           @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-        when "mousewheelEventListener"
-          @hand.processMouseScroll event
-
-        when "DOMMouseScrollEventListener"
+        when "wheelEventListener"
           @hand.processMouseScroll event
 
         when "cutEventListener"
@@ -1425,20 +1421,12 @@ class WorldMorph extends PanelWdgt
 
     # Safari, Chrome
     
-    @mousewheelEventListener = (event) =>
-      @events.push "mousewheelEventListener"
+    @wheelEventListener = (event) =>
+      @events.push "wheelEventListener"
       @events.push event
       event.preventDefault()
 
-    canvas.addEventListener "mousewheel", @mousewheelEventListener, false
-    # Firefox
-    
-    @DOMMouseScrollEventListener = (event) =>
-      @events.push "DOMMouseScrollEventListener"
-      @events.push event
-      event.preventDefault()
-
-    canvas.addEventListener "DOMMouseScroll", @DOMMouseScrollEventListener, false
+    canvas.addEventListener "wheel", @wheelEventListener, false
 
     # in theory there should be no scroll event on the page
     # window.addEventListener "scroll", ((event) =>
@@ -1612,8 +1600,7 @@ class WorldMorph extends PanelWdgt
     canvas.removeEventListener 'keydown', @keydownEventListener
     canvas.removeEventListener 'keyup', @keyupEventListener
     canvas.removeEventListener 'keypress', @keypressEventListener
-    canvas.removeEventListener 'mousewheel', @mousewheelEventListener
-    canvas.removeEventListener 'DOMMouseScroll', @DOMMouseScrollEventListener
+    canvas.removeEventListener 'wheel', @wheelEventListener
     canvas.removeEventListener 'cut', @cutEventListener
     canvas.removeEventListener 'copy', @copyEventListener
     canvas.removeEventListener 'paste', @pasteEventListener
