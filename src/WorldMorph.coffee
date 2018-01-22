@@ -889,7 +889,7 @@ class WorldMorph extends PanelWdgt
           @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
         when "wheelEventListener"
-          @hand.processMouseScroll event
+          @processWheel event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
 
         when "cutEventListener"
           # note that "event" here is actually a string,
@@ -1159,6 +1159,15 @@ class WorldMorph extends PanelWdgt
     
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
+
+
+  processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
+      pointerAndMorphInfo = @getPointerAndMorphInfo()
+      @automatorRecorderAndPlayer.addWheelCommand deltaX, deltaY, deltaZ, altKey, button, buttons, pointerAndMorphInfo...
+
+    @hand.processWheel deltaX, deltaY, deltaZ, altKey, button, buttons
+
 
   # event.type must be keypress
   getChar: (event) ->

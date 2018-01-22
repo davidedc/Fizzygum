@@ -496,7 +496,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustScrollBars()
 
   # ScrollPanelWdgt events:
-  mouseScroll: (y, x) ->
+  wheel: (x, y, z, altKey, button, buttons) ->
 
     # if we don't destroy the resizing handles,
     # they'll follow the contents being moved!
@@ -514,12 +514,20 @@ class ScrollPanelWdgt extends PanelWdgt
     if Math.abs(x) < Math.abs(y)
       x = 0
 
-    if y
+    if WorldMorph.preferencesAndSettings.invertWheelX
+      x *= -1
+    if WorldMorph.preferencesAndSettings.invertWheelY
+      y *= -1
+    if WorldMorph.preferencesAndSettings.invertWheelZ
+      z *= -1
+
+    if y != 0
       scrollbarJustChanged = true
-      @scrollY y * WorldMorph.preferencesAndSettings.mouseScrollAmount
-    if x
+      @scrollY y * WorldMorph.preferencesAndSettings.wheelScaleY
+    if x != 0
       scrollbarJustChanged = true
-      @scrollX x * WorldMorph.preferencesAndSettings.mouseScrollAmount  
+      @scrollX x * WorldMorph.preferencesAndSettings.wheelScaleX
+
     if scrollbarJustChanged
       @adjustContentsBounds()
       @adjustScrollBars()

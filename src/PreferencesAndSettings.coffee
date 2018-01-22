@@ -25,7 +25,14 @@ class PreferencesAndSettings
   prompterSliderSize: nil
   handleSize: nil
   scrollBarsThickness: nil
-  mouseScrollAmount: nil
+
+  wheelScaleX: 1
+  wheelScaleY: 1
+  wheelScaleZ: 1
+  invertWheelX: true
+  invertWheelY: true
+  invertWheelZ: true
+
   useSliderForInput: nil
   useVirtualKeyboard: nil
   isTouchDevice: nil
@@ -67,7 +74,13 @@ class PreferencesAndSettings
     @handleSize = 15
     @scrollBarsThickness = 10
 
-    @mouseScrollAmount = 40
+    @wheelScaleX = 1
+    @wheelScaleY = 1
+    @wheelScaleZ = 1
+    @invertWheelX = true
+    @invertWheelY = true
+    @invertWheelZ = true
+
     @useSliderForInput = false
     @useVirtualKeyboard = true
     @isTouchDevice = false # turned on by touch events, don't set
@@ -90,7 +103,13 @@ class PreferencesAndSettings
     @handleSize = 26
     @scrollBarsThickness = 24
 
-    @mouseScrollAmount = 40
+    @wheelScaleX = 1
+    @wheelScaleY = 1
+    @wheelScaleZ = 1
+    @invertWheelX = true
+    @invertWheelY = true
+    @invertWheelZ = true
+
     @useSliderForInput = true
     @useVirtualKeyboard = true
     @isTouchDevice = false

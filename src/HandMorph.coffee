@@ -235,7 +235,7 @@ class HandMorph extends Morph
   #   mouseEnterfloatDragging
   #   mouseLeavefloatDragging
   #   mouseMove
-  #   mouseScroll
+  #   wheel
   #
   # Note that some handlers don't want the event but the
   # interesting parameters of the event. This is because
@@ -649,11 +649,13 @@ class HandMorph extends Morph
       morph.mouseTripleClick @position() if morph
     @mouseButton = nil
   
-  processMouseScroll: (event) ->
+  # see https://developer.mozilla.org/en-US/docs/Web/Events/wheel
+  processWheel: (deltaX, deltaY, deltaZ, altKey, button, buttons) ->
     morph = @topMorphUnderPointer()
-    morph = morph.parent  while morph and not morph.mouseScroll
+    morph = morph.parent  while morph and not morph.wheel
 
-    morph.mouseScroll (event.detail / -3) or ((if Object::hasOwnProperty.call(event,'wheelDeltaY') then event.wheelDeltaY / 120 else event.wheelDelta / 120)), event.wheelDeltaX / 120 or 0  if morph
+    if morph?
+      morph.wheel deltaX, deltaY, deltaZ, altKey, button, buttons
   
   
   #
