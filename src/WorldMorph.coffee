@@ -1119,7 +1119,7 @@ class WorldMorph extends PanelWdgt
 
 
   addMouseChangeCommand: (upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       pointerAndMorphInfo = @getPointerAndMorphInfo()
       @automatorRecorderAndPlayer.addMouseChangeCommand upOrDown, button, buttons, ctrlKey, shiftKey, altKey, metaKey, pointerAndMorphInfo...
 
@@ -1157,7 +1157,7 @@ class WorldMorph extends PanelWdgt
         if action not in arr
           arr.push action
     
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addMouseMoveCommand(pageX, pageY, @hand.floatDraggingSomething(), button, buttons, ctrlKey, shiftKey, altKey, metaKey)
 
   # event.type must be keypress
@@ -1170,7 +1170,7 @@ class WorldMorph extends PanelWdgt
       nil # special key
 
   processKeydown: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyDownCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     if @keyboardEventsReceiver
       @keyboardEventsReceiver.processKeyDown scanCode, shiftKey, ctrlKey, altKey, metaKey
@@ -1187,7 +1187,7 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
 
   processKeyup: (event, scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyUpCommand scanCode, shiftKey, ctrlKey, altKey, metaKey
     # dispatch to keyboard receiver
     if @keyboardEventsReceiver
@@ -1200,7 +1200,7 @@ class WorldMorph extends PanelWdgt
       event.preventDefault()
 
   processKeypress: (event, charCode, symbol, shiftKey, ctrlKey, altKey, metaKey) ->
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addKeyPressCommand charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     # This if block adapted from:
     # http://stackoverflow.com/a/16033129
@@ -1263,19 +1263,19 @@ class WorldMorph extends PanelWdgt
        @outstandingTimerTriggeredOperationsCounter.pop()
       ), 50, true
 
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addCutCommand selectedText
 
   processCopy: (selectedText) ->
     console.log "processing copy"
-    if AutomatorRecorderAndPlayer?
+    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
       @automatorRecorderAndPlayer.addCopyCommand selectedText
 
   processPaste: (clipboardText) ->
     if @caret
       # Needs a few msec to execute paste
       console.log "about to insert text: " + clipboardText
-      if AutomatorRecorderAndPlayer?
+      if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.RECORDING
         @automatorRecorderAndPlayer.addPasteCommand clipboardText
 
       # see comment on outstandingTimerTriggeredOperationsCounter
