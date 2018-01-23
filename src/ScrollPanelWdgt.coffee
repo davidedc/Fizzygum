@@ -17,7 +17,7 @@ class ScrollPanelWdgt extends PanelWdgt
   hBar: nil
 
   # there are several ways in which we allow
-  # scrolling when a scrollframe is scrollable
+  # scrolling when a ScrollPanel is scrollable
   # (i.e. the scrollbars are showing).
   # You can choose to scroll it by dragging the
   # contents or by dragging the background,
@@ -31,7 +31,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @scrollBarsThickness = (WorldMorph.preferencesAndSettings.scrollBarsThickness),
     @sliderColor
     ) ->
-    # super() paints the scrollframe, which we don't want,
+    # super() paints the ScrollPanel, which we don't want,
     # so we set 0 opacity here.
     @alpha = 0
     super()
@@ -39,9 +39,9 @@ class ScrollPanelWdgt extends PanelWdgt
     @contents = new PanelWdgt @ unless @contents?
     @addRaw @contents
 
-    # the scrollFrame is never going to paint itself,
+    # the ScrollPanel is never going to paint itself,
     # but its values are going to mimick the values of the
-    # contained frame
+    # contained Panel
     @color = @contents.color
     @alpha = @contents.alpha
     
@@ -79,17 +79,17 @@ class ScrollPanelWdgt extends PanelWdgt
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super
     # keep in synch the color of the content.
-    # Note that the container scrollFrame.
+    # Note that the container ScrollPanel.
     # is actually not painted.
     @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor
     return aColor
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
     alpha = super
-    # update the alpha of the scrollFrame - note
-    # that we are never going to paint the scrollFrame
+    # update the alpha of the ScrollPanel - note
+    # that we are never going to paint the ScrollPanel
     # we are updating the alpha so that its value is the same as the
-    # contained frame
+    # contained Panel
     @contents.setAlphaScaled alphaOrMorphGivingAlpha, morphGivingAlpha
     return alpha
 
@@ -111,11 +111,11 @@ class ScrollPanelWdgt extends PanelWdgt
       @changed()
 
     # this check is to see whether the bar actually belongs to this
-    # scrollframe. The reason why the bar could belong to another
-    # scrollframe is the following: the bar could have been detached
-    # from a scrollframe A. The scrollframe A (which is still fully
+    # ScrollPanel. The reason why the bar could belong to another
+    # ScrollPanel is the following: the bar could have been detached
+    # from a ScrollPanel A. The ScrollPanel A (which is still fully
     # working albeit detached) is then duplicated into
-    # a scrollframe B. What happens is that because the bar is not
+    # a ScrollPanel B. What happens is that because the bar is not
     # a child of A (rather, it's only referenced as a property),
     # the duplication mechanism does not duplicate the bar and it does
     # not update the reference to it. This is correct because one cannot
@@ -123,7 +123,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # , a good example being the targets, i.e. if you duplicate a colorPicker
     # which targets a Morph you want the duplication of the colorPicker to
     # still change color of that same Morph.
-    # So: the scrollframe B could still reference the scrollbar
+    # So: the ScrollPanel B could still reference the scrollbar
     # detached from A and that causes a problem because changes to B would
     # change the dimensions and hiding/unhiding of the scrollbar.
     # So here we avoid that by actually checking what the scrollbar is
@@ -134,7 +134,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @hBar.rawSetWidth hWidth  if @hBar.width() isnt hWidth
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
-        # scrollframe, otherwise we don't move it.
+        # ScrollPanel, otherwise we don't move it.
         if @hBar.parent == @
           @hBar.fullRawMoveTo new Point @left(), @bottom() - @hBar.height()
         stopValue = @contents.width() - @width()
@@ -154,7 +154,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @vBar.rawSetHeight vHeight  if @vBar.height() isnt vHeight
         # we check whether the bar has been detached. If it's still
         # attached then we possibly move it, together with the
-        # scrollframe, otherwise we don't move it.
+        # ScrollPanel, otherwise we don't move it.
         if @vBar.parent == @
           @vBar.fullRawMoveTo new Point @right() - @vBar.width(), @top()
         stopValue = @contents.height() - @height()
@@ -168,7 +168,7 @@ class ScrollPanelWdgt extends PanelWdgt
         @vBar.hide()
   
   # when you add things to the ScrollPanelWdgt they actually
-  # end up in the frame inside it. This also applies to
+  # end up in the Panel inside it. This also applies to
   # resizing handles!
   add: (aMorph) ->
     @contents.add aMorph
@@ -180,7 +180,7 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # puts the morph in the scrollframe
+  # puts the morph in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"
   addInPseudoRandomPosition: (aMorph) ->
@@ -340,7 +340,7 @@ class ScrollPanelWdgt extends PanelWdgt
     newY = ct + steps
     if newY + ch < b
       newY = b - ch
-    # prevents content to be scrolled to the frame's
+    # prevents content to be scrolled to the Panel's
     # bottom if the content is otherwise empty
     newY = t  if newY > t
     # return true if any movement of
@@ -357,16 +357,16 @@ class ScrollPanelWdgt extends PanelWdgt
     else
       return false
   
-  # sometimes you can scroll the contents of a scrollframe
+  # sometimes you can scroll the contents of a ScrollPanel
   # by floatDragging its contents. This is particularly
   # useful in touch devices.
   # You can test this also in non-touch mode
-  # by anchoring a scrollframe to something
+  # by anchoring a ScrollPanel to something
   # non-draggable such as a color palette (can't drag it
   # because user can drag on it to pick a color)
-  # Ten you chuck a long text into the scrollframe and
-  # drag the frame (on the side of the text, where there is no
-  # text) and you should see the scrollframe scrolling.
+  # Ten you chuck a long text into the ScrollPanel and
+  # drag the Panel (on the side of the text, where there is no
+  # text) and you should see the ScrollPanel scrolling.
   mouseDownLeft: (pos) ->
 
     return nil  unless @isScrollingByfloatDragging

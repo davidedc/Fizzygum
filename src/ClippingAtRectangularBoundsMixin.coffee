@@ -4,13 +4,15 @@
 # REQUIRES globalFunctions
 
 
-ClippingMixin =
+ClippingAtRectangularBoundsMixin =
   # class properties here:
   # none
 
   # instance properties to follow:
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
+
+      clipsAtRectangularBounds: true
 
       # used for example:
       # - to determine which morphs you can attach a morph to
@@ -36,10 +38,10 @@ ClippingMixin =
         # Since the PanelWdgt clips its children
         # at its boundary, hence we need
         # to check that we don't consider overlaps with
-        # morphs contained in this frame that are clipped and
+        # morphs contained in this Panel that are clipped and
         # hence *actually* not overlapping with theMorph.
         # So continue checking the children only if the
-        # frame itself actually overlaps.
+        # Panel itself actually overlaps.
         if @areBoundsIntersecting theMorph
           @children.forEach (child) ->
             result = result.concat child.plausibleTargetAndDestinationMorphs theMorph
@@ -48,7 +50,7 @@ ClippingMixin =
 
       # do nothing if the call comes from a child
       # otherwise, if it comes from me (say, because the
-      # frame has been moved), then
+      # Panel has been moved), then
       # do invalidate the cache as normal.
       invalidateFullBoundsCache: (morphCalling) ->
         if morphCalling == @
@@ -73,7 +75,7 @@ ClippingMixin =
         #  debugger
         result
 
-      # frames clip any of their children
+      # Panels clip any of their children
       # at their boundaries
       # so there is no need to do a deep
       # traversal to find the bounds.
@@ -122,7 +124,7 @@ ClippingMixin =
         super
 
         # after all the contents are drawn,
-        # draw the border of the frame again.
+        # draw the border of the Panel again.
         # This is because the border has to be drawn inside the Frame,
         # but the contents might paint over it. So, we need to
         # paint them AFTER the content has been painted.
@@ -140,8 +142,8 @@ ClippingMixin =
         # This allows
         # us to avoid the further traversal of potentially
         # many many morphs if we see that the rectangle we
-        # want to paint is outside its frame.
-        # If the rectangle we want to paint is inside the frame
+        # want to paint is outside its Panel.
+        # If the rectangle we want to paint is inside the Panel
         # then we do have to continue traversing all the
         # children of the Frame.
 
@@ -162,7 +164,7 @@ ClippingMixin =
         # efficiently calculated anyways) is the whole screen.
         # So the children could be anywhere and need to be all
         # checked for damaged areas to repaint.
-        # If the RectangleMorph is made into a frame, one can
+        # If the RectangleMorph is made into a Panel, one can
         # avoid the traversal for any broken rectangle not
         # overlapping it.
 
@@ -171,13 +173,13 @@ ClippingMixin =
         # (or on any Morph which fullBounds are completely
         # covered, for that matter). You could
         # keep for example a list of the top n biggest opaque morphs
-        # (say, frames and rectangles)
+        # (say, Panels and rectangles)
         # and check that case while you traverse the list.
         # (see https://github.com/davidedc/Fizzygum/issues/149 )
         
-        # the part to be redrawn could be outside the frame entirely,
-        # in which case we can stop going down the morphs inside the frame
-        # since the whole point of the frame is to clip everything to a specific
+        # the part to be redrawn could be outside the Panel entirely,
+        # in which case we can stop going down the morphs inside the Panel
+        # since the whole point of the Panel is to clip everything to a specific
         # rectangle. (note that you can't do the same trick with a
         # generic tree of morphs since the root morph doesn't
         # necessarily contain all the submorphs in its boundaries like
@@ -190,7 +192,7 @@ ClippingMixin =
           if aContext == world.worldCanvasContext
             @recordDrawnAreaForNextBrokenRects()
 
-          # this draws the background of the frame itself
+          # this draws the background of the Panel itself
           @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
           @children.forEach (child) =>
@@ -201,36 +203,36 @@ ClippingMixin =
 
         if !@preliminaryCheckNothingToDraw clippingRectangle, aContext
 
-          # the part to be redrawn could be outside the frame entirely,
-          # in which case we can stop going down the morphs inside the frame
-          # since the whole point of the frame is to clip everything to a specific
+          # the part to be redrawn could be outside the Panel entirely,
+          # in which case we can stop going down the morphs inside the Panel
+          # since the whole point of the Panel is to clip everything to a specific
           # rectangle.
           # So, check which part of the Frame should be redrawn:
           dirtyPartOfFrame = @boundingBox().intersect clippingRectangle
           
-          # if there is no dirty part in the frame then do nothing
+          # if there is no dirty part in the Panel then do nothing
           if !dirtyPartOfFrame.isEmpty()
 
             aContext.save()
             aContext.translate @shadowInfo.offset.x * pixelRatio, @shadowInfo.offset.y * pixelRatio
           
-            # this draws the background of the frame itself
+            # this draws the background of the Panel itself
             @paintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
             # since the morph clips at its boundaries, then we know that all of
-            # its children are inside. Hence, if the frame is fully opaque, then
+            # its children are inside. Hence, if the Panel is fully opaque, then
             # since we are just drawing the shadow, we can just
-            # draw the shadow of the frame itself and skip all of the children.
+            # draw the shadow of the Panel itself and skip all of the children.
             if @alpha != 1
               @children.forEach (child) =>
                 child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, dirtyPartOfFrame, appliedShadow
 
             aContext.restore()
-            
+
 
       # PanelWdgt scrolling optimization:
       fullRawMoveBy: (delta) ->
-        #console.log "moving all morphs in the frame"
+        #console.log "moving all morphs in the Panel"
         @bounds = @bounds.translateBy delta
         #console.log "move 1"
         @breakNumberOfRawMovesAndResizesCaches()

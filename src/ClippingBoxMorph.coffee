@@ -4,5 +4,5 @@
 
 class ClippingBoxMorph extends BoxMorph
 
-  @augmentWith ClippingMixin
+  @augmentWith ClippingAtRectangularBoundsMixin
 

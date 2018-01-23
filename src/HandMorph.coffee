@@ -967,7 +967,7 @@ class HandMorph extends Morph
     # for example in case of a SliderMorph invoking this on its
     # button, this causes the movement of the button
     # and adjusting of the Slider values and potentially
-    # adjusting scrollFrame etc.
+    # adjusting scrollpanel etc.
     @determineGrabs pos, morphFarAway, mouseOverNew
 
   reCheckMouseEntersAndMouseLeavesAfterPotentialGeometryChanges: ->

@@ -7,7 +7,7 @@
 class PointerMorph extends BoxMorph
 
   # panes:
-  scrollFrame: nil
+  scrollPanel: nil
   buttonClose: nil
   resizer: nil
   underTheCarpetMorph: nil

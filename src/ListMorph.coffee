@@ -51,7 +51,7 @@ class ListMorph extends ScrollPanelWdgt
     @color = new Color 255, 255, 255
     @buildAndConnectChildren() # builds the list contents
     # it's important to leave the step as the default noOperation
-    # instead of nil because the scrollbars (inherited from scrollframe)
+    # instead of nil because the scrollbars (inherited from ScrollPanel)
     # need the step function to react to mouse floatDrag.
   
   # builds the list contents

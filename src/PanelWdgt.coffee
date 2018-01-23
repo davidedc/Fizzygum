@@ -9,52 +9,52 @@
 #| "container"/"contained" scenario going on.
 
 # REQUIRES RectangularAppearance
-# REQUIRES ClippingMixin
+# REQUIRES ClippingAtRectangularBoundsMixin
 # TODO unclear whether this actually requires RectangularAppearance
 
 class PanelWdgt extends Morph
 
-  @augmentWith ClippingMixin, @name
+  @augmentWith ClippingAtRectangularBoundsMixin, @name
 
-  scrollFrame: nil
+  scrollPanel: nil
   extraPadding: 0
   _acceptsDrops: true
 
-  # if this frame belongs to a scrollFrame, then
-  # the @scrollFrame points to it
-  constructor: (@scrollFrame = nil) ->
+  # if this Panel belongs to a ScrollPanel, then
+  # the @scrollPanel points to it
+  constructor: (@scrollPanel = nil) ->
     super()
     @appearance = new RectangularAppearance @
 
     @color = new Color 255, 250, 245
     @strokeColor = new Color 100, 100, 100
 
-    if @scrollFrame
+    if @scrollPanel
       @noticesTransparentClick = false
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
-    # keep in synch the value of the container scrollFrame
-    # if there is one. Note that the container scrollFrame
+    # keep in synch the value of the container scrollPanel
+    # if there is one. Note that the container scrollPanel
     # is actually not painted.
-    if @scrollFrame
-      unless @scrollFrame.color.eq aColor
-        @scrollFrame.color = aColor
+    if @scrollPanel
+      unless @scrollPanel.color.eq aColor
+        @scrollPanel.color = aColor
     return aColor
 
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->
     alpha = super(alphaOrMorphGivingAlpha, morphGivingAlpha)
-    if @scrollFrame
-      unless @scrollFrame.alpha == alpha
-        @scrollFrame.alpha = alpha
+    if @scrollPanel
+      unless @scrollPanel.alpha == alpha
+        @scrollPanel.alpha = alpha
     return alpha
 
 
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
     @bringToForegroud()
 
-    # when you click on an "empty" part of a frame that contains
+    # when you click on an "empty" part of a Panel that contains
     # a piece of text, we pass the click on to the text to it
     # puts the caret at the end of the text.
     # TODO the focusing and placing of the caret at the end of

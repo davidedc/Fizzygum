@@ -45,8 +45,8 @@ class MorphicNode
   rootCache: nil
   rootCacheChecker: nil
 
-  checkFirstFrameParentCache: nil
-  cachedFirstFrameParent: nil
+  checkFirstParentClippingAtBoundsCache: nil
+  cachedFirstParentClippingAtBounds: nil
 
   constructor: (@parent = nil, @children = []) ->
 
@@ -442,37 +442,37 @@ class MorphicNode
   firstChildSuchThat: (predicate) ->
     @nthChildSuchThat 1, predicate
 
-  SLOWfirstFrameParent: (morphToStartFrom = @) ->
+  SLOWfirstParentClippingAtBounds: (morphToStartFrom = @) ->
     if morphToStartFrom.parent?
-      if morphToStartFrom.parent instanceof PanelWdgt
+      if morphToStartFrom.parent.clipsAtRectangularBounds
         return morphToStartFrom.parent
       else
-        return morphToStartFrom.parent.SLOWfirstFrameParent()
+        return morphToStartFrom.parent.SLOWfirstParentClippingAtBounds()
     else
       return nil
 
-  firstFrameParent: (morphToStartFrom = @) ->
-    if @checkFirstFrameParentCache == WorldMorph.numberOfAddsAndRemoves
+  firstParentClippingAtBounds: (morphToStartFrom = @) ->
+    if @checkFirstParentClippingAtBoundsCache == WorldMorph.numberOfAddsAndRemoves
       if world.doubleCheckCachedMethodsResults
-        if @cachedFirstFrameParent != @SLOWfirstFrameParent morphToStartFrom
+        if @cachedFirstParentClippingAtBounds != @SLOWfirstParentClippingAtBounds morphToStartFrom
           debugger
-          alert "firstFrameParent is broken (cached)"
+          alert "firstParentClippingAtBounds is broken (cached)"
 
     if morphToStartFrom.parent?
-      if morphToStartFrom.parent instanceof PanelWdgt
+      if morphToStartFrom.parent.clipsAtRectangularBounds
         result = morphToStartFrom.parent
       else
-        result = morphToStartFrom.parent.firstFrameParent()
+        result = morphToStartFrom.parent.firstParentClippingAtBounds()
     else
       result =  nil
 
     if world.doubleCheckCachedMethodsResults
-      if result != @SLOWfirstFrameParent morphToStartFrom
+      if result != @SLOWfirstParentClippingAtBounds morphToStartFrom
         debugger
-        alert "firstFrameParent is broken (uncached)"
+        alert "firstParentClippingAtBounds is broken (uncached)"
 
-    @checkFirstFrameParentCache = WorldMorph.numberOfAddsAndRemoves
-    @cachedFirstFrameParent = result
+    @checkFirstParentClippingAtBoundsCache = WorldMorph.numberOfAddsAndRemoves
+    @cachedFirstParentClippingAtBounds = result
 
 
   

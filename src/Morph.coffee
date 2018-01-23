@@ -115,15 +115,15 @@ class Morph extends MorphicNode
   noticesTransparentClick: false
   fps: 0
 
-  # usually Morphs can be detached from Frames
+  # usually Morphs can be detached from Panels
   # by grabbing them (there are exceptions, for example
-  # buttons don't stick to the world but stick to Frames,
+  # buttons don't stick to the world but stick to Panels,
   # morph that "select" based on dragging such as the ColorPanelMorph).
-  # However you can get them to stick to Frames (and the desktop)
+  # However you can get them to stick to Panels (and the desktop)
   # by toggling this flag
   isLockingToPanels: false
   # even if a Morph is locked to its parent (which is
-  # the default) or locks to Frames (because isLockingToPanels is
+  # the default) or locks to Panels (because isLockingToPanels is
   # set to true), it could be STILL BE dragged
   # (if any of its parents is loose).
   #
@@ -163,12 +163,12 @@ class Morph extends MorphicNode
   # Otherwise, without coalescing, there would FIRST be a
   # multiple-selection menu to spacially demultiplex which
   # morph is the one of interest
-  # (the TextMorph, or the Frame, or the ScrollPanelWdgt?). And
+  # (the TextMorph, or the Panel, or the ScrollPanelWdgt?). And
   # if the user wanted to resize the scroll text, which Morph
   # would the user have to pick? It would be very confusing.
   #
   # Instead, in this example above, one can naturally
-  # resize the scrollframe, or change its color, or delete it,
+  # resize the ScrollPanel, or change its color, or delete it,
   # instead of operating on the text content.
   #
   # Note that, on the other side, for this to work the menu of
@@ -410,15 +410,15 @@ class Morph extends MorphicNode
   # be painted INSIDE the morph (otherwise a) adjacent morphs, of morphs
   # within a layout would make a mess and b) clipping morph would
   # present a problem).
-  # Also, Frames are tricky
+  # Also, Panels are tricky
   # because they need to paint the strokes after they paint their
   # content (because the content could paint everywhere inside the
-  # Frame).
+  # Panel).
   # If you are thinking that you could paint the stroke before
   # the contents, by just
-  # painting the contents of the frame slightly clipped "inside" the
-  # border of the frame, that could potentially work with enough
-  # changes, but it would only be easy to do with rectangular Frames,
+  # painting the contents of the Panel slightly clipped "inside" the
+  # border of the Panel, that could potentially work with enough
+  # changes, but it would only be easy to do with rectangular Panels,
   # since clipping "on the inside" of a border of arbitrary shape is
   # not trivial, maybe you'd have to examine how the lines cross at
   # different angles to paint "inside" of the lines, looks very messy.
@@ -469,7 +469,7 @@ class Morph extends MorphicNode
 
   close: ->
     if world.underTheCarpetMorph?
-      world.underTheCarpetMorph.scrollFrame.addInPseudoRandomPosition @
+      world.underTheCarpetMorph.scrollPanel.addInPseudoRandomPosition @
     else
       world.inform "There is no\ncarpet to go under!"
   
@@ -742,7 +742,7 @@ class Morph extends MorphicNode
   # Note that this method has a slightly different
   # version in PanelWdgt (because it clips, so we need
   # to check that we don't consider overlaps with
-  # morphs contained in a frame that are clipped and
+  # morphs contained in a Panel that are clipped and
   # hence *actually* not overlapping).
   plausibleTargetAndDestinationMorphs: (theMorph) ->
     # find if I intersect theMorph,
@@ -878,10 +878,10 @@ class Morph extends MorphicNode
       result = @children[0].bounds
       @children.forEach (child) ->
         # we exclude the HandleMorphs because they
-        # mangle how the frame inside ScrollPanelWdgts
+        # mangle how the Panel inside ScrollPanelWdgts
         # calculate their size when they are resized
         # (remember that the resizing handle of ScrollPanelWdgts
-        # actually end up in the frame inside them.)
+        # actually end up in the Panel inside them.)
         if !(child instanceof HandleMorph) and !(child instanceof CaretMorph)
           result = result.merge child.fullBounds()
     result    
@@ -977,7 +977,7 @@ class Morph extends MorphicNode
   # we do take into account orphanage and
   # visibility.
   clipThrough: ->
-    # answer which part of me is not clipped by a Frame
+    # answer which part of me is not clipped by a Panel
     if @ == Window
       debugger
 
@@ -994,15 +994,15 @@ class Morph extends MorphicNode
       @clipThroughCache = Rectangle.EMPTY
       return @clipThroughCache 
 
-    firstFrameParent = @firstFrameParent()
-    if !firstFrameParent?
-      firstFrameParent = world
-    firstFrameClipThroughBounds = firstFrameParent.clipThrough()
+    firstParentClippingAtBounds = @firstParentClippingAtBounds()
+    if !firstParentClippingAtBounds?
+      firstParentClippingAtBounds = world
+    firstParentClippingAtBoundsClipThroughBounds = firstParentClippingAtBounds.clipThrough()
     @checkClipThroughCache = WorldMorph.numberOfAddsAndRemoves + "-" + WorldMorph.numberOfVisibilityFlagsChanges + "-" + WorldMorph.numberOfCollapseFlagsChanges + "-" + WorldMorph.numberOfRawMovesAndResizes
-    if @ instanceof PanelWdgt
-      @clipThroughCache = @boundingBox().intersect firstFrameClipThroughBounds
+    if @clipsAtRectangularBounds
+      @clipThroughCache = @boundingBox().intersect firstParentClippingAtBoundsClipThroughBounds
     else
-      @clipThroughCache = firstFrameClipThroughBounds
+      @clipThroughCache = firstParentClippingAtBoundsClipThroughBounds
 
 
     return @clipThroughCache
@@ -1025,10 +1025,10 @@ class Morph extends MorphicNode
     # inside a non-text-wrapping ScrollPanelWdgt then this
     # is not going to work. So if I'm a box attached to a
     # box inside a non-text-wrapping ScrollPanelWdgt then
-    # there will be no adjusting of bounds of the scrollframe
+    # there will be no adjusting of bounds of the ScrollPanel
     # not the adjusting of the scrollbars.
     # This could be done, we could check up the chain to find
-    # if we are indirectly inside a scrollframe however
+    # if we are indirectly inside a ScrollPanel however
     # there might be performance implications, so I'd probably
     # have to introduce caching, and this whole mechanism should
     # go away with proper layouts...
@@ -1298,10 +1298,10 @@ class Morph extends MorphicNode
       # inside a non-text-wrapping ScrollPanelWdgt then this
       # is not going to work. So if I'm a box attached to a
       # box inside a non-text-wrapping ScrollPanelWdgt then
-      # there will be no adjusting of bounds of the scrollframe
+      # there will be no adjusting of bounds of the ScrollPanel
       # not the adjusting of the scrollbars.
       # This could be done, we could check up the chain to find
-      # if we are indirectly inside a scrollframe however
+      # if we are indirectly inside a ScrollPanel however
       # there might be performance implications, so I'd probably
       # have to introduce caching, and this whole mechanism should
       # go away with proper layouts...
@@ -1884,7 +1884,7 @@ class Morph extends MorphicNode
   # and a higher level way to "add".
   # For example, a ScrollPanelWdgt does a "high-level"
   # add of things in a different way, as it actually adds
-  # stuff to a frame inside it. Hence a need to have
+  # stuff to a Panel inside it. Hence a need to have
   # both a high-level and a low-level.
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
@@ -2235,8 +2235,8 @@ class Morph extends MorphicNode
       if @parent instanceof PanelWdgt
         return @isLockingToPanels
 
-      # not attached to desktop, not inside a scrollable frame
-      # and not inside a frame.
+      # not attached to desktop, not inside a scrollable Panel
+      # and not inside a Panel.
       # So, for example, when this morph is attached to another morph
       # attached to the world (because then it should remain solid
       # with the parent)
@@ -2313,7 +2313,7 @@ class Morph extends MorphicNode
       # TODO actually stop at the first
       # CLIPPING morph (more generic), not
       # just a PanelWdgt
-      if scanningMorphs instanceof PanelWdgt
+      if scanningMorphs.clipsAtRectangularBounds
         return nil
       if scanningMorphs.hasShadow()
         return scanningMorphs

@@ -3,7 +3,7 @@
 class UnderTheCarpetMorph extends BoxMorph
 
   # panes:
-  scrollFrame: nil
+  scrollPanel: nil
   buttonClose: nil
   resizer: nil
 
@@ -36,9 +36,9 @@ class UnderTheCarpetMorph extends BoxMorph
     # Check which objects end with the word Morph
     theWordMorph = "Morph"
 
-    @scrollFrame = new ScrollPanelWdgt()
+    @scrollPanel = new ScrollPanelWdgt()
 
-    @add @scrollFrame
+    @add @scrollPanel
 
     # close button
     @buttonClose = new SimpleButtonMorph true, @, "removeFromTree", (new StringMorph2 "close").alignCenter()
@@ -86,20 +86,20 @@ class UnderTheCarpetMorph extends BoxMorph
       @rawSetHeight @label.height() + 50
       @changed()
 
-    # scrollFrame
+    # scrollPanel
     y = @label.bottom() + 2
     w = @width() - @cornerRadius
     w -= @cornerRadius
     b = @bottom() - (2 * @cornerRadius) - WorldMorph.preferencesAndSettings.handleSize
     h = b - y
-    @scrollFrame.fullRawMoveTo new Point x, y
-    @scrollFrame.rawSetExtent new Point w, h
+    @scrollPanel.fullRawMoveTo new Point x, y
+    @scrollPanel.rawSetExtent new Point w, h
 
     # close button
-    x = @scrollFrame.left()
-    y = @scrollFrame.bottom() + @cornerRadius
+    x = @scrollPanel.left()
+    y = @scrollPanel.bottom() + @cornerRadius
     h = WorldMorph.preferencesAndSettings.handleSize
-    w = @scrollFrame.width() - h - @cornerRadius
+    w = @scrollPanel.width() - h - @cornerRadius
     @buttonClose.fullRawMoveTo new Point x, y
     @buttonClose.rawSetExtent new Point w, h
     trackChanges.pop()

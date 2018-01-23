@@ -55,7 +55,7 @@ class HandleMorph extends Morph
     # right now you can resize a morph only if it's
     # free-floating, however this will change in the future
     # as for example things inside vertically-stretchable
-    # frames can potentially change their width.
+    # Panels can potentially change their width.
     # so this handle has to go away now.
     if @parent.layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
       @destroy()
