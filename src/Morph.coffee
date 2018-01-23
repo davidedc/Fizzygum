@@ -2642,10 +2642,15 @@ class Morph extends MorphicNode
       # leave out the world itself and the morphs that are about
       # to be destroyed
       if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
-        # leave out SimpleVerticalStackPanelWdgt when
-        # inside a SimpleVerticalStackScrollPanelWdgt
-        # because it's redundant
-        if !((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))
+        # * leave out SimpleVerticalStackPanelWdgt when
+        #   inside a SimpleVerticalStackScrollPanelWdgt
+        # * also leave out PanelWdgt when
+        #   inside a ScrollPanelWdgt
+        # ...because they would be redundant - there is no need for the
+        # user to know or have access to the internal structure of
+        # those constructs
+        if (!((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))) and
+         (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt)))
           hierarchyMenuMorphs.push each
 
     hierarchyMenuMorphs
