@@ -2852,6 +2852,59 @@ class Morph extends MorphicNode
     @createWrappingSimplePlainTextScrollPanelWdgt()
     @createNonWrappingSimplePlainTextScrollPanelWdgt()
 
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createWrappingSimplePlainTextPanelWdgt: ->
+    SfA = new SimplePlainTextPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "lectus posuere a. Phasellus finibus blandit ex vitae " +
+      "varius. Vestibulum blandit velit elementum, ornare " +
+      "ipsum sollicitudin, blandit nunc. Mauris a sapien " +
+      "nibh. Nulla nec bibendum quam, eu condimentum nisl. " +
+      "Cras consequat efficitur nisi sed ornare. " +
+      "Pellentesque vitae urna vitae libero malesuada " +
+      "pharetra." +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "ex dui a velit. Nullam lectus leo, lobortis eget " +
+      "erat ac, lobortis dignissim magna. Morbi ac odio " +
+      "in purus blandit dignissim. Maecenas at sagittis " +
+      "odio. Suspendisse tempus mattis erat id euismod. " +
+      "Duis semper mauris nec odio sagittis vulputate. " +
+      "Praesent varius ac erat id fringilla. Suspendisse " +
+      "porta sollicitudin bibendum. Pellentesque imperdiet " +
+      "at eros nec euismod. Etiam ac mattis odio, ac finibus " +
+      "nisi.",true, 10)
+    world.add SfA
+    SfA.fullRawMoveTo new Point 20, 25
+    SfA.rawSetExtent new Point 390, 305
+
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createNonWrappingSimplePlainTextPanelWdgt: ->
+    SfB = new SimplePlainTextPanelWdgt(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing " +
+      "elit. Integer rhoncus pharetra nulla, vel maximus " +
+      "\n\n" +
+      "Pellentesque commodo, nulla mattis vulputate " +
+      "porttitor, elit augue vestibulum est, nec congue " +
+      "nisi.",false, 10)
+    world.add SfB
+    SfB.fullRawMoveTo new Point 430, 25
+    SfB.rawSetExtent new Point 390, 305
+
+  # this is provided for completeness, however see the
+  # note in SimplePlainTextPanelWdgt about how this is
+  # incomplete and why this widget is not useful anyways
+  createWrappingAndNonWrappingSimplePlainTextPanelWdgt: ->
+    @createWrappingSimplePlainTextPanelWdgt()
+    @createNonWrappingSimplePlainTextPanelWdgt()
+
+
   createNewStringMorph3WithBackground: ->
     #newMorph = new StringMorph2 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(255, 255, 54), 0.5
     newMorph = new StringMorph3 "Hello World! ⎲ƒ⎳⎷ ⎸⎹ aaa",nil,nil,nil,nil,nil,nil,nil, new Color(230, 230, 130), 1
@@ -3012,6 +3065,9 @@ class Morph extends MorphicNode
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"    
     menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"    
+    menu.addMenuItem "simple plain text panel wrapping", true, @, "createWrappingSimplePlainTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel not wrapping", true, @, "createNonWrappingSimplePlainTextPanelWdgt"
+    menu.addMenuItem "simple plain text panel (wrapping / not wrapping)", true, @, "createWrappingAndNonWrappingSimplePlainTextPanelWdgt"
     menu.addMenuItem "simple plain text scrollpanel wrapping", true, @, "createWrappingSimplePlainTextScrollPanelWdgt"
     menu.addMenuItem "simple plain text scrollpanel not wrapping", true, @, "createNonWrappingSimplePlainTextScrollPanelWdgt"
     menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, @, "createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt"
