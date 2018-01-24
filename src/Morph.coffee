@@ -498,7 +498,7 @@ class Morph extends MorphicNode
     @onClickOutsideMeOrAnyOfMyChildren nil
 
     if @parent?
-
+      previousParent = @parent
       # if the morph contributes to a shadow, unfortunately
       # we have to walk towards the top to
       # break the morph that has the shadow.
@@ -508,7 +508,10 @@ class Morph extends MorphicNode
       else
         @fullChanged()
 
-      @parent.removeChild @
+      previousParent.removeChild @
+      if previousParent.childRemoved?
+        previousParent.childRemoved @
+
     return nil
   
   fullDestroy: ->
