@@ -611,6 +611,8 @@ class Morph extends MorphicNode
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetWidth newWidth
+    if @implementsDeferredLayout()
+      @invalidateLayout()
   
   # note that using this one, the children
   # morphs attached as floating don't move
