@@ -1,6 +1,6 @@
 # ReconfigurablePaintMorph //////////////////////////////////////////////////////
 
-class ReconfigurablePaintMorph extends WindowMorph
+class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
 
   mainCanvas: nil
   overlayCanvas: nil

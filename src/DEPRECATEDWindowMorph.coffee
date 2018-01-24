@@ -1,6 +1,6 @@
-# WindowMorph //////////////////////////////////////////////////////
+# DEPRECATEDWindowMorph //////////////////////////////////////////////////////
 
-class WindowMorph extends BoxMorph
+class DEPRECATEDWindowMorph extends BoxMorph
 
   label: nil
   topLeftButton: nil

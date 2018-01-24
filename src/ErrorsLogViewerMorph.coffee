@@ -4,7 +4,7 @@
 # in the inspector so to get a compilation error
 # (e.g. unmatched parens) and click "save"
 
-class ErrorsLogViewerMorph extends WindowMorph
+class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
 
   tempPromptEntryField: nil
   defaultContents: ""

@@ -1,6 +1,6 @@
 # FridgeMagnetsMorph //////////////////////////////////////////////////////
 
-class FridgeMagnetsMorph extends WindowMorph
+class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
 
   # panes:
   fridge: nil

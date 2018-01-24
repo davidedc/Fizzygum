@@ -1,6 +1,6 @@
 # TextPromptMorph ///////////////////////////////////////////////////
 
-class TextPromptMorph extends WindowMorph
+class TextPromptMorph extends DEPRECATEDWindowMorph
 
   tempPromptEntryField: nil
   defaultContents: ""

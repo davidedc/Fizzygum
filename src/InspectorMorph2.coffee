@@ -1,6 +1,6 @@
 # InspectorMorph2 //////////////////////////////////////////////////////
 
-class InspectorMorph2 extends WindowMorph
+class InspectorMorph2 extends DEPRECATEDWindowMorph
 
   target: nil
   currentProperty: nil
