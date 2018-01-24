@@ -888,9 +888,16 @@ class Morph extends MorphicNode
         # (remember that the resizing handle of ScrollPanelWdgts
         # actually end up in the Panel inside them.)
         if !(child instanceof HandleMorph) and !(child instanceof CaretMorph)
-          result = result.merge child.fullBounds()
+          # if a morph implements deferred layout, then
+          # really we can't consider the sizes and positions
+          # of its children, so stick to the parent bounds
+          # only
+          if child.implementsDeferredLayout()
+            result = result.merge child.bounds
+          else
+            result = result.merge child.fullBounds()
     result    
-  
+
   # does not take into account orphanage or visibility
   fullBounds: ->
     if @cachedFullBounds?
@@ -3764,6 +3771,12 @@ class Morph extends MorphicNode
       !C.isCollapsed()
         count++
     return count
+
+  # it's useful to know when a morph defers its layout
+  # because it means that its current size is indicative
+  # (particularly the children's sizes and position)
+  implementsDeferredLayout: ->
+    @doLayout != Morph::doLayout
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
