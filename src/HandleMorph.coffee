@@ -51,17 +51,30 @@ class HandleMorph extends Morph
   grabsToParentWhenDragged: ->
     return false
 
+  updateVisibilityAndPosition: ->
+    @updateVisibility()
+    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+      @updateResizerHandlePosition()
+      @moveInFrontOfSiblings()
+
+  updateVisibility: ->
+    # TODO rather than updating the visibility, we could
+    # just make it "inactive" and by drawing it gray, which
+    # would also look better (rather than a hole with
+    # nothing)
+    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
+      @show()
+    else
+      @hide()
+
   parentHasReLayouted: ->
     # right now you can resize a morph only if it's
     # free-floating, however this will change in the future
     # as for example things inside vertically-stretchable
     # Panels can potentially change their width.
     # so this handle has to go away now.
-    if @parent.layoutSpec != LayoutSpec.ATTACHEDAS_FREEFLOATING
-      @destroy()
-    else
-      @updateResizerHandlePosition()
-      @moveInFrontOfSiblings()
+    @updateVisibilityAndPosition()
+    if @parent.layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
       super
 
   updateResizerHandlePosition: ->

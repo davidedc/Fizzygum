@@ -1926,6 +1926,17 @@ class Morph extends MorphicNode
     previousParent = aMorph.parent
     aMorph.parent?.invalidateLayout()
 
+    # The resizing handle becomes visible/invisible
+    # when the layout spec of the parent changes
+    # (typically it's visible only when freefloating)
+    # TODO rather than actioning this here, action
+    # this via a callback called when the layout
+    # spec is changed
+    isThereAnHandle = aMorph.firstChildSuchThat (m) ->
+      m instanceof HandleMorph
+    if isThereAnHandle?
+      isThereAnHandle.updateVisibilityAndPosition()
+
     # if the morph contributes to a shadow, unfortunately
     # we have to walk towards the top to
     # break the morph that has the shadow.
