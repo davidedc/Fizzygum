@@ -2961,7 +2961,8 @@ class Morph extends MorphicNode
     @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    svspw = new SimpleVerticalStackPanelWdgt false
+    debugger
+    svspw = new SimpleVerticalStackPanelWdgt null, null, null, false
     world.add svspw
     svspw.fullRawMoveTo new Point 35, 30
     svspw.rawSetExtent new Point 370, 325
