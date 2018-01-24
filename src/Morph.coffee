@@ -2960,6 +2960,22 @@ class Morph extends MorphicNode
     @createSimpleVerticalStackPanelWdgt()
     @createSimpleVerticalStackScrollPanelWdgt()
 
+  createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
+    svspw = new SimpleVerticalStackPanelWdgt false
+    world.add svspw
+    svspw.fullRawMoveTo new Point 35, 30
+    svspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth: ->
+    svsspw = new SimpleVerticalStackScrollPanelWdgt false
+    world.add svsspw
+    svsspw.fullRawMoveTo new Point 430, 25
+    svsspw.rawSetExtent new Point 370, 325
+
+  createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth: ->
+    @createSimpleVerticalStackPanelWdgt()
+    @createSimpleVerticalStackScrollPanelWdgt()
+
   createSimpleDocumentScrollPanelWdgt: ->
     sdspw = new SimpleDocumentScrollPanelWdgt()
     world.add sdspw
@@ -3051,9 +3067,12 @@ class Morph extends MorphicNode
 
   popUpVerticalStackMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Vertical stack"
-    menu.addMenuItem "vertical stack", true, @, "createSimpleVerticalStackPanelWdgt"
-    menu.addMenuItem "vertical stack scrollpanel", true, @, "createSimpleVerticalStackScrollPanelWdgt"
-    menu.addMenuItem "vertical stack panel and scrollpanel", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
+    menu.addMenuItem "vertical stack constrained contents width", true, @, "createSimpleVerticalStackPanelWdgt"
+    menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, @, "createSimpleVerticalStackScrollPanelWdgt"
+    menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
+    menu.addMenuItem "vertical stack free contents width", true, @, "createSimpleVerticalStackPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack scrollpanel free contents width", true, @, "createSimpleVerticalStackScrollPanelWdgtFreeContentsWidth"
+    menu.addMenuItem "vertical stack panel and scrollpanel free contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanelFreeContentsWidth"
 
     menu.popUpAtHand()
 
@@ -3193,7 +3212,12 @@ class Morph extends MorphicNode
   # beyond the generic entries above.
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
-      @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningTheMenu, menu
+      # it could be possible to figure out layouts when the vertical
+      # stack doesn't contrain the content widths but it's rather
+      # more complicated so we are not doing it for the time
+      # being
+      if @parent?.constrainContentWidth
+        @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningTheMenu, menu
 
   buildMorphContextMenu: (morphOpeningTheMenu) ->
     menu = @buildBaseMorphClassContextMenu morphOpeningTheMenu

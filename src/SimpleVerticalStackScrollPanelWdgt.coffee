@@ -5,13 +5,16 @@
 
 class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
-  constructor: ->
+  constructor: (@isTextLineWrapping = true) ->
     VS = new SimpleVerticalStackPanelWdgt()
+
+    if !@isTextLineWrapping
+      VS.constrainContentWidth = false
+
     VS.tight = false
     VS.isLockingToPanels = true
     super VS
     @disableDrops()
-    @isTextLineWrapping = true
     @color = new Color 255, 255, 255
 
     ostmA = new SimplePlainTextWdgt(

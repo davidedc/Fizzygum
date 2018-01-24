@@ -234,20 +234,19 @@ class ScrollPanelWdgt extends PanelWdgt
     padding = Math.floor @extraPadding + @padding
     totalPadding = 2*padding
 
-    if @isTextLineWrapping
-      if @contents instanceof SimpleVerticalStackPanelWdgt
-        @contents.adjustContentsBounds()
-      else if @contents instanceof PanelWdgt
-        @contents.children.forEach (morph) =>
-          if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
-            # this re-layouts the text to fit the width.
-            # The new height of the TextMorph will then be used
-            # to redraw the vertical slider.
-            morph.rawSetWidth @contents.width() - totalPadding
-            # the SimplePlainTextWdgt just needs this to be different from null
-            # while the TextMorph actually uses this number
-            morph.maxTextWidth = @contents.width() - totalPadding
-            @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
+    if @contents instanceof SimpleVerticalStackPanelWdgt
+      @contents.adjustContentsBounds()
+    else if @isTextLineWrapping and @contents instanceof PanelWdgt
+      @contents.children.forEach (morph) =>
+        if (morph instanceof TextMorph) or (morph instanceof SimplePlainTextWdgt)
+          # this re-layouts the text to fit the width.
+          # The new height of the TextMorph will then be used
+          # to redraw the vertical slider.
+          morph.rawSetWidth @contents.width() - totalPadding
+          # the SimplePlainTextWdgt just needs this to be different from null
+          # while the TextMorph actually uses this number
+          morph.maxTextWidth = @contents.width() - totalPadding
+          @contents.rawSetHeight (Math.max morph.height(), @height()) - totalPadding
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
     if subBounds
@@ -262,7 +261,9 @@ class ScrollPanelWdgt extends PanelWdgt
       # components in it, then we add the minimum space needed to fill
       # the viewport, so we never end up with empty space filling the stack
       # beyond the height of the viewport.
-      if @isTextLineWrapping or (@ instanceof SimplePlainTextScrollPanelWdgt)
+      if @isTextLineWrapping or
+       (@ instanceof SimplePlainTextScrollPanelWdgt) or
+       (@ instanceof SimpleVerticalStackScrollPanelWdgt)
         newBounds = subBounds.expandBy(padding)?.ceil()
 
         # ok so this is tricky: say that you have a document with
