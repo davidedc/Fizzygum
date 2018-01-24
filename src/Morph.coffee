@@ -2413,7 +2413,7 @@ class Morph extends MorphicNode
     world.hand.grab @
     @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
   
-  # note how this verified that
+  # note how this checks whether
   # at *any point* up in the
   # morphs hierarchy there is a HandMorph
   isPickedUp: ->
