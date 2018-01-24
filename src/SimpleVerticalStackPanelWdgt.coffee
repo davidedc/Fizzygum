@@ -3,6 +3,10 @@
 
 class SimpleVerticalStackPanelWdgt extends Morph
 
+  # stacks don't necessarily enforce a width on contents
+  # so the contents could stick out, so we clip at the bounds
+  @augmentWith ClippingAtRectangularBoundsMixin, @name
+
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
