@@ -273,7 +273,7 @@ class ScrollPanelWdgt extends PanelWdgt
         # viewport. So what will happen is that the panel will be moved
         # so its left will coincide with the left of the viewport.
         # So the icon will appear non-centered.
-        newBounds = newBounds.merge new Rectangle @left(), @contents.top(), @right(), @contents.top() + 1
+        newBounds = newBounds.merge new Rectangle @contents.left(), @contents.top(), @contents.left() + @width(), @contents.top() + 1
 
         if newBounds.height() < @height()
           newBounds = newBounds.growBy new Point 0, @height() - newBounds.height()
