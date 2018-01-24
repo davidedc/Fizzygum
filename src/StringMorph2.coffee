@@ -174,7 +174,7 @@ class StringMorph2 extends Morph
     AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
-      return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
+      return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"
 
   # used to identify morphs in macros/tests.
   # identifying morphs this way resists more

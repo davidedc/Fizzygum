@@ -70,7 +70,7 @@ class StringMorph extends Morph
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.hidingOfMorphsContentExtractInLabels
       return firstPart
     else
-      return firstPart + " (\"" + @text.slice(0, 30) + "...\")"
+      return firstPart + " (\"" + @text.slice(0, 30).replace(/(?:\r\n|\r|\n)/g, '↵') + "...\")"
 
   getTextDescription: ->
     if @textDescription?
