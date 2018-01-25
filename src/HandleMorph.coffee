@@ -291,12 +291,12 @@ class HandleMorph extends Morph
   
   # HandleMorph events:
   mouseEnter: ->
-    console.log "<<<<<< handle mousenter"
+    #console.log "<<<<<< handle mousenter"
     @state = @STATE_HIGHLIGHTED
     @changed()
   
   mouseLeave: ->
-    console.log "<<<<<< handle mouseleave"
+    #console.log "<<<<<< handle mouseleave"
     @state = @STATE_NORMAL
     @changed()
 
