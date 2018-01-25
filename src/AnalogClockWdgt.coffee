@@ -1,9 +1,9 @@
-# AnalogClockMorph //////////////////////////////////////////////////////
+# AnalogClockWdgt //////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES Morph
 
-class AnalogClockMorph extends Morph
+class AnalogClockWdgt extends Morph
 
   hoursHandAngle: 0
   minutesHandAngle: 0
@@ -20,6 +20,16 @@ class AnalogClockMorph extends Morph
     return
 
     #@setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
+
+  widthWithoutSpacing: ->
+    Math.min @width(), @height()
+
+  rawResizeToWithoutSpacing: ->
+    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawSetExtent new Point newWidth, newWidth
+
 
   # This method only paints this very morph's "image",
   # it doesn't descend the children
@@ -66,12 +76,18 @@ class AnalogClockMorph extends Morph
       # (after the restore).
       @paintHighlight aContext, al, at, w, h
 
-  # BlinkerMorph stepping:
   step: ->
     @changed()
 
   calculateHandsAngles: ->
-    now = new Date()
+
+    if AutomatorRecorderAndPlayer? and
+     AutomatorRecorderAndPlayer.animationsPacingControl and
+     AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
+      now = new Date 2011,10,30
+    else
+      now = new Date()
+
     #sec = now.getSeconds()
     sec = now.getSeconds() + now.getMilliseconds()/1000
     min = now.getMinutes()

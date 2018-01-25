@@ -330,7 +330,7 @@ class WorldMorph extends PanelWdgt
       fmm.fullMoveTo new Point 505, 275
       fmm.setExtent new Point 570, 400
 
-      acm = new AnalogClockMorph()
+      acm = new AnalogClockWdgt()
       @add acm
       acm.fullMoveTo new Point 860, 40
       acm.setExtent new Point 200, 200

@@ -378,8 +378,8 @@ class Morph extends MorphicNode
   unregisterThisInstance: ->
     # remove instance from the instances tracker
     # in the class. To see this: just create an
-    # AnalogClockMorph, see that
-    # AnalogClockMorph.instances[0] has one
+    # AnalogClockWdgt, see that
+    # AnalogClockWdgt.instances[0] has one
     # element. Then delete the clock, and see that the
     # tracker is now an empty array.
     goingUpClassHyerarchy = @constructor
@@ -3072,7 +3072,7 @@ class Morph extends MorphicNode
     world.create new UnderTheCarpetOpenerMorph()
 
   analogClock: ->
-    world.create new AnalogClockMorph()
+    world.create new AnalogClockWdgt()
 
   popUpIconsMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"

@@ -18,16 +18,16 @@ class Class
   # the constructor always calling "super", so constructors
   # up the chain cause the object to register itself
   # with all the superclasses.
-  # this mechanism can be tested by opening an AnalogClockMorph and
+  # this mechanism can be tested by opening an AnalogClockWdgt and
   # then from the console:
   #  world.children[0].constructor.instances[0] === world.children[0]
   # or
-  #  AnalogClockMorph.instances[0] === world.children[0]
+  #  AnalogClockWdgt.instances[0] === world.children[0]
   # or
-  #  AnalogClockMorph.instances
-  # to check whether AnalogClockMorph was removed from the superclass'
+  #  AnalogClockWdgt.instances
+  # to check whether AnalogClockWdgt was removed from the superclass'
   # (i.e. Morph) list:
-  #  AnalogClockMorph.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockMorph");
+  #  AnalogClockWdgt.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockWdgt");
   # Note that only Morphs have that kind
   # of tracking and hence the existence check of
   # the registerThisInstance function
