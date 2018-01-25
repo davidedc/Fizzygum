@@ -14,6 +14,12 @@ class VerticalStackLayoutSpec
   proportionalHeight: false
   alignment: 'left'
 
+  # TODO there should be a method on the morph that
+  # initialises its layoutSpecDetails with the proper
+  # settings, like we do for WindowContentLayoutSpec.
+  # Doing it all from this constructor common for all
+  # widgets, and then doing a case analysis based on
+  # the element class... this is not OK...
   constructor: (@element, @stack) ->
     
     availableWidthInStack = @availableWidthInStack()
