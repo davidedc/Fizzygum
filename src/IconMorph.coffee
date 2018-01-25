@@ -21,5 +21,5 @@ class IconMorph extends Morph
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawResizeToWithoutSpacing()
     ratio = @height()/@width()
-    @rawSetExtent new Point newWidth, newWidth * ratio
+    @rawSetExtent new Point newWidth, Math.round newWidth * ratio
    
