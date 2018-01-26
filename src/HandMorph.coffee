@@ -189,6 +189,9 @@ class HandMorph extends Morph
       # out of it.
       oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
 
+  draggingSomething: ->
+    @floatDraggingSomething() or @nonFloatDraggingSomething()
+
   floatDraggingSomething: ->
     if @children.length > 0 then true else false
 
@@ -869,7 +872,7 @@ class HandMorph extends Morph
     return [false, displacementDueToGrabDragThreshold]
 
   determineGrabs: (pos, topMorph, mouseOverNew) ->
-    if (!@nonFloatDraggingSomething()) and (!@floatDraggingSomething()) and (@mouseButton is "left")
+    if !@draggingSomething() and (@mouseButton is "left")
       morph = topMorph.findRootForGrab()
       topMorph.mouseMove pos  if topMorph.mouseMove
 
