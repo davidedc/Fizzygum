@@ -3062,8 +3062,8 @@ class Morph extends MorphicNode
     else
       menu.addMenuItem "collapse", true, @, "collapse"
 
-    menu.addMenuItem "create pointer", true, @, "createPointerMorph"
-    menu.addMenuItem "others ➜", false, @, "popUpSecondMenu", "others"
+    menu.addMenuItem "others ➜", false, @, "popUpIconsMenu", "others"
+    menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
 
 
     menu.popUpAtHand()
