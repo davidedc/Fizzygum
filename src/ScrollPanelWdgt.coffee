@@ -497,7 +497,14 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustScrollBars()
 
   # ScrollPanelWdgt events:
-  wheel: (x, y, z, altKey, button, buttons) ->
+  wheel: (xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg) ->
+
+    x = xArg
+    y = yArg
+    z = zArg
+    altKey = altKeyArg
+    button = buttonArg
+    buttons = buttonsArg
 
     # if we don't destroy the resizing handles,
     # they'll follow the contents being moved!
@@ -523,11 +530,39 @@ class ScrollPanelWdgt extends PanelWdgt
       z *= -1
 
     if y != 0
-      scrollbarJustChanged = true
-      @scrollY y * WorldMorph.preferencesAndSettings.wheelScaleY
+      # TODO this escalation should also
+      # be implemented in the touch case... user could scroll
+      # WITHOUT wheel, by just touch-dragging the contents...
+      #
+      # Escalate the scroll in case we are in a nested
+      # ScrollPanel situation and we already
+      # scrolled this inner one "up/down to the end".
+      # In such case, the outer one has to scroll...
+      #
+      # if scrolling up and the content top is already below the top (or just a little above the top)
+      #  OR
+      # if scrolling down and the content bottom is already above the bottom (or just a little below the bottom)
+      #  THEN
+      # escalate the method up, since there might be another scrollbar catching it
+      #
+      # The "just a little" caveats are because sometimes dimensions are non-integer
+      # (TODO ...which shouldn't really happen)
+      #
+      if (y > 0 and @contents.top() >= (@top() - 1)) or
+       (y < 0 and @contents.bottom() <= (@bottom() + 1))
+        @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
+      else
+        scrollbarJustChanged = true
+        @scrollY y * WorldMorph.preferencesAndSettings.wheelScaleY
     if x != 0
-      scrollbarJustChanged = true
-      @scrollX x * WorldMorph.preferencesAndSettings.wheelScaleX
+      # similar to the vertical case, escalate the scroll in case
+      # we are in a nested ScrollPanel situation
+      if (x > 0 and @contents.left() >= (@left()-1)) or
+       (y < 0 and @contents.right() <= (@right()+1) )
+        @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
+      else
+        scrollbarJustChanged = true
+        @scrollX x * WorldMorph.preferencesAndSettings.wheelScaleX
 
     if scrollbarJustChanged
       @adjustContentsBounds()
