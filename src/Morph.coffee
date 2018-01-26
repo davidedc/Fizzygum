@@ -3062,7 +3062,7 @@ class Morph extends MorphicNode
     else
       menu.addMenuItem "collapse", true, @, "collapse"
 
-    menu.addMenuItem "others ➜", false, @, "popUpIconsMenu", "others"
+    menu.addMenuItem "others ➜", false, @, "popUpFirstMenu", "others"
     menu.addMenuItem "others 2 ➜", false, @, "popUpSecondMenu", "others"
 
 
@@ -3117,6 +3117,11 @@ class Morph extends MorphicNode
     menu.addMenuItem "simple plain text scrollpanel not wrapping", true, @, "createNonWrappingSimplePlainTextScrollPanelWdgt"
     menu.addMenuItem "simple plain text scrollpanel (wrapping / not wrapping)", true, @, "createWrappingAndNonWrappingSimplePlainTextScrollPanelWdgt"
 
+    menu.popUpAtHand()
+
+  popUpFirstMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
+    menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningTheMenu) ->

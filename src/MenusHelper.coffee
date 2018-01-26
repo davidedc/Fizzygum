@@ -30,3 +30,9 @@ class MenusHelper
   createNewClippingBoxMorph: ->
     world.create new ClippingBoxMorph()
 
+  makeSlidersButtonsStatesBright: ->
+    world.forAllChildrenBottomToTop (child) ->
+      if child instanceof SliderButtonMorph
+       child.pressColor = new Color 0, 255, 0
+       child.highlightColor = new Color 0, 0, 255
+       child.normalColor = new Color 0, 0, 0
