@@ -3516,12 +3516,15 @@ class Morph extends MorphicNode
   #
   #
   
-  # Morph events:
-  escalateEvent: (functionName, arg) ->
+  # Morph events --------------------------------------------
+
+  # TODO I'm sure there is a cleaner way to handle arbitrary
+  # number of arguments here
+  escalateEvent: (functionName, arg1, arg2, arg3, arg4, arg5, arg6) ->
     handler = @parent
     if handler?
       handler = handler.parent  while not handler[functionName] and handler.parent?
-      handler[functionName] arg  if handler[functionName]
+      handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6  if handler[functionName]
   
   
   # Morph eval. Used by the Inspector and the TextMorph.
