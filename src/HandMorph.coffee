@@ -406,6 +406,15 @@ class HandMorph extends Morph
     if @floatDraggingSomething()
       @drop()
     else
+
+      # used right now for the slider button:
+      # it's likely that the non-float drag will end
+      # up outside of its bounds, and yet we need to
+      # notify the button that the drag is over so it
+      # can repaint itself of another color.
+      if @nonFloatDraggingSomething()
+        @nonFloatDraggedMorph.endOfNonFloatDrag?()
+
       @previousNonFloatDraggingPos = nil
       # let's check if the user clicked on a menu item,
       # in which case we add a special dedicated command

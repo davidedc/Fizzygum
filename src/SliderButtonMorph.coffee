@@ -84,27 +84,56 @@ class SliderButtonMorph extends CircleBoxMorph
       if !oldButtonPosition.eq newPosition
         @fullRawMoveTo newPosition
         @parent.updateValue()
-    
+  
+  endOfNonFloatDrag: ->  
+    if @state != @STATE_NORMAL
+      @state = @STATE_NORMAL
+      @color = @normalColor.copy()
+      @changed()
+
+  setHiglightedColor: ->
+    if @state != @STATE_HIGHLIGHTED
+      @state = @STATE_HIGHLIGHTED
+      @color = @highlightColor.copy()
+      @changed()
+
+  setNormalColor: ->
+    if @state != @STATE_NORMAL
+      @state = @STATE_NORMAL
+      @color = @normalColor.copy()
+      @changed()
+
+  setPressedColor: ->
+    if @state != @STATE_PRESSED
+      @state = @STATE_PRESSED
+      @color = @pressColor.copy()
+      @changed()
+
+  mouseMove: ->
+    # remember that a drag can start a few pixels after the
+    # mouse button is pressed (because of de-noising), so
+    # only checking for "draggingSomething" is not going to be
+    # enough since we receive a few moves without the "draggingSomething"
+    # being set. So we also check for the "pressed" state.
+    if @state == @STATE_PRESSED or world.hand.draggingSomething()
+      return
+    @setHiglightedColor()
   
   #SliderButtonMorph events:
   mouseEnter: ->
-    @state = @STATE_HIGHLIGHTED
-    @color = @highlightColor.copy()
-    @changed()
+    if world.hand.draggingSomething()
+      return
+    @setHiglightedColor()
   
   mouseLeave: ->
-    @state = @STATE_NORMAL
-    @color = @normalColor.copy()
-    @changed()
+    if world.hand.draggingSomething()
+      return
+    @setNormalColor()
   
   mouseDownLeft: (pos) ->
-    @state = @STATE_PRESSED
-    @color = @pressColor.copy()
-    @changed()
+    @setPressedColor()
 
   mouseClickLeft: ->
     @bringToForegroud()
-    @state = @STATE_HIGHLIGHTED
-    @color = @highlightColor.copy()
-    @changed()
+    @setHiglightedColor()
   

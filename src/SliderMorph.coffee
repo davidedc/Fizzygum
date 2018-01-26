@@ -202,6 +202,11 @@ class SliderMorph extends CircleBoxMorph
   mouseDownLeft: (pos) ->
     if @button.parent == @ and ((@parent instanceof ScrollPanelWdgt) or (@parent instanceof PromptMorph))
       world.hand.nonFloatDragMorphFarAwayToHere @button, pos
+      # in an ideal world when a widget moves under the pointer
+      # it gets all the right events like mouseEnter etc.
+      # however that's difficult to do, just set the "pressed"
+      # color from here
+      @button.setPressedColor()
     else
       @escalateEvent "mouseDownLeft", pos
     
