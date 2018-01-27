@@ -558,7 +558,7 @@ class ScrollPanelWdgt extends PanelWdgt
       # similar to the vertical case, escalate the scroll in case
       # we are in a nested ScrollPanel situation
       if (x > 0 and @contents.left() >= (@left()-1)) or
-       (y < 0 and @contents.right() <= (@right()+1) )
+       (x < 0 and @contents.right() <= (@right()+1) )
         @escalateEvent 'wheel', xArg, yArg, zArg, altKeyArg, buttonArg, buttonsArg
       else
         scrollbarJustChanged = true
