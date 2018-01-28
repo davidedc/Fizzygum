@@ -262,6 +262,13 @@ class WorldMorph extends PanelWdgt
 
     @changed()
 
+  createErrorConsole: ->
+    @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
+    @add @errorConsole
+    @errorConsole.fullMoveTo new Point 190,10
+    @errorConsole.setExtent new Point 550,415
+    @errorConsole.hide()
+
   boot: ->
 
     if !window.location.href.contains "worldWithSystemTestHarness"
@@ -288,12 +295,7 @@ class WorldMorph extends PanelWdgt
     WorldMorph.ongoingUrlActionNumber= 0
 
     if !window.location.href.contains "worldWithSystemTestHarness"
-      @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
-      @add @errorConsole
-      @errorConsole.fullMoveTo new Point 190,10
-      @errorConsole.setExtent new Point 550,415
-      @errorConsole.hide()
-
+      @createErrorConsole()
       welcomeTitle = new StringMorph2 "Welcome to Fizzygum!"
       welcomeTitle.isEditable = true
       @add welcomeTitle
@@ -998,6 +1000,7 @@ class WorldMorph extends PanelWdgt
         try
           eachSteppingMorph.step()
         catch err
+          if !world.errorConsole? then world.createErrorConsole()
           @errorConsole.popUpWithError err
 
 

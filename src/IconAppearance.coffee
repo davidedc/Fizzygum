@@ -122,7 +122,8 @@ class IconAppearance extends Appearance
         @paintFunction aContext
       catch err
         console.log err
-        world.errorConsole?.popUpWithError err
+        if !world.errorConsole? then world.createErrorConsole()
+        world.errorConsole.popUpWithError err
 
 
       aContext.restore()

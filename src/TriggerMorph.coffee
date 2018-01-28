@@ -212,6 +212,7 @@ class TriggerMorph extends Morph
       try
         @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
       catch err
+        if !world.errorConsole? then world.createErrorConsole()
         world.errorConsole.popUpWithError err
     return
 
