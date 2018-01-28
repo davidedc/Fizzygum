@@ -388,7 +388,7 @@ class ScrollPanelWdgt extends PanelWdgt
         # reached, and we don't want to scroll until that happens
         # that would be strange because it would be giving the
         # wrong cue to the user, we just want to hold steady
-        !world.hand.morphToGrab.detachesWhenDragged() and
+        !world.hand.morphToGrab?.detachesWhenDragged() and
         @boundsContainPoint(world.hand.position())
           newPos = world.hand.position()
           if @hBar.visibleBasedOnIsVisibleProperty() and
