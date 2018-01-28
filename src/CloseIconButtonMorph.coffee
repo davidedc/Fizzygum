@@ -9,7 +9,7 @@
 # the color of a face belonging to a button is
 # not yet supported.
 # i.e. this is currently the simplest way to change the color
-# of a non-ractangular button.
+# of a non-rectangular button.
 
 class CloseIconButtonMorph extends EmptyButtonMorph
 
