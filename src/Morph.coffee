@@ -2433,7 +2433,13 @@ class Morph extends MorphicNode
   
   pickUp: ->
     world.hand.grab @
-    @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
+    # if one uses the "deferred" API then we need to look
+    # into the "desiredExtent" as the true extent has yet
+    # to be settled
+    if @desiredExtent?
+      @fullRawMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
+    else
+      @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
   
   # note how this checks whether
   # at *any point* up in the
