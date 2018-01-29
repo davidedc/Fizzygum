@@ -97,13 +97,13 @@ class BoxyAppearance extends Appearance
     w = @morph.width()
     h = @morph.height()
     # top left:
-    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90), false
+    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90)
     # top right:
-    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0), false
+    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0)
     # bottom right:
-    context.arc w - offset, h - offset, radius, degreesToRadians(0), degreesToRadians(90), false
+    context.arc w - offset, h - offset, radius, degreesToRadians(0), degreesToRadians(90)
     # bottom left:
-    context.arc offset, h - offset, radius, degreesToRadians(90), degreesToRadians(180), false
+    context.arc offset, h - offset, radius, degreesToRadians(90), degreesToRadians(180)
 
   cornerRadiusPopout: (menuItem)->
     @morph.prompt menuItem.parent.title + "\ncorner\nradius:",

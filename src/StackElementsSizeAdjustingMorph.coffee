@@ -145,7 +145,7 @@ class StackElementsSizeAdjustingMorph extends Morph
       radius = Math.min centerX, centerY
       radius = radius - radius / 20
       aContext.beginPath()
-      aContext.arc centerX, centerY, radius, 0, 2 * Math.PI, false
+      aContext.arc centerX, centerY, radius, 0, 2 * Math.PI
       aContext.fillStyle = 'Gray'
       aContext.fill()
       aContext.closePath()

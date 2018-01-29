@@ -18,13 +18,13 @@ class BubblyAppearance extends BoxyAppearance
     h = @morph.height()
 
     # top left:
-    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90), false
+    context.arc offset, offset, radius, degreesToRadians(-180), degreesToRadians(-90)
 
     # top right:
-    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0), false
+    context.arc w - offset, offset, radius, degreesToRadians(-90), degreesToRadians(-0)
 
     # bottom right:
-    context.arc w - offset, h - offset - radius, radius, degreesToRadians(0), degreesToRadians(90), false
+    context.arc w - offset, h - offset - radius, radius, degreesToRadians(0), degreesToRadians(90)
     unless @isThought # draw speech bubble hook
       if @isPointingRight
         context.lineTo offset + radius, h - offset
@@ -34,7 +34,7 @@ class BubblyAppearance extends BoxyAppearance
         context.lineTo w - (offset + radius), h - offset
 
     # bottom left:
-    context.arc offset, h - offset - radius, radius, degreesToRadians(90), degreesToRadians(180), false
+    context.arc offset, h - offset - radius, radius, degreesToRadians(90), degreesToRadians(180)
 
     if @isThought
       # close large bubble:

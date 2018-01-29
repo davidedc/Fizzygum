@@ -157,7 +157,7 @@ class AnalogClockWdgt extends Morph
     context.beginPath()
     context.lineWidth = 10
     context.strokeStyle = '#325FA2'
-    context.arc 0, 0, squareDim, 0, Math.PI * 2, true
+    context.arc 0, 0, squareDim, 0, Math.PI * 2
     context.stroke()
 
 
@@ -200,7 +200,7 @@ class AnalogClockWdgt extends Morph
 
     # the dot in the middle of the face
     context.beginPath()
-    context.arc(0, 0, 7, 0, Math.PI * 2, true)
+    context.arc 0, 0, 7, 0, Math.PI * 2
     context.fill()
     context.restore()
 

@@ -69,7 +69,7 @@ class UnderCarpetIconMorph extends Morph
     context.beginPath()
     context.translate x, y
     context.scale w / 2, h / 2
-    context.arc 1, 1, 1, 0, 2 * Math.PI, false
+    context.arc 1, 1, 1, 0, 2 * Math.PI
     context.closePath()
     context.restore()
     return
@@ -79,7 +79,7 @@ class UnderCarpetIconMorph extends Morph
     context.beginPath()
     context.translate x, y
     context.scale w / 2, h / 2
-    context.arc 1, 1, 1, Math.PI / 180 * startAngle, Math.PI / 180 * endAngle, false
+    context.arc 1, 1, 1, Math.PI / 180 * startAngle, Math.PI / 180 * endAngle
     if isClosed
       context.lineTo 1, 1
       context.closePath()

@@ -86,8 +86,8 @@ class CircleBoxyAppearance extends Appearance
       aContext.beginPath()
 
       # the two circles (one at each end)
-      aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI, false
-      aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI, false
+      aContext.arc points[0].x, points[0].y, radius, 0, 2 * Math.PI
+      aContext.arc points[1].x, points[1].y, radius, 0, 2 * Math.PI
       # the rectangle
       rect = rect.floor()
       rect = rect.toLocalCoordinatesOf @morph
