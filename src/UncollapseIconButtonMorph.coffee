@@ -36,9 +36,14 @@ class UncollapseIconButtonMorph extends EmptyButtonMorph
     context.fill()
 
     # The "open window" inside the circle
+    context.beginPath()
     context.rect 65, 65, 65, 21
+    context.closePath()
     context.fill()
+
+    context.beginPath()
     context.rect 65, 65, 65, 65
+    context.closePath()
     context.strokeStyle = strokeColor.toString()
     context.lineWidth = 10
     context.stroke()
