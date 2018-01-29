@@ -75,8 +75,8 @@ class DestroyIconMorph extends Morph
   drawingIconInSquare: (context) ->
 
     # colors
-    blackColor = 'rgba(0, 0, 0, 1)'
-    color = 'rgba(0, 0, 0, 1)'
+    blackColorString = 'rgba(0, 0, 0, 1)'
+    colorString = 'rgba(0, 0, 0, 1)'
 
     # the drawing
     # icon adapted from
@@ -103,9 +103,9 @@ class DestroyIconMorph extends Morph
     context.lineTo 37.5, 32.5
     context.lineTo 42.5, 4.5
     context.closePath()
-    context.fillStyle = color
+    context.fillStyle = colorString
     context.fill()
-    context.strokeStyle = blackColor
+    context.strokeStyle = blackColorString
     context.lineWidth = 1
     context.stroke()
 

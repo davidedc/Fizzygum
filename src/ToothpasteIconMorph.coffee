@@ -56,7 +56,7 @@ class ToothpasteIconMorph extends IconMorph
     context.bezierCurveTo 188.36, 103.53, 194, 97.87, 194, 90.91
     context.bezierCurveTo 194, 83.95, 188.36, 78.29, 181.43, 78.29
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     # the tube
@@ -91,7 +91,7 @@ class ToothpasteIconMorph extends IconMorph
     context.lineTo 25.82, 117.31
     context.lineTo 27.26, 114.18
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
     """
 

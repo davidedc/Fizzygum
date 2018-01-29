@@ -67,12 +67,12 @@ class CollapsedStateIconMorph extends Morph
   drawingIconInSquare: (context) ->
 
     #// Color Declarations
-    color = 'rgba(0, 0, 0, 1)'
+    colorString = 'rgba(0, 0, 0, 1)'
     #// Bezier Drawing
     context.beginPath()
     context.moveTo 44.5, 262.42
     context.lineTo 204.07, 111.5
     context.lineTo 360.5, 265.5
-    context.strokeStyle = color
+    context.strokeStyle = colorString
     context.lineWidth = 30
     context.stroke()

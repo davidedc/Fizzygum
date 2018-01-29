@@ -31,7 +31,7 @@ class CollapseIconButtonMorph extends EmptyButtonMorph
     context.bezierCurveTo 53.89, 183.9, 16.1, 146.11, 16.1, 99.5
     context.bezierCurveTo 16.1, 52.89, 53.89, 15.1, 100.5, 15.1
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     # The "open window" inside the circle

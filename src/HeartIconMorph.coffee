@@ -96,10 +96,10 @@ class HeartIconMorph extends Morph
 
   drawingIconInSquare: (context) ->
     #// Color Declarations
-    color = 'rgba(0, 0, 0)'
+    colorString = 'rgba(0, 0, 0)'
 
-    context.strokeStyle = color
-    context.fillStyle = color
+    context.strokeStyle = colorString
+    context.fillStyle = colorString
 
     #// Oval Drawing
     @arc context, 11, 21, 99, 99, 136, 326, false

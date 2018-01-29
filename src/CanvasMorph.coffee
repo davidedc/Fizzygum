@@ -67,7 +67,7 @@ class CanvasMorph extends PanelWdgt
     return [@backBuffer, @backBufferContext]
 
 
-  clear: (color = @color.toString()) ->
+  clear: (color = @color) ->
     if !@backBuffer? then @createRefreshOrGetBackBuffer()
     # @backBuffer.width and @backBuffer.height are already in
     # physical coordinates so no need to adjust for pixelratio
@@ -80,7 +80,7 @@ class CanvasMorph extends PanelWdgt
     # in backBufferExtent 
     #@backBufferContext.scale pixelRatio, pixelRatio
     
-    @backBufferContext.fillStyle = color
+    @backBufferContext.fillStyle = color.toString()
     @backBufferContext.fillRect 0, 0, backBufferExtent.x, backBufferExtent.y
 
     # we leave the context with the correct scaling.

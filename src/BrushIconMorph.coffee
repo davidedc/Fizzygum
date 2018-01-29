@@ -51,7 +51,7 @@ class BrushIconMorph extends IconMorph
     context.bezierCurveTo 10.61, -6.51, 23.94, 9.8, 30.6, 10.26
     context.bezierCurveTo 32.67, 12.13, 32.44, 28.43, 25.09, 40.78
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     # highlight squiggle
@@ -62,7 +62,7 @@ class BrushIconMorph extends IconMorph
     context.bezierCurveTo -47.06, 62.44, -20.17, 66.63, 2.11, 50.1
     context.bezierCurveTo 24.4, 33.32, 22.79, 14.69, 16.36, 14.69
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
     context.restore()
 

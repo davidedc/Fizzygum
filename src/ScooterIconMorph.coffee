@@ -96,20 +96,20 @@ class ScooterIconMorph extends Morph
 
   drawingIconInSquare: (context) ->
     #// Color Declarations
-    color2 = 'rgba(0, 0, 0, 1)'
+    colorString = 'rgba(0, 0, 0, 1)'
     #// Oval Drawing
     @oval context, 10.5, 136.5, 34.5, 34.5
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 10
     context.stroke()
     #// Oval 2 Drawing
     @oval context, 154, 135.5, 34.5, 34.5
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 10
     context.stroke()
     #// Oval 3 Drawing
     @arc context, 141, 123, 57, 57, 176, 268, false
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 7.5
     context.stroke()
     #// Bezier Drawing
@@ -117,7 +117,7 @@ class ScooterIconMorph extends Morph
     context.moveTo 171.5, 153.5
     context.lineTo 167, 38
     context.lineCap = 'round'
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 8
     context.stroke()
     #// Bezier 2 Drawing
@@ -125,7 +125,7 @@ class ScooterIconMorph extends Morph
     context.moveTo 146.5, 36.5
     context.lineTo 190.5, 36.5
     context.lineCap = 'round'
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 7
     context.stroke()
     #// Bezier 3 Drawing
@@ -133,6 +133,6 @@ class ScooterIconMorph extends Morph
     context.moveTo 28.5, 153.5
     context.lineTo 140.5, 153.5
     context.lineCap = 'round'
-    context.strokeStyle = color2
+    context.strokeStyle = colorString
     context.lineWidth = 7
     context.stroke()

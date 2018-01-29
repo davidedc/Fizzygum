@@ -134,7 +134,7 @@ class RectangularAppearance extends Appearance
 
         aContext.globalAlpha = @morph.alpha
         aContext.lineWidth = 1
-        aContext.strokeStyle = @morph.strokeColor
+        aContext.strokeStyle = @morph.strokeColor.toString()
         # half-pixel adjustments are needed in HTML5 Canvas to draw
         # pixel-perfect lines. Also note how we have to multiply the
         # morph metrics to bring them to physical pixels coords.

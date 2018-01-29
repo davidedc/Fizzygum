@@ -21,7 +21,7 @@ class IconAppearance extends Appearance
     context.bezierCurveTo 57.28, 176.61, 22.39, 141.72, 22.39, 98.5
     context.bezierCurveTo 22.39, 55.28, 57.28, 20.39, 100.5, 20.39
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
     """
 

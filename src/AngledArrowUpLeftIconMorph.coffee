@@ -26,7 +26,7 @@ class AngledArrowUpLeftIconMorph extends IconMorph
     context.lineTo 16.6, -50.58
     context.bezierCurveTo -4.2, -29.81, -25, -9.04, -25, -9.04
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     context.restore()

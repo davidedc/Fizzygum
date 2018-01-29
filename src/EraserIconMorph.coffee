@@ -43,7 +43,7 @@ class EraserIconMorph extends IconMorph
     context.lineTo 101.94, 39.44
     context.lineTo 178.4, 39.44
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
     """
 

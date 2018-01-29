@@ -31,7 +31,7 @@ class CloseIconButtonMorph extends EmptyButtonMorph
     context.bezierCurveTo 53.89, 183.9, 16.1, 146.11, 16.1, 99.5
     context.bezierCurveTo 16.1, 52.89, 53.89, 15.1, 100.5, 15.1
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     # The x inside the circle
@@ -56,7 +56,7 @@ class CloseIconButtonMorph extends EmptyButtonMorph
     context.lineTo 65.73, 125.45
     context.bezierCurveTo 63.21, 127.72, 63.21, 131.75, 65.73, 134.27
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
 
     """

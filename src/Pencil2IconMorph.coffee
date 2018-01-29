@@ -46,7 +46,7 @@ class Pencil2IconMorph extends IconMorph
     context.lineTo 52.03, 157.57
     context.lineTo 122.79, 35.35
     context.closePath()
-    context.fillStyle = fillColor
+    context.fillStyle = fillColor.toString()
     context.fill()
     """
 

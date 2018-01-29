@@ -88,7 +88,7 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
             # give it a little bit of a tint so
             # you can see the canvas when you take it
             # apart from the paint tool.
-            #context.fillStyle = new Color 0,255,0,0.5
+            #context.fillStyle = (new Color 0,255,0,0.5).toString()
             #context.fillRect 0, 0, @width(), @height()
 
             context.translate -@bounds.origin.x, -@bounds.origin.y
@@ -427,7 +427,7 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
 
                 contextMain.beginPath()
                 contextMain.lineWidth="2"
-                contextMain.fillStyle = new Color 255, 250, 245
+                contextMain.fillStyle = (new Color 255, 250, 245).toString()
                 contextMain.rect(-5,-5,10,10)
                 contextMain.fill()
                 @underlyingCanvasMorph.changed()
