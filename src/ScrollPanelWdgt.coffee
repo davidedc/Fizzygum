@@ -15,6 +15,9 @@ class ScrollPanelWdgt extends PanelWdgt
   contents: nil
   vBar: nil
   hBar: nil
+  # used to avoid recursively re-entering the
+  # adjustContentsBounds function
+  _adjustingContentsBounds: false
 
   # there are several ways in which we allow
   # scrolling when a ScrollPanel is scrollable
@@ -226,6 +229,9 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustScrollBars()
 
   adjustContentsBounds: ->
+    # avoid recursively re-entering this function
+    if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
+
     # if PanelWdgt is of type isTextLineWrapping
     # it means that you don't want the TextMorph to
     # extend indefinitely as you are typing. Rather,
@@ -299,6 +305,7 @@ class ScrollPanelWdgt extends PanelWdgt
     # case. The good news is that it's a cheap check to do in case
     # there is nothing to do.
     @keepContentsInScrollPanelWdgt()
+    @_adjustingContentsBounds = false
 
   keepContentsInScrollPanelWdgt: ->
     if @contents.left() > @left()

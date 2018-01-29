@@ -10,6 +10,9 @@ class SimpleVerticalStackPanelWdgt extends Morph
   _acceptsDrops: true
   tight: true
   constrainContentWidth: true
+  # used to avoid recursively re-entering the
+  # adjustContentsBounds function
+  _adjustingContentsBounds: false
 
   add: (aMorph) ->
     aMorph.rawResizeToWithoutSpacing()
@@ -36,6 +39,8 @@ class SimpleVerticalStackPanelWdgt extends Morph
     @adjustContentsBounds()
 
   adjustContentsBounds: ->
+    # avoid recursively re-entering this function
+    if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
     @padding = 5
     totalPadding = 2 * @padding
 
@@ -96,6 +101,7 @@ class SimpleVerticalStackPanelWdgt extends Morph
       newHeight = Math.max newHeight, @height()
 
     @rawSetHeight newHeight
+    @_adjustingContentsBounds = false
 
   rawSetExtent: (aPoint) ->
     unless aPoint.eq @extent()
