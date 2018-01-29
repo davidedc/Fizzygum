@@ -32,6 +32,7 @@ class MenuMorph extends Morph
     super()
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
+    @strokeColor = new Color 210, 210, 210
 
     # the morphOpeningTheMenu is only useful to get the "parent" menu.
     # the "parent" menu is the menu that this menu is attached to,
