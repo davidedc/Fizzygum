@@ -78,9 +78,17 @@ class BoxyAppearance extends Appearance
         aContext.fillStyle = "black"
 
       aContext.beginPath()
-      @outlinePath aContext, Math.max @getCornerRadius(), 0
+      @outlinePath aContext, Math.max @getCornerRadius(), false
       aContext.closePath()
       aContext.fill()
+
+      if @morph.strokeColor? and !appliedShadow?
+        aContext.lineWidth = 1
+        aContext.strokeStyle = @morph.strokeColor.toString()
+        aContext.beginPath()
+        @outlinePath aContext, Math.max @getCornerRadius(), true
+        aContext.closePath()
+        aContext.stroke()
 
       aContext.restore()
 
@@ -92,8 +100,12 @@ class BoxyAppearance extends Appearance
       @paintHighlight aContext, al, at, w, h
 
   
-  outlinePath: (context, radius) ->
+  outlinePath: (context, radius, isStroke) ->
     offset = radius
+    # in order to be crisp, strokes have to be displaced a bit
+    # (while fills don't, they'd look fuzzy instead)
+    if isStroke
+      offset += 0.5
     w = @morph.width()
     h = @morph.height()
     # top left:
