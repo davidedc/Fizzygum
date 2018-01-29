@@ -75,7 +75,7 @@ class IconAppearance extends Appearance
     result2Y = @morph.top() + (height - (result2H)) / 2
 
     result = new Rectangle result2X, result2Y, result2X + result2W, result2Y + result2H
-    return result
+    return result.round()
 
   widthWithoutSpacing: ->
     @calculateRectangleOfIcon().width()
