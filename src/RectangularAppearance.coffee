@@ -76,12 +76,11 @@ class RectangularAppearance extends Appearance
 
       # paint the background
       toBePainted = new Rectangle al, at, al + w, at + h
-      if @morph.backgroundColor?
 
+      if @morph.backgroundColor?
         color = @morph.backgroundColor
         if appliedShadow?
           color = "black"
-
         @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
       # now paint the actual morph, which is a rectangle
