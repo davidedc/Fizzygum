@@ -37,7 +37,7 @@ class StringFieldMorph extends PanelWdgt
     text = new StringMorph txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric
     #console.log "text morph extent: " + text.text + " : " + text.extent()
     @rawSetWidth Math.max @minTextWidth, text.width()
-    console.log "string fleid morph extent: " + @extent()
+    #console.log "string field morph extent: " + @extent()
 
   reLayout: ->
     super()
