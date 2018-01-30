@@ -1637,6 +1637,8 @@ class Morph extends MorphicNode
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   hide: ->
+    if !@isVisible
+      return
     @isVisible = false
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
