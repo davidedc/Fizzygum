@@ -12,10 +12,6 @@ class VerticalStackLayoutSpec
   widthOfElementWhenAdded: nil
   elasticity: 1
   alignment: 'left'
-  stretchesToFillStack: false
-
-  constructor: (@stretchesToFillStack) ->
-    return nil
 
   # TODO there should be a method on the morph that
   # initialises its layoutSpecDetails with the proper
@@ -28,8 +24,7 @@ class VerticalStackLayoutSpec
     availableWidthInStack = @availableWidthInStack()
     elementWidthWithoutSpacing = @element.widthWithoutSpacing()
     
-    #if (@element instanceof SimplePlainTextWdgt) or elementWidthWithoutSpacing > availableWidthInStack
-    if @stretchesToFillStack or elementWidthWithoutSpacing > availableWidthInStack
+    if elementWidthWithoutSpacing > availableWidthInStack
       @widthOfElementWhenAdded = availableWidthInStack
     else
       @widthOfElementWhenAdded = elementWidthWithoutSpacing
@@ -42,7 +37,6 @@ class VerticalStackLayoutSpec
     @stack.width() - 2 * @stack.padding
 
   getWidthInStack: ->
-    debugger
     availableWidthInStack = @availableWidthInStack()
     proportionalWidth = availableWidthInStack * @widthOfElementWhenAdded / @widthOfStackWhenAdded
     differenceWithFixedWidth = proportionalWidth - @widthOfElementWhenAdded
@@ -58,7 +52,6 @@ class VerticalStackLayoutSpec
     menu.addMenuItem "layout in stack ➜", false, @, "vertStackMenu", ""
 
   vertStackMenu: (morphOpeningTheMenu,targetMorph,a,b,c)->
-    debugger
     menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, nil
     menu.addMenuItem "base width...", true, @, "baseWidthPopout", ""
     menu.addMenuItem "elasticity...", true, @, "elasticityPopout", ""
@@ -93,7 +86,6 @@ class VerticalStackLayoutSpec
       true
 
   setElasticity: (elasticityOrMorphGivingElasticity, morphGivingElasticity) ->
-    debugger
     if morphGivingElasticity?.getValue?
       elasticity = morphGivingElasticity.getValue()
     else
@@ -118,7 +110,6 @@ class VerticalStackLayoutSpec
       true
 
   setWidthOfElementWhenAdded: (widthOfElementWhenAddedOrMorphGivingWidthOfElementWhenAdded, morphGivingWidthOfElementWhenAdded) ->
-    debugger
     if morphGivingWidthOfElementWhenAdded?.getValue?
       widthOfElementWhenAdded = morphGivingWidthOfElementWhenAdded.getValue()
     else
