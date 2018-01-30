@@ -211,8 +211,14 @@ class HandMorph extends Morph
             arr.push action
 
       morphToDrop = @children[0]
-      target = @dropTargetFor morphToDrop
+
+      if morphToDrop.rejectsBeingDropped?()
+        target = world
+      else
+        target = @dropTargetFor morphToDrop
+
       @fullChanged()
+      target.aboutToDrop? morphToDrop
       target.add morphToDrop
       morphToDrop.fullChanged()
 

@@ -13,7 +13,9 @@
 # REQUIRES globalFunctions
 # REQUIRES DeepCopierMixin
 # REQUIRES LayoutSpec
+# REQUIRES PreferredSize
 # REQUIRES VerticalStackLayoutSpec
+# REQUIRES WindowContentLayoutSpec
 
 class Morph extends MorphicNode
 
@@ -260,8 +262,11 @@ class Morph extends MorphicNode
 
   shadowInfo: nil
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
+
   initialiseDefaultVerticalStackLayoutSpec: ->
-    @layoutSpecDetails = new VerticalStackLayoutSpec false
+    @layoutSpecDetails = new VerticalStackLayoutSpec 1
 
   mouseClickRight: ->
     # you could bring up what you right-click,
@@ -472,6 +477,7 @@ class Morph extends MorphicNode
       return firstPart + @uniqueIDString()
 
   close: ->
+    @parent?.childBeingClosed? @
     if world.underTheCarpetMorph?
       world.underTheCarpetMorph.scrollPanel.addInPseudoRandomPosition @
     else
@@ -481,6 +487,7 @@ class Morph extends MorphicNode
   # Morph deleting:
   destroy: ->
 
+    @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
 
     @destroyed = true
@@ -1641,6 +1648,7 @@ class Morph extends MorphicNode
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   hide: ->
+    debugger
     if !@isVisible
       return
     @isVisible = false
@@ -1662,6 +1670,7 @@ class Morph extends MorphicNode
 
 
   show: ->
+    debugger
     if @isVisible
       return
     if @visibleBasedOnIsVisibleProperty() == true
@@ -1720,6 +1729,9 @@ class Morph extends MorphicNode
     WorldMorph.numberOfAddsAndRemoves++
     @parent.removeChild @
     @fullChanged()
+
+  colloquialName: ->
+    "generic widget"
 
   createPointerMorph: ->
     myPosition = @positionAmongSiblings()
@@ -2438,6 +2450,7 @@ class Morph extends MorphicNode
     @_acceptsDrops = false
   
   pickUp: ->
+    @parent?.childBeingPickedUp? @
     world.hand.grab @
     # if one uses the "deferred" API then we need to look
     # into the "desiredExtent" as the true extent has yet
@@ -3117,6 +3130,29 @@ class Morph extends MorphicNode
 
     menu.popUpAtHand()
 
+  popUpWindowsMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Windows"
+    menu.addMenuItem "empty window", true, @, "createEmptyWindow"
+    menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
+
+    menu.popUpAtHand()
+
+  createEmptyInternalWindow: ->
+    wm = new WindowMorph nil, nil, nil, true
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+  createEmptyWindow: ->
+    wm = new WindowMorph nil, nil, nil
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+
+
   popUpSimplePlainTextWdgtMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Simple plain text"
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
@@ -3142,6 +3178,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
+    menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
     menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"

@@ -18,6 +18,10 @@ class IconMorph extends Morph
   rawResizeToWithoutSpacing: ->
     @rawSetExtent @appearance.calculateRectangleOfIcon()
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
+
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawResizeToWithoutSpacing()
     ratio = @height()/@width()

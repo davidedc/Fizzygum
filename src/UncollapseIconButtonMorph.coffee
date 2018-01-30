@@ -60,3 +60,4 @@ class UncollapseIconButtonMorph extends EmptyButtonMorph
 
 
   actOnClick: ->
+    @parent.parent.contents.unCollapse()

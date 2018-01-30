@@ -40,6 +40,9 @@ class SimplePlainTextWdgt extends TextMorph2
     @maxTextWidth = true
     @reLayout()
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
 
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     super

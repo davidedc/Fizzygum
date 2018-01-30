@@ -13,6 +13,9 @@ class VerticalStackLayoutSpec
   elasticity: 1
   alignment: 'left'
 
+  constructor: (@elasticity) ->
+    return nil
+
   # TODO there should be a method on the morph that
   # initialises its layoutSpecDetails with the proper
   # settings, like we do for WindowContentLayoutSpec.
@@ -21,23 +24,19 @@ class VerticalStackLayoutSpec
   # the element class... this is not OK...
   rememberInitialDimensions: (@element, @stack) ->
     
-    availableWidthInStack = @availableWidthInStack()
+    availableWidthInStack = @stack.availableWidthForContents()
     elementWidthWithoutSpacing = @element.widthWithoutSpacing()
     
     if elementWidthWithoutSpacing > availableWidthInStack
       @widthOfElementWhenAdded = availableWidthInStack
+      @elasticity = 1
     else
       @widthOfElementWhenAdded = elementWidthWithoutSpacing
 
     @widthOfStackWhenAdded = availableWidthInStack
-    @elasticity = 1
-
-  # TODO this should belong to the stack, not here
-  availableWidthInStack: ->
-    @stack.width() - 2 * @stack.padding
 
   getWidthInStack: ->
-    availableWidthInStack = @availableWidthInStack()
+    availableWidthInStack = @stack.availableWidthForContents()
     proportionalWidth = availableWidthInStack * @widthOfElementWhenAdded / @widthOfStackWhenAdded
     differenceWithFixedWidth = proportionalWidth - @widthOfElementWhenAdded
     
@@ -86,6 +85,7 @@ class VerticalStackLayoutSpec
       true
 
   setElasticity: (elasticityOrMorphGivingElasticity, morphGivingElasticity) ->
+    debugger
     if morphGivingElasticity?.getValue?
       elasticity = morphGivingElasticity.getValue()
     else

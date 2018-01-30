@@ -13,6 +13,10 @@ class HeartIconMorph extends Morph
   rawResizeToWithoutSpacing: ->
     @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
+
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetExtent new Point newWidth, newWidth
 

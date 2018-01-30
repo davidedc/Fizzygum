@@ -21,11 +21,18 @@ class AnalogClockWdgt extends Morph
 
     #@setMinAndMaxBoundsAndSpreadability (new Point 15,15) , (new Point 15,15), LayoutSpec.SPREADABILITY_HANDLES
 
+  colloquialName: ->
+    "analog clock"
+
   widthWithoutSpacing: ->
     Math.min @width(), @height()
 
   rawResizeToWithoutSpacing: ->
     @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
     @rawSetExtent new Point newWidth, newWidth

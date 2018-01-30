@@ -38,6 +38,13 @@ class SimpleVerticalStackPanelWdgt extends Morph
       return
     @adjustContentsBounds()
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
+
+  availableWidthForContents: ->
+    @width() - 2 * @padding
+
   adjustContentsBounds: ->
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true

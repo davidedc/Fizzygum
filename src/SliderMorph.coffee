@@ -38,6 +38,9 @@ class SliderMorph extends CircleBoxMorph
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button
 
+  initialiseDefaultVerticalStackLayoutSpec: ->
+    @layoutSpecDetails = new VerticalStackLayoutSpec 0
+
   imBeingAddedTo: (newParentMorph) ->
     @reLayout()
     
@@ -59,6 +62,9 @@ class SliderMorph extends CircleBoxMorph
       # it's the time of the button
       @button.reLayout()
     
+  initialiseDefaultWindowContentLayoutSpec: ->
+    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
+    @layoutSpecDetails.resizerCanOverlapContents = false
 
   
   rangeSize: ->
