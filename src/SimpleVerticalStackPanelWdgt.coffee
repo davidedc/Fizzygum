@@ -52,7 +52,8 @@ class SimpleVerticalStackPanelWdgt extends Morph
 
     childrenNotHandlesNorCarets.forEach (morph) =>
       if morph.layoutSpec != LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
-        morph.layoutSpecDetails = new VerticalStackLayoutSpec morph, @
+        morph.initialiseDefaultVerticalStackLayoutSpec()
+        morph.layoutSpecDetails.rememberInitialDimensions morph, @
         morph.setLayoutSpec LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
 
     childrenNotHandlesNorCarets.forEach (morph) =>

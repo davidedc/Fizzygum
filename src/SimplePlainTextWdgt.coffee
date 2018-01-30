@@ -40,6 +40,9 @@ class SimplePlainTextWdgt extends TextMorph2
     @maxTextWidth = true
     @reLayout()
 
+  initialiseDefaultVerticalStackLayoutSpec: ->
+    @layoutSpecDetails = new VerticalStackLayoutSpec true
+
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     super
     menu.removeMenuItem "soft wrap"

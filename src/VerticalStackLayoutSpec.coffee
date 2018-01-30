@@ -11,8 +11,11 @@ class VerticalStackLayoutSpec
   widthOfStackWhenAdded: nil
   widthOfElementWhenAdded: nil
   elasticity: 1
-  proportionalHeight: false
   alignment: 'left'
+  stretchesToFillStack: false
+
+  constructor: (@stretchesToFillStack) ->
+    return nil
 
   # TODO there should be a method on the morph that
   # initialises its layoutSpecDetails with the proper
@@ -20,20 +23,21 @@ class VerticalStackLayoutSpec
   # Doing it all from this constructor common for all
   # widgets, and then doing a case analysis based on
   # the element class... this is not OK...
-  constructor: (@element, @stack) ->
+  rememberInitialDimensions: (@element, @stack) ->
     
     availableWidthInStack = @availableWidthInStack()
     elementWidthWithoutSpacing = @element.widthWithoutSpacing()
     
-    if (@element instanceof SimplePlainTextWdgt) or elementWidthWithoutSpacing > availableWidthInStack
+    #if (@element instanceof SimplePlainTextWdgt) or elementWidthWithoutSpacing > availableWidthInStack
+    if @stretchesToFillStack or elementWidthWithoutSpacing > availableWidthInStack
       @widthOfElementWhenAdded = availableWidthInStack
-      @widthOfStackWhenAdded = availableWidthInStack
-      @elasticity = 1
     else
       @widthOfElementWhenAdded = elementWidthWithoutSpacing
-      @widthOfStackWhenAdded = availableWidthInStack
-      @elasticity = 1
 
+    @widthOfStackWhenAdded = availableWidthInStack
+    @elasticity = 1
+
+  # TODO this should belong to the stack, not here
   availableWidthInStack: ->
     @stack.width() - 2 * @stack.padding
 

@@ -13,6 +13,7 @@
 # REQUIRES globalFunctions
 # REQUIRES DeepCopierMixin
 # REQUIRES LayoutSpec
+# REQUIRES VerticalStackLayoutSpec
 
 class Morph extends MorphicNode
 
@@ -258,6 +259,9 @@ class Morph extends MorphicNode
   destroyed: false
 
   shadowInfo: nil
+
+  initialiseDefaultVerticalStackLayoutSpec: ->
+    @layoutSpecDetails = new VerticalStackLayoutSpec false
 
   mouseClickRight: ->
     # you could bring up what you right-click,
