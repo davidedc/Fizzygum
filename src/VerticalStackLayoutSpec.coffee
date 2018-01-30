@@ -93,11 +93,10 @@ class VerticalStackLayoutSpec
 
     elasticity = Number(elasticity)
 
-    if elasticity
-      elasticity = elasticity/100
-      unless @elasticity == elasticity
-        @elasticity = elasticity
-        @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+    elasticity = elasticity/100
+    unless @elasticity == elasticity
+      @elasticity = elasticity
+      @element.refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   baseWidthPopout: (menuItem,a,b,c,d,e,f)->
     @element.prompt menuItem.parent.title + "\nbase width:",
