@@ -3138,14 +3138,14 @@ class Morph extends MorphicNode
     menu.popUpAtHand()
 
   createEmptyInternalWindow: ->
-    wm = new WindowMorph nil, nil, nil, true
+    wm = new WindowWdgt nil, nil, nil, true
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
 
   createEmptyWindow: ->
-    wm = new WindowMorph nil, nil, nil
+    wm = new WindowWdgt nil, nil, nil
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
     world.add wm

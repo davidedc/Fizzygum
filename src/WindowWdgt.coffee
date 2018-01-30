@@ -1,7 +1,7 @@
-# WindowMorph //////////////////////////////////////////////////////
+# WindowWdgt //////////////////////////////////////////////////////
 # REQUIRES WindowContentsPlaceholderText
 
-class WindowMorph extends SimpleVerticalStackPanelWdgt
+class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   label: nil
   closeButton: nil
@@ -42,7 +42,7 @@ class WindowMorph extends SimpleVerticalStackPanelWdgt
     #@adjustContentsBounds()
 
   contentsRecursivelyCanSetHeightFreely: ->
-    if !(@contents instanceof WindowMorph)
+    if !(@contents instanceof WindowWdgt)
       return @contents.layoutSpecDetails.canSetHeightFreely
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
@@ -51,7 +51,7 @@ class WindowMorph extends SimpleVerticalStackPanelWdgt
       return true
 
     if @parent?
-      if @parent instanceof WindowMorph
+      if @parent instanceof WindowWdgt
         return @parent.recursivelyAttachedAsFreeFloating()
 
     return false
