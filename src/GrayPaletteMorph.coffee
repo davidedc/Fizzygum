@@ -4,6 +4,8 @@ class GrayPaletteMorph extends ColorPaletteMorph
 
   constructor: (@target = nil, sizePoint) ->
     super @target, sizePoint or new Point 80, 10
+  colloquialName: ->
+    "shades of gray"
   
   # no changes of position or extent should be
   # performed in here

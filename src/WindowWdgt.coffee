@@ -64,11 +64,22 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       @label.setText "empty window"
 
+  colloquialName: ->
+    if @internal
+      return "internal window"
+    else
+      return "window"
+
   add: (aMorph, position = nil, layoutSpec, notContent) ->
     debugger
     unless notContent or (aMorph instanceof CaretMorph) or (aMorph instanceof HandleMorph)
       @contentNeverSetInPlaceYet = true
-      @label.setText aMorph.colloquialName()
+      titleToBeSet = aMorph.colloquialName()
+      if titleToBeSet == "window"
+        titleToBeSet = "window with another " + titleToBeSet
+      if titleToBeSet == "internal window"
+        titleToBeSet = "window with an " + titleToBeSet
+      @label.setText titleToBeSet
       @removeChild @contents
       @contents = aMorph
       @adjustContentsBounds()

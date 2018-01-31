@@ -14,6 +14,9 @@ class ColorPaletteMorph extends Morph
   constructor: (@target = nil, sizePoint) ->
     super()
     @silentRawSetExtent sizePoint or new Point 80, 50
+
+  colloquialName: ->
+    "color palette"
   
   detachesWhenDragged: ->
     false

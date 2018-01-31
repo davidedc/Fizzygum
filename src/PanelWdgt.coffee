@@ -32,6 +32,9 @@ class PanelWdgt extends Morph
     if @scrollPanel
       @noticesTransparentClick = false
 
+  colloquialName: ->
+    "panel"
+
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
     # keep in synch the value of the container scrollPanel

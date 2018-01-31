@@ -7,5 +7,5 @@
 
 class SimpleDocumentPanelWdgt extends SimpleVerticalStackPanelWdgt
 
-  nothing1: null
-  nothing2: null
+  colloquialName: ->
+    "document"

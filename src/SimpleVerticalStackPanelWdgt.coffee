@@ -14,6 +14,9 @@ class SimpleVerticalStackPanelWdgt extends Morph
   # adjustContentsBounds function
   _adjustingContentsBounds: false
 
+  colloquialName: ->
+    "stack"
+
   add: (aMorph) ->
     aMorph.rawResizeToWithoutSpacing()
     super

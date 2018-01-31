@@ -63,6 +63,12 @@ class MenuMorph extends Morph
         @createLabel()
         @silentAdd @label
 
+  colloquialName: ->
+    toBeReturned = "menu"
+    if @title
+      return "\"" + @title + "\" menu"
+    else
+      return "menu"
 
   # the propagation happens through the parentMenu property
   # rather than the parent property

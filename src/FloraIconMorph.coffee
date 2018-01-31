@@ -7,6 +7,9 @@ class FloraIconMorph extends Morph
   #  super()
   #  @setColor new Color 0, 0, 0
 
+  colloquialName: ->
+    "heart icon"
+
   widthWithoutSpacing: ->
     Math.min @width(), @height()
 

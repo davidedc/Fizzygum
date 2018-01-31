@@ -23,6 +23,9 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     ostmA.enableSelecting()
     @setContents ostmA, 5
 
+  colloquialName: ->
+    "stack"
+
   lockAllChildern: ->
     @disableDrops()
     @contents.disableDrops()

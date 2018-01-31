@@ -69,6 +69,9 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @adjustScrollBars()
 
+  colloquialName: ->
+    "scrollable panel"
+
   adjustContentsBasedOnHBar: (num) ->
     @contents.fullRawMoveTo new Point @left() - num, @contents.position().y
     @adjustContentsBounds()

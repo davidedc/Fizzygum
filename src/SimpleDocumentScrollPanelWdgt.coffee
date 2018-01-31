@@ -10,5 +10,5 @@
 
 class SimpleDocumentScrollPanelWdgt extends SimpleVerticalStackScrollPanelWdgt
 
-	nothing1: null
-	nothing2: null
+  colloquialName: ->
+    "document"

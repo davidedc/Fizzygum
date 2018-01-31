@@ -38,6 +38,9 @@ class SliderMorph extends CircleBoxMorph
     @silentRawSetExtent new Point 20, 100
     @silentAdd @button
 
+  colloquialName: ->
+    "slider"
+
   initialiseDefaultVerticalStackLayoutSpec: ->
     @layoutSpecDetails = new VerticalStackLayoutSpec 0
 
