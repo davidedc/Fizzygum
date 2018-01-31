@@ -17,6 +17,9 @@ class ColorPaletteMorph extends Morph
 
   colloquialName: ->
     "color palette"
+
+  initialiseDefaultWindowContentLayoutSpec: ->
+    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
   
   detachesWhenDragged: ->
     false

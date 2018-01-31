@@ -70,6 +70,10 @@ class MenuMorph extends Morph
     else
       return "menu"
 
+  initialiseDefaultWindowContentLayoutSpec: ->
+    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
+    @layoutSpecDetails.canSetHeightFreely = false
+
   # the propagation happens through the parentMenu property
   # rather than the parent property
   propagateKillMenus: ->

@@ -4,6 +4,10 @@ class GrayPaletteMorph extends ColorPaletteMorph
 
   constructor: (@target = nil, sizePoint) ->
     super @target, sizePoint or new Point 80, 10
+
+  initialiseDefaultWindowContentLayoutSpec: ->
+    @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
+
   colloquialName: ->
     "shades of gray"
   
