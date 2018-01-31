@@ -71,7 +71,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       return "window"
 
   add: (aMorph, position = nil, layoutSpec, notContent) ->
-    debugger
     unless notContent or (aMorph instanceof CaretMorph) or (aMorph instanceof HandleMorph)
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aMorph.colloquialName()
@@ -89,7 +88,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @resizer?.moveInFrontOfSiblings()
 
   childBeingDestroyed: (child) ->
-    debugger
     if child == @contents
       @resetToDefaultContents()
 
@@ -163,7 +161,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @layoutSpecDetails.canSetHeightFreely = false
 
   adjustContentsBounds: ->
-    debugger
     # avoid recursively re-entering this function
     if @_adjustingContentsBounds then return else @_adjustingContentsBounds = true
 

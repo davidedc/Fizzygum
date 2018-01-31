@@ -90,7 +90,6 @@ class SimplePlainTextWdgt extends TextMorph2
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   softWrapOff: ->
-    debugger
 
     @parent.parent.isTextLineWrapping = false
     @maxTextWidth = nil

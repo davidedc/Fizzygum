@@ -21,7 +21,6 @@ class SimplePlainTextPanelWdgt extends PanelWdgt
     padding
     ) ->
 
-    debugger
     super()
     @takesOverAndCoalescesChildrensMenus = true
     @disableDrops()

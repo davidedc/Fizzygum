@@ -1648,7 +1648,6 @@ class Morph extends MorphicNode
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
   hide: ->
-    debugger
     if !@isVisible
       return
     @isVisible = false
@@ -1670,7 +1669,6 @@ class Morph extends MorphicNode
 
 
   show: ->
-    debugger
     if @isVisible
       return
     if @visibleBasedOnIsVisibleProperty() == true
@@ -3008,7 +3006,6 @@ class Morph extends MorphicNode
     @createSimpleVerticalStackScrollPanelWdgt()
 
   createSimpleVerticalStackPanelWdgtFreeContentsWidth: ->
-    debugger
     svspw = new SimpleVerticalStackPanelWdgt null, null, null, false
     world.add svspw
     svspw.fullRawMoveTo new Point 35, 30

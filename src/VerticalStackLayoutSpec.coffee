@@ -79,7 +79,6 @@ class VerticalStackLayoutSpec
       true
 
   setElasticity: (elasticityOrMorphGivingElasticity, morphGivingElasticity) ->
-    debugger
     if morphGivingElasticity?.getValue?
       elasticity = morphGivingElasticity.getValue()
     else
