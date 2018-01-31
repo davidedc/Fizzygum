@@ -17,6 +17,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   _adjustingContentsBounds: false
   internal: false
   defaultContents: nil
+  reInflating: false
 
   constructor: (@labelContent = "my window", @closeButton, @contents, @internal = false) ->
     super nil, nil, 40, true
@@ -41,7 +42,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
-      return @contents.layoutSpecDetails.canSetHeightFreely
+      return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isCollapsed()) and !@reInflating
     return @contents.contentsRecursivelyCanSetHeightFreely()
 
   recursivelyAttachedAsFreeFloating: ->
@@ -98,6 +99,34 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   childBeingClosed: (child) ->
     if child == @contents
       @resetToDefaultContents()
+
+  childBeingCollapsed: (child) ->
+    if child == @contents
+      @widthWhenUnCollapsed = @width()
+      @contentsExtentWhenCollapsed = @contents.extent()
+      @extentWhenCollapsed = @extent()
+
+  childBeingUnCollapsed: (child) ->
+    if child == @contents
+      @widthWhenCollapsed = @width()
+
+  childCollapsed: (child) ->
+    if child == @contents
+      if @widthWhenCollapsed?
+        @rawSetWidth @widthWhenCollapsed
+      @adjustContentsBounds()
+      @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+
+  childUnCollapsed: (child) ->
+    if child == @contents
+      @reInflating = true
+      @rawSetExtent @extentWhenCollapsed
+      @contents.rawSetExtent @contentsExtentWhenCollapsed
+      if @widthWhenUnCollapsed?
+        @rawSetWidth @widthWhenUnCollapsed
+      @adjustContentsBounds()
+      @reInflating = false
+      @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   resetToDefaultContents: ->
     @contents = @defaultContents
@@ -195,7 +224,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     stackHeight = 0
 
-    if @contents?
+    if @contents? and !@contents.collapsed
       if @contents.layoutSpec != LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
         @contents.initialiseDefaultWindowContentLayoutSpec()
         @contents.setLayoutSpec LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
@@ -269,6 +298,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
       @contents.fullRawMoveTo new Point leftPosition, @top() + (closeIconSize + @padding + @padding) + @padding
       stackHeight += desiredHeight
+
+    if @contents? and @contents.collapsed
+      partOfHeightUsedUp = Math.round closeIconSize + @padding + @padding
+
 
     newHeight = stackHeight + partOfHeightUsedUp
 

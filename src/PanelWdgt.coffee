@@ -77,7 +77,13 @@ class PanelWdgt extends Morph
     if @parent?
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
-        @parent.adjustScrollBars()
+        @parent.adjustScrollBars?()
+
+  childRemoved: (child) ->
+    if @parent?
+      if @parent.adjustContentsBounds?
+        @parent.adjustContentsBounds()
+        @parent.adjustScrollBars?()  
 
   detachesWhenDragged: ->
     if @parent?

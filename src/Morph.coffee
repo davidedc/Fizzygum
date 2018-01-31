@@ -1692,24 +1692,30 @@ class Morph extends MorphicNode
     @fullChanged()
 
   collapse: ->
+    if @collapsed
+      return
+    @parent?.childBeingCollapsed? @
     @collapsed = true
     WorldMorph.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @invalidateLayout()
     @fullChanged()
+    @parent?.childCollapsed? @
 
   unCollapse: ->
     if !@collapsed
       return
     if !@isCollapsed()
       return
+    @parent?.childBeingUnCollapsed? @
     @collapsed = false
     WorldMorph.numberOfCollapseFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
     @invalidateLayout()
     @fullChanged()
+    @parent?.childUnCollapsed? @
 
   
   isCollapsed: ->
