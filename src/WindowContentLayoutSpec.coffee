@@ -34,5 +34,13 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
 
   resizerCanOverlapContents: true
 
+  rememberInitialDimensions: (@element, @stack) ->
+    super
+    
+    availableWidthInStack = @stack.availableWidthForContents()
+    if @preferredStartingWidth == PreferredSize.DONT_MIND
+      @widthOfElementWhenAdded = availableWidthInStack
+      @elasticity = 1
+
   constructor: (@preferredStartingWidth, @preferredStartingHeight, elasticity) ->
     super elasticity
