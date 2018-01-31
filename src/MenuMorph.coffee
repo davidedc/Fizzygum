@@ -75,7 +75,7 @@ class MenuMorph extends Morph
   isPinned: ->
     return !(@killThisMenuIfClickOnDescendantsTriggers or @killThisMenuIfClickOutsideDescendants)
 
-  # this is invokes on the menu morph to be
+  # this is invoked on the menu morph to be
   # pinned. The triggering menu item is the first
   # parameter.
   pin: (pinMenuItem)->

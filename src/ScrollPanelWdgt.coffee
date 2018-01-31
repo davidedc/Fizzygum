@@ -196,7 +196,6 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
   
-  
   setContents: (aMorph, extraPadding) ->
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...

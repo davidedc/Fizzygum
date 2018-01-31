@@ -4039,8 +4039,7 @@ class Morph extends MorphicNode
         LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
 
     while true
-      leftToDo = @firstChildSuchThat(
-        (m) ->
+      leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
           if m instanceof LayoutElementAdderOrDropletMorph
@@ -4056,7 +4055,6 @@ class Morph extends MorphicNode
           if kkk instanceof LayoutElementAdderOrDropletMorph
             return false
           return true            
-      )
       debugger
       if !leftToDo?
         break
@@ -4069,8 +4067,7 @@ class Morph extends MorphicNode
     # adding the last adder/droplet.
 
     while true
-      leftToDo = @firstChildSuchThat(
-        (m) ->
+      leftToDo = @firstChildSuchThat (m) ->
           if m.layoutSpec != LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
             return false
           if m instanceof LayoutElementAdderOrDropletMorph
@@ -4086,7 +4083,6 @@ class Morph extends MorphicNode
           if kkk instanceof LayoutElementAdderOrDropletMorph
             return false
           return true            
-      )
       debugger
       if !leftToDo?
         break

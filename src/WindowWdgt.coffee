@@ -39,8 +39,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @setEmptyWindowLabel()
     @rawSetExtent new Point 300, 300
 
-    #@adjustContentsBounds()
-
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
       return @contents.layoutSpecDetails.canSetHeightFreely
