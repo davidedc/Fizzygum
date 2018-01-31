@@ -22,7 +22,7 @@ class ColorPaletteMorph extends Morph
   # performed in here
   createRefreshOrGetBackBuffer: ->
     cacheKey =
-      @extent().toString()
+      @contructor.name + "-" + @extent().toString()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit

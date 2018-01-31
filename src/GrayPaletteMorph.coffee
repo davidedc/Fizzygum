@@ -10,7 +10,7 @@ class GrayPaletteMorph extends ColorPaletteMorph
   createRefreshOrGetBackBuffer: ->
 
     cacheKey =
-      @extent().toString()
+      @contructor.name + "-" + @extent().toString()
 
     cacheHit = world.cacheForImmutableBackBuffers.get cacheKey
     if cacheHit? then return cacheHit
