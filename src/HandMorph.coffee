@@ -224,7 +224,7 @@ class HandMorph extends Morph
 
       @children = []
       @rawSetExtent new Point()
-      morphToDrop.justDropped? @
+      morphToDrop.justDropped? target
       if target.reactToDropOf
         target.reactToDropOf morphToDrop, @
     #else

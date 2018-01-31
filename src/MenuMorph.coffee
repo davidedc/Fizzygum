@@ -88,7 +88,10 @@ class MenuMorph extends Morph
     @killThisMenuIfClickOnDescendantsTriggers = false
     @killThisMenuIfClickOutsideDescendants = false
     @onClickOutsideMeOrAnyOfMyChildren nil
-    pinMenuItem.firstParentThatIsAMenu().propagateKillMenus()
+    if pinMenuItem?
+      pinMenuItem.firstParentThatIsAMenu().propagateKillMenus()
+    else
+      @parentMenu?.propagateKillMenus()
     world.destroyMorphsMarkedForDestruction()
 
     @parentMenu = @parent
@@ -310,7 +313,10 @@ class MenuMorph extends Morph
     unless @isListContents
       @destroy()
 
-  justDropped: ->
+  justDropped: (widgetDroppedOn) ->
+    if widgetDroppedOn != world
+      @pin()
+
     @updateShadow()
 
   updateShadow: ->
