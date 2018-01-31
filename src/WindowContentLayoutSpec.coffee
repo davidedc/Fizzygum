@@ -5,6 +5,19 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
 
   @augmentWith DeepCopierMixin
 
+  # when you drop something on a window, you
+  # expect a couple of possible behaviours:
+  # 1) the window takes the size of the dropped item
+  # 2) the item takes the size of the window
+  # You normally expect 1) with things that inherently have
+  # a particular size and proportion, for example a slider
+  # (which makes no sense when enlarged and deformed to a
+  # different proportion)
+  # You expect 2) with things that are "small", since you
+  # want to "window" them you probably want to give them
+  # more importance.
+  # These two properties can define which behaviour is
+  # going to take effect.
   preferredStartingWidth: nil
   preferredStartingHeight: nil
   
