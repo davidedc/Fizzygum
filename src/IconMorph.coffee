@@ -16,7 +16,7 @@ class IconMorph extends Morph
     @appearance.widthWithoutSpacing()
 
   rawResizeToWithoutSpacing: ->
-    @rawSetExtent @appearance.calculateRectangleOfIcon()
+    @rawSetExtent @appearance.calculateRectangleOfIcon().extent()
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
