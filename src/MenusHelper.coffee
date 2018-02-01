@@ -36,3 +36,6 @@ class MenusHelper
        child.pressColor = new Color 0, 255, 0
        child.highlightColor = new Color 0, 0, 255
        child.normalColor = new Color 0, 0, 0
+
+  makeIconWithText: ->
+    world.create new IconWithTextWdgt "hey there", new BrushIconMorph()
