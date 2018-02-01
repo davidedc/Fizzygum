@@ -22,14 +22,23 @@ class WindowContentLayoutSpec extends VerticalStackLayoutSpec
   preferredStartingHeight: nil
   
   # if this is set, it means that the widget can
-  # meaningfully have its height set to any value
-  # this is true for example for vertical sliders,
-  # but false for icons (since they'd only show empty
-  # vertical space which would not be meaningful)
-  # or vertical stacks or "naked" wrapping text
-  # If this is set, the holding window can be stretched
+  # meaningfully have its height set to any value,
+  # so the holding window can be stretched
   # vertically to any extent (if the window itself
-  # is not constrained by a layout)
+  # is not constrained by a layout, that is)
+  # This is true for example for vertical sliders, or
+  # scrolling panels (scrolling stacks, or scrolling text
+  # panels, or documents).
+  # This is FALSE for icons (since they'd only show empty
+  # vertical space which would not be meaningful)
+  # or the clock (same reason) or vertical stacks or "naked"
+  # wrapping text (in those cases it's the content that dictates
+  # what the height should be, there literally is nothing
+  # boyond the height that they have).
+  #
+  # Note that we'll have to override this when we'll want
+  # to maximise windows, we'll just have to
+  # leave the empty vertical space.
   canSetHeightFreely: true
 
   resizerCanOverlapContents: true
