@@ -37,5 +37,8 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @setContents ostmA, padding
     ostmA.lockToPanels()
 
+  colloquialName: ->
+    return "text"
+
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1

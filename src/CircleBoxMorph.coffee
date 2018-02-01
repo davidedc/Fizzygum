@@ -10,6 +10,8 @@ class CircleBoxMorph extends Morph
     @appearance = new CircleBoxyAppearance(@)
     @silentRawSetExtent new Point 20, 100
 
+  colloquialName: ->
+    return "circle-box"
   
   autoOrientation: ->
     if @height() > @width()
