@@ -3173,6 +3173,7 @@ class Morph extends MorphicNode
   popUpFirstMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
+    menu.addMenuItem "make pointer", true, @, "createPointerMorph"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningTheMenu) ->
