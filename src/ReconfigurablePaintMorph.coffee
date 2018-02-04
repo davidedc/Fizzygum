@@ -13,7 +13,29 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
   constructor: (@target) ->
     super "Fizzypaint"
     @pencilToolButton.select 1
-  
+
+  isToolPressed: (buttonToCheckIfPressed) ->
+    whichButtonIsSelected = @radioButtonsHolderMorph.whichButtonSelected()
+    if whichButtonIsSelected?
+      if whichButtonIsSelected == buttonToCheckIfPressed.parent
+        return true
+      else
+        return false
+    return false
+
+  # normally a button injects new code only when
+  # is pressed, BUT here we make it so we inject new
+  # code also if the tool is selected, without it to
+  # be re-pressed. In order to do that, we
+  # simply listen to a notification of new code being
+  # available from a button, we check if it's selected
+  # and in that case we tell the button to actually
+  # inject the code.
+  newCodeToInjectFromButton: (whichButtonHasNewCode) ->
+    debugger
+    if @isToolPressed whichButtonHasNewCode
+      whichButtonHasNewCode.injectCodeIntoTarget()
+
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -53,31 +75,13 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
 
     # tools -------------------------------
 
-    # small hack on the tool - if we edit code when a tool
-    # is pressed, then we push the code without needing
-    # the user to press it manually again.
-    isToolPressed = ->
-        if @parent.buttonShown?
-          if @parent.buttons[@parent.buttonShown] != @
-            return true
-          else
-            return false
-        return false
-
-
-    modifyCodeToBeInjected = (unused,textMorph) ->
-        @codeToBeInjected = textMorph.text
-        if @isToolPressed()
-            @injectCodeIntoTarget()
 
     @radioButtonsHolderMorph = new RadioButtonsHolderMorph()
     @add @radioButtonsHolderMorph
 
-    pencilButtonOff = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new Pencil2IconMorph()
+    pencilButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new Pencil2IconMorph()
     pencilButtonOff.alpha = 0.1
-    pencilButtonOff.isToolPressed = isToolPressed
-    pencilButtonOff.modifyCodeToBeInjected = modifyCodeToBeInjected
-    pencilButtonOff.codeToBeInjected = """
+    pencilButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
             if world.hand.floatDraggingSomething() then return
             context = @backBufferContext
@@ -118,21 +122,19 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
             @changed()
         """
 
-    pencilButtonOn = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new Pencil2IconMorph new Color 255,255,255
+    pencilButtonOn = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new Pencil2IconMorph new Color 255,255,255
     pencilButtonOn.alpha = 0.1
-    pencilButtonOn.codeToBeInjected = "mouseMove = -> return"
+    pencilButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
 
     @pencilToolButton = new ToggleButtonMorph pencilButtonOff, pencilButtonOn
 
 
 
 
-    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new BrushIconMorph()
+    brushToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new BrushIconMorph()
     brushToolButtonOff.alpha = 0.1
-    brushToolButtonOff.isToolPressed = isToolPressed
-    brushToolButtonOff.modifyCodeToBeInjected = modifyCodeToBeInjected
 
-    brushToolButtonOff.codeToBeInjected = """
+    brushToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
             if world.hand.floatDraggingSomething() then return
             context = @backBufferContext
@@ -226,18 +228,16 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
             @changed()
         """
 
-    brushToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new BrushIconMorph new Color 255,255,255
+    brushToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new BrushIconMorph new Color 255,255,255
     brushToolButtonOn.alpha = 0.1
-    brushToolButtonOn.codeToBeInjected = "mouseMove = -> return"
+    brushToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @brushToolButton = new ToggleButtonMorph brushToolButtonOff, brushToolButtonOn
 
 
-    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new ToothpasteIconMorph()
+    toothpasteToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new ToothpasteIconMorph()
     toothpasteToolButtonOff.alpha = 0.1
-    toothpasteToolButtonOff.isToolPressed = isToolPressed
-    toothpasteToolButtonOff.modifyCodeToBeInjected = modifyCodeToBeInjected
 
-    toothpasteToolButtonOff.codeToBeInjected = """
+    toothpasteToolButtonOff.sourceCodeToBeInjected = """
         # Toothpaste graphics
         # original implementation by Ward Cunningham, from Tektronix Smalltalk
         # implementation of Smalltalk 80
@@ -391,18 +391,16 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
             @changed()
         """
 
-    toothpasteToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new ToothpasteIconMorph new Color 255,255,255
+    toothpasteToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new ToothpasteIconMorph new Color 255,255,255
     toothpasteToolButtonOn.alpha = 0.1
-    toothpasteToolButtonOn.codeToBeInjected = "mouseMove = -> return"
+    toothpasteToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @toothpasteToolButton = new ToggleButtonMorph toothpasteToolButtonOff, toothpasteToolButtonOn
 
 
-    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new EraserIconMorph()
+    eraserToolButtonOff = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new EraserIconMorph()
     eraserToolButtonOff.alpha = 0.1
-    eraserToolButtonOff.isToolPressed = isToolPressed
-    eraserToolButtonOff.modifyCodeToBeInjected = modifyCodeToBeInjected
 
-    eraserToolButtonOff.codeToBeInjected = """
+    eraserToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
             if world.hand.floatDraggingSomething() then return
             context = @backBufferContext
@@ -439,9 +437,9 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
             @changed()
         """
 
-    eraserToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @overlayCanvas, new EraserIconMorph new Color 255,255,255
+    eraserToolButtonOn = new CodeInjectingSimpleRectangularButtonMorph @, @overlayCanvas, new EraserIconMorph new Color 255,255,255
     eraserToolButtonOn.alpha = 0.1
-    eraserToolButtonOn.codeToBeInjected = "mouseMove = -> return"
+    eraserToolButtonOn.sourceCodeToBeInjected = "mouseMove = -> return"
     @eraserToolButton = new ToggleButtonMorph eraserToolButtonOff, eraserToolButtonOn
 
 

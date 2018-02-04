@@ -16,3 +16,9 @@ class RadioButtonsHolderMorph extends Morph
     for eachChild in @children
       if eachChild != morphThatFired
         eachChild.resetSwitchButton?()
+
+  whichButtonSelected: ->
+    for eachChild in @children
+      if eachChild.isSelected()
+        return eachChild
+    return null

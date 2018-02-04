@@ -77,7 +77,10 @@ class SwitchButtonMorph extends Morph
   # TODO
   getTextDescription: ->
 
-  
+  # if one calls "isSelected" it probably means that this SwitchButton
+  # has two buttons: a "selected" button and an "unselected" button
+  isSelected: ->
+    return @buttonShown != 0  
 
   mouseClickLeft: ->
     @buttonShown++
