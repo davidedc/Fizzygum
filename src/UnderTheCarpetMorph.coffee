@@ -19,6 +19,9 @@ class UnderTheCarpetMorph extends BoxMorph
     @target = target
     @currentProperty = nil
     @buildAndConnectChildren()
+
+  empty: ->
+    @scrollPanel?.contents?.fullDestroyChildren()
   
   buildAndConnectChildren: ->
     @attribs = []

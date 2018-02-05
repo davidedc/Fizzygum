@@ -4,9 +4,10 @@
 class IconAppearance extends Appearance
 
   preferredSize: new Point 200, 200
+  specificationSize: new Point 200, 200
 
   # default icon is a circle
-  paintFunctionSource: """
+  paintFunction: (context) ->
     fillColor = @color
     context.beginPath()
     context.moveTo 100.5, 7
@@ -23,26 +24,9 @@ class IconAppearance extends Appearance
     context.closePath()
     context.fillStyle = fillColor.toString()
     context.fill()
-    """
 
 
-  constructor: (morph, paintFunctionSource) ->
-    super morph
-    
-    if paintFunctionSource?
-      @paintFunctionSource = paintFunctionSource
-      @compilePaintFunction()
-    else
-      # use the default icon image (a simple circle)
-      @compilePaintFunction()
 
-
-  compilePaintFunction: ->
-    console.log "compiling icon: " + @paintFunctionSource
-    compiledOutput = compileFGCode @paintFunctionSource, true
-    console.log compiledOutput
-
-    @paintFunction = new Function 'context', compiledOutput
 
   calculateRectangleOfIcon: ->
     height = @morph.height()
@@ -114,6 +98,7 @@ class IconAppearance extends Appearance
 
       aContext.translate(result.left(), result.top())
       aContext.scale(result.width() / @preferredSize.width(), result.height() / @preferredSize.height())
+      aContext.scale(@preferredSize.width() / @specificationSize.width(), @preferredSize.height() / @specificationSize.height())
 
       ## at this point, you draw in a squareSize x squareSize
       ## canvas, and it gets painted in a square that fits
@@ -157,5 +142,4 @@ class IconAppearance extends Appearance
     context.restore()
     return
 
-  paintFunction: (context) ->
 
