@@ -3,7 +3,12 @@
 
 class IconAppearance extends Appearance
 
+  # preferredSize and specificationSize should be
+  # in the same ratio
   preferredSize: new Point 200, 200
+
+  # this is the dimension of the "original" canvas
+  # that the actual code paints on.
   specificationSize: new Point 200, 200
 
   # default icon is a circle

@@ -6,7 +6,6 @@ class HeartIconAppearance extends IconAppearance
   constructor: (@morph) ->
     super
     @preferredSize = new Point 100, 100
-    @specificationSize = new Point 200, 200
 
   paintFunction: (context) ->
     #// Color Declarations
