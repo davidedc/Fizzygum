@@ -37,5 +37,84 @@ class MenusHelper
        child.highlightColor = new Color 0, 0, 255
        child.normalColor = new Color 0, 0, 0
 
+  # Icons --------------------------------------------------------------
+
   makeIconWithText: ->
     world.create new IconWithTextWdgt "hey there", new BrushIconMorph()
+
+  makeEmptyIconWithText: ->
+    world.create new IconWithTextWdgt "hey there"
+
+  makeBouncingParticle: ->
+    world.create new BouncerWdgt()
+
+  createDestroyIconMorph: ->
+    world.create new DestroyIconMorph()
+
+  createUnderCarpetIconMorph: ->
+    world.create new UnderCarpetIconMorph()
+
+  createUncollapsedStateIconMorph: ->
+    world.create new UncollapsedStateIconMorph()
+
+  createCollapsedStateIconMorph: ->
+    world.create new CollapsedStateIconMorph()
+
+  createCloseIconButtonMorph: ->
+    world.create new CloseIconButtonMorph()
+
+  createScratchAreaIconMorph: ->
+    world.create new ScratchAreaIconMorph()
+
+  createFloraIconMorph: ->
+    world.create new FloraIconMorph()
+
+  createScooterIconMorph: ->
+    world.create new ScooterIconMorph()
+
+  createHeartIconMorph: ->
+    world.create new HeartIconMorph()
+
+
+  createPencil1IconMorph: ->
+    world.create new PencilIconMorph()
+
+  createPencil2IconMorph: ->
+    world.create new Pencil2IconMorph()
+
+  createBrushIconMorph: ->
+    world.create new BrushIconMorph()
+
+  createToothpasteIconMorph: ->
+    world.create new ToothpasteIconMorph()
+
+  createEraserIconMorph: ->
+    world.create new EraserIconMorph()
+
+
+  createTrashcanIconWdgt: ->
+    world.create new TrashcanIconWdgt()
+
+  createShortcutArrowIconWdgt: ->
+    world.create new ShortcutArrowIconWdgt()
+
+  createRasterPicIconWdgt: ->
+    world.create new RasterPicIconWdgt()
+
+  createPaintBucketIconWdgt: ->
+    world.create new PaintBucketIconWdgt()
+
+  createObjectIconWdgt: ->
+    world.create new ObjectIconWdgt()
+
+  createFolderIconWdgt: ->
+    world.create new FolderIconWdgt()
+
+  createBasementIconWdgt: ->
+    world.create new BasementIconWdgt()
+
+  makeGenericReferenceIcon: ->
+    world.create new GenericShortcutIconWdgt()
+
+  makeGenericObjectIcon: ->
+    world.create new GenericObjectIconWdgt()

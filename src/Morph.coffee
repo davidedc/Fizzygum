@@ -2992,9 +2992,6 @@ class Morph extends MorphicNode
     #newMorph.maxTextWidth = 300
     world.create newMorph
 
-  createDestroyIconMorph: ->
-    world.create new DestroyIconMorph()
-
   createSimpleVerticalStackPanelWdgt: ->
     svspw = new SimpleVerticalStackPanelWdgt()
     world.add svspw
@@ -3032,30 +3029,6 @@ class Morph extends MorphicNode
     world.add sdspw
     sdspw.fullRawMoveTo new Point 35, 30
     sdspw.rawSetExtent new Point 370, 325
-
-  createUnderCarpetIconMorph: ->
-    world.create new UnderCarpetIconMorph()
-
-  createUncollapsedStateIconMorph: ->
-    world.create new UncollapsedStateIconMorph()
-
-  createCollapsedStateIconMorph: ->
-    world.create new CollapsedStateIconMorph()
-
-  createCloseIconButtonMorph: ->
-    world.create new CloseIconButtonMorph()
-
-  createScratchAreaIconMorph: ->
-    world.create new ScratchAreaIconMorph()
-
-  createFloraIconMorph: ->
-    world.create new FloraIconMorph()
-
-  createScooterIconMorph: ->
-    world.create new ScooterIconMorph()
-
-  createHeartIconMorph: ->
-    world.create new HeartIconMorph()
 
   showOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.push b
@@ -3104,15 +3077,29 @@ class Morph extends MorphicNode
 
   popUpIconsMenu: (morphOpeningTheMenu) ->
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
-    menu.addMenuItem "Destroy icon", true, @, "createDestroyIconMorph"
-    menu.addMenuItem "Under the carpet icon", true, @, "createUnderCarpetIconMorph"
-    menu.addMenuItem "Collapsed state icon", true, @, "createCollapsedStateIconMorph"
-    menu.addMenuItem "Uncollapsed state icon", true, @, "createUncollapsedStateIconMorph"
-    menu.addMenuItem "Close icon", true, @, "createCloseIconButtonMorph"
-    menu.addMenuItem "Scratch area icon", true, @, "createScratchAreaIconMorph"
-    menu.addMenuItem "Flora icon", true, @, "createFloraIconMorph"
-    menu.addMenuItem "Scooter icon", true, @, "createScooterIconMorph"
-    menu.addMenuItem "Heart icon", true, @, "createHeartIconMorph"
+    menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconMorph"
+    menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconMorph"
+    menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconMorph"
+    menu.addMenuItem "Uncollapsed state icon", true, menusHelper, "createUncollapsedStateIconMorph"
+    menu.addMenuItem "Close icon", true, menusHelper, "createCloseIconButtonMorph"
+    menu.addMenuItem "Scratch area icon", true, menusHelper, "createScratchAreaIconMorph"
+    menu.addMenuItem "Flora icon", true, menusHelper, "createFloraIconMorph"
+    menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconMorph"
+    menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconMorph"
+
+    menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
+    menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconMorph"
+    menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconMorph"
+    menu.addMenuItem "Toothpaste icon", true, menusHelper, "createToothpasteIconMorph"
+    menu.addMenuItem "Eraser icon", true, menusHelper, "createEraserIconMorph"
+
+    menu.addMenuItem "Trashcan icon", true, menusHelper, "createTrashcanIconWdgt"
+    menu.addMenuItem "Shortcut arrow icon", true, menusHelper, "createShortcutArrowIconWdgt"
+    menu.addMenuItem "Raster pic icon", true, menusHelper, "createRasterPicIconWdgt"
+    menu.addMenuItem "Paint bucket icon", true, menusHelper, "createPaintBucketIconWdgt"
+    menu.addMenuItem "Object icon", true, menusHelper, "createObjectIconWdgt"
+    menu.addMenuItem "Folder icon", true, menusHelper, "createFolderIconWdgt"
+    menu.addMenuItem "Basement icon", true, menusHelper, "createBasementIconWdgt"
 
     menu.popUpAtHand()
 
@@ -3175,6 +3162,10 @@ class Morph extends MorphicNode
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
     menu.addMenuItem "make pointer", true, @, "createPointerMorph"
     menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
+    menu.addMenuItem "empty icon with text", true, menusHelper, "makeEmptyIconWithText"
+    menu.addMenuItem "generic reference icon", true, menusHelper, "makeGenericReferenceIcon"
+    menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
+    menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningTheMenu) ->
