@@ -14,6 +14,9 @@ class BasementWdgt extends BoxMorph
     @color = new Color 60, 60, 60
     @padding = 5
     @buildAndConnectChildren()
+
+  colloquialName: ->
+    "Basement"
   
   setTarget: (target) ->
     @target = target
