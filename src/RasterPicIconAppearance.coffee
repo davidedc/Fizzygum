@@ -7,7 +7,7 @@ class RasterPicIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    blackColorString = 'rgba(35, 31, 32, 1)'
+    widgetColor = @morph.color
     outlineColorString = 'rgba(184, 184, 184, 1)'
     # outline Drawing
     context.beginPath()
@@ -64,10 +64,10 @@ class RasterPicIconAppearance extends IconAppearance
     context.lineTo 77.79, 87.13
     context.lineTo 77.79, 87.13
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = widgetColor
     context.fill()
     # sun Drawing
     @oval context, 56.25, 23.5, 20.5, 20.75
-    context.strokeStyle = blackColorString
+    context.strokeStyle = widgetColor
     context.lineWidth = 4
     context.stroke()

@@ -10,7 +10,7 @@ class DestroyIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # colors
-    blackColorString = 'rgba(0, 0, 0, 1)'
+    widgetColor = @morph.color
     colorString = 'rgba(0, 0, 0, 1)'
 
     # the drawing
@@ -40,7 +40,7 @@ class DestroyIconAppearance extends IconAppearance
     context.closePath()
     context.fillStyle = colorString
     context.fill()
-    context.strokeStyle = blackColorString
+    context.strokeStyle = widgetColor
     context.lineWidth = 1
     context.stroke()
 

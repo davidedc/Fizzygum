@@ -7,7 +7,7 @@ class WidgetIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    blackColorString = 'rgba(0, 0, 0, 1)'
+    widgetColor = @morph.color
     outlineColorString = 'rgba(184, 184, 184, 1)'
     # outline Drawing
     context.beginPath()
@@ -121,5 +121,5 @@ class WidgetIconAppearance extends IconAppearance
     context.lineTo 57, 65
     context.bezierCurveTo 57, 60.52, 60.52, 57, 65, 57
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = widgetColor
     context.fill()

@@ -7,7 +7,7 @@ class PaintBucketIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    blackColorString = 'rgba(0, 0, 0, 1)'
+    widgetColor = @morph.color
     outlineColorString = 'rgba(184, 184, 184, 1)'
     # Bezier 2 Drawing
     context.beginPath()
@@ -137,5 +137,5 @@ class PaintBucketIconAppearance extends IconAppearance
     context.bezierCurveTo 85.35, 42.26, 88.62, 48.15, 90.4, 53.16
     context.bezierCurveTo 92.49, 58.86, 92.39, 63.08, 90.3, 65.15
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = widgetColor
     context.fill()

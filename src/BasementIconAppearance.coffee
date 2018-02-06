@@ -7,7 +7,7 @@ class BasementIconIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     # Color Declarations
-    blackColorString = 'rgba(0, 0, 0, 1)'
+    widgetColor = @morph.color
     outlineColorString = 'rgba(184, 184, 184, 1)'
     # outline Drawing
     context.beginPath()
@@ -308,5 +308,5 @@ class BasementIconIconAppearance extends IconAppearance
     context.lineTo 41.24, 73.45
     context.lineTo 47.3, 70.8
     context.closePath()
-    context.fillStyle = blackColorString
+    context.fillStyle = widgetColor
     context.fill()
