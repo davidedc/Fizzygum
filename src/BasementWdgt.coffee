@@ -1,6 +1,6 @@
-# UnderTheCarpetMorph //////////////////////////////////////////////////////
+# BasementWdgt //////////////////////////////////////////////////////
 
-class UnderTheCarpetMorph extends BoxMorph
+class BasementWdgt extends BoxMorph
 
   # panes:
   scrollPanel: nil
@@ -30,7 +30,7 @@ class UnderTheCarpetMorph extends BoxMorph
     @fullDestroyChildren()
 
     # label
-    @label = new TextMorph "Under the carpet"
+    @label = new TextMorph "Basement"
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color 255, 255, 255

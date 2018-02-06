@@ -478,10 +478,10 @@ class Morph extends MorphicNode
 
   close: ->
     @parent?.childBeingClosed? @
-    if world.underTheCarpetMorph?
-      world.underTheCarpetMorph.scrollPanel.addInPseudoRandomPosition @
+    if world.basementWdgt?
+      world.basementWdgt.scrollPanel.addInPseudoRandomPosition @
     else
-      world.inform "There is no\ncarpet to go under!"
+      world.inform "There is no\ncasement to go in!"
   
   
   # Morph deleting:
@@ -3069,8 +3069,8 @@ class Morph extends MorphicNode
 
     menu.popUpAtHand()
 
-  underTheCarpetIconAndText: ->
-    world.create new UnderTheCarpetOpenerMorph()
+  basementIconAndText: ->
+    world.create new BasementOpenerMorph()
 
   analogClock: ->
     world.create new AnalogClockWdgt()
@@ -3175,7 +3175,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
-    menu.addMenuItem "under the carpet", true, @, "underTheCarpetIconAndText"
+    menu.addMenuItem "under the carpet", true, @, "basementIconAndText"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"

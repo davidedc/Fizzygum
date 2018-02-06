@@ -1,6 +1,6 @@
-# UnderTheCarpetOpenerMorph //////////////////////////////////////////////////////
+# BasementOpenerMorph //////////////////////////////////////////////////////
 
-class UnderTheCarpetOpenerMorph extends BoxMorph
+class BasementOpenerMorph extends BoxMorph
 
   constructor: (target) ->
     super()
@@ -8,8 +8,8 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
     @color = new Color 160, 160, 160
     @noticesTransparentClick = true
 
-    lmContent1 = new UnderCarpetIconMorph()
-    lmContent2 = new TextMorph2 "under the carpet"
+    lmContent1 = new BasementIconWdgt()
+    lmContent2 = new TextMorph2 "Basement"
 
     @add lmContent1, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
     @add lmContent2, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED
@@ -21,18 +21,18 @@ class UnderTheCarpetOpenerMorph extends BoxMorph
     lmContent2.setMinAndMaxBoundsAndSpreadability (new Point 10,10) , (new Point 20,20), 2* LayoutSpec.SPREADABILITY_MEDIUM
 
     @fullRawMoveTo new Point 10 + 60 * 0, 30 + 50 * 1
-    if !world.underTheCarpetMorph?
-      world.underTheCarpetMorph = new UnderTheCarpetMorph()
+    if !world.basementWdgt?
+      world.basementWdgt = new BasementWdgt()
 
     new HandleMorph @
 
   mouseDoubleClick: ->
-    if !world.underTheCarpetMorph?
-      world.underTheCarpetMorph = new UnderTheCarpetMorph()
+    if !world.basementWdgt?
+      world.basementWdgt = new BasementWdgt()
 
-    if world.underTheCarpetMorph?.destroyed
-      world.underTheCarpetMorph = new UnderTheCarpetMorph()
+    if world.basementWdgt?.destroyed
+      world.basementWdgt = new BasementWdgt()
 
-    world.underTheCarpetMorph.spawnNextTo @
+    world.basementWdgt.spawnNextTo @
 
 

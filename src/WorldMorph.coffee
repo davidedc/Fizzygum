@@ -163,7 +163,7 @@ class WorldMorph extends PanelWdgt
 
   steppingMorphs: []
 
-  underTheCarpetMorph: nil
+  basementWdgt: nil
 
   # since the shadow is just a "rendering" effect
   # there is no morph for it, we need to just clean up
@@ -286,7 +286,7 @@ class WorldMorph extends PanelWdgt
 
     # boot-up state machine
     console.log "booting"
-    @underTheCarpetMorph = new UnderTheCarpetMorph()
+    @basementWdgt = new BasementWdgt()
     WorldMorph.bootState = WorldMorph.JUST_STARTED
 
     ProfilingDataCollector.enableProfiling()
@@ -1660,6 +1660,10 @@ class WorldMorph extends PanelWdgt
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = nil
     @fullDestroyChildren()
+    # the "basementWdgt" is not attached to the
+    # world tree so it's not in the children,
+    # so we need to clean up separately
+    @basementWdgt?.empty()
     # some tests might change the background
     # color of the world so let's reset it.
     @setColor new Color 205, 205, 205
@@ -1870,7 +1874,7 @@ class WorldMorph extends PanelWdgt
     @create new PenMorph()
   underTheCarpet: ->
     #newMorph = new MorphsListMorph()
-    newMorph = new UnderTheCarpetMorph()
+    newMorph = new BasementWdgt()
     @create newMorph
   closingWindow: ->
 
