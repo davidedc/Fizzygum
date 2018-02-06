@@ -24,7 +24,7 @@ HighlightableMixin =
 
 
       updateColor: ->
-        @color = switch @state
+        @setColor switch @state
           when @STATE_NORMAL
             @color_normal
           when @STATE_HIGHLIGHTED
