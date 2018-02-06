@@ -3,6 +3,7 @@
 class OverlayCanvasMorph extends CanvasMorph
 
   underlyingCanvasMorph: nil
+  defaultRejectDrags: true
 
   constructor: ->
     super
