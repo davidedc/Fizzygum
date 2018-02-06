@@ -38,7 +38,7 @@ HighlightableMixin =
       mouseEnter: ->
         @state = @STATE_HIGHLIGHTED
         @updateColor()
-        @startCountdownForBubbleHelp @hint  if @hint
+        @startCountdownForBubbleHelp? @hint  if @hint
       
       mouseLeave: ->
         @state = @STATE_NORMAL
