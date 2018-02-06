@@ -1,4 +1,4 @@
-class GenericObjectIconAppearance extends IconAppearance
+class ObjectIconAppearance extends IconAppearance
 
   constructor: (@morph) ->
     super
