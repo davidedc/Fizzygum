@@ -900,3 +900,7 @@ extend = (child, parent) ->
   child.__super__ = parent.prototype
   return child
 
+getRandomInt = (min, max) ->
+  min = Math.ceil min
+  max = Math.floor max
+  Math.floor Math.random() * (max - min) + min
