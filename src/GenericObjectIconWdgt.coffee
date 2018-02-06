@@ -34,13 +34,6 @@ class GenericObjectIconWdgt extends Morph
     @rawSetExtent new Point newWidth, newWidth
     @invalidateLayout()
 
-  mouseClickLeft: ->
-    #world.inform "clicked!"
-    world.setColor new Color 0,255,0
-
-  mouseDoubleClick: ->
-    world.setColor new Color 255,0,0
-  
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger

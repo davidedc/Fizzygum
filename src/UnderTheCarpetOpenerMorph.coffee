@@ -2,11 +2,6 @@
 
 class UnderTheCarpetOpenerMorph extends BoxMorph
 
-  # panes:
-  scrollPanel: nil
-  buttonClose: nil
-  resizer: nil
-
   constructor: (target) ->
     super()
 

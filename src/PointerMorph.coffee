@@ -6,12 +6,6 @@
 
 class PointerMorph extends BoxMorph
 
-  # panes:
-  scrollPanel: nil
-  buttonClose: nil
-  resizer: nil
-  underTheCarpetMorph: nil
-
   constructor: (@target) ->
     super()
 
