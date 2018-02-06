@@ -1,6 +1,6 @@
 # ReconfigurablePaintMorph //////////////////////////////////////////////////////
 
-class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
+class ReconfigurablePaintMorph extends Morph
 
   mainCanvas: nil
   overlayCanvas: nil
@@ -10,9 +10,27 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
   eraserToolButton: nil
   radioButtonsHolderMorph: nil
 
-  constructor: (@target) ->
-    super "Fizzypaint"
+  # the external padding is the space between the edges
+  # of the container and all of its internals. The reason
+  # you often set this to zero is because windows already put
+  # contents inside themselves with a little padding, so this
+  # external padding is not needed. Useful to keep it
+  # separate and know that it's working though.
+  externalPadding: 0
+  # the internal padding is the space between the internal
+  # components. It doesn't necessarily need to be equal to the
+  # external padding
+  internalPadding: 5
+
+  constructor: ->
+    debugger
+    super
+    @buildAndConnectChildren()
     @pencilToolButton.select 1
+    @invalidateLayout()
+
+  colloquialName: ->   
+    "Fizzypaint"
 
   isToolPressed: (buttonToCheckIfPressed) ->
     whichButtonIsSelected = @radioButtonsHolderMorph.whichButtonSelected()
@@ -39,8 +57,6 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
-
-    super
 
     # mainCanvas
     @mainCanvas = new CanvasMorph()
@@ -479,58 +495,58 @@ class ReconfigurablePaintMorph extends DEPRECATEDWindowMorph
     trackChanges.push false
 
     # label
-    labelLeft = @left() + @padding
-    labelTop = @top() + @padding
-    labelRight = @right() - @padding
+    labelLeft = @left() + @externalPadding
+    labelTop = @top() + @externalPadding
+    labelRight = @right() - @externalPadding
     labelWidth = labelRight - labelLeft
-    labelBottom = labelTop + @label.height() + 2
+    labelBottom = @top() + @externalPadding
 
     # tools -------------------------------
 
     toolButtonSize = new Point 93, 55
-    eachPaneWidth = Math.floor(@width() - 3 * @padding - toolButtonSize.width())
-    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
+    eachPaneWidth = Math.floor(@width() - 2 * @externalPadding - @internalPadding - toolButtonSize.width())
+    b = @bottom() - (2 * @externalPadding)
 
 
     if @radioButtonsHolderMorph.parent == @
-      @radioButtonsHolderMorph.fullRawMoveTo new Point @left() + @padding, labelBottom + @padding
-      @radioButtonsHolderMorph.rawSetExtent new Point 2 * @padding + toolButtonSize.width(), b - (@label.bottom() + @padding)
+      @radioButtonsHolderMorph.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
+      @radioButtonsHolderMorph.rawSetExtent new Point 2 * @internalPadding + toolButtonSize.width(), @height() - 2 * @externalPadding
 
     if @pencilToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, labelBottom + 10
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, labelBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
       @pencilToolButton.doLayout buttonBounds
 
     if @brushToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @pencilToolButton.bottom() + @padding
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @pencilToolButton.bottom() + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
       @brushToolButton.doLayout buttonBounds
 
     if @toothpasteToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @brushToolButton.bottom() + @padding
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @brushToolButton.bottom() + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
       @toothpasteToolButton.doLayout buttonBounds
 
     if @eraserToolButton.parent == @radioButtonsHolderMorph
-      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @padding, @toothpasteToolButton.bottom() + @padding
+      buttonBounds = new Rectangle new Point @radioButtonsHolderMorph.left() + @internalPadding, @toothpasteToolButton.bottom() + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
       @eraserToolButton.doLayout buttonBounds 
 
     # mainCanvas --------------------------
-    mainCanvasWidth = @width() - @radioButtonsHolderMorph.width() - 3*@padding
-    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
-    mainCanvasHeight =  b - (@label.bottom() + @padding)
+    mainCanvasWidth = @width() - @radioButtonsHolderMorph.width() - 2*@externalPadding - @internalPadding
+    b = @bottom() - (2 * @externalPadding)
+    mainCanvasHeight =  @height() - 2 * @externalPadding
     mainCanvasBottom = labelBottom + mainCanvasHeight
-    mainCanvasLeft = @radioButtonsHolderMorph.right() + @padding
+    mainCanvasLeft = @radioButtonsHolderMorph.right() + @internalPadding
 
     if @mainCanvas.parent == @
-      @mainCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom + @padding
+      @mainCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom
       @mainCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
 
     # overlayCanvas ----------------------
     # has exact same size and position of the main canvas
     if @overlayCanvas.parent == @mainCanvas
-      @overlayCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom + @padding
+      @overlayCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom
       @overlayCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
 
     # ----------------------------------------------

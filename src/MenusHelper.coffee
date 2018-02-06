@@ -16,8 +16,13 @@ class MenusHelper
 
   createReconfigurablePaint: ->
     reconfPaint = new ReconfigurablePaintMorph()
-    world.create reconfPaint
-    reconfPaint.setExtent new Point 460, 400
+    wm = new WindowWdgt nil, nil, reconfPaint
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
 
   createSimpleButton: ->
     world.create new SimpleRectangularButtonMorph true, @, nil, new IconMorph(nil)
