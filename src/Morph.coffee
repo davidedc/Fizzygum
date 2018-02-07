@@ -1616,7 +1616,9 @@ class Morph extends MorphicNode
   # fullBounds property, then we could be smarter
   # in discarding whole sections of the scene graph.
   # (see https://github.com/davidedc/Fizzygum/issues/150 )
-
+  #
+  # To draw a widget, basically you first have to draw its shadow
+  # and then you draw the contents. See methods below.
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
     # if there is a shadow "property" object
     # then first draw the shadow of the treee
@@ -1630,6 +1632,11 @@ class Morph extends MorphicNode
       @fullPaintIntoAreaOrBlitFromBackBufferJustContent aContext, clippingRectangle, appliedShadow
 
 
+  # to draw the shadow, most of the times you have to draw the whole
+  # of the contents, but with a darker/fainter color, and with
+  # transparency. The Panel is an exception, since you know that
+  # all of its contents are inside of it, and if it's fully opaque,
+  # then you can just draw a rectangle.
   fullPaintIntoAreaOrBlitFromBackBufferJustShadow: (aContext, clippingRectangle, appliedShadow) ->
     clippingRectangle = clippingRectangle.translateBy -@shadowInfo.offset.x, -@shadowInfo.offset.y
 
@@ -1642,6 +1649,10 @@ class Morph extends MorphicNode
       aContext.restore()
   
 
+  # "drawing the content" actually just means drawing the tree
+  # of the widget normally. The only variant is that the Panel
+  # draws its background, then its contents AND THEN its stroke
+  # (because otherwise its content would paint over its stroke)
   fullPaintIntoAreaOrBlitFromBackBufferJustContent: (aContext, clippingRectangle, appliedShadow) ->
     @paintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
     @children.forEach (child) ->
