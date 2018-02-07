@@ -41,7 +41,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @color = new Color 172, 172, 172
     @buildAndConnectChildren()
 
-    @setEmptyWindowLabel()
+    if @contents == @defaultContents
+      @setEmptyWindowLabel()
+    else
+      # TODO there is a duplicate of this down below
+      titleToBeSet = @contents.colloquialName()
+      if titleToBeSet == "window"
+        titleToBeSet = "window with another " + titleToBeSet
+      if titleToBeSet == "internal window"
+        titleToBeSet = "window with an " + titleToBeSet
+      @label.setText titleToBeSet
+
     @rawSetExtent new Point 300, 300
 
   contentsRecursivelyCanSetHeightFreely: ->
