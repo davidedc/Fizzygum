@@ -99,7 +99,7 @@ class ReconfigurablePaintMorph extends Morph
     pencilButtonOff.alpha = 0.1
     pencilButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.floatDraggingSomething() then return
+            if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
@@ -152,7 +152,7 @@ class ReconfigurablePaintMorph extends Morph
 
     brushToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.floatDraggingSomething() then return
+            if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
@@ -334,7 +334,7 @@ class ReconfigurablePaintMorph extends Morph
             console.log "resetting the queue"
 
         mouseUpLeft = ->
-            if world.hand.floatDraggingSomething() then return
+            if world.hand.draggingSomething() then return
             if @queue?
                 console.log "draining the queue"
                 contextMain = @underlyingCanvasMorph.backBufferContext
@@ -355,7 +355,7 @@ class ReconfigurablePaintMorph extends Morph
                 delete @queue
 
         mouseMove = (pos, mouseButton) ->
-            if world.hand.floatDraggingSomething() then return
+            if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
@@ -418,7 +418,7 @@ class ReconfigurablePaintMorph extends Morph
 
     eraserToolButtonOff.sourceCodeToBeInjected = """
         mouseMove = (pos, mouseButton) ->
-            if world.hand.floatDraggingSomething() then return
+            if world.hand.draggingSomething() then return
             context = @backBufferContext
             context.setTransform 1, 0, 0, 1, 0, 0
             context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
