@@ -42,15 +42,14 @@ class StringFieldMorph extends PanelWdgt
   reLayout: ->
     super()
     txt = (if @text then @getValue() else @defaultContents)
-    @text = nil
-    @fullDestroyChildren()
-    @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
-    @text.isNumeric = @isNumeric # for whichever reason...
+    if !@text?
+      @text = new StringMorph(txt, @fontSize, @fontStyle, @isBold, @isItalic, @isNumeric)
+      @text.isNumeric = @isNumeric # for whichever reason...
+      @text.isEditable = @isEditable
+      @text.enableSelecting()    
+      @add @text
     @text.fullRawMoveTo @position()
-    @text.isEditable = @isEditable
-    @text.enableSelecting()    
     @silentRawSetExtent new Point Math.max(@width(), @minTextWidth), @text.height()
-    @add @text
     @notifyChildrenThatParentHasReLayouted()
 
   
