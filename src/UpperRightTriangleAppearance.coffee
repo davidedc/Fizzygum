@@ -14,7 +14,7 @@ class UpperRightTriangleAppearance extends Appearance
   paintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
 
     if @morph.preliminaryCheckNothingToDraw clippingRectangle, aContext
-      return
+      return nil
 
     [area,sl,st,al,at,w,h] = @morph.calculateKeyValues aContext, clippingRectangle
     if area.isNotEmpty()
