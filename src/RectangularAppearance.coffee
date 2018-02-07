@@ -83,6 +83,7 @@ class RectangularAppearance extends Appearance
           color = "black"
         @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
+
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)
       toBePainted = toBePainted.intersect @morph.boundingBoxTight().scaleBy pixelRatio
@@ -92,6 +93,8 @@ class RectangularAppearance extends Appearance
         color = "black"
 
       @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
+
+      @drawAdditionalParts? false, appliedShadow, aContext, al, at, w, h
 
       if !appliedShadow?
         @paintStroke aContext, clippingRectangle
