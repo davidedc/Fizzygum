@@ -35,7 +35,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @tight = true
 
     @defaultContents = new WindowContentsPlaceholderText()
-    @contents = @defaultContents
+    if !@contents?
+      @contents = @defaultContents
 
     @padding = 5
     @color = new Color 172, 172, 172
