@@ -200,17 +200,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     totalPadding = 2 * @padding
     closeIconSize = 16
 
-    # label
-    labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
-    labelTop = @top() + @padding
-    labelRight = @right() - @padding
-    labelWidth = labelRight - labelLeft
 
-    if @label? and @label.parent == @
-      labelBounds = new Rectangle new Point labelLeft, labelTop
-      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, 15
-      @label.doLayout labelBounds
-    labelBottom = labelTop + @label.height() + 2
 
 
     # close button
@@ -313,6 +303,18 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
     @titlebarBackground.fullRawMoveTo @position().add new Point 1,1
+
+    # label
+    if @label? and @label.parent == @
+      labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
+      labelTop = @top() + @padding
+      labelRight = @right() - @padding
+      labelWidth = labelRight - labelLeft
+
+      labelBounds = new Rectangle new Point labelLeft, labelTop
+      labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, 15
+      @label.rawSetBounds labelBounds
+
     @resizer?.silentUpdateResizerHandlePosition()
 
     @_adjustingContentsBounds = false
