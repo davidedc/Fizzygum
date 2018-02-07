@@ -3,6 +3,10 @@
 
 class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
+  # TODO we already have the concept of "droplet" widget
+  # so probably we should re-use that. The current drop
+  # area management seems a little byzantine...
+
   label: nil
   closeButton: nil
   collapseUncollapseSwitchButton: nil
