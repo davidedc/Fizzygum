@@ -1,4 +1,5 @@
 # SimpleVerticalStackPanelWdgt /////////////////////////////////////////////////////////
+# REQUIRES ClippingAtRectangularBoundsMixin
 
 
 class SimpleVerticalStackPanelWdgt extends Morph

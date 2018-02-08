@@ -1,5 +1,5 @@
 # VerticalStackLayoutSpec
-
+# REQUIRES DeepCopierMixin
 
 class VerticalStackLayoutSpec
 

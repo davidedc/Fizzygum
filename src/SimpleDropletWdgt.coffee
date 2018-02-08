@@ -1,4 +1,5 @@
 # SimpleDropletWdgt //////////////////////////////////////////////////////
+# REQUIRES HighlightableMixin
 
 # looks like a plus sign and it replaces itself with whatever you
 # drop on it. It can also assign the dropped widget to a parent field
