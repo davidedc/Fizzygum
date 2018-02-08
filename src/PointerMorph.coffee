@@ -63,14 +63,14 @@ class PointerMorph extends BoxMorph
     @parent.add @target, myPosition
     @target.fullMoveTo @position()
     @target.fullChanged()
-    @destroy()
+    @close()
 
   closeThis: ->
-    @destroy()
+    @close()
 
   closeThisAndTarget: ->
-    @target.destroy()
-    @destroy()
+    @target.close()
+    @close()
 
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     menu.addLine 1

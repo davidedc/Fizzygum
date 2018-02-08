@@ -256,7 +256,7 @@ class HandMorph extends Morph
     if @world.temporaryHandlesAndLayoutAdjusters.length > 0
       if actionedMorph not in @world.temporaryHandlesAndLayoutAdjusters
         for eachTemporaryHandlesAndLayoutAdjusters in @world.temporaryHandlesAndLayoutAdjusters
-          eachTemporaryHandlesAndLayoutAdjusters.destroy()
+          eachTemporaryHandlesAndLayoutAdjusters.fullDestroy()
         @world.temporaryHandlesAndLayoutAdjusters = []
 
   stopEditingIfActionIsElsewhere: (actionedMorph) ->
@@ -806,10 +806,13 @@ class HandMorph extends Morph
     # the next mouse click, or whenever another temporary Morph decides
     # that it needs to remove them. The primary purpose of temporaries is
     # to display tools tips of speech bubble help.
-    #
-    @temporaries.forEach (morph) =>
-      unless morph.isClickable and morph.boundsContainPoint @position()
-        morph = morph.destroy()
+
+    # use a shallow copy of @temporaries because we are
+    # removing elements while iterating through it
+    scanningTemporaries = arrayShallowCopy @temporaries
+    scanningTemporaries.forEach (morph) =>
+      unless morph.boundsContainPoint @position()
+        morph.fullDestroy()
         @temporaries.remove morph
   
   

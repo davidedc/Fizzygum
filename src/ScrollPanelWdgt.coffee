@@ -202,7 +202,7 @@ class ScrollPanelWdgt extends PanelWdgt
   setContents: (aMorph, extraPadding) ->
     @extraPadding = extraPadding
     # there should never be a shadow but one never knows...
-    @contents.fullDestroyChildren()
+    @contents.closeChildren()
     @contents.fullRawMoveTo @position()
 
     aMorph.fullRawMoveTo @position().add @padding + @extraPadding

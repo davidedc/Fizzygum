@@ -44,13 +44,13 @@ class TextPromptMorph extends DEPRECATEDWindowMorph
     @add @tempPromptEntryField
 
     # buttons -------------------------------
-    @cancelButton = new SimpleButtonMorph true, @, "fullDestroy", (new StringMorph2 "cancel").alignCenter()
+    @cancelButton = new SimpleButtonMorph true, @, "close", (new StringMorph2 "cancel").alignCenter()
     @add @cancelButton
 
     @saveButton = new SimpleButtonMorph true, @, "informTarget", (new StringMorph2 "save").alignCenter()
     @add @saveButton
 
-    @okButton = new SimpleButtonMorph true, @, "informTargetAndDestroy", (new StringMorph2 "ok").alignCenter()
+    @okButton = new SimpleButtonMorph true, @, "notifyTargetAndClose", (new StringMorph2 "ok").alignCenter()
     @add @okButton
 
     @invalidateLayout()
@@ -58,9 +58,9 @@ class TextPromptMorph extends DEPRECATEDWindowMorph
   informTarget: ->
     @target[@callback].call @target, nil, @textMorph
 
-  informTargetAndDestroy: ->
+  notifyTargetAndClose: ->
     @informTarget()
-    @fullDestroy()
+    @close()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts

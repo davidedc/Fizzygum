@@ -31,7 +31,7 @@ class SimpleDropletWdgt extends Morph
       nil,
       nil
     morphBeingDropped.setBounds @bounds
-    @destroy()
+    @fullDestroy()
 
 
 

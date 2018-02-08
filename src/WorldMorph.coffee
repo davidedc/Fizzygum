@@ -279,7 +279,7 @@ class WorldMorph extends PanelWdgt
           menu = new MenuMorph @, false, @, true, true, "Morphic"
         if @isDevMode
           menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
-          menu.addMenuItem "delete all", true, @, "fullDestroy"
+          menu.addMenuItem "delete all", true, @, "fullClose"
         menu
       @setColor new Color 244,243,244
 
@@ -1714,7 +1714,6 @@ class WorldMorph extends PanelWdgt
       menu.addLine()
       menu.addMenuItem "show all", true, @, "showAllMinimised"
       menu.addMenuItem "hide all", true, @, "minimiseAll"
-      menu.addMenuItem "delete all", true, @, "fullDestroy"
       menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"

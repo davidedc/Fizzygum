@@ -92,9 +92,9 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
   informTarget: ->
     @target[@callback].call @target, nil, @textMorph
 
-  informTargetAndDestroy: ->
+  notifyTargetAndClose: ->
     @informTarget()
-    @fullDestroy()
+    @close()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts

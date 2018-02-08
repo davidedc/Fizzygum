@@ -62,7 +62,7 @@ class PromptMorph extends MenuMorph
     # that would be rather difficult in case of
     # multiple prompts being pinned down and changing
     # the property concurrently
-    @addMenuItem "Close", true, @, "fullDestroy"
+    @addMenuItem "Close", true, @, "close"
 
     @reLayout()
 

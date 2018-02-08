@@ -28,7 +28,7 @@ class MenuMorph extends Morph
       world.alignIDsOfNextMorphsInSystemTests()
     if !@isListContents
       if @killThisMenuIfClickOutsideDescendants
-        @onClickOutsideMeOrAnyOfMyChildren "destroy"
+        @onClickOutsideMeOrAnyOfMyChildren "close"
     super()
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
@@ -128,9 +128,6 @@ class MenuMorph extends Morph
     @silentAdd item,nil,0
   
   createLabel: ->
-    # console.log "menu create label"
-    if @label?
-      @label = @label.destroy()
     @label = new MenuHeader localize @title
 
   createMenuItem: (label, closesUnpinnedMenus = true, target, action, hint, color, bold = false, italic = false,doubleClickAction, arg1, arg2,representsAMorph = false)->
@@ -164,7 +161,7 @@ class MenuMorph extends Morph
     item = @firstChildSuchThat (m) ->
       m.label? and m.label.text == label
     if item?
-      item.destroy()
+      item.fullDestroy()
 
   removeConsecutiveLines: ->
     # have to copy the array with slice()
@@ -173,7 +170,7 @@ class MenuMorph extends Morph
     destroyNextLines = false
     for item in @children.slice()
       if destroyNextLines and item instanceof RectangleMorph
-        item.destroy()
+        item.fullDestroy()
       if item instanceof RectangleMorph
         destroyNextLines = true
         continue
@@ -312,10 +309,10 @@ class MenuMorph extends Morph
     if !@isListContents
       world.openMenus.remove @
 
-
-  itemSelected: ->
-    unless @isListContents
-      @destroy()
+  close: ->
+    super()
+    if !@isListContents
+      world.openMenus.remove @
 
   justDropped: (widgetDroppedOn) ->
     if widgetDroppedOn != world

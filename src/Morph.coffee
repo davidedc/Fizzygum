@@ -477,6 +477,7 @@ class Morph extends MorphicNode
       return firstPart + @uniqueIDString()
 
   close: ->
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
       world.basementWdgt.scrollPanel.addInPseudoRandomPosition @
@@ -484,11 +485,17 @@ class Morph extends MorphicNode
       world.inform "There is no\ncasement to go in!"
   
   
-  # Morph deleting:
+  # Widgets destroying ======
+  # this is different from a widget being closed/deleted
+  # when a widget is destroyed, it's removed from the stepping
+  # list and marked as destroyed.
+  # NOTE that the tree under this widget is kept intact,
+  # so this widget could be duplicated and revived
   destroy: ->
 
     @parent?.childBeingDestroyed? @
     @unregisterThisInstance()
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
     @destroyed = true
     @parent?.invalidateLayout()
@@ -523,8 +530,16 @@ class Morph extends MorphicNode
       if previousParent.childRemoved?
         previousParent.childRemoved @
 
+    # in case I'm a destory at the end of a fullDestroy,
+    # the children array is already empty
+    if @children.length != 0
+      @children = []
+
     return nil
   
+  # destroys the whole tree
+  # from the bottom (leaf widgets, drawn on top
+  # of everything) to the top
   fullDestroy: ->
     WorldMorph.numberOfAddsAndRemoves++
     # we can't use a normal iterator because
@@ -534,6 +549,16 @@ class Morph extends MorphicNode
     until @children.length == 0
       @children[0].fullDestroy()
     @destroy()
+    return nil
+
+  closeChildren: ->
+    WorldMorph.numberOfAddsAndRemoves++
+    # we can't use a normal iterator because
+    # we are iterating over an array that changes
+    # its length as we are deleting its contents
+    # while we are iterating on it.
+    until @children.length == 0
+      @children[0].close()
     return nil
 
   fullDestroyChildren: ->
@@ -2105,7 +2130,10 @@ class Morph extends MorphicNode
   # For example, if the Morph appeared in a data
   # structure related to the broken rectangles mechanism,
   # we should place the copied morph there.
-  fullCopy: ()->
+  fullCopy: ->
+    if @destroyed
+      @inform "The item you are\ntrying to copy\nis dead!"
+      return null
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     if copiedMorph instanceof MenuMorph
@@ -2614,7 +2642,7 @@ class Morph extends MorphicNode
     # that would be rather difficult in case of
     # multiple prompts being pinned down and changing
     # the property concurrently
-    menu.addMenuItem "Close", true, menu, "fullDestroy"
+    menu.addMenuItem "Close", true, menu, "close"
 
     menu.popUpAtHand()
 
@@ -3288,7 +3316,11 @@ class Morph extends MorphicNode
       else
         menu.addMenuItem "lock to " + whereToOrFrom, true, @, "toggleIsLockingToPanels", "make this morph\nmovable"
     menu.addMenuItem "hide", true, @, "hide"
-    menu.addMenuItem "delete", true, @, "fullDestroy"
+    if @ instanceof WindowWdgt
+      menu.addMenuItem "close", true, @, "close"
+    else
+      menu.addMenuItem "delete", true, @, "close"
+    menu.addMenuItem "destroy", true, @, "fullDestroy"
 
     menu
 
@@ -4036,7 +4068,7 @@ class Morph extends MorphicNode
           m.layoutSpec == LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED and
           m instanceof LayoutElementAdderOrDropletMorph
       for C in allAddersToBeDestroyed
-        C.destroy()
+        C.fullDestroy()
       return
 
     if @children.length == 0

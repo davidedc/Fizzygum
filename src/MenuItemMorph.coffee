@@ -40,9 +40,6 @@ class MenuItemMorph extends TriggerMorph
 
   createLabel: ->
     # console.log "menuitem createLabel"
-    if @label?
-      @label = @label.destroy()
-
     if isString @labelString
       @label = @createLabelString @labelString
     else if @labelString instanceof Array      

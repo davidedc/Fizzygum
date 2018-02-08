@@ -56,8 +56,6 @@ class ListMorph extends ScrollPanelWdgt
   
   # builds the list contents
   buildAndConnectChildren: ->
-    if @listContents
-      @listContents = @listContents.destroy()
     @listContents = new MenuMorph @, true, @, false, false, nil, nil
     @listContents.isLockingToPanels = true
     @elements = ["(empty)"]  if !@elements.length

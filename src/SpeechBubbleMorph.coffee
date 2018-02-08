@@ -10,7 +10,6 @@ class SpeechBubbleMorph extends Morph
 
   contents: nil
   padding: nil # additional vertical pixels
-  isClickable: false
   morphInvokingThis: nil
 
   constructor: (
@@ -48,7 +47,7 @@ class SpeechBubbleMorph extends Morph
         , delay
   
   # SpeechBubbleMorph invoking:
-  popUp: (pos, isClickable) ->
+  popUp: (pos) ->
     # console.log "bubble popup"
     @fullRawMoveTo pos.subtract new Point 0, @height()
     @fullRawMoveWithin world
@@ -60,11 +59,6 @@ class SpeechBubbleMorph extends Morph
     @fullChanged()
     world.hand.destroyTemporaries()
     world.hand.temporaries.push @
-    if isClickable
-      @mouseEnter = ->
-        @destroy()
-    else
-      @isClickable = false
     
   buildAndConnectChildren: ->
     # console.log "bubble buildAndConnectChildren"

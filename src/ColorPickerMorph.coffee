@@ -23,14 +23,9 @@ class ColorPickerMorph extends Morph
     @appearance = new RectangularAppearance @
     @color = new Color 255, 255, 255
     @rawSetExtent new Point 80, 80
-
-  reLayout: ->
-    super()
     @buildSubmorphs()
-    @notifyChildrenThatParentHasReLayouted()
 
   buildSubmorphs: ->
-    @fullDestroyChildren()
     @feedback = new RectangleMorph new Point(20, 20), @choice
     @colorPalette = new ColorPaletteMorph @feedback, new Point @width(), 50
     @grayPalette = new GrayPaletteMorph @feedback, new Point @width(), 5

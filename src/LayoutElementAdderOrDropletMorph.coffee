@@ -144,7 +144,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
       morphBeingDropped,
       nil,
       LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED    
-    @destroy()
+    @fullDestroy()
 
   mouseEnter: ->
     @setColor new Color 100, 100, 100
