@@ -69,6 +69,11 @@ class ScrollPanelWdgt extends PanelWdgt
 
     @adjustScrollBars()
 
+  wantsDropOf: (aMorph) ->
+    if @contents instanceof FolderPanelWdgt
+      return false
+    return @_acceptsDrops
+
   colloquialName: ->
     if @contents instanceof FolderPanelWdgt
       "folder"

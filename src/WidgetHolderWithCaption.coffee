@@ -1,22 +1,29 @@
-# IconWithTextWdgt //////////////////////////////////////////////////////
+# WidgetHolderWithCaption //////////////////////////////////////////////////////
 
-class IconWithTextWdgt extends Morph
+class WidgetHolderWithCaption extends Morph
 
   labl: nil
 
   constructor: (@labelContent, @icon) ->
     super()
+    if !@icon?
+      @icon = new SimpleDropletWdgt "icon"
     @rawSetExtent new Point 95, 95
     @add @icon
     @label = new StringMorph2 @labelContent
     @label.fittingSpecWhenBoundsTooLarge = FittingSpecTextInLargerBounds.SCALEUP
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.color = new Color 255, 255, 255
+    @label.hasDarkOutline = true
     @add @label, nil, nil, true
     @label.alignCenter()
     @label.alignMiddle()
+    @label.isEditable = true
     # update layout
     @invalidateLayout()
+
+  setColor: (theColor) ->
+    @icon.setColor theColor
 
   widthWithoutSpacing: ->
     Math.min @width(), @height()
@@ -34,13 +41,6 @@ class IconWithTextWdgt extends Morph
     @rawSetExtent new Point newWidth, newWidth
     @invalidateLayout()
 
-  mouseClickLeft: ->
-    #world.inform "clicked!"
-    world.setColor new Color 0,255,0
-
-  mouseDoubleClick: ->
-    world.setColor new Color 255,0,0
-  
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger
@@ -76,10 +76,25 @@ class IconWithTextWdgt extends Morph
     # going to be painted and moved OK.
     trackChanges.push false
 
-    @icon.setExtent new Point @width(), Math.round(@height()*8/10)
-    @icon.fullRawMoveTo new Point @left(), @top()
-    @label.setExtent new Point @width(), Math.round(@height()*2/10)
-    @label.fullRawMoveTo new Point @left(), @top() + Math.round(@height()*8/10)
+    height = @height()
+    width = @width()
+
+    squareDim = Math.min width, height
+
+     # p0 is the origin, the origin being in the bottom-left corner
+    p0 = @topLeft()
+
+    # now the origin if on the left edge, in the middle height of the morph
+    p0 = p0.add new Point width/2, height/2
+    
+    # now the origin is in the middle height of the morph,
+    # on the left edge of the square incribed in the morph
+    p0 = p0.subtract new Point squareDim/2, squareDim/2
+
+    @icon.setExtent (new Point squareDim, squareDim*8/10).round()
+    @icon.fullRawMoveTo p0.round()
+    @label.setExtent (new Point squareDim, squareDim*2/10).round()
+    @label.fullRawMoveTo (p0.add new Point 0, squareDim*8/10).round()
 
 
     trackChanges.pop()

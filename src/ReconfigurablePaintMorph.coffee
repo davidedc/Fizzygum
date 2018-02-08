@@ -34,6 +34,14 @@ class ReconfigurablePaintMorph extends Morph
 
   representativeIcon: ->
     new PaintBucketIconWdgt()
+
+  closeFromContainerWindow: (containerWindow) ->
+    if !world.anyReferenceToWdgt containerWindow
+      prompt = new SaveReferencePromptWdgt @, containerWindow, nil, nil
+      prompt.popUpAtHand()
+    else
+      containerWindow.close()
+
   isToolPressed: (buttonToCheckIfPressed) ->
     whichButtonIsSelected = @radioButtonsHolderMorph.whichButtonSelected()
     if whichButtonIsSelected?

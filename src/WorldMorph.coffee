@@ -8,7 +8,7 @@
 # REQUIRES SystemTestsControlPanelUpdater
 
 # The WorldMorph takes over the canvas on the page
-class WorldMorph extends PanelWdgt
+class WorldMorph extends FolderPanelWdgt
 
   # We need to add and remove
   # the event listeners so we are
@@ -201,6 +201,9 @@ class WorldMorph extends PanelWdgt
   # solution is more ad-hoc and is much much slower.
   outstandingTimerTriggeredOperationsCounter: []
 
+  widgetsReferencingOtherWidgets: []
+  incrementalGcSessionId: 0
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -261,6 +264,9 @@ class WorldMorph extends PanelWdgt
 
 
     @changed()
+
+  wantsDropOf: (aMorph) ->
+    return @_acceptsDrops
 
   createErrorConsole: ->
     @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
@@ -1736,6 +1742,7 @@ class WorldMorph extends PanelWdgt
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
       menu.addMenuItem "switch to dev mode", true, @, "toggleDevMode"
+    menu.addMenuItem "make folder", true, @, "makeFolder"
     menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
 
@@ -2021,4 +2028,14 @@ class WorldMorph extends PanelWdgt
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = nil
     @worldCanvas.focus()
-    
+
+  reactToDropOf: ->
+
+  anyReferenceToWdgt: (whichWdgt) ->
+    # go through all the references and check whether they reference
+    # the wanted widget. Note that the reference could be unreachable
+    # in the basement, or even in the trash
+    for eachReferencingMorph in @widgetsReferencingOtherWidgets
+      if eachReferencingMorph.target == whichWdgt
+        return true
+    return false

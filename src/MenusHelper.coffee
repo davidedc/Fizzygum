@@ -1,4 +1,5 @@
 # MenusHelper ////////////////////////////////////////////////////////////
+# REQUIRES DeepCopierMixin
 
 # All "actions" functions for all accessory menu items should belong
 # in here. Also helps so we don't pollute moprhs with a varying number
@@ -45,10 +46,14 @@ class MenusHelper
   # Icons --------------------------------------------------------------
 
   makeIconWithText: ->
-    world.create new IconWithTextWdgt "hey there", new BrushIconMorph()
+    world.create new WidgetHolderWithCaption "hey there", new BrushIconMorph()
 
   makeEmptyIconWithText: ->
-    world.create new IconWithTextWdgt "hey there"
+    world.create new WidgetHolderWithCaption "hey there"
+
+  makeFolderWindow: (a,b,c,d,e) ->
+    debugger
+    world.create new FolderWindowWdgt nil,nil,nil,nil, @
 
   makeBouncingParticle: ->
     world.create new BouncerWdgt()
@@ -117,6 +122,9 @@ class MenusHelper
 
   createBasementIconWdgt: ->
     world.create new BasementIconWdgt()
+
+  createWidgetIconWdgt: ->
+    world.create new WidgetIconWdgt()
 
   makeGenericReferenceIcon: ->
     world.create new GenericShortcutIconWdgt()

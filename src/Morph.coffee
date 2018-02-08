@@ -480,9 +480,12 @@ class Morph extends MorphicNode
     world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
-      world.basementWdgt.scrollPanel.addInPseudoRandomPosition @
+      world.basementWdgt.scrollPanel.contents.addInPseudoRandomPosition @
     else
       world.inform "There is no\nbasement to go in!"
+
+  closeFromContainerWindow: (containerWindow) ->
+    containerWindow.close()  
   
   # Widgets destroying ======
   # this is different from a widget being closed/deleted
@@ -1224,13 +1227,27 @@ class Morph extends MorphicNode
     if false and !window.recalculatingLayouts
       debugger
 
-    leftOff = @fullBounds().left() - aMorph.left()
+    # in case of widgets with deferred layouts we need
+    # to look into desired extent and desired position
+    if @desiredExtent?
+      newBoundsForThisLayout = @desiredExtent
+      @desiredExtent = nil
+    else
+      newBoundsForThisLayout = @extent()
+
+    if @desiredPosition?
+      newBoundsForThisLayout = (new Rectangle @desiredPosition).setBoundsWidthAndHeight newBoundsForThisLayout
+      @desiredPosition = nil
+    else
+      newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
+
+    leftOff = newBoundsForThisLayout.left() - aMorph.left()
     @fullRawMoveBy new Point -leftOff, 0  if leftOff < 0
-    rightOff = @fullBounds().right() - aMorph.right()
+    rightOff = newBoundsForThisLayout.right() - aMorph.right()
     @fullRawMoveBy new Point -rightOff, 0  if rightOff > 0
-    topOff = @fullBounds().top() - aMorph.top()
+    topOff = newBoundsForThisLayout.top() - aMorph.top()
     @fullRawMoveBy new Point 0, -topOff  if topOff < 0
-    bottomOff = @fullBounds().bottom() - aMorph.bottom()
+    bottomOff = newBoundsForThisLayout.bottom() - aMorph.bottom()
     @fullRawMoveBy new Point 0, -bottomOff  if bottomOff > 0
 
 
@@ -1784,6 +1801,48 @@ class Morph extends MorphicNode
     morphToAdd.fullChanged()
     @removeFromTree()
 
+  createReference: (referenceName, placeToDropItIn = world) ->
+
+    debugger
+    # this function can also be called as a callback
+    # of a trigger, in which case the first parameter
+    # here is a menuItem. We take that parameter away
+    # in that case.
+    if referenceName? and typeof(referenceName) != "string"
+      referenceName = nil
+      placeToDropItIn = world
+
+    # don't create new reference if it exists already
+    for eachChild in placeToDropItIn.children
+      if (eachChild instanceof ReferenceWdgt) and eachChild.target == @
+        return
+
+    morphToAdd = new ReferenceWdgt @, referenceName
+    if placeToDropItIn == world
+      placeToDropItIn.add morphToAdd
+      morphToAdd.fullMoveTo @position().subtract new Point 50, 50
+    else
+      placeToDropItIn.addInPseudoRandomPosition morphToAdd
+    morphToAdd.setExtent new Point 75, 75
+    morphToAdd.fullChanged()
+    @bringToForegroud()
+
+  createFolderReference: (referenceName, whichFolderPanelToAddTo) ->
+    morphToAdd = new ReferenceWdgt @, referenceName, true
+    whichFolderPanelToAddTo.add morphToAdd
+    # TODO better way to add icons to folders
+    morphToAdd.fullMoveTo whichFolderPanelToAddTo.position().add new Point 50, 50
+    morphToAdd.setExtent new Point 75, 75
+    morphToAdd.fullChanged()
+    @bringToForegroud()
+
+  createReferenceAndClose: (unused,stringFieldWithName,placeToDropItIn)->
+    debugger
+    if @ instanceof FolderWindowWdgt
+      @createFolderReference stringFieldWithName.text.text, @wdgtWhereReferenceWillGo
+    else
+      @createReference stringFieldWithName?.text.text, placeToDropItIn
+    @close()
     
   # Morph full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
@@ -2018,6 +2077,10 @@ class Morph extends MorphicNode
     aMorph.imBeingAddedTo @
     if previousParent?.childRemoved?
       previousParent.childRemoved @
+
+    if @childAdded?
+      @childAdded aMorph
+
     return aMorph
 
   addInset: (aMorph) ->
@@ -2105,7 +2168,7 @@ class Morph extends MorphicNode
 
   duplicateMenuAction: ->
     aFullCopy = @fullCopy()
-    aFullCopy.pickUp()
+    aFullCopy?.pickUp()
 
   # in case we copy a morph, if the original was in some
   # data structures related to broken morphs, then
@@ -2669,11 +2732,12 @@ class Morph extends MorphicNode
     world.add inspector
     #inspector.changed()
 
-  spawnNextTo: (morphToBeNextTo) ->
-    morphToBeNextTo.parent.add @
-    @fullRawMoveTo \
-      morphToBeNextTo.topRight().translateBy new Point 5, -5
-    @fullRawMoveWithin morphToBeNextTo.parent
+  spawnNextTo: (morphToBeNextTo, whereToAddIt) ->
+    if !whereToAddIt?
+      whereToAddIt = morphToBeNextTo.parent
+    whereToAddIt.add @
+    @fullRawMoveTo morphToBeNextTo.center()
+    @fullRawMoveWithin whereToAddIt
     
   
   # Morph menus ////////////////////////////////////////////////////////////////
@@ -2741,11 +2805,14 @@ class Morph extends MorphicNode
         #   inside a SimpleVerticalStackScrollPanelWdgt
         # * also leave out PanelWdgt when
         #   inside a ScrollPanelWdgt
+        # * also leave out ScrollPanelWdgt when
+        #   inside a FolderWindowWdgt
         # ...because they would be redundant - there is no need for the
         # user to know or have access to the internal structure of
         # those constructs
         if (!((each instanceof SimpleVerticalStackPanelWdgt) and (each.parent instanceof SimpleVerticalStackScrollPanelWdgt))) and
-         (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt)))
+         (!((each instanceof PanelWdgt) and (each.parent instanceof ScrollPanelWdgt))) and
+         (!((each instanceof ScrollPanelWdgt) and (each.parent instanceof FolderWindowWdgt)))
           hierarchyMenuMorphs.push each
 
     hierarchyMenuMorphs
@@ -3111,7 +3178,7 @@ class Morph extends MorphicNode
     menu.popUpAtHand()
 
   basementIconAndText: ->
-    world.create new BasementOpenerMorph()
+    world.create new BasementOpenerWdgt()
 
   analogClock: ->
     world.create new AnalogClockWdgt()
@@ -3141,6 +3208,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "Object icon", true, menusHelper, "createObjectIconWdgt"
     menu.addMenuItem "Folder icon", true, menusHelper, "createFolderIconWdgt"
     menu.addMenuItem "Basement icon", true, menusHelper, "createBasementIconWdgt"
+    menu.addMenuItem "Widget icon", true, menusHelper, "createWidgetIconWdgt"
 
     menu.popUpAtHand()
 
@@ -3167,6 +3235,12 @@ class Morph extends MorphicNode
     menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
 
     menu.popUpAtHand()
+
+  popUpShortcutsAndScriptsMenu: (morphOpeningTheMenu) ->
+    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "shortcuts & scripts"
+    menu.addMenuItem "basement shortcut", true, @, "basementIconAndText"
+    menu.popUpAtHand()
+
 
   createEmptyInternalWindow: ->
     wm = new WindowWdgt nil, nil, nil, true
@@ -3206,6 +3280,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "empty icon with text", true, menusHelper, "makeEmptyIconWithText"
     menu.addMenuItem "generic reference icon", true, menusHelper, "makeGenericReferenceIcon"
     menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
+    menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
     menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
     menu.popUpAtHand()
 
@@ -3216,7 +3291,7 @@ class Morph extends MorphicNode
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
-    menu.addMenuItem "under the carpet", true, @, "basementIconAndText"
+    menu.addMenuItem "shortcuts & scripts➜", false, @, "popUpShortcutsAndScriptsMenu", "icons"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
@@ -3254,7 +3329,6 @@ class Morph extends MorphicNode
       menu.addMenuItem "duplicate", true, @, "duplicateMenuAction" , "make a copy\nand pick it up"
       menu.addMenuItem "pick up", true, @, "pickUp", "disattach and put \ninto the hand"
       menu.addMenuItem "attach...", true, @, "attach", "stick this morph\nto another one"
-      menu.addMenuItem "move", true, @, "showMoveHandle", "show a handle\nwhich can be floatDragged\nto move this morph"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window\non all properties"
 
       # A) normally, just take a picture of this morph
@@ -3293,7 +3367,7 @@ class Morph extends MorphicNode
           # just open new tab with image of morph.
           window.open @fullImageData()
 
-      menu.addMenuItem "take pic", true, @, "takePic", "open a new window\nwith a picture of this morph"
+      menu.addMenuItem "create shortcut", true, @, "createReference", "creates a reference to this wdgt and leaves it on the desktop"
 
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
 

@@ -85,6 +85,16 @@ class PanelWdgt extends Morph
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars?()  
 
+  childAdded: (child) ->
+    # the BasementWdgt has a filter that can
+    # show/hide the contents of this pane
+    # based on whether they are reachable or
+    # not. So let's notify it.
+    if @parent?
+      if @parent.parent?
+        if @parent.parent.childAddedInScrollPanel?
+          @parent.parent.childAddedInScrollPanel child
+
   # puts the morph in the ScrollPanel
   # in some sparse manner and keeping it
   # "in view"

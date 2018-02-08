@@ -64,6 +64,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return @contents.representativeIcon()
 
+  closeFromWindowBar: ->
+    @contents?.closeFromContainerWindow @
+
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
       return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isCollapsed()) and !@reInflating

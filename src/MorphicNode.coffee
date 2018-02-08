@@ -48,6 +48,9 @@ class MorphicNode
   checkFirstParentClippingAtBoundsCache: nil
   cachedFirstParentClippingAtBounds: nil
 
+  gcSessionIdMark: 0
+  gcReferenceExaminedSessionIdMark: 0
+
   constructor: (@parent = nil, @children = []) ->
 
   
@@ -111,6 +114,21 @@ class MorphicNode
     @invalidateFullClippedBoundsCache @
     @children.remove aMorphicNode
     aMorphicNode.parent = nil
+
+  markReferenceAsVisited: (newGcSessionId) ->
+    @gcReferenceExaminedSessionIdMark = newGcSessionId
+
+  wasReferenceVisited: (newGcSessionId) ->
+    @gcReferenceExaminedSessionIdMark == newGcSessionId
+
+  markItAndItsParentsAsReachable: (newGcSessionId) ->
+    @gcSessionId = newGcSessionId
+    if @parent?
+      if @parent.gcSessionId == newGcSessionId
+        return
+      if @parent?.parent?.parent instanceof BasementWdgt
+        return
+      @parent.markItAndItsParentsAsReachable newGcSessionId
   
   # is this Morph attached to neither the world nor to
   # the hand?
@@ -119,6 +137,22 @@ class MorphicNode
     if root == world or root == world.hand
       return false
     return true
+
+  isInBasement: ->
+    thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
+      eachWdgt instanceof BasementWdgt 
+    return thereCouldBeOne.length == 1
+
+  isInBasementButReachable: (newGcSessionId) ->
+    debugger
+    if @gcSessionId == newGcSessionId
+      return true
+    if @parent.gcSessionId == newGcSessionId
+      return true
+    if @parent instanceof BasementWdgt
+      return false
+    return @parent.isInBasementButReachable newGcSessionId
+
 
   # MorphicNode functions:
   SLOWroot: ->
