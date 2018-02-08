@@ -1,7 +1,10 @@
+# REQUIRES ChildrenStainerMixin
+
 class GenericShortcutIconWdgt extends Morph
 
-  referenceArrowIcon: nil
+  @augmentWith ChildrenStainerMixin, @name
 
+  referenceArrowIcon: nil
 
   constructor: (@icon) ->
     super()

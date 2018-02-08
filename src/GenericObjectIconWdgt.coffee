@@ -1,7 +1,10 @@
+# REQUIRES ChildrenStainerMixin
+
 class GenericObjectIconWdgt extends Morph
 
-  objectIcon: nil
+  @augmentWith ChildrenStainerMixin, @name
 
+  objectIcon: nil
 
   constructor: (@icon) ->
     super()
