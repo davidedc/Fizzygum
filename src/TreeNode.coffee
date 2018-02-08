@@ -13,7 +13,7 @@
 # touching of any of the out-of-scope properties
 # mentioned.
 
-class MorphicNode
+class TreeNode
 
   parent: nil
   # "children" is an ordered list of the immediate
@@ -54,19 +54,19 @@ class MorphicNode
   constructor: (@parent = nil, @children = []) ->
 
   
-  # MorphicNode string representation: e.g. 'a MorphicNode[3]'
+  # TreeNode string representation: e.g. 'a TreeNode[3]'
   toString: ->
     if @children?
       childrenLength = @children.length
     else
       childrenLength = "-"
-    "a MorphicNode" + "[" + childrenLength + "]"
+    "a TreeNode" + "[" + childrenLength + "]"
 
   # currently unused in ZK
   childrenTopToBottom: ->
     arrayShallowCopyAndReverse @children
   
-  # MorphicNode accessing:
+  # TreeNode accessing:
   addChild: (aMorphicNode, position = nil) ->
     WorldMorph.numberOfAddsAndRemoves++
     @invalidateFullBoundsCache @
@@ -154,14 +154,14 @@ class MorphicNode
     return @parent.isInBasementButReachable newGcSessionId
 
 
-  # MorphicNode functions:
+  # TreeNode functions:
   SLOWroot: ->
     if @parent?
       return @parent.SLOWroot()
     else
       return @
 
-  # MorphicNode functions:
+  # TreeNode functions:
   root: ->
     if @rootCacheChecker == WorldMorph.numberOfAddsAndRemoves
       #console.log "cache hit root"

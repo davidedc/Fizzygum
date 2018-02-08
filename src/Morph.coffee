@@ -17,7 +17,7 @@
 # REQUIRES VerticalStackLayoutSpec
 # REQUIRES WindowContentLayoutSpec
 
-class Morph extends MorphicNode
+class Morph extends TreeNode
 
   @augmentWith DeepCopierMixin
 
