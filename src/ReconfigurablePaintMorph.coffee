@@ -1,6 +1,6 @@
 # ReconfigurablePaintMorph //////////////////////////////////////////////////////
 
-class ReconfigurablePaintMorph extends Morph
+class ReconfigurablePaintMorph extends Widget
 
   mainCanvas: nil
   overlayCanvas: nil
@@ -496,7 +496,7 @@ class ReconfigurablePaintMorph extends Morph
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
-    # bounds of the parent Morph. This means that
+    # bounds of the parent Widget. This means that
     # if only the parent morph breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its

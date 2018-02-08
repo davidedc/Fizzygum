@@ -1,8 +1,8 @@
 # PointerMorph ///////////////////////////////////////////////////////////
 
 
-# Points to a Morph. There can be multiple PointerMorph(s) for any
-# Morph.
+# Points to a Widget. There can be multiple PointerMorph(s) for any
+# Widget.
 
 class PointerMorph extends BoxMorph
 

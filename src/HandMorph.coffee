@@ -1,16 +1,16 @@
 # HandMorph ///////////////////////////////////////////////////////////
 
-# The mouse cursor. Note that it's not a child of the WorldMorph, this Morph
+# The mouse cursor. Note that it's not a child of the WorldMorph, this Widget
 # is never added to any other morph. [TODO] Find out why and write explanation.
 # Not to be confused with the HandleMorph
 
-class HandMorph extends Morph
+class HandMorph extends Widget
 
   world: nil
   mouseButton: nil
   # used for example to check that
   # mouseDown and mouseUp happen on the
-  # same Morph (otherwise clicks happen for
+  # same Widget (otherwise clicks happen for
   # example when resizing a button via the
   # handle)
   mouseDownMorph: nil
@@ -169,7 +169,7 @@ class HandMorph extends Morph
       # morph to make the shadow, so
       # this is why we add the shadow after
       # the morph has been added.
-      # Note that Morphs can specify the look
+      # Note that Widgets can specify the look
       # (i.e. offset blur and color)
       # of their shadow (e.g. Menus have a particular one
       # so they all seem to float at a particular height)
@@ -694,9 +694,9 @@ class HandMorph extends Morph
     #        droppedSVG(image, name)
     #        droppedAudio(audio, name)
     #    
-    #    events to interested Morphs at the mouse pointer
+    #    events to interested Widgets at the mouse pointer
     #    if none of the above content types can be determined, the file contents
-    #    is dispatched as an ArrayBuffer to interested Morphs:
+    #    is dispatched as an ArrayBuffer to interested Widgets:
     #
     #    ```droppedBinary(anArrayBuffer, name)```
 
@@ -803,7 +803,7 @@ class HandMorph extends Morph
   destroyTemporaries: ->
 
     # temporaries are just an array of morphs which will be deleted upon
-    # the next mouse click, or whenever another temporary Morph decides
+    # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them. The primary purpose of temporaries is
     # to display tools tips of speech bubble help.
 
@@ -961,7 +961,7 @@ class HandMorph extends Morph
         @nonFloatDraggedMorph.nonFloatDragging?(@nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall)
     
     #
-    # original, more cautious code for grabbing Morphs,
+    # original, more cautious code for grabbing Widgets,
     # retained in case of needing to fall back:
     #
     #   if (morph === this.morphToGrab) {

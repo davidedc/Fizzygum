@@ -1,7 +1,7 @@
 # TriggerMorph ////////////////////////////////////////////////////////
 
 # **************************************
-# This Morph is now deprecated, use the
+# This Widget is now deprecated, use the
 # SimpleButton instead
 # **************************************
 
@@ -12,7 +12,7 @@
 # dataSourceMorphForTarget, target and action
 # are used - see comments.
 
-class TriggerMorph extends Morph
+class TriggerMorph extends Widget
 
   target: nil
   action: nil
@@ -41,7 +41,7 @@ class TriggerMorph extends Morph
   closesUnpinnedMenus: true
   
   # tells if the button represents a morph, in which
-  # case we are going to highlight the Morph on hover
+  # case we are going to highlight the Widget on hover
   representsAMorph: false
 
   state: 0

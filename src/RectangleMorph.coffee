@@ -1,5 +1,5 @@
 # RectangleMorph /////////////////////////////////////////////////////////
-# a plain rectangular Morph. Because it's so basic, it's the building
+# a plain rectangular Widget. Because it's so basic, it's the building
 # block of many more complex constructions, for example containers
 # , clipping windows, and clipping windows which allow content to be
 # scrolled (clipping is particularly easy to do along a rectangular
@@ -10,7 +10,7 @@
 # are painted over the border, which would look bad.
 
 
-class RectangleMorph extends Morph
+class RectangleMorph extends Widget
 
   constructor: (extent, color) ->
     super()

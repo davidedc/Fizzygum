@@ -248,7 +248,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     world.removeSteppingMorph @list.listContents
     @add @list
 
-    # we add a Morph alignment here because adjusting IDs whenever
+    # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -391,7 +391,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
-    # bounds of the parent Morph. This means that
+    # bounds of the parent Widget. This means that
     # if only the parent morph breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
@@ -521,7 +521,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     # inject code will also break the layout and the morph
     @target.injectProperty propertyName, txt
 
-  # TODO should have a removeProperty method in Morph (and in the classes somehow)
+  # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here 
   addProperty: (ignoringThis, morphWithProperty) ->
     prop = morphWithProperty.text.text
@@ -535,7 +535,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
   addPropertyPopout: ->
     @prompt "new property name:", @, "addProperty", "property" # Chrome cannot handle empty strings (others do)
 
-  # TODO should have a removeProperty method in Morph (and in the classes somehow)
+  # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here 
   renameProperty: (ignoringThis, morphWithProperty) ->
     propertyName = @list.selected.labelString
@@ -554,7 +554,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     propertyName = @list.selected.labelString
     @prompt "property name:", @, "renameProperty", propertyName
   
-  # TODO should have a removeProperty method in Morph (and in the classes somehow)
+  # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here 
   removeProperty: ->
     propertyName = @list.selected.labelString

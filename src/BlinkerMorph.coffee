@@ -2,7 +2,7 @@
 
 # can be used for text caret
 
-class BlinkerMorph extends Morph
+class BlinkerMorph extends Widget
 
   constructor: (@fps = 2) ->
     world.addSteppingMorph @

@@ -12,7 +12,7 @@
 # REQUIRES ClippingAtRectangularBoundsMixin
 # TODO unclear whether this actually requires RectangularAppearance
 
-class PanelWdgt extends Morph
+class PanelWdgt extends Widget
 
   @augmentWith ClippingAtRectangularBoundsMixin, @name
 

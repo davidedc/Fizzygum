@@ -9,7 +9,7 @@
 # example code to run:
 #   this.sierpinski(400,40);
 
-class PenMorph extends Morph
+class PenMorph extends Widget
   
   heading: 0
   penSize: nil

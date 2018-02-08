@@ -2,7 +2,7 @@
 # REQUIRES ControllerMixin
 # REQUIRES BackBufferMixin
 
-class ColorPaletteMorph extends Morph
+class ColorPaletteMorph extends Widget
 
   @augmentWith ControllerMixin
   @augmentWith BackBufferMixin
@@ -64,7 +64,7 @@ class ColorPaletteMorph extends Morph
     @updateTarget()
   
   updateTarget: ->
-    if @target instanceof Morph and @choice?
+    if @target instanceof Widget and @choice?
       setterMethodString = "set" + @targetSetter.camelize()
       if @target[setterMethodString] instanceof Function
         @target[setterMethodString] @choice

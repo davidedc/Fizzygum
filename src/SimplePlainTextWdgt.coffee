@@ -10,7 +10,7 @@
 # TextMorph2 with the current ScrollPanelWdgt and the current layout mechanism (which
 # we'd want to change with a more generic one but it's a complex process).
 #
-# This Morph can do stuff that the TextMorph2 is not quite ready to do (i.e. can
+# This Widget can do stuff that the TextMorph2 is not quite ready to do (i.e. can
 # adjust its vertical size to fit its contents in the given width, which is what
 # "normal" text editing looks like.
 #

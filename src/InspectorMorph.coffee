@@ -153,7 +153,7 @@ class InspectorMorph extends BoxMorph
     world.removeSteppingMorph @list.listContents
     @add @list
 
-    # we add a Morph alignment here because adjusting IDs whenever
+    # we add a Widget alignment here because adjusting IDs whenever
     # we add or remove methods is a pain...
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -366,7 +366,7 @@ class InspectorMorph extends BoxMorph
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
-    # bounds of the parent Morph. This means that
+    # bounds of the parent Widget. This means that
     # if only the parent morph breaks its rectangle
     # then everything is OK.
     # Also note that if you attach something else to its
@@ -385,7 +385,7 @@ class InspectorMorph extends BoxMorph
       if @label.height() > @height() - 50
         @silentRawSetHeight @label.height() + 50
         # TODO run the tests when commenting this out
-        # because this one point to the Morph implementation
+        # because this one point to the Widget implementation
         # which is empty.
         @reLayout()
         

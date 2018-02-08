@@ -17,7 +17,7 @@ DeepCopierMixin =
       # should also take care of inserting the copied
       # morph in whatever other data structures where the
       # original morph was.
-      # For example, if the Morph appeared in a data
+      # For example, if the Widget appeared in a data
       # structure related to the broken rectangles mechanism,
       # we should place the copied morph there.
       deepCopy: (doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure)->
@@ -27,7 +27,7 @@ DeepCopierMixin =
             return "$" + haveIBeenCopiedAlready
           else
             return objectClones[haveIBeenCopiedAlready]
-        if (@ instanceof Morph) and (@ not in allMorphsInStructure)
+        if (@ instanceof Widget) and (@ not in allMorphsInStructure)
           if doSerialize
             return "$EXTERNAL" + @uniqueIDString()
           else
@@ -56,7 +56,10 @@ DeepCopierMixin =
               if @[property].rebuildDerivedValue?
                 cloneOfMe[property] = nil
               else
-                if !@[property].deepCopy? then debugger
+                if !@[property].deepCopy?
+                  console.dir @
+                  console.log property
+                  debugger
                 cloneOfMe[property] = @[property].deepCopy doSerialize, objOriginalsClonedAlready, objectClones, allMorphsInStructure
             else
               if property != "instanceNumericID"
@@ -135,7 +138,7 @@ DeepCopierMixin =
           # since they test positive as typeof "object"
           theClone = Object.create(@constructor::)
           # add to the instances tracking.
-          # note that only Morphs have that kind
+          # note that only Widgets have that kind
           # of tracking
           theClone.registerThisInstance?()
           if addClassNameFieldIfObjectNotArray

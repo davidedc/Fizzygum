@@ -8,7 +8,7 @@
 #   1) as a cache
 #   2) because the morph has inherently a "raster" nature
 #      such as the canvas where you can run a turtle to
-#      draw stuff, or a Morph where you want to have
+#      draw stuff, or a Widget where you want to have
 #      pixel-based filters.
 #
 # The cache use is useful for morphs that ideally
@@ -83,7 +83,7 @@ BackBufferMixin =
           return data.a is 0
         false
 
-      # Morph pixel access:
+      # Widget pixel access:
       getPixelColor: (aPoint) ->
         [@backBuffer, @backBufferContext] = @createRefreshOrGetBackBuffer()
         point = aPoint.toLocalCoordinatesOf @

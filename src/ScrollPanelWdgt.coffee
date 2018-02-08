@@ -135,8 +135,8 @@ class ScrollPanelWdgt extends PanelWdgt
     # not update the reference to it. This is correct because one cannot
     # just change all the references to other objects that are not children
     # , a good example being the targets, i.e. if you duplicate a colorPicker
-    # which targets a Morph you want the duplication of the colorPicker to
-    # still change color of that same Morph.
+    # which targets a Widget you want the duplication of the colorPicker to
+    # still change color of that same Widget.
     # So: the ScrollPanel B could still reference the scrollbar
     # detached from A and that causes a problem because changes to B would
     # change the dimensions and hiding/unhiding of the scrollbar.
@@ -386,7 +386,7 @@ class ScrollPanelWdgt extends PanelWdgt
       scrollbarJustChanged = false
       if world.hand.mouseButton and
         !world.hand.floatDraggingSomething() and
-        # if the Morph at hand is float draggable then
+        # if the Widget at hand is float draggable then
         # we are probably about to detach it, so
         # we shouldn't move anything, because user might
         # just float-drag the morph as soon as the threshold is

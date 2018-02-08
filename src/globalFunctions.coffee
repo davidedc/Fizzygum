@@ -540,14 +540,14 @@ boot = ->
   # REQUIRES directives), each class *can*
   # initialise static/nonstatic properties with objects
   # created from other classes (as long as the REQUIRES
-  # directives are well set). So for example a Morph can
+  # directives are well set). So for example a Widget can
   # initialise a "color" property doing something like
   #
   #   myCol: new Color(...)
   #
   # Also note that we load "Coffeescript" here.
   # Obviously if we don't have the pre-compiled file we need
-  # that to create the Morphs and all that is needed to
+  # that to create the Widgets and all that is needed to
   # start the world, that's a given.
   # But *also* we need it now if we have the pre-compiled file,
   # that's because actually the Fizzypaint application

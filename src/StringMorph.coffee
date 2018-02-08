@@ -4,7 +4,7 @@
 # REQUIRES WorldMorph
 # REQUIRES BackBufferMixin
 
-class StringMorph extends Morph
+class StringMorph extends Widget
 
   @augmentWith BackBufferMixin
 

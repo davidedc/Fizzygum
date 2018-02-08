@@ -5,7 +5,7 @@
 # drop on it. It can also assign the dropped widget to a parent field
 # of choice.
 
-class SimpleDropletWdgt extends Morph
+class SimpleDropletWdgt extends Widget
 
   @augmentWith HighlightableMixin, @name
 

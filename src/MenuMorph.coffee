@@ -1,5 +1,5 @@
 # MenuMorph ///////////////////////////////////////////////////////////
-# MenuMorphs are special Morphs that have quite complex logic for
+# MenuMorphs are special Widgets that have quite complex logic for
 # opening themselves, closing themseves when users click outside,
 # popping up, opening sub-menus, and pinning them down.
 # Other than that, ideally they should be able to contain anything.
@@ -8,7 +8,7 @@
 # "pinned on desktop", plus no shadow when pinned on anything
 # else other than the desktop.
 
-class MenuMorph extends Morph
+class MenuMorph extends Widget
 
   target: nil
   title: nil
@@ -149,7 +149,7 @@ class MenuMorph extends Morph
       doubleClickAction,  # doubleclick action
       arg1,  # argument to action 1
       arg2,  # argument to action 2
-      representsAMorph  # does it represent a Morph?
+      representsAMorph  # does it represent a Widget?
       )
     if !@environment?
       item.dataSourceMorphForTarget = item

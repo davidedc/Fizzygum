@@ -2,7 +2,7 @@
 
 # I can have an optionally rounded border
 
-class BoxMorph extends Morph
+class BoxMorph extends Widget
 
   cornerRadius: nil
 
@@ -63,7 +63,7 @@ class BoxMorph extends Morph
         choicesExcludingParent.push each
 
     if choicesExcludingParent.length > 0
-      menu = new MenuMorph @, false, @, true, true, "choose Morph to put as inset:"
+      menu = new MenuMorph @, false, @, true, true, "choose Widget to put as inset:"
       choicesExcludingParent.forEach (each) =>
         menu.addMenuItem each.toString().slice(0, 50), true, each, "choiceOfMorphToBePicked"
     else

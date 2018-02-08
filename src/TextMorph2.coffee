@@ -597,7 +597,7 @@ class TextMorph2 extends StringMorph2
   
   # TextMorph evaluation. This menu is placed as the
   # "overridingContextMenu" in the Inspector panes, where
-  # the text contents is executed against the target Morph
+  # the text contents is executed against the target Widget
   evaluationMenu: ->
     menu = @buildHierarchyMenu()
 
@@ -660,7 +660,7 @@ class TextMorph2 extends StringMorph2
   
   inspectSelection: ->
     # evaluateString is a pimped-up eval in
-    # the Morph class.
+    # the Widget class.
     result = @receiver.evaluateString @selection()
     if result? then @spawnInspector result
 

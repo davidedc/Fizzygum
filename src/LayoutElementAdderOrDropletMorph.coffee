@@ -4,7 +4,7 @@
 # REQUIRES LayoutSpec
 
 
-class LayoutElementAdderOrDropletMorph extends Morph
+class LayoutElementAdderOrDropletMorph extends Widget
   _acceptsDrops: true
 
   constructor: ->
@@ -128,7 +128,7 @@ class LayoutElementAdderOrDropletMorph extends Morph
     # put a supporting morph underneath it and put the adder/droplet
     # in a layout.
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
-      newMorph = new Morph()
+      newMorph = new Widget()
       @parent.add newMorph
       newMorph.rawSetBounds @boundingBox()
       newMorph.add @, nil, LayoutSpec.ATTACHEDAS_STACK_HORIZONTAL_VERTICALALIGNMENTS_UNDEFINED

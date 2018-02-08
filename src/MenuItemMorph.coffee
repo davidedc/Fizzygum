@@ -4,7 +4,7 @@
 
 class MenuItemMorph extends TriggerMorph
 
-  # labelString can also be a Morph or a Canvas or a tuple: [icon, string]
+  # labelString can also be a Widget or a Canvas or a tuple: [icon, string]
   constructor: (closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
     super closesUnpinnedMenus, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
@@ -44,7 +44,7 @@ class MenuItemMorph extends TriggerMorph
       @label = @createLabelString @labelString
     else if @labelString instanceof Array      
       # assume its pattern is: [icon, string] 
-      @label = new Morph()
+      @label = new Widget()
       @label.alpha = 0 # transparent
 
       icon = @createIcon @labelString[0]
@@ -55,7 +55,7 @@ class MenuItemMorph extends TriggerMorph
       lbl.fullRawMoveCenterTo icon.center()
       lbl.fullRawMoveLeftSideTo icon.right() + 4
       @label.rawSetBounds icon.boundingBox().merge lbl.boundingBox()
-    else # assume it's either a Morph or a Canvas
+    else # assume it's either a Widget or a Canvas
       @label = @createIcon @labelString
 
     @add @label
@@ -68,13 +68,13 @@ class MenuItemMorph extends TriggerMorph
   
 
   createIcon: (source) ->
-    # source can be either a Morph or an HTMLCanvasElement
-    icon = new Morph()
-    icon.backBuffer = (if source instanceof Morph then source.fullImage() else source)
+    # source can be either a Widget or an HTMLCanvasElement
+    icon = new Widget()
+    icon.backBuffer = (if source instanceof Widget then source.fullImage() else source)
     icon.backBufferContext = icon.backBuffer.getContext "2d"
 
     # adjust shadow dimensions
-    if source instanceof Morph and source.hasShadow()
+    if source instanceof Widget and source.hasShadow()
       src = icon.backBuffer
       icon.backBuffer = newCanvas(
         source.fullBounds().extent().subtract(

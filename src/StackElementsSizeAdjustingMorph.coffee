@@ -2,12 +2,12 @@
 
 
 
-class StackElementsSizeAdjustingMorph extends Morph
+class StackElementsSizeAdjustingMorph extends Widget
 
 
   hand: nil
   indicator: nil
-  category: 'Morphic-Layouts'
+  category: 'Widgetic-Layouts'
 
 
   constructor: ->

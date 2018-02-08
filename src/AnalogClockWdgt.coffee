@@ -1,9 +1,9 @@
 # AnalogClockWdgt //////////////////////////////////////////////////////
 
 # this comment below is needed to figure out dependencies between classes
-# REQUIRES Morph
+# REQUIRES Widget
 
-class AnalogClockWdgt extends Morph
+class AnalogClockWdgt extends Widget
 
   hoursHandAngle: 0
   minutesHandAngle: 0

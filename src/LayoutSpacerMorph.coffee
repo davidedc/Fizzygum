@@ -4,7 +4,7 @@
 # REQUIRES LayoutSpec
 
 
-class LayoutSpacerMorph extends Morph
+class LayoutSpacerMorph extends Widget
   thisSpacerIsTransparent: false
 
   constructor: (spacerWeight = 1) ->

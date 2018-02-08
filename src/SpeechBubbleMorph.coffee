@@ -2,11 +2,11 @@
 
 #
 #	I am a comic-style speech bubble that can display either a string,
-#	a Morph, a Canvas or a toString() representation of anything else.
+#	a Widget, a Canvas or a toString() representation of anything else.
 #	If I am invoked using popUp() I behave like a tool tip.
 #
 
-class SpeechBubbleMorph extends Morph
+class SpeechBubbleMorph extends Widget
 
   contents: nil
   padding: nil # additional vertical pixels
@@ -65,7 +65,7 @@ class SpeechBubbleMorph extends Morph
     # re-build my contents
     if @contentsMorph
       @contentsMorph = @contentsMorph.destroy()
-    if @contents instanceof Morph
+    if @contents instanceof Widget
       @contentsMorph = @contents
     else if isString @contents
       @contentsMorph = new TextMorph(
@@ -76,7 +76,7 @@ class SpeechBubbleMorph extends Morph
         true,
         "center")
     else if @contents instanceof HTMLCanvasElement
-      @contentsMorph = new Morph()
+      @contentsMorph = new Widget()
       @contentsMorph.silentRawSetWidth @contents.width
       @contentsMorph.silentRawSetHeight @contents.height
       @contentsMorph.backBuffer = @contents

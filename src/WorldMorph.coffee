@@ -282,7 +282,7 @@ class WorldMorph extends FolderPanelWdgt
         if @isDevMode
           menu = new MenuMorph @, false, @, true, true, "Fizzygum"
         else
-          menu = new MenuMorph @, false, @, true, true, "Morphic"
+          menu = new MenuMorph @, false, @, true, true, "Widgetic"
         if @isDevMode
           menu.addMenuItem "parts bin ➜", false, @, "popUpDemoMenu", "sample morphs"
           menu.addMenuItem "delete all", true, @, "fullClose"
@@ -423,14 +423,18 @@ class WorldMorph extends FolderPanelWdgt
     return mostRecentMenu
 
   # see roundNumericIDsToNextThousand method in
-  # Morph for an explanation of why we need this
+  # Widget for an explanation of why we need this
   # method.
   alignIDsOfNextMorphsInSystemTests: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE
-      # Check which objects end with the word Morph
+      # Check which objects end with the word Widget
       theWordMorph = "Morph"
+      theWordWdgt = "Wdgt"
+      theWordWidget = "Widget"
       listOfMorphsClasses = (Object.keys(window)).filter (i) ->
-        i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+        (i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1) or
+        (i.indexOf(theWordWdgt, i.length - theWordWdgt.length) isnt -1) or
+        (i.indexOf(theWordWidget, i.length - theWordWidget.length) isnt -1)
       for eachMorphClass in listOfMorphsClasses
         #console.log "bumping up ID of class: " + eachMorphClass
         window[eachMorphClass].roundNumericIDsToNextThousand?()
@@ -441,7 +445,7 @@ class WorldMorph extends FolderPanelWdgt
       eachMorph.close()
     @markedForDestruction = []
   
-  # World Morph broken rects debugging
+  # World Widget broken rects debugging
   # not using it anywhere
   brokenFor: (aMorph) ->
     # private
@@ -453,16 +457,16 @@ class WorldMorph extends FolderPanelWdgt
   # fullPaintIntoAreaOrBlitFromBackBuffer results into actual painting of pieces of
   # morphs done
   # by the paintIntoAreaOrBlitFromBackBuffer function.
-  # The paintIntoAreaOrBlitFromBackBuffer function is defined in Morph.
+  # The paintIntoAreaOrBlitFromBackBuffer function is defined in Widget.
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, aRect) ->
-    # invokes the Morph's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
-    #  * the default one by Morph which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
+    # invokes the Widget's fullPaintIntoAreaOrBlitFromBackBuffer, which has only three implementations:
+    #  * the default one by Widget which just invokes the paintIntoAreaOrBlitFromBackBuffer of all children
     #  * the interesting one in PanelWdgt which a) narrows the dirty
     #    rectangle (intersecting it with its border
     #    since the PanelWdgt clips at its border) and b) stops recursion on all
     #    the children that are outside such intersection.
     #  * this implementation which just takes into account that the hand
-    #    (which could contain a Morph being floatDragged)
+    #    (which could contain a Widget being floatDragged)
     #    is painted on top of everything.
     super aContext, aRect
 
@@ -581,10 +585,10 @@ class WorldMorph extends FolderPanelWdgt
 
     for brokenMorph in window.morphsThatMaybeChangedGeometryOrPosition
 
-      # let's see if this Morph that marked itself as broken
+      # let's see if this Widget that marked itself as broken
       # was actually painted in the past frame.
       # If it was then we have to clean up the "before" area
-      # even if the Morph is not visible anymore
+      # even if the Widget is not visible anymore
       if brokenMorph.clippedBoundsWhenLastPainted?
         if brokenMorph.clippedBoundsWhenLastPainted.isNotEmpty()
           sourceBroken = brokenMorph.clippedBoundsWhenLastPainted.growBy @maxShadowSize
@@ -593,7 +597,7 @@ class WorldMorph extends FolderPanelWdgt
         #  debugger
 
       # for the "destination" broken rectangle we can actually
-      # check whether the Morph is still visible because we
+      # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
       unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
@@ -638,7 +642,7 @@ class WorldMorph extends FolderPanelWdgt
           sourceBroken = brokenMorph.fullClippedBoundsWhenLastPainted.growBy @maxShadowSize
 
       # for the "destination" broken rectangle we can actually
-      # check whether the Morph is still visible because we
+      # check whether the Widget is still visible because we
       # can skip the destination rectangle in that case
       # (not the source one!)
       unless brokenMorph.surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage()
@@ -700,7 +704,7 @@ class WorldMorph extends FolderPanelWdgt
 
     until morphsThatMaybeChangedLayout.length == 0
 
-      # find the first Morph which has a broken layout,
+      # find the first Widget which has a broken layout,
       # take out of queue all the others
       loop
         tryThisMorph = morphsThatMaybeChangedLayout[morphsThatMaybeChangedLayout.length - 1]
@@ -711,7 +715,7 @@ class WorldMorph extends FolderPanelWdgt
         else
           break
 
-      # now that you have a Morph with a broken layout
+      # now that you have a Widget with a broken layout
       # go up the chain of broken layouts as much as
       # possible
       # QUESTION: would it be safer instead to start from the
@@ -758,9 +762,9 @@ class WorldMorph extends FolderPanelWdgt
     #ProfilingDataCollector.profileBrokenRects @broken, @numberOfDuplicatedBrokenRects, @numberOfMergedSourceAndDestination
 
     # each broken rectangle requires traversing the scenegraph to
-    # redraw what's overlapping it. Not all Morphs are traversed
+    # redraw what's overlapping it. Not all Widgets are traversed
     # in particular the following can stop the recursion:
-    #  - invisible Morphs
+    #  - invisible Widgets
     #  - PanelWdgts that don't overlap the broken rectangle
     # Since potentially there is a lot of traversal ongoin for
     # each broken rectangle, one might want to consolidate overlapping
@@ -966,7 +970,7 @@ class WorldMorph extends FolderPanelWdgt
     if @steppingMorphs.indexOf(theMorph) != -1
       @steppingMorphs.remove theMorph
 
-  # Morph stepping:
+  # Widget stepping:
   runChildrensStepFunction: ->
 
     # make a shallow copy of the array before iterating over
@@ -1684,17 +1688,21 @@ class WorldMorph extends FolderPanelWdgt
   # There is something special about the
   # "world" version of fullDestroyChildren:
   # it resets the counter used to count
-  # how many morphs exist of each Morph class.
+  # how many morphs exist of each Widget class.
   # That counter is also used to determine the
-  # unique ID of a Morph. So, destroying
+  # unique ID of a Widget. So, destroying
   # all morphs from the world causes the
   # counts and IDs of all the subsequent
   # morphs to start from scratch again.
   fullDestroyChildren: ->
-    # Check which objects end with the word Morph
+    # Check which objects end with the word Widget
     theWordMorph = "Morph"
+    theWordWdgt = "Wdgt"
+    theWordWidget = "Widget"
     ListOfMorphs = (Object.keys(window)).filter (i) ->
-      i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1
+      (i.indexOf(theWordMorph, i.length - theWordMorph.length) isnt -1) or
+      (i.indexOf(theWordWdgt, i.length - theWordWdgt.length) isnt -1) or
+      (i.indexOf(theWordWidget, i.length - theWordWidget.length) isnt -1)
     for eachMorphClass in ListOfMorphs
       if eachMorphClass != "WorldMorph"
         #console.log "resetting " + eachMorphClass + " from " + window[eachMorphClass].instancesCounter
@@ -1716,7 +1724,7 @@ class WorldMorph extends FolderPanelWdgt
       menu = new MenuMorph(@, false, 
         @, true, true, @constructor.name or @constructor.toString().split(" ")[1].split("(")[0])
     else
-      menu = new MenuMorph @, false, @, true, true, "Morphic"
+      menu = new MenuMorph @, false, @, true, true, "Widgetic"
     if @isDevMode
       menu.addMenuItem "demo ➜", false, @, "popUpDemoMenu", "sample morphs"
       menu.addLine()
@@ -1882,7 +1890,6 @@ class WorldMorph extends FolderPanelWdgt
   createNewPenMorph: ->
     @create new PenMorph()
   underTheCarpet: ->
-    #newMorph = new MorphsListMorph()
     newMorph = new BasementWdgt()
     @create newMorph
   closingWindow: ->
@@ -1946,7 +1953,7 @@ class WorldMorph extends FolderPanelWdgt
     menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Layout tests"
     menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
     menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
-    menu.addMenuItem "test screen 1", true, Morph, "setupTestScreen1"
+    menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"
     menu.popUpAtHand()
     
   
@@ -1968,7 +1975,7 @@ class WorldMorph extends FolderPanelWdgt
   #      child.unminimise()
   
   edit: (aStringMorphOrTextMorph) ->
-    # first off, if the Morph is not editable
+    # first off, if the Widget is not editable
     # then there is nothing to do
     # return nil  unless aStringMorphOrTextMorph.isEditable
 
@@ -2002,7 +2009,7 @@ class WorldMorph extends FolderPanelWdgt
       @inputDOMElementForVirtualKeyboard.style.left = @caret.left() + pos.x + "px"
       @inputDOMElementForVirtualKeyboard.focus()
     
-    # Morphic.js provides the "slide" method but I must have lost it
+    # Widgetic.js provides the "slide" method but I must have lost it
     # in the way, so commenting this out for the time being
     #
     #if WorldMorph.preferencesAndSettings.useSliderForInput

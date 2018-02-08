@@ -1,4 +1,4 @@
-# Morphic node class only cares about the
+# Widgetic node class only cares about the
 # parent/child connection between
 # morphs. It's good to connect/disconnect
 # morphs and to find parents or children
@@ -130,7 +130,7 @@ class TreeNode
         return
       @parent.markItAndItsParentsAsReachable newGcSessionId
   
-  # is this Morph attached to neither the world nor to
+  # is this Widget attached to neither the world nor to
   # the hand?
   isOrphan: ->
     root = @root()
@@ -269,7 +269,7 @@ class TreeNode
   # we just use @allChildrenBottomToTop() but that would mean to create
   # all the intermediary arrays with also all the unneeded node elements,
   # there is no need for that.
-  # This is the simplest and cheapest way to visit all Morphs in
+  # This is the simplest and cheapest way to visit all Widgets in
   # a tree of morphs.
   forAllChildrenBottomToTop: (aFunction) ->
     aFunction.call nil, @

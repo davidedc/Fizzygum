@@ -2,7 +2,7 @@
 
 # bounces within the parent. Veeery similar to the good old
 # AtomMorph from Squeak
-class BouncerWdgt extends Morph
+class BouncerWdgt extends Widget
 
   velocity: nil
 

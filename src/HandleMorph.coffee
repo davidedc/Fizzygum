@@ -1,11 +1,11 @@
 # HandleMorph ////////////////////////////////////////////////////////
 # not to be confused with the HandMorph
-# I am a resize / move handle that can be attached to any Morph
+# I am a resize / move handle that can be attached to any Widget
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 
-class HandleMorph extends Morph
+class HandleMorph extends Widget
 
 
   target: nil

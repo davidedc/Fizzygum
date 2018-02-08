@@ -2,7 +2,7 @@
 # REQUIRES ClippingAtRectangularBoundsMixin
 
 
-class SimpleVerticalStackPanelWdgt extends Morph
+class SimpleVerticalStackPanelWdgt extends Widget
 
   # stacks don't necessarily enforce a width on contents
   # so the contents could stick out, so we clip at the bounds

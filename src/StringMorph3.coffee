@@ -24,7 +24,7 @@
 # REQUIRES FittingSpecTextInSmallerBounds
 # REQUIRES FittingSpecTextInLargerBounds
 
-class StringMorph3 extends Morph
+class StringMorph3 extends Widget
 
   @augmentWith BackBufferMixin
 

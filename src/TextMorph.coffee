@@ -389,6 +389,6 @@ class TextMorph extends StringMorph
   
   inspectSelection: ->
     # evaluateString is a pimped-up eval in
-    # the Morph class.
+    # the Widget class.
     result = @receiver.evaluateString @selection()
     if result? then @spawnInspector result

@@ -7,7 +7,7 @@
 # or SliderMorph) can control a target
 # and they have the same function to attach
 # targets. Not worth having this in the
-# whole Morph hierarchy, so... ideal use
+# whole Widget hierarchy, so... ideal use
 # of mixins here.
 
 ControllerMixin =

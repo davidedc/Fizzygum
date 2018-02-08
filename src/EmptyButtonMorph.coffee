@@ -6,7 +6,7 @@
 
 # REQUIRES HighlightableMixin
 
-class EmptyButtonMorph extends Morph
+class EmptyButtonMorph extends Widget
 
   @augmentWith HighlightableMixin, @name
 
@@ -25,7 +25,7 @@ class EmptyButtonMorph extends Morph
   closesUnpinnedMenus: true
   
   # tells if the button represents a morph, in which
-  # case we are going to highlight the Morph on hover
+  # case we are going to highlight the Widget on hover
   representsAMorph: false
 
 

@@ -2,7 +2,7 @@
 
 # I can be used for sliders
 
-class CircleBoxMorph extends Morph
+class CircleBoxMorph extends Widget
 
 
   constructor: ->

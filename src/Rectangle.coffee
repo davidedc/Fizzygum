@@ -16,7 +16,7 @@
 # doesn't affect any other Rectangle ever apart from the
 # new one.
 # So for example you never change the @bounds property of
-# a Morph in-place ever, rather
+# a Widget in-place ever, rather
 # you rather replace it with a new Rectangle.
 # Also this means that as you create a Rectangle from another,
 # you can have the new Rectangle pointing directly at the old

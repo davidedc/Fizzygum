@@ -1,13 +1,15 @@
-# Morph //////////////////////////////////////////////////////////////
+# Widget //////////////////////////////////////////////////////////////
 
-# A Morph (from the Greek "shape" or "form") is an interactive
-# graphical object. General information on the Morphic system
-# can be found at http://minnow.cc.gatech.edu/squeak/30. 
+# "Widget" is a more understandable name for the concept of "Morph"
+# (from the Greek "shape" or "form"). A Widget is an interactive
+# graphical object.
+# (General information on the Morphic system
+# can be found at http://wiki.squeak.org/squeak/30 )
 
-# Morphs exist in a tree, rooted at a World or at the Hand.
-# The morphs owns submorphs. Morphs are drawn recursively;
-# if a Morph has no owner it never gets drawn
-# (but note that there are other ways to hide a Morph).
+# Widgets exist in a tree, rooted at a World or at the Hand.
+# The morphs owns submorphs. Widgets are drawn recursively;
+# if a Widget has no owner it never gets drawn
+# (but note that there are other ways to hide a Widget).
 
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
@@ -17,17 +19,17 @@
 # REQUIRES VerticalStackLayoutSpec
 # REQUIRES WindowContentLayoutSpec
 
-class Morph extends TreeNode
+class Widget extends TreeNode
 
   @augmentWith DeepCopierMixin
 
   # we want to keep track of how many instances we have
-  # of each Morph for a few reasons:
-  # 1) it gives us an identifier for each Morph
+  # of each Widget for a few reasons:
+  # 1) it gives us an identifier for each Widget
   # 2) profiling
   # 3) generate a uniqueIDString that we can use
   #    for example for hashtables
-  # each subclass of Morph has its own static
+  # each subclass of Widget has its own static
   # instancesCounter which starts from zero. First object
   # has instanceNumericID of 1.
   # instanceNumericID is initialised in the constructor.
@@ -84,7 +86,7 @@ class Morph extends TreeNode
   # Note that paddings of consecutive morphs do add up.
   # The padding area reacts to mouse events ONLY IF
   # it's filled with color. Otherwise, it doesn't.
-  # This is consistent with the concept that Morphs only
+  # This is consistent with the concept that Widgets only
   # react within their "filled" region.
   paddingTop: 0
   paddingBottom: 0
@@ -98,7 +100,7 @@ class Morph extends TreeNode
   backgroundColor: nil
   backgroundTransparency: 1
 
-  # for a Morph, being visible and collapsed
+  # for a Widget, being visible and collapsed
   # are two separate things.
   # isVisible means that the morph is meant to show
   #  as empty or without any surface. BUT the morph
@@ -118,23 +120,23 @@ class Morph extends TreeNode
   noticesTransparentClick: false
   fps: 0
 
-  # usually Morphs can be detached from Panels
+  # usually Widgets can be detached from Panels
   # by grabbing them (there are exceptions, for example
   # buttons don't stick to the world but stick to Panels,
   # morph that "select" based on dragging such as the ColorPanelMorph).
   # However you can get them to stick to Panels (and the desktop)
   # by toggling this flag
   isLockingToPanels: false
-  # even if a Morph is locked to its parent (which is
+  # even if a Widget is locked to its parent (which is
   # the default) or locks to Panels (because isLockingToPanels is
   # set to true), it could be STILL BE dragged
   # (if any of its parents is loose).
   #
-  # Setting this flag prevents that: a Morph rejecting
+  # Setting this flag prevents that: a Widget rejecting
   # a drag can never be part of a chain that is dragged.
-  # An example is buttons that are part of a compund Morph
+  # An example is buttons that are part of a compund Widget
   # (such as the Inspector):
-  # in those cases you can never drag the compound Morph by
+  # in those cases you can never drag the compound Widget by
   # dragging a button (because it is a common behaviour to
   # "drag away" from a button to avoid actioning it when one
   # mousedowns on it). (Note however that buttont on the desktop
@@ -167,7 +169,7 @@ class Morph extends TreeNode
   # multiple-selection menu to spacially demultiplex which
   # morph is the one of interest
   # (the TextMorph, or the Panel, or the ScrollPanelWdgt?). And
-  # if the user wanted to resize the scroll text, which Morph
+  # if the user wanted to resize the scroll text, which Widget
   # would the user have to pick? It would be very confusing.
   #
   # Instead, in this example above, one can naturally
@@ -336,7 +338,7 @@ class Morph extends TreeNode
   # one new menu item is added, then
   # all the subsequent IDs for the TextMorph will be off.
   # In order to sort that out, we occasionally re-align
-  # the counts to the next 1000, so the next Morphs
+  # the counts to the next 1000, so the next Widgets
   # being created will all be aligned and
   # minor discrepancies are ironed-out
   @roundNumericIDsToNextThousand: ->
@@ -370,8 +372,8 @@ class Morph extends TreeNode
 
     @setMinAndMaxBoundsAndSpreadability (new Point 30,30) , (new Point 30,30)
 
-  # this happens when the Morph's constructor runs
-  # and also when the Morph is duplicated
+  # this happens when the Widget's constructor runs
+  # and also when the Widget is duplicated
   registerThisInstance: ->
     goingUpClassHyerarchy = @constructor
     loop
@@ -383,7 +385,7 @@ class Morph extends TreeNode
         goingUpClassHyerarchy.instances.push @
       goingUpClassHyerarchy = goingUpClassHyerarchy.__super__.constructor
 
-  # this happens when the Morph is destroyed
+  # this happens when the Widget is destroyed
   unregisterThisInstance: ->
     # remove instance from the instances tracker
     # in the class. To see this: just create an
@@ -451,7 +453,7 @@ class Morph extends TreeNode
   #
   #    damage list housekeeping
   #
-  #	the trackChanges property of the Morph prototype is a Boolean switch
+  #	the trackChanges property of the Widget prototype is a Boolean switch
   #	that determines whether the World's damage list ('broken' rectangles)
   #	tracks changes. By default the switch is always on. If set to false,
   #	changes are not stored. This can be very useful for housekeeping of
@@ -467,7 +469,7 @@ class Morph extends TreeNode
   #	method of InspectorMorph
   
   
-  # Morph string representation: e.g. 'a Morph' or 'a Morph#2'
+  # Widget string representation: e.g. 'a Widget' or 'a Widget#2'
   toString: ->
     firstPart = "a "
 
@@ -601,12 +603,12 @@ class Morph extends TreeNode
   
   # leaving this function as step means that the morph wants to do nothing
   # but the children *are* traversed and their step function is invoked.
-  # If a Morph wants to do nothing and wants to prevent the children to be
+  # If a Widget wants to do nothing and wants to prevent the children to be
   # traversed, then this function should be set to nil.
   step: noOperation
   
   
-  # Morph accessing - geometry getting:
+  # Widget accessing - geometry getting:
   left: ->
     @bounds.left()
   
@@ -634,7 +636,7 @@ class Morph extends TreeNode
   boundingBox: ->
     @bounds
   
-  # Morph accessing - geometry getting:
+  # Widget accessing - geometry getting:
   leftTight: ->
     @bounds.left() + @paddingLeft
   
@@ -794,7 +796,7 @@ class Morph extends TreeNode
 
   # used for example:
   # - to determine which morphs you can attach a morph to
-  # - for a SliderMorph's "set target" so you can change properties of another Morph
+  # - for a SliderMorph's "set target" so you can change properties of another Widget
   # - by the HandleMorph when you attach it to some other morph
   # Note that this method has a slightly different
   # version in PanelWdgt (because it clips, so we need
@@ -805,7 +807,7 @@ class Morph extends TreeNode
     # find if I intersect theMorph,
     # then check my children recursively
     # exclude me if I'm a child of theMorph
-    # (cause it's usually odd to attach a Morph
+    # (cause it's usually odd to attach a Widget
     # to one of its submorphs or for it to
     # control the properties of one of its submorphs)
     result = []
@@ -1072,7 +1074,7 @@ class Morph extends TreeNode
     return @clipThroughCache
   
   
-  # Morph accessing - simple changes:
+  # Widget accessing - simple changes:
   fullRawMoveBy: (delta) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -1220,7 +1222,7 @@ class Morph extends TreeNode
 
     @fullRawMoveTo aPoint.subtract @fullBounds().extent().floorDivideBy 2
   
-  # make sure I am completely within another Morph's bounds
+  # make sure I am completely within another Widget's bounds
   fullRawMoveWithin: (aMorph) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -1259,7 +1261,7 @@ class Morph extends TreeNode
   # parent is layouting, as they are
   # placed with absolute positioning.
   # In some cases though, such as in the
-  # case of the HandleMorph, a Morph
+  # case of the HandleMorph, a Widget
   # make take the occasion to do special things
   # In the case of the HandleMorph, it's going
   # to place itself in the bottom-right
@@ -1298,7 +1300,7 @@ class Morph extends TreeNode
     if @insetMorph == theMorphChangingTheExtent
       @rawSetExtent @extentBasedOnInsetExtent(theMorphChangingTheExtent), theMorphChangingTheExtent
 
-  # more complex Morphs, e.g. layouts, might
+  # more complex Widgets, e.g. layouts, might
   # do a more complex calculation to get the
   # minimum extent
   getMinimumExtent: ->
@@ -1306,7 +1308,7 @@ class Morph extends TreeNode
 
   setMinimumExtent: (@minimumExtent) ->
 
-  # Morph accessing - dimensional changes requiring a complete redraw
+  # Widget accessing - dimensional changes requiring a complete redraw
   rawSetExtent: (aPoint, morphStartingTheChange = nil) ->
     # TODO in theory the low-level APIs should only be
     # in the "recalculateLayouts" phase
@@ -1497,16 +1499,16 @@ class Morph extends TreeNode
         
     return aColor
   
-  # Morph displaying ---------------------------------------------------------
+  # Widget displaying ---------------------------------------------------------
 
   # There are three fundamental methods for rendering and displaying anything.
   # * updateBackBuffer: this one creates/updates the local canvas of this morph only
-  #   i.e. not the children. For example: a ColorPickerMorph is a Morph which
-  #   contains three children Morphs (a color palette, a greyscale palette and
+  #   i.e. not the children. For example: a ColorPickerMorph is a Widget which
+  #   contains three children Widgets (a color palette, a greyscale palette and
   #   a feedback). The updateBackBuffer method of ColorPickerMorph only creates
-  #   a canvas for the container Morph. So that's just a canvas with a
+  #   a canvas for the container Widget. So that's just a canvas with a
   #   solid color. As the
-  #   ColorPickerMorph constructor runs, the three childredn Morphs will
+  #   ColorPickerMorph constructor runs, the three childredn Widgets will
   #   run their own updateBackBuffer method, so each child will have its own
   #   canvas with their own contents.
   #   Note that updateBackBuffer should be called sparingly. A morph should repaint
@@ -1514,7 +1516,7 @@ class Morph extends TreeNode
   #   whenever it changes dimensions. Things like changing parent and updating
   #   the position shouldn't normally trigger an update of the buffer.
   #   Also note that before the buffer is painted for the first time, they
-  #   might not know their extent. Typically text-related Morphs know their
+  #   might not know their extent. Typically text-related Widgets know their
   #   extensions after they painted the text for the first time...
   # * paintIntoAreaOrBlitFromBackBuffer: takes the local canvas and paints it to a specific area in a passed
   #   canvas. The local canvas doesn't contain any rendering of the children of
@@ -1645,7 +1647,7 @@ class Morph extends TreeNode
       #if (@ instanceof MenuMorph) and (@fullClippedBoundsWhenLastPainted.containsPoint (new Point(10,10)))
       #  debugger
 
-  # in general, the children of a Morph could be outside the
+  # in general, the children of a Widget could be outside the
   # bounds of the parent (they could also be much larger
   # then the parent). This means that we have to traverse
   # all the children to find out whether any of those overlap
@@ -1844,7 +1846,7 @@ class Morph extends TreeNode
       @createReference stringFieldWithName?.text.text, placeToDropItIn
     @close()
     
-  # Morph full image:
+  # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160
   fullImage: (bounds, noShadow = false) ->
@@ -1928,7 +1930,7 @@ class Morph extends TreeNode
   
   
   
-  # Morph updating ///////////////////////////////////////////////////////////////
+  # Widget updating ///////////////////////////////////////////////////////////////
   changed: ->
     # tests should all pass even if you don't
     # use the trackChanges flag, perhaps things
@@ -1994,11 +1996,11 @@ class Morph extends TreeNode
   childChanged: ->
     # react to a  change in one of my children,
     # default is to just pass this message on upwards
-    # override this method for Morphs that need to adjust accordingly
+    # override this method for Widgets that need to adjust accordingly
     @parent.childChanged @  if @parent
   
   
-  # Morph accessing - structure //////////////////////////////////////////////
+  # Widget accessing - structure //////////////////////////////////////////////
 
   # EXPLANATION of "silent" vs. "raw" vs. "normal" hierarchy/bounds change methods
   # ------------------------------------------------------------------------------
@@ -2043,9 +2045,9 @@ class Morph extends TreeNode
     @addRaw arguments...
   
   # attaches submorph on top
-  # ??? TODO you should handle the case of Morph
+  # ??? TODO you should handle the case of Widget
   #     being added to itself and the case of
-  # ??? TODO a Morph being added to one of its
+  # ??? TODO a Widget being added to one of its
   #     children
   addRaw: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
 
@@ -2121,7 +2123,7 @@ class Morph extends TreeNode
     # a clipping morph. So we
     # need to do a "changed" here
     # to make sure that anything that
-    # is outside the clipping Morph gets
+    # is outside the clipping Widget gets
     # painted over.
     owner = aMorph.parent
     if owner?
@@ -2155,7 +2157,7 @@ class Morph extends TreeNode
   #	potential alternative - solution for morphAt.
   #	Has some issues, commented out for now...
   #
-  #Morph::morphAt = function (aPoint) {
+  # Widget::morphAt = function (aPoint) {
   #	return this.topMorphSuchThat(function (m) {
   #		return m.fullBounds().containsPoint(aPoint);
   #	});
@@ -2192,7 +2194,7 @@ class Morph extends TreeNode
   # should also take care of inserting the copied
   # morph in whatever other data structures where the
   # original morph was.
-  # For example, if the Morph appeared in a data
+  # For example, if the Widget appeared in a data
   # structure related to the broken rectangles mechanism,
   # we should place the copied morph there.
   fullCopy: ->
@@ -2329,12 +2331,12 @@ class Morph extends TreeNode
       #  console.log ''
       @injectProperty m[1],m[2]
   
-  # Morph dragging (and dropping) /////////////////////////////////////////
+  # Widget dragging (and dropping) /////////////////////////////////////////
   
   # (In this comment section "non-float" dragging and "dragging" are
   # interchangeable unless made explicit)
   #
-  # Usually when you "stick" a Morph A onto another B, it
+  # Usually when you "stick" a Widget A onto another B, it
   # remains "solid" to its parent, so A grabs to B when dragged.
   #
   # On the other hand, a SliderButton doesn't grab to the parent when
@@ -2342,9 +2344,9 @@ class Morph extends TreeNode
   # stays within the bounds of the parent when dragged is another matter).
   #
   # So via this method the system can determine what the
-  # "top of the drag" is starting from any Morph.
+  # "top of the drag" is starting from any Widget.
   # The process of finding the top of the drag involves going up
-  # the chain and finding the first Morph that is loose. Then that
+  # the chain and finding the first Widget that is loose. Then that
   # will be the top of the drag, and the whole TREE under that morph
   # will be dragged.
   #
@@ -2358,7 +2360,7 @@ class Morph extends TreeNode
   # So A can be dragged: the whole tree under B is dragged (i.e. A B in
   # this case).
   #
-  # If going up the chain of "grabbing" Morphs a Morph rejects being
+  # If going up the chain of "grabbing" Widgets a Widget rejects being
   # dragged then the drag will be prevented. This rejection happens
   # via the "rejectDrags" method. In that way, for example
   # for the ColorPaletteMorph, you can avoid grabs (because drags on
@@ -2369,7 +2371,7 @@ class Morph extends TreeNode
   # (so: nor A nor B can't be dragged).
   #
   # Note that there is no away to prevent userts from "picking up"
-  # a Morph and then do a drag (which in that case would be a FLOATING drag).
+  # a Widget and then do a drag (which in that case would be a FLOATING drag).
 
   grabsToParentWhenDragged: ->
     if @parent?
@@ -2495,7 +2497,7 @@ class Morph extends TreeNode
     # nonfloatdragged
     return false
 
-  # Morph dragging (and dropping) /////////////////////////////////////////
+  # Widget dragging (and dropping) /////////////////////////////////////////
 
   # finds the first parent that is a menu
   firstParentThatIsAMenu: ->
@@ -2606,7 +2608,7 @@ class Morph extends TreeNode
           world.removeSteppingMorph @
   
   
-  # Morph utilities ////////////////////////////////////////////////////////
+  # Widget utilities ////////////////////////////////////////////////////////
   
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
@@ -2740,7 +2742,7 @@ class Morph extends TreeNode
     @fullRawMoveWithin whereToAddIt
     
   
-  # Morph menus ////////////////////////////////////////////////////////////////
+  # Widget menus ////////////////////////////////////////////////////////////////
   
   # context Menus are whatever appears when one right-clicks
   # on something. It could be a custom menu, or the standard
@@ -3400,7 +3402,7 @@ class Morph extends TreeNode
 
     menu
 
-  # Morph-specific menu entries are basically the ones
+  # Widget-specific menu entries are basically the ones
   # beyond the generic entries above.
   addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
@@ -3419,7 +3421,7 @@ class Morph extends TreeNode
       menu = @addShapeSpecificMenuItems menu
     menu
 
-  # Morph menu actions
+  # Widget menu actions
   calculateAlphaScaled: (alpha) ->
     if typeof alpha is "number"
       unscaled = alpha / 100
@@ -3608,7 +3610,7 @@ class Morph extends TreeNode
     list
 
   
-  # Morph entry field tabbing //////////////////////////////////////////////
+  # Widget entry field tabbing //////////////////////////////////////////////
   
   allEntryFields: ->
     @collectAllChildrenBottomToTopSuchThat (each) ->
@@ -3661,17 +3663,17 @@ class Morph extends TreeNode
   #
   #	the following are examples of what the navigation methods should
   #	look like. Insert these at the World level for fallback, and at lower
-  #	levels in the Morphic tree (e.g. dialog boxes) for a more fine-grained
+  #	levels in the Widgetic tree (e.g. dialog boxes) for a more fine-grained
   #	control over the tabbing cycle.
   #
-  #Morph::nextTab = function (editField) {
+  # Widget::nextTab = function (editField) {
   #	var	next = this.nextEntryField(editField);
   #	editField.clearSelection();
   #	next.selectAll();
   #	next.edit();
   #};
   #
-  #Morph::previousTab = function (editField) {
+  # Widget::previousTab = function (editField) {
   #	var	prev = this.previousEntryField(editField);
   #	editField.clearSelection();
   #	prev.selectAll();
@@ -3680,7 +3682,7 @@ class Morph extends TreeNode
   #
   #
   
-  # Morph events --------------------------------------------
+  # Widget events --------------------------------------------
 
   # TODO I'm sure there is a cleaner way to handle arbitrary
   # number of arguments here
@@ -3691,7 +3693,7 @@ class Morph extends TreeNode
       handler[functionName] arg1, arg2, arg3, arg4, arg5, arg6  if handler[functionName]
   
   
-  # Morph eval. Used by the Inspector and the TextMorph.
+  # Widget eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
     try
       result = eval compileFGCode codeSource, true
@@ -3703,7 +3705,7 @@ class Morph extends TreeNode
     result
   
   
-  # Morph collision detection - not used anywhere at the moment ////////////////////////
+  # Widget collision detection - not used anywhere at the moment ////////////////////////
   
   isTouching: (otherMorph) ->
     oImg = @overlappingImage otherMorph
@@ -3735,27 +3737,27 @@ class Morph extends TreeNode
   # Layouts
   # ------------------------------------------------------------------------------------
   # So layouts in ZK work the following way:
-  #  1) Any Morph can contain a number of other morphs
+  #  1) Any Widget can contain a number of other morphs
   #     according to a number of layouts *simultaneously*
   #     e.g. you can have two morphs being horizontally stacked
   #     and two other morphs being inset for example
   #  2) There is no need for an explicit special container. Any
-  #     Morph can be a container when needed.
-  #  3) The default attaching of Morphs to a Morph puts them
+  #     Widget can be a container when needed.
+  #  3) The default attaching of Widgets to a Widget puts them
   #     under the effect of the most basic layout: the FREEFLOATING
   #     layout.
   #  3) A user can only do a high-level resize or move to a FREEFLOATING
-  #     Morph. All other Morphs are under the effect of more complex
+  #     Widget. All other Widgets are under the effect of more complex
   #     layout strategies so they can't be moved willy nilly
   #     directly by the user via some high-level "resize" or "move"
   #     Control of size and placement can be done, but indirectly via other
   #     means below.
-  #  4) You CAN control the size and location of Morphs under the
+  #  4) You CAN control the size and location of Widgets under the
   #     effect of complex layouts, but only indirectly: by programmatically
   #     changing their layout spec properties.
-  #  5) You CAN also manually control the size and location of Morphs
+  #  5) You CAN also manually control the size and location of Widgets
   #     under the effect of complex layouts by using special Adjusting
-  #     Morphs, which are provided by the container, and give handles
+  #     Widgets, which are provided by the container, and give handles
   #     to manually control the content. These manual controls
   #     under the courtains go and programmatically modify the layout
   #     spec properties of the content.
@@ -3961,7 +3963,7 @@ class Morph extends TreeNode
   # because it means that its current size is indicative
   # (particularly the children's sizes and position)
   implementsDeferredLayout: ->
-    @doLayout != Morph::doLayout
+    @doLayout != Widget::doLayout
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
@@ -3992,7 +3994,7 @@ class Morph extends TreeNode
     # adjusting. We marked the @layoutIsValid
     # to false because it's an important breadcrumb
     # for finding the morphs that actually have a
-    # layout to be recalculated but this Morph
+    # layout to be recalculated but this Widget
     # now needs to do nothing.
     #if @layoutSpec == LayoutSpec.ATTACHEDAS_FREEFLOATING
     #  @layoutIsValid = true
@@ -4009,7 +4011,7 @@ class Morph extends TreeNode
     
     # bad kludge here but I think there will be more
     # of these as we move over to the new layouts, we'll
-    # probably have split Morphs for the new layouts mechanism
+    # probably have split Widgets for the new layouts mechanism
     if (@ instanceof TextMorph) or (@ instanceof SimplePlainTextWdgt)
       @rawSetBounds newBoundsForThisLayout
     else
@@ -4034,7 +4036,7 @@ class Morph extends TreeNode
       # this is unfortunate but
       # we don't want to rely on clipping what's
       # beyond the allocated space. Clipping
-      # in this Morphic implementation has special
+      # in this Widgetic implementation has special
       # status and we don't want to meddle with
       # that.
       # example: if newBoundsForThisLayout.width() is 10 and min.width() is 50

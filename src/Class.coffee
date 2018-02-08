@@ -12,7 +12,7 @@ class Class
   
 
   # adds code into the constructor, such that when a
-  # Morph is created, it registers itself as in instance
+  # Widget is created, it registers itself as in instance
   # on the Class it belongs to AND TO ALL THE SUPERKLASSES
   # The way it's added to all the superclasses is via
   # the constructor always calling "super", so constructors
@@ -26,9 +26,9 @@ class Class
   # or
   #  AnalogClockWdgt.instances
   # to check whether AnalogClockWdgt was removed from the superclass'
-  # (i.e. Morph) list:
+  # (i.e. Widget) list:
   #  AnalogClockWdgt.__super__.instances.map((elem)=>elem.constructor.name).filter((name)=>name === "AnalogClockWdgt");
-  # Note that only Morphs have that kind
+  # Note that only Widgets have that kind
   # of tracking and hence the existence check of
   # the registerThisInstance function
   _addInstancesTracker: (aString) ->
@@ -223,7 +223,7 @@ class Class
             # first line here is equivalent to "super" the one
             # passing all the arguments
             window.#{@name}.__super__.constructor.apply this, arguments
-            # register instance (only Morphs have this method)
+            # register instance (only Widgets have this method)
             @registerThisInstance?()
             return
         """

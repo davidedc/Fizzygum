@@ -5,7 +5,7 @@
 # or
 #   world.create(new IconMorph("color = 'rgba(226, 0, 75, 1)'\ncontext.beginPath()\ncontext.moveTo 23, 103\ncontext.lineTo 93, 178\ncontext.strokeStyle = color\ncontext.stroke()"))
 
-class IconMorph extends Morph
+class IconMorph extends Widget
 
 
   constructor: (@color = new Color 0,0,0) ->

@@ -1,6 +1,6 @@
 # ColorPickerMorph ///////////////////////////////////////////////////
 
-class ColorPickerMorph extends Morph
+class ColorPickerMorph extends Widget
 
   # pattern: all the children should be declared here
   # the reason is that when you duplicate a morph

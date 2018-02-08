@@ -16,15 +16,15 @@ ClippingAtRectangularBoundsMixin =
 
       # used for example:
       # - to determine which morphs you can attach a morph to
-      # - for a SliderMorph's "set target" so you can change properties of another Morph
+      # - for a SliderMorph's "set target" so you can change properties of another Widget
       # - by the HandleMorph when you attach it to some other morph
       # Note that this method has a slightly different
-      # version in Morph (because it doesn't clip)
+      # version in Widget (because it doesn't clip)
       plausibleTargetAndDestinationMorphs: (theMorph) ->
         # find if I intersect theMorph,
         # then check my children recursively
         # exclude me if I'm a child of theMorph
-        # (cause it's usually odd to attach a Morph
+        # (cause it's usually odd to attach a Widget
         # to one of its submorphs or for it to
         # control the properties of one of its submorphs)
         result = []
@@ -158,7 +158,7 @@ ClippingAtRectangularBoundsMixin =
         # that's a nightmare scenegraph
         # to *completely* traverse for *any* broken rectangle
         # anywhere on the screen.
-        # The traversal is complete because a) Morphic doesn't
+        # The traversal is complete because a) Widgetic doesn't
         # assume that the rectangle clips its children and
         # b) the bounding rectangle (which currently is not
         # efficiently calculated anyways) is the whole screen.
@@ -170,7 +170,7 @@ ClippingAtRectangularBoundsMixin =
 
         # Also note that in theory you could stop recursion on any
         # PanelWdgt completely covered by a large opaque morph
-        # (or on any Morph which fullBounds are completely
+        # (or on any Widget which fullBounds are completely
         # covered, for that matter). You could
         # keep for example a list of the top n biggest opaque morphs
         # (say, Panels and rectangles)
