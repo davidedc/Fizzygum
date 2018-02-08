@@ -482,8 +482,7 @@ class Morph extends MorphicNode
     if world.basementWdgt?
       world.basementWdgt.scrollPanel.addInPseudoRandomPosition @
     else
-      world.inform "There is no\ncasement to go in!"
-  
+      world.inform "There is no\nbasement to go in!"
   
   # Widgets destroying ======
   # this is different from a widget being closed/deleted
