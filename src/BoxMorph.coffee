@@ -10,6 +10,9 @@ class BoxMorph extends Morph
     super()
     @appearance = new BoxyAppearance @
 
+  colloquialName: ->
+    "box"
+
   insetPosition: ->
     return @position().add(@cornerRadius - Math.round(@cornerRadius/Math.sqrt(2)))
 

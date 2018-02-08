@@ -17,3 +17,6 @@ class RectangleMorph extends Morph
     @appearance = new RectangularAppearance @
     @silentRawSetExtent(extent) if extent?
     @color = color if color?
+
+  colloquialName: ->
+    "rectangle"
