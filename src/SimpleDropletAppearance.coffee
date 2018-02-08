@@ -26,7 +26,7 @@ class SimpleDropletAppearance extends RectangularAppearance
   # to do it here) or not (in which case we do need to do the
   # additional canvas scaling)
 
-  drawAdditionalParts: (alreadyUsingCanvasClipping, alreadyUsingCanvasScaling, appliedShadow, context, al, at, w, h) ->
+  drawAdditionalPartsOnBaseShape: (alreadyUsingCanvasClipping, alreadyUsingCanvasScaling, appliedShadow, context, al, at, w, h) ->
 
     # we refuse to paint the shadow of the plus sign
     # in the middle of a black rectangle. Just, no.

@@ -94,7 +94,7 @@ class RectangularAppearance extends Appearance
 
       @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
-      @drawAdditionalParts? false, false, appliedShadow, aContext, al, at, w, h
+      @drawAdditionalPartsOnBaseShape? false, false, appliedShadow, aContext, al, at, w, h
 
       if !appliedShadow?
         @paintStroke aContext, clippingRectangle
