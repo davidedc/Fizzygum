@@ -177,7 +177,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @add @titlebarBackground, nil, nil, true
 
     # label
-    @label?.destroy()
+    @label?.fullDestroy()
     @label = new StringMorph2 @labelContent
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true

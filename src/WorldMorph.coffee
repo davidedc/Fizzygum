@@ -429,9 +429,10 @@ class WorldMorph extends PanelWdgt
         #console.log "bumping up ID of class: " + eachMorphClass
         window[eachMorphClass].roundNumericIDsToNextThousand?()
 
+  # used to close temporary menus
   destroyMorphsMarkedForDestruction: ->
     for eachMorph in @markedForDestruction
-      eachMorph.destroy()
+      eachMorph.close()
     @markedForDestruction = []
   
   # World Morph broken rects debugging
@@ -790,7 +791,7 @@ class WorldMorph extends PanelWdgt
         @currentPinoutingMorphs.remove eachPinoutingMorph
         @morphsBeingPinouted.remove eachPinoutingMorph.morphThisMorphIsPinouting
         eachPinoutingMorph.morphThisMorphIsPinouting = nil
-        eachPinoutingMorph.destroy()
+        eachPinoutingMorph.fullDestroy()
 
     for eachMorphNeedingPinout in @morphsToBePinouted.slice()
       if eachMorphNeedingPinout not in @morphsBeingPinouted
@@ -813,7 +814,7 @@ class WorldMorph extends PanelWdgt
         @currentHighlightingMorphs.remove eachHighlightingMorph
         @morphsBeingHighlighted.remove eachHighlightingMorph.morphThisMorphIsHighlighting
         eachHighlightingMorph.morphThisMorphIsHighlighting = nil
-        eachHighlightingMorph.destroy()
+        eachHighlightingMorph.fullDestroy()
 
     for eachMorphNeedingHighlight in @morphsToBeHighlighted.slice()
       if eachMorphNeedingHighlight not in @morphsBeingHighlighted
@@ -963,7 +964,7 @@ class WorldMorph extends PanelWdgt
   runChildrensStepFunction: ->
 
     # make a shallow copy of the array before iterating over
-    # it in the case some morph destroyes itself and takes itself
+    # it in the case some morph destroys itself and takes itself
     # out of the array thus changing it in place and mangling the
     # stepping.
     # TODO all these array modifications should be immutable...
@@ -1660,6 +1661,7 @@ class WorldMorph extends PanelWdgt
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = nil
     @fullDestroyChildren()
+    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
     # the "basementWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately
@@ -1714,6 +1716,7 @@ class WorldMorph extends PanelWdgt
       menu.addLine()
       menu.addMenuItem "show all", true, @, "showAllMinimised"
       menu.addMenuItem "hide all", true, @, "minimiseAll"
+      menu.addMenuItem "delete all", true, @, "closeChildren"
       menu.addMenuItem "move all inside", true, @, "keepAllSubmorphsWithin", "keep all submorphs\nwithin and visible"
       menu.addMenuItem "inspect", true, @, "inspect", "open a window on\nall properties"
       menu.addMenuItem "test menu ➜", false, @, "testMenu", "debugging and testing operations"
@@ -1971,7 +1974,7 @@ class WorldMorph extends PanelWdgt
       @lastEditedText = @caret.target
       if @lastEditedText != previouslyEditedText
         @lastEditedText.clearSelection()
-      @caret = @caret.destroy()
+      @caret = @caret.fullDestroy()
 
     # create the new Caret
     @caret = new CaretMorph aStringMorphOrTextMorph
@@ -2008,7 +2011,7 @@ class WorldMorph extends PanelWdgt
       @lastEditedText = @caret.target
       @lastEditedText.clearSelection()
       @lastEditedText.escalateEvent "reactToEdit", @lastEditedText
-      @caret = @caret.destroy()
+      @caret = @caret.fullDestroy()
 
     # the only place where the @keyboardEventsReceiver is unset
     # (and the hidden input is removed)
