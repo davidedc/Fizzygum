@@ -186,18 +186,6 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  # puts the morph in the ScrollPanel
-  # in some sparse manner and keeping it
-  # "in view"
-  addInPseudoRandomPosition: (aMorph) ->
-    @contents.add aMorph
-    posx = Math.abs(hashCode(aMorph.toString())) % @width()
-    posy = Math.abs(hashCode(aMorph.toString() + "x")) % @height()
-    position = @contents.position().add new Point posx, posy
-    aMorph.fullMoveTo position
-    aMorph.fullRawMoveWithin @contents
-    @adjustContentsBounds()
-    @adjustScrollBars()
   
   setContents: (aMorph, extraPadding) ->
     @extraPadding = extraPadding
