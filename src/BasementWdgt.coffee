@@ -17,11 +17,6 @@ class BasementWdgt extends BoxMorph
 
   colloquialName: ->
     "Basement"
-  
-  setTarget: (target) ->
-    @target = target
-    @currentProperty = nil
-    @buildAndConnectChildren()
 
   empty: ->
     @scrollPanel?.contents?.fullDestroyChildren()

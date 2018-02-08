@@ -801,7 +801,7 @@ class HandMorph extends Morph
   
   # HandMorph tools
   destroyTemporaries: ->
-    #
+
     # temporaries are just an array of morphs which will be deleted upon
     # the next mouse click, or whenever another temporary Morph decides
     # that it needs to remove them. The primary purpose of temporaries is

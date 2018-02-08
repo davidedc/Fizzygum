@@ -32,6 +32,8 @@ class ReconfigurablePaintMorph extends Morph
   colloquialName: ->   
     "Fizzypaint"
 
+  representativeIcon: ->
+    new PaintBucketIconWdgt()
   isToolPressed: (buttonToCheckIfPressed) ->
     whichButtonIsSelected = @radioButtonsHolderMorph.whichButtonSelected()
     if whichButtonIsSelected?

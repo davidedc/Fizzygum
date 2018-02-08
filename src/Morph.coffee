@@ -1773,6 +1773,9 @@ class Morph extends MorphicNode
   colloquialName: ->
     "generic widget"
 
+  representativeIcon: ->
+    new WidgetIconWdgt()
+
   createPointerMorph: ->
     myPosition = @positionAmongSiblings()
     morphToAdd = new PointerMorph @
@@ -2143,7 +2146,7 @@ class Morph extends MorphicNode
 
     return copiedMorph
 
-  serialize: ()->
+  serialize: ->
     allMorphsInStructure = @allChildrenBottomToTop()
     arr1 = []
     arr2 = []
