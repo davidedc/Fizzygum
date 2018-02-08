@@ -55,6 +55,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @rawSetExtent new Point 300, 300
 
+  setTitle: (newTitle) ->
+    @label.setText @contents.colloquialName() + ": " + newTitle
+
   contentsRecursivelyCanSetHeightFreely: ->
     if !(@contents instanceof WindowWdgt)
       return (@contents.layoutSpecDetails.canSetHeightFreely and !@contents.isCollapsed()) and !@reInflating
