@@ -39,6 +39,10 @@ class StringMorph2 extends Morph
   fontName: nil
   isBold: nil
   isItalic: nil
+  # TODO there is no API to toggle this properly yet,
+  # TODO?? ...and there is no menu entry for this
+  # TODO???? ...should we let users pick any color?
+  hasDarkOutline: false
   isHeaderLine: nil
   isEditable: false
   # if "isNumeric", it rejects all inputs
@@ -497,6 +501,7 @@ class StringMorph2 extends Morph
     @isShowingBlanks  + "-" +
     @originallySetFontSize + "-" +
     @buildCanvasFontProperty() + "-" +
+    @hasDarkOutline + "-" +
     @isHeaderLine + "-" +
     @color.toString()  + "-" +
     (if @backgroundColor? then @backgroundColor.toString() else "transp") + "-" +
@@ -605,6 +610,18 @@ class StringMorph2 extends Morph
 
     textVerticalPosition = @textVerticalPosition(fontHeight @fittingFontSize) + fontHeight(@fittingFontSize)
     textHorizontalPosition = @textHorizontalPosition widthOfText
+
+    if @hasDarkOutline
+      backBufferContext.fillStyle = "black"
+      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+0
+      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+0
+      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+0
+      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition+1.5
+      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition+1.5
+      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition+1.5
+      backBufferContext.fillText text, textHorizontalPosition+0, textVerticalPosition-1.5
+      backBufferContext.fillText text, textHorizontalPosition+1.5, textVerticalPosition-1.5
+      backBufferContext.fillText text, textHorizontalPosition-1.5, textVerticalPosition-1.5
 
     backBufferContext.fillStyle = @color.toString()
     backBufferContext.fillText text, textHorizontalPosition, textVerticalPosition
