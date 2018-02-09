@@ -799,7 +799,7 @@ class HandMorph extends Widget
   # HandMorph tools
   destroyTemporaries: ->
 
-    # temporaries are just an array of widgets which will be deleted upon
+    # "temporaries" keeps a list of widgets which will be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them. The primary purpose of temporaries is
     # to display tools tips of speech bubble help.
