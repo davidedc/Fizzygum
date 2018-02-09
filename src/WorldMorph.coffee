@@ -1049,16 +1049,16 @@ class WorldMorph extends FolderPanelWdgt
     clientHeight = document.documentElement.clientHeight  if document.body.scrollTop
     # scrolled left b/c of viewport scaling
     clientWidth = document.documentElement.clientWidth  if document.body.scrollLeft
-    if @worldCanvas.width isnt clientWidth
+
+    if (@worldCanvas.width isnt clientWidth) or (@worldCanvas.height isnt clientHeight)
+      @fullChanged()
       @worldCanvas.width = (clientWidth * pixelRatio)
       @worldCanvas.style.width = clientWidth + "px"
-      @rawSetWidth clientWidth
-    if @worldCanvas.height isnt clientHeight
       @worldCanvas.height = (clientHeight * pixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
-      @rawSetHeight clientHeight
-    @children.forEach (child) =>
-      child.reactToWorldResize? @boundingBox()
+      @rawSetExtent new Point clientWidth, clientHeight
+      @children.forEach (child) =>
+        child.reactToWorldResize? @boundingBox()
   
     
   
