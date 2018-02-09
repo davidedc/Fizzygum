@@ -1,14 +1,7 @@
 # MenuMorph ///////////////////////////////////////////////////////////
-# MenuMorphs are special Widgets that have quite complex logic for
-# opening themselves, closing themseves when users click outside,
-# popping up, opening sub-menus, and pinning them down.
-# Other than that, ideally they should be able to contain anything.
-#
-# Menus have 3 different shadows: "normal", "when dragged" and
-# "pinned on desktop", plus no shadow when pinned on anything
-# else other than the desktop.
+# MenuMorphs is a Pop-up with basically a vertical stack of buttons
 
-class MenuMorph extends Widget
+class MenuMorph extends PopUpWdgt
 
   target: nil
   title: nil
@@ -16,23 +9,6 @@ class MenuMorph extends Widget
   fontSize: nil
   label: nil
   isListContents: false
-
-  killThisPopUpIfClickOnDescendantsTriggers: true
-  killThisPopUpIfClickOutsideDescendants: true
-  isPopUpMarkedForClosure: false
-  # the morphOpeningThePopUp is only useful to get the "parent" pop-up.
-  # the "parent" pop-up is the menu that this menu is attached to,
-  # but we need this extra property because it's not the
-  # actual parent. The reason is that menus are actually attached
-  # to the world morph. This is for a couple of reasons:
-  # 1) they can still appear at the top even if the "parent menu"
-  #    or the parent object are not in the foreground. This is
-  #    what happens for example in OSX, you can right-click on a
-  #    morph that is not in the background but the menu that comes up
-  #    will be in the foreground.
-  # 2) they can appear unoccluded if the "parent morph" or "parent object"
-  #    are in a morph that clips at its boundaries.
-  morphOpeningThePopUp: nil
 
   constructor: (@morphOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
@@ -42,15 +18,15 @@ class MenuMorph extends Widget
     if !@isListContents
       if @killThisPopUpIfClickOutsideDescendants
         @onClickOutsideMeOrAnyOfMyChildren "close"
-    super()
+    super @morphOpeningThePopUp, @killThisPopUpIfClickOutsideDescendants, @killThisPopUpIfClickOnDescendantsTriggers
     @isLockingToPanels = false
     @appearance = new MenuAppearance @
     @strokeColor = new Color 210, 210, 210
 
 
-    if !@isListContents
-      world.freshlyCreatedPopUps.push @
-      world.openPopUps.push @
+    if @isListContents
+      world.freshlyCreatedPopUps.remove @
+      world.openPopUps.remove @
     # important not to traverse all the children for stepping through, because
     # there could be a lot of entries for example in the inspector the number
     # of properties of an object - there could be a 100 of those and we don't
@@ -73,66 +49,7 @@ class MenuMorph extends Widget
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
-  hierarchyOfPopUps: ->
-    ascendingMorphs = @
-    hierarchy = [ascendingMorphs]
-    while ascendingMorphs?.getParentPopUp?
-      ascendingMorphs = ascendingMorphs.getParentPopUp()
-      if ascendingMorphs?
-        hierarchy.push ascendingMorphs
-    return hierarchy
 
-  # for pop ups, the propagation happens through the getParentPopUp method
-  # rather than the parent property, but for other normal widgets it goes
-  # up the parent property
-  propagateKillPopUps: ->
-    if @killThisPopUpIfClickOnDescendantsTriggers
-      @getParentPopUp()?.propagateKillPopUps()
-      @markPopUpForClosure()
-
-  markPopUpForClosure: ->
-    world.popUpsMarkedForClosure.push @
-    @isPopUpMarkedForClosure = true
-
-  # why introduce a new flag when you can calculate
-  # from existing flags?
-  isPopUpPinned: ->
-    return !(@killThisPopUpIfClickOnDescendantsTriggers or @killThisPopUpIfClickOutsideDescendants)
-
-  getParentPopUp: ->
-    if @isPopUpPinned()
-      return @parent
-    else
-      if @morphOpeningThePopUp?
-        return @morphOpeningThePopUp.firstParentThatIsAPopUp()
-    return nil
-
-
-  # this is invoked on the menu morph to be
-  # pinned. The triggering menu item is the first
-  # parameter.
-  pinPopUp: (pinMenuItem)->
-    @killThisPopUpIfClickOnDescendantsTriggers = false
-    @killThisPopUpIfClickOutsideDescendants = false
-    @onClickOutsideMeOrAnyOfMyChildren nil
-    if pinMenuItem?
-      pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
-    else
-      @getParentPopUp()?.propagateKillPopUps()
-    world.closePopUpsMarkedForClosure()
-    
-    # leave the menu attached to whatever it's attached,
-    # just change the shadow.
-    @updatePopUpShadow()
-
-
-
-  # StringMorph menus:
-  addMorphSpecificMenuEntries: (unused_morphOpeningThePopUp, menu) ->
-    super
-    menu.addLine()
-    menu.addMenuItem "pin", false, @, "pin"
-  
   createLine: (height = 1) ->
     item = new RectangleMorph()
     item.setMinimumExtent new Point 5,1
@@ -324,66 +241,5 @@ class MenuMorph extends Widget
 
     @changed()
 
-  destroy: ->
-    WorldMorph.numberOfAddsAndRemoves++
-    super()
-    if !@isListContents
-      world.openPopUps.remove @
 
-  close: ->
-    super()
-    if !@isListContents
-      world.openPopUps.remove @
-
-  justDropped: (widgetDroppedOn) ->
-    if widgetDroppedOn != world
-      @pinPopUp()
-
-    @updatePopUpShadow()
-
-  updatePopUpShadow: ->
-    if @isPopUpPinned()
-      if @parent == world
-        @addShadow new Point(3, 3), 0.3
-      else
-        @removeShadow()
-    else 
-      @addShadow()
-
-  # shadow is added to a morph by
-  # the HandMorph while floatDragging
-  addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
-    super offset, alpha
-  
-  popUpCenteredAtHand: (world) ->
-    @popUp (world.hand.position().subtract @extent().floorDivideBy 2), world
-  
-  # currently unused
-  popUpCenteredInWorld: (world) ->
-    @popUp (world.center().subtract @extent().floorDivideBy 2), world
-
-  popUpAtHand: ->
-    @popUp world.hand.position(), world
-
-  popUp: (pos, morphToAttachTo) ->
-    # console.log "menu popup"
-    @silentFullRawMoveTo pos
-    morphToAttachTo.add @
-    # the @fullRawMoveWithin method
-    # needs to know the extent of the morph
-    # so it must be called after the morphToAttachTo.add
-    # method. If you call before, there is
-    # nopainting happening and the morph doesn't
-    # know its extent.
-    @fullRawMoveWithin world
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-    # shadow must be added after the morph
-    # has been placed somewhere because
-    # otherwise there is no visible image
-    # to base the shadow on
-    # P.S. this is the thing that causes the MenuMorph buffer
-    # to be painted after the creation.
-    @addShadow()
-    @fullChanged()
 
