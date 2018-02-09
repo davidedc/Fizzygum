@@ -16,7 +16,7 @@ class PromptMorph extends MenuMorph
   #colorPalette: nil
   #grayPalette: nil
 
-  constructor: (morphOpeningTheMenu, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
+  constructor: (morphOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->
 
     isNumeric = true  if @ceilingNum
@@ -29,7 +29,7 @@ class PromptMorph extends MenuMorph
       false,
       isNumeric)
 
-    super morphOpeningTheMenu, false, @target, true, true, @msg or "", @tempPromptEntryField
+    super morphOpeningThePopUp, false, @target, true, true, @msg or "", @tempPromptEntryField
 
 
     @silentAdd @tempPromptEntryField

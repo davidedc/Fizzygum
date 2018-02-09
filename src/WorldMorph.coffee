@@ -131,9 +131,9 @@ class WorldMorph extends FolderPanelWdgt
   morphsDetectingClickOutsideMeOrAnyOfMeChildren: []
   hierarchyOfClickedMorphs: []
   hierarchyOfClickedMenus: []
-  markedForDestruction: []
-  freshlyCreatedMenus: []
-  openMenus: []
+  popUpsMarkedForClosure: []
+  freshlyCreatedPopUps: []
+  openPopUps: []
 
   # boot-up state machine
   @BOOT_COMPLETE: 2
@@ -401,26 +401,26 @@ class WorldMorph extends FolderPanelWdgt
 
     return allCandidateMorphsWithSameTextDescription[occurrenceNumber]
 
-  mostRecentlyCreatedMenu: ->
-    mostRecentMenu = nil
-    mostRecentMenuID = -1
+  mostRecentlyCreatedPopUp: ->
+    mostRecentPopUp = nil
+    mostRecentPopUpID = -1
 
     # we have to check which menus
     # are actually open, because
     # the destroy() function used
     # everywhere is not recursive and
-    # that's where we update the @openMenus
+    # that's where we update the @openPopUps
     # array so we have to doublecheck here
     # note how we examine the array in reverse order
     # because we might delete its elements
-    for i in [(@openMenus.length-1).. 0] by -1
-      if @openMenus[i].isOrphan()
-        @openMenus.splice i, 1
+    for i in [(@openPopUps.length-1).. 0] by -1
+      if @openPopUps[i].isOrphan()
+        @openPopUps.splice i, 1
 
-    for eachMenu in @openMenus
-      if eachMenu.instanceNumericID >= mostRecentMenuID
-        mostRecentMenu = eachMenu
-    return mostRecentMenu
+    for eachPopUp in @openPopUps
+      if eachPopUp.instanceNumericID >= mostRecentPopUpID
+        mostRecentPopUp = eachPopUp
+    return mostRecentPopUp
 
   # see roundNumericIDsToNextThousand method in
   # Widget for an explanation of why we need this
@@ -440,10 +440,10 @@ class WorldMorph extends FolderPanelWdgt
         window[eachMorphClass].roundNumericIDsToNextThousand?()
 
   # used to close temporary menus
-  destroyMorphsMarkedForDestruction: ->
-    for eachMorph in @markedForDestruction
+  closePopUpsMarkedForClosure: ->
+    for eachMorph in @popUpsMarkedForClosure
       eachMorph.close()
-    @markedForDestruction = []
+    @popUpsMarkedForClosure = []
   
   # World Widget broken rects debugging
   # not using it anywhere
@@ -1012,7 +1012,7 @@ class WorldMorph extends FolderPanelWdgt
           eachSteppingMorph.step()
         catch err
           if !world.errorConsole? then world.createErrorConsole()
-          @errorConsole.popUpWithError err
+          @errorConsole.showUpWithError err
 
 
   
@@ -1895,9 +1895,9 @@ class WorldMorph extends FolderPanelWdgt
   closingWindow: ->
 
 
-  popUpDemoMenu: (morphOpeningTheMenu,b,c,d) ->
+  popUpDemoMenu: (morphOpeningThePopUp,b,c,d) ->
     if window.location.href.contains "worldWithSystemTestHarness"
-      menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "make a morph"
+      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "make a morph"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -1926,7 +1926,7 @@ class WorldMorph extends FolderPanelWdgt
       menu.addMenuItem "under the carpet", true, @, "underTheCarpet"
       menu.addMenuItem "closing window", true, @, "closingWindow"
     else
-      menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "parts bin"
+      menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "parts bin"
       menu.addMenuItem "rectangle", true, @, "createNewRectangleMorph"
       menu.addMenuItem "box", true, @, "createNewBoxMorph"
       menu.addMenuItem "circle box", true, @, "createNewCircleBoxMorph"
@@ -1949,8 +1949,8 @@ class WorldMorph extends FolderPanelWdgt
 
     menu.popUpAtHand()
 
-  layoutTestsMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Layout tests"
+  layoutTestsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Layout tests"
     menu.addMenuItem "adjuster morph", true, @, "createNewStackElementsSizeAdjustingMorph"
     menu.addMenuItem "adder/droplet", true, @, "createNewLayoutElementAdderOrDropletMorph"
     menu.addMenuItem "test screen 1", true, Widget, "setupTestScreen1"

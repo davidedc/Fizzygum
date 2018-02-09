@@ -111,7 +111,7 @@ class HandMorph extends Widget
       contextMenu = morphTheMenuIsAbout.buildContextMenu()
 
     if contextMenu
-      contextMenu.parentMenu = morphTheMenuIsAbout.firstParentThatIsAMenu()
+      contextMenu.parentPopUp = morphTheMenuIsAbout.firstParentThatIsAPopUp()
       contextMenu.popUpAtHand()
 
 
@@ -274,9 +274,9 @@ class HandMorph extends Widget
       if actionedMorph isnt @world.caret.target
         # user clicked on something other than what the
         # caret is attached to
-        mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
-        if mostRecentlyCreatedMenu?
-          unless mostRecentlyCreatedMenu.isAncestorOf actionedMorph
+        mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
+        if mostRecentlyCreatedPopUp?
+          unless mostRecentlyCreatedPopUp.isAncestorOf actionedMorph
             # only dismiss editing if the actionedMorph the user
             # clicked on is not part of a menu.
             @world.stopEditing()
@@ -325,7 +325,7 @@ class HandMorph extends Widget
       # been freshly created or not. This came about because
       # small movements of the mouse while clicking on the
       # desktop would not dismiss menus.
-      if !(morph.firstParentThatIsAMenu() instanceof MenuMorph)
+      if !(morph.firstParentThatIsAPopUp() instanceof MenuMorph)
         @cleanupMenuMorphs nil, morph, true
 
       @morphToGrab = morph.findRootForGrab()
@@ -406,7 +406,7 @@ class HandMorph extends Widget
 
     alreadyRecordedLeftOrRightClickOnMenuItem = false
     @destroyTemporaries()
-    world.freshlyCreatedMenus = []
+    world.freshlyCreatedPopUps = []
 
 
     if @floatDraggingSomething()
@@ -438,8 +438,8 @@ class HandMorph extends Widget
           # detached a menuItem and placed it on any other
           # morph so you need to ascertain that you'll
           # find it in the activeMenu later on...
-          mostRecentlyCreatedMenu = world.mostRecentlyCreatedMenu()
-          if mostRecentlyCreatedMenu == menuItemMorph.parent
+          mostRecentlyCreatedPopUp = world.mostRecentlyCreatedPopUp()
+          if mostRecentlyCreatedPopUp == menuItemMorph.parent
             labelString = menuItemMorph.labelString
             occurrenceNumber = menuItemMorph.howManySiblingsBeforeMeSuchThat (m) ->
               m.labelString == labelString
@@ -577,13 +577,13 @@ class HandMorph extends Widget
 
     # note that all the actions due to the clicked
     # morphs have been performed, now we can destroy
-    # morphs queued up for destruction
+    # morphs queued up for closure
     # which might include menus...
     # if we destroyed menus earlier, the
     # actions that come from the click
     # might be mangled, e.g. adding a menu
     # to a destroyed menu, etc.
-    world.destroyMorphsMarkedForDestruction()
+    world.closePopUpsMarkedForClosure()
 
     # remove menus that have requested
     # to be removed when a click happens outside
@@ -608,11 +608,11 @@ class HandMorph extends Widget
     # the one the user clicked on.
     # (including the one the user clicked on)
     # note that the hierarchy of the menus is actually
-    # via the parentMenu property
-    ascendingMorphs = morph.firstParentThatIsAMenu()
+    # via the parentPopUp property
+    ascendingMorphs = morph.firstParentThatIsAPopUp()
     world.hierarchyOfClickedMenus = [ascendingMorphs]
-    while ascendingMorphs.parentMenu?
-      ascendingMorphs = ascendingMorphs.parentMenu
+    while ascendingMorphs.parentPopUp?
+      ascendingMorphs = ascendingMorphs.parentPopUp
       world.hierarchyOfClickedMenus.push ascendingMorphs
     
     # go through the morphs that wanted a notification
@@ -637,7 +637,7 @@ class HandMorph extends Widget
          (eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.hierarchyOfClickedMorphs)
         # skip the freshly created menus as otherwise we might
         # destroy them immediately
-        if alsoKillFreshMenus or eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedMenus
+        if alsoKillFreshMenus or eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren not in world.freshlyCreatedPopUps
           if eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]?
             eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren[eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[0]].call eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren, eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[1], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[2], eachMorphWantingToBeNotifiedIfClickOutsideThemOrTheirChildren.clickOutsideMeOrAnyOfMeChildrenCallback[3]
 
@@ -802,10 +802,12 @@ class HandMorph extends Widget
   # HandMorph tools
   destroyTemporaries: ->
 
-    # temporaries are just an array of morphs which will be deleted upon
+    # temporaries are just an array of widgets which will be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
     # that it needs to remove them. The primary purpose of temporaries is
     # to display tools tips of speech bubble help.
+    # Note that we actually destroy temporaries because we are not expecting
+    # anybody to revive them once they are gone (as opposed to menus)
 
     # use a shallow copy of @temporaries because we are
     # removing elements while iterating through it

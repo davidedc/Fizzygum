@@ -472,7 +472,7 @@ compileFGCode = (codeSource, bare) ->
     errorMessage += "error:\n"
     errorMessage += err + "\n"
     if !world.errorConsole? then world.createErrorConsole()
-    world.errorConsole.popUpWithError errorMessage
+    world.errorConsole.showUpWithError errorMessage
 
   t1 = performance.now()
   #console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."

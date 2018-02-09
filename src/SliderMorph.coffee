@@ -103,7 +103,7 @@ class SliderMorph extends CircleBoxMorph
     return    
   
   # SliderMorph menu:
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "show value", true, @, "showValue", "display a dialog box\nshowing the selected number"

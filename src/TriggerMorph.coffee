@@ -38,7 +38,7 @@ class TriggerMorph extends Widget
   # see note above about Colors and shared objects
   pressColor: new Color 128, 128, 128
   centered: false
-  closesUnpinnedMenus: true
+  ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
   # tells if the button represents a morph, in which
   # case we are going to highlight the Widget on hover
@@ -53,7 +53,7 @@ class TriggerMorph extends Widget
   color: new Color 255, 255, 255
 
   constructor: (
-      @closesUnpinnedMenus = true,
+      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
       @target = nil,
       @action = nil,
       @labelString = nil,
@@ -213,7 +213,7 @@ class TriggerMorph extends Widget
         @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
       catch err
         if !world.errorConsole? then world.createErrorConsole()
-        world.errorConsole.popUpWithError err
+        world.errorConsole.showUpWithError err
     return
 
   triggerDoubleClick: ->
@@ -248,8 +248,8 @@ class TriggerMorph extends Widget
     @bringToForegroud()
     @state = @STATE_HIGHLIGHTED
     @changed()
-    if @closesUnpinnedMenus
-      @propagateKillMenus()
+    if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
+      @propagateKillPopUps()
     @trigger()
 
   mouseDoubleClick: ->

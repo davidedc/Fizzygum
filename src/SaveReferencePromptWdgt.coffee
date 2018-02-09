@@ -6,7 +6,7 @@ class SaveReferencePromptWdgt extends MenuMorph
   # vertical stack layout anyways
   msg: " save as...         "
 
-  constructor: (morphOpeningTheMenu, @target, @defaultContents = "untitled", @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
+  constructor: (morphOpeningThePopUp, @target, @defaultContents = "untitled", @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
 
     @tempPromptEntryField = new StringFieldWdgt2(
       @defaultContents,
@@ -18,7 +18,7 @@ class SaveReferencePromptWdgt extends MenuMorph
       false
     )
 
-    super morphOpeningTheMenu, false, @target, true, true, @msg, @tempPromptEntryField
+    super morphOpeningThePopUp, false, @target, true, true, @msg, @tempPromptEntryField
 
 
     @silentAdd @tempPromptEntryField

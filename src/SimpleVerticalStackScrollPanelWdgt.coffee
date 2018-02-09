@@ -73,7 +73,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
 
     return true
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "move all inside"
 

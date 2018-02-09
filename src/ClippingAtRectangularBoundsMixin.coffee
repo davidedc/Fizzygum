@@ -32,7 +32,7 @@ ClippingAtRectangularBoundsMixin =
             !@isCollapsed() and
             !theMorph.isAncestorOf(@) and
             @areBoundsIntersecting(theMorph) and
-            !@anyParentMarkedForDestruction()
+            !@anyParentPopUpMarkedForClosure()
           result = [@]
 
         # Since the PanelWdgt clips its children

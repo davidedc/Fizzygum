@@ -30,7 +30,7 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     @textMorph.setText newText + text
 
 
-  popUpWithError: (err) ->
+  showUpWithError: (err) ->
     unless @paused
       @addText err
 

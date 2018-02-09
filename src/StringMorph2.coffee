@@ -852,7 +852,7 @@ class StringMorph2 extends Widget
 
     menu.popUpAtHand()
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"

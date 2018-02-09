@@ -148,7 +148,7 @@ class PanelWdgt extends Widget
         @parent.adjustScrollBars()
 
   # PanelWdgt menus:
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     if @children.length
       menu.addLine()

@@ -189,7 +189,6 @@ class Widget extends TreeNode
   onNextStep: nil # optional function to be run once. Not currently used in Fizzygum
 
   clickOutsideMeOrAnyOfMeChildrenCallback: [nil]
-  isMarkedForDestruction: false
 
   textDescription: nil
 
@@ -299,19 +298,6 @@ class Widget extends TreeNode
     return [myTextDescription, position, theLenght]
 
   setTextDescription: (@textDescription) ->
-
-
-  markForDestruction: ->
-    world.markedForDestruction.push @
-    @isMarkedForDestruction = true
-
-  anyParentMarkedForDestruction: ->
-    if @isMarkedForDestruction
-      return true
-    else if @parent?
-      return @parent.anyParentMarkedForDestruction() 
-    return false
-
 
   uniqueIDString: ->
     @morphClassString() + "#" + @instanceNumericID
@@ -815,7 +801,7 @@ class Widget extends TreeNode
         !@isCollapsed() and
         !theMorph.isAncestorOf(@) and
         @areBoundsIntersecting(theMorph) and
-        !@anyParentMarkedForDestruction()
+        !@anyParentPopUpMarkedForClosure()
       result = [@]
 
     @children.forEach (child) ->
@@ -2128,7 +2114,8 @@ class Widget extends TreeNode
     owner = aMorph.parent
     if owner?
       owner.removeChild aMorph
-    aMorph.isMarkedForDestruction = false
+    if aMorph.isPopUpMarkedForClosure?
+      aMorph.isPopUpMarkedForClosure = false
     @addChild aMorph, position
     if !avoidExtentCalculation
       aMorph.calculateAndUpdateExtent()
@@ -2205,8 +2192,8 @@ class Widget extends TreeNode
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
     if copiedMorph instanceof MenuMorph
       copiedMorph.onClickOutsideMeOrAnyOfMyChildren nil
-      copiedMorph.killThisMenuIfClickOnDescendantsTriggers = false
-      copiedMorph.killThisMenuIfClickOutsideDescendants = false
+      copiedMorph.killThisPopUpIfClickOnDescendantsTriggers = false
+      copiedMorph.killThisPopUpIfClickOutsideDescendants = false
 
     return copiedMorph
 
@@ -2500,12 +2487,12 @@ class Widget extends TreeNode
   # Widget dragging (and dropping) /////////////////////////////////////////
 
   # finds the first parent that is a menu
-  firstParentThatIsAMenu: ->
+  firstParentThatIsAPopUp: ->
     scanningMorphs = @
     while scanningMorphs.parent?
       scanningMorphs = scanningMorphs.parent
       if scanningMorphs instanceof MenuMorph
-        if !scanningMorphs.isMarkedForDestruction
+        if scanningMorphs.isPopUpMarkedForClosure? and scanningMorphs.isPopUpMarkedForClosure == false
           return scanningMorphs
     return scanningMorphs
 
@@ -2513,6 +2500,13 @@ class Widget extends TreeNode
       @parent instanceof WorldMorph
         return @  
     @parent.rootForFocus()
+
+  anyParentPopUpMarkedForClosure: ->
+    if @isPopUpMarkedForClosure? and @isPopUpMarkedForClosure
+      return true
+    else if @parent?
+      return @parent.anyParentPopUpMarkedForClosure() 
+    return false
 
   rootForFocus: ->
     if !@parent? or
@@ -2528,9 +2522,14 @@ class Widget extends TreeNode
     @rootForFocus()?.moveAsLastChild()
     @rootForFocus()?.fullChanged()
 
-  propagateKillMenus: ->
+
+  # note that "propagateKillPopUps" doesn't necessarily
+  # go up the "parent" trail, for pop ups this method goes up
+  # another trail of pop up ownership named parentPopUp that is
+  # independent of the parent trail
+  propagateKillPopUps: ->
     if @parent?
-      @parent.propagateKillMenus()
+      @parent.propagateKillPopUps()
 
   mouseDownLeft: (pos) ->
     @bringToForegroud()
@@ -2802,7 +2801,7 @@ class Widget extends TreeNode
       # only add morphs that have a menu, and
       # leave out the world itself and the morphs that are about
       # to be destroyed
-      if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentMarkedForDestruction())
+      if (each.buildMorphContextMenu) and (each isnt world) and (!each.anyParentPopUpMarkedForClosure())
         # * leave out SimpleVerticalStackPanelWdgt when
         #   inside a SimpleVerticalStackScrollPanelWdgt
         # * also leave out PanelWdgt when
@@ -2836,40 +2835,12 @@ class Widget extends TreeNode
 
     menu
 
-  popupDeveloperMenu: (morphOpeningTheMenu)->
-    @buildMorphContextMenu(morphOpeningTheMenu).popUpAtHand()
-
+  popupDeveloperMenu: (morphOpeningThePopUp)->
+    @buildMorphContextMenu(morphOpeningThePopUp).popUpAtHand()
 
   popUpColorSetter: ->
     @pickColor "color:", "setColor", new Color 0,0,0
 
-  popup: (morphToAttachTo, pos) ->
-    # console.log "menu popup"
-    @silentFullRawMoveTo pos
-    morphToAttachTo.add @
-    # the @fullRawMoveWithin method
-    # needs to know the extent of the morph
-    # so it must be called after the morphToAttachTo.add
-    # method. If you call before, there is
-    # nopainting happening and the morph doesn't
-    # know its extent.
-    @fullRawMoveWithin world
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-    # shadow must be added after the morph
-    # has been placed somewhere because
-    # otherwise there is no visible image
-    # to base the shadow on
-    # P.S. this is the thing that causes the MenuMorph buffer
-    # to be painted after the creation.
-    @addShadow()
-    @fullChanged()
-
-
-  popUpAtHand: (morphToAttachTo)->
-    if !morphToAttachTo?
-      morphToAttachTo = world
-    @popup morphToAttachTo, world.hand.position()
 
   transparencyPopout: (menuItem)->
     @prompt menuItem.parent.title + "\nalpha\nvalue:",
@@ -3146,8 +3117,8 @@ class Widget extends TreeNode
   removeOutputPins: (a,b,c,d) ->
     world.morphsToBePinouted.remove b
 
-  testMenu: (morphOpeningTheMenu,targetMorph)->
-    menu = new MenuMorph morphOpeningTheMenu,  false, targetMorph, true, true, nil
+  testMenu: (morphOpeningThePopUp,targetMorph)->
+    menu = new MenuMorph morphOpeningThePopUp,  false, targetMorph, true, true, nil
     menu.addMenuItem "serialise morph to memory", true, targetMorph, "serialiseToMemory"
     menu.addMenuItem "deserialize from memory and attach to world", true, targetMorph, "deserialiseFromMemoryAndAttachToWorld"
     menu.addMenuItem "deserialize from memory and attach to hand", true, targetMorph, "deserialiseFromMemoryAndAttachToHand"
@@ -3185,8 +3156,8 @@ class Widget extends TreeNode
   analogClock: ->
     world.create new AnalogClockWdgt()
 
-  popUpIconsMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "icons"
+  popUpIconsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "icons"
     menu.addMenuItem "Destroy icon", true, menusHelper, "createDestroyIconMorph"
     menu.addMenuItem "Under the carpet icon", true, menusHelper, "createUnderCarpetIconMorph"
     menu.addMenuItem "Collapsed state icon", true, menusHelper, "createCollapsedStateIconMorph"
@@ -3214,8 +3185,8 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpVerticalStackMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Vertical stack"
+  popUpVerticalStackMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Vertical stack"
     menu.addMenuItem "vertical stack constrained contents width", true, @, "createSimpleVerticalStackPanelWdgt"
     menu.addMenuItem "vertical stack scrollpanel constrained contents width", true, @, "createSimpleVerticalStackScrollPanelWdgt"
     menu.addMenuItem "vertical stack panel and scrollpanel constrained contents width", true, @, "createSimpleVerticalStackPanelWdgtAndScrollPanel"
@@ -3225,21 +3196,21 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpDocumentMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Document"
+  popUpDocumentMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Document"
     menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanelWdgt"
 
     menu.popUpAtHand()
 
-  popUpWindowsMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Windows"
+  popUpWindowsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Windows"
     menu.addMenuItem "empty window", true, @, "createEmptyWindow"
     menu.addMenuItem "empty internal window", true, @, "createEmptyInternalWindow"
 
     menu.popUpAtHand()
 
-  popUpShortcutsAndScriptsMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "shortcuts & scripts"
+  popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "shortcuts & scripts"
     menu.addMenuItem "basement shortcut", true, @, "basementIconAndText"
     menu.popUpAtHand()
 
@@ -3260,8 +3231,8 @@ class Widget extends TreeNode
 
 
 
-  popUpSimplePlainTextWdgtMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "Simple plain text"
+  popUpSimplePlainTextWdgtMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Simple plain text"
     menu.addMenuItem "simple plain text wrapping", true, @, "createNewWrappingSimplePlainTextWdgtWithBackground"
     menu.addMenuItem "simple plain text not wrapping", true, @, "createNewNonWrappingSimplePlainTextWdgtWithBackground"    
     menu.addMenuItem "simple plain text (wrapping / not wrapping)", true, @, "createNewWrappingAndNonWrappingSimplePlainTextWdgtWithBackground"    
@@ -3274,8 +3245,8 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  popUpFirstMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
+  popUpFirstMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "make sliders' buttons states bright", true, menusHelper, "makeSlidersButtonsStatesBright"
     menu.addMenuItem "make pointer", true, @, "createPointerMorph"
     menu.addMenuItem "icon with text", true, menusHelper, "makeIconWithText"
@@ -3286,8 +3257,8 @@ class Widget extends TreeNode
     menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
     menu.popUpAtHand()
 
-  popUpSecondMenu: (morphOpeningTheMenu) ->
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "others"
+  popUpSecondMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "others"
     menu.addMenuItem "icons ➜", false, @, "popUpIconsMenu", "icons"
     menu.addMenuItem "simple plain text ➜", false, @, "popUpSimplePlainTextWdgtMenu", "icons"
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
@@ -3315,9 +3286,9 @@ class Widget extends TreeNode
     derezzedObject = world.deserialize world.lastSerializationString
     world.add derezzedObject
 
-  buildBaseMorphClassContextMenu: (morphOpeningTheMenu) ->
+  buildBaseMorphClassContextMenu: (morphOpeningThePopUp) ->
 
-    menu = new MenuMorph(morphOpeningTheMenu, false, 
+    menu = new MenuMorph(morphOpeningThePopUp, false, 
       @,
       true,
       true,
@@ -3404,18 +3375,18 @@ class Widget extends TreeNode
 
   # Widget-specific menu entries are basically the ones
   # beyond the generic entries above.
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     if @layoutSpec == LayoutSpec.ATTACHEDAS_VERTICAL_STACK_ELEMENT
       # it could be possible to figure out layouts when the vertical
       # stack doesn't contrain the content widths but it's rather
       # more complicated so we are not doing it for the time
       # being
       if @parent?.constrainContentWidth
-        @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningTheMenu, menu
+        @layoutSpecDetails.addMorphSpecificMenuEntries morphOpeningThePopUp, menu
 
-  buildMorphContextMenu: (morphOpeningTheMenu) ->
-    menu = @buildBaseMorphClassContextMenu morphOpeningTheMenu
-    @addMorphSpecificMenuEntries morphOpeningTheMenu, menu
+  buildMorphContextMenu: (morphOpeningThePopUp) ->
+    menu = @buildBaseMorphClassContextMenu morphOpeningThePopUp
+    @addMorphSpecificMenuEntries morphOpeningThePopUp, menu
 
     if @addShapeSpecificMenuItems?
       menu = @addShapeSpecificMenuItems menu

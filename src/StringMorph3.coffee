@@ -862,7 +862,7 @@ class StringMorph3 extends Widget
     menu.popUpAtHand()
 
   # StringMorph3 menus:
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "edit...", true, @, "editPopup", "set this String's\ncontent"
@@ -935,16 +935,16 @@ class StringMorph3 extends Widget
     menu.silentAdd mi1
     menu.silentAdd mi2
 
-  fixTextToBoxMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
+  fixTextToBoxMenu: (morphOpeningThePopUp, ignored, otherMenuEntryToCheck) ->
 
 
     if otherMenuEntryToCheck[0].isTicked()
-      morphOpeningTheMenu.toggleTick()
+      morphOpeningThePopUp.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
       # todo actually do something that changes the
       # fitting mode of the morph
 
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "fit text to box"
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "fit text to box"
 
     tilesBinHeader = new StringMorph2 "if box is smaller"
     tilesBinHeader.toggleHeaderLine()
@@ -976,15 +976,15 @@ class StringMorph3 extends Widget
 
     menu.popUpAtHand()
 
-  fixBoxToTextMenu: (morphOpeningTheMenu, ignored, otherMenuEntryToCheck) ->
+  fixBoxToTextMenu: (morphOpeningThePopUp, ignored, otherMenuEntryToCheck) ->
 
     if otherMenuEntryToCheck[0].isTicked()
-      morphOpeningTheMenu.toggleTick()
+      morphOpeningThePopUp.toggleTick()
       otherMenuEntryToCheck[0].toggleTick()
       # todo actually do something that changes the
       # fitting mode of the morph
 
-    menu = new MenuMorph morphOpeningTheMenu,  false, @, true, true, "fit box to text"
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "fit box to text"
 
     tilesBinHeader = new StringMorph2 "make box..."
     tilesBinHeader.toggleHeaderLine()

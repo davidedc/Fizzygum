@@ -113,7 +113,7 @@ class IconAppearance extends Appearance
       catch err
         console.log err
         if !world.errorConsole? then world.createErrorConsole()
-        world.errorConsole.popUpWithError err
+        world.errorConsole.showUpWithError err
 
 
       aContext.restore()

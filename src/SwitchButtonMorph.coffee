@@ -14,7 +14,7 @@ class SwitchButtonMorph extends Widget
   # see note above about Colors and shared objects
   pressColor: new Color 128, 128, 128
  
-  closesUnpinnedMenus: true
+  ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
   buttonShown: 0
 

@@ -22,7 +22,7 @@ class EmptyButtonMorph extends Widget
  
   hint: nil
  
-  closesUnpinnedMenus: true
+  ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked: true
   
   # tells if the button represents a morph, in which
   # case we are going to highlight the Widget on hover
@@ -33,7 +33,7 @@ class EmptyButtonMorph extends Widget
   color: new Color 255, 255, 255
 
   constructor: (
-      @closesUnpinnedMenus = true,
+      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
       @target = nil,
       @action = nil,
 
@@ -110,8 +110,8 @@ class EmptyButtonMorph extends Widget
 
   
   mouseClickLeft: ->
-    if @closesUnpinnedMenus
-      @propagateKillMenus()
+    if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked
+      @propagateKillPopUps()
     @trigger()
     @escalateEvent "mouseClickLeft"
 

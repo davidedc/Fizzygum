@@ -72,7 +72,7 @@ class PointerMorph extends BoxMorph
     @target.close()
     @close()
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     menu.addLine 1
     menu.addMenuItem "close this button", true, @, "closeThis"
     menu.addMenuItem "close target morph", true, @, "closeThisAndTarget"

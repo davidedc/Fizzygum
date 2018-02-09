@@ -48,7 +48,7 @@ class SimplePlainTextWdgt extends TextMorph2
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
     menu.removeMenuItem "soft wrap".tick()

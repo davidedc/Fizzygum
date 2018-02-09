@@ -73,7 +73,7 @@ class ColorPaletteMorph extends Widget
   
     
   # ColorPaletteMorph menu:
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"

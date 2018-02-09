@@ -236,7 +236,7 @@ class StringMorph extends Widget
       nil, 6, 500, true
 
   # StringMorph menus:
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "edit", true, @, "edit"

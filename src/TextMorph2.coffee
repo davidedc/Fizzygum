@@ -572,7 +572,7 @@ class TextMorph2 extends StringMorph2
     @changed()
     world.stopEditing()
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     if @softWrap

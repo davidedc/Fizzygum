@@ -574,12 +574,12 @@ class ScrollPanelWdgt extends PanelWdgt
       @adjustScrollBars()
   
 
-  addMorphSpecificMenuEntries: (morphOpeningTheMenu, menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     if @takesOverAndCoalescesChildrensMenus
       childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
         !((m instanceof HandleMorph) or (m instanceof CaretMorph))
       if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length == 1
-        childrenNotHandlesNorCarets[0].addMorphSpecificMenuEntries morphOpeningTheMenu, menu
+        childrenNotHandlesNorCarets[0].addMorphSpecificMenuEntries morphOpeningThePopUp, menu
     else
       super
   

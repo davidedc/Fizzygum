@@ -7,7 +7,7 @@
 class SimpleRectangularButtonMorph extends EmptyButtonMorph
 
   constructor: (
-      @closesUnpinnedMenus = true,
+      @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,
       @target = nil,
       @action = nil,
 
