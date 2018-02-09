@@ -929,7 +929,8 @@ class WorldMorph extends FolderPanelWdgt
           @hand.processDrop event
 
         when "resizeEventListener"
-          @stretchWorldToFillEntirePage()  if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+          if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+            @stretchWorldToFillEntirePage()
 
     @events = []
 
@@ -1030,7 +1031,7 @@ class WorldMorph extends FolderPanelWdgt
     bkground = document.getElementById("background")
     bkground.style.width = "960px"
     bkground.style.height = "720px"
-    bkground.style.backgroundColor = "gb(245, 245, 245)"
+    bkground.style.backgroundColor = "rgb(245, 245, 245)"
 
   stretchWorldToFillEntirePage: ->
     pos = getDocumentPositionOf @worldCanvas
