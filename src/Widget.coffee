@@ -2496,13 +2496,8 @@ class Widget extends TreeNode
           return scanningMorphs
     return scanningMorphs
 
-    if !@parent? or
-      @parent instanceof WorldMorph
-        return @  
-    @parent.rootForFocus()
-
   anyParentPopUpMarkedForClosure: ->
-    if @isPopUpMarkedForClosure? and @isPopUpMarkedForClosure
+    if @isPopUpMarkedForClosure
       return true
     else if @parent?
       return @parent.anyParentPopUpMarkedForClosure() 
@@ -2525,7 +2520,8 @@ class Widget extends TreeNode
 
   # note that "propagateKillPopUps" doesn't necessarily
   # go up the "parent" trail, for pop ups this method goes up
-  # another trail of pop up ownership named parentPopUp that is
+  # another trail of pop up ownership named via the
+  # "morphOpeningThePopUp" property, that is
   # independent of the parent trail
   propagateKillPopUps: ->
     if @parent?

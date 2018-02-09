@@ -607,7 +607,7 @@ class HandMorph extends Widget
     # the one the user clicked on.
     # (including the one the user clicked on)
     # note that the hierarchy of the menus is actually
-    # via the parentPopUp
+    # via the getParentPopUp method
     firstParentThatIsAPopUp = morph.firstParentThatIsAPopUp()
     if firstParentThatIsAPopUp?.hierarchyOfPopUps?
       world.hierarchyOfClickedMenus = firstParentThatIsAPopUp.hierarchyOfPopUps()

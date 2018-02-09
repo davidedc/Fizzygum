@@ -76,18 +76,18 @@ class MenuMorph extends Widget
   hierarchyOfPopUps: ->
     ascendingMorphs = @
     hierarchy = [ascendingMorphs]
-    while ascendingMorphs?.parentPopUp?
-      ascendingMorphs = ascendingMorphs.parentPopUp()
+    while ascendingMorphs?.getParentPopUp?
+      ascendingMorphs = ascendingMorphs.getParentPopUp()
       if ascendingMorphs?
         hierarchy.push ascendingMorphs
     return hierarchy
 
-  # for pop ups, the propagation happens through the parentPopUp property
+  # for pop ups, the propagation happens through the getParentPopUp method
   # rather than the parent property, but for other normal widgets it goes
   # up the parent property
   propagateKillPopUps: ->
     if @killThisPopUpIfClickOnDescendantsTriggers
-      @parentPopUp()?.propagateKillPopUps()
+      @getParentPopUp()?.propagateKillPopUps()
       @markPopUpForClosure()
 
   markPopUpForClosure: ->
@@ -99,7 +99,7 @@ class MenuMorph extends Widget
   isPopUpPinned: ->
     return !(@killThisPopUpIfClickOnDescendantsTriggers or @killThisPopUpIfClickOutsideDescendants)
 
-  parentPopUp: ->
+  getParentPopUp: ->
     if @isPopUpPinned()
       return @parent
     else
@@ -118,7 +118,7 @@ class MenuMorph extends Widget
     if pinMenuItem?
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
     else
-      @parentPopUp()?.propagateKillPopUps()
+      @getParentPopUp()?.propagateKillPopUps()
     world.closePopUpsMarkedForClosure()
     
     # leave the menu attached to whatever it's attached,
