@@ -136,4 +136,4 @@ class EmptyButtonMorph extends Widget
   
   # TriggerMorph bubble help:
   startCountdownForBubbleHelp: (contents) ->
-    SpeechBubbleMorph.createInAWhileIfHandStillContainedInMorph @, contents
+    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents

@@ -2790,7 +2790,7 @@ class Widget extends TreeNode
   
   # When user right-clicks on a morph that is a child of other morphs,
   # then it's ambiguous which of the morphs she wants to operate on.
-  # An example is right-clicking on a SpeechBubbleMorph: did she
+  # An example is right-clicking on a ToolTipWdgt: did she
   # mean to operate on the BubbleMorph or did she mean to operate on
   # the TextMorph contained in it?
   # This menu lets her disambiguate.

@@ -1831,8 +1831,8 @@ class WorldMorph extends FolderPanelWdgt
     newMorph.isEditable = true
     newMorph.maxTextWidth = 300
     @create newMorph
-  createNewSpeechBubbleMorph: ->
-    newMorph = new SpeechBubbleMorph "Hello, World!"
+  createNewToolTipWdgt: ->
+    newMorph = new ToolTipWdgt "Hello, World!"
     @create newMorph
   createNewGrayPaletteMorph: ->
     @create new GrayPaletteMorph()
@@ -1910,7 +1910,7 @@ class WorldMorph extends FolderPanelWdgt
       menu.addLine()
       menu.addMenuItem "string", true, @, "createNewString"
       menu.addMenuItem "text", true, @, "createNewText"
-      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addMenuItem "speech bubble", true, @, "createNewToolTipWdgt"
       menu.addLine()
       menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
       menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"
@@ -1937,7 +1937,7 @@ class WorldMorph extends FolderPanelWdgt
       menu.addLine()
       menu.addMenuItem "string", true, @, "createNewStringMorph2WithoutBackground"
       menu.addMenuItem "text", true, @, "createNewTextMorph2WithBackground"
-      menu.addMenuItem "speech bubble", true, @, "createNewSpeechBubbleMorph"
+      menu.addMenuItem "speech bubble", true, @, "createNewToolTipWdgt"
       menu.addLine()
       menu.addMenuItem "gray scale palette", true, @, "createNewGrayPaletteMorph"
       menu.addMenuItem "color palette", true, @, "createNewColorPaletteMorph"

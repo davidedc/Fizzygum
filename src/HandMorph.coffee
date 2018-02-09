@@ -18,7 +18,7 @@ class HandMorph extends Widget
   morphToGrab: nil
   grabOrigin: nil
   mouseOverList: nil
-  temporaries: nil
+  toolTipsList: nil
   touchHoldTimeout: nil
   doubleClickMorph: nil
   tripleClickMorph: nil
@@ -30,7 +30,7 @@ class HandMorph extends Widget
 
   constructor: (@world) ->
     @mouseOverList = []
-    @temporaries = []
+    @toolTipsList = []
     super()
     @minimumExtent = new Point 0,0
     @silentRawSetBounds Rectangle.EMPTY
@@ -296,7 +296,7 @@ class HandMorph extends Widget
     return [relativePos.x, relativePos.y]
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
-    @destroyTemporaries()
+    @destroyToolTips()
     @morphToGrab = nil
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -404,7 +404,7 @@ class HandMorph extends Widget
     morph = @topMorphUnderPointer()
 
     alreadyRecordedLeftOrRightClickOnMenuItem = false
-    @destroyTemporaries()
+    @destroyToolTips()
     world.freshlyCreatedPopUps = []
 
 
@@ -643,7 +643,7 @@ class HandMorph extends Widget
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseDoubleClickCommand nil, pointerAndMorphInfo...
 
-    @destroyTemporaries()
+    @destroyToolTips()
     if @floatDraggingSomething()
       @drop()
     else
@@ -656,7 +656,7 @@ class HandMorph extends Widget
     if AutomatorRecorderAndPlayer?
       world.automatorRecorderAndPlayer.addMouseTripleClickCommand nil, pointerAndMorphInfo...
 
-    @destroyTemporaries()
+    @destroyToolTips()
     if @floatDraggingSomething()
       @drop()
     else
@@ -797,22 +797,21 @@ class HandMorph extends Widget
   
   
   # HandMorph tools
-  destroyTemporaries: ->
+  destroyToolTips: ->
 
-    # "temporaries" keeps a list of widgets which will be deleted upon
+    # "toolTipsList" keeps a list of widgets which will be deleted upon
     # the next mouse click, or whenever another temporary Widget decides
-    # that it needs to remove them. The primary purpose of temporaries is
-    # to display tools tips of speech bubble help.
-    # Note that we actually destroy temporaries because we are not expecting
+    # that it needs to remove them.
+    # Note that we actually destroy toolTipsList because we are not expecting
     # anybody to revive them once they are gone (as opposed to menus)
 
-    # use a shallow copy of @temporaries because we are
+    # use a shallow copy of the list because we are
     # removing elements while iterating through it
-    scanningTemporaries = arrayShallowCopy @temporaries
+    scanningTemporaries = arrayShallowCopy @toolTipsList
     scanningTemporaries.forEach (morph) =>
       unless morph.boundsContainPoint @position()
         morph.fullDestroy()
-        @temporaries.remove morph
+        @toolTipsList.remove morph
   
   
   # HandMorph floatDragging optimization

@@ -1,12 +1,14 @@
-# SpeechBubbleMorph ///////////////////////////////////////////////////
+# ToolTipWdgt ///////////////////////////////////////////////////
 
-#
-#	I am a comic-style speech bubble that can display either a string,
-#	a Widget, a Canvas or a toString() representation of anything else.
-#	If I am invoked using popUp() I behave like a tool tip.
-#
+# when invoked using...
+#    createInAWhileIfHandStillContainedInMorph / openAt
+#	... I can temporarily display any widget.
+# (is you just use the default constructor it will just sit there
+# and basically _not_ behave like a tool tip)
+# Note that I'm not a PopUp, for example I can't be pinned.
+# I'm always attached to the world, without any layout constraints.
 
-class SpeechBubbleMorph extends Widget
+class ToolTipWdgt extends Widget
 
   contents: nil
   padding: nil # additional vertical pixels
@@ -33,7 +35,7 @@ class SpeechBubbleMorph extends Widget
     # do nothing.
     if morphInvokingThis.root() == world and morphInvokingThis.boundsContainPoint world.hand.position()
       theBubble = new @ localize(contents), morphInvokingThis, nil, nil
-      theBubble.popUp theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
+      theBubble.openAt theBubble.morphInvokingThis.rightCenter().add new Point -8, 0
 
   @createInAWhileIfHandStillContainedInMorph: (morphInvokingThis, contents, delay = 500) ->
     # console.log "bubble createInAWhileIfHandStillContainedInMorph"
@@ -46,9 +48,9 @@ class SpeechBubbleMorph extends Widget
         )
         , delay
   
-  # SpeechBubbleMorph invoking:
-  popUp: (pos) ->
-    # console.log "bubble popup"
+  # ToolTipWdgt invoking:
+  openAt: (pos) ->
+    # console.log "tool tip opening"
     @fullRawMoveTo pos.subtract new Point 0, @height()
     @fullRawMoveWithin world
 
@@ -57,8 +59,8 @@ class SpeechBubbleMorph extends Widget
     world.add @
     @addShadow()
     @fullChanged()
-    world.hand.destroyTemporaries()
-    world.hand.temporaries.push @
+    world.hand.destroyToolTips()
+    world.hand.toolTipsList.push @
     
   buildAndConnectChildren: ->
     # console.log "bubble buildAndConnectChildren"
@@ -94,9 +96,6 @@ class SpeechBubbleMorph extends Widget
     # adjust my layout
     @silentRawSetWidth @contentsMorph.width() + ((if @padding then @padding * 2 else @cornerRadius * 2))
     @silentRawSetHeight @contentsMorph.height() + @cornerRadius + @padding * 2 + 2
-
-    # draw my outline
-    #super()
 
     # position my contents
     @contentsMorph.fullRawMoveTo @position().add(

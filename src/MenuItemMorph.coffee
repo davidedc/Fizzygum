@@ -131,7 +131,7 @@ class MenuItemMorph extends TriggerMorph
     unless @isListItem()
       @state = @STATE_NORMAL
       @changed()
-    world.hand.destroyTemporaries()  if @hint
+    world.hand.destroyToolTips()  if @hint
   
   mouseDownLeft: (pos) ->
     if @isListItem()

@@ -237,7 +237,7 @@ class TriggerMorph extends Widget
   mouseLeave: ->
     @state = @STATE_NORMAL
     @changed()
-    world.hand.destroyTemporaries()  if @hint
+    world.hand.destroyToolTips()  if @hint
   
   mouseDownLeft: ->
     @state = @STATE_PRESSED
@@ -257,4 +257,4 @@ class TriggerMorph extends Widget
 
   # TriggerMorph bubble help:
   startCountdownForBubbleHelp: (contents) ->
-    SpeechBubbleMorph.createInAWhileIfHandStillContainedInMorph @, contents
+    ToolTipWdgt.createInAWhileIfHandStillContainedInMorph @, contents
