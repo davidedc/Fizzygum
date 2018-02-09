@@ -68,6 +68,9 @@ class PopUpWdgt extends Widget
         return @morphOpeningThePopUp.firstParentThatIsAPopUp()
     return nil
 
+  firstParentThatIsAPopUp: ->
+    if !@isPopUpMarkedForClosure or !@parent? then return @
+    return @parent.firstParentThatIsAPopUp()
 
   # this is invoked on the menu morph to be
   # pinned. The triggering menu item is the first
@@ -86,6 +89,13 @@ class PopUpWdgt extends Widget
     # just change the shadow.
     @updatePopUpShadow()
 
+
+  fullCopy: ->
+    copiedMorph = super
+    copiedMorph.onClickOutsideMeOrAnyOfMyChildren nil
+    copiedMorph.killThisPopUpIfClickOnDescendantsTriggers = false
+    copiedMorph.killThisPopUpIfClickOutsideDescendants = false
+    return copiedMorph
 
 
   addMorphSpecificMenuEntries: (unused_morphOpeningThePopUp, menu) ->

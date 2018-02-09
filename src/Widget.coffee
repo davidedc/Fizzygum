@@ -2190,11 +2190,6 @@ class Widget extends TreeNode
       return null
     allMorphsInStructure = @allChildrenBottomToTop()
     copiedMorph = @deepCopy false, [], [], allMorphsInStructure
-    if copiedMorph instanceof MenuMorph
-      copiedMorph.onClickOutsideMeOrAnyOfMyChildren nil
-      copiedMorph.killThisPopUpIfClickOnDescendantsTriggers = false
-      copiedMorph.killThisPopUpIfClickOutsideDescendants = false
-
     return copiedMorph
 
   serialize: ->
@@ -2486,15 +2481,10 @@ class Widget extends TreeNode
 
   # Widget dragging (and dropping) /////////////////////////////////////////
 
-  # finds the first parent that is a menu
+  # finds the first parent that is a PopUp
   firstParentThatIsAPopUp: ->
-    scanningMorphs = @
-    while scanningMorphs.parent?
-      scanningMorphs = scanningMorphs.parent
-      if scanningMorphs instanceof MenuMorph
-        if scanningMorphs.isPopUpMarkedForClosure? and scanningMorphs.isPopUpMarkedForClosure == false
-          return scanningMorphs
-    return scanningMorphs
+    if !@parent? then return @
+    return @parent.firstParentThatIsAPopUp()
 
   anyParentPopUpMarkedForClosure: ->
     if @isPopUpMarkedForClosure
