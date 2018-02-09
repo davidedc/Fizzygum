@@ -18,7 +18,6 @@ class MenuMorph extends Widget
   isListContents: false
   killThisPopUpIfClickOnDescendantsTriggers: true
   killThisPopUpIfClickOutsideDescendants: true
-  tempPromptEntryField: nil
   parentPopUp: nil
   isPopUpMarkedForClosure: false
 

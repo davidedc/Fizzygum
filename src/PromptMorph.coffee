@@ -16,6 +16,8 @@ class PromptMorph extends MenuMorph
   #colorPalette: nil
   #grayPalette: nil
 
+  tempPromptEntryField: nil
+
   constructor: (morphOpeningThePopUp, @msg, @target, @callback, @defaultContents, @intendedWidth, @floorNum,
     @ceilingNum, @isRounded) ->
 
@@ -49,10 +51,7 @@ class PromptMorph extends MenuMorph
       slider.silentRawSetHeight WorldMorph.preferencesAndSettings.prompterSliderSize
       slider.target = @
       slider.argumentToAction = @
-      if @isRounded
-        slider.action = "reactToSliderAction1"
-      else
-        slider.action = "reactToSliderAction2"
+      slider.action = "reactToSliderAction"
       @silentAdd slider
     @addLine 2
 
@@ -65,6 +64,14 @@ class PromptMorph extends MenuMorph
     @addMenuItem "Close", true, @, "close"
 
     @reLayout()
+
+  reactToSliderAction: (num) ->
+    @tempPromptEntryField.changed()
+    @tempPromptEntryField.text.text = Math.round(num).toString()
+    @tempPromptEntryField.text.reLayout()
+    
+    @tempPromptEntryField.text.changed()
+    @tempPromptEntryField.text.edit()
 
   reLayout: ->
     super()

@@ -2679,22 +2679,6 @@ class Widget extends TreeNode
 
     #prompt.popUpAtHand()
     #prompt.tempPromptEntryField.edit()
-
-  reactToSliderAction1: (num, theMenu) ->
-    theMenu.tempPromptEntryField.changed()
-    theMenu.tempPromptEntryField.text.text = Math.round(num).toString()
-    theMenu.tempPromptEntryField.text.reLayout()
-    
-    theMenu.tempPromptEntryField.text.changed()
-    theMenu.tempPromptEntryField.text.edit()
-
-  reactToSliderAction2: (num, theMenu) ->
-    alert "I thought this wasn't used, add a note in the code about how this comes about"
-    theMenu.tempPromptEntryField.changed()
-    theMenu.tempPromptEntryField.text.text = num.toString()
-    theMenu.tempPromptEntryField.text.reLayout()
-    
-    theMenu.tempPromptEntryField.text.changed()
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph defaultContents
