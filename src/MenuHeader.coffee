@@ -30,6 +30,4 @@ class MenuHeader extends BoxMorph
   mouseClickLeft: ->
     super
     if @parent?
-      parentPopUp = @firstParentThatIsAPopUp()
-      if parentPopUp?
-        parentPopUp.pinPopUp @
+      @firstParentThatIsAPopUp()?.pinPopUp @

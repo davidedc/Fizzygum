@@ -16,12 +16,25 @@ class MenuMorph extends Widget
   fontSize: nil
   label: nil
   isListContents: false
+
   killThisPopUpIfClickOnDescendantsTriggers: true
   killThisPopUpIfClickOutsideDescendants: true
-  parentPopUp: nil
   isPopUpMarkedForClosure: false
+  # the morphOpeningThePopUp is only useful to get the "parent" pop-up.
+  # the "parent" pop-up is the menu that this menu is attached to,
+  # but we need this extra property because it's not the
+  # actual parent. The reason is that menus are actually attached
+  # to the world morph. This is for a couple of reasons:
+  # 1) they can still appear at the top even if the "parent menu"
+  #    or the parent object are not in the foreground. This is
+  #    what happens for example in OSX, you can right-click on a
+  #    morph that is not in the background but the menu that comes up
+  #    will be in the foreground.
+  # 2) they can appear unoccluded if the "parent morph" or "parent object"
+  #    are in a morph that clips at its boundaries.
+  morphOpeningThePopUp: nil
 
-  constructor: (morphOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
+  constructor: (@morphOpeningThePopUp, @isListContents = false, @target, @killThisPopUpIfClickOutsideDescendants = true, @killThisPopUpIfClickOnDescendantsTriggers = true, @title = nil, @environment = nil, @fontSize = nil) ->
     # console.log "menu constructor"
     # console.log "menu super"
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
@@ -34,20 +47,6 @@ class MenuMorph extends Widget
     @appearance = new MenuAppearance @
     @strokeColor = new Color 210, 210, 210
 
-    # the morphOpeningThePopUp is only useful to get the "parent" menu.
-    # the "parent" menu is the menu that this menu is attached to,
-    # but we need this extra property because it's not the
-    # actual parent. The reason is that menus are actually attached
-    # to the world morph. This is for a couple of reasons:
-    # 1) they can still appear at the top even if the "parent menu"
-    #    or the parent object are not in the foreground. This is
-    #    what happens for example in OSX, you can right-click on a
-    #    morph that is not in the background but the menu that comes up
-    #    will be in the foreground.
-    # 2) they can appear unoccluded if the "parent morph" or "parent object"
-    #    are in a morph that clips at its boundaries.
-    if morphOpeningThePopUp?
-      @parentPopUp = morphOpeningThePopUp.firstParentThatIsAPopUp()
 
     if !@isListContents
       world.freshlyCreatedPopUps.push @
@@ -74,21 +73,40 @@ class MenuMorph extends Widget
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 0
     @layoutSpecDetails.canSetHeightFreely = false
 
+  hierarchyOfPopUps: ->
+    ascendingMorphs = @
+    hierarchy = [ascendingMorphs]
+    while ascendingMorphs?.parentPopUp?
+      ascendingMorphs = ascendingMorphs.parentPopUp()
+      if ascendingMorphs?
+        hierarchy.push ascendingMorphs
+    return hierarchy
+
   # for pop ups, the propagation happens through the parentPopUp property
   # rather than the parent property, but for other normal widgets it goes
   # up the parent property
   propagateKillPopUps: ->
     if @killThisPopUpIfClickOnDescendantsTriggers
-      if @parentPopUp?
-        @parentPopUp.propagateKillPopUps()
+      @parentPopUp()?.propagateKillPopUps()
       @markPopUpForClosure()
 
   markPopUpForClosure: ->
     world.popUpsMarkedForClosure.push @
     @isPopUpMarkedForClosure = true
 
+  # why introduce a new flag when you can calculate
+  # from existing flags?
   isPopUpPinned: ->
     return !(@killThisPopUpIfClickOnDescendantsTriggers or @killThisPopUpIfClickOutsideDescendants)
+
+  parentPopUp: ->
+    if @isPopUpPinned()
+      return @parent
+    else
+      if @morphOpeningThePopUp?
+        return @morphOpeningThePopUp.firstParentThatIsAPopUp()
+    return nil
+
 
   # this is invoked on the menu morph to be
   # pinned. The triggering menu item is the first
@@ -100,10 +118,8 @@ class MenuMorph extends Widget
     if pinMenuItem?
       pinMenuItem.firstParentThatIsAPopUp().propagateKillPopUps()
     else
-      @parentPopUp?.propagateKillPopUps()
+      @parentPopUp()?.propagateKillPopUps()
     world.closePopUpsMarkedForClosure()
-
-    @parentPopUp = @parent
     
     # leave the menu attached to whatever it's attached,
     # just change the shadow.
@@ -112,7 +128,7 @@ class MenuMorph extends Widget
 
 
   # StringMorph menus:
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+  addMorphSpecificMenuEntries: (unused_morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
