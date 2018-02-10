@@ -1075,7 +1075,7 @@ class WorldMorph extends FolderPanelWdgt
         basementOpenerWdgt.fullMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
 
     @children.forEach (child) =>
-      if child != basementOpenerWdgt
+      if child != basementOpenerWdgt and !(child instanceof WidgetHolderWithCaption)
         if child.positionFractionalInHoldingPanel?
           child.fullRawMoveToFractionalPositionInPaneUserHasSet()
         if !child.wasPositionedSlightlyOutsidePanel
