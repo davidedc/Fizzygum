@@ -1252,7 +1252,7 @@ class Widget extends TreeNode
       newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
     # adjust the top side and the left side last, so that
-    # the control buttons in the window bats are still
+    # the control buttons in the window bars are still
     # visible/reachable
     # Note that we have to update newBoundsForThisLayout as
     # we update the widget position!
