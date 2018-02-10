@@ -1239,14 +1239,31 @@ class Widget extends TreeNode
     else
       newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
-    leftOff = newBoundsForThisLayout.left() - aMorph.left()
-    @fullRawMoveBy new Point -leftOff, 0  if leftOff < 0
+    # adjust the top side and the left side last, so that
+    # the control buttons in the window bats are still
+    # visible/reachable
+    # Note that we have to update newBoundsForThisLayout as
+    # we update the widget position!
+
     rightOff = newBoundsForThisLayout.right() - aMorph.right()
-    @fullRawMoveBy new Point -rightOff, 0  if rightOff > 0
-    topOff = newBoundsForThisLayout.top() - aMorph.top()
-    @fullRawMoveBy new Point 0, -topOff  if topOff < 0
+    if rightOff > 0
+      @fullRawMoveBy new Point -rightOff, 0
+      newBoundsForThisLayout = @bounds
+
+    leftOff = newBoundsForThisLayout.left() - aMorph.left()
+    if leftOff < 0
+      @fullRawMoveBy new Point -leftOff, 0
+      newBoundsForThisLayout = @bounds
+
     bottomOff = newBoundsForThisLayout.bottom() - aMorph.bottom()
-    @fullRawMoveBy new Point 0, -bottomOff  if bottomOff > 0
+    if bottomOff > 0
+      @fullRawMoveBy new Point 0, -bottomOff
+      newBoundsForThisLayout = @bounds
+    
+    topOff = newBoundsForThisLayout.top() - aMorph.top()
+    if topOff < 0
+      @fullRawMoveBy new Point 0, -topOff
+      newBoundsForThisLayout = @bounds
 
 
   notifyChildrenThatParentHasReLayouted: ->
