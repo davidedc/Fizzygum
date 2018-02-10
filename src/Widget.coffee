@@ -1135,6 +1135,19 @@ class Widget extends TreeNode
         return
     WorldMorph.numberOfRawMovesAndResizes++
 
+  fullRawMoveToFractionalPositionInPaneUserHasSet: ->
+    # we do one dimension at a time here for a subtle reason: if
+    # say a window has the left side beyond the left side of the desktop
+    # then the x of positionFractionalInHoldingPanel is NEGATIVE
+    # and as one shrinks the browser the window comes TO THE RIGHT.
+    # This might make some mathematical sense but is very unintuitive so
+    # we just don't move widgets along the dimensions that have a negative
+    # fractional component
+    if @positionFractionalInHoldingPanel[0] > 0
+      @fullRawMoveTo (new Point (@parent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
+    if @positionFractionalInHoldingPanel[1] > 0
+      @fullRawMoveTo (new Point @left(), (@parent.height() * @positionFractionalInHoldingPanel[1])).round()
+
   
   fullRawMoveTo: (aPoint) ->
     # TODO in theory the low-level APIs should only be
