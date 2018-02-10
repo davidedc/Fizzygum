@@ -27,7 +27,7 @@ class BasementOpenerWdgt extends WidgetHolderWithCaption
       @userMovedThisFromComputedPosition = true
 
 
-  mouseClickLeft: ->
+  mouseDoubleClick: ->
 
     if @target.isOrphan()
       @target.unCollapse()

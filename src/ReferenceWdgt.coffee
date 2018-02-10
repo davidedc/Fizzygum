@@ -34,7 +34,7 @@ class ReferenceWdgt extends WidgetHolderWithCaption
     super
     world.widgetsReferencingOtherWidgets.remove @
 
-  mouseClickLeft: (pos) ->
+  mouseDoubleClick: ->
     if @target.destroyed
       @inform "The referenced item\nis dead!"
       return
