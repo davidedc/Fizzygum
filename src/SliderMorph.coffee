@@ -44,7 +44,7 @@ class SliderMorph extends CircleBoxMorph
   initialiseDefaultVerticalStackLayoutSpec: ->
     @layoutSpecDetails = new VerticalStackLayoutSpec 0
 
-  imBeingAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (newParentMorph) ->
     @reLayout()
     
     # might happen in phase of deserialization that

@@ -80,5 +80,5 @@ class PromptMorph extends MenuMorph
 
   buildSubmorphs: ->
 
-  imBeingAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (newParentMorph) ->
   

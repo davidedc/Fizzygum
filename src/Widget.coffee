@@ -2040,7 +2040,7 @@ class Widget extends TreeNode
   # functions, as that's architecturally incorrect and can cause infinite loops in
   # the invocations.
 
-  imBeingAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (newParentMorph) ->
     @reLayout()
 
   addAsSiblingAfterMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
@@ -2101,7 +2101,7 @@ class Widget extends TreeNode
 
     aMorph.fullChanged()
     @silentAdd aMorph, true, position
-    aMorph.imBeingAddedTo @
+    aMorph.iHaveBeenAddedTo @
     if previousParent?.childRemoved?
       previousParent.childRemoved @
 
