@@ -203,6 +203,7 @@ class WorldMorph extends FolderPanelWdgt
 
   widgetsReferencingOtherWidgets: []
   incrementalGcSessionId: 0
+  desktopSidesPadding: 10
 
   constructor: (
       @worldCanvas,
@@ -1034,6 +1035,8 @@ class WorldMorph extends FolderPanelWdgt
     bkground.style.backgroundColor = "rgb(245, 245, 245)"
 
   stretchWorldToFillEntirePage: ->
+    # once you call this, the world will forever take the whole page
+    @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
     pos = getDocumentPositionOf @worldCanvas
     clientHeight = window.innerHeight
     clientWidth = window.innerWidth
@@ -1057,10 +1060,45 @@ class WorldMorph extends FolderPanelWdgt
       @worldCanvas.height = (clientHeight * pixelRatio)
       @worldCanvas.style.height = clientHeight + "px"
       @rawSetExtent new Point clientWidth, clientHeight
-      @children.forEach (child) =>
-        child.reactToWorldResize? @boundingBox()
+      @desktopReLayout()
   
-    
+
+  desktopReLayout: ->
+    basementOpenerWdgt = @firstChildSuchThat (w) ->
+      w instanceof BasementOpenerWdgt
+    if basementOpenerWdgt?
+      if basementOpenerWdgt.userMovedThisFromComputedPosition
+
+        # we do one dimension at a time here for a subtle reason: if
+        # say a window has the left side beyond the left side of the desktop
+        # then the x of positionFractionalInHoldingPanel is NEGATIVE
+        # and as one shrinks the browser the window comes TO THE RIGHT.
+        # This might make some mathematical sense but is very unintuitive so
+        # we just don't move widgets along the dimensions that have a negative
+        # fractional component
+        if basementOpenerWdgt.positionFractionalInHoldingPanel[0] > 0
+          basementOpenerWdgt.fullRawMoveTo (new Point (world.width() * basementOpenerWdgt.positionFractionalInHoldingPanel[0]), basementOpenerWdgt.top()).round()
+        if basementOpenerWdgt.positionFractionalInHoldingPanel[1] > 0
+          basementOpenerWdgt.fullRawMoveTo (new Point basementOpenerWdgt.left(), (world.height() * basementOpenerWdgt.positionFractionalInHoldingPanel[1])).round()
+
+        if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
+          basementOpenerWdgt.fullRawMoveWithin @
+      else
+        basementOpenerWdgt.fullMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
+
+    @children.forEach (child) =>
+      if child != basementOpenerWdgt
+        if child.positionFractionalInHoldingPanel?
+
+          # see comment above about negative fractional components
+          if child.positionFractionalInHoldingPanel[0] > 0
+            child.fullRawMoveTo (new Point (world.width() * child.positionFractionalInHoldingPanel[0]), child.top()).round()
+          if child.positionFractionalInHoldingPanel[1] > 0
+            child.fullRawMoveTo (new Point child.left(), (world.height() * child.positionFractionalInHoldingPanel[1])).round()
+
+
+        if !child.wasPositionedSlightlyOutsidePanel
+          child.fullRawMoveWithin @
   
   # WorldMorph events:
   initVirtualKeyboard: ->

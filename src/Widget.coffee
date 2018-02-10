@@ -263,6 +263,18 @@ class Widget extends TreeNode
 
   shadowInfo: nil
 
+  # some morphs such as references are given a
+  # default "computed" position on the screen.
+  # As long as the user didn't manually
+  # reposition them, then we keep giving them a
+  # computed position. BUT as soon as the user manually
+  # places them, then we quit giving the widget a
+  # computed position and rather we stick with the
+  # position the user gave.
+  userMovedThisFromComputedPosition: false
+  positionFractionalInHoldingPanel: nil
+  wasPositionedSlightlyOutsidePanel: false
+
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
 
@@ -2560,7 +2572,10 @@ class Widget extends TreeNode
       #console.log "****** onClickOutsideMeOrAnyOfMyChildren removing element"
       world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
 
-  justDropped: ->
+  justDropped: (whereIn) ->
+    @positionFractionalInHoldingPanel = @positionFractionalInMorph whereIn
+    @wasPositionedSlightlyOutsidePanel = ! whereIn.bounds.containsRectangle @bounds
+
     
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops
@@ -3148,7 +3163,7 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   basementIconAndText: ->
-    world.create new BasementOpenerWdgt()
+    world.add new BasementOpenerWdgt()
 
   analogClock: ->
     world.create new AnalogClockWdgt()
@@ -3562,6 +3577,7 @@ class Widget extends TreeNode
     @isLockingToPanels = false
 
   prepareToBeGrabbed: ->
+    @userMovedThisFromComputedPosition = true
     @unlockFromPanels()
     @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
     @layoutSpecDetails = nil

@@ -103,8 +103,9 @@ class PopUpWdgt extends Widget
     menu.addLine()
     menu.addMenuItem "pin", false, @, "pin"
  
-  justDropped: (widgetDroppedOn) ->
-    if widgetDroppedOn != world
+  justDropped: (whereIn) ->
+    super
+    if whereIn != world
       @pinPopUp()
 
     @updatePopUpShadow()
