@@ -18,6 +18,7 @@ class BasementOpenerWdgt extends WidgetHolderWithCaption
     @setExtent new Point 75, 75
 
   iHaveBeenAddedTo: (whereTo) ->
+    super
     if whereTo == world and !@userMovedThisFromComputedPosition
       @fullMoveTo world.bottomRight().subtract @extent().add world.desktopSidesPadding
 
