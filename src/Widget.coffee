@@ -731,6 +731,16 @@ class Widget extends TreeNode
   
   position: ->
     @bounds.origin
+
+  positionFractionalInMorph: (theMorph) ->
+    [relativeXPos, relativeYPos] = @positionPixelsInMorph theMorph
+    fractionalXPos = relativeXPos / theMorph.width()
+    fractionalYPos = relativeYPos / theMorph.height()
+    return [fractionalXPos, fractionalYPos]
+
+  positionPixelsInMorph: (theMorph) ->
+    relativePos = @position().toLocalCoordinatesOf theMorph
+    return [relativePos.x, relativePos.y]
   
   extent: ->
     @bounds.extent()

@@ -285,15 +285,6 @@ class HandMorph extends Widget
         else
           @world.stopEditing()
 
-  pointerPositionFractionalInMorph: (theMorph) ->
-    [relativeXPos, relativeYPos] = @pointerPositionPixelsInMorph theMorph
-    fractionalXPos = relativeXPos / theMorph.width()
-    fractionalYPos = relativeYPos / theMorph.height()
-    return [fractionalXPos, fractionalYPos]
-
-  pointerPositionPixelsInMorph: (theMorph) ->
-    relativePos = @position().toLocalCoordinatesOf theMorph
-    return [relativePos.x, relativePos.y]
 
   processMouseDown: (button, buttons, ctrlKey, shiftKey, altKey, metaKey) ->
     @destroyToolTips()

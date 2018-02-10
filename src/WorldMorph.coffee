@@ -1124,8 +1124,8 @@ class WorldMorph extends FolderPanelWdgt
     absoluteBoundsOfMorphRelativeToWorld = topMorphUnderPointer.boundingBox().asArray_xywh()
     morphIdentifierViaTextLabel = topMorphUnderPointer.identifyViaTextLabel()
     morphPathRelativeToWorld = topMorphUnderPointer.pathOfChildrenPositionsRelativeToWorld()
-    pointerPositionFractionalInMorph = @hand.pointerPositionFractionalInMorph topMorphUnderPointer
-    pointerPositionPixelsInMorph = @hand.pointerPositionPixelsInMorph topMorphUnderPointer
+    pointerPositionFractionalInMorph = @hand.positionFractionalInMorph topMorphUnderPointer
+    pointerPositionPixelsInMorph = @hand.positionPixelsInMorph topMorphUnderPointer
     # note that this pointer position is in world
     # coordinates not in page coordinates
     pointerPositionPixelsInWorld = @hand.position()
