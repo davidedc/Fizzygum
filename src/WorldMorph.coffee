@@ -7,8 +7,14 @@
 # REQUIRES ProfilingDataCollector
 # REQUIRES SystemTestsControlPanelUpdater
 
+# REQUIRES GridPositioningOfAddedShortcutsMixin
+# REQUIRES KeepIconicDesktopSystemLinksBackMixin
+
 # The WorldMorph takes over the canvas on the page
-class WorldMorph extends FolderPanelWdgt
+class WorldMorph extends PanelWdgt
+
+  @augmentWith GridPositioningOfAddedShortcutsMixin, @name
+  @augmentWith KeepIconicDesktopSystemLinksBackMixin, @name
 
   # We need to add and remove
   # the event listeners so we are
@@ -204,6 +210,7 @@ class WorldMorph extends FolderPanelWdgt
   widgetsReferencingOtherWidgets: []
   incrementalGcSessionId: 0
   desktopSidesPadding: 10
+
   # the desktop lays down icons vertically
   laysIconsHorizontallyInGrid: false
   iconsLayingInGridWrapCount: 5
@@ -2058,13 +2065,6 @@ class WorldMorph extends FolderPanelWdgt
       document.body.removeChild @inputDOMElementForVirtualKeyboard
       @inputDOMElementForVirtualKeyboard = nil
     @worldCanvas.focus()
-
-  # the desktop is a FolderPanelWdgt, which has extra logic
-  # such that any widget dropped in it "becomes" a reference
-  # to such widget, and the widget is moved to the basement.
-  # We override that behaviour "our" here by leaving this
-  # method empty.
-  reactToDropOf: ->
 
   anyReferenceToWdgt: (whichWdgt) ->
     # go through all the references and check whether they reference

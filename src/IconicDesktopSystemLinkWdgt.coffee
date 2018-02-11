@@ -8,13 +8,6 @@
 
 class IconicDesktopSystemLinkWdgt extends WidgetHolderWithCaptionWdgt
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    super
-    @moveOnTopOfTopReference()
-
-  moveAsLastChild: ->
-    @moveOnTopOfTopReference()
-
   moveOnTopOfTopReference: ->
     topMostReference = @parent.topmostChildSuchThat (c) =>
       c != @ and (c instanceof WidgetHolderWithCaptionWdgt)

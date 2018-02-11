@@ -37,7 +37,7 @@ class ReconfigurablePaintMorph extends Widget
 
   closeFromContainerWindow: (containerWindow) ->
     if !world.anyReferenceToWdgt containerWindow
-      prompt = new SaveReferencePromptWdgt @, containerWindow, nil, nil
+      prompt = new SaveReferencePromptWdgt @, containerWindow
       prompt.popUpAtHand()
     else
       containerWindow.close()

@@ -4,7 +4,7 @@
 class FolderWindowWdgt extends WindowWdgt
 
 
-  constructor: (@labelContent, @closeButton, @contents, @internal = false, @wdgtWhereReferenceWillGo) ->
+  constructor: (@labelContent, @closeButton, @contents, @internal = false) ->
     @contents = new ScrollPanelWdgt new FolderPanelWdgt()
     super "", @closeButton, @contents, @internal
 
@@ -14,8 +14,11 @@ class FolderWindowWdgt extends WindowWdgt
 
   closeFromWindowBar: ->
     if !world.anyReferenceToWdgt @
-      prompt = new SaveReferencePromptWdgt @, @, nil, nil
+      prompt = new SaveReferencePromptWdgt @, @
       prompt.popUpAtHand()
     else
       @close()
 
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+    super
+    @contents.contents.addMorphSpecificMenuEntries morphOpeningThePopUp, menu

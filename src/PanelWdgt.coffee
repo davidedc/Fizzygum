@@ -35,6 +35,13 @@ class PanelWdgt extends Widget
   colloquialName: ->
     "panel"
 
+  # only the desktop and folder panels have menu entries
+  # to invoke this
+  makeFolder: ->
+    newFolderWindow = new FolderWindowWdgt()
+    newFolderWindow.close()
+    newFolderWindow.createFolderReference "untitled", @
+
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
     # keep in synch the value of the container scrollPanel

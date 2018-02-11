@@ -101,6 +101,7 @@ class TreeNode
       return
     @parent.children.splice idx, 1
     @parent.children.push @
+    @parent.childMovedInFrontOfOthers? @
     # whoever invoked this should probably
     # do a fullChanged() we don't do it
     # here because it seems like a lower-level
