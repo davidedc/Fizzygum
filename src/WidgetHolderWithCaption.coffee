@@ -22,7 +22,7 @@ class WidgetHolderWithCaption extends Widget
     # update layout
     @invalidateLayout()
 
-  iHaveBeenAddedTo: (whereTo) ->
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
     super
     @moveOnTopOfTopReference()
 

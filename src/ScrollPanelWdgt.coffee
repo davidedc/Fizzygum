@@ -184,8 +184,8 @@ class ScrollPanelWdgt extends PanelWdgt
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it. This also applies to
   # resizing handles!
-  add: (aMorph) ->
-    @contents.add aMorph
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+    @contents.add aMorph, position, layoutSpec, beingDropped
     @adjustContentsBounds()
     @adjustScrollBars()
 

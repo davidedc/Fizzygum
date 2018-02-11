@@ -2053,7 +2053,7 @@ class Widget extends TreeNode
   # functions, as that's architecturally incorrect and can cause infinite loops in
   # the invocations.
 
-  iHaveBeenAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
     @reLayout()
 
   addAsSiblingAfterMe: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
@@ -2073,7 +2073,7 @@ class Widget extends TreeNode
   # both a high-level and a low-level.
   # For most morphs the two things coincide, and the
   # high-level just calls the low-level.
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
     if (aMorph not instanceof HighlighterMorph) and (aMorph not instanceof CaretMorph)
       if @ == world
         aMorph.addShadow()
@@ -2087,7 +2087,7 @@ class Widget extends TreeNode
   #     being added to itself and the case of
   # ??? TODO a Widget being added to one of its
   #     children
-  addRaw: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING) ->
+  addRaw: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
 
     # let's check if we are trying to add
     # an ancestor of me below me.
@@ -2114,7 +2114,7 @@ class Widget extends TreeNode
 
     aMorph.fullChanged()
     @silentAdd aMorph, true, position
-    aMorph.iHaveBeenAddedTo @
+    aMorph.iHaveBeenAddedTo @, beingDropped
     if previousParent?.childRemoved?
       previousParent.childRemoved @
 

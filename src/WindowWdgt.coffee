@@ -98,7 +98,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       return "window"
 
-  add: (aMorph, position = nil, layoutSpec, notContent) ->
+  add: (aMorph, position = nil, layoutSpec, beingDropped, notContent) ->
     unless notContent or (aMorph instanceof CaretMorph) or (aMorph instanceof HandleMorph)
       @contentNeverSetInPlaceYet = true
       titleToBeSet = aMorph.colloquialName()
@@ -110,9 +110,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @removeChild @contents
       @contents = aMorph
       @adjustContentsBounds()
-      super aMorph, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT
+      super aMorph, position, LayoutSpec.ATTACHEDAS_WINDOW_CONTENT, beingDropped
     else
-      super aMorph, position, LayoutSpec.ATTACHEDAS_FREEFLOATING
+      super aMorph, position, LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped
     @resizer?.moveInFrontOfSiblings()
 
   childBeingDestroyed: (child) ->
@@ -183,7 +183,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       else
         @titlebarBackground.setColor new Color 125,125,125
         @titlebarBackground.strokeColor = new Color 100,100,100
-      @add @titlebarBackground, nil, nil, true
+      @add @titlebarBackground, nil, nil, nil, true
 
     # label
     @label?.fullDestroy()
@@ -191,7 +191,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @label.fontSize = WorldMorph.preferencesAndSettings.menuFontSize
     @label.isBold = true
     @label.color = new Color 255, 255, 255
-    @add @label, nil, nil, true
+    @add @label, nil, nil, nil, true
 
     # upper-left button, often a close button
     # but it can be anything
@@ -204,8 +204,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @collapseUncollapseSwitchButton = new SwitchButtonMorph [collapseButton, uncollapseButton]
 
 
-    @add @closeButton, nil, nil, true
-    @add @collapseUncollapseSwitchButton, nil, nil, true
+    @add @closeButton, nil, nil, nil, true
+    @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 
     @add @contents
 

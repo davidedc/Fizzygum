@@ -42,5 +42,5 @@ class SaveReferencePromptWdgt extends MenuMorph
 
   buildSubmorphs: ->
 
-  iHaveBeenAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
   

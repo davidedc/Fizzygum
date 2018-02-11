@@ -12,7 +12,7 @@ class CanvasMorph extends PanelWdgt
   @augmentWith BackBufferMixin
 
   
-  iHaveBeenAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
 
   # No changes of position or extent should be
   # performed in here.

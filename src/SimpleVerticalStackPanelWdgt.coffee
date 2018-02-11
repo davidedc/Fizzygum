@@ -18,7 +18,7 @@ class SimpleVerticalStackPanelWdgt extends Widget
   colloquialName: ->
     "stack"
 
-  add: (aMorph) ->
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
     aMorph.rawResizeToWithoutSpacing()
     super
 

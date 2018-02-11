@@ -38,7 +38,7 @@ class ColorPickerMorph extends Widget
     @feedback.fullRawMoveTo new Point x, y
     @add @feedback
 
-  iHaveBeenAddedTo: (newParentMorph) ->
+  iHaveBeenAddedTo: (whereTo, beingDropped) ->
   
   getColor: ->
     @feedback.color
