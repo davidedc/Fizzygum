@@ -1858,20 +1858,18 @@ class Widget extends TreeNode
         return
 
     morphToAdd = new ReferenceWdgt @, referenceName
-    if placeToDropItIn == world
-      placeToDropItIn.add morphToAdd
-      morphToAdd.fullMoveTo @position().subtract new Point 50, 50
-    else
-      placeToDropItIn.addInPseudoRandomPosition morphToAdd
+    # this "add" is going to try to position the
+    # new icon into a grid
+    placeToDropItIn.add morphToAdd
     morphToAdd.setExtent new Point 75, 75
     morphToAdd.fullChanged()
     @bringToForegroud()
 
   createFolderReference: (referenceName, whichFolderPanelToAddTo) ->
     morphToAdd = new ReferenceWdgt @, referenceName, true
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
     whichFolderPanelToAddTo.add morphToAdd
-    # TODO better way to add icons to folders
-    morphToAdd.fullMoveTo whichFolderPanelToAddTo.position().add new Point 50, 50
     morphToAdd.setExtent new Point 75, 75
     morphToAdd.fullChanged()
     @bringToForegroud()

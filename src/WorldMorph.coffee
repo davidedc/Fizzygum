@@ -204,6 +204,9 @@ class WorldMorph extends FolderPanelWdgt
   widgetsReferencingOtherWidgets: []
   incrementalGcSessionId: 0
   desktopSidesPadding: 10
+  # the desktop lays down icons vertically
+  laysIconsHorizontallyInGrid: false
+  iconsLayingInGridWrapCount: 5
 
   constructor: (
       @worldCanvas,

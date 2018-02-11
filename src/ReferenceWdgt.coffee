@@ -16,7 +16,7 @@ class ReferenceWdgt extends WidgetHolderWithCaption
     if !@isFolder
       return
     if droppedWidget instanceof ReferenceWdgt
-      @target.contents.contents.addInPseudoRandomPosition droppedWidget
+      @target.contents.contents.add droppedWidget
     else
       droppedWidget.createReferenceAndClose nil, nil, @target.contents.contents
 
