@@ -2,7 +2,7 @@
 
 # REQUIRES HighlightableMixin
 
-class BasementOpenerWdgt extends WidgetHolderWithCaption
+class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt
 
   @augmentWith HighlightableMixin, @name
 

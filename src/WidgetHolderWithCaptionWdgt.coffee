@@ -1,6 +1,11 @@
-# WidgetHolderWithCaption //////////////////////////////////////////////////////
+# WidgetHolderWithCaptionWdgt //////////////////////////////////////////////////////
 
-class WidgetHolderWithCaption extends Widget
+# This is what typically people refer to as "icons", however that's not
+# quite precise. An icon is just a symbol, it doesn't have a caption per se.
+# This widget has a caption instead. Also, since it can hold any widget, the
+# final name is WidgetHolderWithCaptionWdgt.
+
+class WidgetHolderWithCaptionWdgt extends Widget
 
   labl: nil
 
@@ -22,23 +27,6 @@ class WidgetHolderWithCaption extends Widget
     # update layout
     @invalidateLayout()
 
-  iHaveBeenAddedTo: (whereTo, beingDropped) ->
-    super
-    @moveOnTopOfTopReference()
-
-  moveAsLastChild: ->
-    @moveOnTopOfTopReference()
-
-  moveOnTopOfTopReference: ->
-    topMostReference = @parent.topmostChildSuchThat (c) =>
-      c != @ and (c instanceof WidgetHolderWithCaption)
-    if topMostReference?
-      @parent.children.remove @
-      index = @parent.children.indexOf topMostReference
-      @parent.children.splice (index + 1), 0, @
-    else
-      @parent.children.remove @
-      @parent.children.unshift @
 
   setColor: (theColor) ->
     @icon.setColor theColor

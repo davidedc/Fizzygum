@@ -1078,7 +1078,7 @@ class WorldMorph extends FolderPanelWdgt
         basementOpenerWdgt.fullMoveTo @bottomRight().subtract basementOpenerWdgt.extent().add @desktopSidesPadding
 
     @children.forEach (child) =>
-      if child != basementOpenerWdgt and !(child instanceof WidgetHolderWithCaption)
+      if child != basementOpenerWdgt and !(child instanceof WidgetHolderWithCaptionWdgt)
         if child.positionFractionalInHoldingPanel?
           child.fullRawMoveToFractionalPositionInPaneUserHasSet()
         if !child.wasPositionedSlightlyOutsidePanel
@@ -1773,7 +1773,7 @@ class WorldMorph extends FolderPanelWdgt
       menu.addMenuItem "switch to user mode", true, @, "toggleDevMode", "disable developers'\ncontext menus"
     else
       menu.addMenuItem "switch to dev mode", true, @, "toggleDevMode"
-    menu.addMenuItem "make folder", true, @, "makeFolder"
+    menu.addMenuItem "new folder", true, @, "makeFolder"
     menu.addMenuItem "about Fizzygum...", true, @, "about"
     menu
 
@@ -2059,6 +2059,11 @@ class WorldMorph extends FolderPanelWdgt
       @inputDOMElementForVirtualKeyboard = nil
     @worldCanvas.focus()
 
+  # the desktop is a FolderPanelWdgt, which has extra logic
+  # such that any widget dropped in it "becomes" a reference
+  # to such widget, and the widget is moved to the basement.
+  # We override that behaviour "our" here by leaving this
+  # method empty.
   reactToDropOf: ->
 
   anyReferenceToWdgt: (whichWdgt) ->

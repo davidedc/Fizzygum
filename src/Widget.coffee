@@ -1854,10 +1854,10 @@ class Widget extends TreeNode
 
     # don't create new reference if it exists already
     for eachChild in placeToDropItIn.children
-      if (eachChild instanceof ReferenceWdgt) and eachChild.target == @
+      if (eachChild instanceof IconicDesktopSystemShortcutWdgt) and eachChild.target == @
         return
 
-    morphToAdd = new ReferenceWdgt @, referenceName
+    morphToAdd = new IconicDesktopSystemShortcutWdgt @, referenceName
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn.add morphToAdd
@@ -1866,7 +1866,7 @@ class Widget extends TreeNode
     @bringToForegroud()
 
   createFolderReference: (referenceName, whichFolderPanelToAddTo) ->
-    morphToAdd = new ReferenceWdgt @, referenceName, true
+    morphToAdd = new IconicDesktopSystemShortcutWdgt @, referenceName, true
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     whichFolderPanelToAddTo.add morphToAdd

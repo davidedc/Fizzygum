@@ -46,10 +46,10 @@ class MenusHelper
   # Icons --------------------------------------------------------------
 
   makeIconWithText: ->
-    world.create new WidgetHolderWithCaption "hey there", new BrushIconMorph()
+    world.create new WidgetHolderWithCaptionWdgt "hey there", new BrushIconMorph()
 
   makeEmptyIconWithText: ->
-    world.create new WidgetHolderWithCaption "hey there"
+    world.create new WidgetHolderWithCaptionWdgt "hey there"
 
   makeFolderWindow: (a,b,c,d,e) ->
     debugger

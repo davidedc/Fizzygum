@@ -12,11 +12,6 @@ class FolderWindowWdgt extends WindowWdgt
   representativeIcon: ->
     new GenericShortcutIconWdgt new FolderIconWdgt()
 
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
-    super
-    menu.addLine()
-    menu.addMenuItem "new folder...", true, @contents.contents, "makeFolder", "make a new folder", nil,nil,nil,nil, @wdgtWhereReferenceWillGo
-
   closeFromWindowBar: ->
     if !world.anyReferenceToWdgt @
       prompt = new SaveReferencePromptWdgt @, @, nil, nil
