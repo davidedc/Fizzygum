@@ -3198,9 +3198,6 @@ class Widget extends TreeNode
 
     menu.popUpAtHand()
 
-  basementIconAndText: ->
-    world.add new BasementOpenerWdgt()
-
   analogClock: ->
     world.create new AnalogClockWdgt()
 
@@ -3259,7 +3256,7 @@ class Widget extends TreeNode
 
   popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "shortcuts & scripts"
-    menu.addMenuItem "basement shortcut", true, @, "basementIconAndText"
+    menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.popUpAtHand()
 
 

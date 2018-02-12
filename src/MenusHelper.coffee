@@ -131,3 +131,7 @@ class MenusHelper
 
   makeGenericObjectIcon: ->
     world.create new GenericObjectIconWdgt()
+
+
+  basementIconAndText: ->
+    world.add new BasementOpenerWdgt()
