@@ -135,3 +135,37 @@ class MenusHelper
 
   basementIconAndText: ->
     world.add new BasementOpenerWdgt()
+
+  newScriptWindow: ->
+    scriptWdgt = new ScriptWdgt()
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+  createFizzyPaintLauncherAndItsIcon: ->
+    scriptWdgt = new ScriptWdgt """
+      reconfPaint = new ReconfigurablePaintMorph()
+      wm = new WindowWdgt nil, nil, reconfPaint
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+    """
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+    fizzyPaintLauncher = new ScriptShortcutWdgt wm, "Fizzypaint", new PaintBucketIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add fizzyPaintLauncher
+    fizzyPaintLauncher.setExtent new Point 75, 75
+    fizzyPaintLauncher.fullChanged()

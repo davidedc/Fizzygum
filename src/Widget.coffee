@@ -1900,10 +1900,23 @@ class Widget extends TreeNode
     morphToAdd.fullChanged()
     @bringToForegroud()
 
+  createScriptReference: (referenceName, whichFolderPanelToAddTo) ->
+    morphToAdd = new ScriptShortcutWdgt @, referenceName, true
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    whichFolderPanelToAddTo.add morphToAdd
+    morphToAdd.setExtent new Point 75, 75
+    morphToAdd.fullChanged()
+    @bringToForegroud()
+
   createReferenceAndClose: (unused,stringFieldWithName,placeToDropItIn)->
     debugger
     if @ instanceof FolderWindowWdgt
       @createFolderReference stringFieldWithName.text.text, @wdgtWhereReferenceWillGo
+    else if (@ instanceof WindowWdgt) and @contents instanceof ScriptWdgt
+      if !placeToDropItIn?
+        placeToDropItIn = world
+      @createScriptReference stringFieldWithName.text.text, placeToDropItIn
     else
       @createReference stringFieldWithName?.text.text, placeToDropItIn
     @close()
@@ -3257,6 +3270,8 @@ class Widget extends TreeNode
   popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "shortcuts & scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
+    menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
+    menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncherAndItsIcon"
     menu.popUpAtHand()
 
 

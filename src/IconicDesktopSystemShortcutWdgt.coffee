@@ -31,7 +31,7 @@ class IconicDesktopSystemShortcutWdgt extends IconicDesktopSystemLinkWdgt
     debugger
     if !@isFolder
       return
-    if droppedWidget instanceof IconicDesktopSystemShortcutWdgt
+    if droppedWidget instanceof IconicDesktopSystemLinkWdgt
       @target.contents.contents.add droppedWidget
     else
       droppedWidget.createReferenceAndClose nil, nil, @target.contents.contents
