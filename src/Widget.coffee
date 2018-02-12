@@ -2717,15 +2717,14 @@ class Widget extends TreeNode
 
     prompt = new CodePromptMorph(msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
+    wm = new WindowWdgt nil, nil, prompt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
 
-    prompt.setExtent new Point 600,400
 
-    world.add prompt
-    prompt.fullMoveTo world.hand.position().subtract new Point 50, 100
-    prompt.fullRawMoveWithin world
-
-    #prompt.popUpAtHand()
-    #prompt.tempPromptEntryField.edit()
   
   pickColor: (msg, callback, defaultContents) ->
     colorPicker = new ColorPickerMorph defaultContents

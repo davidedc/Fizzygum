@@ -1,6 +1,6 @@
 # CodePromptMorph ///////////////////////////////////////////////////
 
-class CodePromptMorph extends DEPRECATEDWindowMorph
+class CodePromptMorph extends Widget
 
   tempPromptEntryField: nil
   defaultContents: ""
@@ -10,25 +10,29 @@ class CodePromptMorph extends DEPRECATEDWindowMorph
   saveButton: nil
   okButton: nil
 
+  # the external padding is the space between the edges
+  # of the container and all of its internals. The reason
+  # you often set this to zero is because windows already put
+  # contents inside themselves with a little padding, so this
+  # external padding is not needed. Useful to keep it
+  # separate and know that it's working though.
+  externalPadding: 0
+  # the internal padding is the space between the internal
+  # components. It doesn't necessarily need to be equal to the
+  # external padding
+  internalPadding: 5
+
   constructor: (@msg, @target, @callback, @defaultContents) ->
-    super "Edit tool code"
+    super new Point 200,400
+    @buildAndConnectChildren()
+
+  colloquialName: ->
+    "Edit tool code"
 
   buildAndConnectChildren: ->
+    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
-
-    # remove all submorhs i.e. panes and buttons
-    # THE ONES THAT ARE STILL
-    # submorphs of the inspector. If they
-    # have been peeled away, they still live
-    #@fullDestroyChildren()
-
-    super
-    
-    #@tempPromptEntryField = new TextMorph2 @defaultContents,nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5
-    #@tempPromptEntryField.isEditable = true
-    #@add @tempPromptEntryField
-
 
     @tempPromptEntryField = new ScrollPanelWdgt()
     @tempPromptEntryField.disableDrops()
@@ -74,6 +78,7 @@ class CodePromptMorph extends DEPRECATEDWindowMorph
       return
 
     super
+    debugger
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -86,44 +91,31 @@ class CodePromptMorph extends DEPRECATEDWindowMorph
     # going to be painted and moved OK.
     trackChanges.push false
 
-    # label
-    labelLeft = @left() + @padding
-    labelTop = @top() + @padding
-    labelRight = @right() - @padding
-    labelWidth = labelRight - labelLeft
-    labelBottom = labelTop + @label.height() + 2
-
-    eachPaneWidth = Math.floor(@width() / 2) - @padding
-
-
-    mainCanvasWidth = eachPaneWidth
-    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
-    mainCanvasHeight = b - labelBottom - Math.floor(@padding / 2)
-    mainCanvasBottom = labelBottom + mainCanvasHeight + Math.floor(@padding / 2)
-    mainCanvasLeft = @left() + eachPaneWidth
+    textHeight = @height() - 2 * @externalPadding - @internalPadding - 15
+    textBottom = @top() + @externalPadding + textHeight
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point labelLeft, labelBottom + Math.floor(@padding / 2)
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @padding, mainCanvasHeight
+      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, textHeight
 
 
     # buttons -------------------------------
     
 
-    eachButtonWidth = (@width() - 5* @padding - WorldMorph.preferencesAndSettings.handleSize) / 3
+    eachButtonWidth = (@width() - 2 * @externalPadding - 3 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize) / 3
 
     if @cancelButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @cancelButton.doLayout buttonBounds 
 
     if @saveButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @saveButton.doLayout buttonBounds 
 
     if @okButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), textBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @okButton.doLayout buttonBounds 
 
