@@ -477,6 +477,14 @@ class Widget extends TreeNode
       return firstPart + @uniqueIDString()
 
   close: ->
+
+    # closing window content: also close the window
+    # UNLESS we are an internal window, in such case
+    # leave the parent one as is
+    if !(@ instanceof WindowWdgt) and @parent? and @parent instanceof WindowWdgt
+      @parent.close()
+      return
+
     world.morphsDetectingClickOutsideMeOrAnyOfMeChildren.remove @
     @parent?.childBeingClosed? @
     if world.basementWdgt?
