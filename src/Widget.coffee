@@ -1527,9 +1527,18 @@ class Widget extends TreeNode
     else
       aColor = aColorOrAMorphGivingAColor
     if aColor
-      unless @color.eq aColor
-        @color = aColor
-        @changed()
+
+      # if the color is set using the color string literal
+      # e.g. "red" then we can't check equality using .eq
+      # so just skip the check and set the color
+      # TODO either all colors should be set as Color instead
+      # of strings, or this check should be smarter
+      if @color?.eq?
+        if @color.eq aColor
+          return
+
+      @color = aColor
+      @changed()
         
     return aColor
   
@@ -1539,10 +1548,19 @@ class Widget extends TreeNode
     else
       aColor = aColorOrAMorphGivingAColor
     if aColor
-      unless @color.eq aColor
-        @backgroundColor = aColor
-        @changed()
-        
+
+      # if the color is set using the color string literal
+      # e.g. "red" then we can't check equality using .eq
+      # so just skip the check and set the color
+      # TODO either all colors should be set as Color instead
+      # of strings, or this check should be smarter
+      if @backgroundColor?.eq?
+        if @backgroundColor.eq aColor
+          return
+
+      @backgroundColor = aColor
+      @changed()
+
     return aColor
   
   # Widget displaying ---------------------------------------------------------
