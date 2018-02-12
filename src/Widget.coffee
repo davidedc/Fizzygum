@@ -2707,7 +2707,7 @@ class Widget extends TreeNode
   textPrompt: (msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded) ->
 
-    prompt = new TextPromptMorph(msg, target, callback, defaultContents, width, floorNum,
+    prompt = new CodePromptMorph(msg, target, callback, defaultContents, width, floorNum,
     ceilingNum, isRounded)
 
     prompt.setExtent new Point 600,400

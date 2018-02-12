@@ -1,6 +1,6 @@
-# TextPromptMorph ///////////////////////////////////////////////////
+# CodePromptMorph ///////////////////////////////////////////////////
 
-class TextPromptMorph extends DEPRECATEDWindowMorph
+class CodePromptMorph extends DEPRECATEDWindowMorph
 
   tempPromptEntryField: nil
   defaultContents: ""
@@ -33,14 +33,16 @@ class TextPromptMorph extends DEPRECATEDWindowMorph
     @tempPromptEntryField = new ScrollPanelWdgt()
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.isTextLineWrapping = true
     @tempPromptEntryField.color = new Color 255, 255, 255
 
     @textMorph = new SimplePlainTextWdgt @defaultContents
+    @textMorph.setFontName nil, nil, @textMorph.monoFontStack     
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
 
-    @tempPromptEntryField.setContents @textMorph, 2
+    @tempPromptEntryField.setContents @textMorph, 5
+    @textMorph.softWrapOff()
+
     @add @tempPromptEntryField
 
     # buttons -------------------------------
