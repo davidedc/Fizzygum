@@ -25,7 +25,7 @@ class SaveReferencePromptWdgt extends MenuMorph
 
     @silentAdd @tempPromptEntryField
 
-    @addMenuItem "Don't save", true, @target, "moveToTrash"
+    @addMenuItem "Don't save", true, @target, "destroy"
     # "Cancel" here just dismisses this prompt, but the target
     # wdgt remains open
     @addMenuItem "Cancel", true, @, "close"
