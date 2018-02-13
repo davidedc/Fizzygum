@@ -275,6 +275,8 @@ class Widget extends TreeNode
   positionFractionalInHoldingPanel: nil
   wasPositionedSlightlyOutsidePanel: false
 
+  connectionsCalculationToken: 314
+
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.THIS_ONE_I_HAVE_NOW , PreferredSize.THIS_ONE_I_HAVE_NOW, 1
 
@@ -1521,7 +1523,9 @@ class Widget extends TreeNode
     h = Math.max Math.round(height or 0), 0
     @bounds = new Rectangle @bounds.origin, new Point @bounds.corner.x, @bounds.origin.y + h
   
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
     else
@@ -1542,7 +1546,9 @@ class Widget extends TreeNode
         
     return aColor
   
-  setBackgroundColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
+  setBackgroundColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+
     if morphGivingColor?.getColor?
       aColor = morphGivingColor.getColor()
     else
@@ -3606,7 +3612,10 @@ class Widget extends TreeNode
   colorSetters: ->
     # for context menu demo purposes
     ["color", "backgroundColor"]
-  
+
+  stringSetters: ->
+    []
+
   numericalSetters: ->
     list = ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
     if @addShapeSpecificNumericalSetters?

@@ -1065,7 +1065,8 @@ class StringMorph3 extends Widget
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
-  setText: (theTextContent, stringFieldMorph) ->
+  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
     if stringFieldMorph?
       # in this case, the stringFieldMorph has a
       # StringMorph in "text". The StringMorph has the

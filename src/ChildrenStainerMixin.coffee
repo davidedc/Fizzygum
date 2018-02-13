@@ -17,7 +17,8 @@ ChildrenStainerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      setColor: (theColor) ->
-        super
+      setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
+        if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+        super theColor, ignored, connectionsCalculationToken, true
         for eachChild in @children
-          eachChild.setColor theColor
+          eachChild.setColor theColor, ignored, connectionsCalculationToken

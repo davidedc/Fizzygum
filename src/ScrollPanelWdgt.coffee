@@ -90,12 +90,14 @@ class ScrollPanelWdgt extends PanelWdgt
     @adjustContentsBounds()
     @adjustScrollBars()
 
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
-    aColor = super
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+
+    aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
     # keep in synch the color of the content.
     # Note that the container ScrollPanel.
     # is actually not painted.
-    @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor
+    @contents.setColor aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken
     return aColor
 
   setAlphaScaled: (alphaOrMorphGivingAlpha, morphGivingAlpha) ->

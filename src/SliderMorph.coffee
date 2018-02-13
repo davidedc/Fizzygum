@@ -87,6 +87,16 @@ class SliderMorph extends CircleBoxMorph
       return (@height() - @button.height()) / @rangeSize()
     else
       return (@width() - @button.width()) / @rangeSize()
+
+  setValue: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @value = Number(newvalue)
+    @updateTarget()
+    @reLayout()
+    
+    @button.reLayout()
+    
+    @changed()
     
   updateValue: ->
     if @autoOrientation() is "vertical"
@@ -95,12 +105,12 @@ class SliderMorph extends CircleBoxMorph
       relPos = @button.left() - @left()
     newvalue = Math.round relPos / @unitSize() + @start
     if @value != newvalue
-      @value = newvalue
-      @updateTarget()
+      @setValue newvalue, nil, nil
   
   updateTarget: ->
+    debugger
     if @action and @action != ""
-      @target[@action].call @target, @value, @argumentToAction
+      @target[@action].call @target, @value, @argumentToAction, @connectionsCalculationToken
     return    
   
   # SliderMorph menu:
@@ -247,11 +257,6 @@ class SliderMorph extends CircleBoxMorph
     @changed()
   
   # openTargetSelector: -> taken form the ControllerMixin
-
-  # TODO clean this name up
-  setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
-    @target = theTarget
-    @action = each
   
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     choices = theTarget.numericalSetters()
@@ -262,10 +267,14 @@ class SliderMorph extends CircleBoxMorph
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  
+  stringSetters: ->
+    list = super()
+    list.push "setValue"
+    list
+
   numericalSetters: ->
     list = super()
-    list.push "setStart", "setStop", "setSize"
+    list.push "setValue", "setStart", "setStop", "setSize"
     list
   
   

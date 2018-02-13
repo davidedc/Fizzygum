@@ -28,7 +28,9 @@ class WidgetHolderWithCaptionWdgt extends Widget
     @invalidateLayout()
 
 
-  setColor: (theColor) ->
+  setColor: (theColor, ignored, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+
     @icon.setColor theColor
 
   widthWithoutSpacing: ->

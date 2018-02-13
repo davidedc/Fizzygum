@@ -51,9 +51,10 @@ class StringMorph extends Widget
     # override inherited properties:
     @noticesTransparentClick = true
 
-  setText: (theTextContent,a) ->
-    if a?
-      theTextContent = a.text.text
+  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    if stringFieldMorph?
+      theTextContent = stringFieldMorph.text.text
     theTextContent = theTextContent + ""
     if @text != theTextContent
       @text = theTextContent

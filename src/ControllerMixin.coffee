@@ -18,6 +18,7 @@ ControllerMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
       openTargetSelector: ->
+        debugger
         choices = world.plausibleTargetAndDestinationMorphs @
         if choices.length > 0
           menu = new MenuMorph @, false, @, true, true, "choose target:"
@@ -27,3 +28,7 @@ ControllerMixin =
         else
           menu = new MenuMorph @, false, @, true, true, "no targets available"
         menu.popUpAtHand()
+
+      setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
+        @target = theTarget
+        @action = each

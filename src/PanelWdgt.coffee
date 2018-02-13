@@ -42,8 +42,10 @@ class PanelWdgt extends Widget
     newFolderWindow.close()
     newFolderWindow.createReference "untitled", @
 
-  setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
-    aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)
+  setColor: (aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+
+    aColor = super aColorOrAMorphGivingAColor, morphGivingColor, connectionsCalculationToken, true
     # keep in synch the value of the container scrollPanel
     # if there is one. Note that the container scrollPanel
     # is actually not painted.

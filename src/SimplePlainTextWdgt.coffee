@@ -1,5 +1,7 @@
 # SimplePlainTextWdgt ///////////////////////////////////////////////////////////
 
+# REQUIRES ControllerMixin
+
 # A multi-line, optionally word-wrapping string.
 # It's not "contained": it will literally blurt itself out allover the
 # screen. For "contained" text (the only practical solution for long
@@ -20,6 +22,8 @@
 # bound etc...)
 
 class SimplePlainTextWdgt extends TextMorph2
+
+  @augmentWith ControllerMixin
 
   constructor: (
    @text = "SimplePlainText",
@@ -48,6 +52,16 @@ class SimplePlainTextWdgt extends TextMorph2
     super
     @layoutSpecDetails.canSetHeightFreely = false
 
+  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
+    debugger
+    choices = theTarget.stringSetters()
+    menu = new MenuMorph @, false, @, true, true, "choose target property:"
+    choices.forEach (each) =>
+      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil,theTarget, each
+    if choices.length == 0
+      menu = new MenuMorph @, false, @, true, true, "no target properties available"
+    menu.popUpAtHand()
+
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
@@ -65,6 +79,9 @@ class SimplePlainTextWdgt extends TextMorph2
     menu.removeMenuItem "↑ align top"
     menu.removeMenuItem "⍿ align middle"
     menu.removeMenuItem "↓ align bottom"
+
+    menu.addLine()
+    menu.addMenuItem "set target", true, @, "openTargetSelector", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
 
     if @amIDirectlyInsideScrollPanelWdgt()
       childrenNotCarets = @parent.children.filter (m) ->
@@ -101,10 +118,17 @@ class SimplePlainTextWdgt extends TextMorph2
 
   # This is also invoked for example when you take a slider
   # and set it to target this.
-  setText: (theTextContent, stringFieldMorph) ->
-    super
+  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    super theTextContent, stringFieldMorph, connectionsCalculationToken, true
     @reLayout()
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
+    @updateTarget()
+
+  updateTarget: ->
+    if @action and @action != ""
+      @target[@action].call @target, @text, nil, @connectionsCalculationToken
+    return    
 
   toggleShowBlanks: ->
     super

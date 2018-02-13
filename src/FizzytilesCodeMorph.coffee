@@ -7,10 +7,10 @@ class FizzytilesCodeMorph extends TextMorph2
 
 
   showCompiledCode: (theTextContent) ->
-    @setText theTextContent, nil, true
+    @setText theTextContent, nil, nil, nil, true
 
-  setText: (theTextContent, stringFieldMorph, skipCompilation) ->
-    super
+  setText: (theTextContent, stringFieldMorph, connectionsCalculationToken, superCall, skipCompilation) ->
+    super theTextContent, stringFieldMorph, connectionsCalculationToken, true
     if !skipCompilation?
       @fridgeMagnetsCanvas?.newGraphicsCode @text
 

@@ -240,7 +240,7 @@ class CaretMorph extends BlinkerMorph
   # all the changes and sort-of-resetting the
   # state of the target.
   undo: ->
-    @target.setText @originalContents
+    @target.setText @originalContents, nil, nil
     @target.clearSelection()
     @gotoSlot 0
   
@@ -259,7 +259,10 @@ class CaretMorph extends BlinkerMorph
         @target.deleteSelection()
       text = @target.text
       text = text.slice(0, @slot) + symbol + text.slice(@slot)
-      @target.setText text
+      # this is a setText that will trigger the text
+      # connections "from within", starting a new connections
+      # update round
+      @target.setText text, nil, nil
       @goRight false, symbol.length
       @updateDimension()
   
@@ -310,7 +313,7 @@ class CaretMorph extends BlinkerMorph
     else
       text = @target.text
       text = text.slice(0, @slot) + text.slice(@slot + 1)
-      @target.setText text    
+      @target.setText text, nil, nil
   
   deleteLeft: ->
     if @target.selection()
@@ -318,7 +321,7 @@ class CaretMorph extends BlinkerMorph
       @target.deleteSelection()
     else
       text = @target.text
-      @target.setText text.substring(0, @slot - 1) + text.substr(@slot)
+      @target.setText text.substring(0, @slot - 1) + text.substr(@slot), nil, nil
       @goLeft()
 
     @updateSelection false

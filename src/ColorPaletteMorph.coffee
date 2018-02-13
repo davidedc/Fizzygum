@@ -8,7 +8,8 @@ class ColorPaletteMorph extends Widget
   @augmentWith BackBufferMixin
 
   target: nil
-  targetSetter: "color"
+  action: nil
+  argumentToAction: nil
   choice: nil
 
   constructor: (@target = nil, sizePoint) ->
@@ -57,20 +58,26 @@ class ColorPaletteMorph extends Widget
   
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
     @choice = @getPixelColor pos.add (deltaDragFromPreviousCall or new Point 0, 0)
+    @connectionsCalculationToken = getRandomInt -20000, 20000
     @updateTarget()
   
   mouseDownLeft: (pos) ->
     @choice = @getPixelColor pos
+    @connectionsCalculationToken = getRandomInt -20000, 20000
     @updateTarget()
   
   updateTarget: ->
-    if @target instanceof Widget and @choice?
-      setterMethodString = "set" + @targetSetter.camelize()
-      if @target[setterMethodString] instanceof Function
-        @target[setterMethodString] @choice
-      else
-        alert "this shouldn't happen"
-  
+    debugger
+
+    if !@target? then return
+
+    if !@action?
+      @action = "color"
+
+    setterMethodString = "set" + @action.camelize()
+
+    @target[setterMethodString].call @target, @choice, nil, @connectionsCalculationToken
+    return  
     
   # ColorPaletteMorph menu:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
@@ -79,10 +86,6 @@ class ColorPaletteMorph extends Widget
     menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose color property\n will be" + " controlled by this one"
   
   # openTargetSelector: -> taken form the ControllerMixin
-
-  setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
-    @target = theTarget
-    @targetSetter = each
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     choices = theTarget.colorSetters()
