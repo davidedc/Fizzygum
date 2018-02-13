@@ -93,8 +93,8 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     @angledArrows = []
     super @target.toString()
   
-  setTarget: (target) ->
-    @target = target
+  inspectObject: (objectToBeInspected) ->
+    @target = objectToBeInspected
     @currentProperty = nil
     @buildAndConnectChildren()
   

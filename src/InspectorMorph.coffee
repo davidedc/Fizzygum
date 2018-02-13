@@ -27,8 +27,8 @@ class InspectorMorph extends BoxMorph
     @color = new Color 60, 60, 60
     @buildAndConnectChildren()  if @target
   
-  setTarget: (target) ->
-    @target = target
+  inspectObject: (objectToBeInspected) ->
+    @target = objectToBeInspected
     @currentProperty = nil
     @buildAndConnectChildren()
   
@@ -256,7 +256,7 @@ class InspectorMorph extends BoxMorph
         inspector.changed()
 
       menu.addMenuItem "here...", true, @, =>
-        @setTarget @currentProperty
+        @inspectObject @currentProperty
 
       menu.popUpAtHand()
     else

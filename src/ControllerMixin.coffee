@@ -17,13 +17,13 @@ ControllerMixin =
   # instance properties to follow:
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
-      setTarget: ->
+      openTargetSelector: ->
         choices = world.plausibleTargetAndDestinationMorphs @
         if choices.length > 0
           menu = new MenuMorph @, false, @, true, true, "choose target:"
           #choices.push @world()
           choices.forEach (each) =>
-            menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", false, @, "setTargetSetter", nil, nil, nil, nil, nil, each, nil, true
+            menu.addMenuItem (each.toString().replace "Wdgt", "").slice(0, 50) + " ➜", false, @, "openTargetPropertySelector", nil, nil, nil, nil, nil, each, nil, true
         else
           menu = new MenuMorph @, false, @, true, true, "no targets available"
         menu.popUpAtHand()

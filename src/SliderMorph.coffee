@@ -17,6 +17,7 @@ class SliderMorph extends CircleBoxMorph
 
   target: nil
   action: nil
+
   start: nil
   stop: nil
   value: nil
@@ -135,7 +136,7 @@ class SliderMorph extends CircleBoxMorph
         true
     ), "set the range\ncovered by\nthe slider button"
     menu.addLine()
-    menu.addMenuItem "set target", true, @, "setTarget", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
+    menu.addMenuItem "set target", true, @, "openTargetSelector", "select another morph\nwhose numerical property\nwill be " + "controlled by this one"
   
   showValue: ->
     @inform @value
@@ -245,25 +246,24 @@ class SliderMorph extends CircleBoxMorph
     
     @changed()
   
-  # setTarget: -> taken form the ControllerMixin
+  # openTargetSelector: -> taken form the ControllerMixin
 
   # TODO clean this name up
-  swapTargetsTHISNAMEISRANDOM: (ignored, ignored2, theTarget, each) ->
+  setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
     @target = theTarget
     @action = each
   
-  setTargetSetter: (ignored, ignored2, theTarget) ->
+  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     choices = theTarget.numericalSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", nil, nil, nil, nil, nil,theTarget, each
+      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil,theTarget, each
     if choices.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
   
   numericalSetters: ->
-    # for context menu demo purposes
     list = super()
     list.push "setStart", "setStop", "setSize"
     list

@@ -994,7 +994,6 @@ class StringMorph2 extends Widget
   
   
   numericalSetters: ->
-    # for context menu demo purposes
     ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "setAlphaScaled", "setFontSize", "setText"]
   
   

@@ -76,19 +76,19 @@ class ColorPaletteMorph extends Widget
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.addLine()
-    menu.addMenuItem "set target", true, @, "setTarget", "choose another morph\nwhose color property\n will be" + " controlled by this one"
+    menu.addMenuItem "set target", true, @, "openTargetSelector", "choose another morph\nwhose color property\n will be" + " controlled by this one"
   
-  # setTarget: -> taken form the ControllerMixin
+  # openTargetSelector: -> taken form the ControllerMixin
 
-  swapTargetsTHISNAMEISRANDOM: (ignored, ignored2, theTarget, each) ->
+  setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
     @target = theTarget
     @targetSetter = each
 
-  setTargetSetter: (ignored, ignored2, theTarget) ->
+  openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     choices = theTarget.colorSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
     choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "swapTargetsTHISNAMEISRANDOM", nil, nil, nil, nil, nil, theTarget, each
+      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, each
 
     if choices.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"

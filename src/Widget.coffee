@@ -3287,6 +3287,7 @@ class Widget extends TreeNode
     menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
     menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
     menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
+    menu.addMenuItem "patch programming ➜", false, @, "popUpShortcutsAndScriptsMenu", "icons"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->
@@ -3607,7 +3608,6 @@ class Widget extends TreeNode
     ["color", "backgroundColor"]
   
   numericalSetters: ->
-    # for context menu demo purposes
     list = ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
     if @addShapeSpecificNumericalSetters?
       list = @addShapeSpecificNumericalSetters list
