@@ -78,7 +78,9 @@ class ColorPaletteMorph extends Widget
 
     @target[setterMethodString].call @target, @choice, nil, @connectionsCalculationToken
     return  
-    
+
+  reactToTargetConnection: ->
+
   # ColorPaletteMorph menu:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

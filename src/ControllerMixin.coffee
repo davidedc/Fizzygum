@@ -32,3 +32,6 @@ ControllerMixin =
       setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
         @target = theTarget
         @action = each
+        @connectionsCalculationToken = getRandomInt -20000, 20000
+        @reactToTargetConnection()
+

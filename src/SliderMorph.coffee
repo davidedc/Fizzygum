@@ -112,7 +112,10 @@ class SliderMorph extends CircleBoxMorph
     if @action and @action != ""
       @target[@action].call @target, @value, @argumentToAction, @connectionsCalculationToken
     return    
-  
+
+  reactToTargetConnection: ->
+    @updateTarget()
+
   # SliderMorph menu:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

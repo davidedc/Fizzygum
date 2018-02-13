@@ -62,6 +62,11 @@ class SimplePlainTextWdgt extends TextMorph2
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
+  stringSetters: ->
+    list = super()
+    list.push "setText"
+    list
+
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "soft wrap"
@@ -128,7 +133,10 @@ class SimplePlainTextWdgt extends TextMorph2
   updateTarget: ->
     if @action and @action != ""
       @target[@action].call @target, @text, nil, @connectionsCalculationToken
-    return    
+    return
+
+  reactToTargetConnection: ->
+    @updateTarget()
 
   toggleShowBlanks: ->
     super
