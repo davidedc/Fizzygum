@@ -3297,7 +3297,7 @@ class Widget extends TreeNode
     menu.addMenuItem "vertical stack ➜", false, @, "popUpVerticalStackMenu", "icons"
     menu.addMenuItem "document ➜", false, @, "popUpDocumentMenu", "icons"
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
-    menu.addMenuItem "shortcuts & scripts➜", false, @, "popUpShortcutsAndScriptsMenu", "icons"
+    menu.addMenuItem "shortcuts & scripts ➜", false, @, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
     menu.addMenuItem "analog clock", true, @, "analogClock"
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
