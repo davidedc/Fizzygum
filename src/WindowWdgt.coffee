@@ -55,6 +55,32 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @rawSetExtent new Point 300, 300
 
+  # in general, windows just create a reference of themselves and
+  # that is it. However, windows containing a ScriptWdgt create
+  # a special type of reference that has a slightly different icon
+  # and when double-clicked actually runs the script rather than
+  # bringing up the script 
+  createReference: (referenceName, placeToDropItIn) ->
+    # this function can also be called as a callback
+    # of a trigger, in which case the first parameter
+    # here is a menuItem. We take that parameter away
+    # in that case.
+    if referenceName? and typeof(referenceName) != "string"
+      referenceName = nil
+      placeToDropItIn = world
+
+    if @contents? and (@contents instanceof ScriptWdgt)
+      morphToAdd = new IconicDesktopSystemScriptShortcutWdgt @, referenceName
+      # this "add" is going to try to position the reference
+      # in some smart way (i.e. according to a grid)
+      placeToDropItIn.add morphToAdd
+      morphToAdd.setExtent new Point 75, 75
+      morphToAdd.fullChanged()
+      @bringToForegroud()
+    else
+      super
+
+
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
 

@@ -1,27 +1,10 @@
-# REQUIRES HighlightableMixin
-
-class ScriptShortcutWdgt extends IconicDesktopSystemLinkWdgt
-
-  @augmentWith HighlightableMixin, @name
-
-  @_acceptsDrops: false
-  color_hover: new Color 90, 90, 90
-  color_pressed: new Color 128, 128, 128
-  color_normal: new Color 0, 0, 0
+class IconicDesktopSystemScriptShortcutWdgt extends IconicDesktopSystemShortcutWdgt
 
   constructor: (@target, @title, @icon) ->
-    if !@title?
-      @title = @target.colloquialName()
-
     if !@icon?
-      super @title, new GenericShortcutIconWdgt new ScriptIconWdgt()
-    else
-      super @title, @icon
-    world.widgetsReferencingOtherWidgets.push @
-
-  destroy: ->
-    super
-    world.widgetsReferencingOtherWidgets.remove @
+      @icon = new GenericShortcutIconWdgt new ScriptIconWdgt()
+    
+    super @target, @title, @icon
 
   mouseDoubleClick: ->
     if @target.destroyed
@@ -31,11 +14,7 @@ class ScriptShortcutWdgt extends IconicDesktopSystemLinkWdgt
     @target.contents.doAll()
 
 
-  alignCopiedMorphToReferenceTracker: (cloneOfMe) ->
-    if world.widgetsReferencingOtherWidgets.indexOf(@) != -1
-      world.widgetsReferencingOtherWidgets.push cloneOfMe
-
-  addShapeSpecificMenuItems: (menu) ->
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     menu.addLine()
     menu.addMenuItem "edit script...", true, @, "editScript"
     menu

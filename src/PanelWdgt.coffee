@@ -40,7 +40,7 @@ class PanelWdgt extends Widget
   makeFolder: ->
     newFolderWindow = new FolderWindowWdgt()
     newFolderWindow.close()
-    newFolderWindow.createFolderReference "untitled", @
+    newFolderWindow.createReference "untitled", @
 
   setColor: (aColorOrAMorphGivingAColor, morphGivingColor) ->
     aColor = super(aColorOrAMorphGivingAColor, morphGivingColor)

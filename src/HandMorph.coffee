@@ -199,6 +199,7 @@ class HandMorph extends Widget
 
 
   drop: ->
+    debugger
     if @floatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?

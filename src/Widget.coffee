@@ -1868,8 +1868,6 @@ class Widget extends TreeNode
     @removeFromTree()
 
   createReference: (referenceName, placeToDropItIn = world) ->
-
-    debugger
     # this function can also be called as a callback
     # of a trigger, in which case the first parameter
     # here is a menuItem. We take that parameter away
@@ -1883,7 +1881,7 @@ class Widget extends TreeNode
       if (eachChild instanceof IconicDesktopSystemShortcutWdgt) and eachChild.target == @
         return
 
-    morphToAdd = new IconicDesktopSystemShortcutWdgt @, referenceName
+    morphToAdd = new IconicDesktopSystemDocumentShortcutWdgt @, referenceName
     # this "add" is going to try to position the
     # new icon into a grid
     placeToDropItIn.add morphToAdd
@@ -1891,36 +1889,10 @@ class Widget extends TreeNode
     morphToAdd.fullChanged()
     @bringToForegroud()
 
-  createFolderReference: (referenceName, whichFolderPanelToAddTo) ->
-    morphToAdd = new IconicDesktopSystemShortcutWdgt @, referenceName, true
-    # this "add" is going to try to position the reference
-    # in some smart way (i.e. according to a grid)
-    whichFolderPanelToAddTo.add morphToAdd
-    morphToAdd.setExtent new Point 75, 75
-    morphToAdd.fullChanged()
-    @bringToForegroud()
-
-  createScriptReference: (referenceName, whichFolderPanelToAddTo) ->
-    morphToAdd = new ScriptShortcutWdgt @, referenceName, true
-    # this "add" is going to try to position the reference
-    # in some smart way (i.e. according to a grid)
-    whichFolderPanelToAddTo.add morphToAdd
-    morphToAdd.setExtent new Point 75, 75
-    morphToAdd.fullChanged()
-    @bringToForegroud()
-
-  createReferenceAndClose: (unused,stringFieldWithName,placeToDropItIn)->
-    debugger
-    if @ instanceof FolderWindowWdgt
-      @createFolderReference stringFieldWithName.text.text, @wdgtWhereReferenceWillGo
-    else if (@ instanceof WindowWdgt) and @contents instanceof ScriptWdgt
-      if !placeToDropItIn?
-        placeToDropItIn = world
-      @createScriptReference stringFieldWithName.text.text, placeToDropItIn
-    else
-      @createReference stringFieldWithName?.text.text, placeToDropItIn
+  createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
+    @createReference referenceName, placeToDropItIn
     @close()
-    
+
   # Widget full image:
   # Fixes https://github.com/jmoenig/morphic.js/issues/7
   # and https://github.com/davidedc/Fizzygum/issues/160

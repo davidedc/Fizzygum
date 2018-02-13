@@ -13,4 +13,4 @@ CreateShortcutOfDroppedItemsMixin =
         super
         debugger
         if !(droppedWidget instanceof IconicDesktopSystemShortcutWdgt)
-          droppedWidget.createReferenceAndClose nil, nil, @
+          droppedWidget.createReferenceAndClose nil, @

@@ -163,7 +163,7 @@ class MenusHelper
     world.add wm
     wm.changed()
 
-    fizzyPaintLauncher = new ScriptShortcutWdgt wm, "Fizzypaint", new PaintBucketIconWdgt()
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Fizzypaint", new PaintBucketIconWdgt()
     # this "add" is going to try to position the reference
     # in some smart way (i.e. according to a grid)
     world.add fizzyPaintLauncher
