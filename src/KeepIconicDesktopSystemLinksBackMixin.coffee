@@ -10,11 +10,9 @@ KeepIconicDesktopSystemLinksBackMixin =
     @addInstanceProperties fromClass,
 
       childAdded: (theWidget) ->
-        debugger
         if theWidget instanceof IconicDesktopSystemLinkWdgt
           theWidget.moveOnTopOfTopReference()
 
       childMovedInFrontOfOthers: (theWidget) ->
-        debugger
         if theWidget instanceof IconicDesktopSystemLinkWdgt
           theWidget.moveOnTopOfTopReference()
