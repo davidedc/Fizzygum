@@ -148,11 +148,14 @@ Array::unique = ->
   output[@[key]] = @[key] for key in [0...@length]
   value for key, value of output
 
-# from https://gist.github.com/vjt/827679
+# from viniciusCamargo's comment
+# here: https://gist.github.com/vjt/827679
 if typeof String::camelize == 'undefined'
   String::camelize = ->
-    @replace /(?:^|[-])(\w)/g, (_, c) ->
-      if c then c.toUpperCase() else ''
+    @
+      .replace(/\s(.)/g, ($1) -> $1.toUpperCase())
+      .replace(/\s/g, '')
+      .replace(/^(.)/, ($1) -> $1.toLowerCase())
 
 if typeof String::contains == 'undefined'
   String::contains = (it) ->
