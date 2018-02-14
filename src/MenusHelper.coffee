@@ -169,3 +169,8 @@ class MenusHelper
     world.add fizzyPaintLauncher
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
+
+  createFanout: ->
+    fanoutWdgt = new FanoutWdgt()
+    world.create fanoutWdgt
+    fanoutWdgt.setExtent new Point 100, 100

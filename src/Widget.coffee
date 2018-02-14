@@ -3247,10 +3247,15 @@ class Widget extends TreeNode
     menu.popUpAtHand()
 
   popUpShortcutsAndScriptsMenu: (morphOpeningThePopUp) ->
-    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "shortcuts & scripts"
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Shortcuts & Scripts"
     menu.addMenuItem "basement shortcut", true, menusHelper, "basementIconAndText"
     menu.addMenuItem "new script", true, menusHelper, "newScriptWindow"
     menu.addMenuItem "Fizzypaint launcher", true, menusHelper, "createFizzyPaintLauncherAndItsIcon"
+    menu.popUpAtHand()
+
+  popUpPatchProgrammingMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Patch Programming"
+    menu.addMenuItem "fanout", true, menusHelper, "createFanout"
     menu.popUpAtHand()
 
 
@@ -3294,7 +3299,7 @@ class Widget extends TreeNode
     menu.addMenuItem "generic object icon", true, menusHelper, "makeGenericObjectIcon"
     menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
     menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
-    menu.addMenuItem "patch programming ➜", false, @, "popUpShortcutsAndScriptsMenu", "icons"
+    menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->
