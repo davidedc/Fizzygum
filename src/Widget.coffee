@@ -3610,7 +3610,6 @@ class Widget extends TreeNode
     @layoutSpecDetails = nil
 
   colorSetters: ->
-    # for context menu demo purposes
     ["color", "backgroundColor"]
 
   stringSetters: ->

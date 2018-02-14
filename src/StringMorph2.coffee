@@ -982,7 +982,6 @@ class StringMorph2 extends Widget
     else
       size = sizeOrMorphGivingSize
 
-    # for context menu demo purposes
     if typeof size is "number"
       newSize = Math.round Math.min Math.max(size, 4), 500
     else

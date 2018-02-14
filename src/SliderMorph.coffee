@@ -155,7 +155,6 @@ class SliderMorph extends CircleBoxMorph
     @inform @value
   
   userSetStart: (num) ->
-    # for context menu demo purposes
     @start = Math.max num, @stop
 
   
@@ -187,7 +186,6 @@ class SliderMorph extends CircleBoxMorph
     else
       num = numOrMorphGivingNum
 
-    # for context menu demo purposes
     if typeof num is "number"
       @start = Math.min Math.max(num, 0), @stop - @size
     else
@@ -208,7 +206,6 @@ class SliderMorph extends CircleBoxMorph
     else
       num = numOrMorphGivingNum
 
-    # for context menu demo purposes
     if typeof num is "number"
       @stop = Math.max num, @start + @size
     else
@@ -240,7 +237,6 @@ class SliderMorph extends CircleBoxMorph
     else
       size = sizeOrMorphGivingSize
 
-    # for context menu demo purposes
     if typeof size is "number"
       @size = Math.min Math.max(size, 1), @stop - @start
     else

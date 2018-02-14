@@ -39,7 +39,6 @@ class BoxMorph extends Widget
     else
       radius = radiusOrMorphGivingRadius
 
-    # for context menu demo purposes
     if typeof radius is "number"
       @cornerRadius = Math.max radius, 0
     else
