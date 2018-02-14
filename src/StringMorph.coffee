@@ -317,8 +317,7 @@ class StringMorph extends Widget
     @changed()
   
   numericalSetters: ->
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "setAlphaScaled", "setFontSize", "setText"]
-  
+    [["alpha 0-100", "font size", "text"], ["setAlphaScaled", "setFontSize", "setText"]]  
   
   # StringMorph editing:
   edit: ->

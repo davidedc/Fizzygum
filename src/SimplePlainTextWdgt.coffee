@@ -54,18 +54,19 @@ class SimplePlainTextWdgt extends TextMorph2
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     debugger
-    choices = theTarget.stringSetters()
+    [menuEntriesStrings, functionNamesStrings] = theTarget.stringSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
-    choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil,theTarget, each
-    if choices.length == 0
+    for i in [0...menuEntriesStrings.length]
+      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+    if menuEntriesStrings.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
   stringSetters: ->
-    list = super()
-    list.push "setText"
-    list
+    [menuEntriesStrings, functionNamesStrings] = super()
+    menuEntriesStrings.push "text"
+    functionNamesStrings.push "setText"
+    [menuEntriesStrings, functionNamesStrings]
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

@@ -72,11 +72,9 @@ class ColorPaletteMorph extends Widget
     if !@target? then return
 
     if !@action?
-      @action = "color"
+      @action = "setColor"
 
-    setterMethodString = "set" + @action.camelize()
-
-    @target[setterMethodString].call @target, @choice, nil, @connectionsCalculationToken
+    @target[@action].call @target, @choice, nil, @connectionsCalculationToken
     return  
 
   reactToTargetConnection: ->
@@ -90,11 +88,10 @@ class ColorPaletteMorph extends Widget
   # openTargetSelector: -> taken form the ControllerMixin
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    choices = theTarget.colorSetters()
+    [menuEntriesStrings, functionNamesStrings] = theTarget.colorSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
-    choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, each
-
-    if choices.length == 0
+    for i in [0...menuEntriesStrings.length]
+      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+    if menuEntriesStrings.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()

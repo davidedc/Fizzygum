@@ -1104,7 +1104,7 @@ class StringMorph3 extends Widget
   
   
   numericalSetters: ->
-    ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "setAlphaScaled", "setFontSize", "setText"]
+    [["alpha 0-100", "font size", "text"], ["setAlphaScaled", "setFontSize", "setText"]]  
   
   
   # StringMorph3 editing:

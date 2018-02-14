@@ -258,22 +258,24 @@ class SliderMorph extends CircleBoxMorph
   # openTargetSelector: -> taken form the ControllerMixin
   
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
-    choices = theTarget.numericalSetters()
+    [menuEntriesStrings, functionNamesStrings] = theTarget.numericalSetters()
     menu = new MenuMorph @, false, @, true, true, "choose target property:"
-    choices.forEach (each) =>
-      menu.addMenuItem each, true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil,theTarget, each
-    if choices.length == 0
+    for i in [0...menuEntriesStrings.length]
+      menu.addMenuItem menuEntriesStrings[i], true, @, "setTargetAndActionWithOnesPickedFromMenu", nil, nil, nil, nil, nil, theTarget, functionNamesStrings[i]
+    if menuEntriesStrings.length == 0
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
   stringSetters: ->
-    list = super()
-    list.push "setValue"
-    list
+    [menuEntriesStrings, functionNamesStrings] = super()
+    menuEntriesStrings.push "value"
+    functionNamesStrings.push "setValue"
+    [menuEntriesStrings, functionNamesStrings]
 
   numericalSetters: ->
-    list = super()
-    list.push "setValue", "setStart", "setStop", "setSize"
-    list
+    [menuEntriesStrings, functionNamesStrings] = super()
+    menuEntriesStrings.push "value", "start", "stop", "size"
+    functionNamesStrings.push "setValue", "setStart", "setStop", "setSize"
+    [menuEntriesStrings, functionNamesStrings]
   
   

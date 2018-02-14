@@ -444,10 +444,11 @@ class Widget extends TreeNode
       return @appearance.addShapeSpecificMenuItems menu
     return menu
 
-  addShapeSpecificNumericalSetters: (list) ->
+
+  addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     if @appearance?.addShapeSpecificNumericalSetters?
-      return @appearance.addShapeSpecificNumericalSetters list
-    return list
+      return @appearance.addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
+    return [menuEntriesStrings, functionNamesStrings]
 
   
   #
@@ -3610,16 +3611,18 @@ class Widget extends TreeNode
     @layoutSpecDetails = nil
 
   colorSetters: ->
-    ["color", "backgroundColor"]
+    [["color", "background color"], ["setColor", "setBackgroundColor"]]  
 
   stringSetters: ->
-    []
+    [[],[]]
 
   numericalSetters: ->
-    list = ["fullRawMoveLeftSideTo", "fullRawMoveTopSideTo", "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
+    menuEntriesStrings = ["width", "height", "alpha 1-100", "padding", "padding top", "padding bottom", "padding left", "padding right"]
+    functionNamesStrings = ["rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
+
     if @addShapeSpecificNumericalSetters?
-      list = @addShapeSpecificNumericalSetters list
-    list
+      [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings]
 
   
   # Widget entry field tabbing //////////////////////////////////////////////

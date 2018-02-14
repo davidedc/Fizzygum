@@ -134,6 +134,7 @@ class BoxyAppearance extends Appearance
     menu.addMenuItem "pick inset...", true, @morph, "pickInset", "put a morph as inset"
     menu
   
-  addShapeSpecificNumericalSetters: (list) ->
-    list.push "setCornerRadius"
-    list
+  addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    menuEntriesStrings.push "corner radius"
+    functionNamesStrings.push "setCornerRadius"
+    [menuEntriesStrings, functionNamesStrings]
