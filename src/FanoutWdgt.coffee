@@ -3,10 +3,13 @@
 
 class FanoutWdgt extends Widget
 
+  @augmentWith ControllerMixin
+
   pinUp: nil
   pinDown: nil
   pinLeft: nil
   pinRight: nil
+  inputValue: nil
 
   constructor: (@color) ->
     super
@@ -23,6 +26,36 @@ class FanoutWdgt extends Widget
     @add @pinRight
 
     @invalidateLayout()
+
+  setInput: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @inputValue = newvalue
+    @updateTarget()
+
+  updateTarget: ->
+    for target in @children
+      if target instanceof FanoutPinWdgt
+        target.setInput @inputValue, nil, @connectionsCalculationToken
+    return
+
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "input"
+    functionNamesStrings.push "setInput"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "input"
+    functionNamesStrings.push "setInput"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "input"
+    functionNamesStrings.push "setInput"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
