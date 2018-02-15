@@ -3679,9 +3679,9 @@ class Widget extends TreeNode
       menuEntriesStrings = []
       functionNamesStrings = []
 
-    [menuEntriesStrings, functionNamesStrings] = colorSetters menuEntriesStrings, functionNamesStrings
-    [menuEntriesStrings, functionNamesStrings] = stringSetters menuEntriesStrings, functionNamesStrings
-    [menuEntriesStrings, functionNamesStrings] = numericalSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings] = @colorSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings] = @stringSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings] = @numericalSetters menuEntriesStrings, functionNamesStrings
 
     # already sorted and deduplicated by the last of the calls above
     return [menuEntriesStrings, functionNamesStrings]
