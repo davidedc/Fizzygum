@@ -148,6 +148,16 @@ Array::unique = ->
   output[@[key]] = @[key] for key in [0...@length]
   value for key, value of output
 
+# deduplicates array entries
+# keeping the current order
+# see https://stackoverflow.com/a/14438954
+# does NOT modify array in place
+uniqueKeepOrder = (value, index, self) ->
+  self.indexOf(value) == index
+
+Array::uniqueKeepOrder = ->
+  return @filter uniqueKeepOrder
+
 
 if typeof String::contains == 'undefined'
   String::contains = (it) ->
