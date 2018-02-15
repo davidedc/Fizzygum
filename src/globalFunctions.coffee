@@ -142,7 +142,7 @@ Array::remove = (args...) ->
   output
 
 # deduplicates array entries
-# doesn NOT modify array in place
+# does NOT modify array in place
 Array::unique = ->
   output = {}
   output[@[key]] = @[key] for key in [0...@length]
