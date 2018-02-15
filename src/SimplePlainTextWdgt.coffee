@@ -62,11 +62,11 @@ class SimplePlainTextWdgt extends TextMorph2
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  stringSetters: ->
-    [menuEntriesStrings, functionNamesStrings] = super()
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
     menuEntriesStrings.push "text"
     functionNamesStrings.push "setText"
-    [menuEntriesStrings, functionNamesStrings]
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super

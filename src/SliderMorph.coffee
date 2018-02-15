@@ -266,16 +266,16 @@ class SliderMorph extends CircleBoxMorph
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  stringSetters: ->
-    [menuEntriesStrings, functionNamesStrings] = super()
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
     menuEntriesStrings.push "value"
     functionNamesStrings.push "setValue"
-    [menuEntriesStrings, functionNamesStrings]
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
-  numericalSetters: ->
-    [menuEntriesStrings, functionNamesStrings] = super()
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
     menuEntriesStrings.push "value", "start", "stop", "size"
     functionNamesStrings.push "setValue", "setStart", "setStop", "setSize"
-    [menuEntriesStrings, functionNamesStrings]
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
   
   

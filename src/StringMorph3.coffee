@@ -1103,8 +1103,11 @@ class StringMorph3 extends Widget
       @changed()
   
   
-  numericalSetters: ->
-    [["alpha 0-100", "font size", "text"], ["setAlphaScaled", "setFontSize", "setText"]]  
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "alpha 0-100", "font size", "text"
+    functionNamesStrings.push "setAlphaScaled", "setFontSize", "setText"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
   
   
   # StringMorph3 editing:

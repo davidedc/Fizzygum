@@ -446,9 +446,13 @@ class Widget extends TreeNode
 
 
   addShapeSpecificNumericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+
     if @appearance?.addShapeSpecificNumericalSetters?
-      return @appearance.addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
-    return [menuEntriesStrings, functionNamesStrings]
+      [menuEntriesStrings, functionNamesStrings] = @appearance.addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   
   #
@@ -3615,20 +3619,72 @@ class Widget extends TreeNode
     @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
     @layoutSpecDetails = nil
 
-  colorSetters: ->
-    [["color", "background color"], ["setColor", "setBackgroundColor"]]  
+  deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
+    menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()
+    functionNamesStrings = functionNamesStrings.uniqueKeepOrder()
 
-  stringSetters: ->
-    [[],[]]
+    debugger
 
-  numericalSetters: ->
-    menuEntriesStrings = ["width", "height", "alpha 1-100", "padding", "padding top", "padding bottom", "padding left", "padding right"]
-    functionNamesStrings = ["rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"]
+    #1) combine the arrays:
+    list = []
+    j = 0
+    while j < menuEntriesStrings.length
+      list.push
+        'menuEntriesStrings': menuEntriesStrings[j]
+        'functionNamesStrings': functionNamesStrings[j]
+      j++
+    #2) sort:
+    list.sort (a, b) ->
+      if a.menuEntriesStrings < b.menuEntriesStrings then -1 else if a.menuEntriesStrings == b.menuEntriesStrings then 0 else 1
+      #Sort could be modified to, for example, sort on the age 
+      # if the name is the same.
+    #3) separate them back out:
+    k = 0
+    while k < list.length
+      menuEntriesStrings[k] = list[k].menuEntriesStrings
+      functionNamesStrings[k] = list[k].functionNamesStrings
+      k++
+
+    return [menuEntriesStrings, functionNamesStrings]
+
+  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+    menuEntriesStrings.push "color", "background color"
+    functionNamesStrings.push "setColor", "setBackgroundColor"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+    # we don't add anything so no need to sort/deduplicate
+    return [menuEntriesStrings, functionNamesStrings]
+
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+    menuEntriesStrings.push "width", "height", "alpha 0-100", "padding", "padding top", "padding bottom", "padding left", "padding right"
+    functionNamesStrings.push "rawSetWidth", "rawSetHeight", "setAlphaScaled", "setPadding", "setPaddingTop", "setPaddingBottom", "setPaddingLeft", "setPaddingRight"
 
     if @addShapeSpecificNumericalSetters?
       [menuEntriesStrings, functionNamesStrings] = @addShapeSpecificNumericalSetters menuEntriesStrings, functionNamesStrings
-    [menuEntriesStrings, functionNamesStrings]
 
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  allSetters: (menuEntriesStrings, functionNamesStrings) ->
+    if !menuEntriesStrings? 
+      menuEntriesStrings = []
+      functionNamesStrings = []
+
+    [menuEntriesStrings, functionNamesStrings] = colorSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings] = stringSetters menuEntriesStrings, functionNamesStrings
+    [menuEntriesStrings, functionNamesStrings] = numericalSetters menuEntriesStrings, functionNamesStrings
+
+    # already sorted and deduplicated by the last of the calls above
+    return [menuEntriesStrings, functionNamesStrings]
   
   # Widget entry field tabbing //////////////////////////////////////////////
   
