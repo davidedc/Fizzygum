@@ -41,18 +41,16 @@ class ScriptWdgt extends Widget
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    @tempPromptEntryField = new ScrollPanelWdgt()
+    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt scriptStartingContent, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = new Color 255, 255, 255
 
-    @textMorph = new SimplePlainTextWdgt scriptStartingContent
-    @textMorph.setFontName nil, nil, @textMorph.monoFontStack     
+    @textMorph = @tempPromptEntryField.textWdgt
+    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
-
-    @tempPromptEntryField.setContents @textMorph, 5
-    @textMorph.softWrapOff()
 
     @add @tempPromptEntryField
 

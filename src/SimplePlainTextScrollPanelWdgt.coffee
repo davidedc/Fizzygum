@@ -16,6 +16,8 @@
 
 class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
 
+  textWdgt: nil
+
   constructor: (
     textAsString,
     wraps,
@@ -28,14 +30,14 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @contents.disableDrops()
     @isTextLineWrapping = wraps
     @color = new Color 255, 255, 255
-    ostmA = new SimplePlainTextWdgt(
+    @textWdgt = new SimplePlainTextWdgt(
       textAsString,nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
-    ostmA.isEditable = true
+    @textWdgt.isEditable = true
     if !wraps
-      ostmA.maxTextWidth = 0
-    ostmA.enableSelecting()
-    @setContents ostmA, padding
-    ostmA.lockToPanels()
+      @textWdgt.maxTextWidth = 0
+    @textWdgt.enableSelecting()
+    @setContents @textWdgt, padding
+    @textWdgt.lockToPanels()
 
   colloquialName: ->
     return "text"

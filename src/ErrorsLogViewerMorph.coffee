@@ -52,17 +52,17 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     #@add @tempPromptEntryField
 
 
-    @tempPromptEntryField = new ScrollPanelWdgt()
+    @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
-    @tempPromptEntryField.isTextLineWrapping = true
     @tempPromptEntryField.color = new Color 255, 255, 255
 
-    @textMorph = new TextMorph @defaultContents
+    @textMorph = @tempPromptEntryField.textWdgt
+    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
 
-    @tempPromptEntryField.setContents @textMorph, 2
     @add @tempPromptEntryField
 
     # buttons -------------------------------
