@@ -1,6 +1,6 @@
 # EditableMarkMorph ////////////////////////////////////////////////////////
 
-class EditableMarkMorph extends UpperRightTriangleAnnotation
+class EditableMarkMorph extends UpperRightTriangleIconicButton
 
   editObject: nil
   editMethodAsString: ""

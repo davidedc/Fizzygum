@@ -2356,17 +2356,14 @@ class Widget extends TreeNode
   # if a function, the txt must contain the parameters and
   # the arrow and the body
   injectProperty: (propertyName, txt) ->
-    try
-      # this.target[propertyName] = evaluate txt
-      @evaluateString "@" + propertyName + " = " + txt
-      # if we are saving a function, we'd like to
-      # keep the source code so we can edit Coffeescript
-      # again.
-      if isFunction @[propertyName]
-        @[propertyName + "_source"] = txt
-      @sourceChanged()
-    catch err
-      @inform err
+    # this.target[propertyName] = evaluate txt
+    @evaluateString "@" + propertyName + " = " + txt
+    # if we are saving a function, we'd like to
+    # keep the source code so we can edit Coffeescript
+    # again.
+    if isFunction @[propertyName]
+      @[propertyName + "_source"] = txt
+    @sourceChanged()
 
   injectProperties: (codeBlurb) ->
 
@@ -3771,14 +3768,10 @@ class Widget extends TreeNode
   
   # Widget eval. Used by the Inspector and the TextMorph.
   evaluateString: (codeSource) ->
-    try
-      result = eval compileFGCode codeSource, true
-      @reLayout()
-      
-      @changed()
-    catch err
-      @inform err
-    result
+    debugger
+    result = eval compileFGCode codeSource, true
+    @reLayout()
+    @changed()
   
   
   # Widget collision detection - not used anywhere at the moment ////////////////////////

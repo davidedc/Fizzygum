@@ -209,11 +209,7 @@ class TriggerMorph extends Widget
   trigger: ->
     if @action and @action != ""
       #console.log "@target: " + @target + " @morphEnv: " + @morphEnv
-      try
-        @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
-      catch err
-        if !world.errorConsole? then world.createErrorConsole()
-        world.errorConsole.showUpWithError err
+      @target[@action].call @target, @dataSourceMorphForTarget, @morphEnv, @argumentToAction1, @argumentToAction2
     return
 
   triggerDoubleClick: ->

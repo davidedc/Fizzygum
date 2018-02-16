@@ -9,13 +9,34 @@ UpperRightInternalHaloMixin =
   onceAddedClassProperties: (fromClass) ->
     @addInstanceProperties fromClass,
 
-      updateResizerPosition: ->
-        @silentRawSetExtent new Point 100, 100
-        @silentFullRawMoveTo new Point 100, 100
-  
       # floatDragging and dropping:
       isLockingToPanels: false
+      proportionOfParent: 4/8
+      fixedSize: 0
+      positionWithinParent: "topRight"
 
+      parentHasReLayouted: ->
+        @updateResizerPosition()
+        @moveInFrontOfSiblings()
+        super
+
+      updateResizerPosition: ->
+        if @parent
+          @silentUpdateResizerPosition()
+          @changed()
+
+      silentUpdateResizerPosition: ->
+        if @parent
+          xDim = @parent.width()
+          yDim = @parent.height()
+          minDim = Math.min(xDim, yDim) * @proportionOfParent + @fixedSize
+
+          @silentRawSetExtent new Point minDim, minDim
+          if @positionWithinParent == "topLeft"
+            @silentFullRawMoveTo new Point @parent.left(), @parent.top()
+          else if @positionWithinParent == "topRight"
+            @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
+  
       makeSolidWithParentMorph: (ignored, ignored2, morphAttachedTo)->
         morphAttachedTo.add @
         @updateResizerPosition()

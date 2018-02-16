@@ -2,7 +2,9 @@
 
 class UpperRightTriangleAppearance extends Appearance
 
-  constructor: (morph) ->
+  positionWithinParent: nil
+
+  constructor: (morph, @positionWithinParent = "topRight") ->
     super morph
 
   # This method only paints this very morph's "image",
@@ -58,9 +60,14 @@ class UpperRightTriangleAppearance extends Appearance
     context.fillStyle = color.toString()
 
     context.beginPath()
-    context.moveTo 0, 0
-    context.lineTo @morph.width(), @morph.height()
-    context.lineTo @morph.width(), 0
+    if @positionWithinParent == "topRight"
+      context.moveTo 0, 0
+      context.lineTo @morph.width(), @morph.height()
+      context.lineTo @morph.width(), 0
+    else if @positionWithinParent == "topLeft"
+      context.moveTo 0, 0
+      context.lineTo 0, @morph.height()
+      context.lineTo @morph.width(), 0
     context.closePath()
     context.fill()
 

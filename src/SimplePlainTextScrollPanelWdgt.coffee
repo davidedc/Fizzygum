@@ -17,6 +17,8 @@
 class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
 
   textWdgt: nil
+  modifiedTextTriangleAnnotation: nil
+  widgetToBeNotifiedOfTextModificationChange: nil
 
   constructor: (
     textAsString,
@@ -38,9 +40,27 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
     @textWdgt.enableSelecting()
     @setContents @textWdgt, padding
     @textWdgt.lockToPanels()
+    
 
   colloquialName: ->
     return "text"
 
   initialiseDefaultWindowContentLayoutSpec: ->
     @layoutSpecDetails = new WindowContentLayoutSpec PreferredSize.DONT_MIND , PreferredSize.DONT_MIND, 1
+
+  checkIfTextContentWasModifiedFromTextAtStart: ->
+    @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()
+
+  addModifiedContentIndicator: ->
+    @modifiedTextTriangleAnnotation = new ModifiedTextTriangleAnnotationWdgt @
+    @textWdgt.widgetToBeNotifiedOfTextModificationChange = @
+    @textWdgt.considerCurrentTextAsReferenceText()
+    @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()
+
+  textContentModified: ->
+    @modifiedTextTriangleAnnotation?.show()
+    @widgetToBeNotifiedOfTextModificationChange?.textContentModified()
+
+  textContentUnmodified: ->
+    @modifiedTextTriangleAnnotation?.hide()
+    @widgetToBeNotifiedOfTextModificationChange?.textContentUnmodified()

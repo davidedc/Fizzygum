@@ -187,9 +187,12 @@ class ScrollPanelWdgt extends PanelWdgt
   # end up in the Panel inside it. This also applies to
   # resizing handles!
   add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
-    @contents.add aMorph, position, layoutSpec, beingDropped
-    @adjustContentsBounds()
-    @adjustScrollBars()
+    if aMorph instanceof ModifiedTextTriangleAnnotationWdgt
+      super
+    else
+      @contents.add aMorph, position, layoutSpec, beingDropped
+      @adjustContentsBounds()
+      @adjustScrollBars()
 
   showResizeAndMoveHandlesAndLayoutAdjusters: ->
     super

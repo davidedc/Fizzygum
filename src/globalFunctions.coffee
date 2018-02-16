@@ -467,17 +467,18 @@ loadJSFilesWithCoffeescriptSources = ->
 
 
 compileFGCode = (codeSource, bare) ->
+  debugger
   t0 = performance.now()
   try
     # Coffeescript v2 is used
     compiled = CoffeeScript.compile codeSource,{"bare":bare}
   catch err
+    debugger
     errorMessage =  "error in compiling:\n"
     errorMessage += codeSource + "\n"
     errorMessage += "error:\n"
     errorMessage += err + "\n"
-    if !world.errorConsole? then world.createErrorConsole()
-    world.errorConsole.showUpWithError errorMessage
+    throw new Error errorMessage
 
   t1 = performance.now()
   #console.log "compileFGCode time: " + (t1 - t0) + " milliseconds."

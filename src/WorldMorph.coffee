@@ -850,100 +850,107 @@ class WorldMorph extends PanelWdgt
 
 
   playQueuedEvents: ->
-    for i in [0...@events.length] by 2
-      eventType = @events[i]
-      # note that these events are actually strings
-      # in the case of clipboard events. Since
-      # for security reasons clipboard access is not
-      # allowed outside of the event listener, we
-      # have to work with text here.
-      event = @events[i+1]
+    try
 
-      switch eventType
+      for i in [0...@events.length] by 2
+        eventType = @events[i]
+        # note that these events are actually strings
+        # in the case of clipboard events. Since
+        # for security reasons clipboard access is not
+        # allowed outside of the event listener, we
+        # have to work with text here.
+        event = @events[i+1]
 
-        when "inputDOMElementForVirtualKeyboardKeydownEventListener"
-          @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
+        switch eventType
 
-          if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+          when "inputDOMElementForVirtualKeyboardKeydownEventListener"
+            @keyboardEventsReceiver.processKeyDown event  if @keyboardEventsReceiver
+
+            if event.keyIdentifier is "U+0009" or event.keyIdentifier is "Tab"
+              @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+
+          when "inputDOMElementForVirtualKeyboardKeyupEventListener"
+            # dispatch to keyboard receiver
+            if @keyboardEventsReceiver
+              # so far the caret is the only keyboard
+              # event handler and it has no keyup
+              # handler
+              if @keyboardEventsReceiver.processKeyUp
+                @keyboardEventsReceiver.processKeyUp event  
+
+          when "inputDOMElementForVirtualKeyboardKeypressEventListener"
             @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
 
-        when "inputDOMElementForVirtualKeyboardKeyupEventListener"
-          # dispatch to keyboard receiver
-          if @keyboardEventsReceiver
-            # so far the caret is the only keyboard
-            # event handler and it has no keyup
-            # handler
-            if @keyboardEventsReceiver.processKeyUp
-              @keyboardEventsReceiver.processKeyUp event  
+          when "mousedownEventListener"
+            @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-        when "inputDOMElementForVirtualKeyboardKeypressEventListener"
-          @keyboardEventsReceiver.processKeyPress event  if @keyboardEventsReceiver
+          when "touchstartEventListener"
+            @hand.processTouchStart event
 
-        when "mousedownEventListener"
-          @processMouseDown event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+          when "mouseupEventListener"
+            @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
 
-        when "touchstartEventListener"
-          @hand.processTouchStart event
+          when "touchendEventListener"
+            @hand.processTouchEnd event
 
-        when "mouseupEventListener"
-          @processMouseUp  event.button, event.ctrlKey, event.buttons, event.shiftKey, event.altKey, event.metaKey
+          when "mousemoveEventListener"
+            posInDocument = getDocumentPositionOf @worldCanvas
+            # events from JS arrive in page coordinates,
+            # we turn those into world coordinates
+            # instead.
+            worldX = event.pageX - posInDocument.x
+            worldY = event.pageY - posInDocument.y
+            @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
 
-        when "touchendEventListener"
-          @hand.processTouchEnd event
+          when "touchmoveEventListener"
+            @hand.processTouchMove event
 
-        when "mousemoveEventListener"
-          posInDocument = getDocumentPositionOf @worldCanvas
-          # events from JS arrive in page coordinates,
-          # we turn those into world coordinates
-          # instead.
-          worldX = event.pageX - posInDocument.x
-          worldY = event.pageY - posInDocument.y
-          @processMouseMove worldX, worldY, event.button, event.buttons, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey
+          when "keydownEventListener"
+            @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-        when "touchmoveEventListener"
-          @hand.processTouchMove event
+          when "keyupEventListener"
+            @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-        when "keydownEventListener"
-          @processKeydown event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "keypressEventListener"
+            @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
 
-        when "keyupEventListener"
-          @processKeyup event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "wheelEventListener"
+            @processWheel event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
 
-        when "keypressEventListener"
-          @processKeypress event, event.keyCode, @getChar(event), event.shiftKey, event.ctrlKey, event.altKey, event.metaKey
+          when "cutEventListener"
+            # note that "event" here is actually a string,
+            # for security reasons clipboard access is not
+            # allowed outside of the event listener, we
+            # have to work with text here.
+            @processCut event
 
-        when "wheelEventListener"
-          @processWheel event.deltaX, event.deltaY, event.deltaZ, event.altKey, event.button, event.buttons
+          when "copyEventListener"
+            # note that "event" here is actually a string,
+            # for security reasons clipboard access is not
+            # allowed outside of the event listener, we
+            # have to work with text here.
+            @processCopy event
 
-        when "cutEventListener"
-          # note that "event" here is actually a string,
-          # for security reasons clipboard access is not
-          # allowed outside of the event listener, we
-          # have to work with text here.
-          @processCut event
+          when "pasteEventListener"
+            # note that "event" here is actually a string,
+            # for security reasons clipboard access is not
+            # allowed outside of the event listener, we
+            # have to work with text here.
+            @processPaste event
 
-        when "copyEventListener"
-          # note that "event" here is actually a string,
-          # for security reasons clipboard access is not
-          # allowed outside of the event listener, we
-          # have to work with text here.
-          @processCopy event
+          when "dropEventListener"
+            @hand.processDrop event
 
-        when "pasteEventListener"
-          # note that "event" here is actually a string,
-          # for security reasons clipboard access is not
-          # allowed outside of the event listener, we
-          # have to work with text here.
-          @processPaste event
+          when "resizeEventListener"
+            if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
+              @stretchWorldToFillEntirePage()
 
-        when "dropEventListener"
-          @hand.processDrop event
+    catch err
+      if !world.errorConsole? then world.createErrorConsole()
+      @errorConsole.showUpWithError err
 
-        when "resizeEventListener"
-          if @automaticallyAdjustToFillEntireBrowserAlsoOnResize
-            @stretchWorldToFillEntirePage()
-
-    @events = []
+    finally
+      @events = []
 
   # we keep the "pacing" promises in this
   # srcLoadsSteps array, (or, more precisely,

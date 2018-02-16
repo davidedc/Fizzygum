@@ -1,4 +1,4 @@
-# UpperRightTriangleAnnotation ////////////////////////////////////////////////////////
+# UpperRightTriangleIconicButton ////////////////////////////////////////////////////////
 
 # like an UpperRightTriangle, but it adds an icon on the top-right
 # note that this should all be done with actual layouts but this
@@ -9,11 +9,14 @@
 #
 # to test this:
 # create a canvas. then:
-# new UpperRightTriangleAnnotation(world.children[0])
+# new UpperRightTriangleIconicButton(world.children[0])
 
-class UpperRightTriangleAnnotation extends UpperRightTriangle
+class UpperRightTriangleIconicButton extends UpperRightTriangle
 
-  pencilIconMorph = nil
+  @augmentWith HighlightableMixin, @name
+
+  color: new Color 255, 255, 255
+  pencilIconMorph: nil
 
   constructor: (parent = nil) ->
     super
@@ -40,23 +43,3 @@ class UpperRightTriangleAnnotation extends UpperRightTriangle
     @add @pencilIconMorph
     @pencilIconMorph.updateResizerPosition()
 
-
-  parentHasReLayouted: ->
-    @updateResizerPosition()
-    @moveInFrontOfSiblings()
-    super
-
-  updateResizerPosition: ->
-    if @parent
-      @silentUpdateResizerPosition()
-      @changed()
-
-  silentUpdateResizerPosition: ->
-    if @parent
-      xDim = @parent.width()
-      yDim = @parent.height()
-      minDim = Math.min(xDim, yDim) * 4/8
-
-      @silentRawSetExtent new Point minDim, minDim
-      @silentFullRawMoveTo new Point @parent.right() - minDim, @parent.top()
-  

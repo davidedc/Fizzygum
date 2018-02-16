@@ -107,6 +107,10 @@ class StringMorph2 extends Widget
   heavyFontStack: 'Impact, Haettenschweiler, "Franklin Gothic Bold", Charcoal, "Helvetica Inserat", "Bitstream Vera Sans Bold", "Arial Black", sans-serif'
   monoFontStack: 'Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace'
 
+  hashOfTextConsideredAsReference: nil
+  widgetToBeNotifiedOfTextModificationChange: nil
+
+
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
       @originallySetFontSize = 12,
@@ -973,8 +977,19 @@ class StringMorph2 extends Widget
       # convert to a string.
       @clearSelection()
       @text = theNewText
+      @checkIfTextContentWasModifiedFromTextAtStart()
       @synchroniseTextAndActualText()
       @changed()
+
+  considerCurrentTextAsReferenceText: ->
+    @hashOfTextConsideredAsReference = hashCode @text
+
+  checkIfTextContentWasModifiedFromTextAtStart: ->
+    if @widgetToBeNotifiedOfTextModificationChange?
+      if @hashOfTextConsideredAsReference == hashCode @text
+        @widgetToBeNotifiedOfTextModificationChange.textContentUnmodified?()
+      else
+        @widgetToBeNotifiedOfTextModificationChange.textContentModified?()
   
   setFontSize: (sizeOrMorphGivingSize, morphGivingSize) ->
     if morphGivingSize?.getValue?

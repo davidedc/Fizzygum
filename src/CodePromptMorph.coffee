@@ -9,6 +9,7 @@ class CodePromptMorph extends Widget
   cancelButton: nil
   saveButton: nil
   okButton: nil
+  saveTextWdgt: nil
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -38,6 +39,12 @@ class CodePromptMorph extends Widget
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = new Color 255, 255, 255
+    @tempPromptEntryField.addModifiedContentIndicator()
+
+    # register this wdgt as one to be notified when the text
+    # changes/unchanges from "reference" content
+    # so we can enable/disable the "save" button
+    @tempPromptEntryField.widgetToBeNotifiedOfTextModificationChange = @
 
     @textMorph = @tempPromptEntryField.textWdgt
     @textMorph.backgroundColor = new Color 0,0,0,0
@@ -51,16 +58,36 @@ class CodePromptMorph extends Widget
     @cancelButton = new SimpleButtonMorph true, @, "close", (new StringMorph2 "cancel").alignCenter()
     @add @cancelButton
 
-    @saveButton = new SimpleButtonMorph true, @, "informTarget", (new StringMorph2 "save").alignCenter()
+    
+    @saveTextWdgt = new StringMorph2 "save"
+    @saveTextWdgt.alignCenter()
+    @saveButton = new SimpleButtonMorph true, @, "informTarget", @saveTextWdgt
     @add @saveButton
 
     @okButton = new SimpleButtonMorph true, @, "notifyTargetAndClose", (new StringMorph2 "ok").alignCenter()
     @add @okButton
+    # ---------------------------------------
+
+    # now that we added the buttons there is a "save" button
+    # to disable (because the reference text has not been
+    # changed yet), so trigger the content check now
+    @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
     @invalidateLayout()
 
+  textContentModified: ->
+    debugger
+    @saveTextWdgt.setColor new Color 0,0,0
+
+  textContentUnmodified: ->
+    debugger
+    @saveTextWdgt.setColor new Color 200, 200, 200
+
+
   informTarget: ->
     @target[@callback].call @target, nil, @textMorph
+    @textMorph.considerCurrentTextAsReferenceText()
+    @tempPromptEntryField.checkIfTextContentWasModifiedFromTextAtStart()
 
   notifyTargetAndClose: ->
     @informTarget()
