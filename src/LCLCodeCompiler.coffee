@@ -71,7 +71,7 @@ class LCLCodeCompiler
     compiledOutput = compiledOutput.replace(/var frame/, ";")
 
     # elegant way to not use eval
-    functionFromCompiledCode = new Function(compiledOutput)
+    functionFromCompiledCode = new Function compiledOutput
 
     output.status = 'parsed'
     output.program = functionFromCompiledCode
