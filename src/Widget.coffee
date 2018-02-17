@@ -3257,6 +3257,7 @@ class Widget extends TreeNode
   popUpPatchProgrammingMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Patch Programming"
     menu.addMenuItem "fanout", true, menusHelper, "createFanout"
+    menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
     menu.popUpAtHand()
 
 

@@ -33,6 +33,8 @@ ControllerMixin =
       setTargetAndActionWithOnesPickedFromMenu: (ignored, ignored2, theTarget, each) ->
         @target = theTarget
         @action = each
+        if @target[@action + "IsConnected"]?
+          @target[@action + "IsConnected"] = true
         @connectionsCalculationToken = getRandomInt -20000, 20000
-        @reactToTargetConnection()
+        @reactToTargetConnection?()
 

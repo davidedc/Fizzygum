@@ -174,3 +174,14 @@ class MenusHelper
     fanoutWdgt = new FanoutWdgt()
     world.create fanoutWdgt
     fanoutWdgt.setExtent new Point 100, 100
+
+  createCalculatingPatchNode: ->
+
+    calculatingPatchNodeWdgt = new CalculatingPatchNodeWdgt()
+    wm = new WindowWdgt nil, nil, calculatingPatchNodeWdgt, true
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
