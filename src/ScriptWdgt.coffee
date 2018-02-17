@@ -92,7 +92,7 @@ class ScriptWdgt extends Widget
     @closeFromContainerWindow @parent
 
   doAll: ->
-    @functionFromCompiledCode.call world
+    @functionFromCompiledCode?.call world
 
   tryIt: ->
     world.evaluateString @textMorph.text
