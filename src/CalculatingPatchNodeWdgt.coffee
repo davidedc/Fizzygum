@@ -58,19 +58,19 @@ class CalculatingPatchNodeWdgt extends Widget
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
-    @input1 = Number(newvalue)
+    @input2 = Number(newvalue)
     @updateTarget @input2connectionsCalculationToken
 
   setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = getRandomInt -20000, 20000 else @input3connectionsCalculationToken = connectionsCalculationToken
-    @input1 = Number(newvalue)
+    @input3 = Number(newvalue)
     @updateTarget @input3connectionsCalculationToken
 
   setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = getRandomInt -20000, 20000 else @input4connectionsCalculationToken = connectionsCalculationToken
-    @input1 = Number(newvalue)
+    @input4 = Number(newvalue)
     @updateTarget @input4connectionsCalculationToken
 
   # the bang makes the node fire the current output value
