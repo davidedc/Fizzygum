@@ -141,7 +141,7 @@ class DiffingPatchNodeWdgt extends Widget
 
   doCalculation: ->
     debugger
-    @output = @htmlDiff @input1, @input2
+    @output = @formattedDiff @input1, @input2
     @textMorph.setText @output
 
 
@@ -226,6 +226,7 @@ class DiffingPatchNodeWdgt extends Widget
 
   # Simple Diff function
   # (C) Paul Butler 2008 <http://www.paulbutler.org/>
+  # https://github.com/paulgb/simplediff/blob/master/coffeescript/simplediff.coffee
   diff: (before, after) ->
       # Find the differences between two lists. Returns a list of pairs, where the first value
       # is in ['+','-','='] and represents an insertion, deletion, or no change for that list.
@@ -275,11 +276,10 @@ class DiffingPatchNodeWdgt extends Widget
       # Returns the difference between the before and after strings when split on whitespace. Considers punctuation a part of the word
       @diff(before.split(/[ ]+/), after.split(/[ ]+/))
 
-  htmlDiff: (before, after) ->
-      # Returns the difference between two strings (as in stringDiff) in HTML format.
+  formattedDiff: (before, after) ->
       con =
           '=': ((x) -> x),
-          '+': ((x) -> '<ins>' + x + '</ins>'),
-          '-': ((x) -> '<del>' + x + '</del>')
+          '+': ((x) -> '+(' + x + ')'),
+          '-': ((x) -> '-(' + x + ')')
       ((con[a])(b.join ' ') for [a, b] in @stringDiff(before, after)).join ' '
 
