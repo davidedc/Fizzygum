@@ -5,7 +5,7 @@ class CalculatingPatchNodeWdgt extends Widget
   @augmentWith ControllerMixin
 
   tempPromptEntryField: nil
-  defaultContents: ""
+  defaultContents: nil
   textMorph: nil
 
   output: nil
@@ -15,11 +15,16 @@ class CalculatingPatchNodeWdgt extends Widget
   input3: nil
   input4: nil
 
+  # we need to keep track of which inputs are
+  # connected becayse we wait for those to be
+  # all updated before the node fires
   setInput1IsConnected: false
   setInput2IsConnected: false
   setInput3IsConnected: false
   setInput4IsConnected: false
 
+  # to keep track of whether each input is
+  # up-to-date or not
   input1connectionsCalculationToken: 314
   input2connectionsCalculationToken: 314
   input3connectionsCalculationToken: 314
@@ -37,41 +42,42 @@ class CalculatingPatchNodeWdgt extends Widget
   # external padding
   internalPadding: 5
 
-  constructor: (@defaultContents) ->
+  constructor: (@defaultContents = "") ->
     super new Point 200,400
     @buildAndConnectChildren()
 
   colloquialName: ->
     "Calculating patch node"
 
-  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
-    debugger
-    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
-    @updateTarget true
-
   setInput1: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input1connectionsCalculationToken then return else if !connectionsCalculationToken? then @input1connectionsCalculationToken = getRandomInt -20000, 20000 else @input1connectionsCalculationToken = connectionsCalculationToken
     @input1 = Number(newvalue)
-    @updateTarget()
+    @updateTarget @input1connectionsCalculationToken
 
   setInput2: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input2connectionsCalculationToken then return else if !connectionsCalculationToken? then @input2connectionsCalculationToken = getRandomInt -20000, 20000 else @input2connectionsCalculationToken = connectionsCalculationToken
     @input1 = Number(newvalue)
-    @updateTarget()
+    @updateTarget @input2connectionsCalculationToken
 
   setInput3: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input3connectionsCalculationToken then return else if !connectionsCalculationToken? then @input3connectionsCalculationToken = getRandomInt -20000, 20000 else @input3connectionsCalculationToken = connectionsCalculationToken
     @input1 = Number(newvalue)
-    @updateTarget()
+    @updateTarget @input3connectionsCalculationToken
 
   setInput4: (newvalue, ignored, connectionsCalculationToken, superCall) ->
     debugger
     if !superCall and connectionsCalculationToken == @input4connectionsCalculationToken then return else if !connectionsCalculationToken? then @input4connectionsCalculationToken = getRandomInt -20000, 20000 else @input4connectionsCalculationToken = connectionsCalculationToken
     @input1 = Number(newvalue)
-    @updateTarget()
+    @updateTarget @input4connectionsCalculationToken
+
+  # the bang makes the node fire the current output value
+  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    debugger
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @updateTarget @connectionsCalculationToken, true
 
   openTargetPropertySelector: (ignored, ignored2, theTarget) ->
     [menuEntriesStrings, functionNamesStrings] = theTarget.numericalSetters()
@@ -82,7 +88,7 @@ class CalculatingPatchNodeWdgt extends Widget
       menu = new MenuMorph @, false, @, true, true, "no target properties available"
     menu.popUpAtHand()
 
-  updateTarget: (directFireViaBang) ->
+  updateTarget: (tokenToCheckIfEqual, directFireViaBang) ->
     debugger
 
     if !@setInput1IsConnected and
@@ -90,17 +96,6 @@ class CalculatingPatchNodeWdgt extends Widget
      !@setInput3IsConnected and
      !@setInput4IsConnected
       return
-
-    tokenToCheckIfEqual = nil
-
-    if @setInput1IsConnected
-      tokenToCheckIfEqual = @input1connectionsCalculationToken
-    if @setInput2IsConnected
-      tokenToCheckIfEqual = @input2connectionsCalculationToken
-    if @setInput3IsConnected
-      tokenToCheckIfEqual = @input3connectionsCalculationToken
-    if @setInput4IsConnected
-      tokenToCheckIfEqual = @input4connectionsCalculationToken
 
     okToFire = true
     if @setInput1IsConnected
@@ -116,19 +111,47 @@ class CalculatingPatchNodeWdgt extends Widget
       if @input4connectionsCalculationToken != tokenToCheckIfEqual
         okToFire = false
 
-    if okToFire or directFireViaBang
-      if !directFireViaBang
-        @connectionsCalculationToken = tokenToCheckIfEqual
-        @doCalculation()
-      if @action and @action != ""
-        @target[@action].call @target, @output, nil, @connectionsCalculationToken
+    # if we are firing via bang then we use
+    # the existing output value, we don't
+    # recalculate a new one
+    if okToFire and !directFireViaBang
+      # note that we calculate an output value
+      # even if this node has no target. This
+      # is because the node might be visualising the
+      # output in some other way.
+      @doCalculation()
+
+    # if all the connected inputs are fresh OR we
+    # are firing via bang, then at this point we
+    # are going to update the target with the output
+    # value.
+    if okToFire or directFireViaBang      
+      @fireOutputToTarget tokenToCheckIfEqual
 
     return    
 
+  fireOutputToTarget: (calculationToken) ->
+    # mark this node as fired.
+    # if the update DOES come from the "bang!", then
+    # @connectionsCalculationToken has already been updated
+    # but we keep it simple and re-assign it here, not
+    # worth complicating things with an additional check
+    @connectionsCalculationToken = calculationToken
+
+    if @action and @action != ""
+      @target[@action].call @target, @output, nil, @connectionsCalculationToken
+
+  reactToTargetConnection: ->
+    # we generate a new calculation token, that's OK because
+    # we are definitely not in the middle of the calculation here
+    # but we might be starting a new chain of calculations
+    @fireOutputToTarget getRandomInt -20000, 20000
+
   doCalculation: ->
-    @evaluateString "@functionFromCompiledCode = " + @textMorph.text
-    # now we have the user-defined function in @functionFromCompiledCode
-    @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
+    if @textMorph.text != ""
+      @evaluateString "@functionFromCompiledCode = " + @textMorph.text
+      # now we have the user-defined function in @functionFromCompiledCode
+      @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
