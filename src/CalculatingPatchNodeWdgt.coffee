@@ -8,6 +8,9 @@ class CalculatingPatchNodeWdgt extends Widget
   defaultContents: nil
   textMorph: nil
 
+  outputTextArea: nil
+  outputTextAreaText: nil
+
   output: nil
 
   input1: nil
@@ -152,6 +155,7 @@ class CalculatingPatchNodeWdgt extends Widget
       @evaluateString "@functionFromCompiledCode = " + @textMorph.text
       # now we have the user-defined function in @functionFromCompiledCode
       @output = @functionFromCompiledCode?.call world, @input1, @input2, @input3, @input4
+      @outputTextAreaText.setText @output + ""
 
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
@@ -181,14 +185,22 @@ class CalculatingPatchNodeWdgt extends Widget
     @tempPromptEntryField.disableDrops()
     @tempPromptEntryField.contents.disableDrops()
     @tempPromptEntryField.color = new Color 255, 255, 255
-
     @textMorph = @tempPromptEntryField.textWdgt
     @textMorph.backgroundColor = new Color 0,0,0,0
     @textMorph.setFontName nil, nil, @textMorph.monoFontStack
     @textMorph.isEditable = true
     @textMorph.enableSelecting()
-
     @add @tempPromptEntryField
+
+    @outputTextArea = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
+    @outputTextArea.disableDrops()
+    @outputTextArea.contents.disableDrops()
+    @outputTextArea.color = new Color 255, 255, 255
+    @outputTextAreaText = @outputTextArea.textWdgt
+    @outputTextAreaText.backgroundColor = new Color 0,0,0,0
+    @outputTextAreaText.setFontName nil, nil, @outputTextAreaText.monoFontStack
+    @outputTextAreaText.isEditable = false
+    @add @outputTextArea
 
 
     @invalidateLayout()
@@ -216,13 +228,19 @@ class CalculatingPatchNodeWdgt extends Widget
     # going to be painted and moved OK.
     trackChanges.push false
 
-    textHeight = @height() - 2 * @externalPadding
-    textBottom = @top() + @externalPadding + textHeight
+    availableHeight = @height() - 2 * @externalPadding - @internalPadding
+    text1Height = Math.round(availableHeight * 2/3)
+    text2Height = Math.round(availableHeight * 1/3)
+
+    textBottom = @top() + @externalPadding + text1Height
 
     if @tempPromptEntryField.parent == @
       @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, textHeight
+      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
 
+    if @outputTextArea.parent == @
+      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding
+      @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
 
 
     trackChanges.pop()
