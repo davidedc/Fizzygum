@@ -193,3 +193,7 @@ class MenusHelper
     world.add wm
     wm.changed()
 
+  createSliderWithSmallestValueAtBottomEnd: ->
+    debugger
+    world.create new SliderMorph nil, nil, nil, nil, nil, true
+

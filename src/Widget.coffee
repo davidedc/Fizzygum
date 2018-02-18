@@ -3259,6 +3259,7 @@ class Widget extends TreeNode
     menu.addMenuItem "fanout", true, menusHelper, "createFanout"
     menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
     menu.addMenuItem "diffing node", true, menusHelper, "createDiffingPatchNode"
+    menu.addMenuItem "slider", true, menusHelper, "createSliderWithSmallestValueAtBottomEnd"
     menu.popUpAtHand()
 
 

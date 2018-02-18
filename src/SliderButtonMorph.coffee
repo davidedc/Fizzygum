@@ -38,6 +38,14 @@ class SliderButtonMorph extends CircleBoxMorph
 
   reLayout: ->
     super()
+
+    sliderValue = @parent.value
+    # notably, if you type "-2" as an input to the slider
+    # then as you type the "-"
+    # you get "-" as the value, which becomes NaN
+    if isNaN sliderValue
+      sliderValue = 0
+
     if @parent?
       orientation = @parent.autoOrientation()
       if orientation is "vertical"
@@ -45,18 +53,23 @@ class SliderButtonMorph extends CircleBoxMorph
         bh = Math.max bw, Math.round @parent.height() * @parent.ratio()
         @silentRawSetExtent new Point bw, bh
         posX = 1
-        posY = Math.min(
-          Math.round((@parent.value - @parent.start) * @parent.unitSize()),
-          @parent.height() - @height())
+        posY = Math.max(0,Math.min(
+          Math.round((sliderValue - @parent.start) * @parent.unitSize()),
+          @parent.height() - @height()))
+        if @parent.smallestValueIsAtBottomEnd
+          posY = @parent.height() - (posY + @height())
+ 
       else
         bh = @parent.height() - 2
         bw = Math.max bh, Math.round @parent.width() * @parent.ratio()
         @silentRawSetExtent new Point bw, bh
         posY = 1
-        posX = Math.min(
-          Math.round((@parent.value - @parent.start) * @parent.unitSize()),
-          @parent.width() - @width())
+        posX = Math.max(0, Math.min(
+          Math.round((sliderValue - @parent.start) * @parent.unitSize()),
+          @parent.width() - @width()))
+
       @silentFullRawMoveTo new Point(posX, posY).add @parent.position()
+
       @notifyChildrenThatParentHasReLayouted()
 
   grabsToParentWhenDragged: ->
@@ -75,11 +88,13 @@ class SliderButtonMorph extends CircleBoxMorph
         newY = Math.max(
           Math.min(@offset.y,
           @parent.bottom() - @height()), @parent.top())
+
       else
         newY = @top()
         newX = Math.max(
           Math.min(@offset.x,
           @parent.right() - @width()), @parent.left())
+
       newPosition = new Point newX, newY
       if !oldButtonPosition.eq newPosition
         @fullRawMoveTo newPosition

@@ -26,12 +26,15 @@ class SliderMorph extends CircleBoxMorph
   button: nil
   argumentToAction: nil
 
+  smallestValueIsAtBottomEnd: false
+
   constructor: (
     @start = 1,
     @stop = 100,
     @value = 50,
     @size = 10,
-    @color = (new Color 0, 0, 0)
+    @color = (new Color 0, 0, 0),
+    @smallestValueIsAtBottomEnd = false
     ) ->
     @button = new SliderButtonMorph()
     super # if nil, then a vertical one will be created
@@ -56,7 +59,8 @@ class SliderMorph extends CircleBoxMorph
       
     @changed()
 
-  rawSetExtent: (aPoint) -> 
+  rawSetExtent: (aPoint) ->
+    debugger
     unless aPoint.eq @extent()
       #console.log "move 17"
       @breakNumberOfRawMovesAndResizesCaches()  
@@ -100,10 +104,15 @@ class SliderMorph extends CircleBoxMorph
     
   updateValue: ->
     if @autoOrientation() is "vertical"
-      relPos = @button.top() - @top()
+      if @smallestValueIsAtBottomEnd
+        relPos = @bottom() - @button.bottom()
+      else
+        relPos = @button.top() - @top()
     else
       relPos = @button.left() - @left()
+
     newvalue = Math.round relPos / @unitSize() + @start
+
     if @value != newvalue
       @setValue newvalue, nil, nil
   
