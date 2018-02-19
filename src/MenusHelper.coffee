@@ -206,3 +206,6 @@ class MenusHelper
     world.add wm
     wm.changed()
 
+  throwAnError: ->
+    throw new Error "you manually threw an error!"
+
