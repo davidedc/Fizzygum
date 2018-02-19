@@ -64,8 +64,8 @@ class SimplePlainTextWdgt extends TextMorph2
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "text"
-    functionNamesStrings.push "setText"
+    menuEntriesStrings.push "bang!", "text"
+    functionNamesStrings.push "bang", "setText"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
@@ -121,6 +121,10 @@ class SimplePlainTextWdgt extends TextMorph2
 
     @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
+  # the bang makes the node fire the current output value
+  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @updateTarget()
 
   # This is also invoked for example when you take a slider
   # and set it to target this.

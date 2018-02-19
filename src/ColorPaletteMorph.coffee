@@ -65,6 +65,32 @@ class ColorPaletteMorph extends Widget
     @choice = @getPixelColor pos
     @connectionsCalculationToken = getRandomInt -20000, 20000
     @updateTarget()
+
+  stringSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "bang!"
+    functionNamesStrings.push "bang"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "bang!"
+    functionNamesStrings.push "bang"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "bang!"
+    functionNamesStrings.push "bang"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
+
+  # the bang makes the node fire the current output value
+  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    debugger
+    if !@choice? then return
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @updateTarget()
   
   updateTarget: ->
     debugger

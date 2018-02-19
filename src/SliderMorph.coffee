@@ -115,6 +115,13 @@ class SliderMorph extends CircleBoxMorph
 
     if @value != newvalue
       @setValue newvalue, nil, nil
+
+  # the bang makes the node fire the current output value
+  bang: (newvalue, ignored, connectionsCalculationToken, superCall) ->
+    debugger
+    if !superCall and connectionsCalculationToken == @connectionsCalculationToken then return else if !connectionsCalculationToken? then @connectionsCalculationToken = getRandomInt -20000, 20000 else @connectionsCalculationToken = connectionsCalculationToken
+    @updateTarget()
+
   
   updateTarget: ->
     debugger
@@ -277,14 +284,20 @@ class SliderMorph extends CircleBoxMorph
 
   stringSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "value"
-    functionNamesStrings.push "setValue"
+    menuEntriesStrings.push "bang!", "value"
+    functionNamesStrings.push "bang", "setValue"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
   numericalSetters: (menuEntriesStrings, functionNamesStrings) ->
     [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
-    menuEntriesStrings.push "value", "start", "stop", "size"
-    functionNamesStrings.push "setValue", "setStart", "setStop", "setSize"
+    menuEntriesStrings.push "bang!", "value", "start", "stop", "size"
+    functionNamesStrings.push "bang", "setValue", "setStart", "setStop", "setSize"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
   
+  colorSetters: (menuEntriesStrings, functionNamesStrings) ->
+    [menuEntriesStrings, functionNamesStrings] = super menuEntriesStrings, functionNamesStrings
+    menuEntriesStrings.push "bang!"
+    functionNamesStrings.push "bang"
+    return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
+
   
