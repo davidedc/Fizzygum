@@ -2768,11 +2768,12 @@ class Widget extends TreeNode
 
   spawnInspector2: (inspectee) ->
     inspector = new InspectorMorph2 inspectee
-    inspector.fullMoveTo world.hand.position()
-    inspector.setExtent new Point 560, 410
-    #inspector.fullRawMoveWithin world
-    world.add inspector
-    #inspector.changed()
+    wm = new WindowWdgt nil, nil, inspector
+    wm.setExtent new Point 560, 410
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
 
   spawnNextTo: (morphToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?

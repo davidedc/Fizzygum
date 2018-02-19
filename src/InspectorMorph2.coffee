@@ -1,6 +1,6 @@
 # InspectorMorph2 //////////////////////////////////////////////////////
 
-class InspectorMorph2 extends DEPRECATEDWindowMorph
+class InspectorMorph2 extends Widget
 
   target: nil
   currentProperty: nil
@@ -47,6 +47,10 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
   removePropertyButton: nil
   saveButton: nil
 
+  externalPadding: 0
+  internalPadding: 5
+  padding: nil
+
   showFields: ->
     if !@showingFields
       @showingFields = true
@@ -91,7 +95,8 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     @classesButtons = []
     @classesNames = []
     @angledArrows = []
-    super @target.toString()
+    super new Point 300, 300
+    @buildAndConnectChildren()
   
   inspectObject: (objectToBeInspected) ->
     @target = objectToBeInspected
@@ -99,6 +104,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
+    debugger
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
@@ -108,7 +114,6 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     # have been peeled away, they still live
     @fullDestroyChildren()
 
-    super
     attribs = []
     @classesButtons = []
     @classesNames = []
@@ -292,12 +297,12 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
 
   openClassInspector: (ignored,ignored2,className) ->
     classInspector = new ClassInspectorMorph window[className].prototype
-    classInspector.fullRawMoveTo world.hand.position()
-    classInspector.setExtent new Point 560,410
-    classInspector.fullRawMoveWithin world
-    world.add classInspector
-    classInspector.bringToForegroud()
-    classInspector.changed()
+    wm = new WindowWdgt nil, nil, classInspector
+    wm.setExtent new Point 560, 410
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
 
   showAttributes: ->
     @showing = "attributes"
@@ -378,6 +383,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     @detail.setContents cnts, 2
   
   doLayout: (newBoundsForThisLayout) ->
+    debugger
     if !window.recalculatingLayouts
       debugger
 
@@ -402,11 +408,9 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
 
     classDiagrHeight = Math.floor(@height() / 3)
 
-    labelLeft = @label.left()
-    labelBottom = @label.bottom() + 2
 
-    headerBounds = new Rectangle new Point(Math.round(@left() + @padding), Math.round(labelBottom + @padding))
-    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @padding, 15
+    headerBounds = new Rectangle new Point(Math.round(@left() + @externalPadding), Math.round(@top() + @externalPadding))
+    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding, 15
     @hierarchyHeaderString.doLayout headerBounds
 
 
@@ -418,7 +422,7 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
     @classesButtons.reverse()
     for eachClassButton in @classesButtons
       if eachClassButton.parent == @
-        buttonBounds = new Rectangle new Point(Math.round(@left() + 2 * @padding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@padding + justAcounter))
+        buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
         buttonBounds = buttonBounds.setBoundsWidthAndHeight 120, 15
         eachClassButton.doLayout buttonBounds
 
@@ -432,44 +436,44 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
 
       anotherCount++
     @classesButtons.reverse()
-    @layoutLastLabelInHierarchy Math.round(@left() + 2 * @padding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@padding + justAcounter)
+    @layoutLastLabelInHierarchy Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2 * @internalPadding + justAcounter)
 
-    @hierarchyBackgroundPanel.fullRawMoveTo new Point @left() + @padding, @hierarchyHeaderString.bottom() + @padding
-    @hierarchyBackgroundPanel.rawSetExtent new Point @width() - 2 * @padding, justAcounter + 20 + @padding
+    @hierarchyBackgroundPanel.fullRawMoveTo new Point @left() + @externalPadding, @hierarchyHeaderString.bottom() + @internalPadding
+    @hierarchyBackgroundPanel.rawSetExtent new Point @width() - 2 * @externalPadding, justAcounter + 20 + @internalPadding
 
-    headerBounds = new Rectangle new Point @left() + @padding , @hierarchyBackgroundPanel.bottom()+ @padding
-    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @padding , 15
+    headerBounds = new Rectangle new Point @left() + @externalPadding , @hierarchyBackgroundPanel.bottom()+ @internalPadding
+    headerBounds = headerBounds.setBoundsWidthAndHeight @width() - 2 * @externalPadding , 15
     @propertyHeaderString.doLayout headerBounds
 
-    listWidth = Math.floor((@width() - 3 * @padding) / 3)
+    listWidth = Math.floor((@width() - 2 * @externalPadding - @internalPadding ) / 3)
     detailWidth = 2*listWidth
 
-    @layoutOwnPropsOnlyToggle @propertyHeaderString.bottom() + @padding, listWidth, detailWidth
+    @layoutOwnPropsOnlyToggle @propertyHeaderString.bottom() + @internalPadding, listWidth, detailWidth
 
     # list
-    listHeight = (@bottom() - 2 * @padding - 15) - (@showMethodsToggle.bottom() + @padding)
+    listHeight = (@bottom() - @externalPadding - @internalPadding - 15) - (@showMethodsToggle.bottom() + @internalPadding)
     if @list.parent == @
-      @list.fullRawMoveTo new Point @left() + @padding, @showMethodsToggle.bottom() + @padding
+      @list.fullRawMoveTo new Point @left() + @externalPadding, @showMethodsToggle.bottom() + @internalPadding
       @list.rawSetExtent new Point listWidth, listHeight
 
     # detail
     if @detail.parent == @
-      @detail.fullRawMoveTo new Point @list.right() + @padding, @list.top()
-      @detail.rawSetExtent new Point(detailWidth, listHeight).round()
+      @detail.fullRawMoveTo new Point @list.right() + @internalPadding, @list.top()
+      @detail.rawSetExtent (new Point detailWidth, listHeight).round()
 
-    buttonBounds = new Rectangle new Point @left() + @padding, @bottom() - 15 - @padding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
     @addPropertyButton.doLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @addPropertyButton.right() + @padding, @bottom() - 15 - @padding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
     @renamePropertyButton.doLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @padding, @bottom() - 15 - @padding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @padding)/3, 15
+    buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
     @removePropertyButton.doLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @right() - @width()/4 - 2*@padding - WorldMorph.preferencesAndSettings.handleSize, @bottom() - 15 - @padding
+    buttonBounds = new Rectangle new Point @right() - @width()/4 - @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize, @bottom() - 15 - @externalPadding
     buttonBounds = buttonBounds.setBoundsWidthAndHeight @width()/4, 15
     @saveButton.doLayout buttonBounds
 
@@ -484,20 +488,20 @@ class InspectorMorph2 extends DEPRECATEDWindowMorph
 
   layoutOwnPropsOnlyToggle: (height, listWidth, detailWidth) ->
 
-    toggleBounds = new Rectangle new Point @left()+@padding , height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @left()+@externalPadding , height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@internalPadding)/ 2,15).round()
     @showMethodsToggle.doLayout toggleBounds
 
-    toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @padding, height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @internalPadding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (listWidth-@internalPadding)/ 2,15).round()
     @showFieldsToggle.doLayout toggleBounds
  
-    toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @padding, height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @internalPadding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@internalPadding)/ 2,15).round()
     @showInheritedToggle.doLayout toggleBounds
 
-    toggleBounds = new Rectangle new Point @showInheritedToggle.right() + @padding, height
-    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@padding)/ 2,15).round()
+    toggleBounds = new Rectangle new Point @showInheritedToggle.right() + @internalPadding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (detailWidth-@internalPadding)/ 2,15).round()
     @showOwnPropsOnlyToggle.doLayout toggleBounds
 
 

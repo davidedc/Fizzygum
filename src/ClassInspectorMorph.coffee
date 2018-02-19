@@ -8,19 +8,22 @@ class ClassInspectorMorph extends InspectorMorph2
   buildAndConnectChildren: ->
     super
     @lastLabelInHierarchy.setText "this class"
-    @label.setText "class " + @target.constructor.name   
+    #@label.setText "class " + @target.constructor.name   
 
   layoutOwnPropsOnlyToggle: (height) ->
 
-    @showMethodsToggle.fullRawMoveTo new Point @left()+@padding , height
-    @showMethodsToggle.rawSetExtent new Point (@width() - 4*@padding)/4,15
 
-    @showFieldsToggle.fullRawMoveTo new Point @showMethodsToggle.right() + @padding, height
-    @showFieldsToggle.rawSetExtent new Point (@width() - 4*@padding)/4,15
+    toggleBounds = new Rectangle new Point @left()+@internalPadding , height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
+    @showMethodsToggle.doLayout toggleBounds
 
-    @showInheritedToggle.fullRawMoveTo new Point @showFieldsToggle.right() + @padding, height
-    @showInheritedToggle.rawSetExtent new Point 2*(@width() - 4*@padding)/4,15
+    toggleBounds = new Rectangle new Point @showMethodsToggle.right() + @internalPadding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
+    @showFieldsToggle.doLayout toggleBounds
 
+    toggleBounds = new Rectangle new Point @showFieldsToggle.right() + @internalPadding, height
+    toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point 2*(@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
+    @showInheritedToggle.doLayout toggleBounds
 
 
   buildAndConnectObjOwnPropsButton: ->
