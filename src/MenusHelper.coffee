@@ -197,3 +197,12 @@ class MenusHelper
     debugger
     world.create new SliderMorph nil, nil, nil, nil, nil, true
 
+  createRegexSubstitutionPatchNodeWdgt: ->
+    regexSubstitutionPatchNodeWdgt = new RegexSubstitutionPatchNodeWdgt()
+    wm = new WindowWdgt nil, nil, regexSubstitutionPatchNodeWdgt, true
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+

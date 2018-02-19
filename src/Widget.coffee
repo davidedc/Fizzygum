@@ -3260,6 +3260,7 @@ class Widget extends TreeNode
     menu.addMenuItem "calculating node", true, menusHelper, "createCalculatingPatchNode"
     menu.addMenuItem "diffing node", true, menusHelper, "createDiffingPatchNode"
     menu.addMenuItem "slider", true, menusHelper, "createSliderWithSmallestValueAtBottomEnd"
+    menu.addMenuItem "regex subst. node", true, menusHelper, "createRegexSubstitutionPatchNodeWdgt"
     menu.popUpAtHand()
 
 
