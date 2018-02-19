@@ -45,6 +45,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @contents == @defaultContents
       @setEmptyWindowLabel()
     else
+      @disableDrops()
       # TODO there is a duplicate of this down below
       titleToBeSet = @contents.colloquialName()
       if titleToBeSet == "window"
@@ -182,6 +183,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @refreshScrollPanelWdgtOrVerticalStackIfIamInIt()
 
   resetToDefaultContents: ->
+    @enableDrops()
     @contents = @defaultContents
     @buildAndConnectChildren()
     @setEmptyWindowLabel()
@@ -194,6 +196,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   reactToDropOf: (theWidget) ->
     @contents = theWidget
     super
+    @disableDrops()
     @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
