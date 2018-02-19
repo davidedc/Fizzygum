@@ -746,11 +746,16 @@ class WorldMorph extends PanelWdgt
           break
         tryThisMorph = tryThisMorph.parent
 
-      # so now you have a "top" element up a chain
-      # of morphs with broken layout. Go do a
-      # doLayout on it, so it might fix a bunch of those
-      # on the chain (but not all)
-      tryThisMorph.doLayout()
+      try
+        # so now you have a "top" element up a chain
+        # of morphs with broken layout. Go do a
+        # doLayout on it, so it might fix a bunch of those
+        # on the chain (but not all)
+        tryThisMorph.doLayout()
+      catch err
+        if !world.errorConsole? then world.createErrorConsole()
+        @errorConsole.contents.showUpWithError err
+
 
   clearGeometryOrPositionPossiblyChangedFlags: ->
     for m in window.morphsThatMaybeChangedGeometryOrPosition
