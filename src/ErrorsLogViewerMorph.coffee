@@ -1,10 +1,13 @@
 # ErrorsLogViewerMorph ///////////////////////////////////////////////////
+# REQUIRES SimplePlainTextScrollPanelWdgt
+# REQUIRES SimpleButtonMorph
+# REQUIRES ToggleButtonMorph
 
 # to make this error log viewer come up, edit any code
 # in the inspector so to get a compilation error
 # (e.g. unmatched parens) and click "save"
 
-class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
+class ErrorsLogViewerMorph extends Widget
 
   tempPromptEntryField: nil
   defaultContents: ""
@@ -14,12 +17,18 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
   pauseToggle: nil
   okButton: nil
 
+  externalPadding: 0
+  internalPadding: 5
+
   paused: false
 
   constructor: (@msg, @target, @callback, @defaultContents) ->
+    debugger
+    super new Point 200,400
+    @buildAndConnectChildren()
 
-    topLeftButton = new HideIconButtonMorph @
-    super "Errors", topLeftButton
+  closeFromContainerWindow: (containerWindow) ->
+    @parent.hide()
 
   addText: (text) ->
     if @textMorph.text.length != 0
@@ -34,23 +43,17 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     unless @paused
       @addText err
 
-    if !@isVisible
-      @show()
-      @bringToForegroud()
+    if !@parent.isVisible
+      @parent.show()
+      @parent.bringToForegroud()
 
 
   buildAndConnectChildren: ->
+    debugger
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
      AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
-
-    super
-    
-    #@tempPromptEntryField = new TextMorph2 @defaultContents,nil,nil,nil,nil,nil,new Color(255, 255, 54), 0.5
-    #@tempPromptEntryField.isEditable = true
-    #@add @tempPromptEntryField
-
 
     @tempPromptEntryField = new SimplePlainTextScrollPanelWdgt @defaultContents, false, 5
     @tempPromptEntryField.disableDrops()
@@ -75,7 +78,7 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     @pauseToggle = new ToggleButtonMorph pauseButton, unpauseButton, if @paused then 1 else 0
     @add @pauseToggle
 
-    @okButton = new SimpleButtonMorph true, @, "hide", (new StringMorph2 "ok").alignCenter()
+    @okButton = new SimpleButtonMorph true, @, "closeFromContainerWindow", (new StringMorph2 "ok").alignCenter()
     @add @okButton
 
     @invalidateLayout()
@@ -97,6 +100,7 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     @close()
 
   doLayout: (newBoundsForThisLayout) ->
+    debugger
     if !window.recalculatingLayouts
       debugger
 
@@ -131,44 +135,32 @@ class ErrorsLogViewerMorph extends DEPRECATEDWindowMorph
     # going to be painted and moved OK.
     trackChanges.push false
 
-    # label
-    labelLeft = @left() + @padding
-    labelTop = @top() + @padding
-    labelRight = @right() - @padding
-    labelWidth = labelRight - labelLeft
-    labelBottom = labelTop + @label.height() + 2
 
-    eachPaneWidth = Math.floor(@width() / 2) - @padding
-
-
-    mainCanvasWidth = eachPaneWidth
-    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
-    mainCanvasHeight = b - labelBottom - Math.floor(@padding / 2)
-    mainCanvasBottom = labelBottom + mainCanvasHeight + Math.floor(@padding / 2)
-    mainCanvasLeft = @left() + eachPaneWidth
+    mainCanvasHeight = @height() - 2 * @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize
+    mainCanvasBottom = @top() + @externalPadding + mainCanvasHeight
 
     if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point labelLeft, labelBottom + Math.floor(@padding / 2)
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @padding, mainCanvasHeight
+      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, mainCanvasHeight
 
 
     # buttons -------------------------------
     
 
-    eachButtonWidth = (@width() - 5* @padding - WorldMorph.preferencesAndSettings.handleSize) / 3
+    eachButtonWidth = (@width() - 2* @externalPadding - 3 * @internalPadding - WorldMorph.preferencesAndSettings.handleSize) / 3
 
     if @clearButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 0*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 0*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @clearButton.doLayout buttonBounds
 
     if @pauseToggle.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 1*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 1*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @pauseToggle.doLayout buttonBounds
 
     if @okButton.parent == @
-      buttonBounds = new Rectangle new Point @left() + @padding + 2*(eachButtonWidth + @padding), mainCanvasBottom + @padding
+      buttonBounds = new Rectangle new Point @left() + @externalPadding + 2*(eachButtonWidth + @internalPadding), mainCanvasBottom + @internalPadding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight eachButtonWidth, 15
       @okButton.doLayout buttonBounds
 

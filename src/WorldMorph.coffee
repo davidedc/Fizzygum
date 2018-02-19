@@ -280,8 +280,15 @@ class WorldMorph extends PanelWdgt
     return @_acceptsDrops
 
   createErrorConsole: ->
-    @errorConsole = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
-    @add @errorConsole
+
+    errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
+    wm = new WindowWdgt nil, nil, errorsLogViewerMorph, true
+    wm.setExtent new Point 460, 400
+    world.add wm
+    wm.changed()
+
+
+    @errorConsole = wm
     @errorConsole.fullMoveTo new Point 190,10
     @errorConsole.setExtent new Point 550,415
     @errorConsole.hide()
@@ -947,7 +954,7 @@ class WorldMorph extends PanelWdgt
 
     catch err
       if !world.errorConsole? then world.createErrorConsole()
-      @errorConsole.showUpWithError err
+      @errorConsole.contents.showUpWithError err
 
     finally
       @events = []
@@ -1031,7 +1038,7 @@ class WorldMorph extends PanelWdgt
           eachSteppingMorph.step()
         catch err
           if !world.errorConsole? then world.createErrorConsole()
-          @errorConsole.showUpWithError err
+          @errorConsole.contents.showUpWithError err
 
 
   
