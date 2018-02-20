@@ -1,6 +1,6 @@
 # FridgeMagnetsMorph //////////////////////////////////////////////////////
 
-class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
+class FridgeMagnetsMorph extends Widget
 
   # panes:
   fridge: nil
@@ -13,9 +13,13 @@ class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
   liveCodeLangOutputHeader: nil
   outputAnimationHeader: nil
 
+  externalPadding: 0
+  internalPadding: 5
+
 
   constructor: ->
-    super "Fizzytiles"
+    super new Point 400, 400
+    @buildAndConnectChildren()
   
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and
@@ -23,7 +27,7 @@ class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
      AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    super
+    #super
 
     # visual output
     @visualOutput = new FridgeMagnetsCanvasMorph()
@@ -97,6 +101,7 @@ class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
     @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
+    debugger
     if !window.recalculatingLayouts
       debugger
 
@@ -118,80 +123,68 @@ class FridgeMagnetsMorph extends DEPRECATEDWindowMorph
     # going to be painted and moved OK.
     trackChanges.push false
 
-    # label
-    labelLeft = @left() + @padding
-    labelTop = @top() + @padding
-    labelRight = @right() - @padding
-    labelWidth = labelRight - labelLeft
-    labelBottom = labelTop + @label.height() + 2
 
-    classDiagrHeight = Math.floor(@height() / 2)
-    eachPaneWidth = Math.floor( (@width() - 4*@padding) / 3) 
+    eachPaneWidth = Math.floor( (@width() - 2*@externalPadding - 2 * @internalPadding) / 3) 
 
 
     # fridge
     fridgeWidth = eachPaneWidth
-    b = @bottom() - (2 * @padding) - WorldMorph.preferencesAndSettings.handleSize
-    fridgeHeight = b - labelBottom - classDiagrHeight
-    fridgeBottom = labelBottom + fridgeHeight + classDiagrHeight
-    fridgeLeft = @fridge.left()
+    fridgeHeight = Math.floor((@height() - 2 * @externalPadding - 2 * 15 - 3 * @internalPadding)/2)
 
-    magnetsBoxLeft = labelLeft + eachPaneWidth + @padding
+    magnetsBoxLeft = @left() + @externalPadding + eachPaneWidth + @internalPadding
     magnetsBoxWidth = eachPaneWidth
-    magnetsBoxHeight = b - labelBottom - (15 + 2*@padding)
 
     if @fridge.parent == @
-      @fridge.fullRawMoveTo new Point magnetsBoxLeft, labelBottom + 15 + 2*@padding
+      @fridge.fullRawMoveTo new Point magnetsBoxLeft, @top() + @externalPadding +  15 + @internalPadding
       @fridge.rawSetExtent new Point eachPaneWidth, fridgeHeight
 
     if @liveCodeLangOutputHeader.parent == @
-      @liveCodeLangOutputHeader.fullRawMoveTo new Point magnetsBoxLeft, @fridge.bottom() + @padding
+      @liveCodeLangOutputHeader.fullRawMoveTo new Point magnetsBoxLeft, @fridge.bottom() + @internalPadding
       @liveCodeLangOutputHeader.rawSetExtent new Point eachPaneWidth, 15
 
     # codeOutput
     if @codeOutput.parent == @
-      @codeOutput.fullRawMoveTo new Point magnetsBoxLeft, labelBottom + classDiagrHeight
+      @codeOutput.fullRawMoveTo new Point magnetsBoxLeft, @liveCodeLangOutputHeader.bottom() + @internalPadding
       @codeOutput.rawSetExtent new Point fridgeWidth, fridgeHeight
 
     if @dragTheTilesHereHeader.parent == @
-      @dragTheTilesHereHeader.fullRawMoveTo new Point magnetsBoxLeft, @label.bottom() + @padding
+      @dragTheTilesHereHeader.fullRawMoveTo new Point magnetsBoxLeft, @top() + @externalPadding
       @dragTheTilesHereHeader.rawSetExtent new Point eachPaneWidth, 15
 
     if @tilesBinHeader.parent == @
-      @tilesBinHeader.fullRawMoveTo new Point @left() + @padding, @label.bottom() + @padding
+      @tilesBinHeader.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
       @tilesBinHeader.rawSetExtent new Point eachPaneWidth, 15
 
     # magnets box
-    detailRight = fridgeLeft + eachPaneWidth
+    magnetsBoxHeight = @height() - 2 * @externalPadding - 15 - @internalPadding
     if @magnetsBox.parent == @
-      @magnetsBox.fullRawMoveTo new Point labelLeft, labelBottom + 15 + 2*@padding
+      @magnetsBox.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding +  15 + @internalPadding
       @magnetsBox.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     # visual output
-    visualOutputLeft = labelLeft + eachPaneWidth + @padding + eachPaneWidth + @padding
+    visualOutputLeft = @codeOutput.right() + @internalPadding
     visualOutputWidth = eachPaneWidth
-    visualOutputRight = visualOutputLeft + visualOutputWidth
     if @visualOutput.parent == @
-      @visualOutput.fullRawMoveTo new Point visualOutputLeft, labelBottom + 15 + 2*@padding
+      @visualOutput.fullRawMoveTo new Point visualOutputLeft, @top() + @externalPadding +  15 + @internalPadding
       @visualOutput.rawSetExtent new Point(eachPaneWidth, magnetsBoxHeight).round()
 
     if @outputAnimationHeader.parent == @
-      @outputAnimationHeader.fullRawMoveTo new Point visualOutputLeft, @label.bottom() + @padding
+      @outputAnimationHeader.fullRawMoveTo new Point visualOutputLeft, @top() + @externalPadding
       @outputAnimationHeader.rawSetExtent new Point eachPaneWidth, 15
 
 
     # sample magnets -------------------------------
     if @scale.parent == @magnetsBox
-      @scale.fullRawMoveTo new Point @magnetsBox.left() + @padding, @magnetsBox.top() + @padding
+      @scale.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @magnetsBox.top() + @internalPadding
 
     if @rotate.parent == @magnetsBox
-      @rotate.fullRawMoveTo new Point @magnetsBox.left() + @padding, @scale.bottom() + @padding
+      @rotate.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @scale.bottom() + @internalPadding
 
     if @box.parent == @magnetsBox
-      @box.fullRawMoveTo new Point @magnetsBox.left() + @padding, @rotate.bottom() + @padding
+      @box.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @rotate.bottom() + @internalPadding
 
     if @move.parent == @magnetsBox
-      @move.fullRawMoveTo new Point @magnetsBox.left() + @padding, @box.bottom() + @padding
+      @move.fullRawMoveTo new Point @magnetsBox.left() + @internalPadding, @box.bottom() + @internalPadding
 
     # ----------------------------------------------
 

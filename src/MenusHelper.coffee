@@ -11,9 +11,15 @@ class MenusHelper
   @augmentWith DeepCopierMixin
 
   createFridgeMagnets: ->
+    debugger
     fmm = new FridgeMagnetsMorph()
-    world.create fmm
-    fmm.setExtent new Point 570, 400
+    wm = new WindowWdgt nil, nil, fmm
+    wm.setExtent new Point 570, 400
+    wm.fullRawMoveTo world.hand.position()
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
 
   createReconfigurablePaint: ->
     reconfPaint = new ReconfigurablePaintMorph()

@@ -352,9 +352,14 @@ class WorldMorph extends PanelWdgt
       reconfPaint.setExtent new Point 460, 400
 
       fmm = new FridgeMagnetsMorph()
-      @add fmm
-      fmm.fullMoveTo new Point 505, 275
-      fmm.setExtent new Point 570, 400
+      wm = new WindowWdgt nil, nil, fmm
+      wm.setExtent new Point 570, 400
+      wm.fullRawMoveTo new Point 505, 275
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+
+
 
       acm = new AnalogClockWdgt()
       @add acm
