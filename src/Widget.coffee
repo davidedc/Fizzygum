@@ -1279,6 +1279,10 @@ class Widget extends TreeNode
     else
       newBoundsForThisLayout = (new Rectangle @position()).setBoundsWidthAndHeight newBoundsForThisLayout
 
+    # "bake" the "deferred" size and position
+    # into the current size and position
+    @rawSetBounds newBoundsForThisLayout
+
     # adjust the top side and the left side last, so that
     # the control buttons in the window bars are still
     # visible/reachable
