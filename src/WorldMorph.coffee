@@ -347,9 +347,12 @@ class WorldMorph extends PanelWdgt
       welcomeBody.setExtent new Point 340, 175
 
       reconfPaint = new ReconfigurablePaintMorph()
-      @add reconfPaint
-      reconfPaint.fullMoveTo new Point 35, 275
-      reconfPaint.setExtent new Point 460, 400
+      wm = new WindowWdgt nil, nil, reconfPaint
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo new Point 35, 275
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
 
       fmm = new FridgeMagnetsMorph()
       wm = new WindowWdgt nil, nil, fmm
