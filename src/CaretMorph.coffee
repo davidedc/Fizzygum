@@ -58,6 +58,15 @@ class CaretMorph extends BlinkerMorph
     @target.escalateEvent "reactToKeystroke", charCode, symbol, shiftKey, ctrlKey, altKey, metaKey
     @updateDimension()
   
+  # Some "keys" don't produce a keypress,
+  # they just produce a keydown/keyup,
+  # (see https://stackoverflow.com/q/1367700 )
+  # so we handle those here.
+  # Note that we use the keyDownEventUsed flag
+  # to absolutely make sure that we don't process
+  # the same thing twice just in case in some
+  # platforms some unexpected keys DO produce
+  # both the keydown + keypress ...
   processKeyDown: (scanCode, shiftKey, ctrlKey, altKey, metaKey) ->
     # @inspectKeyEvent event
     @keyDownEventUsed = false
@@ -74,6 +83,14 @@ class CaretMorph extends BlinkerMorph
       @updateDimension()
       return
     switch scanCode
+      when 32
+        # when you do a preventDefault() on the spacebar,
+        # (to avoid the page to scroll), then the
+        # keypress event for the space doesn't happen
+        # (at least in Chrome/OSX),
+        # so we must process it in the keydown here instead!
+        @insert " "
+        @keyDownEventUsed = true
       when 37
         @goLeft shiftKey
         @keyDownEventUsed = true

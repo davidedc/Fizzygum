@@ -1462,6 +1462,19 @@ class WorldMorph extends PanelWdgt
           doPrevent = d.readOnly or d.disabled
         else
           doPrevent = true
+
+      # this paragraph is to prevent the browser scrolling when
+      # user presses spacebar, see
+      # https://stackoverflow.com/a/22559917
+      if event.keyCode == 32 and event.target == @worldCanvas
+        # Note that doing a preventDefault on the spacebar
+        # causes it not to generate the keypress event
+        # (just the keydown), so we had to modify the keydown
+        # to also process the space.
+        # (I tried to use stopPropagation instead/inaddition but
+        # it didn't work).
+        doPrevent = true
+
       if doPrevent
         event.preventDefault()
 
