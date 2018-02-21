@@ -969,8 +969,7 @@ class WorldMorph extends PanelWdgt
       if !world.errorConsole? then world.createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
-    finally
-      @events = []
+    @events = []
 
   # we keep the "pacing" promises in this
   # srcLoadsSteps array, (or, more precisely,
