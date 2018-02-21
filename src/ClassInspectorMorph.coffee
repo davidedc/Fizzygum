@@ -39,14 +39,15 @@ class ClassInspectorMorph extends InspectorMorph2
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
 
-    try
-      # this.target[propertyName] = evaluate txt
-      @target.evaluateString "@" + propertyName + " = " + txt
-      # if we are saving a function, we'd like to
-      # keep the source code so we can edit Coffeescript
-      # again.
-      if isFunction @target[propertyName]
-        @target[propertyName + "_source"] = txt
-      @notifyInstancesOfSourceChange([propertyName])
-    catch err
-      @inform err
+    # this.target[propertyName] = evaluate txt
+    @target.evaluateString "@" + propertyName + " = " + txt
+    # if we are saving a function, we'd like to
+    # keep the source code so we can edit Coffeescript
+    # again.
+    if isFunction @target[propertyName]
+      @target[propertyName + "_source"] = txt
+    @notifyInstancesOfSourceChange([propertyName])
+
+    @detail.textWdgt.considerCurrentTextAsReferenceText()
+    @detail.checkIfTextContentWasModifiedFromTextAtStart()
+
