@@ -1092,7 +1092,10 @@ class WorldMorph extends PanelWdgt
     window.recalculatingLayouts = false
     @addPinoutingMorphs()
     @addHighlightingMorphs()
+
+    # here is where the repainting on screen happens
     @updateBroken()
+
     WorldMorph.frameCount++
 
   addSteppingMorph: (theMorph) ->
