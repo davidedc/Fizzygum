@@ -761,6 +761,7 @@ class WorldMorph extends PanelWdgt
         # on the chain (but not all)
         tryThisMorph.doLayout()
       catch err
+        @softResetWorld()
         if !world.errorConsole? then world.createErrorConsole()
         @errorConsole.contents.showUpWithError err
 
@@ -966,6 +967,7 @@ class WorldMorph extends PanelWdgt
               @stretchWorldToFillEntirePage()
 
     catch err
+      @softResetWorld()
       if !world.errorConsole? then world.createErrorConsole()
       @errorConsole.contents.showUpWithError err
 
@@ -1049,6 +1051,7 @@ class WorldMorph extends PanelWdgt
         try
           eachSteppingMorph.step()
         catch err
+          @softResetWorld()
           if !world.errorConsole? then world.createErrorConsole()
           @errorConsole.contents.showUpWithError err
 
@@ -1733,14 +1736,20 @@ class WorldMorph extends PanelWdgt
     next.selectAll()
     next.edit()
 
-
-  resetWorld: ->
+  # if an error is thrown, the state of the world might
+  # be messy, for example the pointer might be
+  # dragging an invisible morph, etc.
+  # So, try to clean-up things as much as possible.
+  softResetWorld: ->
     @hand.drop()
-    @changed() # redraw the whole screen
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = nil
-    @fullDestroyChildren()
     world.morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
+
+  resetWorld: ->
+    @softResetWorld()
+    @changed() # redraw the whole screen
+    @fullDestroyChildren()
     # the "basementWdgt" is not attached to the
     # world tree so it's not in the children,
     # so we need to clean up separately
