@@ -16,7 +16,7 @@ class ClassInspectorMorph extends InspectorMorph2
   layoutOwnPropsOnlyToggle: (height) ->
 
 
-    toggleBounds = new Rectangle new Point @left()+@internalPadding , height
+    toggleBounds = new Rectangle new Point @left() + @externalPadding , height
     toggleBounds = toggleBounds.setBoundsWidthAndHeight (new Point (@width() - 2*@externalPadding - 2*@internalPadding)/4,15).round()
     @showMethodsToggle.doLayout toggleBounds
 
