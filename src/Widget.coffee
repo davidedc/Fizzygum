@@ -1780,13 +1780,22 @@ class Widget extends TreeNode
     @children.forEach (child) ->
       child.fullPaintIntoAreaOrBlitFromBackBuffer aContext, clippingRectangle, appliedShadow
 
-  hide: ->
+  # ... when you want to hide something
+  # but you don't want to generate any
+  # broken rectangles
+  silentHide: ->
     if !@isVisible
       return
     @isVisible = false
     WorldMorph.numberOfVisibilityFlagsChanges++
     @invalidateFullBoundsCache @
     @invalidateFullClippedBoundsCache @
+
+  hide: ->
+    if !@isVisible
+      return
+
+    @silentHide()
 
     # TODO refactor this, it appears more than one time
     # if the morph contributes to a shadow, unfortunately
