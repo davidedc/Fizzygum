@@ -281,8 +281,8 @@ class WorldMorph extends PanelWdgt
 
   createErrorConsole: ->
 
-    errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", "no errors yet, phewww!"
-    wm = new WindowWdgt nil, nil, errorsLogViewerMorph, true
+    errorsLogViewerMorph = new ErrorsLogViewerMorph "Errors", @, "modifyCodeToBeInjected", ""
+    wm = new WindowWdgt nil, nil, errorsLogViewerMorph
     wm.setExtent new Point 460, 400
     world.add wm
     wm.changed()
