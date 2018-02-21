@@ -20,7 +20,10 @@ class FridgeMagnetsMorph extends Widget
   constructor: ->
     super new Point 400, 400
     @buildAndConnectChildren()
-  
+
+  colloquialName: ->   
+    "Fizzytiles"
+ 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and
