@@ -574,11 +574,10 @@ class InspectorMorph2 extends Widget
     prop = morphWithProperty.text.text
     if prop.getValue?
       prop = prop.getValue()
-    try
-      delete @target[propertyName]
-      @target[prop] = @currentProperty
-    catch err
-      @inform err
+    
+    delete @target[propertyName]
+    @target[prop] = @currentProperty
+
     @buildAndConnectChildren()
     @notifyInstancesOfSourceChange([prop, propertyName])
   
@@ -590,11 +589,9 @@ class InspectorMorph2 extends Widget
   # rather than here 
   removeProperty: ->
     propertyName = @list.selected.labelString
-    try
-      delete @target[propertyName]
 
-      @currentProperty = nil
-      @buildAndConnectChildren()
-      @notifyInstancesOfSourceChange([propertyName])
-    catch err
-      @inform err
+    delete @target[propertyName]
+
+    @currentProperty = nil
+    @buildAndConnectChildren()
+    @notifyInstancesOfSourceChange([propertyName])
