@@ -812,14 +812,17 @@ class WorldMorph extends PanelWdgt
     if world.showRedraws
       @showBrokenRects @worldCanvasContext
 
-    @broken = []
-    @duplicatedBrokenRectsTracker = {}
-    @numberOfDuplicatedBrokenRects = 0
-    @numberOfMergedSourceAndDestination = 0
+    @resetDataStructuresForBrokenRects()
 
     window.healingRectanglesPhase = false
     if trackChanges.length != 1 and trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
+
+  resetDataStructuresForBrokenRects: ->
+    @broken = []
+    @duplicatedBrokenRectsTracker = {}
+    @numberOfDuplicatedBrokenRects = 0
+    @numberOfMergedSourceAndDestination = 0
 
   addPinoutingMorphs: ->
     for eachPinoutingMorph in @currentPinoutingMorphs.slice()
