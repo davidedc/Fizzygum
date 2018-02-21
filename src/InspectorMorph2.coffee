@@ -51,6 +51,9 @@ class InspectorMorph2 extends Widget
   internalPadding: 5
   padding: nil
 
+  colloquialName: ->
+    "Object Inspector (" + @target.colloquialName() + ")"
+
   showFields: ->
     if !@showingFields
       @showingFields = true
@@ -271,6 +274,8 @@ class InspectorMorph2 extends Widget
     ctrl.setReceiver @target
     @detail.setContents ctrl, 2
     @add @detail
+
+
 
     @hierarchyHeaderString = new StringMorph2 "Hierarchy"
     @hierarchyHeaderString.toggleHeaderLine()

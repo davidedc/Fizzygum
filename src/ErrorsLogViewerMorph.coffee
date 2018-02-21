@@ -27,6 +27,9 @@ class ErrorsLogViewerMorph extends Widget
     super new Point 200,400
     @buildAndConnectChildren()
 
+  colloquialName: ->
+    "Error log"
+
   closeFromContainerWindow: (containerWindow) ->
     @parent.hide()
 
