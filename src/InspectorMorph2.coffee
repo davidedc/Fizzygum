@@ -46,6 +46,7 @@ class InspectorMorph2 extends Widget
   renamePropertyButton: nil
   removePropertyButton: nil
   saveButton: nil
+  saveTextWdgt: nil
 
   externalPadding: 0
   internalPadding: 5
@@ -218,7 +219,9 @@ class InspectorMorph2 extends Widget
     @add @renamePropertyButton
     @removePropertyButton = new SimpleButtonMorph true, @, "removeProperty", (new StringMorph2 "remove").alignCenter()
     @add @removePropertyButton
-    @saveButton = new SimpleButtonMorph true, @, "save", (new StringMorph2 "save").alignCenter()
+
+    @saveTextWdgt = (new StringMorph2 "save").alignCenter()
+    @saveButton = new SimpleButtonMorph true, @, "save", @saveTextWdgt
     @add @saveButton
 
 
@@ -263,16 +266,22 @@ class InspectorMorph2 extends Widget
 
 
     # details pane
-    @detail = new ScrollPanelWdgt()
+    @detail = new SimplePlainTextScrollPanelWdgt "", false, 5
     @detail.disableDrops()
     @detail.contents.disableDrops()
-    @detail.isTextLineWrapping = true
     @detail.color = new Color 255, 255, 255
-    ctrl = new TextMorph ""
-    ctrl.isEditable = true
-    ctrl.enableSelecting()
-    ctrl.setReceiver @target
-    @detail.setContents ctrl, 2
+    @detail.addModifiedContentIndicator()
+
+    # register this wdgt as one to be notified when the text
+    # changes/unchanges from "reference" content
+    # so we can enable/disable the "save" button
+    @detail.widgetToBeNotifiedOfTextModificationChange = @
+
+    @textMorph = @detail.textWdgt
+    @textMorph.backgroundColor = new Color 0,0,0,0
+    @textMorph.setFontName nil, nil, @textMorph.monoFontStack
+    @textMorph.isEditable = false
+
     @add @detail
 
 
@@ -293,6 +302,15 @@ class InspectorMorph2 extends Widget
 
     # update layout
     @invalidateLayout()
+
+  textContentModified: ->
+    debugger
+    @saveTextWdgt.setColor new Color 0,0,0
+
+  textContentUnmodified: ->
+    debugger
+    @saveTextWdgt.setColor new Color 200, 200, 200
+
 
   buildAndConnectObjOwnPropsButton: ->
     @showOwnPropsOnlyOnButton = new SimpleButtonMorph true, @, "hideOwnPropsOnly", (new StringMorph2 "obj own props only: on").alignCenter()
@@ -381,11 +399,13 @@ class InspectorMorph2 extends Widget
       else
         txt = val.toString()
 
-    cnts = new TextMorph txt
+    cnts = @detail.textWdgt
+    cnts.setText txt
+    cnts.setReceiver @target
     cnts.isEditable = true
     cnts.enableSelecting()
-    cnts.setReceiver @target
-    @detail.setContents cnts, 2
+    cnts.considerCurrentTextAsReferenceText()
+    @detail.checkIfTextContentWasModifiedFromTextAtStart()
   
   doLayout: (newBoundsForThisLayout) ->
     debugger
@@ -529,6 +549,9 @@ class InspectorMorph2 extends Widget
     propertyName = @list.selected.labelString
     # inject code will also break the layout and the morph
     @target.injectProperty propertyName, txt
+
+    @detail.textWdgt.considerCurrentTextAsReferenceText()
+    @detail.checkIfTextContentWasModifiedFromTextAtStart()
 
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here 
