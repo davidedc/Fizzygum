@@ -215,6 +215,10 @@ class WorldMorph extends PanelWdgt
   laysIconsHorizontallyInGrid: false
   iconsLayingInGridWrapCount: 5
 
+  errorsWhileRepainting: []
+  paintingWidget: nil
+  widgetsGivingErrorWhileRepainting: []
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -804,11 +808,31 @@ class WorldMorph extends PanelWdgt
 
     window.healingRectanglesPhase = true
 
+    @errorsWhileRepainting = []
+
     @broken.forEach (rect) =>
       if !rect?
         return
       if rect.isNotEmpty()
-        @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
+        try
+          @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, rect
+        catch err
+          @resetWorldCanvasContext()
+          @queueErrorForLaterReporting err
+          @hideOffendingWidget()
+          @softResetWorld()
+
+    # IF we got errors while repainting, the
+    # screen might be in a bad state (because everything in front of the
+    # "bad" widget is not repainted since the offending widget has
+    # thrown, so nothing in front of it could be painted properly)
+    # SO do COMPLETE repaints of the screen and hide
+    # further offending widgets until there are no more errors
+    # (i.e. the offending widgets are progressively hidden so eventually
+    # we should repaint the whole screen without errors, hopefully)
+    if @errorsWhileRepainting.length != 0
+      @findOutAllOtherOffendingWidgetsAndPaintWholeScreen()
+
     if world.showRedraws
       @showBrokenRects @worldCanvasContext
 
@@ -817,6 +841,65 @@ class WorldMorph extends PanelWdgt
     window.healingRectanglesPhase = false
     if trackChanges.length != 1 and trackChanges[0] != true
       alert "trackChanges array should have only one element (true)"
+
+  findOutAllOtherOffendingWidgetsAndPaintWholeScreen: ->
+    # we keep repainting the whole screen until there are no
+    # errors.
+    # Why do we need multiple repaints and not just one?
+    # Because remember that when a widget throws an error while
+    # repainting, it bubble all the way up and stops any
+    # further repainting of the other widgets, potentially
+    # preventing the finding of errors in the other
+    # widgets. Hence, we need to keep repainting until
+    # there are no errors.
+
+    currentErrorsCount = @errorsWhileRepainting.length
+    previousErrorsCount = nil
+    numberOfTotalRepaints = 0
+    until previousErrorsCount == currentErrorsCount
+      numberOfTotalRepaints++
+      try
+        @fullPaintIntoAreaOrBlitFromBackBuffer @worldCanvasContext, @bounds
+      catch err
+        @resetWorldCanvasContext()
+        @queueErrorForLaterReporting err
+        @hideOffendingWidget()
+        @softResetWorld()
+
+      previousErrorsCount = currentErrorsCount
+      currentErrorsCount = @errorsWhileRepainting.length
+
+    #console.log "total repaints: " + numberOfTotalRepaints
+
+  resetWorldCanvasContext: ->
+    # when an error is thrown while painting, it's
+    # possible that we are left with a context in a strange
+    # mixed state, so try to bring it back to
+    # normality as much as possible
+    # We are doing this for "cleanliness" of the context
+    # state, not because we care of the drawing being
+    # perfect (we are eventually going to repaint the
+    # whole screen without the offending widgets
+    # widgets).
+    @worldCanvasContext.closePath()
+    @worldCanvasContext.resetClip?()
+    @worldCanvasContext.resetTransform?()
+    for j in [1...2000]
+      @worldCanvasContext.restore()
+
+  queueErrorForLaterReporting: (err) ->
+    # now record the error so we can report it in the
+    # next cycle, and add the offending widget to a
+    # "banned" list
+    @errorsWhileRepainting.push err
+    if (@widgetsGivingErrorWhileRepainting.indexOf @paintingWidget) == -1
+      @widgetsGivingErrorWhileRepainting.push @paintingWidget
+      @paintingWidget.silentHide()
+
+  hideOffendingWidget: ->
+    if (@widgetsGivingErrorWhileRepainting.indexOf @paintingWidget) == -1
+      @widgetsGivingErrorWhileRepainting.push @paintingWidget
+      @paintingWidget.silentHide()
 
   resetDataStructuresForBrokenRects: ->
     @broken = []
@@ -985,9 +1068,16 @@ class WorldMorph extends PanelWdgt
       resolvingFunction = window.srcLoadsSteps.shift()
       resolvingFunction.call()
 
+  showErrorsHappenedInRepaintingStepInPreviousCycle: ->
+    for eachErr in @errorsWhileRepainting
+      if !world.errorConsole? then world.createErrorConsole()
+      @errorConsole.contents.showUpWithError eachErr
+
   doOneCycle: ->
     WorldMorph.currentTime = Date.now()
     # console.log TextMorph.instancesCounter + " " + StringMorph.instancesCounter
+
+    @showErrorsHappenedInRepaintingStepInPreviousCycle()
 
     @playQueuedEvents()
 

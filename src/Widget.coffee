@@ -1742,6 +1742,11 @@ class Widget extends TreeNode
   # To draw a widget, basically you first have to draw its shadow
   # and then you draw the contents. See methods below.
   fullPaintIntoAreaOrBlitFromBackBuffer: (aContext, clippingRectangle, appliedShadow) ->
+
+    # used to track which widget has been throwing
+    # an error while painting
+    world.paintingWidget = @
+
     # if there is a shadow "property" object
     # then first draw the shadow of the treee
     if @shadowInfo?

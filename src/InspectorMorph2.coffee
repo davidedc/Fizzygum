@@ -553,6 +553,14 @@ class InspectorMorph2 extends Widget
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
 
+    # it's possible that the user might have fixed
+    # a "painting" error, so give another chance to all
+    # "banned" widgets (banned from repainting)
+    for eachWidget in world.widgetsGivingErrorWhileRepainting
+      eachWidget.show()
+    world.widgetsGivingErrorWhileRepainting = []
+
+
   # TODO should have a removeProperty method in Widget (and in the classes somehow)
   # rather than here 
   addProperty: (ignoringThis, morphWithProperty) ->

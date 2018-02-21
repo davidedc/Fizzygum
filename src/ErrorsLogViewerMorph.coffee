@@ -45,6 +45,12 @@ class ErrorsLogViewerMorph extends Widget
   showUpWithError: (err) ->
     unless @paused
       toBeAddedToLog = ""
+
+      if world.widgetsGivingErrorWhileRepainting.length != 0
+        toBeAddedToLog += "Some widgets crashed while painting themselves and\n"
+        toBeAddedToLog += "hence have been banned from re-painting themseves.\n"
+        toBeAddedToLog += "Edit/save any source code to give them another chance.\n\n"
+
       toBeAddedToLog += err
       if err.stack?
         toBeAddedToLog += "\n\nStack:\n" + err.stack

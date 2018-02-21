@@ -51,3 +51,9 @@ class ClassInspectorMorph extends InspectorMorph2
     @detail.textWdgt.considerCurrentTextAsReferenceText()
     @detail.checkIfTextContentWasModifiedFromTextAtStart()
 
+    # it's possible that the user might have fixed
+    # a "painting" error, so give another chance to all
+    # "banned" widgets (banned from repainting)
+    for eachWidget in world.widgetsGivingErrorWhileRepainting
+      eachWidget.show()
+    world.widgetsGivingErrorWhileRepainting = []
