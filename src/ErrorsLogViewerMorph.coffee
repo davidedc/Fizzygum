@@ -33,18 +33,22 @@ class ErrorsLogViewerMorph extends Widget
   closeFromContainerWindow: (containerWindow) ->
     @parent.hide()
 
-  addText: (text) ->
+  addText: (newLog) ->
     if @textMorph.text.length != 0
-      newText = @textMorph.text + "\n"
+      existingLog = @textMorph.text
     else
-      newText = ""
+      existingLog = ""
 
-    @textMorph.setText newText + text
+    @textMorph.setText existingLog + "\n\n-----------------------------------------\n\n" + newLog
 
 
   showUpWithError: (err) ->
     unless @paused
-      @addText err
+      toBeAddedToLog = ""
+      toBeAddedToLog += err
+      if err.stack?
+        toBeAddedToLog += "\n\nStack:\n" + err.stack
+      @addText toBeAddedToLog
 
     if !@parent.isVisible
       @parent.show()
