@@ -21,6 +21,7 @@
 # REQUIRES LRUCache
 # REQUIRES FittingSpecTextInSmallerBounds
 # REQUIRES FittingSpecTextInLargerBounds
+# REQUIRES TextEditingState
 
 class StringMorph2 extends Widget
 
@@ -110,6 +111,8 @@ class StringMorph2 extends Widget
   hashOfTextConsideredAsReference: nil
   widgetToBeNotifiedOfTextModificationChange: nil
 
+  undoHistory: nil
+  redoHistory: nil
 
   constructor: (
       @text = (if text is "" then "" else "StringMorph2"),
@@ -130,6 +133,9 @@ class StringMorph2 extends Widget
     @backgroundColor = backgroundColor if backgroundColor?
     @backgroundTransparency = backgroundTransparency if backgroundTransparency?      
 
+    @undoHistory = []
+    @redoHistory = []
+
     super()
 
     # override inherited properties:
@@ -143,6 +149,66 @@ class StringMorph2 extends Widget
   actualFontSizeUsedInRendering: ->
     @reflowText()
     @fittingFontSize
+
+  pushUndoState: (slot, justFirstClickToPositionCursor) ->
+
+    # Little definition here: a "positional" change
+    # are pairs of states that only differ for the
+    # position.
+
+    # Since we push a:
+    #                  position, text
+    #
+    # pair for each insert (see comment in "insert" for why)
+    # we want to actually forget the "trivial" positional
+    # changes when the user is just typing, so discard the
+    # positional changes of one
+    if @undoHistory.length > 0
+      lastUndoState = @undoHistory[@undoHistory.length - 1]
+      if lastUndoState.selectionStart == @startMark and
+       lastUndoState.selectionEnd == @endMark and
+       lastUndoState.textContent == @text and
+       Math.abs(slot - lastUndoState.cursorPos) <= 1
+        return
+
+    # when the user clicks around, we never want to
+    # store three consecutive non-trivial positional
+    # changes. We just want two: the initial and the last
+    # one. So check the last two pushes, and if they are
+    # positional then we discard the second one, then we are going
+    # to add the new one after this check.
+    # All this is because it's much *much* more natural
+    # for the user to undo up to the position BEFORE an
+    # edit. If you don't save that position before the
+    # edit, you jump directly to the end of the edit before,
+    # it's actually quite puzzling.
+    # It's nominally "functional" to only jump to text changes,
+    # but it's quite unnatural, it's not how undos work
+    # in real editors.
+    if @undoHistory.length > 1
+      lastUndoState = @undoHistory[@undoHistory.length - 1]
+      beforeLastUndoState = @undoHistory[@undoHistory.length - 2]
+      if beforeLastUndoState.selectionStart == lastUndoState.selectionStart == @startMark and
+       beforeLastUndoState.selectionEnd == lastUndoState.selectionEnd == @endMark and
+       beforeLastUndoState.textContent == lastUndoState.textContent == @text
+        @undoHistory.pop()
+
+
+    @redoHistory = []
+
+    @undoHistory.push new TextEditingState @startMark, @endMark, slot, @text, justFirstClickToPositionCursor
+
+  popRedoState: (slot) ->
+    poppedElement = @redoHistory.pop()
+    if poppedElement?
+      @undoHistory.push poppedElement
+    return poppedElement
+
+  popUndoState: ->
+    poppedElement = @undoHistory.pop()
+    if poppedElement?
+      @redoHistory.push poppedElement
+    return poppedElement
 
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
@@ -1045,6 +1111,8 @@ class StringMorph2 extends Widget
     return true
   
   clearSelection: ->
+    if !@startMark? and !@endMark?
+      return
     @startMark = nil
     @endMark = nil
     @changed()
@@ -1131,7 +1199,7 @@ class StringMorph2 extends Widget
         @clearSelection()
 
       if editResult?
-        world.caret.gotoSlot slotUserClickedOn
+        world.caret.gotoSlot slotUserClickedOn, true
         world.caret.show()
         @caretHorizPositionForVertMovement = world.caret.slot
 
