@@ -339,7 +339,7 @@ class WorldMorph extends PanelWdgt
       version.setExtent new Point 134, 15
 
       welcomeMessage = """
-      ...a small dynamic web desktop environment for experimenting with live programming, prototyping and mashups.
+      ...a small dynamic web environment for experimenting with live programming, prototyping and mashups.
 
       Right-click on the desktop to try more widgets!
       """
