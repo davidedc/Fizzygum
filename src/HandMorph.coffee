@@ -219,7 +219,7 @@ class HandMorph extends Widget
 
       @fullChanged()
       target.aboutToDrop? morphToDrop
-      target.add morphToDrop, nil, nil, true
+      target.add morphToDrop, nil, nil, true, nil, @position()
       morphToDrop.fullChanged()
 
       @children = []

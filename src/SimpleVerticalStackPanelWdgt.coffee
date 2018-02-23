@@ -18,9 +18,35 @@ class SimpleVerticalStackPanelWdgt extends Widget
   colloquialName: ->
     "stack"
 
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     aMorph.rawResizeToWithoutSpacing()
-    super
+
+    # find out WHERE to add the widget. Find the existing widget in the
+    # stack that is at the same height, and put the new
+    # widget after it
+
+    childrenNotHandlesNorCarets = @children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    # The vertical stack just lays down
+    # the children in the exact sibling order, so all we have to do
+    # is to count up to the child at the same height, say it's
+    # child "n", then are going to add the new widget in position
+    # "n+1".
+    # (conveniently, "add" supports an argument to insert a widget
+    # in a specific order among the siblings.)
+    positionNumberAmongSiblings = nil
+    if (childrenNotHandlesNorCarets.length > 0) and (positionOnScreen instanceof Point)
+      positionNumberAmongSiblings = 0
+      for eachChild in childrenNotHandlesNorCarets
+        positionNumberAmongSiblings++
+        if eachChild.top() < positionOnScreen.y and eachChild.bottom() > positionOnScreen.y
+          break
+
+    if positionNumberAmongSiblings?
+      super aMorph, positionNumberAmongSiblings, layoutSpec, beingDropped
+    else
+      super
 
   constructor: (extent, color, @padding, @constrainContentWidth = true) ->
     super()
