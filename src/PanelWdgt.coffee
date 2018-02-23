@@ -163,7 +163,7 @@ class PanelWdgt extends Widget
     if @parent?
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
-        @parent.adjustScrollBars()
+        @parent.adjustScrollBars?()
 
   # PanelWdgt menus:
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
