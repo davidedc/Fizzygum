@@ -765,6 +765,13 @@ class Widget extends TreeNode
     fractionalYPos = relativeYPos / theMorph.height()
     return [fractionalXPos, fractionalYPos]
 
+  extentFractionalInMorph: (theMorph) ->
+    width = @width()
+    height = @height()
+    fractionalWidth = width / theMorph.width()
+    fractionalHeight = height / theMorph.height()
+    return [fractionalWidth, fractionalHeight]
+
   positionPixelsInMorph: (theMorph) ->
     relativePos = @position().toLocalCoordinatesOf theMorph
     return [relativePos.x, relativePos.y]
@@ -2622,6 +2629,8 @@ class Widget extends TreeNode
 
   justDropped: (whereIn) ->
     @positionFractionalInHoldingPanel = @positionFractionalInMorph whereIn
+    @extentFractionalInHoldingPanel = @extentFractionalInMorph whereIn
+
     @wasPositionedSlightlyOutsidePanel = ! whereIn.bounds.containsRectangle @bounds
 
     
