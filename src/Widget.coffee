@@ -1157,7 +1157,10 @@ class Widget extends TreeNode
         return
     WorldMorph.numberOfRawMovesAndResizes++
 
-  fullRawMoveToFractionalPositionInPaneUserHasSet: ->
+  fullRawMoveToFractionalPositionInPaneUserHasSet: (boundsOfParent) ->
+    if !boundsOfParent?
+      boundsOfParent = @parent.bounds
+
     # we do one dimension at a time here for a subtle reason: if
     # say a window has the left side beyond the left side of the desktop
     # then the x of positionFractionalInHoldingPanel is NEGATIVE
@@ -1166,9 +1169,10 @@ class Widget extends TreeNode
     # we just don't move widgets along the dimensions that have a negative
     # fractional component
     if @positionFractionalInHoldingPanel[0] > 0
-      @fullRawMoveTo (new Point (@parent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
+      @fullRawMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
     if @positionFractionalInHoldingPanel[1] > 0
-      @fullRawMoveTo (new Point @left(), (@parent.height() * @positionFractionalInHoldingPanel[1])).round()
+      @fullRawMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
+
 
   
   fullRawMoveTo: (aPoint) ->
