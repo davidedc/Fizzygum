@@ -199,7 +199,6 @@ class HandMorph extends Widget
 
 
   drop: ->
-    debugger
     if @floatDraggingSomething()
 
       if AutomatorRecorderAndPlayer?
@@ -266,11 +265,17 @@ class HandMorph extends Widget
       # we might need to close an ongoing edit
       # operation, which means deleting the
       # caret and un-selecting anything that was selected.
-      # Note that we don't want to interrupt an edit
-      # if the user is invoking/clicking on anything
-      # inside a menu, because the invoked function
+      #
+      # This check is because we don't want to interrupt
+      # an edit if the user is invoking/clicking on anything
+      # inside a menu regarding text that is being edited
+      # because the invoked function
       # might do something with the selection
       # (for example doSelection takes the current selection).
+      #
+      # In other words, if we are actioning on something that has
+      # the text as an ancestor, then don't stop the
+      # editing.
       if actionedMorph isnt @world.caret.target
         # user clicked on something other than what the
         # caret is attached to
@@ -559,7 +564,7 @@ class HandMorph extends Widget
       #  console.log "not a triple click, just a double click"
       @tripleClickMorph = nil
       return false
-    ), 500
+    ), 300
 
   cleanupMenuMorphs: (expectedClick, morph, alsoKillFreshMenus)->
 
