@@ -212,13 +212,11 @@ class StringMorph2 extends Widget
 
   setHorizontalAlignment: (newAlignment) ->
     if @horizontalAlignment != newAlignment
-      world.stopEditing()
       @horizontalAlignment = newAlignment
       @changed()
 
   setVerticalAlignment: (newAlignment) ->
     if @verticalAlignment != newAlignment
-      world.stopEditing()
       @verticalAlignment = newAlignment
       @changed()
 
