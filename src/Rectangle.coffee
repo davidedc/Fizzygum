@@ -241,6 +241,14 @@ class Rectangle
     result.corner = @corner.subtract delta
     result.debugIfFloats()
     result
+
+  rightHalf: ->
+    @debugIfFloats()
+    result = new @constructor()
+    result.origin = @origin.add new Point Math.round(@width()/2),0
+    result.corner = @corner.copy()
+    result.debugIfFloats()
+    result
   
   expandBy: (delta) ->
     @debugIfFloats()
