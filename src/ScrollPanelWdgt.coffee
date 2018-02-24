@@ -77,6 +77,8 @@ class ScrollPanelWdgt extends PanelWdgt
   colloquialName: ->
     if @contents instanceof FolderPanelWdgt
       "folder"
+    else if @contents instanceof ToolPanelWdgt
+      "toolbar"
     else
       "scrollable panel"
 
@@ -186,11 +188,11 @@ class ScrollPanelWdgt extends PanelWdgt
   # when you add things to the ScrollPanelWdgt they actually
   # end up in the Panel inside it. This also applies to
   # resizing handles!
-  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped) ->
+  add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
     if aMorph instanceof ModifiedTextTriangleAnnotationWdgt
       super
     else
-      @contents.add aMorph, position, layoutSpec, beingDropped
+      @contents.add aMorph, position, layoutSpec, beingDropped, nil, positionOnScreen
       @adjustContentsBounds()
       @adjustScrollBars()
 

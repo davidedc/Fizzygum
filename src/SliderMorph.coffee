@@ -28,6 +28,8 @@ class SliderMorph extends CircleBoxMorph
 
   smallestValueIsAtBottomEnd: false
 
+  idealRatioWidthToHeight: 1/4
+
   constructor: (
     @start = 1,
     @stop = 100,
@@ -44,6 +46,7 @@ class SliderMorph extends CircleBoxMorph
 
   colloquialName: ->
     "slider"
+
 
   initialiseDefaultVerticalStackLayoutSpec: ->
     @layoutSpecDetails = new VerticalStackLayoutSpec 0
