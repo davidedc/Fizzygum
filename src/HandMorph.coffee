@@ -491,7 +491,15 @@ class HandMorph extends Widget
           doubleClickInvoked = false
 
           if @doubleClickMorph?
-            if @doubleClickMorph == morph
+            # three conditions:
+            #  - both clicks are left-button clicks
+            #  - both clicks on same widget
+            #  - both clicks nearby
+            if @mouseButton == "left" and
+             @doubleClickMorph == morph and
+             ((@doubleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
+              console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
+              console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
               @doubleClickMorph = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -506,7 +514,7 @@ class HandMorph extends Widget
                 # right here.
                 @rememberTripleClickMorphsForAWhile morph
             else
-              @rememberDoubleClickMorphsForAWhile morph
+              @forgetDoubleClickMorphs()
           else
             @rememberDoubleClickMorphsForAWhile morph
 
@@ -518,7 +526,10 @@ class HandMorph extends Widget
           # This pargraph of code is basically the same
           # as the previous one.
           if !doubleClickInvoked
-            if @tripleClickMorph?
+            # same three conditions as double click
+            if @mouseButton == "left" and
+             @tripleClickMorph == morph and
+             ((@tripleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
               #debugger
               if @tripleClickMorph == morph
                 @tripleClickMorph = nil
@@ -529,9 +540,7 @@ class HandMorph extends Widget
                 if !disableConsecutiveClicksFromSingleClicksDueToFastTests
                   @processTripleClick morph
               else
-                @rememberTripleClickMorphsForAWhile morph
-            else
-              @rememberTripleClickMorphsForAWhile morph
+                @forgetTripleClickMorphs()
 
       # some pop-overs can contain horizontal sliders
       # and when the user interacts with them, it's easy
@@ -547,22 +556,32 @@ class HandMorph extends Widget
     @nonFloatDraggedMorph = nil
 
 
+  forgetDoubleClickMorphs: ->
+    @doubleClickMorph = nil
+    @doubleClickPosition = nil
+
   rememberDoubleClickMorphsForAWhile: (morph) ->
     @doubleClickMorph = morph
+    @doubleClickPosition = @position()
     setTimeout (=>
       #if @doubleClickMorph?
       #  console.log "single click"
-      @doubleClickMorph = nil
+      @forgetDoubleClickMorphs()
       return false
     ), 300
 
   # basically the same as rememberDoubleClickMorphsForAWhile
+  forgetTripleClickMorphs: ->
+    @tripleClickMorph = nil
+    @tripleClickPosition = nil
+
   rememberTripleClickMorphsForAWhile: (morph) ->
     @tripleClickMorph = morph
+    @tripleClickPosition = @position()
     setTimeout (=>
       #if @tripleClickMorph?
       #  console.log "not a triple click, just a double click"
-      @tripleClickMorph = nil
+      @forgetTripleClickMorphs()
       return false
     ), 300
 
