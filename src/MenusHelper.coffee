@@ -219,3 +219,12 @@ class MenusHelper
     stretchablePanel = new StretchablePanelContainerWdgt()
     world.create stretchablePanel
     stretchablePanel.setExtent new Point 400, 300
+
+  createToolsPanel: ->
+    toolPanel = new ScrollPanelWdgt new ToolPanelWdgt()
+    wm = new WindowWdgt nil, nil, toolPanel, true
+    wm.setExtent new Point 200, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
