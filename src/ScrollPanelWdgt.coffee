@@ -259,6 +259,11 @@ class ScrollPanelWdgt extends PanelWdgt
 
     subBounds = @contents.subMorphsMergedFullBounds()?.ceil()
     if subBounds
+
+      # add-in the content's own external padding
+      if @contents.externalPadding?
+        subBounds = subBounds.expandBy @contents.externalPadding
+
       # in case of a SimpleVerticalStackScrollPanelWdgt then we really
       # want to make sure that we don't stretch the view and the stack
       # after the end of the contents (this can happen for example
