@@ -1173,6 +1173,11 @@ class Widget extends TreeNode
     if @positionFractionalInHoldingPanel[1] > 0
       @fullRawMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
 
+  rawSetExtentToFractionalExtentInPaneUserHasSet: (boundsOfParent) ->
+    if !boundsOfParent?
+      boundsOfParent = @parent.bounds
+
+    @rawSetExtent new Point @extentFractionalInHoldingPanel[0] * boundsOfParent.width(), @extentFractionalInHoldingPanel[1] * boundsOfParent.height()
 
   
   fullRawMoveTo: (aPoint) ->
