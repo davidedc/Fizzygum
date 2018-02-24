@@ -3342,6 +3342,7 @@ class Widget extends TreeNode
     menu.addMenuItem "folder window", true, menusHelper, "makeFolderWindow"
     menu.addMenuItem "bouncing particle", true, menusHelper, "makeBouncingParticle"
     menu.addMenuItem "throw an error", true, menusHelper, "throwAnError"
+    menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.popUpAtHand()
 

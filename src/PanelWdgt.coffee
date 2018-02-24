@@ -99,6 +99,7 @@ class PanelWdgt extends Widget
 
   childRemoved: (child) ->
     if @parent?
+      @parent.grandChildRemoved?()  
       if @parent.adjustContentsBounds?
         @parent.adjustContentsBounds()
         @parent.adjustScrollBars?()  
@@ -109,6 +110,7 @@ class PanelWdgt extends Widget
     # based on whether they are reachable or
     # not. So let's notify it.
     if @parent?
+      @parent.grandChildAdded?()
       if @parent.parent?
         if @parent.parent.childAddedInScrollPanel?
           @parent.parent.childAddedInScrollPanel child
