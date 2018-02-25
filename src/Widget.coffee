@@ -3659,6 +3659,9 @@ class Widget extends TreeNode
     @unlockFromPanels()
     @setLayoutSpec LayoutSpec.ATTACHEDAS_FREEFLOATING
     @layoutSpecDetails = nil
+    if @originalExtentBeforeBecomingThumbnail?
+      @rawSetExtent @originalExtentBeforeBecomingThumbnail
+      @originalExtentBeforeBecomingThumbnail = nil
 
   deduplicateSettersAndSortByMenuEntryString: (menuEntriesStrings, functionNamesStrings) ->
     menuEntriesStrings = menuEntriesStrings.uniqueKeepOrder()

@@ -8,6 +8,7 @@ class MenuItemMorph extends TriggerMorph
   constructor: (ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph) ->
     #console.log "menuitem constructing"
     super ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked, target, action, labelString, fontSize, fontStyle, centered, environment, morphEnv, hint, color, bold, italic, doubleClickAction, argumentToAction1, argumentToAction2, representsAMorph 
+    @actionableAsThumbnail = true
 
   getTextDescription: ->
     if @textDescription?

@@ -15,16 +15,21 @@ class ToolPanelWdgt extends PanelWdgt
       super
     else
       aMorph.isTemplate = true
-      if aMorph.idealRatioWidthToHeight?
-        ratio = aMorph.idealRatioWidthToHeight
-        if ratio > 1
-          # more wide than tall
-          aMorph.rawSetExtent new Point @thumbnailSize, @thumbnailSize / ratio
-        else
-          # more tall than wide
-          aMorph.rawSetExtent new Point @thumbnailSize * ratio, @thumbnailSize 
-      else
-        aMorph.rawSetExtent new Point @thumbnailSize, @thumbnailSize
+      aMorph.originalExtentBeforeBecomingThumbnail = aMorph.extent()
+
+      if !(aMorph instanceof GlassBoxBottomWdgt)
+        glassBoxBottom = new GlassBoxBottomWdgt()
+        glassBoxBottom.add aMorph
+
+        if !aMorph.actionableAsThumbnail
+          glassBoxTop = new GlassBoxTopWdgt()
+          glassBoxBottom.add glassBoxTop
+
+        glassBoxBottom.fullRawMoveTo @topLeft().add new Point @externalPadding, @externalPadding
+        glassBoxBottom.rawSetExtent new Point @thumbnailSize, @thumbnailSize
+        glassBoxBottom.reLayout()
+
+        aMorph = glassBoxBottom
 
 
       childrenNotHandlesNorCarets = @children.filter (m) ->
