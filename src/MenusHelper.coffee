@@ -228,3 +228,73 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
+
+  popUpMore1IconsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
+    menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
+    menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconMorph"
+    menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconMorph"
+    menu.addMenuItem "Toothpaste icon", true, menusHelper, "createToothpasteIconMorph"
+    menu.addMenuItem "Eraser icon", true, menusHelper, "createEraserIconMorph"
+    menu.addMenuItem "Trashcan icon", true, menusHelper, "createTrashcanIconWdgt"
+    menu.addMenuItem "Shortcut arrow icon", true, menusHelper, "createShortcutArrowIconWdgt"
+    menu.addMenuItem "Raster pic icon", true, menusHelper, "createRasterPicIconWdgt"
+    menu.addMenuItem "Paint bucket icon", true, menusHelper, "createPaintBucketIconWdgt"
+    menu.addMenuItem "Object icon", true, menusHelper, "createObjectIconWdgt"
+    menu.addMenuItem "Folder icon", true, menusHelper, "createFolderIconWdgt"
+    menu.addMenuItem "Basement icon", true, menusHelper, "createBasementIconWdgt"
+    menu.addMenuItem "Widget icon", true, menusHelper, "createWidgetIconWdgt"
+    menu.popUpAtHand()
+
+  popUpMore2IconsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+    menu.addMenuItem "Format as code icon", true, menusHelper, "createFormatAsCodeIconWdgt"
+    menu.addMenuItem "Ch. X icon", true, menusHelper, "createChXIconWdgt"
+    menu.addMenuItem "Ch. X.X icon", true, menusHelper, "createChXXIconWdgt"
+    menu.addMenuItem "Ch. X.X.X icon", true, menusHelper, "createChXXXIconWdgt"
+    menu.addMenuItem "Align right icon", true, menusHelper, "createAlignRightIconWdgt"
+    menu.addMenuItem "Align center icon", true, menusHelper, "createAlignCenterIconWdgt"
+    menu.addMenuItem "Align left icon", true, menusHelper, "createAlignLeftIconWdgt"
+    menu.addMenuItem "Bold icon", true, menusHelper, "createBoldIconWdgt"
+    menu.addMenuItem "Italic icon", true, menusHelper, "createItalicIconWdgt"
+    menu.addMenuItem "Information icon", true, menusHelper, "createInformationIconWdgt"
+    menu.addMenuItem "Textbox icon", true, menusHelper, "createTextboxIconWdgt"
+    menu.addMenuItem "Video play icon", true, menusHelper, "createVideoPlayIconWdgt"
+    menu.popUpAtHand()
+
+  createFormatAsCodeIconWdgt: ->
+    world.create new FormatAsCodeIconWdgt()
+
+  createChXIconWdgt: ->
+    world.create new ChapterXIconWdgt()
+
+  createChXXIconWdgt: ->
+    world.create new ChapterXXIconWdgt()
+
+  createChXXXIconWdgt: ->
+    world.create new ChapterXXXIconWdgt()
+
+  createAlignRightIconWdgt: ->
+    world.create new AlignRightIconWdgt()
+
+  createAlignCenterIconWdgt: ->
+    world.create new AlignCenterIconWdgt()
+
+  createAlignLeftIconWdgt: ->
+    world.create new AlignLeftIconWdgt()
+
+  createBoldIconWdgt: ->
+    world.create new BoldIconWdgt()
+
+  createItalicIconWdgt: ->
+    world.create new ItalicIconWdgt()
+
+  createInformationIconWdgt: ->
+    world.create new InformationIconWdgt()
+
+  createTextboxIconWdgt: ->
+    world.create new TextIconWdgt()
+
+  createVideoPlayIconWdgt: ->
+    world.create new VideoPlayIconWdgt()
+

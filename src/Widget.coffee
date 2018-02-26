@@ -3243,22 +3243,11 @@ class Widget extends TreeNode
     menu.addMenuItem "Scooter icon", true, menusHelper, "createScooterIconMorph"
     menu.addMenuItem "Heart icon", true, menusHelper, "createHeartIconMorph"
 
-    menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
-    menu.addMenuItem "Pencil 2 icon", true, menusHelper, "createPencil2IconMorph"
-    menu.addMenuItem "Brush icon", true, menusHelper, "createBrushIconMorph"
-    menu.addMenuItem "Toothpaste icon", true, menusHelper, "createToothpasteIconMorph"
-    menu.addMenuItem "Eraser icon", true, menusHelper, "createEraserIconMorph"
-
-    menu.addMenuItem "Trashcan icon", true, menusHelper, "createTrashcanIconWdgt"
-    menu.addMenuItem "Shortcut arrow icon", true, menusHelper, "createShortcutArrowIconWdgt"
-    menu.addMenuItem "Raster pic icon", true, menusHelper, "createRasterPicIconWdgt"
-    menu.addMenuItem "Paint bucket icon", true, menusHelper, "createPaintBucketIconWdgt"
-    menu.addMenuItem "Object icon", true, menusHelper, "createObjectIconWdgt"
-    menu.addMenuItem "Folder icon", true, menusHelper, "createFolderIconWdgt"
-    menu.addMenuItem "Basement icon", true, menusHelper, "createBasementIconWdgt"
-    menu.addMenuItem "Widget icon", true, menusHelper, "createWidgetIconWdgt"
+    menu.addMenuItem "more 1 ➜", false, menusHelper, "popUpMore1IconsMenu", "others"
+    menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
 
     menu.popUpAtHand()
+
 
   popUpVerticalStackMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Vertical stack"

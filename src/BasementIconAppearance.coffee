@@ -1,4 +1,4 @@
-class BasementIconIconAppearance extends IconAppearance
+class BasementIconAppearance extends IconAppearance
 
   constructor: (@morph) ->
     super
