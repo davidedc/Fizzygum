@@ -8,6 +8,7 @@ class AnalogClockWdgt extends Widget
   hoursHandAngle: 0
   minutesHandAngle: 0
   secondsHandAngle: 0
+  strokeSizeToClockDimensionRatio: 1/250
 
   constructor: ->
 
@@ -105,14 +106,14 @@ class AnalogClockWdgt extends Widget
     @secondsHandAngle = sec * Math.PI / 30
 
   renderingHelper: (context, color, appliedShadow) ->
-    context.lineWidth = 1
+    height = @height()
+    width = @width()
+
+    context.lineWidth = 1 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.lineCap = "round"
 
     context.save()
     context.globalAlpha = (if appliedShadow? then appliedShadow.alpha else 1) * @alpha
-
-    height = @height()
-    width = @width()
 
     squareDim = Math.min width/2, height/2
 
@@ -122,7 +123,7 @@ class AnalogClockWdgt extends Widget
     context.rotate -Math.PI / 2
     context.strokeStyle = 'black'
     context.fillStyle = 'white'
-    context.lineWidth = 6
+    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.lineCap = 'round'
 
     # hour face ticks
@@ -139,7 +140,7 @@ class AnalogClockWdgt extends Widget
 
     # minute face ticks
     context.save()
-    context.lineWidth = 5
+    context.lineWidth = 5 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     i = 0
     while i < 60
       if i % 5 != 0
@@ -155,14 +156,14 @@ class AnalogClockWdgt extends Widget
 
     @calculateHandsAngles()
 
-    # hour hand
     @drawHoursHand context, squareDim
     @drawMinutesHand context, squareDim
     @drawSecondsHand context, squareDim
-
+    debugger
+    @drawDotInMiddleOfFace context, squareDim
 
     context.beginPath()
-    context.lineWidth = 10
+    context.lineWidth = 10 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.strokeStyle = '#325FA2'
     context.arc 0, 0, squareDim, 0, Math.PI * 2
     context.stroke()
@@ -174,9 +175,11 @@ class AnalogClockWdgt extends Widget
 
 
   drawHoursHand: (context, squareDim) ->
+    height = @height()
+    width = @width()
     context.save()
     context.rotate @hoursHandAngle
-    context.lineWidth = 8
+    context.lineWidth = 8 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.beginPath()
     context.moveTo -squareDim/7, 0
     context.lineTo squareDim/2, 0
@@ -185,9 +188,11 @@ class AnalogClockWdgt extends Widget
 
 
   drawMinutesHand: (context, squareDim) ->
+    height = @height()
+    width = @width()
     context.save()
     context.rotate @minutesHandAngle
-    context.lineWidth = 5
+    context.lineWidth = 5 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.beginPath()
     context.moveTo -squareDim/5, 0
     context.lineTo squareDim/1.3, 0
@@ -195,19 +200,27 @@ class AnalogClockWdgt extends Widget
     context.restore()
 
   drawSecondsHand: (context, squareDim) ->
+    height = @height()
+    width = @width()
     context.save()
     context.rotate @secondsHandAngle
     context.strokeStyle = '#D40000'
     context.fillStyle = '#D40000'
-    context.lineWidth = 6
+    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.beginPath()
     context.moveTo -squareDim/5, 0
     context.lineTo squareDim/1.3, 0
     context.stroke()
+    context.restore()
 
-    # the dot in the middle of the face
+  drawDotInMiddleOfFace: (context, squareDim) ->
+    height = @height()
+    width = @width()
+    context.save()
+    context.fillStyle = '#D40000'
+    context.lineWidth = 6 * Math.min(width,height) * @strokeSizeToClockDimensionRatio
     context.beginPath()
-    context.arc 0, 0, 7, 0, Math.PI * 2
+    context.arc 0, 0, Math.min(width,height)/30, 0, Math.PI * 2
     context.fill()
     context.restore()
 
