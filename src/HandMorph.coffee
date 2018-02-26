@@ -154,10 +154,35 @@ class HandMorph extends Widget
 
 
       @world.stopEditing()
-      if displacementDueToGrabDragThreshold?
+
+      # this paragraph deals with how to resize/reposition the widget
+      # that we are grabbing in respect to the hand
+      if aMorph.originalExtentBeforeBecomingThumbnail?
+        # in this case the widget is "inflating". So, all
+        # visual references that the user might have around the
+        # position of the grab go out of the window: just center
+        # the widget under the pointer and fit it within the
+        # desktop bounds since we are at it (useful in case the
+        # widget is inflating near the screen edges)
+        aMorph.rawSetExtent aMorph.originalExtentBeforeBecomingThumbnail
+        aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
+        aMorph.fullRawMoveWithin world
+        aMorph.originalExtentBeforeBecomingThumbnail = nil
+      else if displacementDueToGrabDragThreshold?
+        # in this case keep some visual consistency and move
+        # the widget accordingly to where the grab started
+        # (remember: we actually grab a while after the user has
+        # pressed, because we want to see an actual significant move
+        # before we resolve that this is a grab)
+        # Don't fit the widget within the world because it often
+        # happens to pick up a widget that is partially outside the
+        # screen and it's no good to make it jump within the screen
+        # - I tried and it looks really strange -
         aMorph.fullMoveTo aMorph.position().add displacementDueToGrabDragThreshold
+
       @grabOrigin = aMorph.situation()
       aMorph.prepareToBeGrabbed? @
+
       @add aMorph
       # you must add the shadow
       # after the morph has been added
