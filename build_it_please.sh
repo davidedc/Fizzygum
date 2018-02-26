@@ -52,7 +52,7 @@ if [ ! -d ../Fizzygum-builds/latest/delete_me ]; then
   mkdir ../Fizzygum-builds/latest/delete_me
 fi
 
-# copy the test files
+# make space for the test files
 mkdir ../Fizzygum-builds/latest/js/tests/
 
 
