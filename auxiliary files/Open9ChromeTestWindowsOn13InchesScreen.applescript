@@ -1,6 +1,6 @@
 set screenWidth to 1280
 set screenHeight to 800
-set pageRoot to "file:///Users/daviddellacasa/Fizzygum/"
+set pageRoot to "file:///Users/daviddellacasa/Fizzygum-all/"
 
 set windows_number to 0
 

@@ -1,10 +1,10 @@
-if [ ! -d ../../Fizzygum ]; then
+if [ ! -d ../../Fizzygum-all ]; then
   echo
   echo ----------- error -------------
   echo You miss the overarching Fizzygum directory.
   echo ...the directory structure should be
-  echo   Fizzygum
-  echo      - Fizzygum-core
+  echo   Fizzygum-all
+  echo      - Fizzygum
   echo      - Fizzygum-builds
   echo      - Fizzygum-tests
   echo      - Fizzygum-website
