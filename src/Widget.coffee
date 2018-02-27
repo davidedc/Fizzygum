@@ -3333,6 +3333,7 @@ class Widget extends TreeNode
     menu.addMenuItem "throw an error", true, menusHelper, "throwAnError"
     menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
+    menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.popUpAtHand()
 

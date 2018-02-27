@@ -93,6 +93,14 @@ class MenuItemMorph extends TriggerMorph
     lbl.setColor @labelColor
     lbl  
 
+  shrinkToTextSize: ->
+    # '5' is to add some padding between
+    # the text and the button edge
+    @rawSetWidth @widthOfLabel() + 5
+
+  widthOfLabel: ->
+    @label.width()
+
   # MenuItemMorph events:
   mouseEnter: ->
     #console.log "@target: " + @target + " @morphEnv: " + @morphEnv

@@ -229,6 +229,15 @@ class MenusHelper
     world.add wm
     wm.changed()
 
+  createHorizontalMenuPanelPanel: ->
+    horizontalMenuPanel = new HorizontalMenuPanelWdgt()
+    wm = new WindowWdgt nil, nil, horizontalMenuPanel, true
+    wm.setExtent new Point 200, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
   popUpMore1IconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 1"
     menu.addMenuItem "Pencil 1 icon", true, menusHelper, "createPencil1IconMorph"
