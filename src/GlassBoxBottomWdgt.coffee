@@ -34,18 +34,21 @@ class GlassBoxBottomWdgt extends RectangleMorph
 
     for eachChild in childrenNotHandlesNorCarets
 
-      if eachChild.idealRatioWidthToHeight?
-        ratio = eachChild.idealRatioWidthToHeight
-        if ratio > 1
-          # more wide than tall
-          eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
-        else
-          # more tall than wide
-          eachChild.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize 
+      if (eachChild instanceof MenuItemMorph)
+        eachChild.fullRawMoveTo @topLeft().add((new Point 0 ,(@height() - eachChild.height())/2 ).round())
       else
-        eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize
+        if eachChild.idealRatioWidthToHeight?
+          ratio = eachChild.idealRatioWidthToHeight
+          if ratio > 1
+            # more wide than tall
+            eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize / ratio
+          else
+            # more tall than wide
+            eachChild.rawSetExtent new Point thumbnailSize * ratio, thumbnailSize 
+        else
+          eachChild.rawSetExtent new Point thumbnailSize, thumbnailSize
 
-      eachChild.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - eachChild.width())/2 ,(thumbnailSize - eachChild.height())/2 ).round())
+        eachChild.fullRawMoveTo @topLeft().add((new Point (thumbnailSize - eachChild.width())/2 ,(thumbnailSize - eachChild.height())/2 ).round())
 
 
     trackChanges.pop()

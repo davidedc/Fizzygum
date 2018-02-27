@@ -1,7 +1,7 @@
 class ToolPanelWdgt extends PanelWdgt
 
+  # TODO pretty sure that we don't need numberOfIconsOnPanel
   numberOfIconsOnPanel: 0
-  laysIconsHorizontallyInGrid: true
   internalPadding: 5
   externalPadding: 10
   thumbnailSize: 40
@@ -37,7 +37,7 @@ class ToolPanelWdgt extends PanelWdgt
 
       foundDrop = false
 
-      if childrenNotHandlesNorCarets.length > 0
+      if positionOnScreen? and childrenNotHandlesNorCarets.length > 0
         positionNumberAmongSiblings = 0
 
         for eachChild in childrenNotHandlesNorCarets
