@@ -3263,7 +3263,7 @@ class Widget extends TreeNode
   popUpDocumentMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Document"
     menu.addMenuItem "simple document scrollpanel", true, @, "createSimpleDocumentScrollPanelWdgt"
-
+    menu.addMenuItem "simple document editor", true, menusHelper, "createSimpleDocumentEditorWdgt"
     menu.popUpAtHand()
 
   popUpWindowsMenu: (morphOpeningThePopUp) ->

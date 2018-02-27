@@ -95,7 +95,7 @@ class HandMorph extends Widget
     # into this coalesced higher-level event,
     # but we still need to make these checks and actions
     @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morphTheMenuIsAbout
-    @stopEditingIfActionIsElsewhere morphTheMenuIsAbout
+    @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere morphTheMenuIsAbout
 
     if AutomatorRecorderAndPlayer? and
      AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING
@@ -283,8 +283,15 @@ class HandMorph extends Widget
           eachTemporaryHandlesAndLayoutAdjusters.fullDestroy()
         @world.temporaryHandlesAndLayoutAdjusters = []
 
-  stopEditingIfActionIsElsewhere: (actionedMorph) ->
+  stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere: (actionedMorph) ->
     if @world.caret?
+
+      # some actioning widgets rely on the
+      # caret, for example to change the properties
+      # of text (e.g. make it bold)
+      if actionedMorph.textPropertyChangerButton? and actionedMorph.textPropertyChangerButton
+        return
+
       # there is a caret on the screen
       # depending on what the user is clicking on,
       # we might need to close an ongoing edit
@@ -339,7 +346,7 @@ class HandMorph extends Widget
       morph = @topMorphUnderPointer()
 
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
-      @stopEditingIfActionIsElsewhere morph
+      @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere morph
 
       # if we are doing a mousedown on anything outside a menu
       # then all the menus must go, whether or not they have
