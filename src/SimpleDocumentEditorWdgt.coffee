@@ -44,6 +44,7 @@ class SimpleDocumentEditorWdgt extends Widget
     @tempPromptEntryField.add new AlignCenterButtonWdgt()
     @tempPromptEntryField.add new AlignRightButtonWdgt()
 
+    @tempPromptEntryField.add new TemplatesButtonWdgt()
 
     @add @tempPromptEntryField
 
