@@ -36,14 +36,14 @@ class SimpleDocumentEditorWdgt extends Widget
 
     @tempPromptEntryField.add new BoldButtonWdgt()
     @tempPromptEntryField.add new ItalicButtonWdgt()
+    @tempPromptEntryField.add new FormatAsCodeButtonWdgt()
+    @tempPromptEntryField.add new IncreaseFontSizeButtonWdgt()
+    @tempPromptEntryField.add new DecreaseFontSizeButtonWdgt()
+
     @tempPromptEntryField.add new AlignLeftButtonWdgt()
     @tempPromptEntryField.add new AlignCenterButtonWdgt()
     @tempPromptEntryField.add new AlignRightButtonWdgt()
 
-    @tempPromptEntryField.add new FormatAsCodeIconWdgt()
-    @tempPromptEntryField.add new ChapterXIconWdgt()
-    @tempPromptEntryField.add new ChapterXXIconWdgt()
-    @tempPromptEntryField.add new ChapterXXXIconWdgt()
 
     @add @tempPromptEntryField
 
