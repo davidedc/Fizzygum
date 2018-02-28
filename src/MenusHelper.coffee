@@ -269,7 +269,61 @@ class MenusHelper
     menu.addMenuItem "Information icon", true, menusHelper, "createInformationIconWdgt"
     menu.addMenuItem "Textbox icon", true, menusHelper, "createTextboxIconWdgt"
     menu.addMenuItem "Video play icon", true, menusHelper, "createVideoPlayIconWdgt"
+
+    menu.addMenuItem "Decrease font size icon", true, menusHelper, "createDecreaseFontSizeIconWdgt"
+    menu.addMenuItem "Increase font size icon", true, menusHelper, "createIncreaseFontSizeIconWdgt"
+    menu.addMenuItem "External link icon", true, menusHelper, "createExternalLinkIconWdgt"
+    menu.addMenuItem "Templates icon", true, menusHelper, "createTemplatesIconWdgt"
+
     menu.popUpAtHand()
+
+  popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Arrows"
+    menu.addMenuItem "Arrow N icon", true, menusHelper, "createArrowNIconWdgt"
+    menu.addMenuItem "Arrow S icon", true, menusHelper, "createArrowSIconWdgt"
+    menu.addMenuItem "Arrow W icon", true, menusHelper, "createArrowWIconWdgt"
+    menu.addMenuItem "Arrow E icon", true, menusHelper, "createArrowEIconWdgt"
+    menu.addMenuItem "Arrow NW icon", true, menusHelper, "createArrowNWIconWdgt"
+    menu.addMenuItem "Arrow NE icon", true, menusHelper, "createArrowNEIconWdgt"
+    menu.addMenuItem "Arrow SE icon", true, menusHelper, "createArrowSEIconWdgt"
+    menu.addMenuItem "Arrow SW icon", true, menusHelper, "createArrowSWIconWdgt"
+    menu.popUpAtHand()
+
+  createArrowEIconWdgt: ->
+    world.create new ArrowEIconWdgt()
+
+  createArrowNEIconWdgt: ->
+    world.create new ArrowNEIconWdgt()
+
+  createArrowNIconWdgt: ->
+    world.create new ArrowNIconWdgt()
+
+  createArrowNWIconWdgt: ->
+    world.create new ArrowNWIconWdgt()
+
+  createArrowSEIconWdgt: ->
+    world.create new ArrowSEIconWdgt()
+
+  createArrowSIconWdgt: ->
+    world.create new ArrowSIconWdgt()
+
+  createArrowSWIconWdgt: ->
+    world.create new ArrowSWIconWdgt()
+
+  createArrowWIconWdgt: ->
+    world.create new ArrowWIconWdgt()
+
+  createDecreaseFontSizeIconWdgt: ->
+    world.create new DecreaseFontSizeIconWdgt()
+
+  createExternalLinkIconWdgt: ->
+    world.create new ExternalLinkIconWdgt()
+
+  createIncreaseFontSizeIconWdgt: ->
+    world.create new IncreaseFontSizeIconWdgt()
+
+  createTemplatesIconWdgt: ->
+    world.create new TemplatesIconWdgt()
 
   createFormatAsCodeIconWdgt: ->
     world.create new FormatAsCodeIconWdgt()
