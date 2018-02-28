@@ -363,7 +363,7 @@ class MenusHelper
 
   createSimpleDocumentEditorWdgt: ->
     simpleDocumentEditor = new SimpleDocumentEditorWdgt()
-    wm = new WindowWdgt nil, nil, simpleDocumentEditor, true
+    wm = new WindowWdgt nil, nil, simpleDocumentEditor
     wm.setExtent new Point 360, 335
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
