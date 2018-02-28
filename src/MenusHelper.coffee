@@ -369,3 +369,13 @@ class MenusHelper
     wm.fullRawMoveWithin world
     world.add wm
     wm.changed()
+
+  createSimpleLinkWdgt: ->
+    simpleLinkWdgt = new SimpleLinkWdgt()
+    simpleLinkWdgt.setExtent new Point 405, 50
+    world.create simpleLinkWdgt
+
+  createSimpleVideoLinkWdgt: ->
+    simpleVideoLinkWdgt = new SimpleVideoLinkWdgt()
+    simpleVideoLinkWdgt.setExtent new Point 405, 50
+    world.create simpleVideoLinkWdgt
