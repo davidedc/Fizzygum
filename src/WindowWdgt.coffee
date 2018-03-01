@@ -23,6 +23,10 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   defaultContents: nil
   reInflating: false
 
+  # TODO passing the @labelContent doesn't quite work, when
+  # you add a widget to the window it overwrites the
+  # title which means that this one parameter passed in
+  # the constructor has no effect
   constructor: (@labelContent = "my window", @closeButton, @contents, @internal = false) ->
     super nil, nil, 40, true
 
@@ -84,6 +88,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
+
+  setTitleWithoutPrependedContentName: (newTitle) ->
+    @label.setText newTitle
 
   representativeIcon: ->
     if @contents == @defaultContents

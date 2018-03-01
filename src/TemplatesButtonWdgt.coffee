@@ -20,11 +20,12 @@ class TemplatesButtonWdgt extends IconMorph
 
   createNewTemplatesWindow: ->
     sdspw = new SimpleDocumentScrollPanelWdgt()
-    wm = new WindowWdgt "templates", nil, sdspw
+    wm = new WindowWdgt nil, nil, sdspw
     wm.setExtent new Point 365, 335
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 50
     wm.fullRawMoveWithin world
     world.add wm
+    wm.setTitleWithoutPrependedContentName "templates"
     wm.changed()
 
     world.simpleEditorTemplates = wm
