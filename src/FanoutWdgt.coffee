@@ -56,6 +56,9 @@ class FanoutWdgt extends Widget
     functionNamesStrings.push "setInput"
     return @deduplicateSettersAndSortByMenuEntryString menuEntriesStrings, functionNamesStrings
 
+  rawSetExtent: (aPoint) ->
+    super
+    @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
