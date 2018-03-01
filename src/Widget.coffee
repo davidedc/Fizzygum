@@ -1436,6 +1436,15 @@ class Widget extends TreeNode
       unless @extent().eq newExtent
         @desiredExtent = newExtent
         @invalidateLayout()
+        # all the resizes via the handles arrive here,
+        # where we remember the fractional size in the
+        # holding panel. That is so for example resizing
+        # items inside a StretchablePanel causes their
+        # relative size to be remembered, so resizing
+        # the stretchable panel will get them to the
+        # correct dimensions
+        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleMorph)
+          @extentFractionalInHoldingPanel = @extentFractionalInMorph @parent
 
   
   silentRawSetExtent: (aPoint) ->
