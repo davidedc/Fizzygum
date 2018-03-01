@@ -161,6 +161,10 @@ class MenusHelper
       world.add wm
       wm.changed()
     """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
 
     wm = new WindowWdgt nil, nil, scriptWdgt
     wm.setExtent new Point 460, 400
