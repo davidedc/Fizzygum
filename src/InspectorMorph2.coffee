@@ -271,6 +271,14 @@ class InspectorMorph2 extends Widget
     @detail.contents.disableDrops()
     @detail.color = new Color 255, 255, 255
     @detail.addModifiedContentIndicator()
+    
+    # when there is no selected item in the list
+    # (for example when the inspector is started)
+    # we need to manually remove the "modified" indicator
+    # and disable the "save" button
+    if !@list.selected?
+      @detail.modifiedTextTriangleAnnotation?.hide()
+      @saveTextWdgt.setColor new Color 200, 200, 200
 
     # register this wdgt as one to be notified when the text
     # changes/unchanges from "reference" content
@@ -305,10 +313,16 @@ class InspectorMorph2 extends Widget
 
   textContentModified: ->
     debugger
+    # TODO this would stand for enabling/disabling the button
+    # but really we are just changing the color and the button
+    # still works. Need some better enabling/disabling
     @saveTextWdgt.setColor new Color 0,0,0
 
   textContentUnmodified: ->
     debugger
+    # TODO this would stand for enabling/disabling the button
+    # but really we are just changing the color and the button
+    # still works. Need some better enabling/disabling
     @saveTextWdgt.setColor new Color 200, 200, 200
 
 
@@ -545,6 +559,7 @@ class InspectorMorph2 extends Widget
   
   #InspectorMorph2 editing ops:
   save: ->
+    if !@list.selected? then return
     txt = @detail.contents.children[0].text.toString()
     propertyName = @list.selected.labelString
     # inject code will also break the layout and the morph
