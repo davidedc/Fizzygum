@@ -246,6 +246,8 @@ class HandMorph extends Widget
       target.add morphToDrop, nil, nil, true, nil, @position()
       morphToDrop.fullChanged()
 
+      world.lastNonTextPropertyChangerButtonClickedOrDropped = morphToDrop
+
       @children = []
       @rawSetExtent new Point()
       morphToDrop.justDropped? target
@@ -515,6 +517,8 @@ class HandMorph extends Widget
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
+          if !morph.textPropertyChangerButton
+            world.lastNonTextPropertyChangerButtonClickedOrDropped = morph
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           #console.log ">>> sent event " + expectedClick + " to: " + morph
 

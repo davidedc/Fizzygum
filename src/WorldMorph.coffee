@@ -219,6 +219,15 @@ class WorldMorph extends PanelWdgt
   paintingWidget: nil
   widgetsGivingErrorWhileRepainting: []
 
+  # this one is so we can left/center/right align in
+  # a document editor the last widget that the user "touched"
+  # TODO this could be extended so we keep a "list" of
+  # "selected" widgets (e.g. if the user ctrl-clicks on a widget
+  # then it highlights in some manner and ends up in this list)
+  # and then operations can be performed on the whole list
+  # of widgets.
+  lastNonTextPropertyChangerButtonClickedOrDropped: nil
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -1841,6 +1850,7 @@ class WorldMorph extends PanelWdgt
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = nil
     @morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
+    @lastNonTextPropertyChangerButtonClickedOrDropped = nil
 
   resetWorld: ->
     @softResetWorld()
