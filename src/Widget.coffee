@@ -1157,7 +1157,10 @@ class Widget extends TreeNode
         return
     WorldMorph.numberOfRawMovesAndResizes++
 
-  fullRawMoveToFractionalPositionInPaneUserHasSet: (boundsOfParent) ->
+  # moving to fractional position within the desktop is
+  # different from the case below because the desktop can be
+  # resized to any ratio
+  fullRawMoveInDesktopToFractionalPosition: (boundsOfParent) ->
     if !boundsOfParent?
       boundsOfParent = @parent.bounds
 
@@ -1172,6 +1175,16 @@ class Widget extends TreeNode
       @fullRawMoveTo (new Point boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]), @top()).round()
     if @positionFractionalInHoldingPanel[1] > 0
       @fullRawMoveTo (new Point @left(), boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])).round()
+
+  fullRawMoveInStretchablePanelToFractionalPosition: (boundsOfParent) ->
+    if !boundsOfParent?
+      boundsOfParent = @parent.bounds
+
+    @fullRawMoveTo (
+      new Point \
+       boundsOfParent.left() + (boundsOfParent.width() * @positionFractionalInHoldingPanel[0]),
+       boundsOfParent.top() + (boundsOfParent.height() * @positionFractionalInHoldingPanel[1])
+    ).round()
 
   rawSetExtentToFractionalExtentInPaneUserHasSet: (boundsOfParent) ->
     if !boundsOfParent?

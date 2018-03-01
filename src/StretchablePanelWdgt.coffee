@@ -43,7 +43,7 @@ class StretchablePanelWdgt extends PanelWdgt
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
     for eachChild in childrenNotHandlesNorCarets
-      eachChild.fullRawMoveToFractionalPositionInPaneUserHasSet newBoundsForThisLayout
+      eachChild.fullRawMoveInStretchablePanelToFractionalPosition newBoundsForThisLayout
       eachChild.rawSetExtentToFractionalExtentInPaneUserHasSet newBoundsForThisLayout      
 
     @rawSetBounds newBoundsForThisLayout

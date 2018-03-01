@@ -1212,7 +1212,7 @@ class WorldMorph extends PanelWdgt
       w instanceof BasementOpenerWdgt
     if basementOpenerWdgt?
       if basementOpenerWdgt.userMovedThisFromComputedPosition
-        basementOpenerWdgt.fullRawMoveToFractionalPositionInPaneUserHasSet()
+        basementOpenerWdgt.fullRawMoveInDesktopToFractionalPosition()
         if !basementOpenerWdgt.wasPositionedSlightlyOutsidePanel
           basementOpenerWdgt.fullRawMoveWithin @
       else
@@ -1221,7 +1221,7 @@ class WorldMorph extends PanelWdgt
     @children.forEach (child) =>
       if child != basementOpenerWdgt and !(child instanceof WidgetHolderWithCaptionWdgt)
         if child.positionFractionalInHoldingPanel?
-          child.fullRawMoveToFractionalPositionInPaneUserHasSet()
+          child.fullRawMoveInDesktopToFractionalPosition()
         if !child.wasPositionedSlightlyOutsidePanel
           child.fullRawMoveWithin @
   
