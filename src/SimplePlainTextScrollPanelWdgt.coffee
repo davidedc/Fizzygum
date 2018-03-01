@@ -54,7 +54,12 @@ class SimplePlainTextScrollPanelWdgt extends ScrollPanelWdgt
   addModifiedContentIndicator: ->
     @modifiedTextTriangleAnnotation = new ModifiedTextTriangleAnnotationWdgt @
     @textWdgt.widgetToBeNotifiedOfTextModificationChange = @
-    @textWdgt.considerCurrentTextAsReferenceText()
+
+    # just because we add the modified content indicator it
+    # doesn't mean that we automatically "save" the content,
+    # so removing this.
+    # @textWdgt.considerCurrentTextAsReferenceText()
+
     @textWdgt.checkIfTextContentWasModifiedFromTextAtStart()
 
   textContentModified: ->
