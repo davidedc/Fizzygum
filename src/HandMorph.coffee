@@ -139,7 +139,7 @@ class HandMorph extends Widget
       target = target.parent
     target
   
-  grab: (aMorph, displacementDueToGrabDragThreshold) ->
+  grab: (aMorph, displacementDueToGrabDragThreshold,  switcherooHappened) ->
     return nil  if aMorph instanceof WorldMorph
     oldParent = aMorph.parent
     if !@floatDraggingSomething()
@@ -157,7 +157,12 @@ class HandMorph extends Widget
 
       # this paragraph deals with how to resize/reposition the widget
       # that we are grabbing in respect to the hand
-      if aMorph.originalExtentBeforeBecomingThumbnail?
+      if switcherooHappened
+        # in this case the widget being grabbed is created on the fly
+        # so just like the next case it's OK to center it under the pointer
+        aMorph.fullRawMoveTo @position().subtract aMorph.extent().floorDivideBy 2
+        aMorph.fullRawMoveWithin world
+      else if aMorph.originalExtentBeforeBecomingThumbnail?
         # in this case the widget is "inflating". So, all
         # visual references that the user might have around the
         # position of the grab go out of the window: just center
@@ -946,6 +951,9 @@ class HandMorph extends Widget
 
       # if a morph is marked for grabbing, grab it
       if @morphToGrab
+        
+        # these first two cases are for float dragging
+        # the third case is non-float drag
         if @morphToGrab.isTemplate
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
@@ -959,8 +967,11 @@ class HandMorph extends Widget
           [skipDragging, displacementDueToGrabDragThreshold] = @checkDraggingTreshold()
           if skipDragging then return
 
+          debugger
+          originalMorphToGrab = @morphToGrab
+          @morphToGrab = @morphToGrab.grabbedWidgetSwitcheroo()
           morph = @morphToGrab
-          @grab morph, displacementDueToGrabDragThreshold
+          @grab morph, displacementDueToGrabDragThreshold, (originalMorphToGrab != morph)
 
         else
           # non-float drags are for things such as sliders
@@ -971,7 +982,7 @@ class HandMorph extends Widget
           # Users don't seem to click on a slider for any other
           # reason than to move it (as opposed to selecting them
           # or picking a position for a cursor), so it's OK.
-          @nonFloatDraggedMorph = @morphToGrab          
+          @nonFloatDraggedMorph = @morphToGrab         
           @nonFloatDragPositionWithinMorphAtStart =
             # if we ever will need to compensate for the grab/drag
             # treshold here, just add .subtract displacementDueToGrabDragThreshold

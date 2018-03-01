@@ -48,6 +48,27 @@ class SlidesMakerWdgt extends Widget
 
     # tools -------------------------------
     @scrollingTools = new ScrollPanelWdgt new ToolPanelWdgt()
+
+    @scrollingTools.add new TextBoxCreatorButtonWdgt()
+    @scrollingTools.add new ExternalLinkCreatorButtonWdgt()
+    @scrollingTools.add new VideoPlayCreatorButtonWdgt()
+
+    @scrollingTools.add new RectangleMorph()
+
+    @scrollingTools.add new DestroyIconMorph()
+    @scrollingTools.add new ScratchAreaIconMorph()
+    @scrollingTools.add new FloraIconMorph()
+    @scrollingTools.add new ScooterIconMorph()
+    @scrollingTools.add new HeartIconMorph()
+
+    @scrollingTools.add new ArrowNIconWdgt()
+    @scrollingTools.add new ArrowSIconWdgt()
+    @scrollingTools.add new ArrowWIconWdgt()
+    @scrollingTools.add new ArrowEIconWdgt()
+    @scrollingTools.add new ArrowNWIconWdgt()
+    @scrollingTools.add new ArrowNEIconWdgt()
+    @scrollingTools.add new ArrowSWIconWdgt()
+    @scrollingTools.add new ArrowSEIconWdgt()
     @add @scrollingTools
 
     @invalidateLayout()

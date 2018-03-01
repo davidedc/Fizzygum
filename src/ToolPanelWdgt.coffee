@@ -14,7 +14,13 @@ class ToolPanelWdgt extends PanelWdgt
      (aMorph instanceof HandleMorph)
       super
     else
-      aMorph.isTemplate = true
+      # if aMorph specifies a non-default switcharoo then it
+      # means it's like the TextBoxCreatorButtonWdgt, which creates a textbox
+      # when dragged. So in that case we DON'T set it as a template
+      # otherwise we do.
+      if aMorph.grabbedWidgetSwitcheroo == Widget::grabbedWidgetSwitcheroo
+        aMorph.isTemplate = true
+
       aMorph.originalExtentBeforeBecomingThumbnail = aMorph.extent()
 
       if !(aMorph instanceof GlassBoxBottomWdgt)

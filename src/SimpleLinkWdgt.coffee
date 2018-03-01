@@ -52,6 +52,10 @@ class SimpleLinkWdgt extends Widget
   createLinkIcon: ->
     @externalLinkIcon = new ExternalLinkButtonWdgt()
 
+  rawSetExtent: (aPoint) ->
+    super
+    @invalidateLayout()
+
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger

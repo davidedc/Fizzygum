@@ -2687,6 +2687,9 @@ class Widget extends TreeNode
     else
       @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
     oldParent?.childPickedUp? @
+
+  grabbedWidgetSwitcheroo: ->
+    @
   
   # note how this checks whether
   # at *any point* up in the
