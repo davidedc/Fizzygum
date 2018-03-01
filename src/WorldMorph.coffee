@@ -1840,7 +1840,7 @@ class WorldMorph extends PanelWdgt
     @hand.drop()
     @hand.mouseOverList = []
     @hand.nonFloatDraggedMorph = nil
-    world.morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
+    @morphsDetectingClickOutsideMeOrAnyOfMeChildren = []
 
   resetWorld: ->
     @softResetWorld()
