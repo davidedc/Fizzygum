@@ -82,12 +82,25 @@ class ToolPanelWdgt extends PanelWdgt
     scanningChildrenY = 0
     numberOfEntries = 0
 
+    # The ToolPanel if often inside a scroll panel,
+    # in which case the panel width stays the same as the scroll panel
+    # is resized (because that's what scrollpanels do, they change
+    # dimensions but the contents remain the same).
+    # BUT we want the toolpanel to never scroll horizontally
+    # (only vertically), i.e. we want it to fit the contents
+    # of the scroll panel parent
+    if @parent?
+      if @parent instanceof ScrollPanelWdgt
+        widthINeedToFitContentIn = @parent.width()
+      else
+        widthINeedToFitContentIn = @width()
+
     for eachChild in childrenNotHandlesNorCarets
 
       xPos = scanningChildrenX * (@thumbnailSize + @internalPadding)
       yPos = scanningChildrenY * (@thumbnailSize + @internalPadding)
 
-      if @externalPadding + xPos + @thumbnailSize + @externalPadding > @parent.width()
+      if @externalPadding + xPos + @thumbnailSize + @externalPadding > widthINeedToFitContentIn
         scanningChildrenX = 0
         if numberOfEntries != 0
           scanningChildrenY++
