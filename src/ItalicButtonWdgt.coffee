@@ -14,7 +14,7 @@ class ItalicButtonWdgt extends Widget
     super
     @appearance = new ItalicIconAppearance @
     @actionableAsThumbnail = true
-    @textPropertyChangerButton = true
+    @editorContentPropertyChangerButton = true
 
   mouseClickLeft: ->
     debugger

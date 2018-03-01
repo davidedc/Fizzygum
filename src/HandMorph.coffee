@@ -291,7 +291,7 @@ class HandMorph extends Widget
       # some actioning widgets rely on the
       # caret, for example to change the properties
       # of text (e.g. make it bold)
-      if actionedMorph.textPropertyChangerButton? and actionedMorph.textPropertyChangerButton
+      if actionedMorph.editorContentPropertyChangerButton? and actionedMorph.editorContentPropertyChangerButton
         return
 
       # there is a caret on the screen
@@ -517,7 +517,7 @@ class HandMorph extends Widget
               morph.mouseUpRight? @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
 
           # fire the click
-          if !morph.textPropertyChangerButton
+          if !morph.editorContentPropertyChangerButton
             world.lastNonTextPropertyChangerButtonClickedOrDropped = morph
           morph[expectedClick] @position(), button, buttons, ctrlKey, shiftKey, altKey, metaKey
           #console.log ">>> sent event " + expectedClick + " to: " + morph

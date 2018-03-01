@@ -14,7 +14,7 @@ class IncreaseFontSizeButtonWdgt extends IconMorph
     super
     @appearance = new IncreaseFontSizeIconAppearance @
     @actionableAsThumbnail = true
-    @textPropertyChangerButton = true
+    @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
 
   mouseClickLeft: ->

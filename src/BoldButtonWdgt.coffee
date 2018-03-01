@@ -14,7 +14,7 @@ class BoldButtonWdgt extends Widget
     super
     @appearance = new BoldIconAppearance @
     @actionableAsThumbnail = true
-    @textPropertyChangerButton = true
+    @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
 
   mouseClickLeft: ->

@@ -15,7 +15,7 @@ class TemplatesButtonWdgt extends IconMorph
     @appearance = new TemplatesIconAppearance @
 
     @actionableAsThumbnail = true
-    @textPropertyChangerButton = true
+    @editorContentPropertyChangerButton = true
     @setColor new Color 0, 0, 0
 
   createNewTemplatesWindow: ->
