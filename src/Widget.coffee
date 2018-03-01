@@ -3362,6 +3362,7 @@ class Widget extends TreeNode
     menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
     menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
+    menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.popUpAtHand()
 
@@ -3377,7 +3378,6 @@ class Widget extends TreeNode
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
-    menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxMorph"
