@@ -2666,7 +2666,9 @@ class Widget extends TreeNode
     @_acceptsDrops = false
   
   pickUp: ->
-    @parent?.childBeingPickedUp? @
+    debugger
+    oldParent = @parent
+    oldParent?.childBeingPickedUp? @
     world.hand.grab @
     # if one uses the "deferred" API then we need to look
     # into the "desiredExtent" as the true extent has yet
@@ -2675,6 +2677,7 @@ class Widget extends TreeNode
       @fullRawMoveTo world.hand.position().subtract @desiredExtent.floorDivideBy 2
     else
       @fullRawMoveTo world.hand.position().subtract @fullBounds().extent().floorDivideBy 2
+    oldParent?.childPickedUp? @
   
   # note how this checks whether
   # at *any point* up in the
@@ -3365,6 +3368,7 @@ class Widget extends TreeNode
     menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
+    menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxMorph"
