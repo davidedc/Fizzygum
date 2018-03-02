@@ -358,6 +358,12 @@ class MenusHelper
   createAlignLeftIconWdgt: ->
     world.create new AlignLeftIconWdgt()
 
+  createWorldMapIconMorph: ->
+    world.create new SimpleWorldMapIconWdgt()
+
+  createUSAMapIconMorph: ->
+    world.create new SimpleUSAMapIconWdgt()
+
   createBoldIconWdgt: ->
     world.create new BoldIconWdgt()
 
