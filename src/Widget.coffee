@@ -3369,6 +3369,10 @@ class Widget extends TreeNode
     menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
     menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
+    menu.addMenuItem "vertical axis", true, menusHelper, "createVerticalAxis"
+    menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
+    menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
+    menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->

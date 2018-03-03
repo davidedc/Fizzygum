@@ -397,3 +397,23 @@ class MenusHelper
     simpleVideoLinkWdgt = new SimpleVideoLinkWdgt()
     simpleVideoLinkWdgt.setExtent new Point 405, 50
     world.create simpleVideoLinkWdgt
+
+  createVerticalAxis: ->
+    vertAxis = new AxisWdgt()
+    vertAxis.setExtent new Point 40, 300
+    world.create vertAxis
+
+  createExampleScatterPlot: ->
+    exampleScatterPlot = new ExampleScatterPlotWdgt()
+    exampleScatterPlot.setExtent new Point 300, 300
+    world.create exampleScatterPlot
+
+  createExampleFunctionPlot: ->
+    exampleFunctionPlot = new ExampleFunctionPlotWdgt()
+    exampleFunctionPlot.setExtent new Point 300, 300
+    world.create exampleFunctionPlot
+  
+  createExampleBarPlot: ->
+    exampleBarPlot = new ExampleBarPlotWdgt()
+    exampleBarPlot.setExtent new Point 300, 300
+    world.create exampleBarPlot
