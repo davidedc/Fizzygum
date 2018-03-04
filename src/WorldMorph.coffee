@@ -10,6 +10,8 @@
 # REQUIRES GridPositioningOfAddedShortcutsMixin
 # REQUIRES KeepIconicDesktopSystemLinksBackMixin
 
+# REQUIRES DesktopAppearance
+
 # The WorldMorph takes over the canvas on the page
 class WorldMorph extends PanelWdgt
 
@@ -237,6 +239,8 @@ class WorldMorph extends PanelWdgt
     # be created.
 
     super()
+    @appearance = new DesktopAppearance @
+
     WorldMorph.preferencesAndSettings = new PreferencesAndSettings()
     #console.log WorldMorph.preferencesAndSettings.menuFontName
     @color = new Color 205, 205, 205 # (130, 130, 130)
