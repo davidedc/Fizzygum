@@ -417,3 +417,8 @@ class MenusHelper
     exampleBarPlot = new ExampleBarPlotWdgt()
     exampleBarPlot.setExtent new Point 300, 300
     world.create exampleBarPlot
+
+  createExample3DPlot: ->
+    example3DPlot = new Example3DPlotWdgt()
+    example3DPlot.setExtent new Point 300, 300
+    world.create example3DPlot

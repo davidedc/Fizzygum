@@ -3373,6 +3373,7 @@ class Widget extends TreeNode
     menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
     menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
     menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
+    menu.addMenuItem "3D plot", true, menusHelper, "createExample3DPlot"
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->
