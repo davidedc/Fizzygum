@@ -8,7 +8,7 @@ class ExampleBarPlotWdgt extends Widget
     return
 
   colloquialName: ->
-    "Scatter"
+    "Bar plot"
 
 
   # This method only paints this very morph's "image",

@@ -8,7 +8,7 @@ class ExampleFunctionPlotWdgt extends Widget
     return
 
   colloquialName: ->
-    "Scatter"
+    "Function plot"
 
 
   # This method only paints this very morph's "image",
