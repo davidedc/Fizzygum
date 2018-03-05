@@ -875,14 +875,33 @@ class StringMorph2 extends Widget
       @text,
       nil, 6, nil, true
 
-  setFontName: (ignored1, ignored2, theNewFontName) ->
+  setFontName: (menuItem, ignored2, theNewFontName) ->
     if @fontName != theNewFontName
       @fontName = theNewFontName
       @changed()
 
-  fontsMenu: (a,targetMorph)->
-    menu = new MenuMorph @, false, targetMorph, true, true, nil
+      if menuItem.parent? and (menuItem.parent instanceof MenuMorph)
+        @updateFontsMenuEntriesTicks menuItem.parent
 
+
+  fontsMenu: (a,targetMorph)->
+    menu = new MenuMorph @, false, targetMorph, true, true, "Fonts"
+
+    menu.addMenuItem untick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
+    menu.addMenuItem untick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
+    menu.addMenuItem untick + "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, @georgiaFontStack
+    menu.addMenuItem untick + "Garamo", true, @, "setFontName", nil, nil, nil, nil, nil, @garamoFontStack
+    menu.addMenuItem untick + "Helve", true, @, "setFontName", nil, nil, nil, nil, nil, @helveFontStack
+    menu.addMenuItem untick + "Verda", true, @, "setFontName", nil, nil, nil, nil, nil, @verdaFontStack
+    menu.addMenuItem untick + "Treby", true, @, "setFontName", nil, nil, nil, nil, nil, @trebuFontStack
+    menu.addMenuItem untick + "Heavy", true, @, "setFontName", nil, nil, nil, nil, nil, @heavyFontStack
+    menu.addMenuItem untick + "Mono", true, @, "setFontName", nil, nil, nil, nil, nil, @monoFontStack
+
+    @updateFontsMenuEntriesTicks menu
+
+    menu.popUpAtHand()
+
+  updateFontsMenuEntriesTicks: (menu) ->
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
     trebuFontStackTick = heavyFontStackTick = monoFontStackTick = untick
@@ -908,17 +927,16 @@ class StringMorph2 extends Widget
       when @monoFontStack
         monoFontStackTick = tick
 
-    menu.addMenuItem justArialFontStackTick + "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, @justArialFontStack
-    menu.addMenuItem timesFontStackTick + "Times", true, @, "setFontName", nil, nil, nil, nil, nil, @timesFontStack
-    menu.addMenuItem georgiaFontStackTick + "Georgia", true, @, "setFontName", nil, nil, nil, nil, nil, @georgiaFontStack
-    menu.addMenuItem garamoFontStackTick + "Garamo", true, @, "setFontName", nil, nil, nil, nil, nil, @garamoFontStack
-    menu.addMenuItem helveFontStackTick + "Helve", true, @, "setFontName", nil, nil, nil, nil, nil, @helveFontStack
-    menu.addMenuItem verdaFontStackTick + "Verda", true, @, "setFontName", nil, nil, nil, nil, nil, @verdaFontStack
-    menu.addMenuItem trebuFontStackTick + "Treby", true, @, "setFontName", nil, nil, nil, nil, nil, @trebuFontStack
-    menu.addMenuItem heavyFontStackTick + "Heavy", true, @, "setFontName", nil, nil, nil, nil, nil, @heavyFontStack
-    menu.addMenuItem monoFontStackTick + "Mono", true, @, "setFontName", nil, nil, nil, nil, nil, @monoFontStack
+    menu.children[1].label.setText justArialFontStackTick + "Arial"
+    menu.children[2].label.setText timesFontStackTick + "Times"
+    menu.children[3].label.setText georgiaFontStackTick + "Georgia"
+    menu.children[4].label.setText garamoFontStackTick + "Garamo"
+    menu.children[5].label.setText helveFontStackTick + "Helve"
+    menu.children[6].label.setText verdaFontStackTick + "Verda"
+    menu.children[7].label.setText trebuFontStackTick + "Treby"
+    menu.children[8].label.setText heavyFontStackTick + "Heavy"
+    menu.children[9].label.setText monoFontStackTick + "Mono"
 
-    menu.popUpAtHand()
 
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
