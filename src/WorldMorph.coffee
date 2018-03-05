@@ -1981,7 +1981,7 @@ class WorldMorph extends PanelWdgt
     @patternName = thePatternName
     @changed()
 
-    if menuItem.parent? and (menuItem.parent instanceof MenuMorph)
+    if menuItem?.parent? and (menuItem.parent instanceof MenuMorph)
       @updatePatternsMenuEntriesTicks menuItem.parent
 
 

@@ -880,7 +880,7 @@ class StringMorph2 extends Widget
       @fontName = theNewFontName
       @changed()
 
-      if menuItem.parent? and (menuItem.parent instanceof MenuMorph)
+      if menuItem?.parent? and (menuItem.parent instanceof MenuMorph)
         @updateFontsMenuEntriesTicks menuItem.parent
 
 
