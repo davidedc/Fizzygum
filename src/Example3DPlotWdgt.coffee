@@ -27,15 +27,8 @@ class Example3DPlotWdgt extends Widget
 
     @grids = []
 
-    XYPlaneGrid =
-      width: 21
-      height: 21
-      vertexIndexes:[]
-
-    graphGrid =
-      width: 21
-      height: 21
-      vertexIndexes:[]
+    XYPlaneGrid = new Grid3D 21, 21, []
+    graphGrid = new Grid3D 21, 21, []
 
     for i in [-1..1] by 0.1
       for j in [-1..1] by 0.1
