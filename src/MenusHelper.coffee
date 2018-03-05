@@ -422,3 +422,20 @@ class MenusHelper
     example3DPlot = new Example3DPlotWdgt()
     example3DPlot.setExtent new Point 300, 300
     world.create example3DPlot
+
+  popUpMapsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Maps"
+    menu.addMenuItem "world map", false, menusHelper, "createWorldMapIconMorph", "others"
+    menu.addMenuItem "USA map", false, menusHelper, "createUSAMapIconMorph", "others"
+
+    menu.popUpAtHand()
+
+  popUpGraphsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "graphs"
+    menu.addMenuItem "vertical axis", true, menusHelper, "createVerticalAxis"
+    menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
+    menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
+    menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
+    menu.addMenuItem "3D plot", true, menusHelper, "createExample3DPlot"
+
+    menu.popUpAtHand()

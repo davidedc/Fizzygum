@@ -3274,11 +3274,9 @@ class Widget extends TreeNode
     menu.addMenuItem "more 1 ➜", false, menusHelper, "popUpMore1IconsMenu", "others"
     menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
     menu.addMenuItem "arrows ➜", false, menusHelper, "popUpArrowsIconsMenu", "others"
-    menu.addMenuItem "world map", false, menusHelper, "createWorldMapIconMorph", "others"
-    menu.addMenuItem "USA map", false, menusHelper, "createUSAMapIconMorph", "others"
+    menu.addMenuItem "maps ➜", false, menusHelper, "popUpMapsMenu", "maps"
 
     menu.popUpAtHand()
-
 
   popUpVerticalStackMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Vertical stack"
@@ -3369,11 +3367,8 @@ class Widget extends TreeNode
     menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
     menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
-    menu.addMenuItem "vertical axis", true, menusHelper, "createVerticalAxis"
-    menu.addMenuItem "scatter plot", true, menusHelper, "createExampleScatterPlot"
-    menu.addMenuItem "function plot", true, menusHelper, "createExampleFunctionPlot"
-    menu.addMenuItem "bar plot", true, menusHelper, "createExampleBarPlot"
-    menu.addMenuItem "3D plot", true, menusHelper, "createExample3DPlot"
+    menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
+
     menu.popUpAtHand()
 
   popUpSecondMenu: (morphOpeningThePopUp) ->
