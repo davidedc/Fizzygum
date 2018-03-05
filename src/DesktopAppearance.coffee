@@ -1,5 +1,8 @@
 class DesktopAppearance extends RectangularAppearance
 
+
+  currentPattern: nil
+
   # This method only paints this very morph
   # i.e. it doesn't descend the children
   # recursively. The recursion mechanism is done by fullPaintIntoAreaOrBlitFromBackBuffer,
@@ -13,65 +16,73 @@ class DesktopAppearance extends RectangularAppearance
 
 
     # set up a pattern
-    if !@pattern?
+    if @morph.patternName? && @morph.patternName == @morph.pattern1
+      @currentPattern = @morph.patternName
+      @pattern = nil
+
+    if @morph.patternName? && @morph.patternName != @currentPattern
+      @currentPattern = @morph.patternName
       @pattern = document.createElement('canvas')
       @pattern.width = 5 * pixelRatio
       @pattern.height = 5 * pixelRatio
       pctx = @pattern.getContext('2d')
       pctx.scale pixelRatio, pixelRatio
 
-      #pctx.fillStyle = 'rgb(235, 235, 235)'
-      #pctx.fillRect 0,0,5,5
-      #pctx.lineWidth = 0.25
-      #pctx.beginPath()
-      #pctx.arc 2,2,2,0,2*Math.PI
-      #pctx.fillStyle = 'rgb(225, 225, 225)'
-      #pctx.strokeStyle = 'rgb(190, 190, 190)'
-      #pctx.fill()
-      #pctx.stroke()
+      switch @morph.patternName
+        when @morph.pattern2
+          pctx.fillStyle = 'rgb(235, 235, 235)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.beginPath()
+          pctx.arc 2,2,2,0,2*Math.PI
+          pctx.fillStyle = 'rgb(225, 225, 225)'
+          pctx.strokeStyle = 'rgb(190, 190, 190)'
+          pctx.fill()
+          pctx.stroke()
+        when @morph.pattern3
+          pctx.fillStyle = 'rgb(230, 236, 241)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.moveTo 1,0
+          pctx.lineTo 1,5
+          pctx.strokeStyle = 'rgb(166, 183, 194)'
+          pctx.stroke()
+        when @morph.pattern4
+          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.moveTo 0,5
+          pctx.lineTo 5,0
+          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.stroke()
+        when @morph.pattern5
+          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.moveTo 2,2
+          pctx.lineTo 4,4
+          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.stroke()
+        when @morph.pattern6
+          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.moveTo 0,0
+          pctx.lineTo 3,3
+          pctx.lineTo 5,0
+          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.stroke()
+        when @morph.pattern7
+          pctx.fillStyle = 'rgb(230, 230, 230)'
+          pctx.fillRect 0,0,5,5
+          pctx.lineWidth = 0.25
+          pctx.moveTo 0,5
+          pctx.lineTo 5,0
+          pctx.moveTo 2.5,2.5
+          pctx.lineTo 0,0
+          pctx.strokeStyle = 'rgb(166, 166, 166)'
+          pctx.stroke()
 
-      #pctx.fillStyle = 'rgb(230, 236, 241)'
-      #pctx.fillRect 0,0,5,5
-      #pctx.lineWidth = 0.25
-      #pctx.moveTo 1,0
-      #pctx.lineTo 1,5
-      #pctx.strokeStyle = 'rgb(166, 183, 194)'
-      #pctx.stroke()
-
-      #pctx.fillStyle = 'rgb(230, 230, 230)'
-      #pctx.fillRect 0,0,5,5
-      #pctx.lineWidth = 0.25
-      #pctx.moveTo 0,5
-      #pctx.lineTo 5,0
-      #pctx.strokeStyle = 'rgb(166, 166, 166)'
-      #pctx.stroke()
-
-      #pctx.fillStyle = 'rgb(230, 230, 230)'
-      #pctx.fillRect 0,0,5,5
-      #pctx.lineWidth = 0.25
-      #pctx.moveTo 2,2
-      #pctx.lineTo 4,4
-      #pctx.strokeStyle = 'rgb(166, 166, 166)'
-      #pctx.stroke()
-
-      #pctx.fillStyle = 'rgb(230, 230, 230)'
-      #pctx.fillRect 0,0,5,5
-      #pctx.lineWidth = 0.25
-      #pctx.moveTo 0,0
-      #pctx.lineTo 3,3
-      #pctx.lineTo 5,0
-      #pctx.strokeStyle = 'rgb(166, 166, 166)'
-      #pctx.stroke()
-
-      pctx.fillStyle = 'rgb(230, 230, 230)'
-      pctx.fillRect 0,0,5,5
-      pctx.lineWidth = 0.25
-      pctx.moveTo 0,5
-      pctx.lineTo 5,0
-      pctx.moveTo 2.5,2.5
-      pctx.lineTo 0,0
-      pctx.strokeStyle = 'rgb(166, 166, 166)'
-      pctx.stroke()
 
       @pattern = aContext.createPattern(@pattern, 'repeat')
 
@@ -107,10 +118,6 @@ class DesktopAppearance extends RectangularAppearance
           color = "black"
         @morph.paintRectangle aContext, toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height(), color
 
-        #aContext.rect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
-        #aContext.fillStyle = @pattern
-        #aContext.fill()
-
 
       # now paint the actual morph, which is a rectangle
       # (potentially inset because of the padding)
@@ -127,8 +134,9 @@ class DesktopAppearance extends RectangularAppearance
       if !appliedShadow?
         @paintStroke aContext, clippingRectangle
 
-      aContext.fillStyle = @pattern
-      aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
+      if @pattern?
+        aContext.fillStyle = @pattern
+        aContext.fillRect toBePainted.left(), toBePainted.top(), toBePainted.width(), toBePainted.height()
 
       aContext.restore()
 
