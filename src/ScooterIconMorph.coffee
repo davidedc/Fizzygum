@@ -1,6 +1,3 @@
-# ScooterIconMorph //////////////////////////////////////////////////////
-
-
 class ScooterIconMorph extends IconMorph
 
   constructor: (@color) ->

@@ -1,5 +1,3 @@
-# BasementOpenerWdgt //////////////////////////////////////////////////////
-
 # REQUIRES HighlightableMixin
 
 class BasementOpenerWdgt extends IconicDesktopSystemLinkWdgt

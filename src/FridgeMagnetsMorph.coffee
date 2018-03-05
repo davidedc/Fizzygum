@@ -1,5 +1,3 @@
-# FridgeMagnetsMorph //////////////////////////////////////////////////////
-
 class FridgeMagnetsMorph extends Widget
 
   # panes:

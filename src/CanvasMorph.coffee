@@ -1,4 +1,3 @@
-# CanvasMorph //////////////////////////////////////////////////////////
 # REQUIRES BackBufferMixin
 # 
 # I clip my submorphs at my bounds. Which potentially saves a lot of redrawing

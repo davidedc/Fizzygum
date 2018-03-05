@@ -1,4 +1,3 @@
-# SimpleDropletWdgt //////////////////////////////////////////////////////
 # REQUIRES HighlightableMixin
 
 # looks like a plus sign and it replaces itself with whatever you

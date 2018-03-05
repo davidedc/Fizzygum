@@ -1,4 +1,3 @@
-# SimpleVerticalStackPanelWdgt /////////////////////////////////////////////////////////
 # REQUIRES ClippingAtRectangularBoundsMixin
 
 

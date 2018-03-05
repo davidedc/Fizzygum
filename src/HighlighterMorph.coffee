@@ -1,5 +1,3 @@
-# HighlighterMorph /////////////////////////////////////////////////////////
-#
 # Used to temporarily highlight morphs e.g. when you hover over
 # a morph entry in a menu, the corresponding morph is highlighted.
 #

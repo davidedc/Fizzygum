@@ -1,5 +1,3 @@
-# Mixin ////////////////////////////////////////////////////////////
-
 class Mixin
   @allMixines: []
   nonStaticPropertiesSources: nil

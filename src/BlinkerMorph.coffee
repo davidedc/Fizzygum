@@ -1,5 +1,3 @@
-# BlinkerMorph ////////////////////////////////////////////////////////
-
 # can be used for text caret
 
 class BlinkerMorph extends Widget

@@ -1,6 +1,3 @@
-# ScooterIconMorph //////////////////////////////////////////////////////
-
-
 class ScooterIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

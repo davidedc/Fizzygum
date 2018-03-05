@@ -1,5 +1,3 @@
-# UpperRightTriangleAppearance //////////////////////////////////////////////////////////////
-
 class UpperRightTriangleAppearance extends Appearance
 
   positionWithinParent: nil

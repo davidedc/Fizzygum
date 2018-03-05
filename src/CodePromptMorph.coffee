@@ -1,5 +1,3 @@
-# CodePromptMorph ///////////////////////////////////////////////////
-
 class CodePromptMorph extends Widget
 
   tempPromptEntryField: nil

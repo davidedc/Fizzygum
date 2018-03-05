@@ -1,4 +1,3 @@
-# StringFieldWdgt2 ////////////////////////////////////////////////////
 # Like StringFieldMorph, but it uses the StringMorph2
 
 # REQUIRES StringMorph2

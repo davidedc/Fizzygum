@@ -1,5 +1,3 @@
-# TriggerMorph ////////////////////////////////////////////////////////
-
 # **************************************
 # This Widget is now deprecated, use the
 # SimpleButton instead

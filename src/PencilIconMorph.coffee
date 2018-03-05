@@ -1,5 +1,3 @@
-# PencilIconMorph //////////////////////////////////////////////////////
-
 # to try it:
 #   world.create(new PencilIconMorph(new Point(200,200),nil))
 # or

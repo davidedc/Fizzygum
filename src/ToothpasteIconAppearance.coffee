@@ -1,5 +1,3 @@
-# ToothpasteIconAppearance //////////////////////////////////////////////////////
-
 class ToothpasteIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

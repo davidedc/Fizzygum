@@ -1,6 +1,3 @@
-# UnderCarpetIconMorph //////////////////////////////////////////////////////
-
-
 class UnderCarpetIconMorph extends IconMorph
 
   constructor: (@color) ->

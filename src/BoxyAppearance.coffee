@@ -1,5 +1,3 @@
-# BoxyAppearance //////////////////////////////////////////////////////////////
-
 class BoxyAppearance extends Appearance
 
   getCornerRadius: ->

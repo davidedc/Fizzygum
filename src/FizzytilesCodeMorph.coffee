@@ -1,6 +1,3 @@
-# FizzytilesCodeMorph ///////////////////////////////////////////////////////////
-
-
 class FizzytilesCodeMorph extends TextMorph2
 
   fridgeMagnetsCanvas: nil

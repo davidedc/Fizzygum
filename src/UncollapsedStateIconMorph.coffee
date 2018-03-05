@@ -1,6 +1,3 @@
-# UncollapsedStateIconMorph //////////////////////////////////////////////////////
-
-
 class UncollapsedStateIconMorph extends IconMorph
 
   constructor: (@color) ->

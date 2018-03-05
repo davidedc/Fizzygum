@@ -1,5 +1,3 @@
-# Globals ////////////////////////////////////////////////////
-
 world = {} # we make "world" global
 
 window.srcLoadsSteps = []

@@ -1,4 +1,3 @@
-# ErrorsLogViewerMorph ///////////////////////////////////////////////////
 # REQUIRES SimplePlainTextScrollPanelWdgt
 # REQUIRES SimpleButtonMorph
 # REQUIRES ToggleButtonMorph

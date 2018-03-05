@@ -1,5 +1,3 @@
-# PromptMorph ///////////////////////////////////////////////////
-
 class PromptMorph extends MenuMorph
 
   # pattern: all the children should be declared here

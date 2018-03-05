@@ -1,5 +1,3 @@
-# EmptyButtonMorph ////////////////////////////////////////////////////////
-
 # sends a message to a target object when pressed.
 # Doesn't have any particular shape, but can host
 # a morph to be used as "face"

@@ -1,5 +1,3 @@
-# ListMorph ///////////////////////////////////////////////////////////
-
 class ListMorph extends ScrollPanelWdgt
   
   elements: nil

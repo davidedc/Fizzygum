@@ -1,5 +1,3 @@
-# BasementWdgt //////////////////////////////////////////////////////
-
 class BasementWdgt extends BoxMorph
 
   # panes:

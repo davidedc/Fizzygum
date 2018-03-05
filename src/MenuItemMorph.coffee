@@ -1,5 +1,3 @@
-# MenuItemMorph ///////////////////////////////////////////////////////
-
 # I automatically determine my bounds
 
 class MenuItemMorph extends TriggerMorph

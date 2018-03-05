@@ -1,5 +1,3 @@
-# Widget //////////////////////////////////////////////////////////////
-
 # "Widget" is a more understandable name for the concept of "Morph"
 # (from the Greek "shape" or "form"). A Widget is an interactive
 # graphical object.
@@ -2337,7 +2335,7 @@ class Widget extends TreeNode
     return totalJSON
 
 
-  # Deserialization /////////////////////////////////////////
+  # Deserialization -----------------------------------
 
 
   deserialize: (serializationString) ->

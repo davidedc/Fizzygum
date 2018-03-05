@@ -1,6 +1,3 @@
-# ScriptIconAppearance //////////////////////////////////////////////////////
-
-
 class ScriptIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

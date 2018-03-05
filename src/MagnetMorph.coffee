@@ -1,6 +1,3 @@
-# MagnetMorph ////////////////////////////////////////////////////////
-
-
 class MagnetMorph extends TriggerMorph
 
   putIntoWords: false

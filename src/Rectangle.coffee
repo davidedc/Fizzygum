@@ -1,5 +1,3 @@
-# Rectangles //////////////////////////////////////////////////////////
-
 # REQUIRES DeepCopierMixin
 
 # Just like the Point class, this class has a "new on change"

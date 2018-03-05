@@ -1,4 +1,3 @@
-# MenuMorph ///////////////////////////////////////////////////////////
 # MenuMorphs is a Pop-up with basically a vertical stack of buttons
 
 class MenuMorph extends PopUpWdgt

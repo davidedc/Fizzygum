@@ -1,4 +1,3 @@
-# WindowWdgt //////////////////////////////////////////////////////
 # REQUIRES WindowContentsPlaceholderText
 
 class WindowWdgt extends SimpleVerticalStackPanelWdgt

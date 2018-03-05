@@ -1,5 +1,3 @@
-# CircleBoxyAppearance //////////////////////////////////////////////////////////////
-
 class CircleBoxyAppearance extends Appearance
 
   constructor: (morph) ->

@@ -1,5 +1,3 @@
-# StringMorph2 /////////////////////////////////////////////////////////
-
 # It's a SINGLE line of text, i.e.
 # it doesn't represent line breaks as multiple lines
 # and there is no concept of soft-wrapping.

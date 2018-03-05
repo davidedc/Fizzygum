@@ -1,5 +1,3 @@
-# ReconfigurablePaintMorph //////////////////////////////////////////////////////
-
 class ReconfigurablePaintMorph extends Widget
 
   mainCanvas: nil

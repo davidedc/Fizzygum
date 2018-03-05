@@ -1,5 +1,3 @@
-# CodeInjectingSimpleRectangularButtonMorph ////////////////////////////////////////////////////////
-
 # like a SimpleRectangularButtonMorph but it contains code that can be
 # injected into another morph
 

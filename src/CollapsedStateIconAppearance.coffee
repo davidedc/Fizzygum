@@ -1,6 +1,3 @@
-# CollapsedStateIconMorph //////////////////////////////////////////////////////
-
-
 class CollapsedStateIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

@@ -1,6 +1,3 @@
-# DestroyIconMorph //////////////////////////////////////////////////////
-
-
 class DestroyIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

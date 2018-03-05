@@ -1,6 +1,3 @@
-# SwitchButtonMorph ////////////////////////////////////////////////////////
-
-
 class SwitchButtonMorph extends Widget
 
   buttons: nil

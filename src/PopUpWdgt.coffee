@@ -1,4 +1,3 @@
-# PopUpWdgt ///////////////////////////////////////////////////////////
 # PopUp widgets are special Widgets that have quite complex logic for
 # opening themselves, closing themseves when users click outside,
 # popping up, opening sub-widgets, and pinning them down.

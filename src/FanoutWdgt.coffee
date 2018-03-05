@@ -1,6 +1,3 @@
-# FanoutWdgt //////////////////////////////////////////////////////
-
-
 class FanoutWdgt extends Widget
 
   @augmentWith ControllerMixin

@@ -1,5 +1,3 @@
-# OverlayCanvasMorph //////////////////////////////////////////////////////////
-
 class OverlayCanvasMorph extends CanvasMorph
 
   underlyingCanvasMorph: nil

@@ -1,4 +1,3 @@
-# FridgeMagnetsCanvasMorph //////////////////////////////////////////////////////////
 # REQUIRES BackBufferMixin
 # REQUIRES numbertimes
 # 

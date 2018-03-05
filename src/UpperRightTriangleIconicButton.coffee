@@ -1,5 +1,3 @@
-# UpperRightTriangleIconicButton ////////////////////////////////////////////////////////
-
 # like an UpperRightTriangle, but it adds an icon on the top-right
 # note that this should all be done with actual layouts but this
 # will do for the moment.

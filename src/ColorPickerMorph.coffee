@@ -1,5 +1,3 @@
-# ColorPickerMorph ///////////////////////////////////////////////////
-
 class ColorPickerMorph extends Widget
 
   # pattern: all the children should be declared here

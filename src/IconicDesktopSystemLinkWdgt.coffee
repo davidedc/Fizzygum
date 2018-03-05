@@ -1,5 +1,3 @@
-# IconicDesktopSystemLinkWdgt //////////////////////////////////////////////////////
-
 # This is an icon, with a caption below, AND it has some logic
 # to be shown "in its own layer" together with the
 # other desktop system links. I.e. you never see a desktop system link

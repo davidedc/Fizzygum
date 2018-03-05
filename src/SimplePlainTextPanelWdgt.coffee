@@ -1,5 +1,3 @@
-# SimplePlainTextPanelWdgt ////////////////////////////////////////////////////
-
 # this comment below is needed to figure out dependencies between classes
 # REQUIRES globalFunctions
 

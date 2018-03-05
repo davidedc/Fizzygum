@@ -1,5 +1,3 @@
-# RectangularAppearance //////////////////////////////////////////////////////////////
-
 class RectangularAppearance extends Appearance
 
   isTransparentAt: (aPoint) ->

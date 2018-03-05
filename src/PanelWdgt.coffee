@@ -1,12 +1,7 @@
-#| PanelWdgt //////////////////////////////////////////////////////////
-#| 
-#| I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
-#| 
-#| and event handling. 
-#| 
-#| It's a good idea to use me whenever it's clear that there is a  
-#| 
-#| "container"/"contained" scenario going on.
+# I clip my submorphs at my bounds. Which potentially saves a lot of redrawing
+# and event handling. 
+# It's a good idea to use me whenever it's clear that there is a  
+# "container"/"contained" scenario going on.
 
 # REQUIRES RectangularAppearance
 # REQUIRES ClippingAtRectangularBoundsMixin

@@ -1,5 +1,3 @@
-# PencilIconMorph //////////////////////////////////////////////////////
-
 class PencilIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

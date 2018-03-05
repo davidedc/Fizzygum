@@ -1,5 +1,3 @@
-# ToolTipWdgt ///////////////////////////////////////////////////
-
 # when invoked using...
 #    createInAWhileIfHandStillContainedInMorph / openAt
 #	... I can temporarily display any widget.

@@ -1,5 +1,3 @@
-# Pencil2IconAppearance //////////////////////////////////////////////////////
-
 class Pencil2IconAppearance extends IconAppearance
 
   paintFunction: (context) ->

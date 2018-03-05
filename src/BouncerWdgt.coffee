@@ -1,5 +1,3 @@
-# BouncerWdgt ////////////////////////////////////////////////////////
-
 # bounces within the parent. Veeery similar to the good old
 # AtomMorph from Squeak
 class BouncerWdgt extends Widget

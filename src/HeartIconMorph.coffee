@@ -1,6 +1,3 @@
-# HeartIconMorph //////////////////////////////////////////////////////
-
-
 class HeartIconMorph extends IconMorph
 
   colloquialName: ->

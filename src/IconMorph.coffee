@@ -1,5 +1,3 @@
-# IconMorph //////////////////////////////////////////////////////
-
 # to try it:
 #   world.create(new IconMorph(nil))
 # or

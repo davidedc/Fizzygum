@@ -1,5 +1,3 @@
-# SimpleDropletAppearance //////////////////////////////////////////////////////////////
-
 class SimpleDropletAppearance extends RectangularAppearance
 
   # the "alreadyUsingCanvasClipping" flag is needed because when

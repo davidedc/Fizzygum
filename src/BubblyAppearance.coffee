@@ -1,5 +1,3 @@
-# BubblyAppearance //////////////////////////////////////////////////////////////
-
 class BubblyAppearance extends BoxyAppearance
 
   isThought: nil

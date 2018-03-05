@@ -1,6 +1,3 @@
-# DestroyIconMorph //////////////////////////////////////////////////////
-
-
 class DestroyIconMorph extends IconMorph
 
   colloquialName: ->

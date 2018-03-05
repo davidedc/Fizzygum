@@ -1,5 +1,3 @@
-# ScriptWdgt ///////////////////////////////////////////////////
-
 class ScriptWdgt extends Widget
 
   tempPromptEntryField: nil

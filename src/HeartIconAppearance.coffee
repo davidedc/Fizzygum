@@ -1,6 +1,3 @@
-# HeartIconMorph //////////////////////////////////////////////////////
-
-
 class HeartIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

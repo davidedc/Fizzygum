@@ -1,6 +1,3 @@
-# FloraIconMorph //////////////////////////////////////////////////////
-
-
 class FloraIconMorph extends IconMorph
 
   colloquialName: ->

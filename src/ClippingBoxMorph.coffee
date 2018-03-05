@@ -1,4 +1,3 @@
-# ClippingBoxMorph ////////////////////////////////////////////////////////////
 # REQUIRES ClippingAtRectangularBoundsMixin
 
 # I can have an optionally rounded border

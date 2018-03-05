@@ -1,5 +1,3 @@
-# EditableMarkMorph ////////////////////////////////////////////////////////
-
 class EditableMarkMorph extends UpperRightTriangleIconicButton
 
   editObject: nil

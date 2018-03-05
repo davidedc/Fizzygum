@@ -1,5 +1,3 @@
-# FolderPanelWdgt //////////////////////////////////////////////////////////
-
 # a FolderPanelWdgt is a Panel that:
 #
 # 1) lets user create new folders in them

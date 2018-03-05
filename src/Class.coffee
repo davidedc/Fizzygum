@@ -1,5 +1,3 @@
-# Class ////////////////////////////////////////////////////////////
-
 class Class
   @allClasses: []
   nonStaticPropertiesSources: nil

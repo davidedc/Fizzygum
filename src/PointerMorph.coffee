@@ -1,6 +1,3 @@
-# PointerMorph ///////////////////////////////////////////////////////////
-
-
 # Points to a Widget. There can be multiple PointerMorph(s) for any
 # Widget.
 

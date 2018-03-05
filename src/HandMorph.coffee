@@ -1,5 +1,3 @@
-# HandMorph ///////////////////////////////////////////////////////////
-
 # The mouse cursor. Note that it's not a child of the WorldMorph, this Widget
 # is never added to any other morph. [TODO] Find out why and write explanation.
 # Not to be confused with the HandleMorph

@@ -1,5 +1,3 @@
-# WidgetHolderWithCaptionWdgt //////////////////////////////////////////////////////
-
 # This is what typically people refer to as "icons", however that's not
 # quite precise. An icon is just a symbol, it doesn't have a caption per se.
 # This widget has a caption instead. Also, since it can hold any widget, the

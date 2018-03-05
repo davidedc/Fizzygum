@@ -1,5 +1,3 @@
-# SimpleDocumentPanelWdgt /////////////////////////////////////////////////////////
-
 # this wraps the functionality of the
 # SimpleVerticalStackPanelWdgt into something that has
 # a more human name. Also provides additional document-oriented

@@ -1,6 +1,3 @@
-# CollapsedStateIconMorph //////////////////////////////////////////////////////
-
-
 class CollapsedStateIconMorph extends IconMorph
 
   colloquialName: ->

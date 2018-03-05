@@ -1,6 +1,3 @@
-# UncollapsedStateIconMorph //////////////////////////////////////////////////////
-
-
 class UncollapsedStateIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

@@ -1,5 +1,3 @@
-# ClassInspectorMorph //////////////////////////////////////////////////////
-
 class ClassInspectorMorph extends InspectorMorph2
 
   notifyInstancesOfSourceChange: (propertiesArray)->

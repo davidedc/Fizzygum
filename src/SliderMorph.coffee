@@ -1,4 +1,3 @@
-# SliderMorph ///////////////////////////////////////////////////
 # Sliders (and hence slider button morphs)
 # are also used in the ScrollPanelWdgts .
 

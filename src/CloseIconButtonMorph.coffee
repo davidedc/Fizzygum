@@ -1,5 +1,3 @@
-# CloseIconButtonMorph //////////////////////////////////////////////////////
-
 # sends a message to a target object when pressed.
 # Takes the shape of an icon, and can also host
 # a morph to be used as "face"

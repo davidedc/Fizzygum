@@ -1,5 +1,3 @@
-# AngledArrowUpLeftIconAppearance //////////////////////////////////////////////////////
-
 class AngledArrowUpLeftIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

@@ -1,4 +1,3 @@
-# HandleMorph ////////////////////////////////////////////////////////
 # not to be confused with the HandMorph
 # I am a resize / move handle that can be attached to any Widget
 

@@ -1,5 +1,3 @@
-# InspectorMorph2 //////////////////////////////////////////////////////
-
 class InspectorMorph2 extends Widget
 
   target: nil

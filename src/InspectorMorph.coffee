@@ -1,5 +1,3 @@
-# InspectorMorph //////////////////////////////////////////////////////
-
 class InspectorMorph extends BoxMorph
 
   target: nil

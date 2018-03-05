@@ -1,5 +1,3 @@
-# MouseSensorMorph ////////////////////////////////////////////////////
-
 # for demo and debugging purposes only, to be removed later
 class MouseSensorMorph extends BoxMorph
 

@@ -1,4 +1,3 @@
-# RectangleMorph /////////////////////////////////////////////////////////
 # a plain rectangular Widget. Because it's so basic, it's the building
 # block of many more complex constructions, for example containers
 # , clipping windows, and clipping windows which allow content to be

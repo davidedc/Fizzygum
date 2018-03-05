@@ -1,5 +1,3 @@
-# EraserIconAppearance //////////////////////////////////////////////////////
-
 class EraserIconAppearance extends IconAppearance
 
   paintFunction: (context) ->

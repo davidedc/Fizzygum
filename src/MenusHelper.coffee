@@ -1,4 +1,3 @@
-# MenusHelper ////////////////////////////////////////////////////////////
 # REQUIRES DeepCopierMixin
 
 # All "actions" functions for all accessory menu items should belong

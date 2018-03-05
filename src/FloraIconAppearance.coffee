@@ -1,6 +1,3 @@
-# FloraIconMorph //////////////////////////////////////////////////////
-
-
 class FloraIconAppearance extends IconAppearance
 
   constructor: (@morph) ->

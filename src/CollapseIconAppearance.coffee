@@ -1,4 +1,3 @@
-# IconAppearance //////////////////////////////////////////////////////////////
 # REQUIRES Point
 
 class CollapseIconAppearance extends IconAppearance

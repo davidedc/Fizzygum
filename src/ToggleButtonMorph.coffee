@@ -1,6 +1,3 @@
-# ToggleButtonMorph ////////////////////////////////////////////////////////
-
-
 class ToggleButtonMorph extends SwitchButtonMorph
 
 

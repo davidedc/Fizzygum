@@ -1,6 +1,3 @@
-# WindowContentsPlaceholderText ///////////////////////////////////////////////////////////
-
-
 class WindowContentsPlaceholderText extends TextMorph2
 
   constructor: ->

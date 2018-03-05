@@ -1,4 +1,3 @@
-# ColorPaletteMorph ///////////////////////////////////////////////////
 # REQUIRES ControllerMixin
 # REQUIRES BackBufferMixin
 

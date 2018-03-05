@@ -1,5 +1,3 @@
-# SimplePlainTextWdgt ///////////////////////////////////////////////////////////
-
 # REQUIRES ControllerMixin
 
 # A multi-line, optionally word-wrapping string.

@@ -1,5 +1,3 @@
-# SimpleRectangularButtonMorph ////////////////////////////////////////////////////////
-
 # sends a message to a target object when pressed.
 # takes a rectangular shape, and can host
 # a morph to be used as "face"

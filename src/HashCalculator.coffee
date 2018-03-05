@@ -1,6 +1,5 @@
 # REQUIRES globalFunctions
 
-# HashCalculator ///////////////////////////////////////////////////
 # adapted from http://stackoverflow.com/a/7616484
 
 # Currently used to differentiate the filenames

@@ -1,5 +1,3 @@
-# GrayPaletteMorph ///////////////////////////////////////////////////
-
 class GrayPaletteMorph extends ColorPaletteMorph
 
   constructor: (@target = nil, sizePoint) ->

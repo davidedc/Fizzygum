@@ -1,5 +1,3 @@
-# BoxMorph ////////////////////////////////////////////////////////////
-
 # I can have an optionally rounded border
 
 class BoxMorph extends Widget

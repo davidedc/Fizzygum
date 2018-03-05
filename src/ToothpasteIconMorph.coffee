@@ -1,5 +1,3 @@
-# ToothpasteIconMorph //////////////////////////////////////////////////////
-
 # to try it:
 #   world.create(new PencilIconMorph()
 # or
