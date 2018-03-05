@@ -10,7 +10,7 @@ class Point3D
   x: nil
   y: nil
   z: nil
-   
+
   constructor: (@x = 0, @y = 0, @z = 0) ->
 
   # the order of the rotations does matter
