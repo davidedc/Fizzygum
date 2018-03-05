@@ -2837,6 +2837,15 @@ class Widget extends TreeNode
     world.add wm
     wm.changed()
 
+  createConsole: ->
+    inspector = new ConsoleWdgt @
+    wm = new WindowWdgt nil, nil, inspector
+    wm.setExtent new Point 285, 290
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
   spawnNextTo: (morphToBeNextTo, whereToAddIt) ->
     if !whereToAddIt?
       whereToAddIt = morphToBeNextTo.parent
@@ -3378,12 +3387,19 @@ class Widget extends TreeNode
     menu.addMenuItem "windows ➜", false, @, "popUpWindowsMenu", "icons"
     menu.addMenuItem "shortcuts & scripts ➜", false, @, "popUpShortcutsAndScriptsMenu", "Shortcuts & Scripts"
     menu.addMenuItem "analog clock", true, @, "analogClock"
-    menu.addMenuItem "inspect 2", true, @, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "dev tools ➜", false, @, "popUpDevToolsMenu", "icons"
     menu.addMenuItem "fizzytiles", true, menusHelper, "createFridgeMagnets"
     menu.addMenuItem "fizzypaint", true, menusHelper, "createReconfigurablePaint"
     menu.addMenuItem "simple button", true, menusHelper, "createSimpleButton"
     menu.addMenuItem "switch button", true, menusHelper, "createSwitchButtonMorph"
     menu.addMenuItem "clipping box", true, menusHelper, "createNewClippingBoxMorph"
+
+    menu.popUpAtHand()
+
+  popUpDevToolsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
+    menu.addMenuItem "inspect2 widget", true, @, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "widget console", true, @, "createConsole", "console"
 
     menu.popUpAtHand()
 

@@ -297,6 +297,17 @@ class HandMorph extends Widget
       if actionedMorph.editorContentPropertyChangerButton? and actionedMorph.editorContentPropertyChangerButton
         return
 
+      # if you click anything directly inside a button that has
+      # "editorContentPropertyChangerButton" set, then do nothing
+      # This is needed because you might "down" on the label of the
+      # button and you don't want to stopEditing in that case
+      # either...
+      if actionedMorph.parent? and
+       (actionedMorph.parent instanceof SimpleButtonMorph) and
+       actionedMorph.parent.editorContentPropertyChangerButton? and
+       actionedMorph.parent.editorContentPropertyChangerButton
+        return
+
       # there is a caret on the screen
       # depending on what the user is clicking on,
       # we might need to close an ongoing edit
@@ -351,6 +362,10 @@ class HandMorph extends Widget
       morph = @topMorphUnderPointer()
 
       @destroyTemporaryHandlesAndLayoutAdjustersIfHandHasNotActionedThem morph
+      # TODO it seems a little aggressive to stop any editing
+      # just on the "down", probably something higher level
+      # would be better? Like if any other object is brought to the
+      # foreground?
       @stopEditingIfWidgetDoesntNeedCaretOrActionIsElsewhere morph
 
       # if we are doing a mousedown on anything outside a menu

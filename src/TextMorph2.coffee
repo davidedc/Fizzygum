@@ -578,8 +578,13 @@ class TextMorph2 extends StringMorph2
     else
       menu.addMenuItem "soft wrap", true, @, "toggleSoftWrap"
     menu.addLine()
-    menu.addMenuItem "run contents", true, @, "doContents"
 
+    if @parent?.parent?.parent? and (@parent.parent.parent instanceof ConsoleWdgt)
+      if @currentlySelecting()
+        menu.addMenuItem "run selection", true, @parent.parent.parent, "doSelection"
+      menu.addMenuItem "run contents", true, @parent.parent.parent, "doAll"
+    else
+      menu.addMenuItem "run contents", true, @, "doContents"
   
   setAlignmentToLeft: ->
     @alignment = "left"
