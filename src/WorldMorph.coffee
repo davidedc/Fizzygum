@@ -1985,6 +1985,12 @@ class WorldMorph extends PanelWdgt
       @updatePatternsMenuEntriesTicks menuItem.parent
 
 
+  # cheap way to keep menu consistency when pinned
+  # note that there is no consistency in case
+  # there are multiple copies of this menu changing
+  # the wallpaper, since there is no real subscription
+  # of a menu to react to wallpaper change coming
+  # from other menus or other means (e.g. API)...
   updatePatternsMenuEntriesTicks: (menu) ->
     pattern1Tick = pattern2Tick = pattern3Tick =
     pattern4Tick = pattern5Tick = pattern6Tick =

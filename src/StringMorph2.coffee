@@ -901,6 +901,12 @@ class StringMorph2 extends Widget
 
     menu.popUpAtHand()
 
+  # cheap way to keep menu consistency when pinned
+  # note that there is no consistency in case
+  # there are multiple copies of this menu changing
+  # the property, since there is no real subscription
+  # of a menu to react to property change coming
+  # from other menus or other means (e.g. API)...
   updateFontsMenuEntriesTicks: (menu) ->
     justArialFontStackTick = timesFontStackTick = georgiaFontStackTick =
     garamoFontStackTick = helveFontStackTick = verdaFontStackTick =
