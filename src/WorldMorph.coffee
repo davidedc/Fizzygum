@@ -301,6 +301,9 @@ class WorldMorph extends PanelWdgt
 
     @changed()
 
+  colloquialName: ->
+    "Desktop"
+
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops
 
