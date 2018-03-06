@@ -288,6 +288,60 @@ class MenusHelper
 
     menu.popUpAtHand()
 
+  popUpMore3IconsMenu: (morphOpeningThePopUp) ->
+    menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "More Icons 2"
+    menu.addMenuItem "Fizzygum logo", true, menusHelper, "createFizzygumLogoIconWdgt"
+    menu.addMenuItem "Fizzygum logo with text", true, menusHelper, "createFizzygumLogoWithTextIconWdgt"
+    menu.addMenuItem "Vaporwave sun", true, menusHelper, "createVaporwaveSunIconWdgt"
+    menu.addMenuItem "Vaporwave background", true, menusHelper, "createVaporwaveBackgroundIconWdgt"
+    menu.addMenuItem "Change font icon", true, menusHelper, "createChangeFontIconWdgt"
+    menu.addMenuItem "C <-> F converter icon", true, menusHelper, "createCFDegreesConverterIconWdgt"
+    menu.addMenuItem "Slide Maker icon", true, menusHelper, "createSlideMakerIconWdgt"
+    menu.addMenuItem "Typewriter icon", true, menusHelper, "createTypewriterIconWdgt"
+    menu.addMenuItem "Little world icon", true, menusHelper, "createLittleWorldIconWdgt"
+    menu.addMenuItem "Little USA icon", true, menusHelper, "createLittleUSAIconWdgt"
+    menu.addMenuItem "Map pin icon", true, menusHelper, "createMapPinIconWdgt"
+    menu.addMenuItem "Save icon", true, menusHelper, "createSaveIconWdgt"
+
+    menu.popUpAtHand()
+
+  createFizzygumLogoWithTextIconWdgt : ->
+    world.create new FizzygumLogoWithTextIconWdgt()
+
+  createVaporwaveBackgroundIconWdgt : ->
+    world.create new VaporwaveBackgroundIconWdgt()
+
+  createCFDegreesConverterIconWdgt : ->
+    world.create new CFDegreesConverterIconWdgt()
+
+  createFizzygumLogoIconWdgt : ->
+    world.create new FizzygumLogoIconWdgt()
+
+  createVaporwaveSunIconWdgt : ->
+    world.create new VaporwaveSunIconWdgt()
+
+  createLittleWorldIconWdgt : ->
+    world.create new LittleWorldIconWdgt()
+
+  createChangeFontIconWdgt : ->
+    world.create new ChangeFontIconWdgt()
+
+  createSlideMakerIconWdgt : ->
+    world.create new SlideMakerIconWdgt()
+
+  createTypewriterIconWdgt : ->
+    world.create new TypewriterIconWdgt()
+
+  createLittleUSAIconWdgt : ->
+    world.create new LittleUSAIconWdgt()
+
+  createMapPinIconWdgt : ->
+    world.create new MapPinIconWdgt()
+
+  createSaveIconWdgt : ->
+    world.create new SaveIconWdgt()
+
+
   popUpArrowsIconsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Arrows"
     menu.addMenuItem "Arrow N icon", true, menusHelper, "createArrowNIconWdgt"

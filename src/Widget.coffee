@@ -3282,6 +3282,7 @@ class Widget extends TreeNode
     menu.addMenuItem "more 2 ➜", false, menusHelper, "popUpMore2IconsMenu", "others"
     menu.addMenuItem "arrows ➜", false, menusHelper, "popUpArrowsIconsMenu", "others"
     menu.addMenuItem "maps ➜", false, menusHelper, "popUpMapsMenu", "maps"
+    menu.addMenuItem "more 3 ➜", false, menusHelper, "popUpMore3IconsMenu", "maps"
 
     menu.popUpAtHand()
 
