@@ -37,5 +37,5 @@ class FolderWindowWdgt extends WindowWdgt
     whichFolderPanelToAddTo.add morphToAdd
     morphToAdd.setExtent new Point 75, 75
     morphToAdd.fullChanged()
-    @bringToForegroud()
+    @bringToForeground()
 

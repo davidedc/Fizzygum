@@ -1852,7 +1852,7 @@ class WorldMorph extends PanelWdgt
 
   switchTextFieldFocus: (current, next) ->
     current.clearSelection()
-    next.bringToForegroud()
+    next.bringToForeground()
     next.selectAll()
     next.edit()
 

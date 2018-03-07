@@ -57,7 +57,7 @@ class ErrorsLogViewerMorph extends Widget
 
     if !@parent.isVisible
       @parent.show()
-      @parent.bringToForegroud()
+      @parent.bringToForeground()
 
 
   buildAndConnectChildren: ->

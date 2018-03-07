@@ -86,7 +86,7 @@ class TreeNode
     
     @addChild aMorphicNode, 0
 
-  # used from bringToForegroud method
+  # used from bringToForeground method
   # for example when you
   # click morphs around... they
   # pop to the foreground

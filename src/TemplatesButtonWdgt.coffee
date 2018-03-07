@@ -31,7 +31,7 @@ class TemplatesButtonWdgt extends IconMorph
     world.simpleEditorTemplates = wm
 
   bringTemplatesWindowIntoView: ->
-    world.simpleEditorTemplates.bringToForegroud()
+    world.simpleEditorTemplates.bringToForeground()
     world.simpleEditorTemplates.fullRawMoveTo world.hand.position().subtract new Point 50, 50
     world.simpleEditorTemplates.fullRawMoveWithin world
 

@@ -59,7 +59,7 @@ class StringFieldWdgt2 extends PanelWdgt
     @text.text
   
   mouseClickLeft: (pos)->
-    @bringToForegroud()
+    @bringToForeground()
     if @isEditable
       @text.edit()
     else

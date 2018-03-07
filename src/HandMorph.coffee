@@ -1024,7 +1024,7 @@ class HandMorph extends Widget
       # pop into the foreground. I'm liking the OSX style
       # so I'm leaving this commented-out, but it's there.
       # TODO this could be a setting somewhere in ZK.
-      # @nonFloatDraggedMorph.bringToForegroud()
+      # @nonFloatDraggedMorph.bringToForeground()
 
       if @mouseButton
         if @previousNonFloatDraggingPos?

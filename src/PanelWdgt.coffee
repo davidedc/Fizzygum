@@ -68,7 +68,7 @@ class PanelWdgt extends Widget
 
 
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
-    @bringToForegroud()
+    @bringToForeground()
 
     # when you click on an "empty" part of a Panel that contains
     # a piece of text, we pass the click on to the text to it

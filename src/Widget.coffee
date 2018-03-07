@@ -285,7 +285,7 @@ class Widget extends TreeNode
     # you could bring up what you right-click,
     # however for example that's not how OSX works.
     # Perhaps this could be a system setting?
-    #@bringToForegroud()
+    #@bringToForeground()
 
     world.hand.openContextMenuAtPointer @
 
@@ -1953,7 +1953,7 @@ class Widget extends TreeNode
     placeToDropItIn.add morphToAdd
     morphToAdd.setExtent new Point 75, 75
     morphToAdd.fullChanged()
-    @bringToForegroud()
+    @bringToForeground()
 
   createReferenceAndClose: (referenceName, placeToDropItIn = world) ->
     @createReference referenceName, placeToDropItIn
@@ -2627,7 +2627,7 @@ class Widget extends TreeNode
     @moveAsLastChild()
     @fullChanged()
 
-  bringToForegroud: ->
+  bringToForeground: ->
     @rootForFocus()?.moveAsLastChild()
     @rootForFocus()?.fullChanged()
 
@@ -2642,7 +2642,7 @@ class Widget extends TreeNode
       @parent.propagateKillPopUps()
 
   mouseDownLeft: (pos) ->
-    @bringToForegroud()
+    @bringToForeground()
     @escalateEvent "mouseDownLeft", pos
 
   mouseClickLeft: (pos) ->

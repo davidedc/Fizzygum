@@ -80,7 +80,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       placeToDropItIn.add morphToAdd
       morphToAdd.setExtent new Point 75, 75
       morphToAdd.fullChanged()
-      @bringToForegroud()
+      @bringToForeground()
     else
       super
 

@@ -374,7 +374,7 @@ class StringMorph extends Widget
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos) ->
-    @bringToForegroud()
+    @bringToForeground()
     caret = world.caret
     if @isEditable
       @edit()  unless @currentlySelecting

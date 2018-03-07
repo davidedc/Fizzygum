@@ -1202,8 +1202,8 @@ class StringMorph3 extends Widget
   # Every time the user clicks on the text, a new edit()
   # is triggered, which creates a new caret.
   mouseClickLeft: (pos, ignored_button, ignored_buttons, ignored_ctrlKey, shiftKey, ignored_altKey, ignored_metaKey) ->
-    @bringToForegroud()
-    world.caret?.bringToForegroud()
+    @bringToForeground()
+    world.caret?.bringToForeground()
     if @isEditable
       # doesn't matter what we set editResult to initially,
       # just not undefined or nil cause that's

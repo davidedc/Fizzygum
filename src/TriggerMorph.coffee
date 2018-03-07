@@ -239,7 +239,7 @@ class TriggerMorph extends Widget
     super
   
   mouseClickLeft: ->
-    @bringToForegroud()
+    @bringToForeground()
     @state = @STATE_HIGHLIGHTED
     @changed()
     if @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked

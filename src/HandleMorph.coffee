@@ -266,7 +266,7 @@ class HandleMorph extends Widget
   # will trigger the button when resizing.
   mouseDownLeft: (pos) ->
     return nil  unless @target
-    @target.bringToForegroud()
+    @target.bringToForeground()
 
   nonFloatDragging: (nonFloatDragPositionWithinMorphAtStart, pos, deltaDragFromPreviousCall) ->
     newPos = pos.subtract nonFloatDragPositionWithinMorphAtStart
