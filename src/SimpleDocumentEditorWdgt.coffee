@@ -21,7 +21,7 @@ class SimpleDocumentEditorWdgt extends Widget
   internalPadding: 5
 
   constructor: (@defaultContents = "") ->
-    super new Point 200,400
+    super new Point 368, 335
     @buildAndConnectChildren()
 
   colloquialName: ->

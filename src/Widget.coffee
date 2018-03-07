@@ -859,6 +859,7 @@ class Widget extends TreeNode
   # for morphs that marked themselves
   # as broken but at moment of destination
   # might be invisible
+  # TODO for sure this should also check for the .destroyed flag
   surelyNotShowingUpOnScreenBasedOnVisibilityCollapseAndOrphanage: ->
     if !@isVisible
       return true
@@ -3399,8 +3400,8 @@ class Widget extends TreeNode
 
   popUpDevToolsMenu: (morphOpeningThePopUp) ->
     menu = new MenuMorph morphOpeningThePopUp,  false, @, true, true, "Dev Tools"
-    menu.addMenuItem "inspect2 widget", true, @, "inspect2", "open a window\non all properties"
-    menu.addMenuItem "widget console", true, @, "createConsole", "console"
+    menu.addMenuItem "inspect", true, @, "inspect2", "open a window\non all properties"
+    menu.addMenuItem "console", true, @, "createConsole", "console"
 
     menu.popUpAtHand()
 
