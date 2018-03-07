@@ -29,9 +29,9 @@ class MenusHelper
     world.add wm
     wm.changed()
 
-  createSlidesMakerWdgt: ->
-    slidesMaker = new SlidesMakerWdgt()
-    wm = new WindowWdgt nil, nil, slidesMaker
+  createSlideMakerWdgt: ->
+    SlideMaker = new SlideMakerWdgt()
+    wm = new WindowWdgt nil, nil, SlideMaker
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
@@ -435,7 +435,7 @@ class MenusHelper
   createSimpleDocumentEditorWdgt: ->
     simpleDocumentEditor = new SimpleDocumentEditorWdgt()
     wm = new WindowWdgt nil, nil, simpleDocumentEditor
-    wm.setExtent new Point 360, 335
+    wm.setExtent new Point 368, 335
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world
     world.add wm

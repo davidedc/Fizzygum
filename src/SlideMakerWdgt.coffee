@@ -1,4 +1,4 @@
-class SlidesMakerWdgt extends Widget
+class SlideMakerWdgt extends Widget
 
   stretchablePanel: nil
   scrollingTools: nil
@@ -22,7 +22,7 @@ class SlidesMakerWdgt extends Widget
     @invalidateLayout()
 
   colloquialName: ->   
-    "Slides maker"
+    "Slide Maker"
 
   representativeIcon: ->
     new PaintBucketIconWdgt()
@@ -53,13 +53,23 @@ class SlidesMakerWdgt extends Widget
     @scrollingTools.add new ExternalLinkCreatorButtonWdgt()
     @scrollingTools.add new VideoPlayCreatorButtonWdgt()
 
+    @scrollingTools.add new WorldMapCreatorButtonWdgt()
+    @scrollingTools.add new USAMapCreatorButtonWdgt()
+
     @scrollingTools.add new RectangleMorph()
+
+    @scrollingTools.add new MapPinIconWdgt()
 
     @scrollingTools.add new DestroyIconMorph()
     @scrollingTools.add new ScratchAreaIconMorph()
     @scrollingTools.add new FloraIconMorph()
     @scrollingTools.add new ScooterIconMorph()
     @scrollingTools.add new HeartIconMorph()
+
+    @scrollingTools.add new FizzygumLogoIconWdgt()
+    @scrollingTools.add new FizzygumLogoWithTextIconWdgt()
+    @scrollingTools.add new VaporwaveBackgroundIconWdgt()
+    @scrollingTools.add new VaporwaveSunIconWdgt()
 
     @scrollingTools.add new ArrowNIconWdgt()
     @scrollingTools.add new ArrowSIconWdgt()

@@ -3373,7 +3373,7 @@ class Widget extends TreeNode
     menu.addMenuItem "stretchable panel", true, menusHelper, "createStretchablePanel"
     menu.addMenuItem "tools panel", true, menusHelper, "createToolsPanel"
     menu.addMenuItem "horiz. menu panel", true, menusHelper, "createHorizontalMenuPanelPanel"
-    menu.addMenuItem "Slides Maker", true, menusHelper, "createSlidesMakerWdgt"
+    menu.addMenuItem "Slide Maker", true, menusHelper, "createSlideMakerWdgt"
     menu.addMenuItem "patch programming ➜", false, @, "popUpPatchProgrammingMenu", "icons"
     menu.addMenuItem "graphs ➜", false, menusHelper, "popUpGraphsMenu", "graphs"
 
