@@ -7,7 +7,7 @@ class MapPinIconAppearance extends IconAppearance
 
   paintFunction: (context) ->
     #// Color Declarations
-    black = 'rgba(0, 0, 0, 1)'
+    pinColorString = 'rgba(255, 0, 0, 1)'
     #// Group
     #// map pin outline Drawing
     context.beginPath()
@@ -46,5 +46,5 @@ class MapPinIconAppearance extends IconAppearance
     context.bezierCurveTo 40.16, 24.44, 44.39, 28.67, 44.39, 33.83
     context.bezierCurveTo 44.39, 39, 40.16, 43.22, 35, 43.22
     context.closePath()
-    context.fillStyle = black
+    context.fillStyle = pinColorString
     context.fill()
