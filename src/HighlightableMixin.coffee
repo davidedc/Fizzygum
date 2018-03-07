@@ -15,7 +15,7 @@ HighlightableMixin =
 
       color_hover: new Color 192, 192, 192
       color_pressed: new Color 128, 128, 128
-      color_normal: new Color 255, 255, 255
+      color_normal: new Color 245, 244, 245
 
       state: 0
       STATE_NORMAL: 0

@@ -552,8 +552,8 @@ class HandMorph extends Widget
             if @mouseButton == "left" and
              @doubleClickMorph == morph and
              ((@doubleClickPosition.distanceTo @position()) < WorldMorph.preferencesAndSettings.grabDragThreshold)
-              console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
-              console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
+              #console.log "@doubleClickPosition.distanceTo @position():" + @doubleClickPosition.distanceTo @position()
+              #console.log "WorldMorph.preferencesAndSettings.grabDragThreshold:" + WorldMorph.preferencesAndSettings.grabDragThreshold
               @doubleClickMorph = nil
               disableConsecutiveClicksFromSingleClicksDueToFastTests = false
               if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state == AutomatorRecorderAndPlayer.PLAYING

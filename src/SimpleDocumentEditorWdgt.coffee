@@ -32,6 +32,7 @@ class SimpleDocumentEditorWdgt extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     @tempPromptEntryField = new HorizontalMenuPanelWdgt()
+    @tempPromptEntryField.strokeColor = nil
     @tempPromptEntryField.rawSetExtent new Point 300,10
 
 

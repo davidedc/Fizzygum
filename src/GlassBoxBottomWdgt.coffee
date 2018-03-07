@@ -6,11 +6,12 @@
 # visually contrasting background and it gives
 # a larger target to grab the widget.
 
-class GlassBoxBottomWdgt extends RectangleMorph
+class GlassBoxBottomWdgt extends BoxMorph
 
   constructor: ->
     super
     @setColor new Color 230,230,230
+    @strokeColor = new Color 196,195,196
     @setAlphaScaled 50
 
   reLayout: ->

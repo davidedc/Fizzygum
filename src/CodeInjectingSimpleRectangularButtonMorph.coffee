@@ -14,6 +14,8 @@ class CodeInjectingSimpleRectangularButtonMorph extends SimpleRectangularButtonM
 
   constructor: (@morphToBeNotifiedForNewCode, @morphWhereToInject, face) ->
     super true, @, 'injectCodeIntoTarget', face
+    @strokeColor = new Color 0, 0, 0
+    @setColor new Color 150, 150, 150
 
   editInjectableSource: ->
     @textPrompt "Code", @, "modifyCodeToBeInjected", @sourceCodeToBeInjected

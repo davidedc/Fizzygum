@@ -26,4 +26,5 @@ class SimpleRectangularButtonMorph extends EmptyButtonMorph
     super
 
     @appearance = new RectangularAppearance @
+    @strokeColor = new Color 196,195,196
 

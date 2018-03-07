@@ -237,6 +237,8 @@ class WorldMorph extends PanelWdgt
   pattern6: "zigzag"
   pattern7: "bricks"
 
+  prettier: false
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -303,6 +305,10 @@ class WorldMorph extends PanelWdgt
 
   colloquialName: ->
     "Desktop"
+
+  makePrettier: ->
+    @prettier = true
+    @changed()
 
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops

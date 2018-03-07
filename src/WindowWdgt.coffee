@@ -42,7 +42,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contents = @defaultContents
 
     @padding = 5
-    @color = new Color 172, 172, 172
+    @color = new Color 248, 248, 248
     @buildAndConnectChildren()
 
     if @contents == @defaultContents

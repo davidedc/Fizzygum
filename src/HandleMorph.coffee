@@ -150,7 +150,7 @@ class HandleMorph extends Widget
       aContext.translate morphPosition.x, morphPosition.y
 
       if @state == @STATE_NORMAL
-        @handleMorphRenderingHelper aContext, @color, new Color 100, 100, 100
+        @handleMorphRenderingHelper aContext, @color, new Color 150, 150, 150
       if @state == @STATE_HIGHLIGHTED
         @handleMorphRenderingHelper aContext, new Color(255, 255, 255), new Color(200, 200, 255)
 
@@ -233,7 +233,7 @@ class HandleMorph extends Widget
 
 
   handleMorphRenderingHelper: (context, color, shadowColor) ->
-    context.lineWidth = 1
+    context.lineWidth = 0.5
     context.lineCap = "round"
 
     # give it a good shadow so that

@@ -24,7 +24,7 @@ class TextMorph2 extends StringMorph2
    @isBold = false,
    @isItalic = false,
    #@isNumeric = false,
-   @color = (new Color 0, 0, 0),
+   @color,
    @backgroundColor = nil,
    @backgroundTransparency = nil
    ) ->

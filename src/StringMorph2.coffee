@@ -120,7 +120,7 @@ class StringMorph2 extends Widget
       @isItalic = false,
       @isHeaderLine = false,
       @isNumeric = false,
-      @color = (new Color 0, 0, 0),
+      @color = (new Color 37, 37, 37),
       backgroundColor,
       backgroundTransparency
       ) ->
@@ -694,7 +694,7 @@ class StringMorph2 extends Widget
 
     # header line
     if @isHeaderLine
-      backBufferContext.strokeStyle = @color.toString()
+      backBufferContext.strokeStyle = new Color 198, 198, 198
       backBufferContext.beginPath()
       backBufferContext.moveTo 0, textVerticalPosition - heightOfText / 2
       backBufferContext.lineTo textHorizontalPosition - 5, textVerticalPosition - heightOfText / 2

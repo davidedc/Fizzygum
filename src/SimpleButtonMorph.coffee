@@ -18,7 +18,8 @@ class SimpleButtonMorph extends EmptyButtonMorph
       @doubleClickAction = nil,
       @argumentToAction1 = nil,
       @argumentToAction2 = nil,
-      @representsAMorph = false
+      @representsAMorph = false,
+      @padding = 0
       ) ->
 
     # additional properties:
@@ -26,4 +27,6 @@ class SimpleButtonMorph extends EmptyButtonMorph
     super
 
     @appearance = new BoxyAppearance @
+    @strokeColor = new Color 196,195,196
+    @color = new Color 245, 244, 245
 

@@ -50,6 +50,13 @@ class InspectorMorph2 extends Widget
   internalPadding: 5
   padding: nil
 
+  # normally buttons only contain centered lower case text
+  # so we can get away with just no padding between button
+  # bounds and text. Some of these buttons however contain
+  # left-aligned class names (with capital letters) so we
+  # do need to add some padding...
+  classNamesTextPadding: 2
+
   colloquialName: ->
     "Object Inspector (" + @target.colloquialName() + ")"
 
@@ -177,7 +184,7 @@ class InspectorMorph2 extends Widget
 
     counter = 0
     for eachNamedClass in @classesNames
-      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass),nil,nil,nil,nil,eachNamedClass
+      classButton = new SimpleButtonMorph true, @, "openClassInspector", (new StringMorph2 eachNamedClass),nil,nil,nil,nil,eachNamedClass,nil,nil,@classNamesTextPadding
       @classesButtons.push classButton
       @add classButton
 
@@ -460,7 +467,7 @@ class InspectorMorph2 extends Widget
     for eachClassButton in @classesButtons
       if eachClassButton.parent == @
         buttonBounds = new Rectangle new Point(Math.round(@left() + @externalPadding + @internalPadding + justAcounter), Math.round(@hierarchyHeaderString.bottom() + 2*@internalPadding + justAcounter))
-        buttonBounds = buttonBounds.setBoundsWidthAndHeight 120, 15
+        buttonBounds = buttonBounds.setBoundsWidthAndHeight 120 + @classNamesTextPadding * 2, 15 + @classNamesTextPadding * 2
         eachClassButton.doLayout buttonBounds
 
         # the top class doesn't get an arrow pointing upwards
@@ -498,20 +505,22 @@ class InspectorMorph2 extends Widget
       @detail.fullRawMoveTo new Point @list.right() + @internalPadding, @list.top()
       @detail.rawSetExtent (new Point detailWidth, listHeight).round()
 
+    widthOfButtonsUnderList = Math.round((listWidth - 2 * @internalPadding)/3)
+
     buttonBounds = new Rectangle new Point @left() + @externalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
     @addPropertyButton.doLayout buttonBounds
 
     buttonBounds = new Rectangle new Point @addPropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
     @renamePropertyButton.doLayout buttonBounds
 
     buttonBounds = new Rectangle new Point @renamePropertyButton.right() + @internalPadding, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight (listWidth - 2 * @internalPadding)/3, 15
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight widthOfButtonsUnderList, 15
     @removePropertyButton.doLayout buttonBounds
 
-    buttonBounds = new Rectangle new Point @right() - @width()/4 - @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize, @bottom() - 15 - @externalPadding
-    buttonBounds = buttonBounds.setBoundsWidthAndHeight @width()/4, 15
+    buttonBounds = new Rectangle new Point Math.round(@right() - @width()/4 - @externalPadding - @internalPadding - WorldMorph.preferencesAndSettings.handleSize), @bottom() - 15 - @externalPadding
+    buttonBounds = buttonBounds.setBoundsWidthAndHeight Math.round(@width()/4), 15
     @saveButton.doLayout buttonBounds
 
     trackChanges.pop()

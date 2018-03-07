@@ -26,6 +26,8 @@ class EmptyButtonMorph extends Widget
   # case we are going to highlight the Widget on hover
   representsAMorph: false
 
+  padding: 0
+
 
   # overrides to superclass
   color: new Color 255, 255, 255
@@ -44,7 +46,8 @@ class EmptyButtonMorph extends Widget
       @doubleClickAction = nil,
       @argumentToAction1 = nil,
       @argumentToAction2 = nil,
-      @representsAMorph = false
+      @representsAMorph = false,
+      @padding = 0
       ) ->
 
     # additional properties:
@@ -84,7 +87,7 @@ class EmptyButtonMorph extends Widget
     @rawSetBounds newBoundsForThisLayout
 
     if @faceMorph?.parent == @
-      @faceMorph.rawSetBounds newBoundsForThisLayout
+      @faceMorph.rawSetBounds newBoundsForThisLayout.insetBy @padding
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()

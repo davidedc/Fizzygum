@@ -10,6 +10,9 @@
 class CanvasMorph extends PanelWdgt
   @augmentWith BackBufferMixin
 
+  constructor: ->
+    super
+    @color = new Color 255, 255, 255
   
   iHaveBeenAddedTo: (whereTo, beingDropped) ->
 

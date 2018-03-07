@@ -13,13 +13,13 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     VS.isLockingToPanels = true
     super VS
     @disableDrops()
-    @color = new Color 255, 255, 255
 
     ostmA = new SimplePlainTextWdgt(
-      "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,new Color(230, 230, 130), 1)
+      "A small string\n\n\nhere another.",nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
     ostmA.isEditable = true
     ostmA.enableSelecting()
     @setContents ostmA, 5
+    @setColor new Color 249, 249, 249
 
   colloquialName: ->
     "stack"

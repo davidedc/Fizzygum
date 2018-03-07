@@ -48,7 +48,7 @@ class TriggerMorph extends Widget
   STATE_PRESSED: 2
 
   # overrides to superclass
-  color: new Color 255, 255, 255
+  color: new Color 249, 249, 249
 
   constructor: (
       @ifInsidePopUpThenClosesUnpinnedPopUpsWhenClicked = true,

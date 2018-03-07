@@ -2,11 +2,11 @@ class RadioButtonsHolderMorph extends Widget
 
   wantsButtonsToBehaveLikeRadioButtons: true
   allowsRadioButtonsToBeAllDisabled: true
-  color: new Color 0,0,0,0.2
 
   constructor: ->
     super()
     @appearance = new RectangularAppearance @
+    @setColor new Color 230, 230, 230
 
 
   mouseClickLeft: (morphThatFired) ->
