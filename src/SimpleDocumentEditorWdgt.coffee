@@ -34,6 +34,8 @@ class SimpleDocumentEditorWdgt extends Widget
     @tempPromptEntryField = new HorizontalMenuPanelWdgt()
     @tempPromptEntryField.rawSetExtent new Point 300,10
 
+
+    @tempPromptEntryField.add new ChangeFontButtonWdgt @
     @tempPromptEntryField.add new BoldButtonWdgt()
     @tempPromptEntryField.add new ItalicButtonWdgt()
     @tempPromptEntryField.add new FormatAsCodeButtonWdgt()
