@@ -112,7 +112,7 @@ class PopUpWdgt extends Widget
   updatePopUpShadow: ->
     if @isPopUpPinned()
       if @parent == world
-        @addShadow new Point(3, 3), 0.3
+        @addShadow()
       else
         @removeShadow()
     else 
@@ -121,6 +121,11 @@ class PopUpWdgt extends Widget
   # shadow is added to a morph by
   # the HandMorph while floatDragging
   addShadow: (offset = new Point(5, 5), alpha = 0.2, color) ->
+
+    if @isPopUpPinned() and @parent == world
+      super new Point(3, 3), 0.3
+      return
+
     super offset, alpha
   
   popUpCenteredAtHand: (world) ->
