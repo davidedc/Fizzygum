@@ -72,7 +72,7 @@ class ReconfigurablePaintMorph extends Widget
     @add @mainCanvas
 
     # overlayCanvas
-    @overlayCanvas = new OverlayCanvasMorph()
+    @overlayCanvas = new CanvasGlassTopWdgt()
     @overlayCanvas.underlyingCanvasMorph = @mainCanvas
     @overlayCanvas.disableDrops()
     @mainCanvas.add @overlayCanvas
