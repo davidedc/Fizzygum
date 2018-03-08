@@ -167,9 +167,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @contentsExtentWhenCollapsed = @contents.extent()
       @extentWhenCollapsed = @extent()
 
+      @editButton?.destroy()
+      @editButton = nil
+
   childBeingUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
+
+    @createAndAddEditButton()
 
   childCollapsed: (child) ->
     if child == @contents
@@ -234,8 +239,6 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if !@closeButton?
       @closeButton = new CloseIconButtonMorph @
 
-    if @contents?.providesAmenitiesForEditing and !@editButton?
-      @editButton = new EditIconButtonWdgt @
 
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonMorph()
@@ -246,13 +249,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @add @closeButton, nil, nil, nil, true
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 
-    if @editButton?
-      @add @editButton, nil, nil, nil, true
+    @createAndAddEditButton()
 
     @add @contents
 
     if !@resizer?
       @resizer = new HandleMorph @
+
+  createAndAddEditButton: ->
+    if @contents?.providesAmenitiesForEditing and !@editButton?
+      @editButton = new EditIconButtonWdgt @
+      @add @editButton, nil, nil, nil, true
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
@@ -384,7 +391,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     # edit button
     if @editButton? and @editButton.parent == @
-      buttonBounds = new Rectangle new Point labelRight + @padding, @top() + @padding
+      buttonBounds = new Rectangle new Point @right() - (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @editButton.doLayout buttonBounds
 
