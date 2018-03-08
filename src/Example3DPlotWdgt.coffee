@@ -172,26 +172,25 @@ class Example3DPlotWdgt extends Widget
         context.strokeStyle = 'grey'
       else
         context.strokeStyle = 'black'
+      context.beginPath()
 
       # draw the "horizontals" in the grid (each point x,y with x+1,y)
       for i in [0...eachGrid.width-1]
         for j in [0...eachGrid.height]
           if eachGrid.vertexIndexes[i+1+j*eachGrid.width]?
-            context.beginPath()
             context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
             context.lineTo points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[(i+1)+j*eachGrid.width]].y
-            context.closePath()
-            context.stroke()
 
       # draw the "verticals" in the grid (each point x,y with x,y+1)
       for i in [0...eachGrid.width]
         for j in [0...eachGrid.height-1]
           if eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]?
-            context.beginPath()
             context.moveTo points[eachGrid.vertexIndexes[i+j*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+j*eachGrid.width]].y
             context.lineTo points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].x, points[eachGrid.vertexIndexes[i+(j+1)*eachGrid.width]].y
             context.closePath()
-            context.stroke()
+
+      context.closePath()
+      context.stroke()
 
     context.globalAlpha = originalAlpha
 
