@@ -68,7 +68,7 @@ class SimpleDocumentWdgt extends Widget
     @toolsPanel.add new TemplatesButtonWdgt()
 
     @add @toolsPanel
-    @toolsPanel.lockAllChildern()
+    @toolsPanel.lockAllChildren()
 
     @invalidateLayout()
 
@@ -76,11 +76,11 @@ class SimpleDocumentWdgt extends Widget
     if @toolsPanel?
       @toolsPanel.destroy()
       @toolsPanel = nil
-      @simpleDocumentScrollPanel.lockAllChildern()
+      @simpleDocumentScrollPanel.lockAllChildren()
       @invalidateLayout()
     else
       @createToolsPanel()
-      @simpleDocumentScrollPanel.unlockAllChildern()
+      @simpleDocumentScrollPanel.unlockAllChildren()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts

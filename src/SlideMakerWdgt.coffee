@@ -44,11 +44,11 @@ class SlideMakerWdgt extends Widget
     if @toolsPanel?
       @toolsPanel.destroy()
       @toolsPanel = nil
-      @stretchablePanel.lockAllChildern()
+      @stretchablePanel.lockAllChildren()
       @invalidateLayout()
     else
       @createToolsPanel()
-      @stretchablePanel.unlockAllChildern()
+      @stretchablePanel.unlockAllChildren()
 
 
   buildAndConnectChildren: ->
@@ -96,7 +96,7 @@ class SlideMakerWdgt extends Widget
     @toolsPanel.add new ArrowSWIconWdgt()
     @toolsPanel.add new ArrowSEIconWdgt()
 
-    @toolsPanel.lockAllChildern()
+    @toolsPanel.lockAllChildren()
     @add @toolsPanel
     @invalidateLayout()
 

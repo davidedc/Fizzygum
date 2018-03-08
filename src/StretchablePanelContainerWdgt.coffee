@@ -184,8 +184,8 @@ class StretchablePanelContainerWdgt extends Widget
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
       if @allSubMorphsAreLocked()
-        menu.addMenuItem "unlock content", true, @, "unlockAllChildern", "lets you drag content in and out"
+        menu.addMenuItem "unlock content", true, @, "unlockAllChildren", "lets you drag content in and out"
       else
-        menu.addMenuItem "lock content", true, @, "lockAllChildern", "prevents dragging content in and out"
+        menu.addMenuItem "lock content", true, @, "lockAllChildren", "prevents dragging content in and out"
 
     menu.removeConsecutiveLines()

@@ -3698,7 +3698,7 @@ class Widget extends TreeNode
   # locking of contents. Not exactly the same as the other
   # type of locking i.e. "locking to panels"
 
-  lockAllChildern: ->
+  lockAllChildren: ->
     @disableDrops()
 
     childrenNotHandlesNorCarets = @children.filter (m) ->
@@ -3722,7 +3722,7 @@ class Widget extends TreeNode
           if each.isEditable?
             each.isEditable = false
 
-  unlockAllChildern: ->
+  unlockAllChildren: ->
     @enableDrops()
     @contents.enableDrops()
 
