@@ -432,9 +432,9 @@ class MenusHelper
   createVideoPlayIconWdgt: ->
     world.create new VideoPlayIconWdgt()
 
-  createSimpleDocumentEditorWdgt: ->
-    simpleDocumentEditor = new SimpleDocumentEditorWdgt()
-    wm = new WindowWdgt nil, nil, simpleDocumentEditor
+  createSimpleDocumentWdgt: ->
+    simpleDocument = new SimpleDocumentWdgt()
+    wm = new WindowWdgt nil, nil, simpleDocument
     wm.setExtent new Point 368, 335
     wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
     wm.fullRawMoveWithin world

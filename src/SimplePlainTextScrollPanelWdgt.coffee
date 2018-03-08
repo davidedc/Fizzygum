@@ -4,10 +4,10 @@
 # The SimplePlainTextScrollPanelWdgt allows you show/edit ONE
 # text blurb only.
 # It doesn't allow you to view/edit multiple text blurbs or
-# other Widgets like the SimpleVerticalStackPanelWdgt/DocumentEditor do.
+# other Widgets like the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor do.
 #
 # However, what the SimplePlainTextScrollPanelWdgt DOES
-# in respect to the SimpleVerticalStackPanelWdgt/DocumentEditor is to
+# in respect to the SimpleVerticalStackPanelWdgt/DocumentViewerOrEditor is to
 # view/edit UNWRAPPED text, which is quite important for
 # code, since really code must have the option of an
 # unwrapped view.

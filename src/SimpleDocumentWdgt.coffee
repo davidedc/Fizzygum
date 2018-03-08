@@ -1,4 +1,9 @@
-class SimpleDocumentEditorWdgt extends Widget
+# This simple-named widget is a user facing widget that
+# provides viewing and editing capabilities for "documents"...
+# where documents are stacks of items that must stay within
+# a certain width, but can stretch for any height.
+
+class SimpleDocumentWdgt extends Widget
 
 
   toolsPanel: nil
@@ -27,7 +32,7 @@ class SimpleDocumentEditorWdgt extends Widget
     @buildAndConnectChildren()
 
   colloquialName: ->
-    "Simple document editor"
+    "Simple document"
 
   representativeIcon: ->
     new TypewriterIconWdgt()
@@ -70,7 +75,7 @@ class SimpleDocumentEditorWdgt extends Widget
   editButtonPressedFromWindowBar: ->
     if @toolsPanel?
       @toolsPanel.destroy()
-      @toolsPanel = null
+      @toolsPanel = nil
       @simpleDocumentScrollPanel.lockAllChildern()
       @invalidateLayout()
     else

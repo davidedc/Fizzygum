@@ -10,9 +10,9 @@ class ChangeFontButtonWdgt extends IconMorph
   color_pressed: new Color 128, 128, 128
   color_normal: new Color 230, 230, 230
 
-  simpleDocumentEditor: nil
+  simpleDocument: nil
 
-  constructor: (@simpleDocumentEditor) ->
+  constructor: (@simpleDocument) ->
     super
     @appearance = new ChangeFontIconAppearance @
 
@@ -23,9 +23,9 @@ class ChangeFontButtonWdgt extends IconMorph
   mouseClickLeft: ->
     # if there is already a font selection menu for the editor,
     # bring that one up, otherwise create one and rember that we created it
-    if @simpleDocumentEditor.fontSelectionMenu? and
-     !@simpleDocumentEditor.fontSelectionMenu.destroyed
-      @simpleDocumentEditor.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
+    if @simpleDocument.fontSelectionMenu? and
+     !@simpleDocument.fontSelectionMenu.destroyed
+      @simpleDocument.fontSelectionMenu.popUp @position().subtract(new Point 80,0), world
     else
       menu = new MenuMorph @, false, @, true, true, "Fonts"
       menu.addMenuItem "Arial", true, @, "setFontName", nil, nil, nil, nil, nil, "justArialFontStack"
@@ -44,7 +44,7 @@ class ChangeFontButtonWdgt extends IconMorph
       menu.forAllChildrenBottomToTop (eachDescendent) ->
         eachDescendent.editorContentPropertyChangerButton = true
 
-      @simpleDocumentEditor.fontSelectionMenu = menu
+      @simpleDocument.fontSelectionMenu = menu
 
   setFontName: (ignored1, ignored2, theNewFontName) ->
     if world.caret?
