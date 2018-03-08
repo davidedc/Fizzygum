@@ -27,6 +27,9 @@ class SimpleDocumentEditorWdgt extends Widget
   colloquialName: ->
     "Simple document editor"
 
+  representativeIcon: ->
+    new TypewriterIconWdgt()
+
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()

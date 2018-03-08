@@ -4,7 +4,7 @@ class ToolPanelWdgt extends PanelWdgt
   numberOfIconsOnPanel: 0
   internalPadding: 5
   externalPadding: 10
-  thumbnailSize: 40
+  thumbnailSize: 30
 
   add: (aMorph, position = nil, layoutSpec = LayoutSpec.ATTACHEDAS_FREEFLOATING, beingDropped, unused, positionOnScreen) ->
 

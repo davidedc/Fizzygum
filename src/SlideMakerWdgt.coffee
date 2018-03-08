@@ -25,7 +25,7 @@ class SlideMakerWdgt extends Widget
     "Slide Maker"
 
   representativeIcon: ->
-    new PaintBucketIconWdgt()
+    new SlideMakerIconWdgt()
 
   rawSetExtent: (aPoint) ->
     super
@@ -118,7 +118,7 @@ class SlideMakerWdgt extends Widget
 
     if @scrollingTools.parent == @
       @scrollingTools.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
-      @scrollingTools.rawSetExtent new Point 115, @height() - 2 * @externalPadding
+      @scrollingTools.rawSetExtent new Point 95, @height() - 2 * @externalPadding
 
 
     # stretchablePanel --------------------------

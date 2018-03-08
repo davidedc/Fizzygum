@@ -168,10 +168,7 @@ class Example3DPlotWdgt extends Widget
 
     for k in [0...@grids.length]
       eachGrid = @grids[k]
-      if k==0
-        context.strokeStyle = 'grey'
-      else
-        context.strokeStyle = 'black'
+
       context.beginPath()
 
       # draw the "horizontals" in the grid (each point x,y with x+1,y)
@@ -190,6 +187,11 @@ class Example3DPlotWdgt extends Widget
             context.closePath()
 
       context.closePath()
+
+      if k==0
+        context.strokeStyle = 'grey'
+      else
+        context.strokeStyle = 'black'
       context.stroke()
 
     context.globalAlpha = originalAlpha
