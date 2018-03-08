@@ -3695,7 +3695,7 @@ class Widget extends TreeNode
     @isLockingToPanels = false
 
   # ---------------------------------------------------------------------
-  # locking of contents. Not the same as the other
+  # locking of contents. Not exactly the same as the other
   # type of locking i.e. "locking to panels"
 
   lockAllChildern: ->
