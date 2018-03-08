@@ -79,6 +79,8 @@ class SlideMakerWdgt extends Widget
     @scrollingTools.add new ArrowNEIconWdgt()
     @scrollingTools.add new ArrowSWIconWdgt()
     @scrollingTools.add new ArrowSEIconWdgt()
+
+    @scrollingTools.lockAllChildern()
     @add @scrollingTools
 
     @invalidateLayout()

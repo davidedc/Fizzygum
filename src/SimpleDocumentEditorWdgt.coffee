@@ -53,6 +53,7 @@ class SimpleDocumentEditorWdgt extends Widget
     @tempPromptEntryField.add new TemplatesButtonWdgt()
 
     @add @tempPromptEntryField
+    @tempPromptEntryField.lockAllChildern()
 
     @outputTextArea = new SimpleDocumentScrollPanelWdgt()
     @add @outputTextArea
