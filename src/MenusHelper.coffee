@@ -187,6 +187,65 @@ class MenusHelper
     fizzyPaintLauncher.setExtent new Point 75, 75
     fizzyPaintLauncher.fullChanged()
 
+  createSimpleDocumentLauncherAndItsIcon: ->
+    scriptWdgt = new ScriptWdgt """
+      reconfPaint = new SimpleDocumentWdgt()
+      wm = new WindowWdgt nil, nil, reconfPaint
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple docs", new TypewriterIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add fizzyPaintLauncher
+    fizzyPaintLauncher.setExtent new Point 75, 75
+    fizzyPaintLauncher.fullChanged()
+
+  createSimpleSlideLauncherAndItsIcon: ->
+    scriptWdgt = new ScriptWdgt """
+      reconfPaint = new SimpleSlideWdgt()
+      wm = new WindowWdgt nil, nil, reconfPaint
+      wm.setExtent new Point 460, 400
+      wm.fullRawMoveTo world.hand.position()
+      wm.fullRawMoveWithin world
+      world.add wm
+      wm.changed()
+    """
+    # the starting script string above is not
+    # actually saved, it's just there as starting
+    # content, so let's save it
+    scriptWdgt.saveScript()
+
+    wm = new WindowWdgt nil, nil, scriptWdgt
+    wm.setExtent new Point 460, 400
+    wm.fullRawMoveTo world.hand.position().subtract new Point 50, 100
+    wm.fullRawMoveWithin world
+    world.add wm
+    wm.changed()
+
+    fizzyPaintLauncher = new IconicDesktopSystemScriptShortcutWdgt wm, "Simple slides", new SimpleSlideIconWdgt()
+    # this "add" is going to try to position the reference
+    # in some smart way (i.e. according to a grid)
+    world.add fizzyPaintLauncher
+    fizzyPaintLauncher.setExtent new Point 75, 75
+    fizzyPaintLauncher.fullChanged()
+
+
   createFanout: ->
     fanoutWdgt = new FanoutWdgt()
     world.create fanoutWdgt
