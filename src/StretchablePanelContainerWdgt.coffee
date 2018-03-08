@@ -172,3 +172,20 @@ class StretchablePanelContainerWdgt extends Widget
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+  # same as simpledocumentscrollpanel, you can lock the contents.
+  # worth factoring it out as a mixin?
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+    super
+
+    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
+      menu.addLine()
+      if @allSubMorphsAreLocked()
+        menu.addMenuItem "unlock content", true, @, "unlockAllChildern", "lets you drag content in and out"
+      else
+        menu.addMenuItem "lock content", true, @, "lockAllChildern", "prevents dragging content in and out"
+
+    menu.removeConsecutiveLines()
