@@ -29,9 +29,9 @@ class MenusHelper
     world.add wm
     wm.changed()
 
-  createSlideMakerWdgt: ->
-    SlideMaker = new SlideMakerWdgt()
-    wm = new WindowWdgt nil, nil, SlideMaker
+  createSimpleSlideWdgt: ->
+    simpleSlide = new SimpleSlideWdgt()
+    wm = new WindowWdgt nil, nil, simpleSlide
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position()
     wm.fullRawMoveWithin world
@@ -296,7 +296,7 @@ class MenusHelper
     menu.addMenuItem "Vaporwave background", true, menusHelper, "createVaporwaveBackgroundIconWdgt"
     menu.addMenuItem "Change font icon", true, menusHelper, "createChangeFontIconWdgt"
     menu.addMenuItem "C <-> F converter icon", true, menusHelper, "createCFDegreesConverterIconWdgt"
-    menu.addMenuItem "Slide Maker icon", true, menusHelper, "createSlideMakerIconWdgt"
+    menu.addMenuItem "Simple slide icon", true, menusHelper, "createSimpleSlideIconWdgt"
     menu.addMenuItem "Typewriter icon", true, menusHelper, "createTypewriterIconWdgt"
     menu.addMenuItem "Little world icon", true, menusHelper, "createLittleWorldIconWdgt"
     menu.addMenuItem "Little USA icon", true, menusHelper, "createLittleUSAIconWdgt"
@@ -326,8 +326,8 @@ class MenusHelper
   createChangeFontIconWdgt : ->
     world.create new ChangeFontIconWdgt()
 
-  createSlideMakerIconWdgt : ->
-    world.create new SlideMakerIconWdgt()
+  createSimpleSlideIconWdgt : ->
+    world.create new SimpleSlideIconWdgt()
 
   createTypewriterIconWdgt : ->
     world.create new TypewriterIconWdgt()

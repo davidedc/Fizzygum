@@ -1,4 +1,4 @@
-class SlideMakerWdgt extends Widget
+class SimpleSlideWdgt extends Widget
 
   stretchablePanel: nil
   toolsPanel: nil
@@ -24,10 +24,10 @@ class SlideMakerWdgt extends Widget
     @invalidateLayout()
 
   colloquialName: ->   
-    "Slide Maker"
+    "Simple slide"
 
   representativeIcon: ->
-    new SlideMakerIconWdgt()
+    new SimpleSlideIconWdgt()
 
   rawSetExtent: (aPoint) ->
     super
