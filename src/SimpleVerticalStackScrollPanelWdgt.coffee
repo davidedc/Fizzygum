@@ -24,53 +24,6 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
   colloquialName: ->
     "stack"
 
-  lockAllChildern: ->
-    @disableDrops()
-    @contents.disableDrops()
-
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
-
-    if childrenNotHandlesNorCarets?
-      for each in childrenNotHandlesNorCarets
-        each.lockToPanels()
-        if each.isEditable?
-          each.isEditable = false
-
-  unlockAllChildern: ->
-    @enableDrops()
-    @contents.enableDrops()
-
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
-
-    if childrenNotHandlesNorCarets?
-      for each in childrenNotHandlesNorCarets
-        each.unlockFromPanels()
-        if each.isEditable?
-          each.isEditable = true
-
-  allSubMorphsAreLocked: ->
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
-
-    if !childrenNotHandlesNorCarets?
-      return true
-
-    if childrenNotHandlesNorCarets.length == 0
-      return true
-
-    notLocking = childrenNotHandlesNorCarets.filter (each) ->
-      !each.isLockingToPanels
-
-    if !notLocking?
-      return false
-
-    if notLocking.length != 0
-      return false
-
-    return true
-
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
     menu.removeMenuItem "move all inside"
