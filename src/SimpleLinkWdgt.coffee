@@ -23,7 +23,7 @@ class SimpleLinkWdgt extends Widget
     @buildAndConnectChildren()
 
   colloquialName: ->
-    "Simple document editor"
+    "Simple link"
 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
