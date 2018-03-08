@@ -3746,7 +3746,9 @@ class Widget extends TreeNode
       return true
 
     notLocking = childrenNotHandlesNorCarets.filter (each) ->
-      !each.isLockingToPanels
+      if each.isEditable? and each.isEditable
+        return true
+      return !each.isLockingToPanels
 
     if !notLocking?
       return false
