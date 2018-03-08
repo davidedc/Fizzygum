@@ -23,6 +23,14 @@ class IconicDesktopSystemDocumentShortcutWdgt extends IconicDesktopSystemShortcu
 
     myPosition = @positionAmongSiblings()
     whatToBringUp = @target.findRootForGrab()
+    # things like draggable graphs have no root for grab,
+    # however since they are in the basement "directly" on their own
+    # it's OK to bring those up (as opposed to things
+    # that are part of other widgets that are in the basement,
+    # in that case you'd tear it off an existing widget and it
+    # would probably be a bad thing)
+    if !whatToBringUp? and @target.isDirectlyInBasement()
+      whatToBringUp = @target
     if !whatToBringUp?
       @inform "The referenced item does exist\nhowever it's part of something\nthat can't be grabbed!"
     else
