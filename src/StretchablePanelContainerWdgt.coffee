@@ -178,14 +178,34 @@ class StretchablePanelContainerWdgt extends Widget
   addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
     super
 
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
+    childrenNotHandlesNorCarets = @children.filter (m) ->
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
     if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
       menu.addLine()
-      if @allSubMorphsAreLocked()
-        menu.addMenuItem "unlock content", true, @, "unlockAllChildren", "lets you drag content in and out"
+      if !@dragsDropsAndEditingEnabled
+        menu.addMenuItem "enable editing", true, @, "enableDragsDropsAndEditing", "lets you drag content in and out"
       else
-        menu.addMenuItem "lock content", true, @, "lockAllChildren", "prevents dragging content in and out"
+        menu.addMenuItem "disable editing", true, @, "disableDragsDropsAndEditing", "prevents dragging content in and out"
 
     menu.removeConsecutiveLines()
+
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    debugger
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleSlideWdgt
+      @parent.enableDragsDropsAndEditing @
+    else
+      super @
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    debugger
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent != triggeringWidget and @parent instanceof SimpleSlideWdgt
+      @parent.disableDragsDropsAndEditing @
+    else
+      super @

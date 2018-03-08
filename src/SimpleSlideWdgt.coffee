@@ -41,15 +41,28 @@ class SimpleSlideWdgt extends Widget
       containerWindow.close()
 
   editButtonPressedFromWindowBar: ->
-    if @toolsPanel?
-      @toolsPanel.destroy()
-      @toolsPanel = nil
-      @stretchablePanel.lockAllChildren()
-      @invalidateLayout()
+    if @dragsDropsAndEditingEnabled
+      @disableDragsDropsAndEditing @
     else
-      @createToolsPanel()
-      @stretchablePanel.unlockAllChildren()
+      @enableDragsDropsAndEditing @
 
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = true
+    @createToolsPanel()
+    @stretchablePanel.enableDragsDropsAndEditing @
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = false
+    @toolsPanel.destroy()
+    @toolsPanel = nil
+    @stretchablePanel.disableDragsDropsAndEditing @
+    @invalidateLayout()
 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
@@ -96,8 +109,9 @@ class SimpleSlideWdgt extends Widget
     @toolsPanel.add new ArrowSWIconWdgt()
     @toolsPanel.add new ArrowSEIconWdgt()
 
-    @toolsPanel.lockAllChildren()
+    @toolsPanel.disableDragsDropsAndEditing()
     @add @toolsPanel
+    @dragsDropsAndEditingEnabled = true
     @invalidateLayout()
 
   createNewStretchablePanel: ->
@@ -142,13 +156,13 @@ class SimpleSlideWdgt extends Widget
 
     stretchablePanelWidth = @width() - 2*@externalPadding
     
-    if @toolsPanel?
+    if @dragsDropsAndEditingEnabled
       stretchablePanelWidth -= @toolsPanel.width() + @internalPadding
 
     b = @bottom() - (2 * @externalPadding)
     stretchablePanelHeight =  @height() - 2 * @externalPadding
     stretchablePanelBottom = labelBottom + stretchablePanelHeight
-    if @toolsPanel?
+    if @dragsDropsAndEditingEnabled
       stretchablePanelLeft = @toolsPanel.right() + @internalPadding
     else
       stretchablePanelLeft = @left() + @externalPadding
@@ -166,4 +180,22 @@ class SimpleSlideWdgt extends Widget
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
+
+  # same as simpledocumentscrollpanel, you can lock the contents.
+  # worth factoring it out as a mixin?
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+    debugger
+    super
+
+    childrenNotHandlesNorCarets = @children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
+      menu.addLine()
+      if !@dragsDropsAndEditingEnabled
+        menu.addMenuItem "enable editing", true, @, "enableDragsDropsAndEditing", "lets you drag content in and out"
+      else
+        menu.addMenuItem "disable editing", true, @, "disableDragsDropsAndEditing", "prevents dragging content in and out"
+
+    menu.removeConsecutiveLines()
 

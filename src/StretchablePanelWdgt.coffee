@@ -59,3 +59,39 @@ class StretchablePanelWdgt extends PanelWdgt
 
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
+
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+    debugger
+    super
+
+    childrenNotHandlesNorCarets = @children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
+      menu.addLine()
+      if !@dragsDropsAndEditingEnabled
+        menu.addMenuItem "enable editing", true, @, "enableDragsDropsAndEditing", "lets you drag content in and out"
+      else
+        menu.addMenuItem "disable editing", true, @, "disableDragsDropsAndEditing", "prevents dragging content in and out"
+
+    menu.removeConsecutiveLines()
+
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    debugger
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent != triggeringWidget and @parent instanceof StretchablePanelContainerWdgt
+      @parent.enableDragsDropsAndEditing @
+    else
+      super @
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    debugger
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    if @parent? and @parent != triggeringWidget and @parent instanceof StretchablePanelContainerWdgt
+      @parent.disableDragsDropsAndEditing @
+    else
+      super @

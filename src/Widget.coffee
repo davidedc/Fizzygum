@@ -40,6 +40,8 @@ class Widget extends TreeNode
 
   appearance: nil
 
+  dragsDropsAndEditingEnabled: true
+
   # Just some tests here ////////////////////
   propertyUpTheChain: [1,2,3]
   morphMethod: ->
@@ -3695,13 +3697,28 @@ class Widget extends TreeNode
     @isLockingToPanels = false
 
   # ---------------------------------------------------------------------
-  # locking of contents. Not exactly the same as the other
-  # type of locking i.e. "locking to panels"
+  # locking of contents
 
-  lockAllChildren: ->
-    @disableDrops()
+  disableDragsDropsAndEditing: ->
+    debugger
 
-    childrenNotHandlesNorCarets = @children.filter (m) ->
+    if !@dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = false
+
+    if @contents?
+      whereToAct = @contents
+    else
+      whereToAct = @
+
+    if !whereToAct.dragsDropsAndEditingEnabled
+      return
+
+    whereToAct.disableDrops()
+
+    whereToAct.dragsDropsAndEditingEnabled = false
+
+    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
     if childrenNotHandlesNorCarets?
@@ -3709,24 +3726,29 @@ class Widget extends TreeNode
         each.lockToPanels()
         if each.isEditable?
           each.isEditable = false
+          if world.caret?.target == each
+            world.stopEditing()
+
+
+  enableDragsDropsAndEditing: ->
+
+    if @dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = true
 
     if @contents?
-      @contents.disableDrops()
+      whereToAct = @contents
+    else
+      whereToAct = @
 
-      childrenNotHandlesNorCarets = @contents.children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+    if whereToAct.dragsDropsAndEditingEnabled
+      return
 
-      if childrenNotHandlesNorCarets?
-        for each in childrenNotHandlesNorCarets
-          each.lockToPanels()
-          if each.isEditable?
-            each.isEditable = false
+    whereToAct.dragsDropsAndEditingEnabled = true
 
-  unlockAllChildren: ->
-    @enableDrops()
-    @contents.enableDrops()
+    whereToAct.enableDrops()
 
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
+    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
       !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
     if childrenNotHandlesNorCarets?
@@ -3735,28 +3757,7 @@ class Widget extends TreeNode
         if each.isEditable?
           each.isEditable = true
 
-  allSubMorphsAreLocked: ->
-    childrenNotHandlesNorCarets = @contents?.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
-    if !childrenNotHandlesNorCarets?
-      return true
-
-    if childrenNotHandlesNorCarets.length == 0
-      return true
-
-    notLocking = childrenNotHandlesNorCarets.filter (each) ->
-      if each.isEditable? and each.isEditable
-        return true
-      return !each.isLockingToPanels
-
-    if !notLocking?
-      return false
-
-    if notLocking.length != 0
-      return false
-
-    return true
 
   # ---------------------------------------------------------------------
 

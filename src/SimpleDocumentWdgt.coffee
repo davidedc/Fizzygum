@@ -68,19 +68,34 @@ class SimpleDocumentWdgt extends Widget
     @toolsPanel.add new TemplatesButtonWdgt()
 
     @add @toolsPanel
-    @toolsPanel.lockAllChildren()
+    @toolsPanel.disableDragsDropsAndEditing()
 
+    @dragsDropsAndEditingEnabled = true
     @invalidateLayout()
 
   editButtonPressedFromWindowBar: ->
-    if @toolsPanel?
-      @toolsPanel.destroy()
-      @toolsPanel = nil
-      @simpleDocumentScrollPanel.lockAllChildren()
-      @invalidateLayout()
+    if @dragsDropsAndEditingEnabled
+      @disableDragsDropsAndEditing @
     else
-      @createToolsPanel()
-      @simpleDocumentScrollPanel.unlockAllChildren()
+      @enableDragsDropsAndEditing @
+
+  enableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if @dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = true
+    @createToolsPanel()
+    @simpleDocumentScrollPanel.enableDragsDropsAndEditing @
+
+  disableDragsDropsAndEditing: (triggeringWidget) ->
+    if !triggeringWidget? then triggeringWidget = @
+    if !@dragsDropsAndEditingEnabled
+      return
+    @toolsPanel.destroy()
+    @toolsPanel = nil
+    @dragsDropsAndEditingEnabled = false
+    @simpleDocumentScrollPanel.disableDragsDropsAndEditing @
+    @invalidateLayout()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
@@ -109,7 +124,7 @@ class SimpleDocumentWdgt extends Widget
     simpleDocumentScrollPanelTop = @top() + @externalPadding
     toolsPanelHeight = 0
 
-    if @toolsPanel?
+    if @dragsDropsAndEditingEnabled
       toolsPanelHeight = 35
       availableHeight -= @internalPadding
       simpleDocumentScrollPanelTop += toolsPanelHeight + @internalPadding
@@ -117,7 +132,7 @@ class SimpleDocumentWdgt extends Widget
     simpleDocumentScrollPanelHeight = availableHeight - toolsPanelHeight
 
 
-    if @toolsPanel? and @toolsPanel.parent == @
+    if @toolsPanel?.parent == @
       @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
       @toolsPanel.rawSetExtent new Point @width() - 2 * @externalPadding, toolsPanelHeight
 
@@ -133,4 +148,21 @@ class SimpleDocumentWdgt extends Widget
 
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
+
+  # same as simpledocumentscrollpanel, you can lock the contents.
+  # worth factoring it out as a mixin?
+  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
+    super
+
+    childrenNotHandlesNorCarets = @children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
+      menu.addLine()
+      if !@dragsDropsAndEditingEnabled
+        menu.addMenuItem "enable editing", true, @, "enableDragsDropsAndEditing", "lets you drag content in and out"
+      else
+        menu.addMenuItem "disable editing", true, @, "disableDragsDropsAndEditing", "prevents dragging content in and out"
+
+    menu.removeConsecutiveLines()
 
