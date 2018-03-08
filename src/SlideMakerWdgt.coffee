@@ -1,7 +1,7 @@
 class SlideMakerWdgt extends Widget
 
   stretchablePanel: nil
-  scrollingTools: nil
+  toolsPanel: nil
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -14,6 +14,8 @@ class SlideMakerWdgt extends Widget
   # components. It doesn't necessarily need to be equal to the
   # external padding
   internalPadding: 5
+
+  providesAmenitiesForEditing: true
 
   constructor: ->
     debugger
@@ -38,51 +40,64 @@ class SlideMakerWdgt extends Widget
     else
       containerWindow.close()
 
+  editButtonPressedFromWindowBar: ->
+    if @toolsPanel?
+      @toolsPanel.destroy()
+      @toolsPanel = nil
+      @stretchablePanel.lockAllChildern()
+      @invalidateLayout()
+    else
+      @createToolsPanel()
+      @stretchablePanel.unlockAllChildern()
+
 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    # stretchablePanel
+    @createToolsPanel()
     @createNewStretchablePanel()
 
+
+    @invalidateLayout()
+
+  createToolsPanel: ->
     # tools -------------------------------
-    @scrollingTools = new ScrollPanelWdgt new ToolPanelWdgt()
+    @toolsPanel = new ScrollPanelWdgt new ToolPanelWdgt()
 
-    @scrollingTools.add new TextBoxCreatorButtonWdgt()
-    @scrollingTools.add new ExternalLinkCreatorButtonWdgt()
-    @scrollingTools.add new VideoPlayCreatorButtonWdgt()
+    @toolsPanel.add new TextBoxCreatorButtonWdgt()
+    @toolsPanel.add new ExternalLinkCreatorButtonWdgt()
+    @toolsPanel.add new VideoPlayCreatorButtonWdgt()
 
-    @scrollingTools.add new WorldMapCreatorButtonWdgt()
-    @scrollingTools.add new USAMapCreatorButtonWdgt()
+    @toolsPanel.add new WorldMapCreatorButtonWdgt()
+    @toolsPanel.add new USAMapCreatorButtonWdgt()
 
-    @scrollingTools.add new RectangleMorph()
+    @toolsPanel.add new RectangleMorph()
 
-    @scrollingTools.add new MapPinIconWdgt()
+    @toolsPanel.add new MapPinIconWdgt()
 
-    @scrollingTools.add new DestroyIconMorph()
-    @scrollingTools.add new ScratchAreaIconMorph()
-    @scrollingTools.add new FloraIconMorph()
-    @scrollingTools.add new ScooterIconMorph()
-    @scrollingTools.add new HeartIconMorph()
+    @toolsPanel.add new DestroyIconMorph()
+    @toolsPanel.add new ScratchAreaIconMorph()
+    @toolsPanel.add new FloraIconMorph()
+    @toolsPanel.add new ScooterIconMorph()
+    @toolsPanel.add new HeartIconMorph()
 
-    @scrollingTools.add new FizzygumLogoIconWdgt()
-    @scrollingTools.add new FizzygumLogoWithTextIconWdgt()
-    @scrollingTools.add new VaporwaveBackgroundIconWdgt()
-    @scrollingTools.add new VaporwaveSunIconWdgt()
+    @toolsPanel.add new FizzygumLogoIconWdgt()
+    @toolsPanel.add new FizzygumLogoWithTextIconWdgt()
+    @toolsPanel.add new VaporwaveBackgroundIconWdgt()
+    @toolsPanel.add new VaporwaveSunIconWdgt()
 
-    @scrollingTools.add new ArrowNIconWdgt()
-    @scrollingTools.add new ArrowSIconWdgt()
-    @scrollingTools.add new ArrowWIconWdgt()
-    @scrollingTools.add new ArrowEIconWdgt()
-    @scrollingTools.add new ArrowNWIconWdgt()
-    @scrollingTools.add new ArrowNEIconWdgt()
-    @scrollingTools.add new ArrowSWIconWdgt()
-    @scrollingTools.add new ArrowSEIconWdgt()
+    @toolsPanel.add new ArrowNIconWdgt()
+    @toolsPanel.add new ArrowSIconWdgt()
+    @toolsPanel.add new ArrowWIconWdgt()
+    @toolsPanel.add new ArrowEIconWdgt()
+    @toolsPanel.add new ArrowNWIconWdgt()
+    @toolsPanel.add new ArrowNEIconWdgt()
+    @toolsPanel.add new ArrowSWIconWdgt()
+    @toolsPanel.add new ArrowSEIconWdgt()
 
-    @scrollingTools.lockAllChildern()
-    @add @scrollingTools
-
+    @toolsPanel.lockAllChildern()
+    @add @toolsPanel
     @invalidateLayout()
 
   createNewStretchablePanel: ->
@@ -118,17 +133,25 @@ class SlideMakerWdgt extends Widget
 
     b = @bottom() - (2 * @externalPadding)
 
-    if @scrollingTools.parent == @
-      @scrollingTools.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
-      @scrollingTools.rawSetExtent new Point 95, @height() - 2 * @externalPadding
+    if @toolsPanel?.parent == @
+      @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, labelBottom
+      @toolsPanel.rawSetExtent new Point 95, @height() - 2 * @externalPadding
 
 
     # stretchablePanel --------------------------
-    stretchablePanelWidth = @width() - @scrollingTools.width() - 2*@externalPadding - @internalPadding
+
+    stretchablePanelWidth = @width() - 2*@externalPadding
+    
+    if @toolsPanel?
+      stretchablePanelWidth -= @toolsPanel.width() + @internalPadding
+
     b = @bottom() - (2 * @externalPadding)
     stretchablePanelHeight =  @height() - 2 * @externalPadding
     stretchablePanelBottom = labelBottom + stretchablePanelHeight
-    stretchablePanelLeft = @scrollingTools.right() + @internalPadding
+    if @toolsPanel?
+      stretchablePanelLeft = @toolsPanel.right() + @internalPadding
+    else
+      stretchablePanelLeft = @left() + @externalPadding
 
     if @stretchablePanel.parent == @
       @stretchablePanel.fullRawMoveTo new Point stretchablePanelLeft, labelBottom
