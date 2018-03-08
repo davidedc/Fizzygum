@@ -127,7 +127,7 @@ class TreeNode
     if @parent?
       if @parent.gcSessionId == newGcSessionId
         return
-      if @parent?.parent?.parent instanceof BasementWdgt
+      if @isDirectlyInBasement()
         return
       @parent.markItAndItsParentsAsReachable newGcSessionId
   
@@ -139,6 +139,14 @@ class TreeNode
       return false
     return true
 
+  # check if the widget is on its own in the basement
+  # (rather than being part of a widget that is in the
+  # basement)
+  isDirectlyInBasement: ->
+    @parent?.parent?.parent instanceof BasementWdgt
+
+  # check if it's in the basement on its own or
+  # as part of another widget.
   isInBasement: ->
     thereCouldBeOne = @allParentsBottomToTopSuchThat (eachWdgt) ->
       eachWdgt instanceof BasementWdgt 
