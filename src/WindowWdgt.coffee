@@ -8,6 +8,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   label: nil
   closeButton: nil
+  editButton: nil
   collapseUncollapseSwitchButton: nil
   labelContent: nil
   resizer: nil
@@ -233,6 +234,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if !@closeButton?
       @closeButton = new CloseIconButtonMorph @
 
+    if @contents?.providesAmenitiesForEditing and !@editButton?
+      @editButton = new EditIconButtonWdgt @
+
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonMorph()
       uncollapseButton = new UncollapseIconButtonMorph()
@@ -241,6 +245,9 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @add @closeButton, nil, nil, nil, true
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
+
+    if @editButton?
+      @add @editButton, nil, nil, nil, true
 
     @add @contents
 
@@ -367,11 +374,20 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
       labelTop = @top() + @padding
       labelRight = @right() - @padding
+      if @editButton?
+        labelRight -= 1 * (closeIconSize + @padding)
       labelWidth = labelRight - labelLeft
 
       labelBounds = new Rectangle new Point labelLeft, labelTop
       labelBounds = labelBounds.setBoundsWidthAndHeight labelWidth, 15
       @label.rawSetBounds labelBounds
+
+    # edit button
+    if @editButton? and @editButton.parent == @
+      buttonBounds = new Rectangle new Point labelRight + @padding, @top() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
+      @editButton.doLayout buttonBounds
+
 
     @resizer?.silentUpdateResizerHandlePosition()
 

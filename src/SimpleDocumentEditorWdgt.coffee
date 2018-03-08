@@ -1,12 +1,12 @@
 class SimpleDocumentEditorWdgt extends Widget
 
 
-  tempPromptEntryField: nil
+  toolsPanel: nil
   defaultContents: nil
   textMorph: nil
 
-  outputTextArea: nil
-  outputTextAreaText: nil
+  simpleDocumentScrollPanel: nil
+  simpleDocumentScrollPanelText: nil
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -19,6 +19,8 @@ class SimpleDocumentEditorWdgt extends Widget
   # components. It doesn't necessarily need to be equal to the
   # external padding
   internalPadding: 5
+
+  providesAmenitiesForEditing: true
 
   constructor: (@defaultContents = "") ->
     super new Point 368, 335
@@ -34,32 +36,46 @@ class SimpleDocumentEditorWdgt extends Widget
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
 
-    @tempPromptEntryField = new HorizontalMenuPanelWdgt()
-    @tempPromptEntryField.strokeColor = nil
-    @tempPromptEntryField.rawSetExtent new Point 300,10
 
-
-    @tempPromptEntryField.add new ChangeFontButtonWdgt @
-    @tempPromptEntryField.add new BoldButtonWdgt()
-    @tempPromptEntryField.add new ItalicButtonWdgt()
-    @tempPromptEntryField.add new FormatAsCodeButtonWdgt()
-    @tempPromptEntryField.add new IncreaseFontSizeButtonWdgt()
-    @tempPromptEntryField.add new DecreaseFontSizeButtonWdgt()
-
-    @tempPromptEntryField.add new AlignLeftButtonWdgt()
-    @tempPromptEntryField.add new AlignCenterButtonWdgt()
-    @tempPromptEntryField.add new AlignRightButtonWdgt()
-
-    @tempPromptEntryField.add new TemplatesButtonWdgt()
-
-    @add @tempPromptEntryField
-    @tempPromptEntryField.lockAllChildern()
-
-    @outputTextArea = new SimpleDocumentScrollPanelWdgt()
-    @add @outputTextArea
-
+    @createToolsPanel()
+    @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt()
+    @add @simpleDocumentScrollPanel
 
     @invalidateLayout()
+
+  createToolsPanel: ->
+    @toolsPanel = new HorizontalMenuPanelWdgt()
+    @toolsPanel.strokeColor = nil
+    @toolsPanel.rawSetExtent new Point 300,10
+
+
+    @toolsPanel.add new ChangeFontButtonWdgt @
+    @toolsPanel.add new BoldButtonWdgt()
+    @toolsPanel.add new ItalicButtonWdgt()
+    @toolsPanel.add new FormatAsCodeButtonWdgt()
+    @toolsPanel.add new IncreaseFontSizeButtonWdgt()
+    @toolsPanel.add new DecreaseFontSizeButtonWdgt()
+
+    @toolsPanel.add new AlignLeftButtonWdgt()
+    @toolsPanel.add new AlignCenterButtonWdgt()
+    @toolsPanel.add new AlignRightButtonWdgt()
+
+    @toolsPanel.add new TemplatesButtonWdgt()
+
+    @add @toolsPanel
+    @toolsPanel.lockAllChildern()
+
+    @invalidateLayout()
+
+  editButtonPressedFromWindowBar: ->
+    if @toolsPanel?
+      @toolsPanel.destroy()
+      @toolsPanel = null
+      @simpleDocumentScrollPanel.lockAllChildern()
+      @invalidateLayout()
+    else
+      @createToolsPanel()
+      @simpleDocumentScrollPanel.unlockAllChildern()
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
@@ -84,19 +100,25 @@ class SimpleDocumentEditorWdgt extends Widget
     # going to be painted and moved OK.
     trackChanges.push false
 
-    availableHeight = @height() - 2 * @externalPadding - @internalPadding
-    text1Height = 35
-    text2Height = availableHeight - text1Height
+    availableHeight = @height() - 2 * @externalPadding
+    simpleDocumentScrollPanelTop = @top() + @externalPadding
+    toolsPanelHeight = 0
 
-    textBottom = @top() + @externalPadding + text1Height
+    if @toolsPanel?
+      toolsPanelHeight = 35
+      availableHeight -= @internalPadding
+      simpleDocumentScrollPanelTop += toolsPanelHeight + @internalPadding
 
-    if @tempPromptEntryField.parent == @
-      @tempPromptEntryField.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
-      @tempPromptEntryField.rawSetExtent new Point @width() - 2 * @externalPadding, text1Height
+    simpleDocumentScrollPanelHeight = availableHeight - toolsPanelHeight
 
-    if @outputTextArea.parent == @
-      @outputTextArea.fullRawMoveTo new Point @left() + @externalPadding, textBottom + @internalPadding
-      @outputTextArea.rawSetExtent new Point @width() - 2 * @externalPadding, text2Height
+
+    if @toolsPanel? and @toolsPanel.parent == @
+      @toolsPanel.fullRawMoveTo new Point @left() + @externalPadding, @top() + @externalPadding
+      @toolsPanel.rawSetExtent new Point @width() - 2 * @externalPadding, toolsPanelHeight
+
+    if @simpleDocumentScrollPanel.parent == @
+      @simpleDocumentScrollPanel.fullRawMoveTo new Point @left() + @externalPadding, simpleDocumentScrollPanelTop
+      @simpleDocumentScrollPanel.rawSetExtent new Point @width() - 2 * @externalPadding, simpleDocumentScrollPanelHeight
 
 
     trackChanges.pop()
