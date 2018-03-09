@@ -2,6 +2,10 @@
 # Doesn't have any particular shape, but can host
 # a morph to be used as "face"
 
+# TODO it's unclear to me why we pass a number of targets
+# and actions in the constructor when what we could simply
+# do is to extend this button and override the mouse events?
+
 # REQUIRES HighlightableMixin
 
 class EmptyButtonMorph extends Widget
