@@ -1212,7 +1212,7 @@ class Widget extends TreeNode
   # you don't actually change the geometry right away,
   # you just ask for the desired change and wait for the
   # layouting mechanism to do its best to satisfy it
-  fullMoveTo: (aPoint) ->
+  fullMoveTo: (aPoint, morphStartingTheChange = nil) ->
     if window.recalculatingLayouts
       debugger
 
@@ -1226,7 +1226,15 @@ class Widget extends TreeNode
       unless @position().eq newPos
         @desiredPosition = newPos
         @invalidateLayout()
-
+        # all the moves via the handles arrive here,
+        # where we remember the fractional position in the
+        # holding panel. That is so for example moving
+        # items inside a StretchablePanel causes their
+        # relative position to be remembered, so resizing
+        # the stretchable panel will get them to the
+        # correct positions
+        if morphStartingTheChange? and @parent? and (morphStartingTheChange instanceof HandleMorph)
+          @positionFractionalInHoldingPanel = @positionFractionalInMorph @parent
 
   
   silentFullRawMoveTo: (aPoint) ->

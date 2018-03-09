@@ -279,7 +279,7 @@ class HandleMorph extends Widget
       # as the parent has re-layouted following the rawSetExtent call just
       # made.
       when "moveHandle"
-        @target.fullMoveTo newPos.subtract @inset
+        @target.fullMoveTo (newPos.subtract @inset), @
       when "resizeHorizontalHandle"
         newWidth = newPos.x + @extent().x + @inset.x - @target.left()
         @target.setWidth newWidth
