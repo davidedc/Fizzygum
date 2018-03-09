@@ -246,6 +246,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
     else
       @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
+
     if @internal
       @titlebarBackground.setColor new Color 172,172,172
       @titlebarBackground.strokeColor = new Color 150,150,150
@@ -258,7 +259,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     if @titlebarBackground?
       @titlebarBackground.fullDestroy()
 
-    @titlebarBackground = new Widget()
+    # TODO we should really just instantiate a Widget,
+    # and give it the shape, there is no reason to create
+    # the dedicated shape morph and then change the appearance
+    # as the window changes from internal to external and vice versa
+    # HOWEVER a bunch of tests would fail if I do the proper
+    # thing so we are doing this for the time being.
+    if @internal
+      @titlebarBackground = new RectangleMorph()
+    else
+      @titlebarBackground = new BoxMorph()
+
     @setAppearanceAndColorOfTitleBackground()
     @add @titlebarBackground, nil, nil, nil, true
   
