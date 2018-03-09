@@ -7,6 +7,7 @@ class ReconfigurablePaintMorph extends Widget
   toothpasteToolButton: nil
   eraserToolButton: nil
   radioButtonsHolderMorph: nil
+  stretchableCanvasContainer: nil
 
   # the external padding is the space between the edges
   # of the container and all of its internals. The reason
@@ -67,9 +68,11 @@ class ReconfigurablePaintMorph extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     # mainCanvas
-    @mainCanvas = new CanvasMorph()
-    @mainCanvas.disableDrops()
-    @add @mainCanvas
+    @stretchableCanvasContainer = new StretchablePanelContainerWdgt new StretchableCanvasWdgt()
+    @stretchableCanvasContainer.disableDrops()
+    @add @stretchableCanvasContainer
+
+    @mainCanvas = @stretchableCanvasContainer.contents
 
     # overlayCanvas
     @overlayCanvas = new CanvasGlassTopWdgt()
@@ -126,10 +129,7 @@ class ReconfigurablePaintMorph extends Widget
             context.lineWidth="2"
 
             if mouseButton == 'left'
-                contextMain = @underlyingCanvasMorph.backBufferContext
-                contextMain.setTransform 1, 0, 0, 1, 0, 0
-                contextMain.scale pixelRatio, pixelRatio
-                contextMain.translate -@bounds.origin.x, -@bounds.origin.y
+                contextMain = @underlyingCanvasMorph.getContextForPainting()
                 contextMain.translate pos.x, pos.y
 
                 contextMain.beginPath()
@@ -175,10 +175,7 @@ class ReconfigurablePaintMorph extends Widget
             if mouseButton == 'left'
                 context.fillStyle = "red"
 
-                contextMain = @underlyingCanvasMorph.backBufferContext
-                contextMain.setTransform 1, 0, 0, 1, 0, 0
-                contextMain.scale pixelRatio, pixelRatio
-                contextMain.translate -@bounds.origin.x, -@bounds.origin.y
+                contextMain = @underlyingCanvasMorph.getContextForPainting()
                 contextMain.translate pos.x, pos.y
                 contextMain.fillStyle = "black"
 
@@ -345,10 +342,7 @@ class ReconfigurablePaintMorph extends Widget
             if world.hand.draggingSomething() then return
             if @queue?
                 console.log "draining the queue"
-                contextMain = @underlyingCanvasMorph.backBufferContext
-                contextMain.setTransform 1, 0, 0, 1, 0, 0
-                contextMain.scale pixelRatio, pixelRatio
-                contextMain.translate -@bounds.origin.x, -@bounds.origin.y
+                contextMain = @underlyingCanvasMorph.getContextForPainting()
                 
                 until @queue.length == 0
                     console.log @queue.length + " more point left to drain"
@@ -380,11 +374,7 @@ class ReconfigurablePaintMorph extends Widget
                 @queue.push pos
                 context.fillStyle = "red"
 
-                contextMain = @underlyingCanvasMorph.backBufferContext
-                contextMain.setTransform 1, 0, 0, 1, 0, 0
-                contextMain.scale pixelRatio, pixelRatio
-                contextMain.translate -@bounds.origin.x, -@bounds.origin.y
-
+                contextMain = @underlyingCanvasMorph.getContextForPainting()
                 
                 contextMain.save()
                 contextMain.translate pos.x, pos.y
@@ -441,10 +431,7 @@ class ReconfigurablePaintMorph extends Widget
             if mouseButton == 'left'
                 context.fillStyle = "red"
 
-                contextMain = @underlyingCanvasMorph.backBufferContext
-                contextMain.setTransform 1, 0, 0, 1, 0, 0
-                contextMain.scale pixelRatio, pixelRatio
-                contextMain.translate -@bounds.origin.x, -@bounds.origin.y
+                contextMain = @underlyingCanvasMorph.getContextForPainting()
                 contextMain.translate pos.x, pos.y
 
                 contextMain.beginPath()
@@ -540,24 +527,16 @@ class ReconfigurablePaintMorph extends Widget
       buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
       @eraserToolButton.doLayout buttonBounds 
 
-    # mainCanvas --------------------------
-    mainCanvasWidth = @width() - @radioButtonsHolderMorph.width() - 2*@externalPadding - @internalPadding
+    # stretchableCanvasContainer --------------------------
+    stretchableCanvasContainerWidth = @width() - @radioButtonsHolderMorph.width() - 2*@externalPadding - @internalPadding
     b = @bottom() - (2 * @externalPadding)
-    mainCanvasHeight =  @height() - 2 * @externalPadding
-    mainCanvasBottom = labelBottom + mainCanvasHeight
-    mainCanvasLeft = @radioButtonsHolderMorph.right() + @internalPadding
+    stretchableCanvasContainerHeight =  @height() - 2 * @externalPadding
+    stretchableCanvasContainerBottom = labelBottom + stretchableCanvasContainerHeight
+    stretchableCanvasContainerLeft = @radioButtonsHolderMorph.right() + @internalPadding
 
-    if @mainCanvas.parent == @
-      @mainCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom
-      @mainCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
-
-    # overlayCanvas ----------------------
-    # has exact same size and position of the main canvas
-    if @overlayCanvas.parent == @mainCanvas
-      @overlayCanvas.fullRawMoveTo new Point mainCanvasLeft, labelBottom
-      @overlayCanvas.rawSetExtent new Point mainCanvasWidth, mainCanvasHeight
-
-    # ----------------------------------------------
+    if @stretchableCanvasContainer.parent == @
+      @stretchableCanvasContainer.fullRawMoveTo new Point stretchableCanvasContainerLeft, labelBottom
+      @stretchableCanvasContainer.setExtent new Point stretchableCanvasContainerWidth, stretchableCanvasContainerHeight
 
 
     trackChanges.pop()

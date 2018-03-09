@@ -17,13 +17,16 @@ class StretchablePanelContainerWdgt extends Widget
   ratio: nil
   contents: nil
 
-  constructor: ->
+  constructor: (contents) ->
     debugger
     super new Point 300, 300
-    contents = new StretchablePanelWdgt()
-    @add contents
+    
+    if !contents?
+      contents = new StretchablePanelWdgt()
 
+    @add contents
     @contents = contents
+
     @rawSetExtent new Point 300, 300
     @contents.rawSetExtent new Point @width(), @height()
     @invalidateLayout()
@@ -39,14 +42,15 @@ class StretchablePanelContainerWdgt extends Widget
       @contents.add aMorph, position, layoutSpec, beingDropped
       @grandChildAdded()
 
-  grandChildAdded: ->
-    if !@ratio?
-      childrenNotHandlesNorCarets = @contents.children.filter (m) ->
-        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+  setRatio: (@ratio) ->
+    @layoutSpecDetails?.canSetHeightFreely = false
 
-      if childrenNotHandlesNorCarets.length != 0
-          @ratio = @width() / @height()
-          @layoutSpecDetails?.canSetHeightFreely = false
+  resetRatio: ->
+    if @ratio?
+      @ratio = nil
+      @layoutSpecDetails?.canSetHeightFreely = true
+      @invalidateLayout()
+
 
   colloquialName: ->
     "stretchable panel"
@@ -75,7 +79,7 @@ class StretchablePanelContainerWdgt extends Widget
 
   rawResizeToWithoutSpacing: ->
     if @ratio?
-      @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()/@ratio
+      @rawSetExtent new Point @widthWithoutSpacing(), Math.round(@widthWithoutSpacing()/@ratio)
       @invalidateLayout()
 
   rawSetWidthSizeHeightAccordingly: (newWidth) ->
@@ -87,24 +91,28 @@ class StretchablePanelContainerWdgt extends Widget
       if !@ratio?
         @ratio = @width() / @height()
         @layoutSpecDetails?.canSetHeightFreely = false
-      @rawSetExtent new Point newWidth, newWidth/@ratio
+      @rawSetExtent new Point newWidth, Math.round(newWidth/@ratio)
       @invalidateLayout()
     else
       @rawSetExtent new Point newWidth, @height()
       @invalidateLayout()
 
-  grandChildRemoved: ->
-    childrenNotHandlesNorCarets = @contents.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
 
-    if @ratio? and childrenNotHandlesNorCarets.length == 0
-      @ratio = nil
-      @layoutSpecDetails?.canSetHeightFreely = true
-      @invalidateLayout()
+  rawSetExtent: (extent) ->
+
+    if extent.eq @extent()
+      return
+
+    super
+    @doLayout @bounds
+
 
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger
+
+    console.log "spanel @contents: " + @contents + " doLayout 1"
+
 
     if !newBoundsForThisLayout?
       if @desiredExtent?
@@ -124,8 +132,14 @@ class StretchablePanelContainerWdgt extends Widget
       @notifyChildrenThatParentHasReLayouted()
       return
 
+    console.log "spanel @contents: " + @contents + " doLayout 2"
+
     debugger
+
+
     @rawSetBounds newBoundsForThisLayout
+
+    console.log "spanel @contents: " + @contents + " doLayout 3"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -157,7 +171,8 @@ class StretchablePanelContainerWdgt extends Widget
         newExtent = new Point width, heightBasedOnWidth
 
       newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
-      @contents.doLayout newBounds
+      console.log "spanel @contents: " + @contents + " bounds: " + newBounds.round()
+      @contents.doLayout newBounds.round()
 
     else
       @contents.doLayout @bounds

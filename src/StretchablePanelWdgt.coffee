@@ -3,6 +3,35 @@
 
 class StretchablePanelWdgt extends PanelWdgt
 
+  childRemoved: (child) ->
+    super
+    if @parent?.setRatio? and @parent.ratio?
+      childrenNotHandlesNorCarets = @children.filter (m) ->
+        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+      if childrenNotHandlesNorCarets.length == 0
+        @parent.resetRatio()
+
+  childAdded: (child) ->
+    super
+    # only set ratio with the first added child
+    # the following ones don't change it
+    if @parent?.setRatio? and !@parent.ratio?
+      childrenNotHandlesNorCarets = @children.filter (m) ->
+        !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+      if childrenNotHandlesNorCarets.length != 0
+        @parent.setRatio @width() / @height()
+
+
+  rawSetExtent: (extent) ->
+    if extent.eq @extent()
+      return
+
+    super
+    @doLayout @bounds
+
+
   doLayout: (newBoundsForThisLayout) ->
     if !window.recalculatingLayouts
       debugger
