@@ -143,7 +143,7 @@ class Example3DPlotWdgt extends Widget
 
     context.strokeStyle = 'black'
     originalAlpha = context.globalAlpha
-    context.globalAlpha = 0.2
+    context.globalAlpha = 0.6
 
     for eachVertex in @vertices
       newPoint = eachVertex.rotateX(90).rotateY(@currentAngle).translateXYZ(0,0.5,0).project(width, height, 528, 7)
