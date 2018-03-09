@@ -83,6 +83,7 @@ class SimpleDocumentWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilYellow?()
     @dragsDropsAndEditingEnabled = true
     @createToolsPanel()
     @simpleDocumentScrollPanel.enableDragsDropsAndEditing @
@@ -91,6 +92,7 @@ class SimpleDocumentWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilClear?()
     @toolsPanel.destroy()
     @toolsPanel = nil
     @dragsDropsAndEditingEnabled = false

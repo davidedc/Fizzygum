@@ -110,6 +110,7 @@ class StretchablePanelWdgt extends PanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilYellow?()
     if @parent? and @parent != triggeringWidget and @parent instanceof StretchablePanelContainerWdgt
       @parent.enableDragsDropsAndEditing @
     else
@@ -120,6 +121,7 @@ class StretchablePanelWdgt extends PanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilClear?()
     if @parent? and @parent != triggeringWidget and @parent instanceof StretchablePanelContainerWdgt
       @parent.disableDragsDropsAndEditing @
     else

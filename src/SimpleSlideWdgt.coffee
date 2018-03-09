@@ -50,6 +50,7 @@ class SimpleSlideWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilYellow?()
     @dragsDropsAndEditingEnabled = true
     @createToolsPanel()
     @stretchablePanel.enableDragsDropsAndEditing @
@@ -90,6 +91,7 @@ class SimpleSlideWdgt extends Widget
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilClear?()
     @dragsDropsAndEditingEnabled = false
     @toolsPanel.destroy()
     @toolsPanel = nil

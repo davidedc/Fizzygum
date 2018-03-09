@@ -3709,6 +3709,35 @@ class Widget extends TreeNode
   # ---------------------------------------------------------------------
   # locking of contents
 
+  enableDragsDropsAndEditing: ->
+
+    if @dragsDropsAndEditingEnabled
+      return
+    @dragsDropsAndEditingEnabled = true
+
+    if @contents?
+      whereToAct = @contents
+    else
+      whereToAct = @
+
+    if whereToAct.dragsDropsAndEditingEnabled
+      return
+
+    @parent?.makePencilYellow?()
+    whereToAct.dragsDropsAndEditingEnabled = true
+
+    whereToAct.enableDrops()
+
+    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
+      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
+
+    if childrenNotHandlesNorCarets?
+      for each in childrenNotHandlesNorCarets
+        each.unlockFromPanels()
+        if each.isEditable?
+          each.isEditable = true
+
+
   disableDragsDropsAndEditing: ->
     debugger
 
@@ -3724,6 +3753,7 @@ class Widget extends TreeNode
     if !whereToAct.dragsDropsAndEditingEnabled
       return
 
+    @parent?.makePencilClear?()
     whereToAct.disableDrops()
 
     whereToAct.dragsDropsAndEditingEnabled = false
@@ -3738,35 +3768,6 @@ class Widget extends TreeNode
           each.isEditable = false
           if world.caret?.target == each
             world.stopEditing()
-
-
-  enableDragsDropsAndEditing: ->
-
-    if @dragsDropsAndEditingEnabled
-      return
-    @dragsDropsAndEditingEnabled = true
-
-    if @contents?
-      whereToAct = @contents
-    else
-      whereToAct = @
-
-    if whereToAct.dragsDropsAndEditingEnabled
-      return
-
-    whereToAct.dragsDropsAndEditingEnabled = true
-
-    whereToAct.enableDrops()
-
-    childrenNotHandlesNorCarets = whereToAct.children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
-
-    if childrenNotHandlesNorCarets?
-      for each in childrenNotHandlesNorCarets
-        each.unlockFromPanels()
-        if each.isEditable?
-          each.isEditable = true
-
 
 
   # ---------------------------------------------------------------------

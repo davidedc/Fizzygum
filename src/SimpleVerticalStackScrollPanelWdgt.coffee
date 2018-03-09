@@ -45,6 +45,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilYellow?()
     if @parent? and @parent != triggeringWidget and @parent instanceof SimpleDocumentWdgt
       @parent.enableDragsDropsAndEditing @
     else
@@ -55,6 +56,7 @@ class SimpleVerticalStackScrollPanelWdgt extends ScrollPanelWdgt
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
       return
+    @parent?.makePencilClear?()
     if @parent? and @parent != triggeringWidget and @parent instanceof SimpleDocumentWdgt
       @parent.disableDragsDropsAndEditing @
     else

@@ -62,6 +62,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
     @rawSetExtent new Point 300, 300
 
+
   # in general, windows just create a reference of themselves and
   # that is it. However, windows containing a ScriptWdgt create
   # a special type of reference that has a slightly different icon
@@ -315,10 +316,25 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @internalExternalSwitchButton = new SwitchButtonMorph [externalButton, internalButton]
       @add @internalExternalSwitchButton, nil, nil, nil, true
 
+  makePencilYellow: ->
+      @editButton?.color_normal = new Color 248, 188, 58
+      @editButton?.changed()
+
+  makePencilClear: ->
+      @editButton?.color_normal = new Color 245, 244, 245
+      @editButton?.changed()
+
   createAndAddEditButton: ->
     if @contents?.providesAmenitiesForEditing and !@editButton?
       @editButton = new EditIconButtonWdgt @
       @add @editButton, nil, nil, nil, true
+
+      @makePencilYellow()
+      # we also need to set directly the color
+      # because the oroginal "color_normal" has
+      # been copied already to "color", so
+      # we need to set "color" too in this case
+      @editButton.setColor new Color 248, 188, 58
 
   initialiseDefaultWindowContentLayoutSpec: ->
     super
