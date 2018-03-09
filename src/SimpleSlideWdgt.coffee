@@ -54,6 +54,38 @@ class SimpleSlideWdgt extends Widget
     @createToolsPanel()
     @stretchablePanel.enableDragsDropsAndEditing @
 
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = true
+
+  # while in editing mode, the slide can take any dimension
+  # and if the content has already a decided ratio then
+  # the container will adjust the content within the given
+  # space so that the content will keep ratio.
+  #
+  # However, when NOT in editing mode, then we
+  # want the content to force the ratio of the window
+  # it might be in, so that
+  # 1) it takes the whole window rather than a
+  #    a letterboxed part, so it looks neat
+  # 2) if we drop the slide in
+  #    a document then it will take a height proportional
+  #    to the given width, which is what looks natural.
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    if @layoutSpecDetails?.canSetHeightFreely
+     super
+     return
+
+    if !@stretchablePanel?
+     super
+     return
+
+    if !@stretchablePanel.ratio?
+     super
+     return
+
+    @rawSetExtent new Point newWidth, newWidth / @stretchablePanel.ratio
+
+
   disableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if !@dragsDropsAndEditingEnabled
@@ -63,6 +95,18 @@ class SimpleSlideWdgt extends Widget
     @toolsPanel = nil
     @stretchablePanel.disableDragsDropsAndEditing @
     @invalidateLayout()
+
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = false
+      # force a resize, so the slide and the window
+      # it's in will take the right ratio, and hence
+      # the content will take the whole window it's in.
+      # Note that the height of 0 here is ignored since
+      # "rawSetWidthSizeHeightAccordingly" will
+      # calculate the height.
+      if @stretchablePanel?.ratio?
+        @rawSetExtent new Point @width(), 0
+
 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
