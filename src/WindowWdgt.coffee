@@ -237,7 +237,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # upper-left button, often a close button
     # but it can be anything
     if !@closeButton?
-      @closeButton = new CloseIconButtonMorph @
+      @closeButton = new CloseIconButtonMorph()
 
 
     if !@collapseUncollapseSwitchButton?
