@@ -23,6 +23,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
   defaultContents: nil
   reInflating: false
 
+  internalExternalSwitchButton: nil
+
   # TODO passing the @labelContent doesn't quite work, when
   # you add a widget to the window it overwrites the
   # title which means that this one parameter passed in
@@ -85,6 +87,26 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     else
       super
 
+
+  makeInternal: ->
+    if !@internal
+      @internal = true
+      @setAppearanceAndColorOfTitleBackground()
+
+  makeExternal: ->
+    if @internal
+      @internal = false
+      # in case the internal window was part of an uneditable
+      # document, then it was set to lock to the panel so it
+      # couldn't be dragged. But we have to change that now since
+      # we ought to be free on the desktop
+      @unlockFromPanels()
+      @setAppearanceAndColorOfTitleBackground()
+
+      world.add @
+      # make it jump out a little
+      @fullRawMoveTo @position().add new Point 10, 10
+      @fullRawMoveWithin world
 
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
@@ -170,11 +192,15 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @editButton?.destroy()
       @editButton = nil
 
+      @internalExternalSwitchButton?.destroy()
+      @internalExternalSwitchButton = nil
+
   childBeingUnCollapsed: (child) ->
     if child == @contents
       @widthWhenCollapsed = @width()
 
     @createAndAddEditButton()
+    @createAndAddInternalExternalSwitchButton()
 
   childCollapsed: (child) ->
     if child == @contents
@@ -210,21 +236,32 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     super
     @disableDrops()
     @buildAndConnectChildren()
+
+  setAppearanceAndColorOfTitleBackground: ->
+    if @internal
+      @titlebarBackground.appearance = new RectangularAppearance @titlebarBackground
+    else
+      @titlebarBackground.appearance = new BoxyAppearance @titlebarBackground
+    if @internal
+      @titlebarBackground.setColor new Color 172,172,172
+      @titlebarBackground.strokeColor = new Color 150,150,150
+    else
+      @titlebarBackground.setColor new Color 125,125,125
+      @titlebarBackground.strokeColor = new Color 100,100,100
+
+
+  buildTitlebarBackground: ->
+    if @titlebarBackground?
+      @titlebarBackground.fullDestroy()
+
+    @titlebarBackground = new Widget()
+    @setAppearanceAndColorOfTitleBackground()
+    @add @titlebarBackground, nil, nil, nil, true
   
   buildAndConnectChildren: ->
 
     if !@titlebarBackground?
-      if @internal
-        @titlebarBackground = new RectangleMorph()
-      else
-        @titlebarBackground = new BoxMorph()
-      if @internal
-        @titlebarBackground.setColor new Color 172,172,172
-        @titlebarBackground.strokeColor = new Color 150,150,150
-      else
-        @titlebarBackground.setColor new Color 125,125,125
-        @titlebarBackground.strokeColor = new Color 100,100,100
-      @add @titlebarBackground, nil, nil, nil, true
+      @buildTitlebarBackground()
 
     # label
     @label?.fullDestroy()
@@ -238,23 +275,30 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     # but it can be anything
     if !@closeButton?
       @closeButton = new CloseIconButtonMorph()
+    @add @closeButton, nil, nil, nil, true
 
 
     if !@collapseUncollapseSwitchButton?
       collapseButton = new CollapseIconButtonMorph()
       uncollapseButton = new UncollapseIconButtonMorph()
       @collapseUncollapseSwitchButton = new SwitchButtonMorph [collapseButton, uncollapseButton]
-
-
-    @add @closeButton, nil, nil, nil, true
     @add @collapseUncollapseSwitchButton, nil, nil, nil, true
 
+
+    @createAndAddInternalExternalSwitchButton()
     @createAndAddEditButton()
 
     @add @contents
 
     if !@resizer?
       @resizer = new HandleMorph @
+
+  createAndAddInternalExternalSwitchButton: ->
+    if @contents?.providesAmenitiesForEditing and !@internalExternalSwitchButton?
+      externalButton = new ExternalIconButtonWdgt()
+      internalButton = new InternalIconButtonWdgt()
+      @internalExternalSwitchButton = new SwitchButtonMorph [externalButton, internalButton]
+      @add @internalExternalSwitchButton, nil, nil, nil, true
 
   createAndAddEditButton: ->
     if @contents?.providesAmenitiesForEditing and !@editButton?
@@ -281,6 +325,7 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @closeButton.doLayout buttonBounds
 
+    # collapse/uncollapse button
     if @collapseUncollapseSwitchButton? and @collapseUncollapseSwitchButton.parent == @
       buttonBounds = new Rectangle new Point @left() + closeIconSize + 2 * @padding, @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
@@ -376,12 +421,24 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
     @titlebarBackground.rawSetExtent (new Point @width(), closeIconSize + 2 * @padding).subtract new Point 2,2
     @titlebarBackground.fullRawMoveTo @position().add new Point 1,1
 
+    if @width() < 4 * (closeIconSize + @padding) + @padding
+      @editButton?.collapse()
+    else
+      @editButton?.unCollapse()
+
+    if @width() < 3 * (closeIconSize + @padding) + @padding
+      @internalExternalSwitchButton?.collapse()
+    else
+      @internalExternalSwitchButton?.unCollapse()
+
     # label
     if @label? and @label.parent == @
       labelLeft = @left() + @padding + 2 * (closeIconSize + @padding)
       labelTop = @top() + @padding
       labelRight = @right() - @padding
-      if @editButton?
+      if @editButton? and !@editButton.isCollapsed()
+        labelRight -= 1 * (closeIconSize + @padding)
+      if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isCollapsed()
         labelRight -= 1 * (closeIconSize + @padding)
       labelWidth = labelRight - labelLeft
 
@@ -390,10 +447,17 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @label.rawSetBounds labelBounds
 
     # edit button
-    if @editButton? and @editButton.parent == @
-      buttonBounds = new Rectangle new Point @right() - (closeIconSize + @padding), @top() + @padding
+    if @editButton? and !@editButton.isCollapsed() and @editButton.parent == @
+      buttonBounds = new Rectangle new Point @right() - 2 * (closeIconSize + @padding), @top() + @padding
       buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
       @editButton.doLayout buttonBounds
+
+    # internal/external button
+    if @internalExternalSwitchButton? and !@internalExternalSwitchButton.isCollapsed() and @internalExternalSwitchButton.parent == @
+      buttonBounds = new Rectangle new Point @right() - 1 * (closeIconSize + @padding), @top() + @padding
+      buttonBounds = buttonBounds.setBoundsWidthAndHeight closeIconSize, closeIconSize
+      @internalExternalSwitchButton.doLayout buttonBounds
+
 
 
     @resizer?.silentUpdateResizerHandlePosition()
