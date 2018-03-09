@@ -103,10 +103,14 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       @unlockFromPanels()
       @setAppearanceAndColorOfTitleBackground()
 
+      previousParent = @parent
       world.add @
-      # make it jump out a little
-      @fullRawMoveTo @position().add new Point 10, 10
-      @fullRawMoveWithin world
+
+      # make it jump out a little, but still, fit it
+      # in the world
+      if previousParent != world
+        @fullRawMoveTo @position().add new Point 10, 10
+        @fullRawMoveWithin world
 
   setTitle: (newTitle) ->
     @label.setText @contents.colloquialName() + ": " + newTitle
