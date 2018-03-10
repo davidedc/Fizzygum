@@ -19,3 +19,10 @@ class RadioButtonsHolderMorph extends Widget
       if eachChild.isSelected()
         return eachChild
     return null
+
+  unselectAll: ->
+    if @allowsRadioButtonsToBeAllDisabled
+      for eachChild in @children
+        if eachChild.isSelected()
+          eachChild.toggle()
+    return null

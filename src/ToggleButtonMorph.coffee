@@ -21,3 +21,6 @@ class ToggleButtonMorph extends SwitchButtonMorph
   select: (whichOne) ->
     if @buttonShown != whichOne
       @buttons[@buttonShown].mouseClickLeft()
+
+  toggle: ->
+    @buttons[@buttonShown].mouseClickLeft()
