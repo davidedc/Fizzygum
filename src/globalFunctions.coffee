@@ -86,7 +86,11 @@ HTMLCanvasElement::deepCopy = (doSerialize, objOriginalsClonedAlready, objectClo
   return cloneOfMe
 
 CanvasRenderingContext2D::rebuildDerivedValue = (objectIBelongTo, myPropertyName) ->
-  objectIBelongTo[myPropertyName] = objectIBelongTo.backBuffer.getContext "2d"
+  # here we need to re-generate a context from the COPY canvas
+  # I can't think of an easy way to do this, just assume that the canvas
+  # in in a property with name same as the context one, but without "Context"
+  # e.g. "backBufferContext" -> belongs to canvas named: "backBuffer"
+  objectIBelongTo[myPropertyName] = objectIBelongTo[myPropertyName.replace "Context", ""].getContext "2d"
 
 # Extending Array's prototype if 'filter' doesn't exist
 # already
