@@ -107,7 +107,22 @@ class SimpleSlideWdgt extends Widget
       # "rawSetWidthSizeHeightAccordingly" will
       # calculate the height.
       if @stretchablePanel?.ratio?
-        @rawSetExtent new Point @width(), 0
+        # try to keep the current width and just adjust the height.
+        # HOWEVER it often happens that just doing that is not OK
+        # because the end result is taller than the screen
+        # which is *very* annoying because the window becomes difficult
+        # to handle and resize, SO calculate a width such that the
+        # height doesn't become problematic
+        if @parent? and (@parent instanceof WindowWdgt) and @parent.parent? and @parent.parent == world
+          newWidth = @parent.width()
+          # TODO magic number here
+          extraHeightOfWindowChrome = 20
+          if newWidth / @stretchablePanel.ratio + extraHeightOfWindowChrome > world.height()
+            newWidth = (world.height() - extraHeightOfWindowChrome) * @stretchablePanel.ratio
+            newWidth = Math.round(Math.min newWidth, world.width())
+          @parent.rawSetExtent new Point newWidth, 0
+        else
+          @rawSetExtent new Point @width(), 0
 
 
   buildAndConnectChildren: ->
