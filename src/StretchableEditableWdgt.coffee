@@ -40,6 +40,36 @@ class StretchableEditableWdgt extends Widget
     else
       @enableDragsDropsAndEditing @
 
+  holderWindowJustBeenGrabbed: (whereFrom) ->
+    if whereFrom instanceof SimpleVerticalStackPanelWdgt
+      @freeFromRatioConstraints()
+
+  holderWindowMadeIntoExternal: ->
+    @freeFromRatioConstraints()
+
+  freeFromRatioConstraints: ->
+    if @layoutSpecDetails?
+      @layoutSpecDetails.canSetHeightFreely = true
+
+      availableHeight = world.height() - 20
+      if @parent.height() > availableHeight
+        @parent.rawSetExtent (new Point Math.min((@width()/@height()) * availableHeight, world.width()), availableHeight).round()
+        @parent.fullRawMoveTo world.hand.position().subtract @parent.extent().floorDivideBy 2
+        @parent.fullRawMoveWithin world
+
+  holderWindowAboutToBeDropped: (whereIn) ->
+    if whereIn instanceof SimpleVerticalStackPanelWdgt
+      if @layoutSpecDetails?
+        @layoutSpecDetails.canSetHeightFreely = false
+        # force a resize, so the slide and the window
+        # it's in will take the right ratio, and hence
+        # the content will take the whole window it's in.
+        # Note that the height of 0 here is ignored since
+        # "rawSetWidthSizeHeightAccordingly" will
+        # calculate the height.
+        if @stretchableWidgetContainer?.ratio?
+          @rawSetExtent new Point @width(), 0
+
   enableDragsDropsAndEditing: (triggeringWidget) ->
     if !triggeringWidget? then triggeringWidget = @
     if @dragsDropsAndEditingEnabled
@@ -49,8 +79,6 @@ class StretchableEditableWdgt extends Widget
     @createToolsPanel()
     @stretchableWidgetContainer.enableDragsDropsAndEditing @
 
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = true
 
   # while in editing mode, the slide can take any dimension
   # and if the content has already a decided ratio then
@@ -92,32 +120,6 @@ class StretchableEditableWdgt extends Widget
     @toolsPanel = nil
     @stretchableWidgetContainer.disableDragsDropsAndEditing @
     @invalidateLayout()
-
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = false
-      # force a resize, so the slide and the window
-      # it's in will take the right ratio, and hence
-      # the content will take the whole window it's in.
-      # Note that the height of 0 here is ignored since
-      # "rawSetWidthSizeHeightAccordingly" will
-      # calculate the height.
-      if @stretchableWidgetContainer?.ratio?
-        # try to keep the current width and just adjust the height.
-        # HOWEVER it often happens that just doing that is not OK
-        # because the end result is taller than the screen
-        # which is *very* annoying because the window becomes difficult
-        # to handle and resize, SO calculate a width such that the
-        # height doesn't become problematic
-        if @parent? and (@parent instanceof WindowWdgt) and @parent.parent? and @parent.parent == world
-          newWidth = @parent.width()
-          # TODO magic number here
-          extraHeightOfWindowChrome = 20
-          if newWidth / @stretchableWidgetContainer.ratio + extraHeightOfWindowChrome > world.height()
-            newWidth = (world.height() - extraHeightOfWindowChrome) * @stretchableWidgetContainer.ratio
-            newWidth = Math.round(Math.min newWidth, world.width())
-          @parent.rawSetExtent new Point newWidth, 0
-        else
-          @rawSetExtent new Point @width(), 0
 
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism

@@ -120,6 +120,8 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
       previousParent = @parent
       world.add @
 
+      @contents?.holderWindowMadeIntoExternal()
+
       # make it jump out a little, but still, fit it
       # in the world
       if previousParent != world
@@ -248,6 +250,12 @@ class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   aboutToDrop: ->
     @removeChild @contents
+
+  aboutToBeDropped: (whereIn) ->
+    @contents?.holderWindowAboutToBeDropped? whereIn
+
+  justBeenGrabbed: (whereFrom) ->
+    @contents?.holderWindowJustBeenGrabbed? whereFrom
 
   reactToDropOf: (theWidget) ->
     @contents = theWidget

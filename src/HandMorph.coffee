@@ -187,6 +187,7 @@ class HandMorph extends Widget
       aMorph.prepareToBeGrabbed?()
 
       @add aMorph
+      aMorph.justBeenGrabbed? oldParent
       # you must add the shadow
       # after the morph has been added
       # because "@add aMorph" causes
@@ -245,6 +246,7 @@ class HandMorph extends Widget
         target = @dropTargetFor morphToDrop
 
       @fullChanged()
+      morphToDrop.aboutToBeDropped? target
       target.aboutToDrop? morphToDrop
       target.add morphToDrop, nil, nil, true, nil, @position()
       morphToDrop.fullChanged()
