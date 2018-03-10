@@ -49,6 +49,19 @@ class Example3DPlotWdgt extends Widget
   colloquialName: ->
     "3D plot"
 
+  widthWithoutSpacing: ->
+    Math.min @width(), @height()
+
+  rawResizeToWithoutSpacing: ->
+    @rawSetExtent new Point @widthWithoutSpacing(), @widthWithoutSpacing()
+
+  initialiseDefaultWindowContentLayoutSpec: ->
+    super
+    @layoutSpecDetails.canSetHeightFreely = false
+
+  rawSetWidthSizeHeightAccordingly: (newWidth) ->
+    @rawSetExtent new Point newWidth, newWidth
+
   step: ->
     if @autoRotate
       @currentAngle++
@@ -124,6 +137,7 @@ class Example3DPlotWdgt extends Widget
     width = @width()
 
 
+
     # clean the background
 
     if appliedShadow?
@@ -139,15 +153,20 @@ class Example3DPlotWdgt extends Widget
     context.fillRect 0, 0, width, height
 
 
+    squareDim = Math.min width, height
+    context.translate (width-squareDim)/2, (height-squareDim)/2
+
     points = []
 
     context.strokeStyle = 'black'
     originalAlpha = context.globalAlpha
     context.globalAlpha = 0.6
 
+    context.scale squareDim/300, squareDim/300
+
     for eachVertex in @vertices
-      newPoint = eachVertex.rotateX(90).rotateY(@currentAngle).translateXYZ(0,0.5,0).project(width, height, 528, 7)
-      newPoint.y -= height * 1/6
+      newPoint = eachVertex.rotateX(90).rotateY(@currentAngle).translateXYZ(0,0.5,0).project(300, 300, 220, 3)
+      newPoint.y -= squareDim * 1/6
       points.push newPoint
 
     for eachQuad in @quads
