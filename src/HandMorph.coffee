@@ -125,7 +125,7 @@ class HandMorph extends Widget
   #
   # floatDrag 'n' drop events, method(arg) -> receiver:
   #
-  #   prepareToBeGrabbed(handMorph) -> grabTarget
+  #   prepareToBeGrabbed() -> grabTarget
   #   reactToGrabOf(grabbedMorph) -> oldParent
   #   wantsDropOf(morphToDrop) ->  newParent
   #   justDropped(handMorph) -> droppedMorph
@@ -184,7 +184,7 @@ class HandMorph extends Widget
         aMorph.fullMoveTo aMorph.position().add displacementDueToGrabDragThreshold
 
       @grabOrigin = aMorph.situation()
-      aMorph.prepareToBeGrabbed? @
+      aMorph.prepareToBeGrabbed?()
 
       @add aMorph
       # you must add the shadow
