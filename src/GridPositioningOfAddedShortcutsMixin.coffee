@@ -12,6 +12,7 @@ GridPositioningOfAddedShortcutsMixin =
       numberOfIconsOnDesktop: 0
       laysIconsHorizontallyInGrid: true
       iconsLayingInGridWrapCount: 3
+      iconsPaddingFromContainerEdges: 5
 
       add: (aMorph, position, layoutSpec, beingDropped) ->
         # TODO can't handle default parameters in mixins
@@ -31,5 +32,5 @@ GridPositioningOfAddedShortcutsMixin =
           else
             xPos = Math.floor @numberOfIconsOnDesktop / @iconsLayingInGridWrapCount
             yPos = @numberOfIconsOnDesktop % @iconsLayingInGridWrapCount
-          aMorph.fullRawMoveTo @position().add new Point xPos * 85, yPos * 85
+          aMorph.fullRawMoveTo (@position().add new Point xPos * 85, yPos * 85).add @iconsPaddingFromContainerEdges
           @numberOfIconsOnDesktop++
