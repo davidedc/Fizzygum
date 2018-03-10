@@ -21,7 +21,7 @@ class MenusHelper
 
 
   createReconfigurablePaint: ->
-    reconfPaint = new ReconfigurablePaintMorph()
+    reconfPaint = new ReconfigurablePaintWdgt()
     wm = new WindowWdgt nil, nil, reconfPaint
     wm.setExtent new Point 460, 400
     wm.fullRawMoveTo world.hand.position()
@@ -160,7 +160,7 @@ class MenusHelper
 
   createFizzyPaintLauncherAndItsIcon: ->
     scriptWdgt = new ScriptWdgt """
-      reconfPaint = new ReconfigurablePaintMorph()
+      reconfPaint = new ReconfigurablePaintWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo world.hand.position()

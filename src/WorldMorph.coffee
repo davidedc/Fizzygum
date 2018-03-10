@@ -380,7 +380,7 @@ class WorldMorph extends PanelWdgt
       welcomeBody.fullMoveTo new Point 37, 80
       welcomeBody.setExtent new Point 340, 175
 
-      reconfPaint = new ReconfigurablePaintMorph()
+      reconfPaint = new ReconfigurablePaintWdgt()
       wm = new WindowWdgt nil, nil, reconfPaint
       wm.setExtent new Point 460, 400
       wm.fullRawMoveTo new Point 35, 275

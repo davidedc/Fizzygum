@@ -1,27 +1,4 @@
-class SimpleSlideWdgt extends Widget
-
-  stretchablePanel: nil
-  toolsPanel: nil
-
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
-
-  providesAmenitiesForEditing: true
-
-  constructor: ->
-    debugger
-    super
-    @buildAndConnectChildren()
-    @invalidateLayout()
+class SimpleSlideWdgt extends StretchableEditableWdgt
 
   colloquialName: ->   
     "Simple slide"
@@ -29,111 +6,6 @@ class SimpleSlideWdgt extends Widget
   representativeIcon: ->
     new SimpleSlideIconWdgt()
 
-  rawSetExtent: (aPoint) ->
-    super
-    @reLayout()
-
-  closeFromContainerWindow: (containerWindow) ->
-    if !world.anyReferenceToWdgt containerWindow
-      prompt = new SaveShortcutPromptWdgt @, containerWindow
-      prompt.popUpAtHand()
-    else
-      containerWindow.close()
-
-  editButtonPressedFromWindowBar: ->
-    if @dragsDropsAndEditingEnabled
-      @disableDragsDropsAndEditing @
-    else
-      @enableDragsDropsAndEditing @
-
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if @dragsDropsAndEditingEnabled
-      return
-    @parent?.makePencilYellow?()
-    @dragsDropsAndEditingEnabled = true
-    @createToolsPanel()
-    @stretchablePanel.enableDragsDropsAndEditing @
-
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = true
-
-  # while in editing mode, the slide can take any dimension
-  # and if the content has already a decided ratio then
-  # the container will adjust the content within the given
-  # space so that the content will keep ratio.
-  #
-  # However, when NOT in editing mode, then we
-  # want the content to force the ratio of the window
-  # it might be in, so that
-  # 1) it takes the whole window rather than a
-  #    a letterboxed part, so it looks neat
-  # 2) if we drop the slide in
-  #    a document then it will take a height proportional
-  #    to the given width, which is what looks natural.
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    if @layoutSpecDetails?.canSetHeightFreely
-     super
-     return
-
-    if !@stretchablePanel?
-     super
-     return
-
-    if !@stretchablePanel.ratio?
-     super
-     return
-
-    @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchablePanel.ratio)
-
-
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if !@dragsDropsAndEditingEnabled
-      return
-    @parent?.makePencilClear?()
-    @dragsDropsAndEditingEnabled = false
-    @toolsPanel.destroy()
-    @toolsPanel = nil
-    @stretchablePanel.disableDragsDropsAndEditing @
-    @invalidateLayout()
-
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = false
-      # force a resize, so the slide and the window
-      # it's in will take the right ratio, and hence
-      # the content will take the whole window it's in.
-      # Note that the height of 0 here is ignored since
-      # "rawSetWidthSizeHeightAccordingly" will
-      # calculate the height.
-      if @stretchablePanel?.ratio?
-        # try to keep the current width and just adjust the height.
-        # HOWEVER it often happens that just doing that is not OK
-        # because the end result is taller than the screen
-        # which is *very* annoying because the window becomes difficult
-        # to handle and resize, SO calculate a width such that the
-        # height doesn't become problematic
-        if @parent? and (@parent instanceof WindowWdgt) and @parent.parent? and @parent.parent == world
-          newWidth = @parent.width()
-          # TODO magic number here
-          extraHeightOfWindowChrome = 20
-          if newWidth / @stretchablePanel.ratio + extraHeightOfWindowChrome > world.height()
-            newWidth = (world.height() - extraHeightOfWindowChrome) * @stretchablePanel.ratio
-            newWidth = Math.round(Math.min newWidth, world.width())
-          @parent.rawSetExtent new Point newWidth, 0
-        else
-          @rawSetExtent new Point @width(), 0
-
-
-  buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-
-    @createToolsPanel()
-    @createNewStretchablePanel()
-
-
-    @invalidateLayout()
 
   createToolsPanel: ->
     # tools -------------------------------
@@ -176,16 +48,11 @@ class SimpleSlideWdgt extends Widget
     @invalidateLayout()
 
   createNewStretchablePanel: ->
-    @stretchablePanel = new StretchableWidgetContainerWdgt()
-    @add @stretchablePanel
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt()
+    @add @stretchableWidgetContainer
 
-  childPickedUp: (childPickedUp) ->
-    if childPickedUp == @stretchablePanel
-      @createNewStretchablePanel()
-      @invalidateLayout()
 
   reLayout: ->
-
     # here we are disabling all the broken
     # rectangles. The reason is that all the
     # submorphs of the inspector are within the
@@ -213,24 +80,24 @@ class SimpleSlideWdgt extends Widget
       @toolsPanel.rawSetExtent new Point 95, @height() - 2 * @externalPadding
 
 
-    # stretchablePanel --------------------------
+    # stretchableWidgetContainer --------------------------
 
-    stretchablePanelWidth = @width() - 2*@externalPadding
+    stretchableWidgetContainerWidth = @width() - 2*@externalPadding
     
     if @dragsDropsAndEditingEnabled
-      stretchablePanelWidth -= @toolsPanel.width() + @internalPadding
+      stretchableWidgetContainerWidth -= @toolsPanel.width() + @internalPadding
 
     b = @bottom() - (2 * @externalPadding)
-    stretchablePanelHeight =  @height() - 2 * @externalPadding
-    stretchablePanelBottom = labelBottom + stretchablePanelHeight
+    stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
+    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
     if @dragsDropsAndEditingEnabled
-      stretchablePanelLeft = @toolsPanel.right() + @internalPadding
+      stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding
     else
-      stretchablePanelLeft = @left() + @externalPadding
+      stretchableWidgetContainerLeft = @left() + @externalPadding
 
-    if @stretchablePanel.parent == @
-      @stretchablePanel.fullRawMoveTo new Point stretchablePanelLeft, labelBottom
-      @stretchablePanel.setExtent new Point stretchablePanelWidth, stretchablePanelHeight
+    if @stretchableWidgetContainer.parent == @
+      @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer.setExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
     # ----------------------------------------------
 
@@ -242,21 +109,4 @@ class SimpleSlideWdgt extends Widget
     @layoutIsValid = true
     @notifyChildrenThatParentHasReLayouted()
 
-  # same as simpledocumentscrollpanel, you can lock the contents.
-  # worth factoring it out as a mixin?
-  addMorphSpecificMenuEntries: (morphOpeningThePopUp, menu) ->
-    debugger
-    super
-
-    childrenNotHandlesNorCarets = @children.filter (m) ->
-      !((m instanceof HandleMorph) or (m instanceof CaretMorph))
-
-    if childrenNotHandlesNorCarets? and childrenNotHandlesNorCarets.length > 0
-      menu.addLine()
-      if !@dragsDropsAndEditingEnabled
-        menu.addMenuItem "enable editing", true, @, "enableDragsDropsAndEditing", "lets you drag content in and out"
-      else
-        menu.addMenuItem "disable editing", true, @, "disableDragsDropsAndEditing", "prevents dragging content in and out"
-
-    menu.removeConsecutiveLines()
 

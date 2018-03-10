@@ -1,4 +1,4 @@
-class ReconfigurablePaintMorph extends Widget
+class ReconfigurablePaintWdgt extends StretchableEditableWdgt
 
   mainCanvas: nil
   overlayCanvas: nil
@@ -6,28 +6,7 @@ class ReconfigurablePaintMorph extends Widget
   brushToolButton: nil
   toothpasteToolButton: nil
   eraserToolButton: nil
-  toolsPanel: nil
-  stretchableCanvasContainer: nil
 
-  # the external padding is the space between the edges
-  # of the container and all of its internals. The reason
-  # you often set this to zero is because windows already put
-  # contents inside themselves with a little padding, so this
-  # external padding is not needed. Useful to keep it
-  # separate and know that it's working though.
-  externalPadding: 0
-  # the internal padding is the space between the internal
-  # components. It doesn't necessarily need to be equal to the
-  # external padding
-  internalPadding: 5
-
-  providesAmenitiesForEditing: true
-
-  constructor: ->
-    debugger
-    super
-    @buildAndConnectChildren()
-    @invalidateLayout()
 
   colloquialName: ->   
     "Fizzypaint"
@@ -35,102 +14,6 @@ class ReconfigurablePaintMorph extends Widget
   representativeIcon: ->
     new PaintBucketIconWdgt()
 
-  rawSetExtent: (aPoint) ->
-    super
-    @reLayout()
-
-  closeFromContainerWindow: (containerWindow) ->
-    if !world.anyReferenceToWdgt containerWindow
-      prompt = new SaveShortcutPromptWdgt @, containerWindow
-      prompt.popUpAtHand()
-    else
-      containerWindow.close()
-
-
-  editButtonPressedFromWindowBar: ->
-    if @dragsDropsAndEditingEnabled
-      @disableDragsDropsAndEditing @
-    else
-      @enableDragsDropsAndEditing @
-
-  enableDragsDropsAndEditing: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if @dragsDropsAndEditingEnabled
-      return
-    @parent?.makePencilYellow?()
-    @dragsDropsAndEditingEnabled = true
-    @createToolsPanel()
-    @stretchableCanvasContainer.enableDragsDropsAndEditing @
-
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = true
-
-  # while in editing mode, the slide can take any dimension
-  # and if the content has already a decided ratio then
-  # the container will adjust the content within the given
-  # space so that the content will keep ratio.
-  #
-  # However, when NOT in editing mode, then we
-  # want the content to force the ratio of the window
-  # it might be in, so that
-  # 1) it takes the whole window rather than a
-  #    a letterboxed part, so it looks neat
-  # 2) if we drop the slide in
-  #    a document then it will take a height proportional
-  #    to the given width, which is what looks natural.
-  rawSetWidthSizeHeightAccordingly: (newWidth) ->
-    if @layoutSpecDetails?.canSetHeightFreely
-     super
-     return
-
-    if !@stretchableCanvasContainer?
-     super
-     return
-
-    if !@stretchableCanvasContainer.ratio?
-     super
-     return
-
-    @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchableCanvasContainer.ratio)
-
-
-  disableDragsDropsAndEditing: (triggeringWidget) ->
-    if !triggeringWidget? then triggeringWidget = @
-    if !@dragsDropsAndEditingEnabled
-      return
-    @parent?.makePencilClear?()
-    @dragsDropsAndEditingEnabled = false
-    @toolsPanel.unselectAll()
-    @toolsPanel.destroy()
-    @toolsPanel = nil
-    @stretchableCanvasContainer.disableDragsDropsAndEditing @
-    @invalidateLayout()
-
-    if @layoutSpecDetails?
-      @layoutSpecDetails.canSetHeightFreely = false
-      # force a resize, so the slide and the window
-      # it's in will take the right ratio, and hence
-      # the content will take the whole window it's in.
-      # Note that the height of 0 here is ignored since
-      # "rawSetWidthSizeHeightAccordingly" will
-      # calculate the height.
-      if @stretchableCanvasContainer?.ratio?
-        # try to keep the current width and just adjust the height.
-        # HOWEVER it often happens that just doing that is not OK
-        # because the end result is taller than the screen
-        # which is *very* annoying because the window becomes difficult
-        # to handle and resize, SO calculate a width such that the
-        # height doesn't become problematic
-        if @parent? and (@parent instanceof WindowWdgt) and @parent.parent? and @parent.parent == world
-          newWidth = @parent.width()
-          # TODO magic number here
-          extraHeightOfWindowChrome = 20
-          if newWidth / @stretchableCanvasContainer.ratio + extraHeightOfWindowChrome > world.height()
-            newWidth = (world.height() - extraHeightOfWindowChrome) * @stretchableCanvasContainer.ratio
-            newWidth = Math.round(Math.min newWidth, world.width())
-          @parent.rawSetExtent new Point newWidth, 0
-        else
-          @rawSetExtent new Point @width(), 0
 
   isToolPressed: (buttonToCheckIfPressed) ->
     whichButtonIsSelected = @toolsPanel.whichButtonSelected()
@@ -154,16 +37,13 @@ class ReconfigurablePaintMorph extends Widget
     if @isToolPressed whichButtonHasNewCode
       whichButtonHasNewCode.injectCodeIntoTarget()
 
-  buildAndConnectChildren: ->
-    if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
-      world.alignIDsOfNextMorphsInSystemTests()
-
+  createNewStretchablePanel: ->
     # mainCanvas
-    @stretchableCanvasContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt()
-    @stretchableCanvasContainer.disableDrops()
-    @add @stretchableCanvasContainer
+    @stretchableWidgetContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt()
+    @stretchableWidgetContainer.disableDrops()
+    @add @stretchableWidgetContainer
 
-    @mainCanvas = @stretchableCanvasContainer.contents
+    @mainCanvas = @stretchableWidgetContainer.contents
 
     # overlayCanvas
     @overlayCanvas = new CanvasGlassTopWdgt()
@@ -189,10 +69,6 @@ class ReconfigurablePaintMorph extends Widget
             context.clearRect 0, 0, @width() * pixelRatio, @height() * pixelRatio
             @changed()
     """
-
-    @createToolsPanel()
-    @invalidateLayout()
-
 
   createToolsPanel: ->
     @toolsPanel = new RadioButtonsHolderMorph()
@@ -618,24 +494,24 @@ class ReconfigurablePaintMorph extends Widget
         buttonBounds = buttonBounds.setBoundsWidthAndHeight toolButtonSize
         @eraserToolButton.doLayout buttonBounds 
 
-    # stretchableCanvasContainer --------------------------
+    # stretchableWidgetContainer --------------------------
     if @toolsPanel? and @toolsPanel.parent == @
-      stretchableCanvasContainerWidth = @width() - @toolsPanel.width() - 2*@externalPadding - @internalPadding
+      stretchableWidgetContainerWidth = @width() - @toolsPanel.width() - 2*@externalPadding - @internalPadding
     else
-      stretchableCanvasContainerWidth = @width() - 2*@externalPadding
+      stretchableWidgetContainerWidth = @width() - 2*@externalPadding
 
     b = @bottom() - (2 * @externalPadding)
-    stretchableCanvasContainerHeight =  @height() - 2 * @externalPadding
-    stretchableCanvasContainerBottom = labelBottom + stretchableCanvasContainerHeight
+    stretchableWidgetContainerHeight =  @height() - 2 * @externalPadding
+    stretchableWidgetContainerBottom = labelBottom + stretchableWidgetContainerHeight
 
     if @toolsPanel? and @toolsPanel.parent == @
-      stretchableCanvasContainerLeft = @toolsPanel.right() + @internalPadding
+      stretchableWidgetContainerLeft = @toolsPanel.right() + @internalPadding
     else
-      stretchableCanvasContainerLeft = @left() + @externalPadding
+      stretchableWidgetContainerLeft = @left() + @externalPadding
 
-    if @stretchableCanvasContainer.parent == @
-      @stretchableCanvasContainer.fullRawMoveTo new Point stretchableCanvasContainerLeft, labelBottom
-      @stretchableCanvasContainer.setExtent new Point stretchableCanvasContainerWidth, stretchableCanvasContainerHeight
+    if @stretchableWidgetContainer.parent == @
+      @stretchableWidgetContainer.fullRawMoveTo new Point stretchableWidgetContainerLeft, labelBottom
+      @stretchableWidgetContainer.setExtent new Point stretchableWidgetContainerWidth, stretchableWidgetContainerHeight
 
 
     trackChanges.pop()
