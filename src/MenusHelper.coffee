@@ -286,7 +286,7 @@ class MenusHelper
     throw new Error "you manually threw an error!"
 
   createStretchablePanel: ->
-    stretchablePanel = new StretchablePanelContainerWdgt()
+    stretchablePanel = new StretchableWidgetContainerWdgt()
     world.create stretchablePanel
     stretchablePanel.setExtent new Point 400, 300
 

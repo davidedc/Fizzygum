@@ -161,7 +161,7 @@ class SimpleSlideWdgt extends Widget
     @invalidateLayout()
 
   createNewStretchablePanel: ->
-    @stretchablePanel = new StretchablePanelContainerWdgt()
+    @stretchablePanel = new StretchableWidgetContainerWdgt()
     @add @stretchablePanel
 
   childPickedUp: (childPickedUp) ->

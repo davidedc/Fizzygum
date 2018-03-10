@@ -68,7 +68,7 @@ class ReconfigurablePaintMorph extends Widget
       world.alignIDsOfNextMorphsInSystemTests()
 
     # mainCanvas
-    @stretchableCanvasContainer = new StretchablePanelContainerWdgt new StretchableCanvasWdgt()
+    @stretchableCanvasContainer = new StretchableWidgetContainerWdgt new StretchableCanvasWdgt()
     @stretchableCanvasContainer.disableDrops()
     @add @stretchableCanvasContainer
 

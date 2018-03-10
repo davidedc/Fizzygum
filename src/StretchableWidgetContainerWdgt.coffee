@@ -12,7 +12,7 @@
 # want, but as soon as there is one element, it sticks
 # to the ratio it has.
 
-class StretchablePanelContainerWdgt extends Widget
+class StretchableWidgetContainerWdgt extends Widget
 
   ratio: nil
   contents: nil
