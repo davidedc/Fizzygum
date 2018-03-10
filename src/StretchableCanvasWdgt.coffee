@@ -45,7 +45,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     extent = @extent()
 
     if !@backBuffer?
-      @createNewSmallExtentBuffer extent
+      @createNewFrontFacingBuffer extent
 
     # little shortcut: if nothing has been painted yet then
     # we can omit painting the big canvas on the small one,
@@ -88,7 +88,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     # ALWAYS leave the context with the correct pixel scaling.
     @behindTheScenesBackBufferContext.scale pixelRatio, pixelRatio
 
-  createNewSmallExtentBuffer: (extent) ->
+  createNewFrontFacingBuffer: (extent) ->
     @backBuffer = newCanvas extent.scaleBy pixelRatio
     @backBufferContext = @backBuffer.getContext "2d"
 
@@ -106,7 +106,7 @@ class StretchableCanvasWdgt extends CanvasMorph
     if !@behindTheScenesBackBuffer? or !@anythingPaintedYet
       @createNewBigExtentBuffer extent
 
-    @createNewSmallExtentBuffer extent
+    @createNewFrontFacingBuffer extent
 
     super
     @doLayout @bounds
