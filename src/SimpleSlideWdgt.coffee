@@ -84,7 +84,7 @@ class SimpleSlideWdgt extends Widget
      super
      return
 
-    @rawSetExtent new Point newWidth, newWidth / @stretchablePanel.ratio
+    @rawSetExtent new Point newWidth, Math.round(newWidth / @stretchablePanel.ratio)
 
 
   disableDragsDropsAndEditing: (triggeringWidget) ->
