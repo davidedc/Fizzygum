@@ -27,6 +27,9 @@ class SimpleDocumentWdgt extends Widget
 
   providesAmenitiesForEditing: true
 
+  startingText: "Your text here."
+
+
   constructor: (@defaultContents = "") ->
     super new Point 368, 335
     @buildAndConnectChildren()
@@ -37,6 +40,26 @@ class SimpleDocumentWdgt extends Widget
   representativeIcon: ->
     new TypewriterIconWdgt()
 
+  hasStartingContentBeenChangedByUser: ->
+    debugger
+    !(
+      @simpleDocumentScrollPanel.contents.children.length == 1 and
+      @simpleDocumentScrollPanel.contents.children[0] instanceof SimplePlainTextWdgt and
+      @simpleDocumentScrollPanel.contents.children[0].text == @startingText
+    )
+
+  closeFromContainerWindow: (containerWindow) ->
+
+    if !@hasStartingContentBeenChangedByUser()
+      # there is no real contents to save
+      containerWindow.fullDestroy()
+    else if !world.anyReferenceToWdgt containerWindow
+      prompt = new SaveShortcutPromptWdgt @, containerWindow
+      prompt.popUpAtHand()
+    else
+      containerWindow.close()
+
+
   buildAndConnectChildren: ->
     if AutomatorRecorderAndPlayer? and AutomatorRecorderAndPlayer.state != AutomatorRecorderAndPlayer.IDLE and AutomatorRecorderAndPlayer.alignmentOfMorphIDsMechanism
       world.alignIDsOfNextMorphsInSystemTests()
@@ -44,6 +67,13 @@ class SimpleDocumentWdgt extends Widget
 
     @createToolsPanel()
     @simpleDocumentScrollPanel = new SimpleDocumentScrollPanelWdgt()
+
+    startingContent = new SimplePlainTextWdgt(
+      @startingText,nil,nil,nil,nil,nil,(new Color 240, 240, 240), 1)
+    @simpleDocumentScrollPanel.setContents startingContent, 5
+    startingContent.isEditable = true
+    startingContent.enableSelecting()
+
     @add @simpleDocumentScrollPanel
 
     @invalidateLayout()

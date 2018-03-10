@@ -26,13 +26,19 @@ class StretchableEditableWdgt extends Widget
     super
     @reLayout()
 
+  hasStartingContentBeenChangedByUser: ->
+    @stretchableWidgetContainer?.ratio?
+
   closeFromContainerWindow: (containerWindow) ->
-    if !world.anyReferenceToWdgt containerWindow
+
+    if !@hasStartingContentBeenChangedByUser()
+      # there is no real contents to save
+      containerWindow.fullDestroy()
+    else if !world.anyReferenceToWdgt containerWindow
       prompt = new SaveShortcutPromptWdgt @, containerWindow
       prompt.popUpAtHand()
     else
       containerWindow.close()
-
 
   editButtonPressedFromWindowBar: ->
     if @dragsDropsAndEditingEnabled
