@@ -214,7 +214,7 @@ class HandMorph extends Widget
       # morph to adjust itself e.g. the ScrollPanelWdgt
       # readjusts itself if you take some morphs
       # out of it.
-      oldParent.reactToGrabOf aMorph  if oldParent and oldParent.reactToGrabOf
+      oldParent?.reactToGrabOf? aMorph
 
   draggingSomething: ->
     @floatDraggingSomething() or @nonFloatDraggingSomething()
