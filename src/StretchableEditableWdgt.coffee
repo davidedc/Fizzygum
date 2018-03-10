@@ -31,7 +31,7 @@ class StretchableEditableWdgt extends Widget
 
   closeFromContainerWindow: (containerWindow) ->
 
-    if !@hasStartingContentBeenChangedByUser()
+    if !@hasStartingContentBeenChangedByUser() and !world.anyReferenceToWdgt containerWindow
       # there is no real contents to save
       containerWindow.fullDestroy()
     else if !world.anyReferenceToWdgt containerWindow
