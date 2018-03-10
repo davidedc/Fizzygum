@@ -239,6 +239,9 @@ class WorldMorph extends PanelWdgt
 
   prettier: false
 
+  howManyUntitledShortcuts: 0
+  howManyUntitledFoldersShortcuts: 0
+
   constructor: (
       @worldCanvas,
       @automaticallyAdjustToFillEntireBrowserAlsoOnResize = true
@@ -309,6 +312,25 @@ class WorldMorph extends PanelWdgt
   makePrettier: ->
     @prettier = true
     @changed()
+
+  getNextUntitledShortcutName: ->
+    name = "Untitled"
+    if @howManyUntitledShortcuts > 0
+      name += " " + (@howManyUntitledShortcuts + 1)
+
+    @howManyUntitledShortcuts++
+
+    return name
+
+  getNextUntitledFolderShortcutName: ->
+    name = "new folder"
+    if @howManyUntitledFoldersShortcuts > 0
+      name += " " + (@howManyUntitledFoldersShortcuts + 1)
+
+    @howManyUntitledFoldersShortcuts++
+
+    return name
+
 
   wantsDropOf: (aMorph) ->
     return @_acceptsDrops

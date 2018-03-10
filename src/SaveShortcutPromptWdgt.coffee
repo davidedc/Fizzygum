@@ -8,7 +8,10 @@ class SaveShortcutPromptWdgt extends MenuMorph
 
   tempPromptEntryField: nil
 
-  constructor: (morphOpeningThePopUp, @target, @defaultContents = "untitled", @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
+  constructor: (morphOpeningThePopUp, @target, @defaultContents, @intendedWidth = 100, @wdgtWhereReferenceWillGo) ->
+    
+    if !@defaultContents
+      @defaultContents = world.getNextUntitledShortcutName()
 
     @tempPromptEntryField = new StringFieldWdgt2(
       @defaultContents,
