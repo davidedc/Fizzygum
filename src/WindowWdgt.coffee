@@ -1,5 +1,18 @@
 # REQUIRES WindowContentsPlaceholderText
 
+# TODO: when floating, windows should really be able to
+# accommodate any extent always, because really windows should
+# be stackable and dockable in any place...
+# ...and that's now how we do it now, for example a window
+# with a clock right now keeps ratio...
+# Only when being part of other layouts e.g. stacks the
+# windows should keep a ratio etc...
+# So I'm inclined to think that a window should do what the
+# StretchableWidgetContainerWdgt does...
+
+# TODO: this is such a special version of SimpleVerticalStackPanelWdgt
+# that really it seems like this extension is misleading...
+
 class WindowWdgt extends SimpleVerticalStackPanelWdgt
 
   # TODO we already have the concept of "droplet" widget

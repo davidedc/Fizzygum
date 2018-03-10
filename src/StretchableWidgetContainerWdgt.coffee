@@ -111,7 +111,7 @@ class StretchableWidgetContainerWdgt extends Widget
     if !window.recalculatingLayouts
       debugger
 
-    console.log "spanel @contents: " + @contents + " doLayout 1"
+    #console.log "spanel @contents: " + @contents + " doLayout 1"
 
 
     if !newBoundsForThisLayout?
@@ -132,14 +132,14 @@ class StretchableWidgetContainerWdgt extends Widget
       @notifyChildrenThatParentHasReLayouted()
       return
 
-    console.log "spanel @contents: " + @contents + " doLayout 2"
+    #console.log "spanel @contents: " + @contents + " doLayout 2"
 
     debugger
 
 
     @rawSetBounds newBoundsForThisLayout
 
-    console.log "spanel @contents: " + @contents + " doLayout 3"
+    #console.log "spanel @contents: " + @contents + " doLayout 3"
 
     # here we are disabling all the broken
     # rectangles. The reason is that all the
@@ -171,7 +171,7 @@ class StretchableWidgetContainerWdgt extends Widget
         newExtent = new Point width, heightBasedOnWidth
 
       newBounds = (new Rectangle p0).setBoundsWidthAndHeight newExtent
-      console.log "spanel @contents: " + @contents + " bounds: " + newBounds.round()
+      #console.log "spanel @contents: " + @contents + " bounds: " + newBounds.round()
       @contents.doLayout newBounds.round()
 
     else
